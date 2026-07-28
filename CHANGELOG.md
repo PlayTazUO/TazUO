@@ -5,6 +5,18 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Legion
+* Added `API.ActiveSpells()`, `API.ActiveSpellNames()` and `API.IsSpellActive(spell)` so scripts can see which toggle spells/moves are currently active (the same ones the spell bar highlights) ([bittiez](https://github.com/bittiez))
+
+### Features
+* Counter bar cells can now hold any spell bar action (spell, macro, weapon ability, script, or skill) in addition to item counters, with per-cell hotkeys (via the shared hotkey window), optional keybind labels, active-ability highlighting, and a hotkey-press flash - [P.R 812](https://github.com/PlayTazUO/TazUO/pull/812) ([bittiez](https://github.com/bittiez))
+
+### Fixes
+* Hotkey input window doesn't loose keys when releasing them ([bittiez](https://github.com/bittiez))
+* Fixed a journal crash (`InvalidOperation_EnumFailedVersion`) caused by a race while checking the top-most gump for inactive transparency - [P.R 822](https://github.com/PlayTazUO/TazUO/pull/822) ([bittiez](https://github.com/bittiez))
+
+## V5.17.7
+
+### Legion
 * `SetTooltip(text)` and `SetEntityTooltip(serial)` now enable mouse input automatically so hover tooltips work without extra setup, and added a dedicated `SetAcceptMouseInput(enabled)` method to the base UI control - [P.R 811](https://github.com/PlayTazUO/TazUO/pull/811) ([bittiez](https://github.com/bittiez))
 * Added `SetTooltip(text)`, `SetEntityTooltip(serial)` and `ClearTooltip()` to the base UI control so scripts can attach plain-text or entity-property tooltips to any control - [P.R 810](https://github.com/PlayTazUO/TazUO/pull/810) ([bittiez](https://github.com/bittiez))
 * Added `API.ListRunningScripts()` and `API.IsScriptRunning(path)`, and switched `API.PlayScript`, `API.StopScript` and `API.ToggleScript` to match scripts by their path relative to the LegionScripts folder so scripts sharing a file name are no longer ambiguous - [P.R 809](https://github.com/PlayTazUO/TazUO/pull/809) ([bittiez](https://github.com/bittiez))

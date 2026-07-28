@@ -332,6 +332,33 @@ namespace ClassicUO.Utility
             return ss;
         }
 
+        /// <summary>
+        /// Builds a short label from a name using its capital letters (e.g. "Last Object Macro" -> "LOM").
+        /// Falls back to the first letter of each whitespace/underscore/dash separated word when the
+        /// name has no capitals, and to the upper-cased name itself when neither applies.
+        /// </summary>
+        public static string AbbreviateToInitials(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return string.Empty;
+
+            var sb = new ValueStringBuilder(stackalloc char[name.Length]);
+
+            foreach (char c in name)
+                if (char.IsUpper(c))
+                    sb.Append(c);
+
+            if (sb.Length == 0)
+                foreach (string part in name.Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries))
+                    sb.Append(char.ToUpperInvariant(part[0]));
+
+            string result = sb.Length > 0 ? sb.ToString() : name.ToUpperInvariant();
+
+            sb.Dispose();
+
+            return result;
+        }
+
         public static string IntToAbbreviatedString(int num)
         {
             if (num > 999999)

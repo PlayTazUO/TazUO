@@ -1191,7 +1191,7 @@ def ProcessCallbacks() -> None:
      Use this when you need to wait for players to click buttons.
      Example:
      ```py
-     while True:
+     while not API.StopRequested:
        API.ProcessCallbacks()
        API.Pause(0.1)
      ```
@@ -1210,7 +1210,7 @@ def OnHotKey(key: "str", callback: "Any" = None) -> None:
      def on_shift_a():
          API.SysMsg("SHIFT+A pressed!")
      API.OnHotKey("SHIFT+A", on_shift_a)
-     while True:
+     while not API.StopRequested:
        API.ProcessCallbacks()
        API.Pause(0.1)
      ```
@@ -1551,7 +1551,7 @@ def DropFromCursor(serial: "int" = 0, x: "int" = 1337, y: "int" = 1337, z: "int"
 
 def GetHeldItem() -> "int":
     """
-     Retrieves data of the currently held item on the game cursor.
+     Retrieves serial of the currently held item on the game cursor.
     
     """
     pass
@@ -1679,6 +1679,48 @@ def ActiveBuffs() -> "list[ApiBuff]":
      buffs = API.ActiveBuffs()
      for buff in buffs:
          API.SysMsg(buff.Title)
+     ```
+    
+    """
+    pass
+
+def ActiveSpells() -> "list[int]":
+    """
+     Get a list of spell ids for spells that are currently toggled on/active.
+     These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
+     reports as active, the same ones the spell bar highlights.
+     Example:
+     ```py
+     for spellId in API.ActiveSpells():
+         API.SysMsg("Active spell id: " + str(spellId))
+     ```
+    
+    """
+    pass
+
+def ActiveSpellNames() -> "list[str]":
+    """
+     Get a list of names for spells that are currently toggled on/active.
+     These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
+     reports as active, the same ones the spell bar highlights.
+     Example:
+     ```py
+     for name in API.ActiveSpellNames():
+         API.SysMsg("Active spell: " + name)
+     ```
+    
+    """
+    pass
+
+def IsSpellActive(spell: "Any") -> "bool":
+    """
+     Check if a toggle spell/move is currently active.
+     You can pass a spell name (for example "Confidence") or a spell id.
+     These are toggle spells/moves that the server reports as active, the same ones the spell bar highlights.
+     Example:
+     ```py
+     if API.IsSpellActive("Confidence"):
+         API.SysMsg("Confidence is active!")
      ```
     
     """
@@ -2169,7 +2211,7 @@ def RequestTarget(timeout: "float" = 5) -> "int":
 
 def RequestAnyTarget(timeout: "float" = 5) -> "ApiGameObject":
     """
-     Prompts the player to target any object in the game world, including an `Item` , `Mobile` , `Land` tile, `Static` , or `Multi` .
+     Prompts the player to target any object in the game world, including an Item, Mobile, Land tile, Static, or Multi.
      Waits for the player to select a target within a given timeout period.
     
     """
@@ -2677,7 +2719,7 @@ def OnStop(callback: "Any" = None) -> None:
      def on_stop():
        API.SysMsg("Cleaning up before stopping...")
      API.OnStop(on_stop)
-     while True:
+     while not API.StopRequested:
        API.ProcessCallbacks()
        API.Pause(0.1)
      ```

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using ClassicUO.Assets;
 using ClassicUO.LegionScripting;
 using ClassicUO.Configuration;
@@ -11,6 +10,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
+using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps.SpellBar;
@@ -264,7 +264,7 @@ public class SpellBar : Gump
         public int CurrentSpellID => slot?.CurrentSpellID ?? -1;
 
         private GumpPic icon;
-        private SpellBarSlot slot;
+        private CounterBarSlot slot;
         private AlphaBlendControl background;
         private int row, col;
         private bool trackCasting;
@@ -292,9 +292,9 @@ public class SpellBar : Gump
         }
 
         /// <summary>Assigns the given slot to this entry at the given row/column and refreshes its icon, tooltip, and hotkey label.</summary>
-        public SpellEntry SetSlot(SpellBarSlot slot, int row, int col)
+        public SpellEntry SetSlot(CounterBarSlot slot, int row, int col)
         {
-            this.slot = slot ?? SpellBarSlot.Empty();
+            this.slot = slot ?? CounterBarSlot.Empty();
             this.row = row;
             this.col = col;
             background.Hue = SpellBarManager.SpellBarRows[row].RowHue;
@@ -342,15 +342,11 @@ public class SpellBar : Gump
             if (macroLabel == null)
                 return;
 
-            string name =
-                slot != null && slot.Type == SpellBarSlotType.Macro ? slot.MacroName :
-                slot != null && slot.Type == SpellBarSlotType.Script ? slot.ScriptDisplayName :
-                slot != null && slot.Type == SpellBarSlotType.Skill ? slot.SkillDisplayName :
-                null;
+            string name = slot?.SlotLabel;
 
             if (!string.IsNullOrEmpty(name))
             {
-                macroLabel.SetText(AbbreviateMacroName(name));
+                macroLabel.SetText(StringHelper.AbbreviateToInitials(name));
                 macroLabel.Y = (Height - macroLabel.Height) >> 1;
                 macroLabel.IsVisible = true;
             }
@@ -359,25 +355,6 @@ public class SpellBar : Gump
                 macroLabel.SetText(string.Empty);
                 macroLabel.IsVisible = false;
             }
-        }
-
-        /// <summary>Builds a short label from a macro name using its capital letters (e.g. "Last Object Macro" -> "LOM").</summary>
-        private static string AbbreviateMacroName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                return string.Empty;
-
-            var sb = new StringBuilder();
-            foreach (char c in name)
-                if (char.IsUpper(c))
-                    sb.Append(c);
-
-            // Fall back to the first letter of each word when the name has no capitals.
-            if (sb.Length == 0)
-                foreach (string part in name.Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries))
-                    sb.Append(char.ToUpperInvariant(part[0]));
-
-            return sb.Length > 0 ? sb.ToString() : name.ToUpperInvariant();
         }
 
         private void SetHotkeyText(int slotIndex)
@@ -455,7 +432,7 @@ public class SpellBar : Gump
                     (World,
                         ScreenCoordinateX - 20, ScreenCoordinateY - 90, (s) =>
                         {
-                            SetSlot(SpellBarSlot.FromSpell(s), row, col);
+                            SetSlot(CounterBarSlot.FromSpell(s), row, col);
                         }, true
                     )
                 );
@@ -468,11 +445,11 @@ public class SpellBar : Gump
             var abilityMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setability"));
             abilityMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_ability_primary"), () =>
             {
-                SetSlot(SpellBarSlot.FromAbility(true), row, col);
+                SetSlot(CounterBarSlot.FromAbility(true), row, col);
             }));
             abilityMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_ability_secondary"), () =>
             {
-                SetSlot(SpellBarSlot.FromAbility(false), row, col);
+                SetSlot(CounterBarSlot.FromAbility(false), row, col);
             }));
             ContextMenu.Add(abilityMenu);
 
@@ -486,7 +463,7 @@ public class SpellBar : Gump
 
             ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_clear"), () =>
             {
-                SetSlot(SpellBarSlot.Empty(), row, col);
+                SetSlot(CounterBarSlot.Empty(), row, col);
             }));
         }
 
@@ -500,7 +477,7 @@ public class SpellBar : Gump
             foreach (Macro macro in World.Macros.GetAllMacros())
                 parent.Add(new ContextMenuItemEntry(macro.Name, () =>
                 {
-                    SetSlot(SpellBarSlot.FromMacro(macro), row, col);
+                    SetSlot(CounterBarSlot.FromMacro(macro), row, col);
                 }));
         }
 
@@ -517,7 +494,7 @@ public class SpellBar : Gump
                 // RelativePath (e.g. "group/loot.py") so same-named scripts in different groups are distinguishable.
                 parent.Add(new ContextMenuItemEntry(script.RelativePath, () =>
                 {
-                    SetSlot(SpellBarSlot.FromScript(script), row, col);
+                    SetSlot(CounterBarSlot.FromScript(script), row, col);
                 }));
             }
         }
@@ -538,7 +515,7 @@ public class SpellBar : Gump
                 int index = skill.Index;
                 parent.Add(new ContextMenuItemEntry(skill.Name, () =>
                 {
-                    SetSlot(SpellBarSlot.FromSkill(index), row, col);
+                    SetSlot(CounterBarSlot.FromSkill(index), row, col);
                 }));
             }
         }
@@ -551,7 +528,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsMagery.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
+                        SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -560,7 +537,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsNecromancy.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
+                        SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -569,7 +546,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsChivalry.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
+                        SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -578,7 +555,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsBushido.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
+                        SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -587,7 +564,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsNinjitsu.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
+                        SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -596,7 +573,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsSpellweaving.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
+                        SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -605,7 +582,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsMysticism.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
+                        SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -614,7 +591,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsMastery.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
+                        SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
                 return list;
@@ -628,7 +605,7 @@ public class SpellBar : Gump
         /// </summary>
         public void SetScriptRunning(string scriptId, bool running)
         {
-            if (slot == null || slot.Type != SpellBarSlotType.Script || slot.ScriptId != scriptId)
+            if (slot == null || slot.Type != CounterBarSlotType.Script || slot.ScriptId != scriptId)
                 return;
 
             scriptRunning = running;
@@ -643,7 +620,7 @@ public class SpellBar : Gump
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
-            if (slot != null && slot.Type == SpellBarSlotType.Ability)
+            if (slot != null && slot.Type == CounterBarSlotType.Ability)
             {
                 // The active primary/secondary ability follows the equipped weapon, so keep icon/hue/tooltip in sync.
                 ushort graphic = slot.GetIconGraphic(World);
@@ -670,7 +647,7 @@ public class SpellBar : Gump
                     SetTooltip(string.Empty);
                 }
             }
-            else if (slot != null && slot.Type == SpellBarSlotType.Spell)
+            else if (slot != null && slot.Type == CounterBarSlotType.Spell)
             {
                 // Toggle moves (e.g. Ninjitsu Backstab, Ki Attack) report on/off via ActiveSpellIcons; keep the highlight in sync.
                 bool active = World.ActiveSpellIcons.IsActive((ushort)slot.CurrentSpellID);

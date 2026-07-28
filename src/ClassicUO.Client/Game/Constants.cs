@@ -105,6 +105,9 @@ namespace ClassicUO.Game
         public const ushort HUE_WARN = 53;
         public const ushort HUE_SUCCESS = 62;
 
+        /// <summary>Warning accent color (e.g. the counter bar hotkey-press flash).</summary>
+        public static readonly Color Warn = Color.Orange;
+
         public static class SqlSettings
         {
             public const string MANAGED_ZLIB = "USE_MANAGED_ZLIB";
