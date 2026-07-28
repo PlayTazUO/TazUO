@@ -1410,6 +1410,99 @@ namespace ClassicUO.LegionScripting
         });
 
         /// <summary>
+        /// Get a list of spell ids for spells that are currently toggled on/active.
+        /// These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
+        /// reports as active, the same ones the spell bar highlights.
+        /// Example:
+        /// ```py
+        /// for spellId in API.ActiveSpells():
+        ///     API.SysMsg("Active spell id: " + str(spellId))
+        /// ```
+        /// </summary>
+        /// <returns>An array of active spell ids.</returns>
+        public int[] ActiveSpells() => OnMain(() =>
+        {
+            if (World == null)
+                return new int[] { };
+
+            ushort[] active = World.ActiveSpellIcons.GetActive();
+            int[] result = new int[active.Length];
+
+            for (int i = 0; i < active.Length; i++)
+                result[i] = active[i];
+
+            return result;
+        });
+
+        /// <summary>
+        /// Get a list of names for spells that are currently toggled on/active.
+        /// These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
+        /// reports as active, the same ones the spell bar highlights.
+        /// Example:
+        /// ```py
+        /// for name in API.ActiveSpellNames():
+        ///     API.SysMsg("Active spell: " + name)
+        /// ```
+        /// </summary>
+        /// <returns>An array of active spell names.</returns>
+        public string[] ActiveSpellNames() => OnMain(() =>
+        {
+            if (World == null)
+                return new string[] { };
+
+            ushort[] active = World.ActiveSpellIcons.GetActive();
+            List<string> result = new();
+
+            foreach (ushort id in active)
+            {
+                SpellDefinition spell = SpellDefinition.FullIndexGetSpell(id);
+
+                if (spell != null && !string.IsNullOrEmpty(spell.Name) && spell != SpellDefinition.EmptySpell)
+                    result.Add(spell.Name);
+            }
+
+            return result.ToArray();
+        });
+
+        /// <summary>
+        /// Check if a toggle spell/move is currently active.
+        /// You can pass a spell name (for example "Confidence") or a spell id.
+        /// These are toggle spells/moves that the server reports as active, the same ones the spell bar highlights.
+        /// Example:
+        /// ```py
+        /// if API.IsSpellActive("Confidence"):
+        ///     API.SysMsg("Confidence is active!")
+        /// ```
+        /// </summary>
+        /// <param name="spell">The spell name or spell id to check.</param>
+        /// <returns>True if the spell is currently toggled on.</returns>
+        public bool IsSpellActive(object spell) => OnMain(() =>
+        {
+            if (World == null || spell == null)
+                return false;
+
+            if (spell is string spellName)
+            {
+                if (string.IsNullOrEmpty(spellName))
+                    return false;
+
+                if (!SpellDefinition.TryGetSpellFromName(spellName, out SpellDefinition def))
+                    return false;
+
+                return World.ActiveSpellIcons.IsActive((ushort)def.ID);
+            }
+
+            try
+            {
+                return World.ActiveSpellIcons.IsActive(Convert.ToUInt16(spell));
+            }
+            catch
+            {
+                return false;
+            }
+        });
+
+        /// <summary>
         /// Show a system message(Left side of screen).
         /// Example:
         /// ```py
