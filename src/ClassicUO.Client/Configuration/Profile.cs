@@ -350,6 +350,7 @@ namespace ClassicUO.Configuration
         public int CounterBarAbbreviatedAmount { get; set => SetProperty(ref field, value); } = 1000;
         public int CounterBarHighlightAmount { get; set => SetProperty(ref field, value); } = 5;
         public int CounterBarCellSize { get; set => SetProperty(ref field, value); } = 40;
+        public bool CounterBarShowHotkeys { get; set => SetProperty(ref field, value); }
 
         // title bar stats
         public bool EnableTitleBarStats { get; set => SetProperty(ref field, value); } = false;

@@ -45,6 +45,15 @@ public static class CountersTab
                 ),
                 TazLang.Get("mog_counters_enablecounters")
             ),
+            Option.Checkbox(
+                TazLang.Get("mog_counters_showhotkeys"),
+                new Accessor<bool>(() => profile.CounterBarShowHotkeys, b =>
+                {
+                    profile.CounterBarShowHotkeys = b;
+                    UIManager.GetGump<CounterBarGump>()?.RefreshHotkeyLabels();
+                }),
+                search: new SearchMetadata(TazLang.Get("mog_counters_showhotkeys"), Keywords: [TazLang.Get("mog_kw_counter"), TazLang.Get("mog_kw_hotkey")])
+            ),
             GetAbbreviationGroup(),
             GetHighlightGroup(),
             GetLayoutGroup()

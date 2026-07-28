@@ -70,5 +70,19 @@ namespace ClassicUO.UnitTests.Game.Managers
         {
             CounterBarSlot.Empty().SlotLabel.Should().BeNull();
         }
+
+        [Fact]
+        public void ActiveHue_MatchesSpellBarValue()
+        {
+            CounterBarSlot.ActiveHue.Should().Be(38);
+        }
+
+        [Fact]
+        public void GetActiveHue_NullWorld_ReturnsZero()
+        {
+            CounterBarSlot.FromAbility(true).GetActiveHue(null).Should().Be(0);
+            new CounterBarSlot { Type = CounterBarSlotType.Spell, SpellId = 1 }.GetActiveHue(null).Should().Be(0);
+            CounterBarSlot.Empty().GetActiveHue(null).Should().Be(0);
+        }
     }
 }

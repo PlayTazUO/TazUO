@@ -275,6 +275,13 @@ namespace ClassicUO.Game.UI.Gumps
             return -1;
         }
 
+        /// <summary>Refreshes every cell's optional keybind label (e.g. after toggling the option or restoring).</summary>
+        public void RefreshHotkeyLabels()
+        {
+            foreach (CounterItem item in GetControls<CounterItem>())
+                item.UpdateHotkeyLabel();
+        }
+
         public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
@@ -411,6 +418,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             IsEnabled = IsVisible = ProfileManager.CurrentProfile.CounterBarEnabled;
             IsLocked = ProfileManager.CurrentProfile.CounterGumpLocked;
+
+            RefreshHotkeyLabels();
         }
 
         /// <summary>Rebuilds a <see cref="CounterBarSlot"/> from a saved counter cell, migrating the legacy standalone "spellid" attribute.</summary>
@@ -510,10 +519,13 @@ namespace ClassicUO.Game.UI.Gumps
             private readonly ImageWithText _image;
             private uint _time;
             private const uint HIGHLIGHT_DURATION = 1000;
+            private const uint HOTKEY_FLASH_DURATION = 500; // warn-colored flash when the cell's hotkey fires
             private const ushort SCRIPT_RUNNING_HUE = 0x0044; // green tint while a script slot runs
             private uint _endHighlight;
+            private uint _hotkeyFlashEnd;
             private bool _highlight;
             private readonly CounterBarGump _gump;
+            private readonly Label _hotkeyLabel;
 
             private CounterBarSlot _slot = CounterBarSlot.Empty();
             private ContextMenuItemEntry _macroMenu;
@@ -534,6 +546,15 @@ namespace ClassicUO.Game.UI.Gumps
 
                 _image = new ImageWithText();
                 Add(_image);
+
+                // Optional keybind label shown at the top of the cell (hidden until a hotkey is set and the option is on).
+                Add(_hotkeyLabel = new Label(string.Empty, true, 0x35, 0, 1, FontStyle.BlackBorder)
+                {
+                    X = 2,
+                    Y = 1,
+                    AcceptMouseInput = false,
+                    IsVisible = false
+                });
 
                 ContextMenu = new ContextMenuControl(_gump);
                 ContextMenu.Add(ResGumps.UseObject, Use);
@@ -610,8 +631,9 @@ namespace ClassicUO.Game.UI.Gumps
                 ushort graphic = _slot.GetIconGraphic(_gump.World);
                 if (graphic != 0)
                 {
-                    // Spells, macros and abilities resolve to a gump icon.
-                    _image.ChangeGraphic(graphic, 0, true);
+                    // Spells, macros and abilities resolve to a gump icon; tint it red while the action
+                    // is active (a toggled-on weapon ability or a toggle-move spell), like the spell bar.
+                    _image.ChangeGraphic(graphic, _slot.GetActiveHue(_gump.World), true);
                 }
                 else
                 {
@@ -691,7 +713,38 @@ namespace ClassicUO.Game.UI.Gumps
                 _ = new HotkeyCaptureWindow(
                     prompt: TazLang.Get("counterbar_slot", new[] { (index + 1).ToString() }),
                     existing: CounterBarHotkeysManager.GetBinding(index),
-                    onSaved: binding => CounterBarHotkeysManager.SetBinding(index, binding));
+                    onSaved: binding =>
+                    {
+                        CounterBarHotkeysManager.SetBinding(index, binding);
+                        UpdateHotkeyLabel();
+                    });
+            }
+
+            /// <summary>Refreshes the optional keybind label from the cell's current binding and the profile toggle.</summary>
+            public void UpdateHotkeyLabel()
+            {
+                if (_hotkeyLabel == null)
+                    return;
+
+                int index = _gump.IndexOf(this);
+                HotkeyBinding binding = index >= 0 ? CounterBarHotkeysManager.GetBinding(index) : null;
+
+                if (ProfileManager.CurrentProfile.CounterBarShowHotkeys && binding is { IsEmpty: false })
+                {
+                    _hotkeyLabel.Text = binding.Describe();
+                    _hotkeyLabel.IsVisible = true;
+                }
+                else
+                {
+                    _hotkeyLabel.IsVisible = false;
+                }
+            }
+
+            /// <summary>Triggers the cell from its hotkey: shows a brief warn-colored flash, then performs the action.</summary>
+            public void ActivateFromHotkey()
+            {
+                _hotkeyFlashEnd = Time.Ticks + HOTKEY_FLASH_DURATION;
+                Use();
             }
 
             private void QuickSetSpell() =>
@@ -934,6 +987,14 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     Vector3 runningHue = ShaderHueTranslator.GetHueVector(SCRIPT_RUNNING_HUE, false, 0.5f);
                     batcher.Draw(SolidColorTextureCache.GetTexture(Color.Green), new Rectangle(x, y, Width, Height), runningHue);
+                }
+
+                // Brief warn-colored flash when this cell's hotkey fires, fading out over its duration.
+                if (Time.Ticks < _hotkeyFlashEnd)
+                {
+                    Vector3 flashHue = ShaderHueTranslator.GetHueVector(0);
+                    flashHue.Z = (float)(_hotkeyFlashEnd - Time.Ticks) / HOTKEY_FLASH_DURATION;
+                    batcher.Draw(SolidColorTextureCache.GetTexture(Constants.Warn), new Rectangle(x, y, Width, Height), flashHue);
                 }
 
                 base.Draw(batcher, x, y);

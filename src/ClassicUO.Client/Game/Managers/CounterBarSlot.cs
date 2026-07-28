@@ -90,6 +90,30 @@ public class CounterBarSlot
         _ => null
     };
 
+    /// <summary>Red highlight hue the spell/counter bar uses for an active ability or toggle-move spell.</summary>
+    public const ushort ActiveHue = 38;
+
+    /// <summary>
+    /// The highlight hue for a slot whose action is currently "active": a primary/secondary weapon
+    /// ability that is toggled on, or a toggle-move spell (e.g. Ninjitsu moves) reported active via
+    /// <see cref="World.ActiveSpellIcons"/>. Returns 0 for everything else.
+    /// </summary>
+    public ushort GetActiveHue(World world)
+    {
+        switch (Type)
+        {
+            case CounterBarSlotType.Ability:
+                if (world?.Player == null)
+                    return 0;
+                return ((byte)world.Player.Abilities[AbilityPrimary ? 0 : 1] & 0x80) != 0 ? ActiveHue : (ushort)0;
+
+            case CounterBarSlotType.Spell:
+                return world != null && world.ActiveSpellIcons.IsActive((ushort)CurrentSpellID) ? ActiveHue : (ushort)0;
+        }
+
+        return 0;
+    }
+
     /// <summary>Toggle decision for a script slot: play when not already running.</summary>
     public static bool ShouldPlay(bool isRunning) => !isRunning;
 

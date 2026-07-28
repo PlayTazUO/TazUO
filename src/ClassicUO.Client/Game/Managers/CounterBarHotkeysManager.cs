@@ -140,7 +140,7 @@ namespace ClassicUO.Game.Managers
         {
             // Don't fire while the counter bar is toggled off (the gump is kept but disabled/hidden).
             if (CounterBarGump.CurrentCounterBarGump is { IsEnabled: true } gump)
-                gump.GetCounterItem(index)?.Use();
+                gump.GetCounterItem(index)?.ActivateFromHotkey();
         }
 
         private static string DisplayName(int index) => TazLang.Get("counterbar_slot", new[] { (index + 1).ToString() });
