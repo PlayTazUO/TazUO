@@ -159,6 +159,12 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
         private void Capture(HotkeyBinding binding)
         {
+            // A concrete input (key, mouse button, wheel or controller) has been captured, so the
+            // held modifiers are already baked into this binding. Clear the modifier accumulator so a
+            // later modifier release does not commit a bare-modifier binding that overwrites this one
+            // (e.g. pressing Ctrl+1 then releasing Ctrl must keep Ctrl+1, not fall back to just Ctrl).
+            _modAccum = SDL.SDL_Keymod.SDL_KMOD_NONE;
+
             if (!AutoStop)
             {
                 // Continuous mode: report the binding but keep listening so the user can keep
