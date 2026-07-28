@@ -388,7 +388,7 @@ namespace ClassicUO.Assets
 
                 byte[] bytes;
                 using (var ms = new MemoryStream())
-                using (var es = entry.Open())
+                using (Stream es = entry.Open())
                 {
                     es.CopyTo(ms);
                     bytes = ms.ToArray();
@@ -464,7 +464,7 @@ namespace ClassicUO.Assets
             Log.Info($"Loading tuoassets.zip: {zipPath}");
             try
             {
-                using var archive = ZipFile.OpenRead(zipPath);
+                using ZipArchive archive = ZipFile.OpenRead(zipPath);
                 foreach (ZipArchiveEntry entry in archive.Entries)
                 {
                     if (string.IsNullOrEmpty(entry.Name)) continue;
@@ -474,7 +474,7 @@ namespace ClassicUO.Assets
 
                     byte[] bytes;
                     using (var ms = new MemoryStream())
-                    using (var es = entry.Open())
+                    using (Stream es = entry.Open())
                     {
                         es.CopyTo(ms);
                         bytes = ms.ToArray();
