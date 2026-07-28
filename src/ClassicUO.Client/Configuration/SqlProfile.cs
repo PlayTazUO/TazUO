@@ -151,6 +151,10 @@ public sealed partial class Profile
         public partial bool SpellBar_ShowHotkeys { get; set; }
 
         [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "counter_bar__show_hotkeys", false)]
+        public partial bool CounterBarShowHotkeys { get; set; }
+
+        [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "nearby_loot_conceals_container_on_open", true)]
         public partial bool NearbyLootConcealsContainerOnOpen { get; set; }
 
