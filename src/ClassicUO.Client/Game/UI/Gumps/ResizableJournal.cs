@@ -458,7 +458,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            if (IsMouseOverJournal() || IsTopMostGump())
+            if (IsMouseOverJournal() || UIManager.TopMostControl == this)
             {
                 _inactiveSince = 0;
 
@@ -482,25 +482,6 @@ namespace ClassicUO.Game.UI.Gumps
         {
             //MouseIsOver only covers the gump itself, so also treat hovering any child (text area, tabs, scroll bar) as being over the journal.
             return MouseIsOver || UIManager.MouseOverControl?.RootParent == this;
-        }
-
-        private bool IsTopMostGump()
-        {
-            //Traverse the linked list by node rather than with foreach: UIManager.Gumps can be modified
-            //(e.g. gumps added from the network thread or disposed elsewhere) while we iterate, which makes
-            //the enumerator throw InvalidOperation_EnumFailedVersion. Manual node traversal is version-safe
-            //and matches how the rest of UIManager walks this collection.
-            for (LinkedListNode<IGui> node = UIManager.Gumps.First; node != null; node = node.Next)
-            {
-                IGui gump = node.Value;
-
-                if (gump.IsDisposed || !gump.IsVisible || gump.LayerOrder != UILayer.Default)
-                    continue;
-
-                return gump == this;
-            }
-
-            return false;
         }
 
         private void ApplyInactivity()
