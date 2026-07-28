@@ -43,6 +43,11 @@ namespace ClassicUO.Game.Managers
         private readonly SemaphoreSlim _dbLock = new(1, 1);
         private bool _disposed;
 
+        // The primary table this database manages, when constructed with a schema. Null when the
+        // schema-less constructor is used (subclasses that still hand-roll their own SQL). The generic
+        // row helpers (AddOrUpdateAsync/DeleteAsync/GetAsync) require this to be set.
+        private readonly SqliteTableSchema? _schema;
+
         /// <summary>The directory that contains the database file.</summary>
         protected string DataDirectory { get; }
 
@@ -77,6 +82,31 @@ namespace ClassicUO.Game.Managers
                 Mode = SqliteOpenMode.ReadWriteCreate,
                 Cache = SqliteCacheMode.Shared
             }.ToString();
+        }
+
+        /// <summary>
+        /// Creates the base database and immediately ensures its primary table matches
+        /// <paramref name="schema"/> - creating it if absent and reconciling columns (adding missing,
+        /// dropping removed) otherwise. This is the recommended constructor: a subclass declares its
+        /// columns once, passes them here, and then works entirely through the generic row helpers
+        /// (<see cref="AddOrUpdateAsync"/>, <see cref="DeleteAsync"/>, <see cref="GetAsync"/>) without
+        /// writing any SQL of its own.
+        /// </summary>
+        /// <param name="schema">The table name and columns to ensure. See <see cref="EnsureTableAsync"/>.</param>
+        /// <param name="dbFileName">The database file name, e.g. <c>"mything.db"</c>.</param>
+        /// <param name="dataDirectory">
+        /// The directory to place the database in. Defaults to the shared <c>{ExecutablePath}/Data</c>
+        /// directory. Provide an explicit directory (e.g. a temp path) to make a subclass unit-testable.
+        /// </param>
+        protected SqliteDatabase(SqliteTableSchema schema, string dbFileName, string dataDirectory = null)
+            : this(dbFileName, dataDirectory)
+        {
+            _schema = schema;
+
+            // Ensure the schema up-front so the row helpers can be used immediately after construction.
+            // Blocking here mirrors the established pattern for these managers (the table must exist
+            // before any query runs) and is safe because nothing else can hold the lock yet.
+            EnsureTableAsync(schema).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -214,6 +244,219 @@ namespace ClassicUO.Game.Managers
                 ).ConfigureAwait(false);
             }
         });
+
+        /// <summary>
+        /// Inserts a row, or updates the existing row when it collides with the table's PRIMARY KEY
+        /// (an <c>INSERT ... ON CONFLICT(pk) DO UPDATE</c> upsert). Only the columns present in
+        /// <paramref name="row"/> are written; non-key columns are updated to the incoming values while
+        /// the key columns identify the row. All SQL is built here from the schema passed to the
+        /// constructor - the caller only supplies the data.
+        /// </summary>
+        /// <param name="row">The row data. Must include every PRIMARY KEY column.</param>
+        /// <returns>The number of rows affected.</returns>
+        protected Task<int> AddOrUpdateAsync(SqliteRow row)
+        {
+            SqliteTableSchema schema = RequireSchema();
+
+            // Keep only columns that are both declared in the schema and supplied on the row, in schema
+            // order so the generated SQL is stable and predictable.
+            List<SqliteColumn> columns = new();
+            foreach (SqliteColumn column in schema.Columns)
+            {
+                if (row.Contains(column.Name))
+                    columns.Add(column);
+            }
+
+            if (columns.Count == 0)
+                throw new ArgumentException("The row has no columns matching the table schema.", nameof(row));
+
+            List<string> primaryKeys = PrimaryKeyColumns(schema);
+
+            DynamicParameters parameters = new();
+            StringBuilder sql = new();
+            sql.Append("INSERT INTO ").Append(QuoteIdentifier(schema.Name)).Append(" (");
+
+            for (int i = 0; i < columns.Count; i++)
+            {
+                if (i > 0)
+                    sql.Append(", ");
+
+                sql.Append(QuoteIdentifier(columns[i].Name));
+            }
+
+            sql.Append(") VALUES (");
+
+            for (int i = 0; i < columns.Count; i++)
+            {
+                if (i > 0)
+                    sql.Append(", ");
+
+                string name = "p" + i;
+                sql.Append('@').Append(name);
+                parameters.Add(name, row[columns[i].Name]);
+            }
+
+            sql.Append(')');
+
+            if (primaryKeys.Count > 0)
+            {
+                sql.Append(" ON CONFLICT(");
+                for (int i = 0; i < primaryKeys.Count; i++)
+                {
+                    if (i > 0)
+                        sql.Append(", ");
+
+                    sql.Append(QuoteIdentifier(primaryKeys[i]));
+                }
+                sql.Append(") DO ");
+
+                // Update every supplied non-key column; if the only supplied columns are the key itself
+                // there is nothing to change, so the conflict is a no-op.
+                List<SqliteColumn> updatable = new();
+                foreach (SqliteColumn column in columns)
+                {
+                    if (!primaryKeys.Contains(column.Name, StringComparer.OrdinalIgnoreCase))
+                        updatable.Add(column);
+                }
+
+                if (updatable.Count == 0)
+                {
+                    sql.Append("NOTHING");
+                }
+                else
+                {
+                    sql.Append("UPDATE SET ");
+                    for (int i = 0; i < updatable.Count; i++)
+                    {
+                        if (i > 0)
+                            sql.Append(", ");
+
+                        string quoted = QuoteIdentifier(updatable[i].Name);
+                        sql.Append(quoted).Append(" = excluded.").Append(quoted);
+                    }
+                }
+            }
+
+            return WithConnectionAsync(connection => connection.ExecuteAsync(sql.ToString(), parameters));
+        }
+
+        /// <summary>
+        /// Deletes every row that matches the equality filter in <paramref name="filter"/> (all supplied
+        /// columns must match, combined with AND). Typically the filter is the row's PRIMARY KEY.
+        /// </summary>
+        /// <param name="filter">The columns to match. Must contain at least one column.</param>
+        /// <returns>The number of rows deleted.</returns>
+        protected Task<int> DeleteAsync(SqliteRow filter)
+        {
+            SqliteTableSchema schema = RequireSchema();
+
+            if (filter.Count == 0)
+                throw new ArgumentException(
+                    "A delete requires at least one filter column; pass the row's key to identify what to delete.",
+                    nameof(filter));
+
+            (string where, DynamicParameters parameters) = BuildWhere(filter);
+            string sql = $"DELETE FROM {QuoteIdentifier(schema.Name)} WHERE {where}";
+
+            return WithConnectionAsync(connection => connection.ExecuteAsync(sql, parameters));
+        }
+
+        /// <summary>
+        /// Reads rows from the table. With no filter it returns every row; otherwise it returns the rows
+        /// whose columns all equal the supplied values (combined with AND). Each result is a
+        /// <see cref="SqliteRow"/> the subclass maps back to its domain type.
+        /// </summary>
+        /// <param name="filter">Optional equality filter. Omit (or pass <c>default</c>) to select all rows.</param>
+        protected async Task<IReadOnlyList<SqliteRow>> GetAsync(SqliteRow filter = default)
+        {
+            SqliteTableSchema schema = RequireSchema();
+
+            StringBuilder sql = new();
+            sql.Append("SELECT * FROM ").Append(QuoteIdentifier(schema.Name));
+
+            DynamicParameters parameters = null;
+            if (filter.Count > 0)
+            {
+                (string where, DynamicParameters whereParams) = BuildWhere(filter);
+                sql.Append(" WHERE ").Append(where);
+                parameters = whereParams;
+            }
+
+            IEnumerable<dynamic> rows = await WithConnectionAsync(connection =>
+                connection.QueryAsync(sql.ToString(), parameters)).ConfigureAwait(false);
+
+            List<SqliteRow> results = new();
+            foreach (IDictionary<string, object> row in rows)
+                results.Add(SqliteRow.FromValues(row));
+
+            return results;
+        }
+
+        /// <summary>
+        /// Reads the first row matching the filter, or <c>null</c> if none match. A convenience over
+        /// <see cref="GetAsync"/> for lookups by a unique key.
+        /// </summary>
+        protected async Task<SqliteRow?> GetFirstAsync(SqliteRow filter = default)
+        {
+            IReadOnlyList<SqliteRow> rows = await GetAsync(filter).ConfigureAwait(false);
+            return rows.Count > 0 ? rows[0] : null;
+        }
+
+        /// <summary>Returns the schema set by the constructor, or throws if the schema-less constructor was used.</summary>
+        private SqliteTableSchema RequireSchema()
+        {
+            if (_schema == null)
+                throw new InvalidOperationException(
+                    "The generic row helpers require a schema. Use the SqliteDatabase(SqliteTableSchema, ...) constructor.");
+
+            return _schema.Value;
+        }
+
+        /// <summary>Returns the PRIMARY KEY column names of a schema, in declaration order.</summary>
+        private static List<string> PrimaryKeyColumns(SqliteTableSchema schema)
+        {
+            List<string> keys = new();
+            foreach (SqliteColumn column in schema.Columns)
+            {
+                if (column.PrimaryKey)
+                    keys.Add(column.Name);
+            }
+
+            return keys;
+        }
+
+        /// <summary>
+        /// Builds a parameterized WHERE fragment matching each column in <paramref name="filter"/> for
+        /// equality (a NULL value becomes <c>IS NULL</c>), combined with AND.
+        /// </summary>
+        private static (string sql, DynamicParameters parameters) BuildWhere(SqliteRow filter)
+        {
+            StringBuilder sql = new();
+            DynamicParameters parameters = new();
+
+            int i = 0;
+            foreach (string column in filter.Columns)
+            {
+                if (i > 0)
+                    sql.Append(" AND ");
+
+                object value = filter[column];
+                if (value is null)
+                {
+                    sql.Append(QuoteIdentifier(column)).Append(" IS NULL");
+                }
+                else
+                {
+                    string name = "w" + i;
+                    sql.Append(QuoteIdentifier(column)).Append(" = @").Append(name);
+                    parameters.Add(name, value);
+                }
+
+                i++;
+            }
+
+            return (sql.ToString(), parameters);
+        }
 
         /// <summary>
         /// Quotes a SQLite identifier (table/column name) so it cannot break out of the surrounding
