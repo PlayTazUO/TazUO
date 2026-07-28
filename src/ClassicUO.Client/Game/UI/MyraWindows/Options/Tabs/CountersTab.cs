@@ -54,6 +54,16 @@ public static class CountersTab
                 }),
                 search: new SearchMetadata(TazLang.Get("mog_counters_showhotkeys"), Keywords: [TazLang.Get("mog_kw_counter"), TazLang.Get("mog_kw_hotkey")])
             ),
+            Option.Checkbox(
+                TazLang.Get("mog_counters_disableitemscaling"),
+                new Accessor<bool>(() => profile.CounterBarDisableItemScaling, b => profile.CounterBarDisableItemScaling = b),
+                search: new SearchMetadata(TazLang.Get("mog_counters_disableitemscaling"), Keywords: [TazLang.Get("mog_kw_counter"), TazLang.Get("mog_kw_item"), TazLang.Get("mog_kw_scaling")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_counters_disableiconscaling"),
+                new Accessor<bool>(() => profile.CounterBarDisableIconScaling, b => profile.CounterBarDisableIconScaling = b),
+                search: new SearchMetadata(TazLang.Get("mog_counters_disableiconscaling"), Keywords: [TazLang.Get("mog_kw_counter"), TazLang.Get("mog_kw_icon"), TazLang.Get("mog_kw_spell"), TazLang.Get("mog_kw_scaling")])
+            ),
             GetAbbreviationGroup(),
             GetHighlightGroup(),
             GetLayoutGroup()

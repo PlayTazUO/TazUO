@@ -1112,12 +1112,27 @@ namespace ClassicUO.Game.UI.Gumps
                         var originalSize = new Point(Width, Height);
                         var point = new Point();
 
+                        // Scaling can be disabled per graphic kind: spell/ability icons resolve to gump
+                        // graphics, plain item counters to art. When disabled we draw the graphic at its
+                        // native size (still centered) instead of stretching it to the cell.
+                        bool disableScaling = _isGumpGraphic
+                            ? ProfileManager.CurrentProfile.CounterBarDisableIconScaling
+                            : ProfileManager.CurrentProfile.CounterBarDisableItemScaling;
+
                         if (rect.Width > 0 && rect.Height > 0)
                         {
-                            float scale = Math.Min((float)Width / rect.Width, (float)Height / rect.Height);
+                            if (disableScaling)
+                            {
+                                originalSize.X = rect.Width;
+                                originalSize.Y = rect.Height;
+                            }
+                            else
+                            {
+                                float scale = Math.Min((float)Width / rect.Width, (float)Height / rect.Height);
 
-                            originalSize.X = Math.Max(1, (int)(rect.Width * scale));
-                            originalSize.Y = Math.Max(1, (int)(rect.Height * scale));
+                                originalSize.X = Math.Max(1, (int)(rect.Width * scale));
+                                originalSize.Y = Math.Max(1, (int)(rect.Height * scale));
+                            }
 
                             point.X = (Width - originalSize.X) >> 1;
                             point.Y = (Height - originalSize.Y) >> 1;
