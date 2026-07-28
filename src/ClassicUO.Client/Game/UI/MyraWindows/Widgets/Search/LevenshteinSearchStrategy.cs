@@ -45,6 +45,10 @@ public partial class LevenshteinSearchStrategy : ISearchStrategy
     }
 
     // Shallow is enough - every field is a value or an immutable delegate.
+    /// <inheritdoc />
+    /// <remarks>Any string is a valid edit-distance query.</remarks>
+    public bool IsQueryValid(string query) => true;
+
     public ISearchStrategy Clone() => (ISearchStrategy)MemberwiseClone();
 
     public static IEnumerable<string> WordBoundaryTokenizer(string s)
