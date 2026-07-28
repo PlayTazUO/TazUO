@@ -505,7 +505,7 @@ public static class VideoTab
                 Option.ComboBox(
                     TazLang.Get("mog_videotab_misc_postprocessingeffecttype"),
                     profile.PostProcessingType,
-                    ["point", "linear", "anisotropic", "xbr"],
+                    ["point", "linear", "anisotropic", "xbr", "fsr"],
                     i =>
                     {
                         profile.PostProcessingType = (ushort)i;
