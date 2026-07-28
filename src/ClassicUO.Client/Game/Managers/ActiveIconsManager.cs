@@ -26,6 +26,14 @@ namespace ClassicUO.Game.Managers
 
         public bool IsActive(ushort id) => _activeIcons.Count != 0 && _activeIcons.Contains(id);
 
+        /// <summary>The spell ids currently toggled on (a snapshot copy).</summary>
+        public ushort[] GetActive()
+        {
+            ushort[] result = new ushort[_activeIcons.Count];
+            _activeIcons.CopyTo(result);
+            return result;
+        }
+
         public void Clear() => _activeIcons.Clear();
     }
 }

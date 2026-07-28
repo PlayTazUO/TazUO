@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Legion
+* Added `API.ActiveSpells()`, `API.ActiveSpellNames()` and `API.IsSpellActive(spell)` so scripts can see which toggle spells/moves are currently active (the same ones the spell bar highlights) ([bittiez](https://github.com/bittiez))
+
 ### Features
 * Counter bar cells can now hold any spell bar action (spell, macro, weapon ability, script, or skill) in addition to item counters, with per-cell hotkeys (via the shared hotkey window), optional keybind labels, active-ability highlighting, and a hotkey-press flash - [P.R 812](https://github.com/PlayTazUO/TazUO/pull/812) ([bittiez](https://github.com/bittiez))
 
