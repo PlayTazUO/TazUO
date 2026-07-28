@@ -80,7 +80,12 @@ namespace ClassicUO.Game.Managers
             {
                 DataSource = DatabasePath,
                 Mode = SqliteOpenMode.ReadWriteCreate,
-                Cache = SqliteCacheMode.Shared
+                // Private cache (the default). Shared cache is an in-process cache-sharing feature: it
+                // provides no benefit across separate clients/processes and changes locking semantics so
+                // that table-level contention surfaces as SQLITE_LOCKED, which the busy handler does not
+                // retry. WAL journal mode (enabled per connection below) is what actually makes
+                // concurrent multi-client access safe and non-blocking for readers.
+                Cache = SqliteCacheMode.Private
             }.ToString();
         }
 
@@ -121,15 +126,31 @@ namespace ClassicUO.Game.Managers
             await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                try
+                // Retry loop for cross-process lock contention. busy_timeout (set per connection) already
+                // makes SQLite wait inside the driver for a lock another client holds; this outer loop is
+                // a bounded backstop for the rare case a lock outlives that timeout under heavy multi-client
+                // write load, so an occasional SQLITE_BUSY is retried rather than thrown at the caller.
+                for (int attempt = 0; ; attempt++)
                 {
-                    return await OpenAndRunAsync(operation).ConfigureAwait(false);
-                }
-                catch (SqliteException ex) when (IsCorruptionError(ex) && QuarantineCorruptDatabase(ex))
-                {
-                    // The file was corrupt and has been quarantined; a fresh database will be created
-                    // on this retry. Only one retry is attempted - if it fails again the error propagates.
-                    return await OpenAndRunAsync(operation).ConfigureAwait(false);
+                    try
+                    {
+                        try
+                        {
+                            return await OpenAndRunAsync(operation).ConfigureAwait(false);
+                        }
+                        catch (SqliteException ex) when (IsCorruptionError(ex) && QuarantineCorruptDatabase(ex))
+                        {
+                            // The file was corrupt and has been quarantined; a fresh database will be created
+                            // on this retry. Only one retry is attempted - if it fails again the error propagates.
+                            return await OpenAndRunAsync(operation).ConfigureAwait(false);
+                        }
+                    }
+                    catch (SqliteException ex) when (IsBusyError(ex) && attempt < MAX_BUSY_RETRIES)
+                    {
+                        // Another client held the database longer than busy_timeout. Back off briefly (the
+                        // delay grows with each attempt) and try again; after MAX_BUSY_RETRIES it propagates.
+                        await Task.Delay(BUSY_RETRY_BASE_DELAY_MS * (attempt + 1)).ConfigureAwait(false);
+                    }
                 }
             }
             finally
@@ -150,13 +171,31 @@ namespace ClassicUO.Game.Managers
                 return true;
             });
 
-        /// <summary>Opens a fresh connection, runs the operation, and disposes the connection.</summary>
+        /// <summary>Opens a fresh connection, configures it for multi-client use, runs the operation, and disposes it.</summary>
         private async Task<T> OpenAndRunAsync<T>(Func<SqliteConnection, Task<T>> operation)
         {
             await using SqliteConnection connection = new(ConnectionString);
             await connection.OpenAsync().ConfigureAwait(false);
+            await ConfigureConnectionAsync(connection).ConfigureAwait(false);
             return await operation(connection).ConfigureAwait(false);
         }
+
+        /// <summary>
+        /// Applies the per-connection pragmas that make the database safe and non-blocking under
+        /// concurrent multi-client access:
+        /// <list type="bullet">
+        /// <item><c>busy_timeout</c> - wait this long for a lock another client holds instead of failing
+        /// immediately with SQLITE_BUSY. Per connection, so it is set on every open.</item>
+        /// <item><c>journal_mode=WAL</c> - lets multiple clients read while one writes (the default
+        /// rollback journal takes an exclusive database lock for the whole of every write). WAL is
+        /// persisted in the database header, so re-asserting it here is cheap once it is set.</item>
+        /// <item><c>synchronous=NORMAL</c> - the standard companion to WAL: durable against application
+        /// crashes, trading only the last committed transaction on an OS/power loss for much less fsync
+        /// overhead.</item>
+        /// </list>
+        /// </summary>
+        private static Task ConfigureConnectionAsync(SqliteConnection connection) => connection.ExecuteAsync(
+            $"PRAGMA busy_timeout={BUSY_TIMEOUT_MS}; PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;");
 
         /// <summary>
         /// Ensures a table matches the given <see cref="SqliteTableSchema"/>: creates it
@@ -228,10 +267,19 @@ namespace ClassicUO.Game.Managers
                 if (existingSet.Contains(column.Name))
                     continue;
 
-                // A primary key cannot be added via ALTER TABLE, so never inline it here.
-                await connection.ExecuteAsync(
-                    $"ALTER TABLE {QuoteIdentifier(schema.Name)} ADD COLUMN {column.ToDefinition(includePrimaryKey: false)}"
-                ).ConfigureAwait(false);
+                try
+                {
+                    // A primary key cannot be added via ALTER TABLE, so never inline it here.
+                    await connection.ExecuteAsync(
+                        $"ALTER TABLE {QuoteIdentifier(schema.Name)} ADD COLUMN {column.ToDefinition(includePrimaryKey: false)}"
+                    ).ConfigureAwait(false);
+                }
+                catch (SqliteException ex) when (IsDuplicateColumnError(ex))
+                {
+                    // Another client added this column between our read of the existing columns and this
+                    // ALTER (simultaneous first launch / upgrade). The end state is what we wanted, so the
+                    // race is benign - carry on.
+                }
             }
 
             foreach (string existingColumn in existingColumns)
@@ -239,9 +287,17 @@ namespace ClassicUO.Game.Managers
                 if (desiredSet.Contains(existingColumn))
                     continue;
 
-                await connection.ExecuteAsync(
-                    $"ALTER TABLE {QuoteIdentifier(schema.Name)} DROP COLUMN {QuoteIdentifier(existingColumn)}"
-                ).ConfigureAwait(false);
+                try
+                {
+                    await connection.ExecuteAsync(
+                        $"ALTER TABLE {QuoteIdentifier(schema.Name)} DROP COLUMN {QuoteIdentifier(existingColumn)}"
+                    ).ConfigureAwait(false);
+                }
+                catch (SqliteException ex) when (IsMissingColumnError(ex))
+                {
+                    // Another client already dropped this column concurrently. Benign - the column is gone,
+                    // which is the desired outcome.
+                }
             }
         });
 
@@ -485,11 +541,47 @@ namespace ClassicUO.Game.Managers
         private static bool IsCorruptionError(SqliteException ex) =>
             ex.SqliteErrorCode == SQLITE_CORRUPT || ex.SqliteErrorCode == SQLITE_NOTADB;
 
+        /// <summary>
+        /// Returns true if the exception is transient lock contention from another client holding the
+        /// database - the kind of failure a short backoff-and-retry can clear.
+        /// </summary>
+        private static bool IsBusyError(SqliteException ex) =>
+            ex.SqliteErrorCode == SQLITE_BUSY || ex.SqliteErrorCode == SQLITE_LOCKED;
+
+        /// <summary>
+        /// Returns true if an <c>ALTER TABLE ... ADD COLUMN</c> failed because the column already exists -
+        /// i.e. another client added it concurrently. Matched on message text because SQLite reports it
+        /// with the generic SQLITE_ERROR code and no distinct extended code.
+        /// </summary>
+        private static bool IsDuplicateColumnError(SqliteException ex) =>
+            ex.SqliteErrorCode == SQLITE_ERROR &&
+            ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Returns true if an <c>ALTER TABLE ... DROP COLUMN</c> failed because the column is already gone -
+        /// i.e. another client dropped it concurrently. Matched on message text for the same reason as
+        /// <see cref="IsDuplicateColumnError"/>.
+        /// </summary>
+        private static bool IsMissingColumnError(SqliteException ex) =>
+            ex.SqliteErrorCode == SQLITE_ERROR &&
+            ex.Message.Contains("no such column", StringComparison.OrdinalIgnoreCase);
+
         // SQLite primary result codes (see https://www.sqlite.org/rescode.html). A malformed database
         // schema, "database disk image is malformed" all report SQLITE_CORRUPT (11); a file whose header
-        // is not recognizable as a SQLite database reports SQLITE_NOTADB (26).
+        // is not recognizable as a SQLite database reports SQLITE_NOTADB (26). SQLITE_BUSY (5) and
+        // SQLITE_LOCKED (6) are lock contention; a duplicate/missing column on ALTER reports the generic
+        // SQLITE_ERROR (1).
+        private const int SQLITE_ERROR = 1;
+        private const int SQLITE_BUSY = 5;
+        private const int SQLITE_LOCKED = 6;
         private const int SQLITE_CORRUPT = 11;
         private const int SQLITE_NOTADB = 26;
+
+        // How long a connection waits for a lock another client holds before giving up (SQLITE_BUSY), and
+        // the bounded application-level retry that backs it up if a lock outlives that wait.
+        private const int BUSY_TIMEOUT_MS = 30_000;
+        private const int MAX_BUSY_RETRIES = 3;
+        private const int BUSY_RETRY_BASE_DELAY_MS = 50;
 
         /// <summary>
         /// Moves a corrupt database file (and its WAL/SHM/journal sidecars) aside so a fresh, empty

@@ -53,6 +53,9 @@ namespace ClassicUO.UnitTests.Game.Managers
 
             public Task<List<string>> ColumnsAsync() => WithConnectionAsync(async c =>
                 (await c.QueryAsync<string>("SELECT name FROM pragma_table_info('things')")).ToList());
+
+            public Task<T> PragmaAsync<T>(string pragma) =>
+                WithConnectionAsync(c => c.ExecuteScalarAsync<T>($"PRAGMA {pragma}"));
         }
 
         private readonly string _tempDir;
@@ -273,6 +276,20 @@ namespace ClassicUO.UnitTests.Game.Managers
 
             IReadOnlyList<SqliteRow> all = await db.AllAsync();
             all.Should().HaveCount(3);
+        }
+
+        [Fact]
+        public async Task Connection_UsesWalJournalMode_AndBusyTimeout()
+        {
+            using var db = new ThingsDatabase(_tempDir);
+
+            // WAL lets multiple clients read while one writes; busy_timeout makes a client wait for a lock
+            // another holds rather than failing immediately. Both are required for safe multi-client use.
+            string journalMode = await db.PragmaAsync<string>("journal_mode");
+            journalMode.Should().Be("wal");
+
+            long busyTimeout = await db.PragmaAsync<long>("busy_timeout");
+            busyTimeout.Should().BeGreaterThan(0);
         }
 
         [Fact]
