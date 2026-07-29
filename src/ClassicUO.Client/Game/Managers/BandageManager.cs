@@ -220,7 +220,7 @@ namespace ClassicUO.Game.Managers
                 // can eventually stop spinning (e.g. no bandages, or a stuck target).
                 PruneExpiredRetries();
 
-                if (player.FindBandage(BandageGraphic) == null)
+                if (FindBandage() == null)
                     return; // Return early if we don't have bandages..
 
                 uint serial;
