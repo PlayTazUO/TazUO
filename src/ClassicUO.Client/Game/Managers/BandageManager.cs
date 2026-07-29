@@ -401,6 +401,9 @@ namespace ClassicUO.Game.Managers
             lock (_queueLock) shouldEnqueue = _enqueuedInGlobalQueue.Add(mobile.Serial);
 
             if (shouldEnqueue) ObjectActionQueue.Instance.Enqueue(new ObjectActionQueueItem(() => ExecuteHealMobile(mobile)), ActionPriority.Immediate);
+
+            // Keep the mobile queued so we re-check until IsHealCandidate is false, even if no HP-change packet arrives.
+            ScheduleRetry(mobile.Serial);
         }
 
         private void ExecuteHealMobile(Mobile mobile)
