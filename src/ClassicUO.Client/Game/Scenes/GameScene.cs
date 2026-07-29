@@ -62,6 +62,7 @@ namespace ClassicUO.Game.Scenes
         });
 
         private static XBREffect _xbr;
+        private static FSREffect _fsr;
         private bool _alphaChanged;
         private long _alphaTimer;
         private bool _forceStopScene;
@@ -449,6 +450,8 @@ namespace ClassicUO.Game.Scenes
             _worldRenderTarget?.Dispose();
             _xbr?.Dispose();
             _xbr = null;
+            _fsr?.Dispose();
+            _fsr = null;
 
             _world.CommandManager.UnRegisterAll();
             _world.Weather.Reset();
@@ -1261,6 +1264,10 @@ namespace ClassicUO.Game.Scenes
             {
                 BindXbrParams(gd);
             }
+            else if (_postFx == _fsr && _fsr != null)
+            {
+                BindFsrParams(gd);
+            }
             batcher.Begin(_postFx, Matrix.Identity);
             try { batcher.SetSampler(_postSampler ?? SamplerState.PointClamp); } catch { batcher.SetSampler(SamplerState.PointClamp); }
             batcher.Draw(_worldRenderTarget, destRect, srcRect, new Vector3(0, 0, 1));
@@ -1564,9 +1571,21 @@ namespace ClassicUO.Game.Scenes
 
         private void UpdatePostProcessState(GraphicsDevice gd)
         {
-            if (_currentFilter == _filterMode &&
-                ((_postFx == null && _filterMode != PostProcessingType.Xbr) || (_postFx != null && (_filterMode != PostProcessingType.Xbr || ReferenceEquals(_postFx, _xbr)))))
-                return;
+            if (_currentFilter == _filterMode)
+            {
+                switch (_filterMode)
+                {
+                    case PostProcessingType.Xbr:
+                        if (ReferenceEquals(_postFx, _xbr) && _xbr != null) return;
+                        break;
+                    case PostProcessingType.Fsr:
+                        if (ReferenceEquals(_postFx, _fsr) && _fsr != null) return;
+                        break;
+                    default:
+                        if (_postFx == null) return;
+                        break;
+                }
+            }
 
             _currentFilter = _filterMode;
 
@@ -1582,6 +1601,19 @@ namespace ClassicUO.Game.Scenes
                         else { _xbr = null; _postFx = null; _postSampler = SamplerState.PointClamp; break; }
                     }
                     _postFx = _xbr;
+                    _postSampler = SamplerState.PointClamp;
+                    break;
+
+                case PostProcessingType.Fsr:
+                    if (_fsr == null)
+                    {
+                        _fsr = new FSREffect(gd);
+                        EffectTechnique tech = _fsr.Techniques?["T0"] ??
+                                   (_fsr.Techniques?.Count > 0 ? _fsr.Techniques[0] : null);
+                        if (tech != null) _fsr.CurrentTechnique = tech;
+                        else { _fsr = null; _postFx = null; _postSampler = SamplerState.PointClamp; break; }
+                    }
+                    _postFx = _fsr;
                     _postSampler = SamplerState.PointClamp;
                     break;
 
@@ -1626,6 +1658,30 @@ namespace ClassicUO.Game.Scenes
             _xbr.Parameters?["invTextureSize"]?.SetValue(new Vector2(1f / w, 1f / h));
             _xbr.Parameters?["TextureSizeInv"]?.SetValue(new Vector2(1f / w, 1f / h));
             _xbr.Parameters?["decal"]?.SetValue(_worldRenderTarget);
+        }
+
+        private void BindFsrParams(GraphicsDevice gd)
+        {
+            if (_fsr == null || _worldRenderTarget == null) return;
+
+            try
+            {
+                if (_fsr.Techniques?["T0"] != null)
+                    _fsr.CurrentTechnique = _fsr.Techniques["T0"];
+            }
+            catch (Exception e)
+            {
+                Log.ErrorDebug(e.ToString());
+            }
+
+            float w = _worldRenderTarget.Width;
+            float h = _worldRenderTarget.Height;
+
+            Viewport vp = gd.Viewport;
+            var ortho = Matrix.CreateOrthographicOffCenter(0, vp.Width, vp.Height, 0, 0, 1);
+            _fsr.MatrixTransform?.SetValue(ortho);
+            _fsr.TextureSize?.SetValue(new Vector2(w, h));
+            _fsr.Parameters?["decal"]?.SetValue(_worldRenderTarget);
         }
 
         private static readonly RenderedText _youAreDeadText = RenderedText.Create(
@@ -1700,6 +1756,7 @@ namespace ClassicUO.Game.Scenes
         Linear,
         Anisotropic,
         Xbr,
+        Fsr,
         Invalid
     }
 }

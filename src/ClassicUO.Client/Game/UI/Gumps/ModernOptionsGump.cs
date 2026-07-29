@@ -1317,7 +1317,7 @@ namespace ClassicUO.Game.UI.Gumps
                     "Processing type",
                     150,
                     ThemeSettings.COMBO_BOX_WIDTH,
-                    ["point", "linear", "anisotropic", "xbr"],
+                    ["point", "linear", "anisotropic", "xbr", "fsr"],
                     profile.PostProcessingType,
                     (s, n) =>
                     {
