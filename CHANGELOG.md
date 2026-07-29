@@ -13,6 +13,7 @@ All notable changes to TazUO will be recorded here.
 
 ### Fixes
 * Hotkey input window doesn't loose keys when releasing them ([bittiez](https://github.com/bittiez))
+* Fixed a journal crash (`InvalidOperation_EnumFailedVersion`) caused by a race while checking the top-most gump for inactive transparency - [P.R 822](https://github.com/PlayTazUO/TazUO/pull/822) ([bittiez](https://github.com/bittiez))
 
 ## V5.17.7
 
