@@ -82,10 +82,10 @@ namespace ClassicUO.Game.Scenes
         private const int MAX_TEXTURE_SIZE = 8192;
 
         // Number of tiles to probe toward the camera when testing whether a light is
-        // occluded by taller terrain (mountains, cave walls). Larger values catch
-        // thicker occluders; the per-tile height threshold keeps distant tiles from
-        // over-occluding.
-        private const int LIGHT_OCCLUSION_DISTANCE = 4;
+        // occluded by taller terrain (mountains, cave walls) or statics. Larger values
+        // catch thicker occluders; the per-tile height threshold keeps distant tiles
+        // from over-occluding.
+        private const int LIGHT_OCCLUSION_DISTANCE = 5;
         private static PostProcessingType _filterMode = PostProcessingType.Point;
         private PostProcessingType _currentFilter;
         private Effect _postFx;
@@ -564,16 +564,35 @@ namespace ClassicUO.Game.Scenes
 
                 for (GameObject o = tile; o != null; o = o.TNext)
                 {
-                    if (
-                        (!(o is Static s) || s.ItemData.IsTransparent)
-                            && (!(o is Multi m) || m.ItemData.IsTransparent)
-                        || !o.AllowedToDraw
-                    )
+                    if (!o.AllowedToDraw)
                     {
                         continue;
                     }
 
-                    if (o.Z < _maxZ && o.Z >= occludeZ)
+                    // Determine the height this tile occupies. Mountains and other terrain
+                    // are Land objects (not Static/Multi), so they must be considered here
+                    // or lights placed behind them leak through and draw on top of the
+                    // terrain. Stretched land uses its averaged height, matching how the
+                    // draw-sorting logic treats it.
+                    sbyte tileZ;
+
+                    if (o is Land land)
+                    {
+                        tileZ = land.IsStretched ? land.AverageZ : o.Z;
+                    }
+                    else if (
+                        o is Static s && !s.ItemData.IsTransparent
+                        || o is Multi m && !m.ItemData.IsTransparent
+                    )
+                    {
+                        tileZ = o.Z;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    if (tileZ < _maxZ && tileZ >= occludeZ)
                     {
                         canBeAdded = false;
 
