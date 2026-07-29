@@ -112,21 +112,9 @@ public class MyraControl : IGui
     private void DesktopOnWidgetGotKeyboardFocus(object sender, GenericEventArgs<Widget> e)
     {
         if (e.Data.AcceptsKeyboardFocus && e.Data is Myra.Graphics2D.UI.TextBox)
-        {
             SetKeyboardFocus();
-            return;
-        }
-
-        // Handing focus back to the game would drag OnFocusLost() along, which tears down any
-        // open Myra context menu. That's wrong while one is up: its own widgets take keyboard
-        // focus as they're clicked (a dropdown's panel, list and rows all accept it), so this
-        // would kill the menu on the press and the row's click - which only fires on the
-        // matching touch-up - would never be delivered. Keep the focus here until it closes;
-        // Myra polls the keyboard itself, so the menu's Up/Down/Enter/Escape keep working.
-        if (_desktop.ContextMenu != null)
-            return;
-
-        UIManager.KeyboardFocusControl = null;
+        else
+            UIManager.KeyboardFocusControl = null;
     }
 
     #endregion
@@ -293,14 +281,9 @@ public class MyraControl : IGui
 
         batcher.FlushBatch(); //Required to draw myra on top of already drawn gumps
 
-        // Myra processes its own mouse/keyboard input inside Desktop.Render(). If we only ran
-        // that for the top-most window, the very first click on a background window would be spent
-        // by the UIManager promoting it to top-most (see UIManager.OnMouseButtonDown) and Myra would
-        // never see the click as a widget press. By also running the input pass while this is the
-        // window under the cursor (MouseOverControl, set during UIManager.Update() before Draw()),
-        // the click is passed through to Myra on the same frame, and hover frames keep Myra's mouse
-        // baseline fresh so the down-edge is detected. Only one window is ever MouseOverControl
-        // (front-most hit), so this does not cause click-through to overlapped windows.
+        // Desktop.Render() runs Myra's input pass. Running it for MouseOverControl too (not just
+        // the top-most window) keeps the first click on a background window from being eaten by
+        // UIManager promoting it to top-most. Only one window is MouseOverControl, so no click-through.
         try
         {
             if (IsTopMost || ReferenceEquals(UIManager.MouseOverControl, this))
@@ -393,10 +376,8 @@ public class MyraControl : IGui
     {
         IsFocused = false;
 
-        // A click that landed inside an open context menu (a searchable combo box dropdown, say)
-        // is not this window losing focus - it's the menu being used. Tearing it down here would
-        // detach it mid-press, so the row's click never completes. Leave both the menu and the
-        // Myra keyboard focus (the dropdown's search box) alone in that case.
+        // A click inside an open context menu is the menu being used, not focus loss.
+        // Closing it here would detach it mid-press and the click would never complete.
         if (_desktop.ContextMenu is { Visible: true } contextMenu &&
             contextMenu.ContainsGlobalPoint(new Point(Mouse.Position.X + ParentX, Mouse.Position.Y + ParentY)))
             return;
@@ -483,13 +464,8 @@ public class MyraControl : IGui
 
         if (_desktop.ContextMenu is { Visible: true } contextMenu)
         {
-            // Rebuilding the menu's screen rect by hand from Left/Top/Bounds here previously
-            // could disagree with Myra's own hit-test (e.g. Margin/alignment aren't accounted
-            // for the same way), which very occasionally made a genuine click inside the menu
-            // (an open SearchableComboBox dropdown, in particular) miss this check, lose
-            // MouseOverControl to whatever's behind it, and get force-closed via OnFocusLost.
-            // ContainsGlobalPoint is the exact method Myra uses internally to decide
-            // IsTouchInside, so deferring to it keeps this in sync by construction.
+            // ContainsGlobalPoint is what Myra uses for IsTouchInside; a hand-rolled rect from
+            // Left/Top/Bounds disagrees with it (margin/alignment) and drops clicks in the menu.
             if (contextMenu.ContainsGlobalPoint(new Point(x + ParentX, y + ParentY)))
                 return true;
         }
