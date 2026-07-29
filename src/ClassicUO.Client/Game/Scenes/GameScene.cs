@@ -74,13 +74,7 @@ namespace ClassicUO.Game.Scenes
             LightsLoader.MAX_LIGHTS_DATA_INDEX_COUNT
         ];
 
-        // Per-frame map of opaque tiles that can occlude a light, keyed by their
-        // isometric "column" (X - Y). Tiles sharing a column project to the same screen
-        // X, so a light is hidden when a tall enough tile in its own column sits between
-        // it and the camera. Built once while the render list is assembled (see
-        // RecordLightOccluder) and queried in AddLight, this avoids scanning the map for
-        // every light every frame. Only the columns in view are kept live each frame;
-        // emptied buckets go back to the pool so roaming the map does not leak buckets.
+        // Drawn opaque tiles that can occlude a light, bucketed by isometric column (X - Y); rebuilt each frame, queried by AddLight.
         private readonly Dictionary<int, List<LightOccluder>> _lightOccluders =
             new Dictionary<int, List<LightOccluder>>();
         private readonly Stack<List<LightOccluder>> _lightOccluderPool =
@@ -93,11 +87,7 @@ namespace ClassicUO.Game.Scenes
         private uint _timeToPlaceMultiInHouseCustomization;
         private const int MAX_TEXTURE_SIZE = 8192;
 
-        // Each tile step toward the camera lowers a light's on-screen position by roughly
-        // one tile (~11 z-units in UO's isometric projection), so an occluder d tiles in
-        // front must stand at least 11*d z-units above the light to cover it. The slop
-        // accounts for tile thickness so an adjacent (d = 1) tile only needs to be ~5
-        // units taller, matching the original single-tile behaviour.
+        // An occluder d tiles in front of a light must stand ~11*d z-units above it to cover it on screen; slop is the tile-thickness leniency.
         private const int LIGHT_OCCLUSION_STEP = 11;
         private const int LIGHT_OCCLUSION_SLOP = 6;
         private static PostProcessingType _filterMode = PostProcessingType.Point;
@@ -558,12 +548,7 @@ namespace ClassicUO.Game.Scenes
 
             bool canBeAdded = true;
 
-            // A light is occluded when a tall enough tile in its own isometric column
-            // (X - Y) stands between it and the camera. The occluder map is built each
-            // frame from the tiles that are actually drawn (RecordLightOccluder), so a
-            // multi-tile-thick mountain or cave wall in front of the light correctly
-            // hides it - including terrain (Land), which the map records. This replaces a
-            // per-light walk across the map with a single lookup down the light's column.
+            // Occluded if a tall enough tile in the light's own column (X - Y) sits in front of it toward the camera.
             if (_lightOccluders.TryGetValue(obj.X - obj.Y, out List<LightOccluder> occluders))
             {
                 int lightX = obj.X;
@@ -702,8 +687,7 @@ namespace ClassicUO.Game.Scenes
             _renderListEffects.Clear();
             _renderListTransparentObjects.Clear();
 
-            // Recycle this frame's column buckets back to the pool so the map is rebuilt
-            // from scratch without churning through allocations as the player roams.
+            // Recycle this frame's column buckets to the pool so the map rebuilds without allocating.
             foreach (List<LightOccluder> bucket in _lightOccluders.Values)
             {
                 bucket.Clear();

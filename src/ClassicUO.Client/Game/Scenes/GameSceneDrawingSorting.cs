@@ -682,11 +682,7 @@ namespace ClassicUO.Game.Scenes
             }
         }
 
-        // Records a drawn tile as a potential light occluder, bucketed by its isometric
-        // column (X - Y). Only opaque surfaces matter: terrain (Land) - which is what
-        // mountains and cave walls are made of - plus non-transparent statics and multis.
-        // Stretched land uses its averaged height to match the draw-sorting logic.
-        // Queried by AddLight to hide lights sitting behind taller terrain.
+        // Records a drawn opaque tile (terrain/static/multi) as a light occluder, bucketed by isometric column (X - Y).
         private void RecordLightOccluder(GameObject obj)
         {
             if (!UseLights && !UseAltLights)
