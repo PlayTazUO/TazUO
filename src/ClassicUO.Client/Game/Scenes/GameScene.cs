@@ -1415,6 +1415,10 @@ namespace ClassicUO.Game.Scenes
 
             hue.Z = 1f;
 
+            bool candleFlicker = ProfileManager.CurrentProfile.CandleFlickerLights;
+            // Time in seconds, used as the phase base for the flicker oscillation.
+            float flickerTime = Time.Ticks / 1000f;
+
             for (int i = 0; i < _lightCount; i++)
             {
                 ref LightData l = ref _lights[i];
@@ -1423,6 +1427,23 @@ namespace ClassicUO.Game.Scenes
                 if (lightInfo.Texture == null)
                 {
                     continue;
+                }
+
+                // Gently modulate each light's intensity so it ebbs and flows like a
+                // candle. A per-light phase seed derived from its position keeps nearby
+                // lights out of sync, and blending two frequencies avoids an obvious
+                // pulse. The amplitude is intentionally small for a subtle effect.
+                if (candleFlicker)
+                {
+                    float seed = l.DrawX * 0.73f + l.DrawY * 1.31f;
+
+                    hue.Z = 1f
+                        + 0.06f * (float)Math.Sin(flickerTime * 3.1f + seed)
+                        + 0.03f * (float)Math.Sin(flickerTime * 7.7f + seed * 1.7f);
+                }
+                else
+                {
+                    hue.Z = 1f;
                 }
 
                 hue.X = l.Color;
