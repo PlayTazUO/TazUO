@@ -31,9 +31,6 @@ public class ScriptManagerWindow : MyraControl
 
     public static ScriptManagerWindow Instance { get; private set; }
 
-    private const int MIN_WIDTH  = 200;
-    private const int MIN_HEIGHT = 200;
-
     private readonly HashSet<string> _collapsedGroups = [];
     private bool _pendingReload = true;
     private string _searchFilter = "";
@@ -98,7 +95,7 @@ public class ScriptManagerWindow : MyraControl
     }
 
     // Restores the window's size and position from the profile (persisted in SqlProfile). Falls
-    // back to auto-sizing / centering for any dimension that has not been saved yet.
+    // back to auto-sizing / centering when a value has not been saved yet.
     private void RestoreWindowState()
     {
         Profile profile = ProfileManager.CurrentProfile;
@@ -106,26 +103,18 @@ public class ScriptManagerWindow : MyraControl
         // Size is persisted through the window's InitialSizeStore accessor so it also plays nicely
         // with the built-in resize/reset handling. The accessor reads/writes the profile below.
         _rootWindow.Props.InitialSizeStore = new Accessor<Point?>(
-            () =>
-            {
-                Profile p = ProfileManager.CurrentProfile;
-                if (p == null || p.ScriptManagerWindowWidth < MIN_WIDTH || p.ScriptManagerWindowHeight < MIN_HEIGHT)
-                    return null;
-                return new Point(p.ScriptManagerWindowWidth, p.ScriptManagerWindowHeight);
-            },
+            () => ProfileManager.CurrentProfile?.ScriptManagerWindowSize,
             value =>
             {
-                Profile p = ProfileManager.CurrentProfile;
-                if (p == null)
-                    return;
-                p.ScriptManagerWindowWidth  = value?.X ?? 0;
-                p.ScriptManagerWindowHeight = value?.Y ?? 0;
+                if (ProfileManager.CurrentProfile != null)
+                    ProfileManager.CurrentProfile.ScriptManagerWindowSize = value;
             });
 
         // Restore position, or center when it has never been saved. Persist future moves.
-        if (profile != null && profile.ScriptManagerWindowX >= 0 && profile.ScriptManagerWindowY >= 0)
+        Point? position = profile?.ScriptManagerWindowPosition;
+        if (position.HasValue)
         {
-            SetPosition(profile.ScriptManagerWindowX, profile.ScriptManagerWindowY);
+            SetPosition(position.Value.X, position.Value.Y);
             SetInScreen();
         }
         else
@@ -142,8 +131,7 @@ public class ScriptManagerWindow : MyraControl
         if (profile == null)
             return;
 
-        profile.ScriptManagerWindowX = _rootWindow.Left;
-        profile.ScriptManagerWindowY = _rootWindow.Top;
+        profile.ScriptManagerWindowPosition = new Point(_rootWindow.Left, _rootWindow.Top);
     }
 
     private void Build()

@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 using ClassicUO.Game;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Configuration;
 
@@ -402,21 +403,13 @@ public sealed partial class Profile
         [SqlSetting(SettingsScope.Global, "candle_flicker_lights", true)]
         public partial bool CandleFlickerLights { get; set; }
 
-        // Persisted size/position of the Legion Script Manager window. A width/height of 0 means
-        // "not set" (auto-size to content); an X/Y of -1 means "not set" (center on open).
+        // Persisted size/position of the Legion Script Manager window. A null value means
+        // "not set": no stored size auto-sizes to content, no stored position centers on open.
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "script_manager_window_width", 0)]
-        public partial int ScriptManagerWindowWidth { get; set; }
+        [SqlSetting(SettingsScope.Global, "script_manager_window_size")]
+        public partial Point? ScriptManagerWindowSize { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "script_manager_window_height", 0)]
-        public partial int ScriptManagerWindowHeight { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "script_manager_window_x", -1)]
-        public partial int ScriptManagerWindowX { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "script_manager_window_y", -1)]
-        public partial int ScriptManagerWindowY { get; set; }
+        [SqlSetting(SettingsScope.Global, "script_manager_window_position")]
+        public partial Point? ScriptManagerWindowPosition { get; set; }
 }

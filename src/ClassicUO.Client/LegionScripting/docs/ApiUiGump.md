@@ -37,7 +37,7 @@ description: ApiUiGump class documentation
 ---
 
 ### CreateModernGump
-`(x, y, width, height, resizable, minWidth, minHeight, onResized)`
+`(x, y, width, height, resizable, minWidth, minHeight, onResized, keepOpen)`
  Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
  The gump uses the standard modern UI panel texture and border size internally.
 
@@ -54,6 +54,7 @@ description: ApiUiGump class documentation
 | `minWidth` | `int` | ✅ Yes | Minimum width (default: 50) |
 | `minHeight` | `int` | ✅ Yes | Minimum height (default: 50) |
 | `onResized` | `object` | ✅ Yes | Optional callback function called when the gump is resized |
+| `keepOpen` | `bool` | ✅ Yes |  |
 
 **Return Type:** `ApiUiNineSliceGump`
 
