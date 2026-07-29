@@ -73,6 +73,18 @@ namespace ClassicUO.Game.Scenes
         private readonly LightData[] _lights = new LightData[
             LightsLoader.MAX_LIGHTS_DATA_INDEX_COUNT
         ];
+
+        // Per-frame map of opaque tiles that can occlude a light, keyed by their
+        // isometric "column" (X - Y). Tiles sharing a column project to the same screen
+        // X, so a light is hidden when a tall enough tile in its own column sits between
+        // it and the camera. Built once while the render list is assembled (see
+        // RecordLightOccluder) and queried in AddLight, this avoids scanning the map for
+        // every light every frame. Only the columns in view are kept live each frame;
+        // emptied buckets go back to the pool so roaming the map does not leak buckets.
+        private readonly Dictionary<int, List<LightOccluder>> _lightOccluders =
+            new Dictionary<int, List<LightOccluder>>();
+        private readonly Stack<List<LightOccluder>> _lightOccluderPool =
+            new Stack<List<LightOccluder>>();
         private Item _multi;
         private Rectangle _rectangleObj = Rectangle.Empty,
             _rectanglePlayer;
@@ -81,11 +93,13 @@ namespace ClassicUO.Game.Scenes
         private uint _timeToPlaceMultiInHouseCustomization;
         private const int MAX_TEXTURE_SIZE = 8192;
 
-        // Number of tiles to probe toward the camera when testing whether a light is
-        // occluded by taller terrain (mountains, cave walls) or statics. Larger values
-        // catch thicker occluders; the per-tile height threshold keeps distant tiles
-        // from over-occluding.
-        private const int LIGHT_OCCLUSION_DISTANCE = 5;
+        // Each tile step toward the camera lowers a light's on-screen position by roughly
+        // one tile (~11 z-units in UO's isometric projection), so an occluder d tiles in
+        // front must stand at least 11*d z-units above the light to cover it. The slop
+        // accounts for tile thickness so an adjacent (d = 1) tile only needs to be ~5
+        // units taller, matching the original single-tile behaviour.
+        private const int LIGHT_OCCLUSION_STEP = 11;
+        private const int LIGHT_OCCLUSION_SLOP = 6;
         private static PostProcessingType _filterMode = PostProcessingType.Point;
         private PostProcessingType _currentFilter;
         private Effect _postFx;
@@ -544,55 +558,29 @@ namespace ClassicUO.Game.Scenes
 
             bool canBeAdded = true;
 
-            // Walk several tiles toward the camera (south-east in UO's isometric
-            // projection) looking for a non-transparent tile tall enough to cover the
-            // light's on-screen position. Each tile step toward the camera lowers the
-            // screen position by roughly one tile (~11 z-units), so the height required
-            // to occlude the light grows with distance. Probing only the single adjacent
-            // tile (the original behaviour) let lights leak through multi-tile-thick
-            // mountains and cave walls, drawing the glow on top of the mountain above.
-            for (int d = 1; d <= LIGHT_OCCLUSION_DISTANCE && canBeAdded; d++)
+            // A light is occluded when a tall enough tile in its own isometric column
+            // (X - Y) stands between it and the camera. The occluder map is built each
+            // frame from the tiles that are actually drawn (RecordLightOccluder), so a
+            // multi-tile-thick mountain or cave wall in front of the light correctly
+            // hides it - including terrain (Land), which the map records. This replaces a
+            // per-light walk across the map with a single lookup down the light's column.
+            if (_lightOccluders.TryGetValue(obj.X - obj.Y, out List<LightOccluder> occluders))
             {
-                GameObject tile = _world.Map.GetTile(obj.X + d, obj.Y + d);
+                int lightX = obj.X;
+                int lightZ = obj.Z;
 
-                if (tile == null)
+                for (int i = 0; i < occluders.Count; i++)
                 {
-                    continue;
-                }
+                    LightOccluder o = occluders[i];
+                    int d = o.X - lightX;
 
-                int occludeZ = obj.Z + 5 + (d - 1) * 11;
-
-                for (GameObject o = tile; o != null; o = o.TNext)
-                {
-                    if (!o.AllowedToDraw)
+                    // Only tiles in front of the light (nearer the camera) can hide it.
+                    if (d <= 0)
                     {
                         continue;
                     }
 
-                    // Determine the height this tile occupies. Mountains and other terrain
-                    // are Land objects (not Static/Multi), so they must be considered here
-                    // or lights placed behind them leak through and draw on top of the
-                    // terrain. Stretched land uses its averaged height, matching how the
-                    // draw-sorting logic treats it.
-                    sbyte tileZ;
-
-                    if (o is Land land)
-                    {
-                        tileZ = land.IsStretched ? land.AverageZ : o.Z;
-                    }
-                    else if (
-                        o is Static s && !s.ItemData.IsTransparent
-                        || o is Multi m && !m.ItemData.IsTransparent
-                    )
-                    {
-                        tileZ = o.Z;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-
-                    if (tileZ < _maxZ && tileZ >= occludeZ)
+                    if (o.Z < _maxZ && o.Z - lightZ >= LIGHT_OCCLUSION_STEP * d - LIGHT_OCCLUSION_SLOP)
                     {
                         canBeAdded = false;
 
@@ -713,6 +701,16 @@ namespace ClassicUO.Game.Scenes
             _renderListAnimations.Clear();
             _renderListEffects.Clear();
             _renderListTransparentObjects.Clear();
+
+            // Recycle this frame's column buckets back to the pool so the map is rebuilt
+            // from scratch without churning through allocations as the player roams.
+            foreach (List<LightOccluder> bucket in _lightOccluders.Values)
+            {
+                bucket.Clear();
+                _lightOccluderPool.Push(bucket);
+            }
+
+            _lightOccluders.Clear();
 
             _foliageCount = 0;
 
@@ -1781,6 +1779,12 @@ namespace ClassicUO.Game.Scenes
             public bool IsHue;
             public int DrawX,
                 DrawY;
+        }
+
+        private struct LightOccluder
+        {
+            public int X;
+            public int Z;
         }
     }
 

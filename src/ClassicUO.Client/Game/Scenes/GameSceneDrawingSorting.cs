@@ -649,6 +649,8 @@ namespace ClassicUO.Game.Scenes
                 return;
             }
 
+            RecordLightOccluder(obj);
+
             // slow as fuck
             if (
                 allowSelection
@@ -678,6 +680,48 @@ namespace ClassicUO.Game.Scenes
             {
                 renderList.Add(obj);
             }
+        }
+
+        // Records a drawn tile as a potential light occluder, bucketed by its isometric
+        // column (X - Y). Only opaque surfaces matter: terrain (Land) - which is what
+        // mountains and cave walls are made of - plus non-transparent statics and multis.
+        // Stretched land uses its averaged height to match the draw-sorting logic.
+        // Queried by AddLight to hide lights sitting behind taller terrain.
+        private void RecordLightOccluder(GameObject obj)
+        {
+            if (!UseLights && !UseAltLights)
+            {
+                return;
+            }
+
+            int z;
+
+            if (obj is Land land)
+            {
+                z = land.IsStretched ? land.AverageZ : land.Z;
+            }
+            else if (obj is Static s && !s.ItemData.IsTransparent)
+            {
+                z = obj.Z;
+            }
+            else if (obj is Multi m && !m.ItemData.IsTransparent)
+            {
+                z = obj.Z;
+            }
+            else
+            {
+                return;
+            }
+
+            int column = obj.X - obj.Y;
+
+            if (!_lightOccluders.TryGetValue(column, out List<LightOccluder> bucket))
+            {
+                bucket = _lightOccluderPool.Count > 0 ? _lightOccluderPool.Pop() : new List<LightOccluder>();
+                _lightOccluders[column] = bucket;
+            }
+
+            bucket.Add(new LightOccluder { X = obj.X, Z = z });
         }
 
         private unsafe bool AddTileToRenderList(
