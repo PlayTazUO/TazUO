@@ -387,15 +387,15 @@ public sealed partial class Profile
         public partial string AutoSkinningKnifeGraphics { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "auto_skinning_human_corpses", false)]
+        [SqlSetting(SettingsScope.Char, "auto_skinning_human_corpses", false)]
         public partial bool AutoSkinningHumanCorpses { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "enable_auto_skinning", false)]
+        [SqlSetting(SettingsScope.Char, "enable_auto_skinning", false)]
         public partial bool EnableAutoSkinning { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "auto_loot_human_corpses", false)]
+        [SqlSetting(SettingsScope.Char, "auto_loot_human_corpses", false)]
         public partial bool AutoLootHumanCorpses { get; set; }
 
         // When true, in-game lights gently ebb and flow like a mild candle flame.
@@ -406,10 +406,10 @@ public sealed partial class Profile
         // Persisted size/position of the Legion Script Manager window. A null value means
         // "not set": no stored size auto-sizes to content, no stored position centers on open.
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "script_manager_window_size")]
+        [SqlSetting(SettingsScope.Char, "script_manager_window_size")]
         public partial Point? ScriptManagerWindowSize { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "script_manager_window_position")]
+        [SqlSetting(SettingsScope.Char, "script_manager_window_position")]
         public partial Point? ScriptManagerWindowPosition { get; set; }
 }
