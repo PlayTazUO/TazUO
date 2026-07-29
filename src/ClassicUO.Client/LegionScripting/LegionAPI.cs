@@ -129,6 +129,14 @@ namespace ClassicUO.LegionScripting
                 {
                     CallbackChannel.Invoke(callback, args);
                 }
+                catch (OperationCanceledException)
+                {
+                    // Expected when the callback stops the script
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // Expected when the script is being stopped
+                }
                 catch (Exception ex)
                 {
                     Log.Warn($"Script callback error: {ex}");
@@ -213,6 +221,14 @@ namespace ClassicUO.LegionScripting
                 try
                 {
                     CallbackChannel.Invoke(callback);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected when the callback stops the script
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // Expected when the script is being stopped
                 }
                 catch (Exception ex)
                 {
