@@ -88,7 +88,6 @@ namespace ClassicUO.LegionScripting
 
         private T OnMain<T>(Func<T> func) => MainThreadQueue.InvokeOnMainThread(func, CancellationToken.Token);
         private void OnMain(Action action) => MainThreadQueue.InvokeOnMainThread(action, CancellationToken.Token);
-        private void EnqueueMain(Action action) => MainThreadQueue.EnqueueAction(action, CancellationToken.Token);
         private T BubblingOnMain<T>(Func<T> func) => MainThreadQueue.BubblingInvokeOnMainThread(func, CancellationToken.Token);
 
         #endregion
