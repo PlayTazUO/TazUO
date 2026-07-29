@@ -61,8 +61,16 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="minHeight">Minimum height (default: 50)</param>
     /// <param name="onResized">Optional callback function called when the gump is resized</param>
     /// <returns>A ApiUiNineSliceGump wrapper containing the nine-slice gump control</returns>
-    public ApiUiNineSliceGump CreateModernGump(int x, int y, int width, int height, bool resizable = true, int minWidth = 50, int minHeight = 50, object onResized = null) => 
-        OnMain(() => new ApiUiNineSliceGump(api, x, y, width, height, resizable, minWidth, minHeight, onResized));
+    public ApiUiNineSliceGump CreateModernGump(int x, int y, int width, int height, bool resizable = true, int minWidth = 50, int minHeight = 50, object onResized = null, bool keepOpen = false) => 
+        OnMain(() =>
+        {
+            var g = new ApiUiNineSliceGump(api, x, y, width, height, resizable, minWidth, minHeight, onResized);
+
+            if (!keepOpen)
+                api._gumps.Add(g.Gump);
+
+            return g;
+        });
 
     /// <summary>
     /// Add a gump to the players screen.
