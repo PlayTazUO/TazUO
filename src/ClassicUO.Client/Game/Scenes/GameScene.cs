@@ -80,6 +80,12 @@ namespace ClassicUO.Game.Scenes
 
         private uint _timeToPlaceMultiInHouseCustomization;
         private const int MAX_TEXTURE_SIZE = 8192;
+
+        // Number of tiles to probe toward the camera when testing whether a light is
+        // occluded by taller terrain (mountains, cave walls). Larger values catch
+        // thicker occluders; the per-tile height threshold keeps distant tiles from
+        // over-occluding.
+        private const int LIGHT_OCCLUSION_DISTANCE = 4;
         private static PostProcessingType _filterMode = PostProcessingType.Point;
         private PostProcessingType _currentFilter;
         private Effect _postFx;
@@ -538,14 +544,23 @@ namespace ClassicUO.Game.Scenes
 
             bool canBeAdded = true;
 
-            int testX = obj.X + 1;
-            int testY = obj.Y + 1;
-
-            GameObject tile = _world.Map.GetTile(testX, testY);
-
-            if (tile != null)
+            // Walk several tiles toward the camera (south-east in UO's isometric
+            // projection) looking for a non-transparent tile tall enough to cover the
+            // light's on-screen position. Each tile step toward the camera lowers the
+            // screen position by roughly one tile (~11 z-units), so the height required
+            // to occlude the light grows with distance. Probing only the single adjacent
+            // tile (the original behaviour) let lights leak through multi-tile-thick
+            // mountains and cave walls, drawing the glow on top of the mountain above.
+            for (int d = 1; d <= LIGHT_OCCLUSION_DISTANCE && canBeAdded; d++)
             {
-                sbyte z5 = (sbyte)(obj.Z + 5);
+                GameObject tile = _world.Map.GetTile(obj.X + d, obj.Y + d);
+
+                if (tile == null)
+                {
+                    continue;
+                }
+
+                int occludeZ = obj.Z + 5 + (d - 1) * 11;
 
                 for (GameObject o = tile; o != null; o = o.TNext)
                 {
@@ -558,7 +573,7 @@ namespace ClassicUO.Game.Scenes
                         continue;
                     }
 
-                    if (o.Z < _maxZ && o.Z >= z5)
+                    if (o.Z < _maxZ && o.Z >= occludeZ)
                     {
                         canBeAdded = false;
 
