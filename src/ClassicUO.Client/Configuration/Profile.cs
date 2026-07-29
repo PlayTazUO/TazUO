@@ -286,7 +286,6 @@ namespace ClassicUO.Configuration
         public int LightLevelType { get; set => SetProperty(ref field, value); } // 0 = absolute, 1 = minimum
         public bool UseColoredLights { get; set => SetProperty(ref field, value); } = true;
         public bool UseDarkNights { get; set => SetProperty(ref field, value); }
-        public bool CandleFlickerLights { get; set => SetProperty(ref field, value); } = true;
         public int CloseHealthBarType { get; set => SetProperty(ref field, value); } = 2; // 0 = none, 1 == not exists, 2 == is dead
         public bool ActivateChatAfterEnter { get; set => SetProperty(ref field, value); }
         public bool ActivateChatAdditionalButtons { get; set => SetProperty(ref field, value); } = true;
