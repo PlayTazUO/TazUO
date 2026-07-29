@@ -396,4 +396,9 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "auto_loot_human_corpses", false)]
         public partial bool AutoLootHumanCorpses { get; set; }
+
+        // When true, in-game lights gently ebb and flow like a mild candle flame.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "candle_flicker_lights", true)]
+        public partial bool CandleFlickerLights { get; set; }
 }
