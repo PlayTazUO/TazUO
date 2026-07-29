@@ -107,6 +107,10 @@ namespace ClassicUO
             Task<bool> skipServerSelectTask = Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.SKIP_SERVER_SELECTION, false);
 
             TazLang.Load(Settings.GlobalSettings.UILanguage);
+
+            // This provides Myra searchable combobox localization context.
+            // Basically, it allows for better developer ergonomics by negating the need to manually
+            // set localize string like tooltips, hints, etc. for every usage.
             Game.UI.MyraWindows.Widgets.Search.SearchableComboBoxLocalization.Install();
 
             string clientPath = Settings.GlobalSettings.UltimaOnlineDirectory;
