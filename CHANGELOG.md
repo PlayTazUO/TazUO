@@ -14,7 +14,8 @@ All notable changes to TazUO will be recorded here.
 * Counter bar cells can now hold any spell bar action (spell, macro, weapon ability, script, or skill) in addition to item counters, with per-cell hotkeys (via the shared hotkey window), optional keybind labels, active-ability highlighting, and a hotkey-press flash - [P.R 812](https://github.com/PlayTazUO/TazUO/pull/812) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
-* Removed the Camera Smoothing option; the camera now always stays locked on the player (the smoothing effect caused the camera to lag behind the player) ([bittiez](https://github.com/bittiez))
+* Fixed InvalidCastException in DelayedObjectClickManager.Update - [P.R 831](https://github.com/PlayTazUO/TazUO/pull/831) ([bittiez](https://github.com/bittiez))
+* Removed the Camera Smoothing option; the camera now always stays locked on the player (the smoothing effect caused the camera to lag behind the player) - ([bittiez](https://github.com/bittiez))
 * Hotkey input window doesn't loose keys when releasing them ([bittiez](https://github.com/bittiez))
 * Fixed a journal crash (`InvalidOperation_EnumFailedVersion`) caused by a race while checking the top-most gump for inactive transparency - [P.R 822](https://github.com/PlayTazUO/TazUO/pull/822) ([bittiez](https://github.com/bittiez))
 * Fixed several bandage agent bugs: a client crash from the retry timer touching game state off the main thread, a duplicate bandage in "check for buff" mode, a stuck bandaging buff that could disable healing, and the retry timer spinning indefinitely for un-healable targets - [P.R 826](https://github.com/PlayTazUO/TazUO/pull/826) ([bittiez](https://github.com/bittiez))
