@@ -17,6 +17,7 @@ All notable changes to TazUO will be recorded here.
 * Hotkey input window doesn't loose keys when releasing them ([bittiez](https://github.com/bittiez))
 * Fixed a journal crash (`InvalidOperation_EnumFailedVersion`) caused by a race while checking the top-most gump for inactive transparency - [P.R 822](https://github.com/PlayTazUO/TazUO/pull/822) ([bittiez](https://github.com/bittiez))
 * Fixed several bandage agent bugs: a client crash from the retry timer touching game state off the main thread, a duplicate bandage in "check for buff" mode, a stuck bandaging buff that could disable healing, and the retry timer spinning indefinitely for un-healable targets - [P.R 826](https://github.com/PlayTazUO/TazUO/pull/826) ([bittiez](https://github.com/bittiez))
+* Reworked the bandage agent to drive its heal retries from the game update loop instead of a background timer, removing the timer/thread-marshaling complexity and making healing more consistent - [P.R 829](https://github.com/PlayTazUO/TazUO/pull/829) ([bittiez](https://github.com/bittiez))
 
 ## V5.17.7
 
