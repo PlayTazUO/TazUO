@@ -4,9 +4,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Network;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using ClassicUO.Utility.Logging;
-using Lock = System.Threading.Lock;
 
 namespace ClassicUO.Game.Managers
 {
@@ -25,16 +23,18 @@ namespace ClassicUO.Game.Managers
 
         private long _nextBandageTime = 0;
         private long _bandagingBuffSetTime = 0;
+        private long _nextRetryTime = 0;
         private readonly LinkedList<uint> _pendingHeals = new();
         private readonly HashSet<uint> _enqueuedInGlobalQueue = new();
         private readonly Dictionary<uint, long> _retryDeadlines = new();
-        private readonly Lock _queueLock = new();
-        private Timer _retryTimer;
+
+        // How often the pending heal queue is re-checked from Update(). Update() runs
+        // every frame, so this throttles the re-check cadence to keep it lightweight.
         private const int RETRY_INTERVAL_MS = 100;
 
         // Upper bound on how long a single mobile is kept in the retry queue while it
         // can't actually be healed (e.g. permanently out of range and HP not changing),
-        // so we don't spin the retry timer forever. Reset whenever a heal is attempted.
+        // so we don't re-queue it forever. Reset whenever a heal is attempted.
         private const long MAX_RETRY_DURATION_MS = 30_000;
 
         // Safety net in case a buff-removed event is ever missed: treat the bandaging
@@ -110,7 +110,6 @@ namespace ClassicUO.Game.Managers
                 {
                     _nextBandageTime = 0;
                     HasBandagingBuff = false;
-                    VerifyTimer();
                     return;
                 }
             }
@@ -145,7 +144,7 @@ namespace ClassicUO.Game.Managers
         }
 
         /// <summary>
-        /// Schedules a retry
+        /// Queues a mobile to be re-checked for healing on a later Update().
         /// </summary>
         private void ScheduleRetry(uint mobileSerial)
         {
@@ -153,86 +152,66 @@ namespace ClassicUO.Game.Managers
 
             uint playerSerial = World.Instance?.Player?.Serial ?? 0;
 
-            lock (_queueLock)
+            if (!_pendingHeals.Contains(mobileSerial))
             {
-                if (!_pendingHeals.Contains(mobileSerial))
-                {
-                    if (mobileSerial == playerSerial)
-                        _pendingHeals.AddFirst(mobileSerial);
-                    else
-                        _pendingHeals.AddLast(mobileSerial);
-                }
-
-                if (!_retryDeadlines.ContainsKey(mobileSerial))
-                    _retryDeadlines[mobileSerial] = Time.Ticks + MAX_RETRY_DURATION_MS;
+                if (mobileSerial == playerSerial)
+                    _pendingHeals.AddFirst(mobileSerial);
+                else
+                    _pendingHeals.AddLast(mobileSerial);
             }
 
-            VerifyTimer();
-        }
-
-        private void VerifyTimer()
-        {
-            lock (_queueLock)
-            {
-                if (!IsEnabled || _pendingHeals.Count == 0)
-                {
-                    DestroyTimer();
-                    return;
-                }
-                _retryTimer ??= new Timer(ProcessRetryQueue, null, RETRY_INTERVAL_MS, RETRY_INTERVAL_MS);
-            }
-        }
-
-        private void DestroyTimer()
-        {
-            _retryTimer?.Dispose();
-            _retryTimer = null;
+            if (!_retryDeadlines.ContainsKey(mobileSerial))
+                _retryDeadlines[mobileSerial] = Time.Ticks + MAX_RETRY_DURATION_MS;
         }
 
         /// <summary>
-        /// Timer callback to process the retry queue. The timer fires on a threadpool
-        /// thread, but healing reads and mutates game state, so the actual work is
-        /// marshaled onto the main thread.
+        /// Driven from GameScene.Update(). Runs on the main thread, so no locking or
+        /// thread marshaling is needed. Re-checks a single pending heal per interval so
+        /// mobiles that couldn't be healed immediately (distance, timing, no bandages)
+        /// are retried without a background timer.
         /// </summary>
-        private void ProcessRetryQueue(object state)
+        public void Update()
         {
-            MainThreadQueue.EnqueueAction(ProcessRetryQueueMainThread);
+            if (!IsEnabled)
+            {
+                if (_pendingHeals.Count > 0 || _enqueuedInGlobalQueue.Count > 0 || _retryDeadlines.Count > 0)
+                    ClearAllPendingHeals();
+                return;
+            }
+
+            if (_pendingHeals.Count == 0)
+                return;
+
+            if (Time.Ticks < _nextRetryTime)
+                return;
+
+            _nextRetryTime = Time.Ticks + RETRY_INTERVAL_MS;
+
+            ProcessPendingHeals();
         }
 
         /// <summary>
-        /// Processes a single pending heal on the main thread.
+        /// Processes a single pending heal. Always called on the main thread from Update().
         /// </summary>
-        private void ProcessRetryQueueMainThread()
+        private void ProcessPendingHeals()
         {
             try
             {
-                if (!IsEnabled)
-                {
-                    ClearAllPendingHeals();
-                    return;
-                }
-
                 PlayerMobile player = World.Instance?.Player;
                 if (player == null)
                     return; // Not in game yet (login/logout/world load); keep the queue and retry later.
 
-                // Drop anything that has been un-healable for too long so the timer
-                // can eventually stop spinning (e.g. no bandages, or a stuck target).
+                // Drop anything that has been un-healable for too long (e.g. no bandages,
+                // or a stuck target) so the queue doesn't keep re-checking it forever.
                 PruneExpiredRetries();
 
                 if (FindBandage() == null)
                     return; // Return early if we don't have bandages..
 
-                uint serial;
+                if (_pendingHeals.Count == 0) return;
 
-                // Safely get and remove the first item from the queue
-                lock (_queueLock)
-                {
-                    if (_pendingHeals.Count == 0) return;
-
-                    serial = _pendingHeals.First.Value;
-                    _pendingHeals.RemoveFirst();
-                }
+                uint serial = _pendingHeals.First.Value;
+                _pendingHeals.RemoveFirst();
 
                 Mobile mobile = World.Instance?.Mobiles?.Get(serial);
                 if (ShouldAttemptHeal(mobile))
@@ -248,16 +227,12 @@ namespace ClassicUO.Game.Managers
                 else
                 {
                     // Recovered, no longer a valid target, or retry window elapsed - stop tracking.
-                    lock (_queueLock) _retryDeadlines.Remove(serial);
+                    _retryDeadlines.Remove(serial);
                 }
             }
             catch (Exception e)
             {
                 Log.Error($"BandageManager failed while processing the heal retry queue: {e}");
-            }
-            finally
-            {
-                VerifyTimer();
             }
         }
 
@@ -266,32 +241,28 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private bool IsRetryExpired(uint serial)
         {
-            lock (_queueLock)
-                return _retryDeadlines.TryGetValue(serial, out long deadline) && Time.Ticks >= deadline;
+            return _retryDeadlines.TryGetValue(serial, out long deadline) && Time.Ticks >= deadline;
         }
 
         /// <summary>
-        /// Removes queued heals whose retry window has elapsed so the retry timer
-        /// doesn't spin indefinitely for targets that can never be healed.
+        /// Removes queued heals whose retry window has elapsed so we don't keep
+        /// re-checking targets that can never be healed.
         /// </summary>
         private void PruneExpiredRetries()
         {
-            lock (_queueLock)
-            {
-                if (_pendingHeals.Count == 0) return;
+            if (_pendingHeals.Count == 0) return;
 
-                long now = Time.Ticks;
-                LinkedListNode<uint> node = _pendingHeals.First;
-                while (node != null)
+            long now = Time.Ticks;
+            LinkedListNode<uint> node = _pendingHeals.First;
+            while (node != null)
+            {
+                LinkedListNode<uint> next = node.Next;
+                if (_retryDeadlines.TryGetValue(node.Value, out long deadline) && now >= deadline)
                 {
-                    LinkedListNode<uint> next = node.Next;
-                    if (_retryDeadlines.TryGetValue(node.Value, out long deadline) && now >= deadline)
-                    {
-                        _pendingHeals.Remove(node);
-                        _retryDeadlines.Remove(node.Value);
-                    }
-                    node = next;
+                    _pendingHeals.Remove(node);
+                    _retryDeadlines.Remove(node.Value);
                 }
+                node = next;
             }
         }
 
@@ -394,13 +365,11 @@ namespace ClassicUO.Game.Managers
             }
 
             // A heal is being attempted, so refresh the retry deadline for this mobile.
-            lock (_queueLock) _retryDeadlines[mobile.Serial] = Time.Ticks + MAX_RETRY_DURATION_MS;
+            _retryDeadlines[mobile.Serial] = Time.Ticks + MAX_RETRY_DURATION_MS;
 
             // Only enqueue if not already in the global priority queue
-            bool shouldEnqueue;
-            lock (_queueLock) shouldEnqueue = _enqueuedInGlobalQueue.Add(mobile.Serial);
-
-            if (shouldEnqueue) ObjectActionQueue.Instance.Enqueue(new ObjectActionQueueItem(() => ExecuteHealMobile(mobile)), ActionPriority.Immediate);
+            if (_enqueuedInGlobalQueue.Add(mobile.Serial))
+                ObjectActionQueue.Instance.Enqueue(new ObjectActionQueueItem(() => ExecuteHealMobile(mobile)), ActionPriority.Immediate);
 
             // Keep the mobile queued so we re-check until IsHealCandidate is false, even if no HP-change packet arrives.
             ScheduleRetry(mobile.Serial);
@@ -409,7 +378,7 @@ namespace ClassicUO.Game.Managers
         private void ExecuteHealMobile(Mobile mobile)
         {
             // Remove from tracking set now that we're executing
-            lock (_queueLock) _enqueuedInGlobalQueue.Remove(mobile.Serial);
+            _enqueuedInGlobalQueue.Remove(mobile.Serial);
 
             if (World.Instance == null || World.Instance.Player == null || mobile == null)
                 return;
@@ -471,18 +440,13 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private void ClearAllPendingHeals()
         {
-            lock (_queueLock)
-            {
-                _pendingHeals.Clear();
-                _enqueuedInGlobalQueue.Clear();
-                _retryDeadlines.Clear();
-            }
-            DestroyTimer();
+            _pendingHeals.Clear();
+            _enqueuedInGlobalQueue.Clear();
+            _retryDeadlines.Clear();
         }
 
         public void Dispose()
         {
-            DestroyTimer();
             ClearAllPendingHeals();
             EventSink.OnBuffAddedInternal -= OnBuffAdded;
             EventSink.OnBuffRemovedInternal -= OnBuffRemoved;
