@@ -16,7 +16,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Mobile mobile = World.Mobiles.Get(inviter);
 
-            int nameWidthAdjustment = mobile == null || mobile.Name.Length < 10 ? 0 : mobile.Name.Length * 5;
+            int nameWidthAdjustment = mobile == null || string.IsNullOrEmpty(mobile.Name) || mobile.Name.Length < 10 ? 0 : mobile.Name.Length * 5;
 
             var partyGumpBackground = new AlphaBlendControl
             {
