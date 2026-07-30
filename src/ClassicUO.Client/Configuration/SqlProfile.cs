@@ -331,10 +331,6 @@ public sealed partial class Profile
         public partial double PaperdollScale { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "camera_smoothing_factor", 0f)]
-        public partial float CameraSmoothingFactor { get; set; }
-
-        [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "hide_layers_for_self", true)]
         public partial bool HideLayersForSelf { get; set; }
 
