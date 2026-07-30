@@ -31,7 +31,7 @@ namespace ClassicUO.Game.Managers
 
             if (entity != null)
             {
-                if (!_world.ClientFeatures.TooltipsEnabled || SerialHelper.IsItem(Serial) && ((Item) entity).IsLocked && ((Item) entity).ItemData.Weight == 255 && !((Item) entity).ItemData.IsContainer)
+                if (!_world.ClientFeatures.TooltipsEnabled || (entity is Item item && item.IsLocked && item.ItemData.Weight == 255 && !item.ItemData.IsContainer))
                 {
                     GameActions.SingleClick(_world, Serial);
                 }
