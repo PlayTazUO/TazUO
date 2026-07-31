@@ -31,22 +31,23 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="canMove">Allow the player to move this gump</param>
     /// <param name="keepOpen">If true, the gump won't be closed if the script stops. Otherwise, it will be closed when the script is stopped. Defaults to false.</param>
     /// <returns>A new, empty gump</returns>
-    public ApiUiBaseGump CreateGump(bool acceptMouseInput = true, bool canMove = true, bool keepOpen = false)
-    {
-        var g = new Gump(api.World, 0, 0)
+    public ApiUiBaseGump CreateGump(bool acceptMouseInput = true, bool canMove = true, bool keepOpen = false) =>
+        OnMain(() =>
         {
-            AcceptMouseInput = acceptMouseInput,
-            CanMove = canMove,
-            WantUpdateSize = true
-        };
+            var g = new Gump(api.World, 0, 0)
+            {
+                AcceptMouseInput = acceptMouseInput,
+                CanMove = canMove,
+                WantUpdateSize = true
+            };
 
-        ApiUiBaseGump apiUiGump = new(g);
+            ApiUiBaseGump apiUiGump = new(g);
 
-        if (!keepOpen)
-            api._gumps.Add(g);
+            if (!keepOpen)
+                api._gumps.Add(g);
 
-        return apiUiGump;
-    }
+            return apiUiGump;
+        });
 
     /// <summary>
     /// Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
