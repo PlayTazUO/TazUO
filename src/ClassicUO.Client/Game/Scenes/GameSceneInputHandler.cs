@@ -423,6 +423,26 @@ namespace ClassicUO.Game.Scenes
             return false;
         }
 
+        /// <summary>
+        /// Pulls keyboard focus away from any other input field (search boxes, Myra windows, etc.)
+        /// when the game world is clicked and hands it back to the system chat. When chat input is
+        /// inactive/disabled, focus is simply cleared so nothing keeps capturing keystrokes. This lets
+        /// the player click the game to escape a text field instead of having to press Esc or click chat.
+        /// </summary>
+        private static void RestoreFocusFromWorldClick()
+        {
+            SystemChatControl chat = UIManager.SystemChat;
+
+            // Already resting on the chat input (or chat doesn't exist) - nothing to steal focus from.
+            if (chat == null || UIManager.KeyboardFocusControl == chat.TextBoxControl)
+            {
+                return;
+            }
+
+            UIManager.KeyboardFocusControl = null;
+            chat.SetFocus();
+        }
+
         private bool OnLeftMouseDown()
         {
             if (
@@ -437,6 +457,10 @@ namespace ClassicUO.Game.Scenes
             {
                 return false;
             }
+
+            // Drop focus from other inputs the instant the world is pressed, not just on release,
+            // so a press-and-hold (e.g. hold-to-walk) also releases the previously focused field.
+            RestoreFocusFromWorldClick();
 
             if (_world.CustomHouseManager != null)
             {
@@ -540,11 +564,7 @@ namespace ClassicUO.Game.Scenes
                 return false;
             }
 
-            if (UIManager.SystemChat != null && !UIManager.SystemChat.IsFocused)
-            {
-                UIManager.KeyboardFocusControl = null;
-                UIManager.SystemChat.SetFocus();
-            }
+            RestoreFocusFromWorldClick();
 
             if (!ProfileManager.CurrentProfile.DisableAutoMove && _rightMousePressed)
             {
