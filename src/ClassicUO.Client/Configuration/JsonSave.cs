@@ -221,23 +221,12 @@ namespace ClassicUO.Configuration
         private string GetBackupPath(int index) => Path.Combine(BackupDirectory, $"{FileName}.{index}");
 
         /// <summary>
-        /// Acquires a lock guarding this file. Global-scope files live in the shared <c>Data</c> folder and can
-        /// be accessed by multiple client instances at once, so they are protected with a cross-process named
-        /// mutex. Other scopes are effectively per-instance and use a no-op lock.
+        /// Acquires a cross-process lock guarding this file. A save can be touched by multiple client
+        /// instances at once regardless of scope - Global files share the <c>Data</c> folder, but Server/
+        /// Account/Char files can also collide when the same server/account/character is logged in from more
+        /// than one client - so every scope is protected with a named mutex keyed on the file path.
         /// </summary>
-        private IDisposable AcquireLock()
-        {
-            if (Scope != SettingsScope.Global)
-                return NullLock.Instance;
-
-            return new CrossProcessLock(FilePath);
-        }
-
-        private sealed class NullLock : IDisposable
-        {
-            public static readonly NullLock Instance = new NullLock();
-            public void Dispose() { }
-        }
+        private IDisposable AcquireLock() => new CrossProcessLock(FilePath);
 
         private sealed class CrossProcessLock : IDisposable
         {
