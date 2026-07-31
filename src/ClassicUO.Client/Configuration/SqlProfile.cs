@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 using ClassicUO.Game;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Configuration;
 
@@ -330,10 +331,6 @@ public sealed partial class Profile
         public partial double PaperdollScale { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "camera_smoothing_factor", 0f)]
-        public partial float CameraSmoothingFactor { get; set; }
-
-        [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "hide_layers_for_self", true)]
         public partial bool HideLayersForSelf { get; set; }
 
@@ -386,19 +383,29 @@ public sealed partial class Profile
         public partial string AutoSkinningKnifeGraphics { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "auto_skinning_human_corpses", false)]
+        [SqlSetting(SettingsScope.Char, "auto_skinning_human_corpses", false)]
         public partial bool AutoSkinningHumanCorpses { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "enable_auto_skinning", false)]
+        [SqlSetting(SettingsScope.Char, "enable_auto_skinning", false)]
         public partial bool EnableAutoSkinning { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "auto_loot_human_corpses", false)]
+        [SqlSetting(SettingsScope.Char, "auto_loot_human_corpses", false)]
         public partial bool AutoLootHumanCorpses { get; set; }
 
         // When true, in-game lights gently ebb and flow like a mild candle flame.
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "candle_flicker_lights", true)]
         public partial bool CandleFlickerLights { get; set; }
+
+        // Persisted size/position of the Legion Script Manager window. A null value means
+        // "not set": no stored size auto-sizes to content, no stored position centers on open.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "script_manager_window_size")]
+        public partial Point? ScriptManagerWindowSize { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "script_manager_window_position")]
+        public partial Point? ScriptManagerWindowPosition { get; set; }
 }

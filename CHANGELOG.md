@@ -8,15 +8,25 @@ All notable changes to TazUO will be recorded here.
 * Added `API.ActiveSpells()`, `API.ActiveSpellNames()` and `API.IsSpellActive(spell)` so scripts can see which toggle spells/moves are currently active (the same ones the spell bar highlights) ([bittiez](https://github.com/bittiez))
 
 ### Features
+* The Legion Script Manager window now remembers its size and position and restores them when reopened - [P.R 828](https://github.com/PlayTazUO/TazUO/pull/828) ([bittiez](https://github.com/bittiez))
 * Added an optional candle flicker effect that makes lights gently ebb and flow (enabled by default, toggle under Video > Lighting) - [P.R 824](https://github.com/PlayTazUO/TazUO/pull/824) ([bittiez](https://github.com/bittiez))
 * Added optional FSR shader to post processing effects - [P.R 821](https://github.com/PlayTazUO/TazUO/pull/821) ([bittiez](https://github.com/bittiez))
 * Assistant Macros tab action selector is now searchable (Searchable Combobox support) - [P.R 823](https://github.com/PlayTazUO/TazUO/pull/823) ([yuval-po](https://github.com/yuval-po))
 * Counter bar cells can now hold any spell bar action (spell, macro, weapon ability, script, or skill) in addition to item counters, with per-cell hotkeys (via the shared hotkey window), optional keybind labels, active-ability highlighting, and a hotkey-press flash - [P.R 812](https://github.com/PlayTazUO/TazUO/pull/812) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Added a suggested crash fix for "Bad uop file" errors, explaining that a `.uop` data file is corrupt, truncated, or mid-patch and how to resolve it - [P.R 841](https://github.com/PlayTazUO/TazUO/pull/841) ([bittiez](https://github.com/bittiez))
+* Guarded the remaining LegionAPI/ApiUiGump methods that touched the game world, UI manager, or gump controls off the main thread, fixing a double-free malloc crash caused by Legion scripts racing with the main thread - [P.R 836](https://github.com/PlayTazUO/TazUO/pull/836) ([bittiez](https://github.com/bittiez))
+* Fixed NullReferenceException in Chunk.Destroy when Node is null - [P.R 835](https://github.com/PlayTazUO/TazUO/pull/835) ([bittiez](https://github.com/bittiez))
+* Fixed a client crash from oversized font sizes overflowing the font texture atlas ("Could not add rect to the newly created atlas") - [P.R 834](https://github.com/PlayTazUO/TazUO/pull/834) ([bittiez](https://github.com/bittiez))
+* Better light handling for lights under ground - [P.R 825](https://github.com/PlayTazUO/TazUO/pull/825) ([bittiez](https://github.com/bittiez))
+* Fixed NullReferenceException in PartyInviteGump when inviter name is null - [P.R 832](https://github.com/PlayTazUO/TazUO/pull/832) ([bittiez](https://github.com/bittiez))
+* Fixed InvalidCastException in DelayedObjectClickManager.Update - [P.R 831](https://github.com/PlayTazUO/TazUO/pull/831) ([bittiez](https://github.com/bittiez))
+* Removed the Camera Smoothing option; the camera now always stays locked on the player (the smoothing effect caused the camera to lag behind the player) - ([bittiez](https://github.com/bittiez))
 * Hotkey input window doesn't loose keys when releasing them ([bittiez](https://github.com/bittiez))
 * Fixed a journal crash (`InvalidOperation_EnumFailedVersion`) caused by a race while checking the top-most gump for inactive transparency - [P.R 822](https://github.com/PlayTazUO/TazUO/pull/822) ([bittiez](https://github.com/bittiez))
 * Fixed several bandage agent bugs: a client crash from the retry timer touching game state off the main thread, a duplicate bandage in "check for buff" mode, a stuck bandaging buff that could disable healing, and the retry timer spinning indefinitely for un-healable targets - [P.R 826](https://github.com/PlayTazUO/TazUO/pull/826) ([bittiez](https://github.com/bittiez))
+* Reworked the bandage agent to drive its heal retries from the game update loop instead of a background timer, removing the timer/thread-marshaling complexity and making healing more consistent - [P.R 829](https://github.com/PlayTazUO/TazUO/pull/829) ([bittiez](https://github.com/bittiez))
 
 ## V5.17.7
 

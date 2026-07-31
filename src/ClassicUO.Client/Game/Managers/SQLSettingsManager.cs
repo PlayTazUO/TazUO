@@ -172,18 +172,10 @@ namespace ClassicUO.Game.Managers
                     return (T)(object)double.Parse(value);
 
                 if (type == typeof(Point))
-                {
-                    // Point.ToString() produces a string in the form "{X:5 Y:10}"
-                    Match match = PointRegex.Match(value);
-                    if (match.Success)
-                    {
-                        return (T)(object)new Point(
-                            int.Parse(match.Groups["X"].Value),
-                            int.Parse(match.Groups["Y"].Value));
-                    }
+                    return TryParsePoint(value, out Point point) ? (T)(object)point : defaultValue;
 
-                    return defaultValue;
-                }
+                if (type == typeof(Point?))
+                    return TryParsePoint(value, out Point nPoint) ? (T)(object)(Point?)nPoint : defaultValue;
 
                 return defaultValue;
             }
@@ -191,6 +183,29 @@ namespace ClassicUO.Game.Managers
             {
                 return defaultValue;
             }
+        }
+
+        /// <summary>
+        /// Parses a <see cref="Point"/> from its <see cref="Point.ToString"/> representation
+        /// (e.g. "{X:5 Y:10}"). Used both by <see cref="ParseValue{T}"/> and by the generated
+        /// SQL-setting loaders for [SqlSetting] properties typed as <see cref="Point"/>/<see cref="Point"/>?.
+        /// </summary>
+        public static bool TryParsePoint(string value, out Point point)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                Match match = PointRegex.Match(value);
+                if (match.Success &&
+                    int.TryParse(match.Groups["X"].Value, out int x) &&
+                    int.TryParse(match.Groups["Y"].Value, out int y))
+                {
+                    point = new Point(x, y);
+                    return true;
+                }
+            }
+
+            point = default;
+            return false;
         }
 
         private string GetScopeKey(SettingsScope scope)

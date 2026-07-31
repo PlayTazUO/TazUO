@@ -157,6 +157,8 @@ namespace ClassicUO.Configuration
                 case "float":
                 case "double":
                 case "string":
+                case "Point":
+                case "Point?":
                     return true;
                 default:
                     return false;
@@ -217,6 +219,9 @@ namespace ClassicUO.Configuration
                 case "ulong":  return $"ulong.TryParse({rawVar}, out ulong {varName})";
                 case "float":  return $"float.TryParse({rawVar}, out float {varName})";
                 case "double": return $"double.TryParse({rawVar}, out double {varName})";
+                // Point.ToString() round-trips through the SQL store; the manager exposes a parser.
+                case "Point":
+                case "Point?": return $"ClassicUO.Game.Managers.SQLSettingsManager.TryParsePoint({rawVar}, out var {varName})";
                 case "string": return null; // no TryParse needed
                 default:       return null;
             }
@@ -228,6 +233,10 @@ namespace ClassicUO.Configuration
             {
                 case "bool":   return literal == "true";
                 case "string": return literal != "null" && literal != "\"\"";
+                // Point/Point? cannot carry a compile-time default via the attribute, so they
+                // always fall back to the type's own default (null / {0,0}); never initialize.
+                case "Point":
+                case "Point?": return false;
                 default:       return literal != "0" && literal != "0f" && literal != "0d";
             }
         }
@@ -281,6 +290,7 @@ namespace ClassicUO.Configuration
             sb.AppendLine("using System.Text.Json.Serialization;");
             sb.AppendLine("using ClassicUO.Game;");
             sb.AppendLine("using ClassicUO.Game.Managers;");
+            sb.AppendLine("using Microsoft.Xna.Framework;");
             sb.AppendLine();
             sb.AppendLine("namespace ClassicUO.Configuration");
             sb.AppendLine("{");

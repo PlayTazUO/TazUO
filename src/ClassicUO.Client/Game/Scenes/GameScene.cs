@@ -73,6 +73,12 @@ namespace ClassicUO.Game.Scenes
         private readonly LightData[] _lights = new LightData[
             LightsLoader.MAX_LIGHTS_DATA_INDEX_COUNT
         ];
+
+        // Drawn opaque tiles that can occlude a light, bucketed by isometric column (X - Y); rebuilt each frame, queried by AddLight.
+        private readonly Dictionary<int, List<LightOccluder>> _lightOccluders =
+            new Dictionary<int, List<LightOccluder>>();
+        private readonly Stack<List<LightOccluder>> _lightOccluderPool =
+            new Stack<List<LightOccluder>>();
         private Item _multi;
         private Rectangle _rectangleObj = Rectangle.Empty,
             _rectanglePlayer;
@@ -80,6 +86,10 @@ namespace ClassicUO.Game.Scenes
 
         private uint _timeToPlaceMultiInHouseCustomization;
         private const int MAX_TEXTURE_SIZE = 8192;
+
+        // An occluder d tiles in front of a light must stand ~11*d z-units above it to cover it on screen; slop is the tile-thickness leniency.
+        private const int LIGHT_OCCLUSION_STEP = 11;
+        private const int LIGHT_OCCLUSION_SLOP = 6;
         private static PostProcessingType _filterMode = PostProcessingType.Point;
         private PostProcessingType _currentFilter;
         private Effect _postFx;
@@ -538,27 +548,24 @@ namespace ClassicUO.Game.Scenes
 
             bool canBeAdded = true;
 
-            int testX = obj.X + 1;
-            int testY = obj.Y + 1;
-
-            GameObject tile = _world.Map.GetTile(testX, testY);
-
-            if (tile != null)
+            // Occluded if a tall enough tile in the light's own column (X - Y) sits in front of it toward the camera.
+            if (_lightOccluders.TryGetValue(obj.X - obj.Y, out List<LightOccluder> occluders))
             {
-                sbyte z5 = (sbyte)(obj.Z + 5);
+                int lightX = obj.X;
+                int lightZ = obj.Z;
 
-                for (GameObject o = tile; o != null; o = o.TNext)
+                for (int i = 0; i < occluders.Count; i++)
                 {
-                    if (
-                        (!(o is Static s) || s.ItemData.IsTransparent)
-                            && (!(o is Multi m) || m.ItemData.IsTransparent)
-                        || !o.AllowedToDraw
-                    )
+                    LightOccluder o = occluders[i];
+                    int d = o.X - lightX;
+
+                    // Only tiles in front of the light (nearer the camera) can hide it.
+                    if (d <= 0)
                     {
                         continue;
                     }
 
-                    if (o.Z < _maxZ && o.Z >= z5)
+                    if (o.Z < _maxZ && o.Z - lightZ >= LIGHT_OCCLUSION_STEP * d - LIGHT_OCCLUSION_SLOP)
                     {
                         canBeAdded = false;
 
@@ -679,6 +686,15 @@ namespace ClassicUO.Game.Scenes
             _renderListAnimations.Clear();
             _renderListEffects.Clear();
             _renderListTransparentObjects.Clear();
+
+            // Recycle this frame's column buckets to the pool so the map rebuilds without allocating.
+            foreach (List<LightOccluder> bucket in _lightOccluders.Values)
+            {
+                bucket.Clear();
+                _lightOccluderPool.Push(bucket);
+            }
+
+            _lightOccluders.Clear();
 
             _foliageCount = 0;
 
@@ -942,6 +958,7 @@ namespace ClassicUO.Game.Scenes
 
             ObjectActionQueue.Instance.Update();
             AutoLootManager.Instance.Update();
+            BandageManager.Instance.Update();
             GridHighlightData.ProcessQueue(_world);
             Profiler.ExitContext("Actions");
 
@@ -1768,6 +1785,12 @@ namespace ClassicUO.Game.Scenes
             public bool IsHue;
             public int DrawX,
                 DrawY;
+        }
+
+        private struct LightOccluder
+        {
+            public int X;
+            public int Z;
         }
     }
 
