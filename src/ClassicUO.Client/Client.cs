@@ -108,6 +108,11 @@ namespace ClassicUO
 
             TazLang.Load(Settings.GlobalSettings.UILanguage);
 
+            // This provides Myra searchable combobox localization context.
+            // Basically, it allows for better developer ergonomics by negating the need to manually
+            // set localize string like tooltips, hints, etc. for every usage.
+            Game.UI.MyraWindows.Widgets.Search.SearchableComboBoxLocalization.Install();
+
             string clientPath = Settings.GlobalSettings.UltimaOnlineDirectory;
             Log.Trace($"Ultima Online installation folder: {clientPath}");
 
