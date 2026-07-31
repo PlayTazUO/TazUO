@@ -209,8 +209,21 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
+            IGui previousFocus = KeyboardFocusControl;
+
             KeyboardFocusControl = null;
             chat.SetFocus();
+
+            // Setting KeyboardFocusControl above fired OnFocusLost on the field we just left, clearing its
+            // IsFocused flag. The mouse-focus tracker (_lastFocus) is separate and, on a world/background
+            // click, still points at that field. Left as-is, the "_lastFocus != control" guard in
+            // OnMouseButtonDown skips OnFocusEnter the next time the field is clicked, so it becomes
+            // keyboard-focused but stays visually unfocused (e.g. a search box keeps showing its
+            // placeholder text). Clear the tracker so re-clicking the field re-runs OnFocusEnter.
+            if (_lastFocus == previousFocus)
+            {
+                _lastFocus = null;
+            }
         }
 
         /// <summary>
