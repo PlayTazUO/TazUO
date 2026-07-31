@@ -446,9 +446,7 @@ namespace ClassicUO.Game.UI.Controls
             }
             catch (System.Exception e)
             {
-                // Glyphs are rasterized onto the font atlas lazily during Draw, so a glyph that cannot fit
-                // (e.g. an oversized font) throws here rather than while the layout was created. Swallow it so a
-                // single bad TextBox can't crash the whole client, and stop retrying to avoid per-frame exceptions.
+                // Glyphs rasterize lazily here, so an unfittable glyph throws at draw time; skip it instead of crashing and stop retrying.
                 _drawFailed = true;
                 Log.Error($"Failed to draw TextBox text, it will be skipped. [{_font}:{_size}] - {e.Message}");
                 return false;

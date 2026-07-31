@@ -88,25 +88,12 @@ public class TrueTypeLoader
 
     private const uint MAX_NUMBER_OF_SYS_FONT_FAMILIES = 1000;
 
-    /// <summary>
-    ///     The smallest font face size that can be requested.
-    /// </summary>
     private const float MIN_FONT_SIZE = 1f;
 
-    /// <summary>
-    ///     The largest font face size that can be requested.
-    ///     FontStashSharp rasterizes each glyph onto a fixed-size texture atlas (1024x1024 by default). A font size that
-    ///     is too large produces a glyph that cannot fit onto a freshly created atlas, which makes FontStashSharp throw
-    ///     ("Could not add rect to the newly created atlas.") from inside its draw routine and crash the client.
-    ///     Real UI text never approaches this value, so clamping here is a safe guard against oversized sizes reaching
-    ///     the rasterizer (whether from code or from a rich-text '/f[font, size]' command).
-    /// </summary>
+    // Oversized sizes produce glyphs too big for FontStashSharp's fixed 1024x1024 atlas, which crashes the client; real UI text never approaches this.
     private const float MAX_FONT_SIZE = 200f;
 
-    /// <summary>
-    ///     Clamps a requested font size to a range the texture atlas can safely rasterize.
-    ///     Also normalizes NaN/Infinity values that would otherwise reach the rasterizer.
-    /// </summary>
+    // Clamps a requested font size to a range the atlas can rasterize, normalizing NaN.
     private static float ClampFontSize(float size)
     {
         if (float.IsNaN(size))
@@ -494,9 +481,7 @@ public class TrueTypeLoader
     /// </returns>
     public SpriteFontBase GetFont(string name, float size)
     {
-        // Keep the size within a range the atlas can rasterize. This is the single choke point for every font
-        // request (direct calls and rich-text '/f[font, size]' commands), so an oversized value can never reach
-        // FontStashSharp and crash the client when it fails to fit the glyph onto a new atlas.
+        // Single choke point for all font requests (incl. rich-text '/f[font, size]'); clamp so an oversized value can't crash the atlas.
         size = ClampFontSize(size);
 
         // A null or empty name can't be looked up (Dictionary.TryGetValue throws on a null key),
