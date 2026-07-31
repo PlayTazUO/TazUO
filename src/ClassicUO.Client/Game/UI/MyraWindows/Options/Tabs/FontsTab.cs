@@ -88,7 +88,6 @@ public static class FontsTab
         Action onAfterUpdate = null
     )
     {
-
         Accessor<string> fontPropToUse;
         Accessor<int> fontSizePropToUse;
         if (onAfterUpdate != null)

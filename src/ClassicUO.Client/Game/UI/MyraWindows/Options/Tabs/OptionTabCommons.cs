@@ -4,6 +4,7 @@ using System.Linq;
 using ClassicUO.Assets;
 using ClassicUO.Common;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using FontStashSharp;
@@ -76,15 +77,14 @@ public static class OptionTabCommons
     }
 
     /// <summary>
-    /// Creates an <see cref="OptionItem"/> containing a font-selector combo box bound to a
-    /// <see cref="string"/> font-name property. Populates the combo with names from
-    /// <see cref="TrueTypeLoader"/>
+    /// Creates a searchable font-selector combo box bound to a <see cref="string"/> font-name
+    /// property. Populates the combo with names from <see cref="TrueTypeLoader"/>
     /// </summary>
-    /// <param name="label">The label displayed beside the combo box</param>
+    /// <param name="label">Unused; kept for call-site symmetry with other selector helpers</param>
     /// <param name="backingProp">Accessor for the underlying font name value</param>
     /// <param name="onAfterUpdate">Optional action invoked after the new font name is persisted</param>
-    /// <returns>An <see cref="OptionItem"/> wrapping the font-selector widget</returns>
-    internal static OptionItem StyledFontSelector(
+    /// <returns>The font-selector <see cref="Widget"/></returns>
+    internal static Widget StyledFontSelector(
         string label,
         Accessor<string> backingProp,
         Action<string> onAfterUpdate = null
@@ -100,7 +100,12 @@ public static class OptionTabCommons
         else
             callback = backingProp.Set;
 
-        return OptionsFactory.CreateComboBox(label, backingProp.Get(), TrueTypeLoader.Instance.GetSortedFontNames().Names, callback);
+        var combo = new ContainsLevenshteinComboBox(backingProp.Get(), TrueTypeLoader.Instance.GetSortedFontNames().Names, callback);
+
+        if (string.IsNullOrWhiteSpace(label))
+            return combo;
+
+        return new MyraLabel(label, MyraLabel.TextStyle.P).PlaceBefore(combo);
     }
 
     /// <summary>Creates a thin horizontal separator widget styled for use between option sections</summary>

@@ -2,16 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using ClassicUO.Assets;
 using ClassicUO.Common;
 using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.LegionScripting;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
+using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
@@ -99,6 +102,12 @@ public class ScriptManagerWindow : MyraControl
     private void RestoreWindowState()
     {
         Profile profile = ProfileManager.CurrentProfile;
+
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // WARNING - Changes are immediately called by the root window;
+        // The serialization overhead here is enormous and causes visible UI stuttering during resize.
+        // Need a debouncer or deferred save
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         // Size is persisted through the window's InitialSizeStore accessor so it also plays nicely
         // with the built-in resize/reset handling. The accessor reads/writes the profile below.
@@ -242,11 +251,7 @@ public class ScriptManagerWindow : MyraControl
         if (!string.IsNullOrEmpty(indent))
             groupRow.Widgets.Add(new MyraLabel(indent, MyraLabel.TextStyle.P));
 
-        groupRow.Widgets.Add(new MyraButton(isCollapsed ? "[+]" : "[-]", () =>
-        {
-            ToggleGroupState(isCollapsed, fullGroupPath, normalizedParentGroup, normalizedGroupName);
-            RebuildScriptList();
-        }));
+        groupRow.Widgets.Add(CreateCollapseExpandButton(isCollapsed, fullGroupPath, normalizedParentGroup, normalizedGroupName));
 
         var groupLabel = new MyraLabel(groupName, MyraLabel.TextStyle.P);
         groupLabel.TouchDown += (s, e) =>
@@ -275,6 +280,48 @@ public class ScriptManagerWindow : MyraControl
                     BuildScriptWidget(script, indent + "   ");
             }
         }
+    }
+
+    /// <summary>
+    /// Create a Collapse/Expand button for a script group
+    /// </summary>
+    /// <param name="isCollapsed">Whether the group is currently collapsed</param>
+    /// <param name="fullGroupPath">The group's full FS path</param>
+    /// <param name="normalizedParentGroup">The normalized parent group name</param>
+    /// <param name="normalizedGroupName">The normalized group name</param>
+    /// <returns>A read-to-use button for the given group/state</returns>
+    private BasicButton CreateCollapseExpandButton(
+        bool isCollapsed,
+        string fullGroupPath,
+        string normalizedParentGroup,
+        string normalizedGroupName
+    )
+    {
+        string text = isCollapsed ? "⮞" : "⮟";
+
+        var label = new MyraLabel(text, 6)
+        {
+            Font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 24),
+            Wrap = false,
+            SingleLine = true,
+            TextAlign = TextHorizontalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
+            Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE
+        };
+
+        return new BasicButton(() =>
+        {
+            ToggleGroupState(isCollapsed, fullGroupPath, normalizedParentGroup, normalizedGroupName);
+            RebuildScriptList();
+        })
+        {
+            Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
+            Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
+            Content = label,
+            VerticalAlignment = VerticalAlignment.Center
+        };
     }
 
     private void BuildScriptWidget(ScriptFile script, string indent)
@@ -370,7 +417,8 @@ public class ScriptManagerWindow : MyraControl
             LegionScripting.LegionScripting.SetAutoPlay(script, false, !charAuto);
             RebuildScriptList();
         }));
-        var scriptHotkey = ScriptHotkeysManager.GetBinding(script);
+
+        HotkeyBinding scriptHotkey = ScriptHotkeysManager.GetBinding(script);
         string hotkeyLabel = scriptHotkey.IsEmpty ? "Set Hotkey" : $"Set Hotkey ({scriptHotkey.Describe()})";
         items.Add((hotkeyLabel, () => new ScriptHotkeyWindow(script)));
         items.Add(("Create Macro Button", () =>
