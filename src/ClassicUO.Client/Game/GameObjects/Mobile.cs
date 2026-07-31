@@ -47,6 +47,12 @@ namespace ClassicUO.Game.GameObjects
         private ushort _animationRepeateMode = 1;
         private ushort _animationRepeatModeCount = 1;
 
+        // The per-frame animation height/center used to anchor overhead text jitters as the
+        // sprite animates. These fields smooth that value over real time so the text follows
+        // the mobile without jumping frame-to-frame. -1 means "uninitialized" (snap on first use).
+        private float _smoothedTextAnimOffset = -1f;
+        private uint _lastTextCoordUpdate;
+
         public Mobile(World world, uint serial) : base(world, serial)
         {
             LastAnimationChangeTime = Time.Ticks;
@@ -997,8 +1003,16 @@ namespace ClassicUO.Game.GameObjects
                 out int height
             );
 
+            // height/centerY come from the current animation frame and change every frame as the
+            // sprite plays, which makes overhead text bounce up and down (very noticeable once the
+            // name overhead reserves extra space above it). Smooth the anchor toward the target so
+            // the text glides instead of jumping. Offset.X/Y (walking) are already interpolated and
+            // stay outside the smoothing so text tracking the mobile stays tight.
+            int targetAnimOffset = height + centerY + 8;
+            int smoothedAnimOffset = SmoothTextAnimOffset(targetAnimOffset);
+
             p.X += (int)Offset.X + 22;
-            p.Y += (int)(Offset.Y - Offset.Z - (height + centerY + 8));
+            p.Y += (int)(Offset.Y - Offset.Z - smoothedAnimOffset);
             // Removed Camera.WorldToScreen() - text is now transformed by worldRTMatrix during rendering
 
             if (ObjectHandlesStatus == ObjectHandlesStatus.DISPLAYING)
@@ -1034,6 +1048,35 @@ namespace ClassicUO.Game.GameObjects
             }
 
             FixTextCoordinatesInScreen();
+        }
+
+        // Frame-rate independent exponential smoothing of the animation-driven text anchor offset.
+        // Advances at most once per game tick (repeated calls in the same tick are no-ops), so it
+        // stays stable no matter how many times UpdateTextCoordsV runs in a frame.
+        private int SmoothTextAnimOffset(int target)
+        {
+            // First use, or a large jump (mount/dismount, morph, graphic swap): snap so the text
+            // doesn't slowly slide across a big gap.
+            if (_smoothedTextAnimOffset < 0f || Math.Abs(target - _smoothedTextAnimOffset) > 40f)
+            {
+                _smoothedTextAnimOffset = target;
+                _lastTextCoordUpdate = Time.Ticks;
+                return target;
+            }
+
+            uint now = Time.Ticks;
+            float dt = (now - _lastTextCoordUpdate) / 1000f;
+
+            if (dt > 0f)
+            {
+                // ~200ms to converge; higher speed = snappier, lower = smoother.
+                const float SPEED = 12f;
+                float t = 1f - MathF.Exp(-SPEED * dt);
+                _smoothedTextAnimOffset += (target - _smoothedTextAnimOffset) * t;
+                _lastTextCoordUpdate = now;
+            }
+
+            return (int)MathF.Round(_smoothedTextAnimOffset);
         }
 
         public override void CheckGraphicChange(byte animIndex = 0)
