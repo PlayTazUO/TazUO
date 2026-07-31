@@ -8,6 +8,7 @@ All notable changes to TazUO will be recorded here.
 * Added `API.ActiveSpells()`, `API.ActiveSpellNames()` and `API.IsSpellActive(spell)` so scripts can see which toggle spells/moves are currently active (the same ones the spell bar highlights) ([bittiez](https://github.com/bittiez))
 
 ### Features
+* Counter bar slots can now trigger Dress or Undress for any dress-agent configuration belonging to the current character - [P.R 844](https://github.com/PlayTazUO/TazUO/pull/844) ([Nesci28](https://github.com/Nesci28))
 * The Legion Script Manager window now remembers its size and position and restores them when reopened - [P.R 828](https://github.com/PlayTazUO/TazUO/pull/828) ([bittiez](https://github.com/bittiez))
 * Added an optional candle flicker effect that makes lights gently ebb and flow (enabled by default, toggle under Video > Lighting) - [P.R 824](https://github.com/PlayTazUO/TazUO/pull/824) ([bittiez](https://github.com/bittiez))
 * Added optional FSR shader to post processing effects - [P.R 821](https://github.com/PlayTazUO/TazUO/pull/821) ([bittiez](https://github.com/bittiez))
