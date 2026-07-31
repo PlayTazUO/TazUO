@@ -1,4 +1,3 @@
-using ClassicUO.Game;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.LegionScripting;
 using ClassicUO.LegionScripting.ApiClasses;
@@ -11,6 +10,7 @@ namespace ClassicUO.UnitTests.Game.LegionScript;
 
 public class ApiUiGumpTests
 {
+    [Collection(MainThreadCollection.Name)]
     public class CreateGump
     {
         [Fact]

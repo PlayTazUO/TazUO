@@ -145,6 +145,28 @@ namespace ClassicUO.UnitTests.Game.UI.Search
         }
 
         [Fact]
+        public void Match_Negative_MaxDistance_Still_Matches_Exact_String()
+        {
+            // Regression: a negative effective distance (from a bad MaxDistance or a custom
+            // GetMaxDistanceForQueryLength) must not make even an exact match (dist=0) fail
+            // the "dist > effectiveMaxDistance" check.
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = -1 };
+
+            strategy.Match("kitten", "kitten").IsMatch.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Match_Negative_GetMaxDistanceForQueryLength_Still_Matches_Exact_String()
+        {
+            var strategy = new LevenshteinSearchStrategy
+            {
+                GetMaxDistanceForQueryLength = _ => -1
+            };
+
+            strategy.Match("kitten", "kitten").IsMatch.Should().BeTrue();
+        }
+
+        [Fact]
         public void Match_PerTokenBest_Default_Tokenizer_Splits_On_Word_Boundaries()
         {
             var strategy = new LevenshteinSearchStrategy { MaxDistance = 0, PerTokenBest = true };

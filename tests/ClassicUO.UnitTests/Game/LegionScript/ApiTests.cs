@@ -5,6 +5,7 @@ using Xunit;
 
 namespace ClassicUO.UnitTests.Game.LegionScript;
 
+[Collection(MainThreadCollection.Name)]
 public class ApiTests
 {
     private LegionAPI api;

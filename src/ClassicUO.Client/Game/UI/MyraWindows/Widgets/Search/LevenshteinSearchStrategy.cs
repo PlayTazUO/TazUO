@@ -71,7 +71,7 @@ public partial class LevenshteinSearchStrategy : ISearchStrategy
         // queries, in the spirit of Elasticsearch's `fuzziness: AUTO` but one edit more
         // permissive at every step - see AutoFuzziness for the authoritative thresholds.
         // MaxDistance still applies as a ceiling on top of that.
-        int effectiveMaxDistance = Math.Min(GetMaxDistanceForQueryLength(b.Length), MaxDistance);
+        int effectiveMaxDistance = Math.Max(0, Math.Min(GetMaxDistanceForQueryLength(b.Length), MaxDistance));
 
         int dist = Levenshtein.Distance(a, b, effectiveMaxDistance);
         if (dist > effectiveMaxDistance)
