@@ -33,7 +33,7 @@ public class OptionsWindow : MyraControl
     private const int MIN_WIDTH = 350;
 
     private const int MAX_HEIGHT = 850;
-    private const int MAX_WIDTH = 1250;
+    private const int MAX_WIDTH = 1200;
 
     private const int SEARCH_DEBOUNCE_MS = 500;
 
