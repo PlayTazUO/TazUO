@@ -52,6 +52,7 @@ namespace ClassicUO.Game.UI.Controls
         private float _size;
         private Color _color;
         private bool _dirty = false;
+        private bool _drawFailed = false;
 
         private int getStrokeSize
         {
@@ -127,6 +128,7 @@ namespace ClassicUO.Game.UI.Controls
                 text = StringHelper.RemoveUnpairedSurrogates(text); //Lone surrogates crash FontStashSharp's text measuring
                 _dirty = false;         //Reset these because we're creating a new text object
                 WantUpdateSize = false; //Not resetting them causes this to happen twice from the constructor setting _font and what not.
+                _drawFailed = false;    //New layout gets a fresh chance to draw
 
                 if (Options == null)
                 {
@@ -327,6 +329,7 @@ namespace ClassicUO.Game.UI.Controls
             Options = null;
             Alpha = 1f;
             _dirty = false;
+            _drawFailed = false;
             WantUpdateSize = false;
         }
 
@@ -423,7 +426,7 @@ namespace ClassicUO.Game.UI.Controls
 
         public bool Draw(UltimaBatcher2D batcher, int x, int y, Color color, float depth = 0f)
         {
-            if (IsDisposed)
+            if (IsDisposed || _drawFailed)
             {
                 return false;
             }
@@ -437,7 +440,17 @@ namespace ClassicUO.Game.UI.Controls
                 x += Width;
             }
 
-            _rtl.Draw(batcher, new Vector2(x, y), color * Alpha, horizontalAlignment: Options.Align, layerDepth: depth);
+            try
+            {
+                _rtl.Draw(batcher, new Vector2(x, y), color * Alpha, horizontalAlignment: Options.Align, layerDepth: depth);
+            }
+            catch (System.Exception e)
+            {
+                // Glyphs rasterize lazily here, so an unfittable glyph throws at draw time; skip it instead of crashing and stop retrying.
+                _drawFailed = true;
+                Log.Error($"Failed to draw TextBox text, it will be skipped. [{_font}:{_size}] - {e.Message}");
+                return false;
+            }
 
             return true;
         }

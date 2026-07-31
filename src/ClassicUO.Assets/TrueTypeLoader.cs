@@ -88,6 +88,20 @@ public class TrueTypeLoader
 
     private const uint MAX_NUMBER_OF_SYS_FONT_FAMILIES = 1000;
 
+    private const float MIN_FONT_SIZE = 1f;
+
+    // Oversized sizes produce glyphs too big for FontStashSharp's fixed 1024x1024 atlas, which crashes the client; real UI text never approaches this.
+    private const float MAX_FONT_SIZE = 200f;
+
+    // Clamps a requested font size to a range the atlas can rasterize, normalizing NaN.
+    private static float ClampFontSize(float size)
+    {
+        if (float.IsNaN(size))
+            return MIN_FONT_SIZE;
+
+        return Math.Clamp(size, MIN_FONT_SIZE, MAX_FONT_SIZE);
+    }
+
     private readonly Dictionary<string, FontSystem> _fonts = new();
 
     private (string[], int)? _orderedFontNames;
@@ -467,6 +481,9 @@ public class TrueTypeLoader
     /// </returns>
     public SpriteFontBase GetFont(string name, float size)
     {
+        // Single choke point for all font requests (incl. rich-text '/f[font, size]'); clamp so an oversized value can't crash the atlas.
+        size = ClampFontSize(size);
+
         // A null or empty name can't be looked up (Dictionary.TryGetValue throws on a null key),
         // so skip straight to the fallback font below.
         if (!string.IsNullOrEmpty(name))
