@@ -14,6 +14,9 @@ namespace ClassicUO.LegionScripting.ApiClasses;
 
 public class ApiUiGump(LegionAPI api)
 {
+        private T OnMain<T>(Func<T> func) => MainThreadQueue.InvokeOnMainThread(func, api.CancellationToken.Token);
+        private void OnMain(Action action) => MainThreadQueue.InvokeOnMainThread(action, api.CancellationToken.Token);
+
     /// <summary>
     /// Get a blank gump.
     /// Example:
@@ -58,7 +61,16 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="minHeight">Minimum height (default: 50)</param>
     /// <param name="onResized">Optional callback function called when the gump is resized</param>
     /// <returns>A ApiUiNineSliceGump wrapper containing the nine-slice gump control</returns>
-    public ApiUiNineSliceGump CreateModernGump(int x, int y, int width, int height, bool resizable = true, int minWidth = 50, int minHeight = 50, object onResized = null) => new ApiUiNineSliceGump(api, x, y, width, height, resizable, minWidth, minHeight, onResized);
+    public ApiUiNineSliceGump CreateModernGump(int x, int y, int width, int height, bool resizable = true, int minWidth = 50, int minHeight = 50, object onResized = null, bool keepOpen = false) => 
+        OnMain(() =>
+        {
+            var g = new ApiUiNineSliceGump(api, x, y, width, height, resizable, minWidth, minHeight, onResized);
+
+            if (!keepOpen)
+                api._gumps.Add(g.Gump);
+
+            return g;
+        });
 
     /// <summary>
     /// Add a gump to the players screen.
@@ -102,7 +114,7 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="isChecked">Default false, set to true if you want this checkbox checked on creation</param>
     /// <returns>The checkbox</returns>
     public ApiUiCheckbox CreateGumpCheckbox(string text = "", ushort hue = 0, bool isChecked = false) =>
-        new ApiUiCheckbox(new Checkbox(0x00D2, 0x00D3, text, color: hue) { CanMove = true, IsChecked = isChecked });
+        OnMain(() => new ApiUiCheckbox(new Checkbox(0x00D2, 0x00D3, text, color: hue) { CanMove = true, IsChecked = isChecked }));
 
     /// <summary>
     /// Create a label for a gump.
@@ -117,10 +129,11 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="text">The text</param>
     /// <param name="hue">The hue of the text</param>
     /// <returns></returns>
-    public ApiUiLabel CreateGumpLabel(string text, ushort hue = 996) => new ApiUiLabel(new Label(text, true, hue))
-    {
-        CanMove = true
-    };
+    public ApiUiLabel CreateGumpLabel(string text, ushort hue = 996) => 
+        OnMain(() => new ApiUiLabel(new Label(text, true, hue))
+            {
+                CanMove = true
+            });
 
     /// <summary>
     /// Get a transparent color box for gumps.
@@ -138,12 +151,12 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="opacity">0.5 = 50%</param>
     /// <param name="color">Html color code like #000000</param>
     /// <returns></returns>
-    public ApiUiAlphaBlendControl CreateGumpColorBox(float opacity = 0.7f, string color = "#000000")
+    public ApiUiAlphaBlendControl CreateGumpColorBox(float opacity = 0.7f, string color = "#000000") => OnMain(() =>
     {
         var bc = new AlphaBlendControl(opacity) { BaseColor = Utility.GetColorFromHex(color) };
 
         return new ApiUiAlphaBlendControl(bc);
-    }
+    });
 
     /// <summary>
     /// Create a picture of an item.
@@ -159,7 +172,7 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="width"></param>
     /// <param name="height"></param>
     /// <returns></returns>
-    public ApiUiResizableStaticPic CreateGumpItemPic(uint graphic, int width, int height)
+    public ApiUiResizableStaticPic CreateGumpItemPic(uint graphic, int width, int height) => OnMain(() =>
     {
         var pic = new ResizableStaticPic(graphic, width, height)
         {
@@ -167,7 +180,7 @@ public class ApiUiGump(LegionAPI api)
         };
 
         return new ApiUiResizableStaticPic(pic);
-    }
+    });
 
     /// <summary>
     /// Create an image control that displays a named PNG texture loaded from a ZIP archive.
@@ -185,7 +198,7 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="height">Display height in pixels; 0 uses the image's natural height</param>
     /// <returns>A LegionTexture control</returns>
     public ApiUiLegionTexture LegionTextureControl(string textureName, int width = 0, int height = 0) =>
-        new ApiUiLegionTexture(new LegionTexturePic(textureName, width, height));
+        OnMain(() => new ApiUiLegionTexture(new LegionTexturePic(textureName, width, height)));
 
     /// <summary>
     /// Create a button for gumps.
@@ -209,12 +222,12 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="pressed">Graphic when pressed</param>
     /// <param name="hover">Graphic on hover</param>
     /// <returns></returns>
-    public ApiUiButton CreateGumpButton(string text = "", ushort hue = 996, ushort normal = 0x00EF, ushort pressed = 0x00F0, ushort hover = 0x00EE)
+    public ApiUiButton CreateGumpButton(string text = "", ushort hue = 996, ushort normal = 0x00EF, ushort pressed = 0x00F0, ushort hover = 0x00EE) => OnMain(() =>
     {
         var b = new Button(0, normal, pressed, hover, caption: text, normalHue: hue, hoverHue: hue);
 
         return new ApiUiButton(b);
-    }
+    });
 
     /// <summary>
     /// Create a simple button, does not use graphics.
@@ -231,13 +244,13 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="width"></param>
     /// <param name="height"></param>
     /// <returns></returns>
-    public ApiUiNiceButton CreateSimpleButton(string text, int width, int height)
+    public ApiUiNiceButton CreateSimpleButton(string text, int width, int height) => OnMain(() =>
     {
         NiceButton b = new(0, 0, width, height, ButtonAction.Default, text);
         b.AlwaysShowBackground = true;
 
         return new ApiUiNiceButton(b);
-    }
+    });
 
     /// <summary>
     /// Create a radio button for gumps, use group numbers to only allow one item to be checked at a time.
@@ -258,12 +271,12 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="hue">Text color</param>
     /// <param name="isChecked">Defaults false, set to true if you want this button checked by default.</param>
     /// <returns></returns>
-    public ApiUiRadioButton CreateGumpRadioButton(string text = "", int group = 0, ushort inactive = 0x00D0, ushort active = 0x00D1, ushort hue = 0xFFFF, bool isChecked = false)
+    public ApiUiRadioButton CreateGumpRadioButton(string text = "", int group = 0, ushort inactive = 0x00D0, ushort active = 0x00D1, ushort hue = 0xFFFF, bool isChecked = false) => OnMain(() =>
     {
         var rb = new RadioButton(group, inactive, active, text, color: hue);
         rb.IsChecked = isChecked;
         return new ApiUiRadioButton(rb);
-    }
+    });
 
     /// <summary>
     /// Create a text area control.
@@ -297,10 +310,7 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="multiline"></param>
     /// <returns></returns>
     public ApiUiTtfTextInputField CreateGumpTextBox(string text = "", int width = 200, int height = 30, bool multiline = false) =>
-        // Construct on the main thread: TTFTextInputField builds FontStashSharp-backed TextBoxes whose
-        // shared font caches are not thread-safe. Building them here (a script background thread) while
-        // the main thread measures/draws the same fonts corrupts those caches and crashes.
-        MainThreadQueue.InvokeOnMainThread(() =>
+        OnMain(() =>
             new ApiUiTtfTextInputField(new TTFTextInputField(width, height, text: text, multiline: multiline, convertHtmlColors: false) { CanMove = true }));
 
     /// <summary>
@@ -349,7 +359,7 @@ public class ApiUiGump(LegionAPI api)
         // Construct on the main thread: TextBox measures its text through FontStashSharp, whose shared
         // font caches (glyph/kerning) are not thread-safe. Measuring here (a script background thread)
         // while the main thread measures/draws the same fonts corrupts those caches and crashes.
-        return MainThreadQueue.InvokeOnMainThread(() =>
+        return OnMain(() =>
             new ApiUiTextBox(TextBox.GetOne(text, font, size, Utility.GetColorFromHex(color), opts)));
     }
 
@@ -384,13 +394,13 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="max">The max value(or what would be 100%), for example 100</param>
     /// <returns></returns>
     public ApiUiSimpleProgressBar CreateGumpSimpleProgressBar
-        (int width, int height, string backgroundColor = "#616161", string foregroundColor = "#212121", int value = 100, int max = 100)
-    {
-        SimpleProgressBar bar = new(backgroundColor, foregroundColor, width, height);
-        bar.SetProgress(value, max);
+        (int width, int height, string backgroundColor = "#616161", string foregroundColor = "#212121", int value = 100, int max = 100) => OnMain(() =>
+        {
+            SimpleProgressBar bar = new(backgroundColor, foregroundColor, width, height);
+            bar.SetProgress(value, max);
 
-        return new ApiUiSimpleProgressBar(bar);
-    }
+            return new ApiUiSimpleProgressBar(bar);
+        });
 
     /// <summary>
     /// Create a scrolling area, add and position controls to it directly.
@@ -410,7 +420,8 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="width"></param>
     /// <param name="height"></param>
     /// <returns></returns>
-    public ApiUiScrollArea CreateGumpScrollArea(int x, int y, int width, int height) => new ApiUiScrollArea(new ScrollArea(x, y, width, height, true));
+    public ApiUiScrollArea CreateGumpScrollArea(int x, int y, int width, int height) => OnMain(() =>
+        new ApiUiScrollArea(new ScrollArea(x, y, width, height, true)));
 
     /// <summary>
     /// Create a gump pic(Use this for gump art, not item art)
@@ -424,7 +435,10 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="y"></param>
     /// <param name="hue"></param>
     /// <returns></returns>
-    public ApiUiGumpPic CreateGumpPic(ushort graphic, int x = 0, int y = 0, ushort hue = 0) => new ApiUiGumpPic(new GumpPic(x, y, graphic, hue));
+    public ApiUiGumpPic CreateGumpPic(ushort graphic, int x = 0, int y = 0, ushort hue = 0) => OnMain(() =>
+    {
+        return new ApiUiGumpPic(new GumpPic(x, y, graphic, hue));
+    });
 
     /// <summary>
     /// Create a gump pic that tiles(repeats) (Use this for gump art, not item art)
@@ -438,7 +452,10 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="hue"></param>
     /// <param name="width"></param>
     /// <returns></returns>
-    public ApiUiTiledGumpPic CreateTiledGumpPic(ushort graphic, int width, int height, ushort hue = 0) => new ApiUiTiledGumpPic(new GumpPicTiled(0, 0, width, height, graphic) { Hue = hue });
+    public ApiUiTiledGumpPic CreateTiledGumpPic(ushort graphic, int width, int height, ushort hue = 0) => OnMain(() =>
+    {
+        return new ApiUiTiledGumpPic(new GumpPicTiled(0, 0, width, height, graphic) { Hue = hue });
+    });
 
     /// <summary>
     /// Creates a dropdown control (combobox) with the specified width and items.
@@ -447,7 +464,10 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="items">Array of strings to display as dropdown options</param>
     /// <param name="selectedIndex">The initially selected item index (default: 0)</param>
     /// <returns>A ApiUiControlDropDown wrapper containing the combobox control</returns>
-    public ApiUiControlDropDown CreateDropDown(int width, IList<string> items, int selectedIndex = 0) => new(new Combobox(0, 0, width, items.ToArray(), selectedIndex), api);
+    public ApiUiControlDropDown CreateDropDown(int width, IList<string> items, int selectedIndex = 0) => OnMain(() =>
+    {
+        return new ApiUiControlDropDown(new Combobox(0, 0, width, items.ToArray(), selectedIndex), api);
+    });
 
     /// <summary>
     /// Add an onClick callback to a control.
@@ -470,27 +490,29 @@ public class ApiUiGump(LegionAPI api)
         if (control == null || onClick == null || !api.CallbackChannel.CanInvoke(onClick))
             return control;
 
-        Control wControl = null;
+        return OnMain(() => {
+            Control wControl = null;
 
-        if(control is Control)
-            wControl = (Control)control;
-        else if (control is ApiUiBaseControl pbc && pbc.Control != null)
-            wControl = pbc.Control;
+            if(control is Control)
+                wControl = (Control)control;
+            else if (control is ApiUiBaseControl pbc && pbc.Control != null)
+                wControl = pbc.Control;
 
-        if (wControl == null)
+            if (wControl == null)
+                return control;
+
+            wControl.AcceptMouseInput = true;
+
+            wControl.MouseUp += (_, e) =>
+            {
+                if (leftOnly && e.Button != MouseButtonType.Left)
+                    return;
+
+                api?.ScheduleCallback(onClick);
+            };
+
             return control;
-
-        wControl.AcceptMouseInput = true;
-
-        wControl.MouseUp += (_, e) =>
-        {
-            if (leftOnly && e.Button != MouseButtonType.Left)
-                return;
-
-            api?.ScheduleCallback(onClick);
-        };
-
-        return control;
+        });
     }
 
     /// <summary>
@@ -517,7 +539,9 @@ public class ApiUiGump(LegionAPI api)
         if (control == null || onDispose == null || control.Control == null || !api.CallbackChannel.CanInvoke(onDispose))
             return control;
 
-        control.Control.Disposed += (_, _) => api?.ScheduleCallback(onDispose);
-        return control;
+        return OnMain(() => {
+            control.Control.Disposed += (_, _) => api?.ScheduleCallback(onDispose);
+            return control;
+        });
     }
 }

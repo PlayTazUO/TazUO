@@ -882,10 +882,6 @@ namespace ClassicUO.Configuration
         public Point PlayerOffset { get; set => SetProperty(ref field, value); } = new Point(0, 0);
 
         [Obsolete]
-        [JsonPropertyName("camera_smoothing_factor")]
-        public float OldCameraSmoothingFactor { get; set => SetProperty(ref field, value); } = 0f;
-
-        [Obsolete]
         [JsonPropertyName("paperdoll_scale")]
         public double OldPaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
 
@@ -1187,7 +1183,6 @@ namespace ClassicUO.Configuration
                 DisableTargetingGridContainers = OldDisableTargetingGridContainers;
                 BuyAgentSubContainers = OldBuyAgentSubContainers;
                 PaperdollScale = OldPaperdollScale;
-                CameraSmoothingFactor = OldCameraSmoothingFactor;
                 HideLayersForSelf = OldHideLayersForSelf;
                 HiddenLayersEnabled = OldHiddenLayersEnabled;
                 DisableMouseInteractionOverheadText = OldDisableMouseInteractionOverheadText;

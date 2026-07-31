@@ -88,7 +88,6 @@ namespace ClassicUO.LegionScripting
 
         private T OnMain<T>(Func<T> func) => MainThreadQueue.InvokeOnMainThread(func, CancellationToken.Token);
         private void OnMain(Action action) => MainThreadQueue.InvokeOnMainThread(action, CancellationToken.Token);
-        private void EnqueueMain(Action action) => MainThreadQueue.EnqueueAction(action, CancellationToken.Token);
         private T BubblingOnMain<T>(Func<T> func) => MainThreadQueue.BubblingInvokeOnMainThread(func, CancellationToken.Token);
 
         #endregion
@@ -128,6 +127,14 @@ namespace ClassicUO.LegionScripting
                 try
                 {
                     CallbackChannel.Invoke(callback, args);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected when the callback stops the script
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // Expected when the script is being stopped
                 }
                 catch (Exception ex)
                 {
@@ -213,6 +220,14 @@ namespace ClassicUO.LegionScripting
                 try
                 {
                     CallbackChannel.Invoke(callback);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected when the callback stops the script
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // Expected when the script is being stopped
                 }
                 catch (Exception ex)
                 {

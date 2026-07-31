@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Xml;
+using ClassicUO.Common;
 using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
@@ -31,9 +31,6 @@ public class ScriptManagerWindow : MyraControl
 
     public static ScriptManagerWindow Instance { get; private set; }
 
-    private const int MIN_WIDTH  = 200;
-    private const int MIN_HEIGHT = 200;
-
     private readonly HashSet<string> _collapsedGroups = [];
     private bool _pendingReload = true;
     private string _searchFilter = "";
@@ -50,7 +47,7 @@ public class ScriptManagerWindow : MyraControl
         Instance = this;
         CanBeSaved = true;
         Build();
-        CenterInViewPort();
+        RestoreWindowState();
         LegionScripting.LegionScripting.ScriptStarted += OnScriptChanged;
         LegionScripting.LegionScripting.ScriptStopped += OnScriptChanged;
     }
@@ -61,7 +58,9 @@ public class ScriptManagerWindow : MyraControl
         {
             if (g is ScriptManagerWindow w)
             {
-                w.CenterInViewPort();
+                // Keep the window where the user left it; SetInScreen guards against it being
+                // fully off-screen without clobbering the remembered position.
+                w.SetInScreen();
                 w.BringOnTop();
                 return;
             }
@@ -73,6 +72,7 @@ public class ScriptManagerWindow : MyraControl
     {
         LegionScripting.LegionScripting.ScriptStarted -= OnScriptChanged;
         LegionScripting.LegionScripting.ScriptStopped -= OnScriptChanged;
+        _rootWindow.LocationChanged -= OnWindowLocationChanged;
         if (Instance == this)
             Instance = null;
         base.Dispose();
@@ -94,18 +94,44 @@ public class ScriptManagerWindow : MyraControl
         }
     }
 
-    public override void Save(XmlTextWriter xml)
+    // Restores the window's size and position from the profile (persisted in SqlProfile). Falls
+    // back to auto-sizing / centering when a value has not been saved yet.
+    private void RestoreWindowState()
     {
-        base.Save(xml);
-        xml.WriteAttributeString("width",  (_rootWindow.Width).ToString());
-        xml.WriteAttributeString("height", (_rootWindow.Height).ToString());
+        Profile profile = ProfileManager.CurrentProfile;
+
+        // Size is persisted through the window's InitialSizeStore accessor so it also plays nicely
+        // with the built-in resize/reset handling. The accessor reads/writes the profile below.
+        _rootWindow.Props.InitialSizeStore = new Accessor<Point?>(
+            () => ProfileManager.CurrentProfile?.ScriptManagerWindowSize,
+            value =>
+            {
+                if (ProfileManager.CurrentProfile != null)
+                    ProfileManager.CurrentProfile.ScriptManagerWindowSize = value;
+            });
+
+        // Restore position, or center when it has never been saved. Persist future moves.
+        Point? position = profile?.ScriptManagerWindowPosition;
+        if (position.HasValue)
+        {
+            SetPosition(position.Value.X, position.Value.Y);
+            SetInScreen();
+        }
+        else
+        {
+            CenterInViewPort();
+        }
+
+        _rootWindow.LocationChanged += OnWindowLocationChanged;
     }
 
-    public override void Load(XmlElement xml)
+    private void OnWindowLocationChanged(object sender, EventArgs e)
     {
-        base.Load(xml);
-        if (int.TryParse(xml.GetAttribute("width"),  out int w) && w >= MIN_WIDTH)  _rootWindow.Width  = w;
-        if (int.TryParse(xml.GetAttribute("height"), out int h) && h >= MIN_HEIGHT) _rootWindow.Height = h;
+        Profile profile = ProfileManager.CurrentProfile;
+        if (profile == null)
+            return;
+
+        profile.ScriptManagerWindowPosition = new Point(_rootWindow.Left, _rootWindow.Top);
     }
 
     private void Build()

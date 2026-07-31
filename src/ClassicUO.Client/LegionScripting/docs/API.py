@@ -599,7 +599,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateModernGump(self, x: "int", y: "int", width: "int", height: "int", resizable: "bool" = True, minWidth: "int" = 50, minHeight: "int" = 50, onResized: "Any" = None) -> "ApiUiNineSliceGump":
+    def CreateModernGump(self, x: "int", y: "int", width: "int", height: "int", resizable: "bool" = True, minWidth: "int" = 50, minHeight: "int" = 50, onResized: "Any" = None, keepOpen: "bool" = False) -> "ApiUiNineSliceGump":
         """
          Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
          The gump uses the standard modern UI panel texture and border size internally.

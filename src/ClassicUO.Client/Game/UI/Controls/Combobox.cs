@@ -112,7 +112,7 @@ namespace ClassicUO.Game.UI.Controls
                 return;
             }
 
-            int comboY = ScreenCoordinateY + Offset.Y;
+            int comboY = ScreenCoordinateY + Offset.Y + 25;
 
             if (comboY < 0)
             {
