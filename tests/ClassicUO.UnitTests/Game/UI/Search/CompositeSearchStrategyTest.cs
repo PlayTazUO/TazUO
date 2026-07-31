@@ -42,5 +42,33 @@ namespace ClassicUO.UnitTests.Game.UI.Search
 
             act.Should().Throw<ArgumentException>();
         }
+
+        [Fact]
+        public void IsQueryValid_Requires_Every_Strategy_To_Accept_The_Query()
+        {
+            // Levenshtein takes anything; the regex strategy can't compile this one. Reporting
+            // "valid" off the permissive half would turn the caller's invalid-query affordance
+            // off and leave the user with a silently empty list.
+            var composite = new CompositeSearchStrategy(
+                new LevenshteinSearchStrategy(),
+                new TextQuerySearchStrategy { UseRegex = true });
+
+            composite.IsQueryValid("(unclosed").Should().BeFalse();
+            composite.IsQueryValid("fine").Should().BeTrue();
+        }
+
+        [Fact]
+        public void Clone_Deep_Copies_The_Inner_Strategies()
+        {
+            var inner = new LevenshteinSearchStrategy { MaxDistance = 0 };
+            var composite = new CompositeSearchStrategy(inner);
+
+            var clone = (CompositeSearchStrategy)composite.Clone();
+            inner.MaxDistance = 5;
+
+            // The clone kept its own copy, so retuning the original leaves it alone.
+            clone.Match("kitten", "kittn").IsMatch.Should().BeFalse();
+            composite.Match("kitten", "kittn").IsMatch.Should().BeTrue();
+        }
     }
 }

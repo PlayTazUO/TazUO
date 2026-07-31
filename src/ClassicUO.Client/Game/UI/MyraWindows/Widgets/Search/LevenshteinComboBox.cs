@@ -6,21 +6,32 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 
 public class LevenshteinComboBox<T> : ScoredSearchComboBox<T>
 {
-    private readonly LevenshteinSearchStrategy _strategy;
+    /// <summary>
+    /// Shadows the base's interface-typed property with the concrete strategy. Resolved from the
+    /// base property on every read rather than cached at construction: the strategy can be
+    /// replaced afterwards (the public setter, or CopyFrom cloning it), and a cached field would
+    /// go on exposing knobs that no longer drive what the dropdown searches with. Null once the
+    /// strategy has been replaced with an unrelated one.
+    /// </summary>
+    public new LevenshteinSearchStrategy? Strategy => base.Strategy as LevenshteinSearchStrategy;
 
+    /// <summary>
+    /// Edit-distance ceiling of the active strategy. Reads back the strategy's own default while
+    /// <see cref="Strategy"/> is null (the strategy was swapped for an unrelated one), and
+    /// assigning is then a no-op rather than a write into a strategy nobody searches with.
+    /// </summary>
     public int MaxDistance
     {
-        get => _strategy.MaxDistance;
-        set => _strategy.MaxDistance = value;
+        get => Strategy?.MaxDistance ?? LevenshteinSearchStrategy.DEFAULT_MAX_DISTANCE;
+        set
+        {
+            if (Strategy is { } strategy)
+                strategy.MaxDistance = value;
+        }
     }
 
-    public LevenshteinComboBox(string styleName = Stylesheet.DefaultStyleName) : this(new LevenshteinSearchStrategy(), styleName)
+    public LevenshteinComboBox(string styleName = Stylesheet.DefaultStyleName) : base(new LevenshteinSearchStrategy(), styleName)
     {
-    }
-
-    private LevenshteinComboBox(LevenshteinSearchStrategy strategy, string styleName) : base(strategy, styleName)
-    {
-        _strategy = strategy;
     }
 }
 

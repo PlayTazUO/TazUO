@@ -6,18 +6,18 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 
 public class ContainsLevenshteinComboBox<T> : ScoredSearchComboBox<T>
 {
-    private readonly ContainsThenLevenshteinSearchStrategy _strategy;
+    /// <summary>
+    /// Deliberately shadows the base's interface-typed property with the concrete strategy, so
+    /// its knobs (MaxDistance, MinScore, CaseSensitive, ...) are reachable without a cast.
+    /// Resolved from the base property on every read rather than cached at construction: the
+    /// strategy can be replaced afterwards (the public setter, or CopyFrom cloning it), and a
+    /// cached field would go on exposing knobs that no longer drive what the dropdown searches
+    /// with. Null once the strategy has been replaced with an unrelated one.
+    /// </summary>
+    public new ContainsThenLevenshteinSearchStrategy? Strategy => base.Strategy as ContainsThenLevenshteinSearchStrategy;
 
-    /// <summary>Deliberately shadows the base's interface-typed property with the concrete strategy, so its knobs (MaxDistance, MinScore, CaseSensitive, ...) are reachable without a cast.</summary>
-    public new ContainsThenLevenshteinSearchStrategy Strategy => _strategy;
-
-    public ContainsLevenshteinComboBox(string styleName = Stylesheet.DefaultStyleName) : this(new ContainsThenLevenshteinSearchStrategy(), styleName)
+    public ContainsLevenshteinComboBox(string styleName = Stylesheet.DefaultStyleName) : base(new ContainsThenLevenshteinSearchStrategy(), styleName)
     {
-    }
-
-    private ContainsLevenshteinComboBox(ContainsThenLevenshteinSearchStrategy strategy, string styleName) : base(strategy, styleName)
-    {
-        _strategy = strategy;
     }
 }
 

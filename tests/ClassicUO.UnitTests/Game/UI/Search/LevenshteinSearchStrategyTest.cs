@@ -85,12 +85,31 @@ namespace ClassicUO.UnitTests.Game.UI.Search
             match.Score.Should().BeLessThan(1d);
         }
 
+        [Theory]
+        // Pins the default fuzziness curve (LevenshteinSearchStrategy.AutoFuzziness): the edit
+        // budget by query length is 1 up to 2 chars, 2 up to 5, 3 beyond. Each row is a query
+        // matched against a candidate exactly `distance` edits away, at the boundary of its
+        // bucket, with MaxDistance and MinScore lifted out of the way so only the curve decides.
+        [InlineData("ab", "ab", true)]      // len 2, 0 edits
+        [InlineData("ab", "xb", true)]      // len 2, 1 edit  - at the budget
+        [InlineData("ab", "xy", false)]     // len 2, 2 edits - over it
+        [InlineData("abcde", "xycde", true)]   // len 5, 2 edits - at the budget
+        [InlineData("abcde", "xyzde", false)]  // len 5, 3 edits - over it
+        [InlineData("abcdef", "xyzdef", true)]  // len 6, 3 edits - at the budget
+        [InlineData("abcdef", "xyzwef", false)] // len 6, 4 edits - over it
+        public void Match_Default_Fuzziness_Curve_Scales_With_Query_Length(string query, string candidate, bool expected)
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = int.MaxValue, MinScore = 0f };
+
+            strategy.Match(candidate, query).IsMatch.Should().Be(expected);
+        }
+
         [Fact]
         public void Match_Short_Query_Does_Not_Match_Unrelated_Short_Word()
         {
             // Regression: "ad" and "Say" are genuinely only 2 edits apart, so a flat
             // MaxDistance=2 (the default) let a 2-letter query match almost any similarly
-            // short, unrelated word. AUTO fuzziness caps queries this short to 0 edits.
+            // short, unrelated word. The fuzziness curve caps queries this short to 1 edit.
             var strategy = new LevenshteinSearchStrategy();
 
             strategy.Match("Say", "ad").IsMatch.Should().BeFalse();
@@ -105,7 +124,7 @@ namespace ClassicUO.UnitTests.Game.UI.Search
         }
 
         [Fact]
-        public void Match_Medium_Query_Allows_One_Edit_But_Not_Three()
+        public void Match_Medium_Query_Allows_Small_Edits_But_Not_An_Unrelated_Word()
         {
             var strategy = new LevenshteinSearchStrategy { MaxDistance = 5 };
 

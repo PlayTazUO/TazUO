@@ -47,4 +47,15 @@ public class ContainsThenLevenshteinSearchStrategy : CompositeSearchStrategy
         _contains = contains;
         _levenshtein = levenshtein;
     }
+
+    /// <summary>
+    /// Overridden to keep the runtime type: the base clone is a plain
+    /// <see cref="CompositeSearchStrategy"/>, so a widget cloning its strategy (see
+    /// <c>SearchableComboBox&lt;T&gt;.CopyFrom</c>) would end up searching with something that
+    /// no longer exposes <see cref="CaseSensitive"/>, <see cref="MaxDistance"/> or
+    /// <see cref="MinScore"/>.
+    /// </summary>
+    public override ISearchStrategy Clone() => new ContainsThenLevenshteinSearchStrategy(
+        (SubstringSearchStrategy)_contains.Clone(),
+        (LevenshteinSearchStrategy)_levenshtein.Clone());
 }

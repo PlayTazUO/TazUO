@@ -10,10 +10,13 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 
 public partial class LevenshteinSearchStrategy : ISearchStrategy
 {
+    /// <summary>Default ceiling on the edit distance a match may have, before <see cref="GetMaxDistanceForQueryLength"/> narrows it further.</summary>
+    public const int DEFAULT_MAX_DISTANCE = 4;
+
     private static readonly Regex _wordBoundaryRegex = WordBoundaryRegex();
 
     public Func<int, int> GetMaxDistanceForQueryLength { get; set; } = AutoFuzziness;
-    public int MaxDistance { get; set; } = 4;
+    public int MaxDistance { get; set; } = DEFAULT_MAX_DISTANCE;
     public float MinScore { get; set; } = 0.6f;
     public bool PerTokenBest { get; set; }
     public bool CaseSensitive { get; set; }
@@ -65,8 +68,9 @@ public partial class LevenshteinSearchStrategy : ISearchStrategy
         // Raw edit distance against a fixed MaxDistance over-matches short queries: "ad" is
         // genuinely only 2 edits from "say", so MaxDistance=2 lets a 2-letter query match
         // almost any similarly short, unrelated word. Scale the effective cap down for short
-        // queries the same way Elasticsearch's `fuzziness: AUTO` does (len<=2 -> 0 edits,
-        // <=5 -> 1, else 2) - MaxDistance still applies as a ceiling on top of that.
+        // queries, in the spirit of Elasticsearch's `fuzziness: AUTO` but one edit more
+        // permissive at every step - see AutoFuzziness for the authoritative thresholds.
+        // MaxDistance still applies as a ceiling on top of that.
         int effectiveMaxDistance = Math.Min(GetMaxDistanceForQueryLength(b.Length), MaxDistance);
 
         int dist = Levenshtein.Distance(a, b, effectiveMaxDistance);
@@ -80,6 +84,11 @@ public partial class LevenshteinSearchStrategy : ISearchStrategy
         return score >= MinScore ? SearchMatch.Exact(score) : SearchMatch.None;
     }
 
+    /// <summary>
+    /// Edit budget allowed for a query of <paramref name="queryLength"/> characters, before
+    /// <see cref="MaxDistance"/> is applied as a ceiling on top. These thresholds are the
+    /// authoritative definition of the default fuzziness curve.
+    /// </summary>
     private static int AutoFuzziness(int queryLength) => queryLength switch
     {
         <= 2 => 1,

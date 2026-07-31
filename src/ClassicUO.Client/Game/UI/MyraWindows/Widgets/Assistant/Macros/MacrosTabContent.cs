@@ -365,15 +365,8 @@ public static class MacrosTabContent
 
             MyraStyle.ApplySearchComboBoxPopupBorder(typeCombo);
 
-            int maxTypeStringLen = 0;
             foreach (string typeName in _sortedMacroTypeNames)
-            {
                 typeCombo.Items.Add(typeName);
-                maxTypeStringLen = Math.Max(maxTypeStringLen, typeName.Length);
-            }
-
-            // Guesstimate width based on the longest string + some margin. May need adjustment based on configured font size/weight.
-            typeCombo.Width = maxTypeStringLen * 8 + 10;
 
             int displayIdx = _macroTypeToDisplayIndex.GetValueOrDefault(capturedAction.Code, 0);
             typeCombo.SelectedIndex = displayIdx;
@@ -422,11 +415,7 @@ public static class MacrosTabContent
                 int curSubIdx = Array.IndexOf(subValues, capturedAction.SubCode);
                 if (curSubIdx < 0) curSubIdx = 0;
 
-                var subCombo = new ContainsLevenshteinComboBox
-                {
-                    Width = 160,
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
+                var subCombo = new ContainsLevenshteinComboBox { VerticalAlignment = VerticalAlignment.Center };
                 MyraStyle.ApplySearchComboBoxPopupBorder(subCombo);
 
                 foreach (string subName in subNames)
