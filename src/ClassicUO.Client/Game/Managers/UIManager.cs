@@ -192,6 +192,26 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        /// <summary>
+        /// Moves keyboard focus off any non-chat input field (search boxes, Myra windows, etc.) and
+        /// hands it back to the system chat when the game world or empty background is clicked. When
+        /// chat input is inactive/disabled, focus is simply cleared so nothing keeps capturing
+        /// keystrokes. Lets the player click away from a text field instead of pressing Esc or clicking chat.
+        /// </summary>
+        public static void RestoreSystemChatFocus()
+        {
+            SystemChatControl chat = SystemChat;
+
+            // Already resting on the chat input (or chat doesn't exist) - nothing to steal focus from.
+            if (chat == null || KeyboardFocusControl == chat.TextBoxControl)
+            {
+                return;
+            }
+
+            KeyboardFocusControl = null;
+            chat.SetFocus();
+        }
+
         public static void OnMouseButtonDown(MouseButtonType button)
         {
             HandleMouseInput();
@@ -220,6 +240,14 @@ namespace ClassicUO.Game.Managers
             }
             else
             {
+                // Clicking empty background (no control, and not the game world - that path never
+                // reaches here) should drop keyboard focus from other inputs, same as a world click.
+                // Skip while a modal is open so we don't steal focus from a modal that captures input.
+                if (button == MouseButtonType.Left && !IsModalOpen)
+                {
+                    RestoreSystemChatFocus();
+                }
+
                 foreach (IGui s in Gumps)
                 {
                     if (s.IsModal && s.ModalClickOutsideAreaClosesThisControl)
