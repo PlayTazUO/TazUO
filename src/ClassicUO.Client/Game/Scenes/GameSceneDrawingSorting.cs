@@ -643,6 +643,8 @@ namespace ClassicUO.Game.Scenes
                 return;
             }
 
+            RecordLightOccluder(obj);
+
             // slow as fuck
             if (
                 allowSelection
@@ -672,6 +674,44 @@ namespace ClassicUO.Game.Scenes
             {
                 renderList.Add(obj);
             }
+        }
+
+        // Records a drawn opaque tile (terrain/static/multi) as a light occluder, bucketed by isometric column (X - Y).
+        private void RecordLightOccluder(GameObject obj)
+        {
+            if (!UseLights && !UseAltLights)
+            {
+                return;
+            }
+
+            int z;
+
+            if (obj is Land land)
+            {
+                z = land.IsStretched ? land.AverageZ : land.Z;
+            }
+            else if (obj is Static s && !s.ItemData.IsTransparent)
+            {
+                z = obj.Z;
+            }
+            else if (obj is Multi m && !m.ItemData.IsTransparent)
+            {
+                z = obj.Z;
+            }
+            else
+            {
+                return;
+            }
+
+            int column = obj.X - obj.Y;
+
+            if (!_lightOccluders.TryGetValue(column, out List<LightOccluder> bucket))
+            {
+                bucket = _lightOccluderPool.Count > 0 ? _lightOccluderPool.Pop() : new List<LightOccluder>();
+                _lightOccluders[column] = bucket;
+            }
+
+            bucket.Add(new LightOccluder { X = obj.X, Z = z });
         }
 
         private unsafe bool AddTileToRenderList(
