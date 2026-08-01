@@ -192,6 +192,46 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        /// <summary>
+        /// Moves keyboard focus off any non-chat input field (search boxes, rename fields, etc.) and
+        /// hands it back to the system chat when the player clicks away from it - the game world, the
+        /// empty background, or a different gump. When chat input is inactive/disabled, focus is simply
+        /// cleared so nothing keeps capturing keystrokes. Lets the player click away from a text field
+        /// instead of pressing Esc or clicking chat.
+        /// </summary>
+        public static void RestoreSystemChatFocus()
+        {
+            SystemChatControl chat = SystemChat;
+
+            // Already resting on the chat input (or chat doesn't exist) - nothing to steal focus from.
+            if (chat == null || KeyboardFocusControl == chat.TextBoxControl)
+            {
+                return;
+            }
+
+            IGui previousFocus = KeyboardFocusControl;
+
+            KeyboardFocusControl = null;
+            chat.SetFocus();
+
+            // Setting KeyboardFocusControl above fired OnFocusLost on the field we just left, clearing its
+            // IsFocused flag. The mouse-focus tracker (_lastFocus) is separate and, on a world/background
+            // click, still points at that field. Left as-is, the "_lastFocus != control" guard in
+            // OnMouseButtonDown skips OnFocusEnter the next time the field is clicked, so it becomes
+            // keyboard-focused but stays visually unfocused (e.g. a search box keeps showing its
+            // placeholder text). Clear the tracker so re-clicking the field re-runs OnFocusEnter.
+            if (_lastFocus == previousFocus)
+            {
+                _lastFocus = null;
+            }
+        }
+
+        /// <summary>
+        /// Returns the top-level gump that owns a control (the control itself when it is already
+        /// top-level). Used to tell whether a click landed in the same window as the focused input.
+        /// </summary>
+        private static IGui GetOwningGump(IGui control) => control?.RootParent ?? control;
+
         public static void OnMouseButtonDown(MouseButtonType button)
         {
             HandleMouseInput();
@@ -215,11 +255,27 @@ namespace ClassicUO.Game.Managers
                 {
                     _keyboardFocusControl = MouseOverControl;
                 }
+                else if (button == MouseButtonType.Left && !IsModalOpen && _keyboardFocusControl != null
+                         && GetOwningGump(_keyboardFocusControl) != GetOwningGump(MouseOverControl))
+                {
+                    // Clicked a different gump than the one that owns the focused input field (search
+                    // boxes, rename fields, etc.), so release it back to the system chat - same as a
+                    // world/background click. Clicks inside the field's own gump keep it focused.
+                    RestoreSystemChatFocus();
+                }
 
                 _mouseDownControls[(int)button] = MouseOverControl;
             }
             else
             {
+                // Clicking empty background (no control, and not the game world - that path never
+                // reaches here) should drop keyboard focus from other inputs, same as a world click.
+                // Skip while a modal is open so we don't steal focus from a modal that captures input.
+                if (button == MouseButtonType.Left && !IsModalOpen)
+                {
+                    RestoreSystemChatFocus();
+                }
+
                 foreach (IGui s in Gumps)
                 {
                     if (s.IsModal && s.ModalClickOutsideAreaClosesThisControl)
