@@ -984,6 +984,19 @@ public class GridItem : Control
             LOW_CONTRAST_OUTLINE_PADDING,
             _bounds
         );
+
+        // The outline shader samples one texel beyond the source. When the art touches the
+        // top of its atlas region, skip that edge so pixels from a neighbouring sprite do
+        // not appear as a horizontal line above the item.
+        if (outlineSource.Top == _bounds.Top)
+        {
+            if (outlineSource.Height <= 1)
+                return;
+
+            outlineSource.Y++;
+            outlineSource.Height--;
+        }
+
         Vector2 scale = new(
             destination.Width / (float)source.Width,
             destination.Height / (float)source.Height
