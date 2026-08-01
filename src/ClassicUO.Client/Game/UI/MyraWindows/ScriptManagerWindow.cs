@@ -19,6 +19,7 @@ using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
+using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -30,14 +31,14 @@ public class ScriptManagerWindow : MyraControl
         "\n# Or documentation at" +
         "\n#   https://tazuo.org/legion/legionapi/";
 
-    private const string NOGROUPTEXT = "No group";
+    private const string NO_GROUP_TEXT = "No group";
 
     public static ScriptManagerWindow Instance { get; private set; }
 
     private readonly HashSet<string> _collapsedGroups = [];
     private bool _pendingReload = true;
     private string _searchFilter = "";
-    private readonly VerticalStackPanel _scriptListPanel = new() { Spacing = 2 };
+    private readonly VerticalStackPanel _scriptListPanel = new() { Spacing = 2, Padding = new Thickness(2, 0, 2, 4) };
 
     // Tracks which group/subgroup the last context menu was invoked on
     private string _contextMenuGroup = "";
@@ -158,9 +159,18 @@ public class ScriptManagerWindow : MyraControl
         SetRootContent(_mainGrid);
     }
 
-    private Widget BuildMenuBar()
+    private WrapPanel BuildMenuBar()
     {
-        var bar = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+        var bar = new WrapPanel
+        {
+            UniformSizing = false,
+            Orientation = Orientation.Horizontal,
+            HorizontalSpacing = 4,
+            VerticalSpacing = 4,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 4)
+        };
+
         bar.Widgets.Add(new MyraButton("Menu", ShowMainMenu));
         bar.Widgets.Add(new MyraButton("Add +", ShowAddMenu));
 
@@ -192,8 +202,8 @@ public class ScriptManagerWindow : MyraControl
     private void ShowAddMenu()
     {
         _contextMenuGroup = "";
-        _contextMenuSubGroup = NOGROUPTEXT;
-        ShowGroupContextMenu("", NOGROUPTEXT);
+        _contextMenuSubGroup = NO_GROUP_TEXT;
+        ShowGroupContextMenu("", NO_GROUP_TEXT);
     }
 
     // ── Script list ───────────────────────────────────────────────────────
@@ -206,7 +216,7 @@ public class ScriptManagerWindow : MyraControl
 
         var groupsMap = new Dictionary<string, Dictionary<string, List<ScriptFile>>>
         {
-            { "", new Dictionary<string, List<ScriptFile>> { { "", new List<ScriptFile>() } } }
+            { "", new Dictionary<string, List<ScriptFile>> { { "", [] } } }
         };
 
         foreach (ScriptFile sf in LegionScripting.LegionScripting.LoadedScripts)
@@ -223,30 +233,49 @@ public class ScriptManagerWindow : MyraControl
             groupsMap[sf.Group][sf.SubGroup].Add(sf);
         }
 
+        int lastGroupIdx = 0;
+
         foreach (KeyValuePair<string, Dictionary<string, List<ScriptFile>>> group in groupsMap)
         {
-            string groupName = string.IsNullOrEmpty(group.Key) ? NOGROUPTEXT : group.Key;
+            string groupName = string.IsNullOrEmpty(group.Key) ? NO_GROUP_TEXT : group.Key;
             BuildGroupWidgets(groupName, group.Value, "");
+
+            if (lastGroupIdx == groupsMap.Count - 1)
+                break;
+
+            _scriptListPanel.Widgets.Add(new HorizontalSeparator
+            {
+                Thickness = 0,
+                BorderThickness = new Thickness(0, 0, 0, 1),
+                Border = new SolidBrush(new Color(0.306f, 0.271f, 0.251f, 0.9f)),
+                Margin = new Thickness(40, 6),
+            });
+
+            lastGroupIdx++;
         }
     }
 
     private void BuildGroupWidgets(string groupName, Dictionary<string, List<ScriptFile>> subGroups, string parentGroup)
     {
         string fullGroupPath = string.IsNullOrEmpty(parentGroup) ? groupName : Path.Combine(parentGroup, groupName);
-        string normalizedGroupName = groupName == NOGROUPTEXT ? "" : groupName;
-        string normalizedParentGroup = parentGroup == NOGROUPTEXT ? "" : parentGroup;
+        string normalizedGroupName = groupName == NO_GROUP_TEXT ? "" : groupName;
+        string normalizedParentGroup = parentGroup == NO_GROUP_TEXT ? "" : parentGroup;
         string indent = string.IsNullOrEmpty(parentGroup) ? "" : "   ";
 
         bool isCollapsedInSettings = string.IsNullOrEmpty(normalizedParentGroup)
             ? LegionScripting.LegionScripting.IsGroupCollapsed(normalizedGroupName)
             : LegionScripting.LegionScripting.IsGroupCollapsed(normalizedParentGroup, normalizedGroupName);
 
-        if (isCollapsedInSettings && !_collapsedGroups.Contains(fullGroupPath))
+        if (isCollapsedInSettings)
             _collapsedGroups.Add(fullGroupPath);
 
         bool isCollapsed = _collapsedGroups.Contains(fullGroupPath);
 
-        var groupRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+        var groupRow = new HorizontalStackPanel
+        {
+            Spacing = 4,
+            VerticalAlignment = VerticalAlignment.Center
+        };
 
         if (!string.IsNullOrEmpty(indent))
             groupRow.Widgets.Add(new MyraLabel(indent, MyraLabel.TextStyle.P));
@@ -263,6 +292,7 @@ public class ScriptManagerWindow : MyraControl
 
         groupRow.Widgets.Add(new MyraButton("...", () => ShowGroupContextMenu(parentGroup, groupName)));
 
+        // Add the group to the actual parent script panel
         _scriptListPanel.Widgets.Add(groupRow);
 
         if (isCollapsed) return;
@@ -449,7 +479,7 @@ public class ScriptManagerWindow : MyraControl
 
     private void ShowGroupContextMenu(string parentGroup, string groupName)
     {
-        bool isRealGroup = groupName != NOGROUPTEXT && !string.IsNullOrEmpty(groupName);
+        bool isRealGroup = groupName != NO_GROUP_TEXT && !string.IsNullOrEmpty(groupName);
         _contextMenuGroup    = parentGroup;
         _contextMenuSubGroup = groupName;
 
@@ -579,8 +609,8 @@ public class ScriptManagerWindow : MyraControl
 
         try
         {
-            string normalizedGroup    = contextGroup    == NOGROUPTEXT ? "" : contextGroup;
-            string normalizedSubGroup = contextSubGroup == NOGROUPTEXT ? "" : contextSubGroup;
+            string normalizedGroup    = contextGroup    == NO_GROUP_TEXT ? "" : contextGroup;
+            string normalizedSubGroup = contextSubGroup == NO_GROUP_TEXT ? "" : contextSubGroup;
             if (!string.IsNullOrEmpty(normalizedGroup))    normalizedGroup    = Path.GetFileName(normalizedGroup);
             if (!string.IsNullOrEmpty(normalizedSubGroup)) normalizedSubGroup = Path.GetFileName(normalizedSubGroup);
 
@@ -636,8 +666,8 @@ public class ScriptManagerWindow : MyraControl
 
         try
         {
-            string normalizedGroup    = contextGroup    == NOGROUPTEXT ? "" : contextGroup;
-            string normalizedSubGroup = contextSubGroup == NOGROUPTEXT ? "" : contextSubGroup;
+            string normalizedGroup    = contextGroup    == NO_GROUP_TEXT ? "" : contextGroup;
+            string normalizedSubGroup = contextSubGroup == NO_GROUP_TEXT ? "" : contextSubGroup;
             if (!string.IsNullOrEmpty(normalizedGroup))    normalizedGroup    = Path.GetFileName(normalizedGroup);
             if (!string.IsNullOrEmpty(normalizedSubGroup)) normalizedSubGroup = Path.GetFileName(normalizedSubGroup);
 
