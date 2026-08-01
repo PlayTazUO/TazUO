@@ -2,22 +2,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.LegionScripting;
 
 namespace ClassicUO.Game.Managers;
 
 /// <summary>The kind of action stored in a single counter bar slot.</summary>
-public enum CounterBarSlotType { Empty = 0, Spell = 1, Macro = 2, Ability = 3, Script = 4, Skill = 5 }
+public enum CounterBarSlotType { Empty = 0, Spell = 1, Macro = 2, Ability = 3, Script = 4, Skill = 5, DressAgent = 6 }
 
 /// <summary>
 /// A single counter bar slot. Holds one of: nothing, a spell, a macro, a weapon
-/// (primary/secondary) ability, a script, or a skill, and centralizes activation,
-/// icon, and tooltip resolution.
+/// (primary/secondary) ability, a script, a skill, or a dress-agent action, and
+/// centralizes activation, icon, and tooltip resolution.
 /// </summary>
 public class CounterBarSlot
 {
-    /// <summary>What this slot holds (spell, macro, ability, script, skill, or empty).</summary>
+    /// <summary>What this slot holds (spell, macro, ability, script, skill, dress agent, or empty).</summary>
     public CounterBarSlotType Type { get; set; } = CounterBarSlotType.Empty;
 
     /// <summary>Full spell index when <see cref="Type"/> is <see cref="CounterBarSlotType.Spell"/>.</summary>
@@ -34,6 +35,12 @@ public class CounterBarSlot
 
     /// <summary>True for the primary ability, false for the secondary, when <see cref="Type"/> is <see cref="CounterBarSlotType.Ability"/>.</summary>
     public bool AbilityPrimary { get; set; }        // Type == Ability (true = primary, false = secondary)
+
+    /// <summary>Dress configuration name when <see cref="Type"/> is <see cref="CounterBarSlotType.DressAgent"/>.</summary>
+    public string DressConfigName { get; set; }     // Type == DressAgent
+
+    /// <summary>True to undress, false to dress, when <see cref="Type"/> is <see cref="CounterBarSlotType.DressAgent"/>.</summary>
+    public bool DressAgentUndress { get; set; }     // Type == DressAgent
 
     /// <summary>True when the slot holds nothing.</summary>
     [JsonIgnore]
@@ -80,13 +87,27 @@ public class CounterBarSlot
         }
     }
 
-    /// <summary>The short in-slot label text for icon-less slots (macro/script/skill), or null for other types.</summary>
+    /// <summary>Friendly action name for a dress-agent slot.</summary>
+    [JsonIgnore]
+    public string DressAgentDisplayName
+    {
+        get
+        {
+            string action = DressAgentUndress
+                ? TazLang.Get("dressagent_undress", "Undress")
+                : TazLang.Get("dressagent_dress", "Dress");
+            return string.IsNullOrEmpty(DressConfigName) ? action : $"{action}: {DressConfigName}";
+        }
+    }
+
+    /// <summary>The short in-slot label text for icon-less slots, or null for other types.</summary>
     [JsonIgnore]
     public string SlotLabel => Type switch
     {
         CounterBarSlotType.Macro => MacroName,
         CounterBarSlotType.Script => ScriptDisplayName,
         CounterBarSlotType.Skill => SkillDisplayName,
+        CounterBarSlotType.DressAgent => DressAgentDisplayName,
         _ => null
     };
 
@@ -159,7 +180,21 @@ public class CounterBarSlot
         return new CounterBarSlot { Type = CounterBarSlotType.Skill, SkillIndex = skillIndex };
     }
 
-    /// <summary>Performs the slot's action: casts the spell, runs the macro, or triggers the ability.</summary>
+    /// <summary>Creates a dress-agent slot, or an empty slot when <paramref name="config"/> is null.</summary>
+    public static CounterBarSlot FromDressAgent(DressConfig config, bool undress)
+    {
+        if (config == null)
+            return Empty();
+
+        return new CounterBarSlot
+        {
+            Type = CounterBarSlotType.DressAgent,
+            DressConfigName = config.Name,
+            DressAgentUndress = undress
+        };
+    }
+
+    /// <summary>Performs the action represented by this slot.</summary>
     public void Activate(World world)
     {
         switch (Type)
@@ -200,6 +235,18 @@ public class CounterBarSlot
             case CounterBarSlotType.Skill:
                 if (SkillIndex >= 0)
                     GameActions.UseSkill(SkillIndex);
+                break;
+
+            case CounterBarSlotType.DressAgent:
+                DressConfig config = DressAgentManager.Instance.CurrentPlayerConfigs.FirstOrDefault(
+                    c => c?.Name?.Equals(DressConfigName, System.StringComparison.OrdinalIgnoreCase) == true);
+                if (config != null)
+                {
+                    if (DressAgentUndress)
+                        DressAgentManager.Instance.UndressFromConfig(config);
+                    else
+                        DressAgentManager.Instance.DressFromConfig(config);
+                }
                 break;
         }
     }
@@ -265,6 +312,10 @@ public class CounterBarSlot
 
             case CounterBarSlotType.Skill:
                 text = SkillDisplayName;
+                return !string.IsNullOrEmpty(text);
+
+            case CounterBarSlotType.DressAgent:
+                text = DressAgentDisplayName;
                 return !string.IsNullOrEmpty(text);
         }
 

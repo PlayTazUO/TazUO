@@ -89,8 +89,7 @@ public static class MyraStyle
 
         ImageTextButtonStyle tabItemStyle = tabControlStyle.TabItemStyle;
         tabItemStyle.Background = new SolidBrush(Color.Transparent);
-        Color darker = new(TazUO_Orange.R, TazUO_Orange.G, TazUO_Orange.B, 0.7f);
-        tabItemStyle.OverBackground = new SolidBrush(darker);
+        tabItemStyle.OverBackground = new SolidBrush(new Color(129, 120, 115, 150)); // lighter hover tone, matches combo/menu hover; selected uses the darker TazUO_Orange
         tabItemStyle.PressedBackground = new SolidBrush(TazUO_Orange);
         tabItemStyle.Border = new SolidBrush(new Color(0, 0, 0, STANDARD_BORDER_ALPHA));
         tabItemStyle.BorderThickness = new Thickness(1, 1, 1, 0); // remove bottom border to avoid overlap
@@ -138,7 +137,7 @@ public static class MyraStyle
 
         ScrollViewerStyle svStyle = Stylesheet.Current.ScrollViewerStyle;
         svStyle.VerticalScrollBackground = new NinePatchRegion(ModernUIConstants.ModernUIVerticalScrollbar, ModernUIConstants.ModernUIVerticalScrollbar.Bounds, new Thickness(1));
-        
+
         svStyle.VerticalScrollKnob = new TextureRegion(ModernUIConstants.ModernUIVerticalScrollbarKnob);
 
         svStyle.HorizontalScrollBackground = new NinePatchRegion(ModernUIConstants.ModernUIHorizontalScrollbar, ModernUIConstants.ModernUIHorizontalScrollbar.Bounds, new Thickness(1));
@@ -163,7 +162,7 @@ public static class MyraStyle
         menuStyle.Padding = new Thickness(0);
         menuStyle.Margin = new Thickness(0);
         menuStyle.Background = new SolidBrush(TazUO_Orange);
-        menuStyle.Border = new SolidBrush(new Color(11, 11, 11, 0.9f));
+        menuStyle.Border = new SolidBrush(new Color(11, 11, 11, 230));
         menuStyle.SelectionBackground = new SolidBrush(new Color(0.306f, 0.271f, 0.251f, 0.9f));
         menuStyle.SelectionHoverBackground = new SolidBrush(new Color(0.506f, 0.471f, 0.451f, 0.9f));
         menuStyle.LabelStyle.Font = _uiFont;
@@ -192,6 +191,17 @@ public static class MyraStyle
         button.PressedBackground = _ninePatchButtonDangerDown;
 
         return button;
+    }
+
+    /// <summary>
+    /// The combo box skin only gives ListBoxStyle a background, not a border (unlike the
+    /// menu skin), so a SearchableComboBox's popup - which reads like a menu - looks
+    /// unstyled next to one. Give it the same border as VerticalMenuStyle.
+    /// </summary>
+    public static void ApplySearchComboBoxPopupBorder<T>(SearchableComboBox<T> combo)
+    {
+        combo.PopupBorder = new SolidBrush(TazUO_Orange);
+        combo.PopupBorderThickness = new Thickness(1);
     }
 
     public static Button ApplySkillButtonStyle(Button button, Lock skillLock)
