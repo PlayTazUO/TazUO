@@ -49,7 +49,10 @@ public class ScriptManagerWindow : MyraControl
 
     // Resizing fires this on every mouse-move tick; debounce so we're not hitting the settings DB
     // on every pixel, only once the drag settles.
-    private readonly Debounce<Point?> _windowSizeDebounce = new(size => ProfileManager.CurrentProfile?.ScriptManagerWindowSize = size, 350);
+    private readonly Debounce<Point?> _windowSizeDebounce = new(
+        size => MainThreadQueue.EnqueueAction(() => ProfileManager.CurrentProfile?.ScriptManagerWindowSize = size),
+        350
+    );
 
     public ScriptManagerWindow() : base(TazLang.Get("scriptmanager_title", "Script Manager"))
     {
@@ -133,7 +136,6 @@ public class ScriptManagerWindow : MyraControl
     private void Build()
     {
         _mainGrid = new MyraGrid();
-        _rootWindow.Height = Math.Clamp(_rootWindow.Height ?? _rootWindow.Bounds.Height, StyleConstantsDefaults.WINDOW_MIN_HEIGHT, 600);
         _mainGrid.AddRow();                                           // Row 0: menu bar (Auto)
         _mainGrid.AddRow(new Proportion(ProportionType.Fill));        // Row 1: script list (Fill)
         _mainGrid.AddColumn(new Proportion(ProportionType.Fill));     // single Fill column

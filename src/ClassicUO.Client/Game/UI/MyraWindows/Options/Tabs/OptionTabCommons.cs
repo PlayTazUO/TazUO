@@ -77,13 +77,14 @@ public static class OptionTabCommons
     }
 
     /// <summary>
-    /// Creates a searchable font-selector combo box bound to a <see cref="string"/> font-name
-    /// property. Populates the combo with names from <see cref="TrueTypeLoader"/>
+    /// Creates an <see cref="OptionItem"/> containing a font-selector combo box bound to a
+    /// <see cref="string"/> font-name property. Populates the combo with names from
+    /// <see cref="TrueTypeLoader"/>
     /// </summary>
-    /// <param name="label">Unused; kept for call-site symmetry with other selector helpers</param>
+    /// <param name="label">The label displayed beside the combo box</param>
     /// <param name="backingProp">Accessor for the underlying font name value</param>
     /// <param name="onAfterUpdate">Optional action invoked after the new font name is persisted</param>
-    /// <returns>The font-selector <see cref="Widget"/></returns>
+    /// <returns>An <see cref="OptionItem"/> wrapping the font-selector widget</returns>
     internal static Widget StyledFontSelector(
         string label,
         Accessor<string> backingProp,
