@@ -911,8 +911,7 @@ namespace ClassicUO.Renderer
             Rectangle destinationRectangle,
             Vector3 color,
             float layerDepth
-        )
-        {
+        ) =>
             AddSprite(
                 texture,
                 0.0f,
@@ -931,7 +930,6 @@ namespace ClassicUO.Renderer
                 layerDepth,
                 0
             );
-        }
 
         public void Draw
         (
@@ -1761,10 +1759,7 @@ namespace ClassicUO.Renderer
         /// <summary>
         /// Restores the default (legacy short-range) projection depth planes.
         /// </summary>
-        public void ResetProjectionDepthRange()
-        {
-            SetProjectionDepthRange(short.MinValue, short.MaxValue);
-        }
+        public void ResetProjectionDepthRange() => SetProjectionDepthRange(short.MinValue, short.MaxValue);
 
         public void SetSampler(SamplerState sampler)
         {
@@ -1889,5 +1884,8 @@ namespace ClassicUO.Renderer
 
         [FileEmbed.FileEmbed("shaders/FSR.fxc")]
         public static partial ReadOnlySpan<byte> GetFSRShader();
+
+        [FileEmbed.FileEmbed("shaders/ScreenOverlay.fxc")]
+        public static partial ReadOnlySpan<byte> GetScreenOverlayShader();
     }
 }

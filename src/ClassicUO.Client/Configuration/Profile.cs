@@ -371,6 +371,11 @@ namespace ClassicUO.Configuration
         public bool EnableWeatherEffects { get; set => SetProperty(ref field, value); } = false;
         public bool EnableEnhancedWeather { get; set => SetProperty(ref field, value); } = false;
 
+        public bool ScreenOverlaysEnabled { get; set => SetProperty(ref field, value); } = true;
+        public float ScreenOverlayIntensity { get; set => SetProperty(ref field, value); } = 1.0f;
+        public bool ScreenShakeEnabled { get; set => SetProperty(ref field, value); } = true;
+        public float ScreenShakeIntensity { get; set => SetProperty(ref field, value); } = 1.0f;
+
         public bool PartyAura { get; set => SetProperty(ref field, value); }
 
         public bool HideChatGradient { get; set => SetProperty(ref field, value); } = false;

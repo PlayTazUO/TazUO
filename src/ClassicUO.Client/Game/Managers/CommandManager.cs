@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Configuration;
+using ClassicUO.Game.ScreenOverlays;
+using ClassicUO.Game.ScreenOverlays.Presets;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.MyraWindows.Options;
 using ClassicUO.LegionScripting;
@@ -287,10 +289,26 @@ namespace ClassicUO.Game.Managers
             Register("myra-draw-widget-frames", args => MyraEnvironment.DrawWidgetsFrames = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-frames", args => MyraEnvironment.DrawMouseHoveredWidgetFrame = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-info", args => MyraEnvironment.DrawMouseHoveredWidgetInfo = ParseBooleanCommandArgs(args));
+            Register("display-overlay-poison", args => HandleOverlayCommand(args, OverlayId.Poison, new PoisonOverlay()));
+            Register("display-overlay-bleed", args => HandleOverlayCommand(args, OverlayId.Bleed, new BleedOverlay()));
+            Register("display-overlay-fracture", args => HandleOverlayCommand(args, OverlayId.Fracture, new FractureOverlay()));
+            Register("display-overlay-tunnel", args => HandleOverlayCommand(args, OverlayId.TunnelVision, new TunnelVisionOverlay()));
+            Register("display-overlay-trauma", args => ScreenShake.Instance.SetTrauma(ParseFloatCommandArgs(args)));
 
             // Reload the language strings, loading any changes that have been made without having to restart the game
             Register("language-regenerate", _ => TazLang.Load(Settings.GlobalSettings.UILanguage));
         }
+
+        private static void HandleOverlayCommand(string[] args, OverlayId id, ScreenOverlayPreset preset)
+        {
+            bool show = ParseBooleanCommandArgs(args);
+            if (show)
+                ScreenOverlayManager.Instance.Show(id, preset);
+            else
+                ScreenOverlayManager.Instance.Hide(id);
+        }
+
+        private static float ParseFloatCommandArgs(string[] args) => args?.Length > 1 && float.TryParse(args[1], out float value) ? value : 0;
 
         /// <summary>
         ///     Parses a command and returns a boolean indicating whether the first argument is 'truthy'
