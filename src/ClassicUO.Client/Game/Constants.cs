@@ -9,6 +9,12 @@ namespace ClassicUO.Game
         public const int MIN_FPS = 12;
         public const int MAX_FPS = 1000;
 
+        /// <summary>
+        /// Name of the sub-folder (relative to a scoped save location) that holds rotating
+        /// backups of JSON save files. Shared by the various JSON save systems.
+        /// </summary>
+        public const string BACKUP_FOLDER = "backups";
+
         public const int CHARACTER_ANIMATION_DELAY = 80;
         public const int ITEM_EFFECT_ANIMATION_DELAY = 50;
 

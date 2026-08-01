@@ -285,7 +285,7 @@ namespace ClassicUO.Game.GameObjects
             int offsetY = 0;
 
             int minX = 6;
-            int maxX = minX + Client.Game.Scene.Camera.Bounds.Width - 6;
+            int maxX = Client.Game.Scene.Camera.Bounds.Width - 6;
             int minY = 0;
             //int maxY = minY + ProfileManager.CurrentProfile.GameWindowSize.Y - 6;
 
@@ -300,15 +300,15 @@ namespace ClassicUO.Game.GameObjects
                     continue;
                 }
 
-                int startX = item.RealScreenPosition.X;
-                int endX = startX + item.TextBox.Width;
+                int textWidth = item.TextBox.MeasuredSize.X;
+                int startX = item.RealScreenPosition.X + ((item.TextBox.Width - textWidth) >> 1);
+                int endX = startX + textWidth;
 
                 if (startX < minX)
                 {
                     item.RealScreenPosition.X += minX - startX;
                 }
-
-                if (endX > maxX)
+                else if (endX > maxX)
                 {
                     item.RealScreenPosition.X -= endX - maxX;
                 }

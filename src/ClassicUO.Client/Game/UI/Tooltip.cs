@@ -142,8 +142,12 @@ namespace ClassicUO.Game.UI
                 return false;
             }
 
-            int z_width = (int)((_textBox.Width + 8) * Client.Game.RenderScale);
-            int z_height = (int)((_textBox.Height + 8) * Client.Game.RenderScale);
+            // Tooltip dimensions stay in logical UI space: the whole UI is drawn to a render
+            // target that the global RenderScale maps onto the screen at blit time, so multiplying
+            // here would double-count the scale (background scales with RenderScale^2 while the
+            // text scales with RenderScale once). See ScaleHelper's "never multiply by RenderScale".
+            int z_width = _textBox.Width + 8;
+            int z_height = _textBox.Height + 8;
 
             if (x < 0)
             {
