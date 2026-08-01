@@ -16,7 +16,7 @@ All notable changes to TazUO will be recorded here.
 * Counter bar cells can now hold any spell bar action (spell, macro, weapon ability, script, or skill) in addition to item counters, with per-cell hotkeys (via the shared hotkey window), optional keybind labels, active-ability highlighting, and a hotkey-press flash - [P.R 812](https://github.com/PlayTazUO/TazUO/pull/812) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
-* Fixed the bandage agent monopolizing the shared action queue: heals still run through the queue but no longer reset the global action cooldown (they are throttled by the agent's own timer), and the queued heal is re-validated when it runs so it no longer fires - or resets the cooldown - on a round where no heal is actually needed ([bittiez](https://github.com/bittiez))
+* Fixed the bandage agent monopolizing the shared action queue: heals still run through the queue, but the queued heal is now re-validated when it runs and only resets the global action cooldown on rounds where a bandage is actually applied - so no-op heal rounds (mobile recovered, still on the bandage timer, no bandage, etc.) no longer stall the player's own queued loot/move/equip actions ([bittiez](https://github.com/bittiez))
 * Fixed text draw position bouncing with always show names enabled - [P.R 840](https://github.com/PlayTazUO/TazUO/pull/840) ([bittiez](https://github.com/bittiez))
 * Fixed spell cast bar not drawing based on actual player position - [P.R 839](https://github.com/PlayTazUO/TazUO/pull/839) ([bittiez](https://github.com/bittiez))
 * Fixed unexpected behaviour when clicking outside of an input field - [P.R 837](https://github.com/PlayTazUO/TazUO/pull/837) ([bittiez](https://github.com/bittiez))

@@ -35,11 +35,14 @@ public class ObjectActionQueue : ConcurrentPriorityQueue<ObjectActionQueueItem, 
             item.Action?.Invoke();
             item.AfterInvoked?.Invoke(item);
 
-            // Some items (e.g. bandage heals) throttle themselves and shouldn't reset the
-            // shared cooldown - otherwise they'd stall the player's own queued actions. Skip
-            // the cooldown for those but still process at most one item per tick.
-            if (item.TriggersGlobalCooldown)
-                GlobalActionCooldown.BeginCooldown();
+            // Evaluated after the action runs, so items can report whether they actually did
+            // work (e.g. a bandage heal that self-throttles only counts on rounds where a heal
+            // was really sent). Items that did no work don't reset the shared cooldown and
+            // don't stall the queue - we drain to the next item this same tick.
+            if (!(item.TriggersGlobalCooldown?.Invoke() ?? true))
+                continue;
+
+            GlobalActionCooldown.BeginCooldown();
             break;
         }
     }
@@ -57,11 +60,13 @@ public class ObjectActionQueueItem(Action action, Action<ObjectActionQueueItem> 
     public bool Canceled { get; private set; }
 
     /// <summary>
-    /// When false, the queue runs this item but does not start the shared
-    /// <see cref="GlobalActionCooldown"/> afterwards. Use for self-throttled actions that
-    /// must not block the player's other queued item actions. Defaults to true.
+    /// Evaluated by the queue after <see cref="Action"/> runs to decide whether this item
+    /// starts the shared <see cref="GlobalActionCooldown"/>. Returning false runs the item
+    /// but skips the cooldown, so self-throttled actions (e.g. a bandage heal that didn't
+    /// actually fire this round) don't block the player's other queued item actions.
+    /// Defaults to always true.
     /// </summary>
-    public bool TriggersGlobalCooldown { get; init; } = true;
+    public Func<bool> TriggersGlobalCooldown { get; init; } = static () => true;
 
     public void SetCanceled(bool canceled = true) => Canceled = canceled;
 

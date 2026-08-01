@@ -367,26 +367,40 @@ namespace ClassicUO.Game.Managers
             // A heal is being attempted, so refresh the retry deadline for this mobile.
             _retryDeadlines[mobile.Serial] = Time.Ticks + MAX_RETRY_DURATION_MS;
 
-            // Only enqueue if not already in the global priority queue. Bandage heals are
-            // throttled by _nextBandageTime, so they must not reset the shared action cooldown
-            // (TriggersGlobalCooldown = false) - otherwise every heal would stall the player's
-            // own queued loot/move/equip actions.
+            // Only enqueue if not already in the global priority queue. The heal re-validates
+            // when it runs and may not actually fire (mobile recovered, still on the bandage
+            // timer, no bandage, etc.). Only a heal that really went out should reset the shared
+            // action cooldown - otherwise a no-op heal round would stall the player's own queued
+            // loot/move/equip actions. TriggersGlobalCooldown reads the executed result, which
+            // the queue evaluates after the action runs.
             if (_enqueuedInGlobalQueue.Add(mobile.Serial))
+            {
+                bool healExecuted = false;
                 ObjectActionQueue.Instance.Enqueue(
-                    new ObjectActionQueueItem(() => ExecuteHealMobile(mobile)) { TriggersGlobalCooldown = false },
+                    new ObjectActionQueueItem(() => healExecuted = ExecuteHealMobile(mobile))
+                    {
+                        TriggersGlobalCooldown = () => healExecuted
+                    },
                     ActionPriority.Immediate);
+            }
 
             // Keep the mobile queued so we re-check until IsHealCandidate is false, even if no HP-change packet arrives.
             ScheduleRetry(mobile.Serial);
         }
 
-        private void ExecuteHealMobile(Mobile mobile)
+        /// <summary>
+        /// Sends a heal at execution time if it is still warranted.
+        /// </summary>
+        /// <returns>True if a bandage was actually sent this round; false if the heal was skipped
+        /// (recovered, still throttled, no bandage, etc.). The queue uses this to decide whether
+        /// the heal should reset the shared action cooldown.</returns>
+        private bool ExecuteHealMobile(Mobile mobile)
         {
             // Remove from tracking set now that we're executing
             _enqueuedInGlobalQueue.Remove(mobile.Serial);
 
             if (World.Instance == null || World.Instance.Player == null || mobile == null)
-                return;
+                return false;
 
             // Re-validate at execution time. The item may have waited in the queue while the
             // mobile recovered, another heal completed, or the buff/timer state changed. Without
@@ -395,7 +409,7 @@ namespace ClassicUO.Game.Managers
             if ((CheckForBuff && IsBandagingBuffActive) || Time.Ticks < _nextBandageTime || !ShouldAttemptHeal(mobile))
             {
                 ScheduleRetry(mobile.Serial);
-                return;
+                return false;
             }
 
             Item bandage = FindBandage();
@@ -403,7 +417,7 @@ namespace ClassicUO.Game.Managers
             {
                 // No bandage found, schedule retry to check again later
                 ScheduleRetry(mobile.Serial);
-                return;
+                return false;
             }
 
             if (UseNewBandagePacket)
@@ -426,6 +440,7 @@ namespace ClassicUO.Game.Managers
 
             // Schedule recheck in case heal failed and hp stayed the same
             ScheduleRetry(mobile.Serial);
+            return true;
         }
 
         private Item FindBandage()
