@@ -25,6 +25,7 @@ namespace ClassicUO.Game.Managers
         private long _bandagingBuffSetTime = 0;
         private long _nextRetryTime = 0;
         private readonly LinkedList<uint> _pendingHeals = new();
+        private readonly HashSet<uint> _enqueuedInGlobalQueue = new();
         private readonly Dictionary<uint, long> _retryDeadlines = new();
 
         // How often the pending heal queue is re-checked from Update(). Update() runs
@@ -41,6 +42,7 @@ namespace ClassicUO.Game.Managers
         private const long MAX_BANDAGE_BUFF_AGE_MS = 15_000;
 
         public int PendingHealCount => _pendingHeals.Count;
+        public int PendingInGlobalQueueCount => _enqueuedInGlobalQueue.Count;
 
         private bool IsEnabled => ProfileManager.CurrentProfile?.EnableBandageAgent ?? false;
         private bool FriendBandagingEnabled => ProfileManager.CurrentProfile?.BandageAgentBandageFriends ?? false;
@@ -172,7 +174,7 @@ namespace ClassicUO.Game.Managers
         {
             if (!IsEnabled)
             {
-                if (_pendingHeals.Count > 0 || _retryDeadlines.Count > 0)
+                if (_pendingHeals.Count > 0 || _enqueuedInGlobalQueue.Count > 0 || _retryDeadlines.Count > 0)
                     ClearAllPendingHeals();
                 return;
             }
@@ -365,19 +367,36 @@ namespace ClassicUO.Game.Managers
             // A heal is being attempted, so refresh the retry deadline for this mobile.
             _retryDeadlines[mobile.Serial] = Time.Ticks + MAX_RETRY_DURATION_MS;
 
-            // Send the heal directly instead of routing it through the shared ObjectActionQueue.
-            // Bandaging is already throttled by its own _nextBandageTime, so it must not run at
-            // Immediate priority (ahead of the player's queued loot/move/equip actions) nor reset
-            // the shared GlobalActionCooldown - doing so let the agent monopolize the queue and
-            // reset the cooldown even on rounds where no heal actually went out. We're always on
-            // the main thread here (packet handler or Update()), so a direct send is safe.
-            ExecuteHealMobile(mobile);
+            // Only enqueue if not already in the global priority queue. Bandage heals are
+            // throttled by _nextBandageTime, so they must not reset the shared action cooldown
+            // (TriggersGlobalCooldown = false) - otherwise every heal would stall the player's
+            // own queued loot/move/equip actions.
+            if (_enqueuedInGlobalQueue.Add(mobile.Serial))
+                ObjectActionQueue.Instance.Enqueue(
+                    new ObjectActionQueueItem(() => ExecuteHealMobile(mobile)) { TriggersGlobalCooldown = false },
+                    ActionPriority.Immediate);
+
+            // Keep the mobile queued so we re-check until IsHealCandidate is false, even if no HP-change packet arrives.
+            ScheduleRetry(mobile.Serial);
         }
 
         private void ExecuteHealMobile(Mobile mobile)
         {
+            // Remove from tracking set now that we're executing
+            _enqueuedInGlobalQueue.Remove(mobile.Serial);
+
             if (World.Instance == null || World.Instance.Player == null || mobile == null)
                 return;
+
+            // Re-validate at execution time. The item may have waited in the queue while the
+            // mobile recovered, another heal completed, or the buff/timer state changed. Without
+            // this a bandage could be wasted on a mobile that no longer needs it, and the per-heal
+            // throttle could be bypassed when several mobiles are enqueued in the same frame.
+            if ((CheckForBuff && IsBandagingBuffActive) || Time.Ticks < _nextBandageTime || !ShouldAttemptHeal(mobile))
+            {
+                ScheduleRetry(mobile.Serial);
+                return;
+            }
 
             Item bandage = FindBandage();
             if (bandage == null)
@@ -437,6 +456,7 @@ namespace ClassicUO.Game.Managers
         private void ClearAllPendingHeals()
         {
             _pendingHeals.Clear();
+            _enqueuedInGlobalQueue.Clear();
             _retryDeadlines.Clear();
         }
 

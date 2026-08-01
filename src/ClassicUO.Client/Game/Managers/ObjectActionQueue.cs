@@ -34,7 +34,12 @@ public class ObjectActionQueue : ConcurrentPriorityQueue<ObjectActionQueueItem, 
 
             item.Action?.Invoke();
             item.AfterInvoked?.Invoke(item);
-            GlobalActionCooldown.BeginCooldown();
+
+            // Some items (e.g. bandage heals) throttle themselves and shouldn't reset the
+            // shared cooldown - otherwise they'd stall the player's own queued actions. Skip
+            // the cooldown for those but still process at most one item per tick.
+            if (item.TriggersGlobalCooldown)
+                GlobalActionCooldown.BeginCooldown();
             break;
         }
     }
@@ -50,6 +55,13 @@ public class ObjectActionQueueItem(Action action, Action<ObjectActionQueueItem> 
     public Action Action { get; } = action;
     public Action<ObjectActionQueueItem> AfterInvoked { get; } = afterInvoked;
     public bool Canceled { get; private set; }
+
+    /// <summary>
+    /// When false, the queue runs this item but does not start the shared
+    /// <see cref="GlobalActionCooldown"/> afterwards. Use for self-throttled actions that
+    /// must not block the player's other queued item actions. Defaults to true.
+    /// </summary>
+    public bool TriggersGlobalCooldown { get; init; } = true;
 
     public void SetCanceled(bool canceled = true) => Canceled = canceled;
 
