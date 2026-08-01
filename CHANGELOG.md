@@ -16,6 +16,7 @@ All notable changes to TazUO will be recorded here.
 * Counter bar cells can now hold any spell bar action (spell, macro, weapon ability, script, or skill) in addition to item counters, with per-cell hotkeys (via the shared hotkey window), optional keybind labels, active-ability highlighting, and a hotkey-press flash - [P.R 812](https://github.com/PlayTazUO/TazUO/pull/812) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed unexpected behaviour when clicking outside of an input field - [P.R 837](https://github.com/PlayTazUO/TazUO/pull/837) ([bittiez](https://github.com/bittiez))
 * Fixed mobile names not being drawn at the edge of the screen for off-screen mobiles - [P.R 838](https://github.com/PlayTazUO/TazUO/pull/838) ([bittiez](https://github.com/bittiez))
 * Added a suggested crash fix for "Bad uop file" errors, explaining that a `.uop` data file is corrupt, truncated, or mid-patch and how to resolve it - [P.R 841](https://github.com/PlayTazUO/TazUO/pull/841) ([bittiez](https://github.com/bittiez))
 * Guarded the remaining LegionAPI/ApiUiGump methods that touched the game world, UI manager, or gump controls off the main thread, fixing a double-free malloc crash caused by Legion scripts racing with the main thread - [P.R 836](https://github.com/PlayTazUO/TazUO/pull/836) ([bittiez](https://github.com/bittiez))
