@@ -11,12 +11,12 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 public class ContainsLevenshteinComboBox<T> : ScoredSearchComboBox<T>
 {
     /// <summary>
-    /// Deliberately shadows the base's interface-typed property with the concrete strategy, so
-    /// its knobs (MaxDistance, MinScore, CaseSensitive, ...) are reachable without a cast.
-    /// Resolved from the base property on every read rather than cached at construction: the
-    /// strategy can be replaced afterwards (the public setter, or CopyFrom cloning it), and a
-    /// cached field would go on exposing knobs that no longer drive what the dropdown searches
-    /// with. Null once the strategy has been replaced with an unrelated one.
+    ///     Deliberately shadows the base's interface-typed property with the concrete strategy, so
+    ///     its knobs (MaxDistance, MinScore, CaseSensitive, ...) are reachable without a cast.
+    ///     Resolved from the base property on every read rather than cached at construction: the
+    ///     strategy can be replaced afterwards (the public setter, or CopyFrom cloning it), and a
+    ///     cached field would go on exposing knobs that no longer drive what the dropdown searches
+    ///     with. Null once the strategy has been replaced with an unrelated one.
     /// </summary>
     public new ContainsThenLevenshteinSearchStrategy? Strategy => base.Strategy as ContainsThenLevenshteinSearchStrategy;
 
@@ -33,7 +33,10 @@ public class ContainsLevenshteinComboBox : ContainsLevenshteinComboBox<string>
     {
     }
 
-    /// <summary>Creates a combo box pre-populated with <paramref name="items"/>, invoking <paramref name="onSelected"/> on selection change.</summary>
+    /// <summary>
+    ///     Creates a combo box pre-populated with <paramref name="items" />, invoking <paramref name="onSelected" /> on
+    ///     selection change.
+    /// </summary>
     /// <param name="items">Items to populate the dropdown with</param>
     /// <param name="onSelected">Callback invoked with the newly selected item</param>
     /// <param name="styleName">Myra stylesheet style name to apply</param>
@@ -46,44 +49,61 @@ public class ContainsLevenshteinComboBox : ContainsLevenshteinComboBox<string>
         _onSelected = onSelected;
     }
 
-    /// <summary>Creates a combo box pre-populated with <paramref name="items"/> and pre-selects <paramref name="selectedItem"/>.</summary>
-    /// <param name="selectedItem">Item to select initially; must be present in <paramref name="items"/></param>
+    /// <summary>
+    ///     Creates a combo box pre-populated with <paramref name="items" /> and pre-selects
+    ///     <paramref name="selectedItem" />.
+    /// </summary>
+    /// <param name="selectedItem">Item to select initially; must be present in <paramref name="items" /></param>
     /// <param name="items">Items to populate the dropdown with</param>
     /// <param name="onSelected">Callback invoked with the newly selected item</param>
+    /// <param name="addSelectedItemIfMissing">
+    ///     Determines whether <paramref name="selectedItem" /> will be added to the options list if it is missing.
+    ///     If <see langword="false" /> and the selected item does not exist in the <paramref name="items" /> list, the
+    ///     selection will be ignored
+    /// </param>
     /// <param name="styleName">Myra stylesheet style name to apply</param>
     public ContainsLevenshteinComboBox(
         string selectedItem,
         IEnumerable<string> items,
         Action<string?> onSelected,
+        bool addSelectedItemIfMissing = true,
         string styleName = Stylesheet.DefaultStyleName
     ) : this(items, onSelected, styleName)
     {
-        // Need to improve this to just accept a selected item...
-        SelectedIndex = Items.IndexOf(selectedItem);
+        int index = Items.IndexOf(selectedItem);
+
+        // selectedItem may no longer be present in items (e.g. a persisted font that was
+        // removed/renamed). Add it so the configured value stays visible instead of showing
+        // no selection at all.
+        if (index < 0 && addSelectedItemIfMissing)
+        {
+            Items.Add(selectedItem);
+            index = Items.Count - 1;
+        }
+
+        SelectedIndex = index;
     }
 
-    /// <summary>Forwards the new selection to <see cref="_onSelected"/>.</summary>
+    /// <summary>Forwards the new selection to <see cref="_onSelected" />.</summary>
     private void OnSelectedItemChanged(object? sender, ValueChangedEventArgs<string> e) => _onSelected?.Invoke(e.NewValue);
 
-    /// <summary>Subscribes to selection changes while placed on a desktop, unsubscribes otherwise, to avoid leaking the handler.</summary>
+    /// <summary>
+    ///     Subscribes to selection changes while placed on a desktop, unsubscribes otherwise, to avoid leaking the
+    ///     handler.
+    /// </summary>
     protected override void OnPlacedChanged()
     {
         base.OnPlacedChanged();
         ManageSubscriptions(Desktop != null);
     }
 
-    /// <summary>Adds or removes the <see cref="SelectedItemChanged"/> subscription.</summary>
+    /// <summary>Adds or removes the <see cref="SearchableComboBox{T}.SelectedItemChanged" /> subscription.</summary>
     /// <param name="subscribe">True to subscribe, false to unsubscribe</param>
     private void ManageSubscriptions(bool subscribe)
     {
         if (subscribe)
-        {
             SelectedItemChanged += OnSelectedItemChanged;
-        }
         else
-        {
             SelectedItemChanged -= OnSelectedItemChanged;
-        }
-
     }
 }

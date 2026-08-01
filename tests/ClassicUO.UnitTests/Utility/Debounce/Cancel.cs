@@ -44,5 +44,17 @@ namespace ClassicUO.UnitTests.Utility.Debounce
 
             act.Should().NotThrow();
         }
+
+        [Fact]
+        public void Cancel_After_Dispose_Should_Not_Throw()
+        {
+            var debounce = new DebounceClass(() => { }, 30);
+            debounce.Invoke();
+            debounce.Dispose();
+
+            System.Action act = () => debounce.Cancel();
+
+            act.Should().NotThrow();
+        }
     }
 }

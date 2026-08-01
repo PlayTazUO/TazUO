@@ -114,6 +114,9 @@ internal sealed class DebounceEngine : IDisposable
     [MethodImpl(MethodImplOptions.Synchronized)]
     public void Cancel()
     {
+        if (_disposed)
+            return;
+
         _windowOpen = false;
         _callPending = false;
         _timer.Change(Timeout.Infinite, Timeout.Infinite);
@@ -123,6 +126,9 @@ internal sealed class DebounceEngine : IDisposable
     [MethodImpl(MethodImplOptions.Synchronized)]
     public void Flush()
     {
+        if (_disposed)
+            return;
+
         if (!_windowOpen)
             return;
 
@@ -139,6 +145,9 @@ internal sealed class DebounceEngine : IDisposable
     [MethodImpl(MethodImplOptions.Synchronized)]
     public void Dispose()
     {
+        if (_disposed)
+            return;
+
         _disposed = true;
         _windowOpen = false;
         _timer.Dispose();
