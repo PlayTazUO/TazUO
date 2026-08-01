@@ -300,10 +300,6 @@ namespace ClassicUO.Game.GameObjects
                     continue;
                 }
 
-                // The overhead box is a fixed, wide, centre-aligned box, so the visible text sits
-                // in the middle of it. Clamp the visible text's real edges (not the whole box) to
-                // the screen so the name stays fully on screen while being drawn at the edge
-                // closest to the object, instead of drifting toward the middle of the screen.
                 int textWidth = item.TextBox.MeasuredSize.X;
                 int startX = item.RealScreenPosition.X + ((item.TextBox.Width - textWidth) >> 1);
                 int endX = startX + textWidth;
