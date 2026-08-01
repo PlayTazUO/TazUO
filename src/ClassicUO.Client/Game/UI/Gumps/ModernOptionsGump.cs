@@ -3161,6 +3161,14 @@ namespace ClassicUO.Game.UI.Gumps
                 ), true, page
             );
 
+            content.AddToRight
+            (
+                new SliderWithLabel
+                (TazLang.Get("mog_tazuo_minimumitemcontrast"), 0, ThemeSettings.SLIDER_WIDTH, 1, 10,
+                    profile.GridHighlightLowContrastMinimum,
+                    (i) => { profile.GridHighlightLowContrastMinimum = (byte)i; }), true, page
+            );
+
             content.RemoveIndent();
 
             content.BlankLine();
