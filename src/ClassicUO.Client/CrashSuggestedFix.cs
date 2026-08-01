@@ -130,6 +130,11 @@ namespace ClassicUO
                 {
                     return zlibFix;
                 }
+
+                if (TryGetBadUopFileCrashFix(exception, out string uopFix))
+                {
+                    return uopFix;
+                }
             }
             catch
             {
@@ -229,6 +234,41 @@ namespace ClassicUO
             sb.AppendLine("1. Remove the '-zlib' launch argument. Instead, enable managed zlib from the Options menu on the login screen (Misc tab) - it does the same thing and is saved for you.");
             sb.AppendLine("2. Reinstall or re-download TazUO so every file is updated together, then try again.");
             sb.AppendLine("3. If you copied files manually, make sure ClassicUO.Utility.dll was replaced along with the rest of the client.");
+            fix = sb.ToString();
+            return true;
+        }
+
+        private static bool TryGetBadUopFileCrashFix(Exception e, out string fix)
+        {
+            fix = null;
+
+            // ToString() on the top-level exception includes the stack traces of any inner
+            // (and aggregated) exceptions, so we can inspect the whole chain in one string.
+            string details = e.ToString();
+
+            if (string.IsNullOrEmpty(details))
+                return false;
+
+            // "Bad uop file" is thrown by UOFileUop.FillEntries when a .uop file does not begin
+            // with the expected magic number. That means the file is truncated, corrupt, still
+            // being downloaded/patched, or not actually a UOP file (for example a 0-byte
+            // placeholder or a mismatched client version).
+            if (!(e is ArgumentException) ||
+                !details.Contains("Bad uop file") ||
+                !details.Contains("UOFileUop.FillEntries"))
+                return false;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("TazUO crashed while loading one of the UO data files (.uop).");
+            sb.AppendLine("The file did not start with the expected header, which means it is corrupt, truncated, still being downloaded/patched, or is not a real UOP file (for example an empty placeholder).");
+            sb.AppendLine("The name just above 'UOFileUop.FillEntries' in the error (for example TileArtLoader, ArtLoader, etc.) tells you which set of files is affected.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. Make sure TazUO is pointed at a complete Ultima Online data directory and that no files are 0 bytes.");
+            sb.AppendLine("2. Verify/repair your UO installation (through the official installer or your shard's patcher) to restore any corrupt or truncated files.");
+            sb.AppendLine("3. If a patcher or download was still running, let it finish completely and then start TazUO again.");
+            sb.AppendLine("4. If you copied the data files manually, re-copy them and confirm none were skipped or truncated.");
+            sb.AppendLine("5. Confirm the client version configured in TazUO matches the version of your UO data files.");
             fix = sb.ToString();
             return true;
         }

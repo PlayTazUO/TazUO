@@ -438,6 +438,10 @@ namespace ClassicUO.Game.Scenes
                 return false;
             }
 
+            // Drop focus from other inputs the instant the world is pressed, not just on release,
+            // so a press-and-hold (e.g. hold-to-walk) also releases the previously focused field.
+            UIManager.RestoreSystemChatFocus();
+
             if (_world.CustomHouseManager != null)
             {
                 HandleHouseManagerMouseDown();
@@ -540,11 +544,7 @@ namespace ClassicUO.Game.Scenes
                 return false;
             }
 
-            if (UIManager.SystemChat != null && !UIManager.SystemChat.IsFocused)
-            {
-                UIManager.KeyboardFocusControl = null;
-                UIManager.SystemChat.SetFocus();
-            }
+            UIManager.RestoreSystemChatFocus();
 
             if (!ProfileManager.CurrentProfile.DisableAutoMove && _rightMousePressed)
             {

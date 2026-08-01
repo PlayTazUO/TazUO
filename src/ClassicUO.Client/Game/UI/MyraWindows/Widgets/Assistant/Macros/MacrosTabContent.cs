@@ -4,6 +4,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
 using System;
@@ -356,18 +357,20 @@ public static class MacrosTabContent
 
             MacroObject capturedAction = action;
 
-#pragma warning disable CS0612, CS0618
-            var typeCombo = new ComboBox
+            var typeCombo = new ContainsLevenshteinComboBox
             {
-                Width = 160,
                 VerticalAlignment = VerticalAlignment.Center,
+                TooltipSelector = s => s
             };
-            foreach (string typeName in _sortedMacroTypeNames)
-                typeCombo.Items.Add(new ListItem(typeName));
 
-            int displayIdx = _macroTypeToDisplayIndex.TryGetValue(capturedAction.Code, out int di) ? di : 0;
+            MyraStyle.ApplySearchComboBoxPopupBorder(typeCombo);
+
+            foreach (string typeName in _sortedMacroTypeNames)
+                typeCombo.Items.Add(typeName);
+
+            int displayIdx = _macroTypeToDisplayIndex.GetValueOrDefault(capturedAction.Code, 0);
             typeCombo.SelectedIndex = displayIdx;
-            typeCombo.SelectedIndexChanged += (_, _) =>
+            typeCombo.SelectedItemChanged += (_, _) =>
             {
                 if (typeCombo.SelectedIndex == null) return;
                 MacroType newType = _sortedMacroTypeValues[typeCombo.SelectedIndex.Value];
@@ -377,13 +380,10 @@ public static class MacrosTabContent
                 onTypeReplace(newAction);
                 MarkDirty();
 
-                // Close the dropdown explicitly, and defer the rebuild until this
-                // event (and the popup close) has fully finished — rebuilding the
-                // widget tree synchronously here corrupts Myra's open ComboBox popup.
-                typeCombo.Desktop?.HideContextMenu();
-                owner.Defer(BuildActionsPanel);
+                // ContainsLevenshteinComboBox hides its popup before raising SelectedItemChanged,
+                // so a synchronous rebuild here is safe (unlike the old obsolete ComboBox).
+                BuildActionsPanel();
             };
-#pragma warning restore CS0612, CS0618
             row.Widgets.Add(typeCombo);
 
             // Sub-type dropdown
@@ -415,24 +415,19 @@ public static class MacrosTabContent
                 int curSubIdx = Array.IndexOf(subValues, capturedAction.SubCode);
                 if (curSubIdx < 0) curSubIdx = 0;
 
-#pragma warning disable CS0612, CS0618
-                var subCombo = new ComboBox
-                {
-                    Width = 160,
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
+                var subCombo = new ContainsLevenshteinComboBox { VerticalAlignment = VerticalAlignment.Center };
+                MyraStyle.ApplySearchComboBoxPopupBorder(subCombo);
 
                 foreach (string subName in subNames)
-                    subCombo.Items.Add(new ListItem(subName));
+                    subCombo.Items.Add(subName);
 
                 subCombo.SelectedIndex = curSubIdx;
-                subCombo.SelectedIndexChanged += (_, _) =>
+                subCombo.SelectedItemChanged += (_, _) =>
                 {
                     if (subCombo.SelectedIndex == null) return;
                     capturedAction.SubCode = subValues[subCombo.SelectedIndex.Value];
                     MarkDirty();
                 };
-#pragma warning restore CS0612, CS0618
                 row.Widgets.Add(subCombo);
             }
             // Text input
