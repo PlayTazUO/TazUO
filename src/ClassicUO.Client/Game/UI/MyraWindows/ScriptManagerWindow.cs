@@ -31,7 +31,7 @@ public class ScriptManagerWindow : MyraControl
         "\n# Or documentation at" +
         "\n#   https://tazuo.org/legion/legionapi/";
 
-    private const string NO_GROUP_TEXT = "No group";
+    private static string NoGroupText => TazLang.Get("scriptmanager_nogroup", "No group");
 
     public static ScriptManagerWindow Instance { get; private set; }
 
@@ -46,7 +46,7 @@ public class ScriptManagerWindow : MyraControl
 
     private MyraGrid _mainGrid;
 
-    public ScriptManagerWindow() : base("Script Manager")
+    public ScriptManagerWindow() : base(TazLang.Get("scriptmanager_title", "Script Manager"))
     {
         Instance = this;
         CanBeSaved = true;
@@ -171,10 +171,10 @@ public class ScriptManagerWindow : MyraControl
             Margin = new Thickness(0, 0, 0, 4)
         };
 
-        bar.Widgets.Add(new MyraButton("Menu", ShowMainMenu));
-        bar.Widgets.Add(new MyraButton("Add +", ShowAddMenu));
+        bar.Widgets.Add(new MyraButton(TazLang.Get("scriptmanager_menu", "Menu"), ShowMainMenu));
+        bar.Widgets.Add(new MyraButton(TazLang.Get("scriptmanager_addbutton", "Add +"), ShowAddMenu));
 
-        var searchBox = new MyraInputBox { HintText = "Search...", Width = 180 };
+        var searchBox = new MyraInputBox { HintText = TazLang.Get("scriptmanager_search_hint", "Search..."), Width = 180 };
         searchBox.TextChangedByUser += (_, _) =>
         {
             _searchFilter = searchBox.Text ?? "";
@@ -188,13 +188,13 @@ public class ScriptManagerWindow : MyraControl
     {
         bool cacheDisabled = LegionScripting.LegionScripting.LScriptSettings.DisableModuleCache;
         ShowContextMenu(
-            ("Refresh",                    () => _pendingReload = true),
-            ("Public Script Browser",      ScriptBrowser.Show),
-            ("Script Recording",           () => UIManager.Add(new ScriptRecordingGump())),
-            ("Scripting Info",             ScriptingInfoGump.Show),
-            ("Persistent Variables",       PersistentVarsWindow.Show),
-            ("Running Scripts",            RunningScriptsWindow.Show),
-            (ContextMenuLabelToggle(cacheDisabled, "Disable module cache"), () =>
+            (TazLang.Get("scriptmanager_refresh", "Refresh"),                    () => _pendingReload = true),
+            (TazLang.Get("scriptmanager_publicbrowser", "Public Script Browser"),      ScriptBrowser.Show),
+            (TazLang.Get("scriptmanager_scriptrecording", "Script Recording"),           () => UIManager.Add(new ScriptRecordingGump())),
+            (TazLang.Get("scriptmanager_scriptinginfo", "Scripting Info"),             ScriptingInfoGump.Show),
+            (TazLang.Get("scriptmanager_persistentvars", "Persistent Variables"),       PersistentVarsWindow.Show),
+            (TazLang.Get("scriptmanager_runningscripts", "Running Scripts"),           RunningScriptsWindow.Show),
+            (ContextMenuLabelToggle(cacheDisabled, TazLang.Get("scriptmanager_disablemodulecache", "Disable module cache")), () =>
                 LegionScripting.LegionScripting.LScriptSettings.DisableModuleCache = !cacheDisabled)
         );
     }
@@ -202,8 +202,8 @@ public class ScriptManagerWindow : MyraControl
     private void ShowAddMenu()
     {
         _contextMenuGroup = "";
-        _contextMenuSubGroup = NO_GROUP_TEXT;
-        ShowGroupContextMenu("", NO_GROUP_TEXT);
+        _contextMenuSubGroup = NoGroupText;
+        ShowGroupContextMenu("", NoGroupText);
     }
 
     // ── Script list ───────────────────────────────────────────────────────
@@ -237,7 +237,7 @@ public class ScriptManagerWindow : MyraControl
 
         foreach (KeyValuePair<string, Dictionary<string, List<ScriptFile>>> group in groupsMap)
         {
-            string groupName = string.IsNullOrEmpty(group.Key) ? NO_GROUP_TEXT : group.Key;
+            string groupName = string.IsNullOrEmpty(group.Key) ? NoGroupText : group.Key;
             BuildGroupWidgets(groupName, group.Value, "");
 
             if (lastGroupIdx == groupsMap.Count - 1)
@@ -258,8 +258,8 @@ public class ScriptManagerWindow : MyraControl
     private void BuildGroupWidgets(string groupName, Dictionary<string, List<ScriptFile>> subGroups, string parentGroup)
     {
         string fullGroupPath = string.IsNullOrEmpty(parentGroup) ? groupName : Path.Combine(parentGroup, groupName);
-        string normalizedGroupName = groupName == NO_GROUP_TEXT ? "" : groupName;
-        string normalizedParentGroup = parentGroup == NO_GROUP_TEXT ? "" : parentGroup;
+        string normalizedGroupName = groupName == NoGroupText ? "" : groupName;
+        string normalizedParentGroup = parentGroup == NoGroupText ? "" : parentGroup;
         string indent = string.IsNullOrEmpty(parentGroup) ? "" : "   ";
 
         bool isCollapsedInSettings = string.IsNullOrEmpty(normalizedParentGroup)
@@ -364,7 +364,11 @@ public class ScriptManagerWindow : MyraControl
         row.Widgets.Add(new MyraButton("...", () => ShowScriptContextMenu(script)));
 
         bool isPlaying = script.IsPlaying;
-        var playStopBtn = new MyraButton(isPlaying ? "Stop" : "Play", () =>
+        string playBtnText = isPlaying
+            ? TazLang.Get("scriptmanager_stopbutton", "Stop")
+            : TazLang.Get("scriptmanager_playbutton", "Play");
+
+        var playStopBtn = new MyraButton(playBtnText, () =>
         {
             if (script.IsPlaying)
                 LegionScripting.LegionScripting.StopScript(script);
@@ -380,10 +384,14 @@ public class ScriptManagerWindow : MyraControl
 
         if (hasGlobal || hasChar)
         {
+            string autostartTooltip = hasGlobal
+                ? TazLang.Get("scriptmanager_autostart_global_tooltip", "Autostart: All characters")
+                : TazLang.Get("scriptmanager_autostart_char_tooltip", "Autostart: This character");
+
             row.Widgets.Add(new MyraLabel(hasGlobal ? "[G]" : "[C]", MyraLabel.TextStyle.P)
             {
                 TextColor = hasGlobal ? Color.Gold : new Color(0, 204, 255, 255),
-                Tooltip = hasGlobal ? "Autostart: All characters" : "Autostart: This character"
+                Tooltip = autostartTooltip
             });
         }
 
@@ -413,14 +421,14 @@ public class ScriptManagerWindow : MyraControl
 
         var items = new List<(string, Action)>
         {
-            ("Edit Constants", () => new ScriptConstantsEditorWindow(script)),
-            ("Edit",           () => new ScriptEditorWindow(script))
+            (TazLang.Get("scriptmanager_editconstants", "Edit Constants"), () => new ScriptConstantsEditorWindow(script)),
+            (TazLang.Get("scriptmanager_edit", "Edit"),           () => new ScriptEditorWindow(script))
         };
 
         if (!isZip)
         {
-            items.Add(("Rename",          () => ShowRenameScriptDialog(script)));
-            items.Add(("Edit Externally", () => FileSystemHelper.OpenFileWithDefaultApp(script.FullPath)));
+            items.Add((TazLang.Get("scriptmanager_rename", "Rename"),          () => ShowRenameScriptDialog(script)));
+            items.Add((TazLang.Get("scriptmanager_editexternally", "Edit Externally"), () => FileSystemHelper.OpenFileWithDefaultApp(script.FullPath)));
             items.Add((TazLang.Get("scripting_openlocation"), () =>
             {
                 if (!FileSystemHelper.OpenLocation(script.FullPath))
@@ -437,21 +445,23 @@ public class ScriptManagerWindow : MyraControl
             }));
         }
 
-        items.Add((ContextMenuLabelToggle(globalAuto, "Autostart on all chars"), () =>
+        items.Add((ContextMenuLabelToggle(globalAuto, TazLang.Get("scriptmanager_autostartall", "Autostart on all chars")), () =>
         {
             LegionScripting.LegionScripting.SetAutoPlay(script, true, !globalAuto);
             RebuildScriptList();
         }));
-        items.Add((ContextMenuLabelToggle(charAuto, "Autostart for this char"), () =>
+        items.Add((ContextMenuLabelToggle(charAuto, TazLang.Get("scriptmanager_autostartchar", "Autostart for this char")), () =>
         {
             LegionScripting.LegionScripting.SetAutoPlay(script, false, !charAuto);
             RebuildScriptList();
         }));
 
         HotkeyBinding scriptHotkey = ScriptHotkeysManager.GetBinding(script);
-        string hotkeyLabel = scriptHotkey.IsEmpty ? "Set Hotkey" : $"Set Hotkey ({scriptHotkey.Describe()})";
+        string hotkeyLabel = scriptHotkey.IsEmpty
+            ? TazLang.Get("scriptmanager_sethotkey", "Set Hotkey")
+            : TazLang.Get("scriptmanager_sethotkey_bound", new[] { scriptHotkey.Describe() });
         items.Add((hotkeyLabel, () => new ScriptHotkeyWindow(script)));
-        items.Add(("Create Macro Button", () =>
+        items.Add((TazLang.Get("scriptmanager_createmacrobutton", "Create Macro Button"), () =>
         {
             var mm = MacroManager.TryGetMacroManager(World.Instance);
             if (mm == null) return;
@@ -463,14 +473,14 @@ public class ScriptManagerWindow : MyraControl
             bg.CenterYInViewPort();
             UIManager.Add(bg);
         }));
-        items.Add(("Delete", () =>
+        items.Add((TazLang.Get("scriptmanager_delete", "Delete"), () =>
         {
             if (script is ZipScriptFile zs)
                 ShowZipDeleteConfirm(zs);
             else
                 ShowDeleteConfirm(
-                    "Delete Script",
-                    $"Are you sure you want to delete '{script.FileName}'?\nThis action cannot be undone.",
+                    TazLang.Get("scriptmanager_deletescript_title", "Delete Script"),
+                    TazLang.Get("scriptmanager_deletescript_msg", new[] { script.FileName }),
                     () => PerformDeleteScript(script));
         }));
 
@@ -479,25 +489,29 @@ public class ScriptManagerWindow : MyraControl
 
     private void ShowGroupContextMenu(string parentGroup, string groupName)
     {
-        bool isRealGroup = groupName != NO_GROUP_TEXT && !string.IsNullOrEmpty(groupName);
+        bool isRealGroup = groupName != NoGroupText && !string.IsNullOrEmpty(groupName);
         _contextMenuGroup    = parentGroup;
         _contextMenuSubGroup = groupName;
 
         var items = new List<(string, Action)>();
 
         if (isRealGroup)
-            items.Add(("Rename Group", () => ShowRenameGroupDialog(groupName, parentGroup)));
+            items.Add((TazLang.Get("scriptmanager_renamegroup", "Rename Group"), () => ShowRenameGroupDialog(groupName, parentGroup)));
 
-        items.Add(("New Script", () => ShowNewScriptDialog(_contextMenuGroup, _contextMenuSubGroup)));
+        items.Add((TazLang.Get("scriptmanager_newscript", "New Script"), () => ShowNewScriptDialog(_contextMenuGroup, _contextMenuSubGroup)));
 
         if (string.IsNullOrEmpty(parentGroup))
-            items.Add(("New Group", ShowNewGroupDialog));
+            items.Add((TazLang.Get("scriptmanager_newgroup", "New Group"), ShowNewGroupDialog));
 
         if (isRealGroup)
-            items.Add(("Delete Group", () => ShowDeleteConfirm(
-                "Delete Group",
-                $"Delete group '{groupName}'?\nThis will permanently delete the folder and ALL scripts inside it.",
-                () => PerformDeleteGroup(groupName, parentGroup))));
+            items.Add((
+                TazLang.Get("scriptmanager_deletegroup", "Delete Group"),
+                () => ShowDeleteConfirm(
+                    TazLang.Get("scriptmanager_deletegroup", "Delete Group"),
+                    TazLang.Get("scriptmanager_deletegroup_msg", new[] { groupName }),
+                    () => PerformDeleteGroup(groupName, parentGroup)
+                )
+            ));
 
         ShowContextMenu(items.ToArray());
     }
@@ -506,12 +520,12 @@ public class ScriptManagerWindow : MyraControl
 
     private void ShowNewScriptDialog(string contextGroup, string contextSubGroup)
     {
-        var nameBox = new MyraInputBox { HintText = "script_name", Width = 220 };
+        var nameBox = new MyraInputBox { HintText = TazLang.Get("scriptmanager_scriptname_hint", "script_name"), Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel("Enter a name for this script:", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel(TazLang.Get("scriptmanager_entername_script", "Enter a name for this script:"), MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("New Script", content, ok =>
+        new MyraDialog(TazLang.Get("scriptmanager_newscript", "New Script"), content, ok =>
         {
             if (!ok) return;
             string name = nameBox.Text?.Trim() ?? "";
@@ -522,12 +536,12 @@ public class ScriptManagerWindow : MyraControl
 
     private void ShowNewGroupDialog()
     {
-        var nameBox = new MyraInputBox { HintText = "group_name", Width = 220 };
+        var nameBox = new MyraInputBox { HintText = TazLang.Get("scriptmanager_groupname_hint", "group_name"), Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel("Enter a name for this group:", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel(TazLang.Get("scriptmanager_entername_group", "Enter a name for this group:"), MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("New Group", content, ok =>
+        new MyraDialog(TazLang.Get("scriptmanager_newgroup", "New Group"), content, ok =>
         {
             if (!ok) return;
             CreateGroup(nameBox.Text?.Trim() ?? "", _contextMenuGroup, _contextMenuSubGroup);
@@ -542,10 +556,10 @@ public class ScriptManagerWindow : MyraControl
 
         var nameBox = new MyraInputBox { Text = displayName, Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel($"New name for '{displayName}':", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel(TazLang.Get("scriptmanager_newname_script", new[] { displayName }), MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("Rename Script", content, ok =>
+        new MyraDialog(TazLang.Get("scriptmanager_renamescript_title", "Rename Script"), content, ok =>
         {
             if (ok) PerformRenameScript(script, nameBox.Text?.Trim() ?? "");
         });
@@ -555,10 +569,10 @@ public class ScriptManagerWindow : MyraControl
     {
         var nameBox = new MyraInputBox { Text = groupName, Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel($"New name for group '{groupName}':", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel(TazLang.Get("scriptmanager_newname_group", new[] { groupName }), MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("Rename Group", content, ok =>
+        new MyraDialog(TazLang.Get("scriptmanager_renamegroup", "Rename Group"), content, ok =>
         {
             if (ok) PerformRenameGroup(groupName, parentGroup, nameBox.Text?.Trim() ?? "");
         });
@@ -603,14 +617,14 @@ public class ScriptManagerWindow : MyraControl
             sanitizedName.Contains('\\') || sanitizedName.Contains('/') ||
             sanitizedName.Contains("..") || sanitizedName is "." or "..")
         {
-            GameActions.Print(World.Instance, "Invalid script name.", 32);
+            GameActions.Print(World.Instance, TazLang.Get("scriptmanager_invalidscriptname", "Invalid script name."), 32);
             return;
         }
 
         try
         {
-            string normalizedGroup    = contextGroup    == NO_GROUP_TEXT ? "" : contextGroup;
-            string normalizedSubGroup = contextSubGroup == NO_GROUP_TEXT ? "" : contextSubGroup;
+            string normalizedGroup    = contextGroup    == NoGroupText ? "" : contextGroup;
+            string normalizedSubGroup = contextSubGroup == NoGroupText ? "" : contextSubGroup;
             if (!string.IsNullOrEmpty(normalizedGroup))    normalizedGroup    = Path.GetFileName(normalizedGroup);
             if (!string.IsNullOrEmpty(normalizedSubGroup)) normalizedSubGroup = Path.GetFileName(normalizedSubGroup);
 
@@ -626,7 +640,7 @@ public class ScriptManagerWindow : MyraControl
             if (!targetDirFull.StartsWith(scriptsRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                 !targetDirFull.Equals(scriptsRoot, StringComparison.OrdinalIgnoreCase))
             {
-                GameActions.Print(World.Instance, "Invalid target directory.", 32);
+                GameActions.Print(World.Instance, TazLang.Get("scriptmanager_invalidtargetdir", "Invalid target directory."), 32);
                 return;
             }
 
@@ -636,16 +650,16 @@ public class ScriptManagerWindow : MyraControl
             {
                 File.WriteAllText(targetFileFull, SCRIPT_HEADER);
                 _pendingReload = true;
-                GameActions.Print(World.Instance, $"Created script '{sanitizedName}'", 66);
+                GameActions.Print(World.Instance, TazLang.Get("scriptmanager_createdscript", new[] { sanitizedName }), 66);
             }
             else
             {
-                GameActions.Print(World.Instance, $"A script named '{sanitizedName}' already exists.", 32);
+                GameActions.Print(World.Instance, TazLang.Get("scriptmanager_scriptexists", new[] { sanitizedName }), 32);
             }
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"File operation failed: {ioEx.Message}", 32); }
-        catch (Exception e) { GameActions.Print(World.Instance, $"Error creating script: {e.Message}", 32); Log.Error(e.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_accessdenied", "Access denied."), 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_fileopfailed", new[] { ioEx.Message }), 32); }
+        catch (Exception e) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_errorcreatingscript", new[] { e.Message }), 32); Log.Error(e.ToString()); }
     }
 
     private void CreateGroup(string name, string contextGroup, string contextSubGroup)
@@ -660,14 +674,14 @@ public class ScriptManagerWindow : MyraControl
             sanitizedName.Contains('\\') || sanitizedName.Contains('/') ||
             sanitizedName is ".." or ".")
         {
-            GameActions.Print(World.Instance, "Invalid group name.", 32);
+            GameActions.Print(World.Instance, TazLang.Get("scriptmanager_invalidgroupname", "Invalid group name."), 32);
             return;
         }
 
         try
         {
-            string normalizedGroup    = contextGroup    == NO_GROUP_TEXT ? "" : contextGroup;
-            string normalizedSubGroup = contextSubGroup == NO_GROUP_TEXT ? "" : contextSubGroup;
+            string normalizedGroup    = contextGroup    == NoGroupText ? "" : contextGroup;
+            string normalizedSubGroup = contextSubGroup == NoGroupText ? "" : contextSubGroup;
             if (!string.IsNullOrEmpty(normalizedGroup))    normalizedGroup    = Path.GetFileName(normalizedGroup);
             if (!string.IsNullOrEmpty(normalizedSubGroup)) normalizedSubGroup = Path.GetFileName(normalizedSubGroup);
 
@@ -680,18 +694,18 @@ public class ScriptManagerWindow : MyraControl
             if (!targetPath.StartsWith(scriptsRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                 !targetPath.Equals(scriptsRoot, StringComparison.OrdinalIgnoreCase))
             {
-                GameActions.Print(World.Instance, "Invalid group location.", 32);
+                GameActions.Print(World.Instance, TazLang.Get("scriptmanager_invalidgrouplocation", "Invalid group location."), 32);
                 return;
             }
 
             if (!Directory.Exists(targetPath)) Directory.CreateDirectory(targetPath);
             File.WriteAllText(Path.Combine(targetPath, "Example.py"), "import API");
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Created group '{sanitizedName}'", 66);
+            GameActions.Print(World.Instance, TazLang.Get("scriptmanager_creategroup", new[] { sanitizedName }), 66);
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"Directory operation failed: {ioEx.Message}", 32); }
-        catch (Exception e) { GameActions.Print(World.Instance, $"Error creating group: {e.Message}", 32); Log.Error(e.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_accessdenied", "Access denied."), 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_diropfailed", new[] { ioEx.Message }), 32); }
+        catch (Exception e) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_errorcreatinggroup", new[] { e.Message }), 32); Log.Error(e.ToString()); }
     }
 
     private void PerformRenameScript(ScriptFile script, string newDisplayName)
@@ -709,7 +723,7 @@ public class ScriptManagerWindow : MyraControl
 
             if (File.Exists(newPath) && !string.Equals(script.FullPath, newPath))
             {
-                GameActions.Print(World.Instance, $"A file named '{newName}' already exists.", 32);
+                GameActions.Print(World.Instance, TazLang.Get("scriptmanager_fileexists", new[] { newName }), 32);
                 return;
             }
 
@@ -721,7 +735,7 @@ public class ScriptManagerWindow : MyraControl
                 _pendingReload   = true;
             }
         }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error renaming script: {ex.Message}", 32); }
+        catch (Exception ex) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_errorrenamingscript", new[] { ex.Message }), 32); }
     }
 
     private void PerformRenameGroup(string groupName, string parentGroup, string newName)
@@ -743,25 +757,25 @@ public class ScriptManagerWindow : MyraControl
 
             if (Directory.Exists(newPath) && !string.Equals(currentPath, newPath, StringComparison.OrdinalIgnoreCase))
             {
-                GameActions.Print(World.Instance, $"A group named '{newName}' already exists.", 32);
+                GameActions.Print(World.Instance, TazLang.Get("scriptmanager_groupexists", new[] { newName }), 32);
                 return;
             }
             if (!Directory.Exists(currentPath))
             {
-                GameActions.Print(World.Instance, $"Source group '{groupName}' not found.", 32);
+                GameActions.Print(World.Instance, TazLang.Get("scriptmanager_sourcegroupnotfound", new[] { groupName }), 32);
                 return;
             }
             if (!string.Equals(currentPath, newPath, StringComparison.OrdinalIgnoreCase))
             {
                 Directory.Move(currentPath, newPath);
                 _pendingReload = true;
-                GameActions.Print(World.Instance, $"Renamed group '{groupName}' to '{newName}'", 66);
+                GameActions.Print(World.Instance, TazLang.Get("scriptmanager_renamedgroup", new[] { groupName, newName }), 66);
             }
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (DirectoryNotFoundException)  { GameActions.Print(World.Instance, "Directory not found.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"Directory operation failed: {ioEx.Message}", 32); }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error renaming group: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_accessdenied", "Access denied."), 32); }
+        catch (DirectoryNotFoundException)  { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_dirnotfound", "Directory not found."), 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_diropfailed", new[] { ioEx.Message }), 32); }
+        catch (Exception ex) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_errorrenaminggroup", new[] { ex.Message }), 32); Log.Error(ex.ToString()); }
     }
 
     private void ShowZipDeleteConfirm(ZipScriptFile script) =>
@@ -779,9 +793,9 @@ public class ScriptManagerWindow : MyraControl
             archive.GetEntry(script.EntryPath)?.Delete();
             LegionScripting.LegionScripting.LoadedScripts.Remove(script);
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Deleted '{script.FileName}' from zip.", 66);
+            GameActions.Print(World.Instance, TazLang.Get("scriptmanager_deletedfromzip", new[] { script.FileName }), 66);
         }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error deleting zip entry: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (Exception ex) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_errordeletingzipentry", new[] { ex.Message }), 32); Log.Error(ex.ToString()); }
     }
 
     private void PerformDeleteEntireZip(ZipScriptFile script)
@@ -792,9 +806,9 @@ public class ScriptManagerWindow : MyraControl
             File.Delete(zipPath);
             LegionScripting.LegionScripting.LoadedScripts.RemoveAll(s => s is ZipScriptFile z && z.ZipPath == zipPath);
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Deleted zip '{Path.GetFileName(zipPath)}'.", 66);
+            GameActions.Print(World.Instance, TazLang.Get("scriptmanager_deletedzip", new[] { Path.GetFileName(zipPath) }), 66);
         }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error deleting zip: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (Exception ex) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_errordeletingzip", new[] { ex.Message }), 32); Log.Error(ex.ToString()); }
     }
 
     private void PerformDeleteScript(ScriptFile script)
@@ -804,9 +818,9 @@ public class ScriptManagerWindow : MyraControl
             File.Delete(script.FullPath);
             LegionScripting.LegionScripting.LoadedScripts.Remove(script);
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Deleted script '{script.FileName}'", 66);
+            GameActions.Print(World.Instance, TazLang.Get("scriptmanager_deletedscript", new[] { script.FileName }), 66);
         }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error deleting script: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (Exception ex) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_errordeletingscript", new[] { ex.Message }), 32); Log.Error(ex.ToString()); }
     }
 
     private void PerformDeleteGroup(string groupName, string parentGroup)
@@ -818,28 +832,28 @@ public class ScriptManagerWindow : MyraControl
 
             if (!Directory.Exists(gPath))
             {
-                GameActions.Print(World.Instance, $"Group '{groupName}' not found", 32);
+                GameActions.Print(World.Instance, TazLang.Get("scriptmanager_groupnotfound", new[] { groupName }), 32);
                 return;
             }
 
             Directory.Delete(gPath, true);
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Deleted group '{groupName}' and all its contents", 66);
+            GameActions.Print(World.Instance, TazLang.Get("scriptmanager_deletedgroup", new[] { groupName }), 66);
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"Delete operation failed: {ioEx.Message}", 32); }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error deleting group: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_accessdenied", "Access denied."), 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_deleteopfailed", new[] { ioEx.Message }), 32); }
+        catch (Exception ex) { GameActions.Print(World.Instance, TazLang.Get("scriptmanager_errordeletinggroup", new[] { ex.Message }), 32); Log.Error(ex.ToString()); }
     }
 
     private sealed class ZipDeleteDialog : MyraControl
     {
         public ZipDeleteDialog(string scriptName, string zipName, Action onDeleteScript, Action onDeleteZip)
-            : base("Delete Zip Script")
+            : base(TazLang.Get("scriptmanager_deletezipscript_title", "Delete Zip Script"))
         {
             var layout = new VerticalStackPanel { Spacing = 8, Padding = new Thickness(8) };
 
             layout.Widgets.Add(new MyraLabel(
-                $"'{scriptName}' is inside zip '{zipName}'.\nWhat would you like to do?",
+                TazLang.Get("scriptmanager_deletezipscript_msg", new[] { scriptName, zipName }),
                 MyraLabel.TextStyle.P) { TextColor = Color.OrangeRed });
 
             var btnRow = new HorizontalStackPanel
@@ -848,17 +862,17 @@ public class ScriptManagerWindow : MyraControl
                 HorizontalAlignment = HorizontalAlignment.Right
             };
 
-            btnRow.Widgets.Add(new MyraButton("Delete Script Only", () =>
+            btnRow.Widgets.Add(new MyraButton(TazLang.Get("scriptmanager_deletescriptonly", "Delete Script Only"), () =>
             {
                 _disposeRequested = true;
                 onDeleteScript();
             }));
-            btnRow.Widgets.Add(new MyraButton("Delete Entire Zip", () =>
+            btnRow.Widgets.Add(new MyraButton(TazLang.Get("scriptmanager_deleteentirezip", "Delete Entire Zip"), () =>
             {
                 _disposeRequested = true;
                 onDeleteZip();
             }));
-            btnRow.Widgets.Add(new MyraButton("Cancel", () => _disposeRequested = true));
+            btnRow.Widgets.Add(new MyraButton(TazLang.Get("scriptmanager_cancel", "Cancel"), () => _disposeRequested = true));
 
             layout.Widgets.Add(btnRow);
             SetRootContent(layout);
