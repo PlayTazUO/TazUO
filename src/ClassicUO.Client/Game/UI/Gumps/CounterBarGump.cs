@@ -340,6 +340,10 @@ namespace ClassicUO.Game.UI.Gumps
                         case CounterBarSlotType.Ability:
                             writer.WriteAttributeString("abilityprimary", slot.AbilityPrimary.ToString());
                             break;
+                        case CounterBarSlotType.DressAgent:
+                            writer.WriteAttributeString("dressconfigname", slot.DressConfigName ?? string.Empty);
+                            writer.WriteAttributeString("dressagentundress", slot.DressAgentUndress.ToString());
+                            break;
                     }
                 }
 
@@ -393,7 +397,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (slot != null && !slot.IsEmpty)
                         {
-                            // Spell/macro/ability/script/skill action; resolves its own icon/label.
+                            // Spell/macro/ability/script/skill/dress-agent action; resolves its own icon/label.
                             items[index]?.SetSlot(slot);
                         }
                         else
@@ -448,6 +452,13 @@ namespace ClassicUO.Game.UI.Gumps
                             return CounterBarSlot.FromSkill(int.Parse(controlXml.GetAttribute("skillindex")));
                         case CounterBarSlotType.Ability:
                             return CounterBarSlot.FromAbility(bool.Parse(controlXml.GetAttribute("abilityprimary")));
+                        case CounterBarSlotType.DressAgent:
+                            return new CounterBarSlot
+                            {
+                                Type = CounterBarSlotType.DressAgent,
+                                DressConfigName = controlXml.GetAttribute("dressconfigname"),
+                                DressAgentUndress = bool.Parse(controlXml.GetAttribute("dressagentundress"))
+                            };
                     }
                 }
 
@@ -533,6 +544,7 @@ namespace ClassicUO.Game.UI.Gumps
             private CounterBarSlot _slot = CounterBarSlot.Empty();
             private ContextMenuItemEntry _macroMenu;
             private ContextMenuItemEntry _scriptMenu;
+            private ContextMenuItemEntry _dressAgentMenu;
 
             public CounterItem(CounterBarGump gump, int x, int y, int w, int h)
             {
@@ -582,6 +594,10 @@ namespace ClassicUO.Game.UI.Gumps
                 GenSkillList(skillMenu);
                 ContextMenu.Add(skillMenu);
 
+                _dressAgentMenu = new ContextMenuItemEntry(TazLang.Get("counterbar_setdressagent", "Set dress agent"));
+                GenDressAgentList(_dressAgentMenu);
+                ContextMenu.Add(_dressAgentMenu);
+
                 ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("counterbar_sethotkey"), SetHotkey));
             }
 
@@ -589,7 +605,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             public ushort Hue { get; private set; }
 
-            /// <summary>The spell/macro/ability/script/skill action assigned to this cell, or an empty slot for a plain item counter.</summary>
+            /// <summary>The action assigned to this cell, or an empty slot for a plain item counter.</summary>
             public CounterBarSlot Slot => _slot;
 
             /// <summary>True when this cell holds a spell bar action instead of an item to count.</summary>
@@ -640,7 +656,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
                 else
                 {
-                    // Scripts and skills (and graphic-less macros) fall back to a short text label.
+                    // Icon-less actions (and graphic-less macros) fall back to a short text label.
                     _image.ChangeGraphic(0, 0, true);
                     _image.SetAmount(StringHelper.AbbreviateToInitials(_slot.SlotLabel));
                 }
@@ -832,13 +848,38 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
+            private void GenDressAgentList(ContextMenuItemEntry parent)
+            {
+                if (parent == null)
+                    return;
+
+                parent.Items.Clear();
+
+                foreach (DressConfig config in DressAgentManager.Instance.CurrentPlayerConfigs)
+                {
+                    if (config == null)
+                        continue;
+
+                    DressConfig selectedConfig = config;
+                    var configMenu = new ContextMenuItemEntry(selectedConfig.Name ?? string.Empty);
+                    configMenu.Add(new ContextMenuItemEntry(
+                        TazLang.Get("dressagent_dress", "Dress"),
+                        () => SetSlot(CounterBarSlot.FromDressAgent(selectedConfig, false))));
+                    configMenu.Add(new ContextMenuItemEntry(
+                        TazLang.Get("dressagent_undress", "Undress"),
+                        () => SetSlot(CounterBarSlot.FromDressAgent(selectedConfig, true))));
+                    parent.Add(configMenu);
+                }
+            }
+
             public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 if (button == MouseButtonType.Right)
                 {
-                    // Refresh the dynamic lists so newly added macros/scripts appear.
+                    // Refresh the dynamic lists so newly added macros, scripts, and dress configs appear.
                     GenMacroList(_macroMenu);
                     GenScriptList(_scriptMenu);
+                    GenDressAgentList(_dressAgentMenu);
                 }
 
                 if (button == MouseButtonType.Left)
