@@ -8,12 +8,17 @@ All notable changes to TazUO will be recorded here.
 * Added `API.ActiveSpells()`, `API.ActiveSpellNames()` and `API.IsSpellActive(spell)` so scripts can see which toggle spells/moves are currently active (the same ones the spell bar highlights) ([bittiez](https://github.com/bittiez))
 
 ### Features
+* Counter bar slots can now trigger Dress or Undress for any dress-agent configuration belonging to the current character - [P.R 844](https://github.com/PlayTazUO/TazUO/pull/844) ([Nesci28](https://github.com/Nesci28))
 * The Legion Script Manager window now remembers its size and position and restores them when reopened - [P.R 828](https://github.com/PlayTazUO/TazUO/pull/828) ([bittiez](https://github.com/bittiez))
 * Added an optional candle flicker effect that makes lights gently ebb and flow (enabled by default, toggle under Video > Lighting) - [P.R 824](https://github.com/PlayTazUO/TazUO/pull/824) ([bittiez](https://github.com/bittiez))
 * Added optional FSR shader to post processing effects - [P.R 821](https://github.com/PlayTazUO/TazUO/pull/821) ([bittiez](https://github.com/bittiez))
+* Assistant Macros tab action selector is now searchable (Searchable Combobox support) - [P.R 823](https://github.com/PlayTazUO/TazUO/pull/823) ([yuval-po](https://github.com/yuval-po))
 * Counter bar cells can now hold any spell bar action (spell, macro, weapon ability, script, or skill) in addition to item counters, with per-cell hotkeys (via the shared hotkey window), optional keybind labels, active-ability highlighting, and a hotkey-press flash - [P.R 812](https://github.com/PlayTazUO/TazUO/pull/812) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed unexpected behaviour when clicking outside of an input field - [P.R 837](https://github.com/PlayTazUO/TazUO/pull/837) ([bittiez](https://github.com/bittiez))
+* Fixed mobile names not being drawn at the edge of the screen for off-screen mobiles - [P.R 838](https://github.com/PlayTazUO/TazUO/pull/838) ([bittiez](https://github.com/bittiez))
+* Added a suggested crash fix for "Bad uop file" errors, explaining that a `.uop` data file is corrupt, truncated, or mid-patch and how to resolve it - [P.R 841](https://github.com/PlayTazUO/TazUO/pull/841) ([bittiez](https://github.com/bittiez))
 * Guarded the remaining LegionAPI/ApiUiGump methods that touched the game world, UI manager, or gump controls off the main thread, fixing a double-free malloc crash caused by Legion scripts racing with the main thread - [P.R 836](https://github.com/PlayTazUO/TazUO/pull/836) ([bittiez](https://github.com/bittiez))
 * Fixed NullReferenceException in Chunk.Destroy when Node is null - [P.R 835](https://github.com/PlayTazUO/TazUO/pull/835) ([bittiez](https://github.com/bittiez))
 * Fixed a client crash from oversized font sizes overflowing the font texture atlas ("Could not add rect to the newly created atlas") - [P.R 834](https://github.com/PlayTazUO/TazUO/pull/834) ([bittiez](https://github.com/bittiez))

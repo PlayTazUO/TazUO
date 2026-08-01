@@ -37,6 +37,12 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
+        public void DressAgentSlotType_HasValue6()
+        {
+            ((int)CounterBarSlotType.DressAgent).Should().Be(6);
+        }
+
+        [Fact]
         public void FromSkill_Negative_ReturnsEmpty()
         {
             CounterBarSlot.FromSkill(-1).IsEmpty.Should().BeTrue();
@@ -50,6 +56,29 @@ namespace ClassicUO.UnitTests.Game.Managers
             slot.IsEmpty.Should().BeFalse();
             slot.Type.Should().Be(CounterBarSlotType.Skill);
             slot.SkillIndex.Should().Be(21);
+        }
+
+        [Fact]
+        public void FromDressAgent_Null_ReturnsEmpty()
+        {
+            CounterBarSlot.FromDressAgent(null, false).IsEmpty.Should().BeTrue();
+        }
+
+        [Theory]
+        [InlineData(false, "Dress: PvP")]
+        [InlineData(true, "Undress: PvP")]
+        public void FromDressAgent_ValidConfig_CreatesActionSlot(bool undress, string expectedLabel)
+        {
+            CounterBarSlot slot = CounterBarSlot.FromDressAgent(
+                new DressConfig { Name = "PvP", CharacterName = "Character Name" }, undress);
+
+            slot.IsEmpty.Should().BeFalse();
+            slot.Type.Should().Be(CounterBarSlotType.DressAgent);
+            slot.DressConfigName.Should().Be("PvP");
+            slot.DressAgentUndress.Should().Be(undress);
+            slot.SlotLabel.Should().Be(expectedLabel);
+            slot.TryGetTooltip(null, out string tooltip).Should().BeTrue();
+            tooltip.Should().Be(expectedLabel);
         }
 
         [Fact]
