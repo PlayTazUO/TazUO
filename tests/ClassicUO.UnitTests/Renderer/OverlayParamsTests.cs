@@ -1,5 +1,6 @@
 using ClassicUO.Renderer.Effects;
 using FluentAssertions;
+using Microsoft.Xna.Framework;
 using Xunit;
 
 namespace ClassicUO.UnitTests.Renderer
@@ -32,7 +33,7 @@ namespace ClassicUO.UnitTests.Renderer
             p.Appearance.Opacity = input;
             p.Appearance.Intensity = input;
             p.Appearance.PulseAmp = input;
-            p.Noise.Amount = input;
+            p.Noise.FlatFloor = input;
             p.Noise.RidgeAmount = input;
             p.Shape.FocusAmount = input;
 
@@ -41,9 +42,44 @@ namespace ClassicUO.UnitTests.Renderer
             p.Appearance.Opacity.Should().Be(expected);
             p.Appearance.Intensity.Should().Be(expected);
             p.Appearance.PulseAmp.Should().Be(expected);
-            p.Noise.Amount.Should().Be(expected);
+            p.Noise.FlatFloor.Should().Be(expected);
             p.Noise.RidgeAmount.Should().Be(expected);
             p.Shape.FocusAmount.Should().Be(expected);
+        }
+
+        [Theory]
+        [InlineData(-0.2f, 0f)]
+        [InlineData(0.35f, 0.35f)]
+        [InlineData(2f, 1f)]
+        public void Clamp_BoundsShapeJitter(float input, float expected)
+        {
+            OverlayParams p = OverlayParams.Default;
+            p.Shape.Jitter.ReachAmount = input;
+            p.Shape.Jitter.FeatherAmount = input;
+
+            p.Clamp();
+
+            p.Shape.Jitter.ReachAmount.Should().Be(expected);
+            p.Shape.Jitter.FeatherAmount.Should().Be(expected);
+        }
+
+        [Fact]
+        public void Default_HasNoShapeJitter()
+        {
+            // Presets written before jitter existed must keep their exact straight-edged behaviour.
+            OverlayParams.Default.Shape.Jitter.ReachAmount.Should().Be(0f);
+        }
+
+        [Fact]
+        public void Clamp_ReplacesADegenerateJitterScale()
+        {
+            // A zero scale collapses the displacement lookup onto one texel, which is a uniform
+            // offset rather than a varying boundary.
+            OverlayParams p = default;
+
+            p.Clamp();
+
+            p.Shape.Jitter.Scale.Should().NotBe(Vector2.Zero);
         }
 
         [Fact]

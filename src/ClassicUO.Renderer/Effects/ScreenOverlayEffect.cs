@@ -15,25 +15,31 @@ namespace ClassicUO.Renderer.Effects
 
             Center = Parameters["Center"];
             AspectScale = Parameters["AspectScale"];
-            Radius = Parameters["Radius"];
+            Reach = Parameters["Reach"];
             Feather = Parameters["Feather"];
             EdgeBlend = Parameters["EdgeBlend"];
+            CornerBias = Parameters["CornerBias"];
+            JitterReach = Parameters["JitterReach"];
+            JitterFeather = Parameters["JitterFeather"];
+            JitterScale = Parameters["JitterScale"];
+            JitterScroll = Parameters["JitterScroll"];
+            JitterChannel = Parameters["JitterChannel"];
             FocusDir = Parameters["FocusDir"];
             FocusPower = Parameters["FocusPower"];
             FocusAmount = Parameters["FocusAmount"];
 
             Time = Parameters["Time"];
-            Scale0 = Parameters["Scale0"];
-            Scale1 = Parameters["Scale1"];
-            Scroll0 = Parameters["Scroll0"];
-            Scroll1 = Parameters["Scroll1"];
-            Channel0 = Parameters["Channel0"];
-            Channel1 = Parameters["Channel1"];
+            BaseScale = Parameters["BaseScale"];
+            DetailScale = Parameters["DetailScale"];
+            BaseScroll = Parameters["BaseScroll"];
+            DetailScroll = Parameters["DetailScroll"];
+            BaseChannel = Parameters["BaseChannel"];
+            DetailChannel = Parameters["DetailChannel"];
             WarpStrength = Parameters["WarpStrength"];
             RidgeAmount = Parameters["RidgeAmount"];
             Threshold = Parameters["Threshold"];
             Softness = Parameters["Softness"];
-            NoiseAmount = Parameters["NoiseAmount"];
+            FlatFloor = Parameters["FlatFloor"];
 
             Tint = Parameters["Tint"];
             Opacity = Parameters["Opacity"];
@@ -46,25 +52,31 @@ namespace ClassicUO.Renderer.Effects
 
         public EffectParameter Center { get; }
         public EffectParameter AspectScale { get; }
-        public EffectParameter Radius { get; }
+        public EffectParameter Reach { get; }
         public EffectParameter Feather { get; }
         public EffectParameter EdgeBlend { get; }
+        public EffectParameter CornerBias { get; }
+        public EffectParameter JitterReach { get; }
+        public EffectParameter JitterFeather { get; }
+        public EffectParameter JitterScale { get; }
+        public EffectParameter JitterScroll { get; }
+        public EffectParameter JitterChannel { get; }
         public EffectParameter FocusDir { get; }
         public EffectParameter FocusPower { get; }
         public EffectParameter FocusAmount { get; }
 
         public EffectParameter Time { get; }
-        public EffectParameter Scale0 { get; }
-        public EffectParameter Scale1 { get; }
-        public EffectParameter Scroll0 { get; }
-        public EffectParameter Scroll1 { get; }
-        public EffectParameter Channel0 { get; }
-        public EffectParameter Channel1 { get; }
+        public EffectParameter BaseScale { get; }
+        public EffectParameter DetailScale { get; }
+        public EffectParameter BaseScroll { get; }
+        public EffectParameter DetailScroll { get; }
+        public EffectParameter BaseChannel { get; }
+        public EffectParameter DetailChannel { get; }
         public EffectParameter WarpStrength { get; }
         public EffectParameter RidgeAmount { get; }
         public EffectParameter Threshold { get; }
         public EffectParameter Softness { get; }
-        public EffectParameter NoiseAmount { get; }
+        public EffectParameter FlatFloor { get; }
 
         public EffectParameter Tint { get; }
         public EffectParameter Opacity { get; }
@@ -81,25 +93,31 @@ namespace ClassicUO.Renderer.Effects
         {
             Center.SetValue(p.Shape.Center);
             AspectScale.SetValue(new Vector2(1f, screenSize.Y / screenSize.X));
-            Radius.SetValue(p.Shape.Radius);
+            Reach.SetValue(p.Shape.Reach);
             Feather.SetValue(p.Shape.Feather);
             EdgeBlend.SetValue(p.Shape.EdgeBlend);
+            CornerBias.SetValue(p.Shape.CornerBias);
+            JitterReach.SetValue(p.Shape.Jitter.ReachAmount);
+            JitterFeather.SetValue(p.Shape.Jitter.FeatherAmount);
+            JitterScale.SetValue(p.Shape.Jitter.Scale);
+            JitterScroll.SetValue(p.Shape.Jitter.Scroll);
+            JitterChannel.SetValue(p.Shape.Jitter.Channel.ToSelector());
             FocusDir.SetValue(p.Shape.FocusDir);
             FocusPower.SetValue(p.Shape.FocusPower);
             FocusAmount.SetValue(p.Shape.FocusAmount);
 
             Time.SetValue(time);
-            Scale0.SetValue(p.Noise.Scale0);
-            Scale1.SetValue(p.Noise.Scale1);
-            Scroll0.SetValue(p.Noise.Scroll0);
-            Scroll1.SetValue(p.Noise.Scroll1);
-            Channel0.SetValue(p.Noise.Channel0.ToSelector());
-            Channel1.SetValue(p.Noise.Channel1.ToSelector());
+            BaseScale.SetValue(p.Noise.BaseScale);
+            DetailScale.SetValue(p.Noise.DetailScale);
+            BaseScroll.SetValue(p.Noise.BaseScroll);
+            DetailScroll.SetValue(p.Noise.DetailScroll);
+            BaseChannel.SetValue(p.Noise.BaseChannel.ToSelector());
+            DetailChannel.SetValue(p.Noise.DetailChannel.ToSelector());
             WarpStrength.SetValue(p.Noise.WarpStrength);
             RidgeAmount.SetValue(p.Noise.RidgeAmount);
             Threshold.SetValue(p.Noise.Threshold);
             Softness.SetValue(p.Noise.Softness);
-            NoiseAmount.SetValue(p.Noise.Amount);
+            FlatFloor.SetValue(p.Noise.FlatFloor);
 
             Tint.SetValue(p.Appearance.Tint.ToVector3());
             Opacity.SetValue(p.Appearance.Opacity);
