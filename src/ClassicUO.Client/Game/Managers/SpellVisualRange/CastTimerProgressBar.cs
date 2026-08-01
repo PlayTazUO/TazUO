@@ -60,8 +60,11 @@ public class CastTimerProgressBar : Gump
 
                 if (vp == null) return false;
 
-                x = vp.Location.X + (int)(m.RealScreenPosition.X - (m.Offset.X + 22 + 5));
-                y = vp.Location.Y + (int)(m.RealScreenPosition.Y - ((m.Offset.Y - m.Offset.Z) - (height + centerY + 15) + (m.IsGargoyle && m.IsFlyingAnimationEnabled ? -22 : !m.IsMounted ? 22 : 0)));
+                // Follow the player's exact interpolated screen position (RealScreenPosition + Offset),
+                // matching how the mobile itself is drawn. Adding Offset keeps the bar glued to the
+                // smooth walk animation; using only the tile-based RealScreenPosition made it jump.
+                x = vp.Location.X + (int)(m.RealScreenPosition.X + m.Offset.X - (22 + 5));
+                y = vp.Location.Y + (int)(m.RealScreenPosition.Y + (m.Offset.Y - m.Offset.Z) + (height + centerY + 15) - (m.IsGargoyle && m.IsFlyingAnimationEnabled ? -22 : !m.IsMounted ? 22 : 0));
 
                 batcher.Draw(_background, new Rectangle(x, y, _barBounds.Width, _barBounds.Height), _barBounds, _hue);
 
