@@ -535,6 +535,14 @@ namespace ClassicUO.Configuration
         public bool GridContainerScaleItems { get; set => SetProperty(ref field, value); } = true;
         public bool GridHighlightLowContrastItems { get; set => SetProperty(ref field, value); } = false;
         public int GridHighlightLowContrastItemsStyle { get; set => SetProperty(ref field, value); } = 0;
+        /// <summary>
+        /// Minimum contrast level used for low-contrast grid item highlighting.
+        /// </summary>
+        public byte GridHighlightLowContrastMinimum
+        {
+            get;
+            set => SetProperty(ref field, Math.Clamp(value, (byte)1, (byte)10));
+        } = 5;
         public bool GridEnableContPreview { get; set => SetProperty(ref field, value); } = true;
         public int Grid_BorderStyle { get; set => SetProperty(ref field, value); } = 0;
         public int Grid_DefaultColumns { get; set => SetProperty(ref field, value); } = 5;
