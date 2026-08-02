@@ -135,6 +135,11 @@ namespace ClassicUO
                 {
                     return uopFix;
                 }
+
+                if (TryGetMissingAssemblyCrashFix(exception, out string assemblyFix))
+                {
+                    return assemblyFix;
+                }
             }
             catch
             {
@@ -269,6 +274,47 @@ namespace ClassicUO
             sb.AppendLine("3. If a patcher or download was still running, let it finish completely and then start TazUO again.");
             sb.AppendLine("4. If you copied the data files manually, re-copy them and confirm none were skipped or truncated.");
             sb.AppendLine("5. Confirm the client version configured in TazUO matches the version of your UO data files.");
+            fix = sb.ToString();
+            return true;
+        }
+
+        private static bool TryGetMissingAssemblyCrashFix(Exception e, out string fix)
+        {
+            fix = null;
+
+            // A FileNotFoundException for one of TazUO's own assemblies (for example
+            // ClassicUO.Assets.dll) means a required file is missing from the installation.
+            // The most common cause is a failed/partial install or files that were not all
+            // copied together, so one dll is absent while the executable still expects it.
+            if (e is not FileNotFoundException fileNotFound)
+                return false;
+
+            string details = e.ToString();
+
+            if (string.IsNullOrEmpty(details))
+                return false;
+
+            // Match on the assembly name from either the FileName property or the message
+            // text (the message is localized, but the assembly name is not translated).
+            string fileName = fileNotFound.FileName ?? string.Empty;
+
+            bool missingTazuoAssembly =
+                fileName.StartsWith("ClassicUO.", StringComparison.OrdinalIgnoreCase) ||
+                details.Contains("Could not load file or assembly 'ClassicUO.");
+
+            if (!missingTazuoAssembly)
+                return false;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("TazUO could not start because one of its own program files is missing.");
+            sb.AppendLine("A required assembly (for example ClassicUO.Assets.dll) could not be found next to the executable.");
+            sb.AppendLine("This almost always means the install did not finish, or the client files were not all copied together, so one or more files are missing.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. Reinstall or re-download TazUO so every file is placed together, then try again.");
+            sb.AppendLine("2. If you copied TazUO manually, re-copy the entire folder and make sure no files were skipped.");
+            sb.AppendLine("3. Check that your antivirus did not quarantine or delete any of TazUO's files.");
+            sb.AppendLine("4. Do not mix files from different TazUO versions - use a clean install of a single build.");
             fix = sb.ToString();
             return true;
         }
