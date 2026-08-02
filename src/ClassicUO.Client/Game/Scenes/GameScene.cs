@@ -487,38 +487,46 @@ namespace ClassicUO.Game.Scenes
 
         private void SocketOnDisconnected(object sender, SocketError e)
         {
-            if (DisconnectionRequested)
+            // Disconnected is raised from the background network/receive tasks (see AsyncNetClient),
+            // but this handler tears down the scene and adds gumps, which mutates UIManager state
+            // (_gumpTypeList, the Gumps list, etc.). Touching that off the main thread races the
+            // game loop and corrupts those collections. Marshal onto the main thread so all the UI
+            // work runs there; InvokeOnMainThread runs inline when already on the main thread.
+            MainThreadQueue.InvokeOnMainThread(() =>
             {
-                Client.Game.SetScene(new LoginScene(_world));
+                if (DisconnectionRequested)
+                {
+                    Client.Game.SetScene(new LoginScene(_world));
 
-                return;
-            }
-            if (Settings.GlobalSettings.Reconnect)
-            {
-                LoginHandshake.Reconnect = true;
-                _forceStopScene = true;
-            }
-            else
-            {
-                UIManager.Add(
-                    new MessageBoxGump(
-                        _world,
-                        200,
-                        200,
-                        string.Format(
-                            ResGeneral.ConnectionLost0,
-                            StringHelper.AddSpaceBeforeCapital(e.ToString())
-                        ),
-                        s =>
-                        {
-                            if (s)
+                    return;
+                }
+                if (Settings.GlobalSettings.Reconnect)
+                {
+                    LoginHandshake.Reconnect = true;
+                    _forceStopScene = true;
+                }
+                else
+                {
+                    UIManager.Add(
+                        new MessageBoxGump(
+                            _world,
+                            200,
+                            200,
+                            string.Format(
+                                ResGeneral.ConnectionLost0,
+                                StringHelper.AddSpaceBeforeCapital(e.ToString())
+                            ),
+                            s =>
                             {
-                                Client.Game.SetScene(new LoginScene(_world));
+                                if (s)
+                                {
+                                    Client.Game.SetScene(new LoginScene(_world));
+                                }
                             }
-                        }
-                    )
-                );
-            }
+                        )
+                    );
+                }
+            });
         }
 
         public void RequestQuitGame() => UIManager.Add(
