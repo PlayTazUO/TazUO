@@ -13,16 +13,23 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), waitMs: 50, maxWaitMs: 120);
 
-            // Keep the window alive continuously (each call resets the 50ms wait) for well past maxWaitMs.
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-
-            while (sw.ElapsedMilliseconds < 400)
+            try
             {
-                debounce.Invoke();
-                Thread.Sleep(15);
-            }
+                // Keep the window alive continuously (each call resets the 50ms wait) for well past maxWaitMs.
+                var sw = System.Diagnostics.Stopwatch.StartNew();
 
-            Volatile.Read(ref calls).Should().BeGreaterThan(1);
+                while (sw.ElapsedMilliseconds < 400)
+                {
+                    debounce.Invoke();
+                    Thread.Sleep(15);
+                }
+
+                TestWait.Until(() => Volatile.Read(ref calls) > 1).Should().BeTrue();
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -31,15 +38,24 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 50);
 
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-
-            while (sw.ElapsedMilliseconds < 200)
+            try
             {
-                debounce.Invoke();
-                Thread.Sleep(15);
-            }
+                // Each poll keeps the window alive (resetting the 50ms wait) so no invocation may ever fire.
+                TestWait.Until(
+                    () =>
+                    {
+                        debounce.Invoke();
+                        return Volatile.Read(ref calls) > 0;
+                    },
+                    timeoutMs: 200
+                ).Should().BeFalse();
 
-            Volatile.Read(ref calls).Should().Be(0);
+                Volatile.Read(ref calls).Should().Be(0);
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
     }
 }
