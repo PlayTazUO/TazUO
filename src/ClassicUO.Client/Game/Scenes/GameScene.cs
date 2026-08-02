@@ -494,6 +494,11 @@ namespace ClassicUO.Game.Scenes
             // work runs there; InvokeOnMainThread runs inline when already on the main thread.
             MainThreadQueue.InvokeOnMainThread(() =>
             {
+                // The callback can be drained a frame later, by which point this scene may already
+                // have been unloaded/replaced; skip the stale teardown then.
+                if (IsDestroyed || Instance != this)
+                    return;
+
                 if (DisconnectionRequested)
                 {
                     Client.Game.SetScene(new LoginScene(_world));
