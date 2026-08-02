@@ -40,13 +40,44 @@ namespace ClassicUO.Game.Managers
 
     internal class TileMarkerManager
     {
-        public static TileMarkerManager Instance { get; private set; } = new TileMarkerManager();
+        public static TileMarkerManager Instance
+        {
+            get
+            {
+                if (field == null)
+                    field = new TileMarkerManager();
+                return field;
+            }
+        }
 
         private Dictionary<TileLocation, ushort> markedTiles = new Dictionary<TileLocation, ushort>();
+        private bool _loaded;
 
-        private TileMarkerManager() { Load(); }
+        private TileMarkerManager()
+        {
+            if (!string.IsNullOrEmpty(ProfileManager.CurrentProfile?.ServerName))
+            {
+                _loaded = true;
+                Load();
+            }
+            else
+            {
+                ProfileManager.CurrentProfileChanged += OnProfileChanged;
+            }
+        }
 
-        private string SavePath => Path.Combine(ProfileManager.ProfilePath ?? CUOEnviroment.ExecutablePath, "TileMarkers.json");
+        private void OnProfileChanged(object sender, EventArgs e)
+        {
+            if (!_loaded && !string.IsNullOrEmpty(ProfileManager.CurrentProfile?.ServerName))
+            {
+                _loaded = true;
+                Load();
+            }
+
+            ProfileManager.CurrentProfileChanged -= OnProfileChanged;
+        }
+
+        private string SavePath => Path.Combine(JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Server), "TileMarkers.json");
 
         public void AddTile(int x, int y, int map, ushort hue)
         {
