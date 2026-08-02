@@ -245,6 +245,7 @@ namespace ClassicUO.Configuration
         public List<string> ScriptHotkeys { get; set => SetProperty(ref field, value); } = new List<string>();
 
         public bool EnableDeathScreen { get; set => SetProperty(ref field, value); } = true;
+        public bool ScreenshotOnDeath { get; set => SetProperty(ref field, value); } = true;
         public bool EnableBlackWhiteEffect { get; set => SetProperty(ref field, value); } = true;
         public ushort HiddenBodyHue { get; set => SetProperty(ref field, value); } = 0x038E;
         public byte HiddenBodyAlpha { get; set => SetProperty(ref field, value); } = 40;

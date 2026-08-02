@@ -1185,7 +1185,7 @@ namespace ClassicUO
             base.OnExiting(sender, args);
         }
 
-        private void TakeScreenshot()
+        public void TakeScreenshot(string prefix = "screenshot")
         {
             string screenshotsFolder = FileSystemHelper.CreateFolderIfNotExists(
                 CUOEnviroment.ExecutablePath,
@@ -1196,7 +1196,7 @@ namespace ClassicUO
 
             string path = Path.Combine(
                 screenshotsFolder,
-                $"screenshot_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
+                $"{prefix}_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
             );
 
             Color[] colors;
