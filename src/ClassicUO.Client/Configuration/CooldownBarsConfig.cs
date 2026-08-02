@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Configuration
 {
@@ -83,6 +84,15 @@ namespace ClassicUO.Configuration
             _current = config;
             _current.Save();
             return migrated;
+        }
+
+        public static void Unload()
+        {
+            if (_current == null)
+                return;
+            
+            _current.Save();
+            _current = null;
         }
 
         private static CooldownBarsConfig LoadForCurrentProfile()
