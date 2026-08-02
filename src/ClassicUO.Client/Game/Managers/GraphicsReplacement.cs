@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using ClassicUO.Utility;
+using System.Text.Json.Serialization.Metadata;
+using ClassicUO.Configuration;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
 {
@@ -15,106 +17,153 @@ namespace ClassicUO.Game.Managers
         Static = 3     // Art system using GetArt() (Item, Static classes)
     }
 
+    [JsonSerializable(typeof(GraphicsReplacementSave))]
     [JsonSerializable(typeof(List<GraphicChangeFilter>))]
     [JsonSerializable(typeof(Dictionary<ushort, GraphicChangeFilter>))]  // Keep for migration
     [JsonSerializable(typeof(GraphicChangeFilter))]
     public partial class GraphicsReplacementJsonContext : JsonSerializerContext
     {
+        private static readonly Lazy<GraphicsReplacementJsonContext> _indented =
+            new(() => new GraphicsReplacementJsonContext(new JsonSerializerOptions { WriteIndented = true }));
+
+        /// <summary>Indented context used to persist the scoped save file.</summary>
+        public static GraphicsReplacementJsonContext DefaultToUse => _indented.Value;
     }
+
+    /// <summary>
+    /// Server-scoped JSON save holding the graphic replacement filters. Saving/loading (with rotating
+    /// backups) is handled by <see cref="JsonSave{T}"/>. The legacy global file is migrated on first load.
+    /// </summary>
+    public sealed class GraphicsReplacementSave : JsonSave<GraphicsReplacementSave>
+    {
+        private const string SaveFileName = "GraphicReplacementFilters.json";
+
+        public List<GraphicChangeFilter> Filters { get; set; } = new();
+
+        protected override SettingsScope Scope => SettingsScope.Server;
+
+        protected override string FileName => SaveFileName;
+
+        protected override JsonTypeInfo<GraphicsReplacementSave> TypeInfo => GraphicsReplacementJsonContext.DefaultToUse.GraphicsReplacementSave;
+
+        /// <summary>The pre-scope save location that this system used to write to.</summary>
+        private static string OldSavePath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "MobileReplacementFilter.json");
+
+        /// <summary>
+        /// Loads the save, migrating from the old global <c>MobileReplacementFilter.json</c> the first time
+        /// the new scoped file does not yet exist. A successful migration removes the legacy file.
+        /// </summary>
+        public static GraphicsReplacementSave LoadWithMigration()
+        {
+            GraphicsReplacementSave instance = new();
+
+            if (!File.Exists(instance.FilePath) && File.Exists(OldSavePath) && TryMigrateOldFile(instance))
+            {
+                instance.Save();     // Persist to the new scoped location.
+                CleanupOldFile();    // Remove the legacy file after a successful migration.
+                Log.Trace("Migrated graphic replacement filters to server-scoped save.");
+                return instance;
+            }
+
+            return Load();
+        }
+
+        private static bool TryMigrateOldFile(GraphicsReplacementSave instance)
+        {
+            string json;
+            try
+            {
+                json = File.ReadAllText(OldSavePath);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Failed to read legacy graphic filters: {e}");
+                return false;
+            }
+
+            // Try the newer list format first.
+            try
+            {
+                List<GraphicChangeFilter> list = JsonSerializer.Deserialize(json, GraphicsReplacementJsonContext.Default.ListGraphicChangeFilter);
+                if (list != null)
+                {
+                    instance.Filters = list;
+                    return true;
+                }
+            }
+            catch
+            {
+                // Fall through to the legacy dictionary format.
+            }
+
+            // Legacy dictionary format - keyed by graphic, all assumed to be Mobile.
+            try
+            {
+                Dictionary<ushort, GraphicChangeFilter> old = JsonSerializer.Deserialize(json, GraphicsReplacementJsonContext.Default.DictionaryUInt16GraphicChangeFilter);
+                if (old != null)
+                {
+                    foreach (KeyValuePair<ushort, GraphicChangeFilter> kvp in old)
+                    {
+                        kvp.Value.OriginalGraphic = kvp.Key;
+                        kvp.Value.OriginalType = 1;    // Mobile
+                        kvp.Value.ReplacementType = 1; // Mobile
+                        instance.Filters.Add(kvp.Value);
+                    }
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Failed to migrate legacy graphic filters: {e}");
+            }
+
+            return false;
+        }
+
+        private static void CleanupOldFile()
+        {
+            try
+            {
+                if (File.Exists(OldSavePath))
+                    File.Delete(OldSavePath);
+            }
+            catch (Exception e)
+            {
+                Log.Warn($"Failed to remove legacy graphic filter file: {e}");
+            }
+        }
+    }
+
     internal static class GraphicsReplacement
     {
+        private static GraphicsReplacementSave _save = new();
         private static Dictionary<(ushort, byte), GraphicChangeFilter> graphicChangeFilters = new Dictionary<(ushort, byte), GraphicChangeFilter>();
         public static Dictionary<(ushort, byte), GraphicChangeFilter> GraphicFilters => graphicChangeFilters;
         private static HashSet<(ushort, byte)> quickLookup = new HashSet<(ushort, byte)>();
+
         public static void Load()
         {
-            if (File.Exists(GetSavePath()))
+            _save = GraphicsReplacementSave.LoadWithMigration();
+            RebuildLookup();
+        }
+
+        private static void RebuildLookup()
+        {
+            graphicChangeFilters = new Dictionary<(ushort, byte), GraphicChangeFilter>();
+            quickLookup = new HashSet<(ushort, byte)>();
+
+            foreach (GraphicChangeFilter filter in _save.Filters)
             {
-                try
-                {
-                    // Try new list format first
-                    List<GraphicChangeFilter> filterList = JsonSerializer.Deserialize(
-                        File.ReadAllText(GetSavePath()),
-                        GraphicsReplacementJsonContext.Default.ListGraphicChangeFilter
-                    );
-
-                    if (filterList != null)
-                    {
-                        graphicChangeFilters = new Dictionary<(ushort, byte), GraphicChangeFilter>();
-                        quickLookup = new HashSet<(ushort, byte)>();
-
-                        foreach (GraphicChangeFilter filter in filterList)
-                        {
-                            (ushort OriginalGraphic, byte OriginalType) key = (filter.OriginalGraphic, filter.OriginalType);
-                            graphicChangeFilters[key] = filter;
-                            quickLookup.Add(key);
-                        }
-                    }
-                }
-                catch
-                {
-                    // Migration from old format - assume all are Mobile type
-                    try
-                    {
-                        Dictionary<ushort, GraphicChangeFilter> oldFormat = JsonSerializer.Deserialize(
-                            File.ReadAllText(GetSavePath()),
-                            GraphicsReplacementJsonContext.Default.DictionaryUInt16GraphicChangeFilter
-                        );
-
-                        if (oldFormat != null)
-                        {
-                            graphicChangeFilters = new Dictionary<(ushort, byte), GraphicChangeFilter>();
-                            quickLookup = new HashSet<(ushort, byte)>();
-
-                            foreach (KeyValuePair<ushort, GraphicChangeFilter> kvp in oldFormat)
-                            {
-                                // Migrate to new format, defaulting to Mobile type
-                                kvp.Value.OriginalType = 1; // Mobile
-                                kvp.Value.ReplacementType = 1; // Mobile
-                                graphicChangeFilters.Add((kvp.Key, 1), kvp.Value);
-                                quickLookup.Add((kvp.Key, 1));
-                            }
-
-                            // Save immediately to persist migration
-                            Save();
-                            Console.WriteLine("Migrated graphic replacement filters to new format");
-                        }
-                    }
-                    catch (Exception migrationError)
-                    {
-                        Console.WriteLine($"Failed to load or migrate graphic filters: {migrationError}");
-                    }
-                }
+                (ushort OriginalGraphic, byte OriginalType) key = (filter.OriginalGraphic, filter.OriginalType);
+                graphicChangeFilters[key] = filter;
+                quickLookup.Add(key);
             }
         }
 
         public static void Save()
         {
-            if (graphicChangeFilters.Count > 0)
-            {
-                try
-                {
-                    // Convert dictionary to list for serialization
-                    var filterList = new List<GraphicChangeFilter>(graphicChangeFilters.Values);
-
-                    FileSystemHelper.WriteAllTextSafe(
-                        GetSavePath(),
-                        JsonSerializer.Serialize(
-                            filterList,
-                            GraphicsReplacementJsonContext.Default.ListGraphicChangeFilter
-                        )
-                    );
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Failed to save mobile graphic change filter. {e.Message}");
-                }
-            }
-            else
-            {
-                if (File.Exists(GetSavePath()))
-                    File.Delete(GetSavePath());
-            }
+            _save.Filters = new List<GraphicChangeFilter>(graphicChangeFilters.Values);
+            _save.Save();
         }
 
         public static void Replace(ushort graphic, byte type, ref ushort newgraphic, ref ushort hue, ref byte newtype)
@@ -240,8 +289,6 @@ namespace ClassicUO.Game.Managers
 
             return false;
         }
-
-        private static string GetSavePath() => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "MobileReplacementFilter.json");
     }
 
     public class GraphicChangeFilter
