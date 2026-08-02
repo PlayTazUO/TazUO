@@ -16,6 +16,7 @@ using ClassicUO.LegionScripting;
 using ClassicUO.Network;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using static ClassicUO.Network.AsyncNetClient;
 
@@ -779,6 +780,13 @@ internal static class GameActions
 
     internal static void Print(World world, string message, ushort hue = 946, MessageType type = MessageType.Regular, byte font = 3, bool unicode = true)
     {
+        // World may be null if called before the world is initialized
+        if (world == null)
+        {
+            Log.Warn($"GameActions.Print called with null world: {message}");
+            return;
+        }
+
         if (type == MessageType.ChatSystem)
         {
             world.MessageManager.HandleMessage
@@ -817,7 +825,16 @@ internal static class GameActions
         MessageType type = MessageType.Regular,
         byte font = 3,
         bool unicode = true
-    ) => world.MessageManager.HandleMessage
+    )
+    {
+        // World may be null if called before the world is initialized
+        if (world == null)
+        {
+            Log.Warn($"GameActions.Print called with null world: {message}");
+            return;
+        }
+
+        world.MessageManager.HandleMessage
         (
             entity,
             message,
@@ -829,6 +846,7 @@ internal static class GameActions
             unicode,
             Settings.GlobalSettings.Language
         );
+    }
 
     internal static void SayParty(string message, uint serial = 0)
     {
