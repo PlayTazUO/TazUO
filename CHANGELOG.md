@@ -17,6 +17,7 @@ All notable changes to TazUO will be recorded here.
 * Counter bar cells can now hold any spell bar action (spell, macro, weapon ability, script, or skill) in addition to item counters, with per-cell hotkeys (via the shared hotkey window), optional keybind labels, active-ability highlighting, and a hotkey-press flash - [P.R 812](https://github.com/PlayTazUO/TazUO/pull/812) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Guard GameActions.Print against null world(Causing a rare crash when trying to send a message before game world is initialized) - [P.R 852](https://github.com/PlayTazUO/TazUO/pull/852) ([yuval-po](https://github.com/yuval-po))
 * Address a concurrency issue causing a rare crash - [P.R 851](https://github.com/PlayTazUO/TazUO/pull/851) ([yuval-po](https://github.com/yuval-po))
 * Fixed ScriptManagerWindow not restoring to the correct size - [P.R 847](https://github.com/PlayTazUO/TazUO/pull/847) ([yuval-po](https://github.com/yuval-po))
 * Fixed the bandage agent monopolizing the shared action queue: heals still run through the queue, but the queued heal is now re-validated when it runs and only resets the global action cooldown on rounds where a bandage is actually applied - so no-op heal rounds (mobile recovered, still on the bandage timer, no bandage, etc.) no longer stall the player's own queued loot/move/equip actions - [P.R 846](https://github.com/PlayTazUO/TazUO/pull/846) ([bittiez](https://github.com/bittiez))
