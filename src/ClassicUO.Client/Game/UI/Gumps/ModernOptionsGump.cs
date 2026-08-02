@@ -1255,6 +1255,10 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.RemoveIndent();
 
+            content.AddToRight
+            (new CheckboxWithLabel(TazLang.Get("mog_video_screenshotondeath"), isChecked: profile.ScreenshotOnDeath, valueChanged: (b) => { profile.ScreenshotOnDeath = b; }),
+                true, page);
+
             content.BlankLine();
 
             content.AddToRight

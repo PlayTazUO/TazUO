@@ -14,6 +14,10 @@ internal static class DeathScreen
 
         if (action != 1)
         {
+            // Capture the final frame before the death screen is drawn over it.
+            if (ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.ScreenshotOnDeath)
+                Client.Game.TakeScreenshot("death");
+
             world.Weather.Reset();
 
             Client.Game.Audio.PlayMusic(Client.Game.Audio.DeathMusicIndex, true);

@@ -467,6 +467,11 @@ public static class VideoTab
                 search: new SearchMetadata(TazLang.Get("mog_videotab_misc_bwdead"), Keywords: [TazLang.Get("mog_kw_dead"), TazLang.Get("mog_kw_bw")])
             ),
             Option.Checkbox(
+                TazLang.Get("mog_videotab_misc_screenshotondeath"),
+                new Accessor<bool>(() => profile.ScreenshotOnDeath),
+                search: new SearchMetadata(TazLang.Get("mog_videotab_misc_screenshotondeath"), Keywords: [TazLang.Get("mog_kw_death")])
+            ),
+            Option.Checkbox(
                 TazLang.Get("mog_videotab_misc_mousethread"),
                 new Accessor<bool>(() => Settings.GlobalSettings.RunMouseInASeparateThread),
                 search: new SearchMetadata(TazLang.Get("mog_videotab_misc_mousethread"), Keywords: [TazLang.Get("mog_kw_mouse"), TazLang.Get("mog_kw_thread")])
