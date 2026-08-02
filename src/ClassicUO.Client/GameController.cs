@@ -1218,6 +1218,11 @@ namespace ClassicUO
                 GraphicsDevice.GetBackBufferData(colors);
             }
 
+            // The render target's alpha channel is not fully opaque in the world viewport (lighting
+            // and world compositing leave varying alpha). Screenshots are always opaque, so force it.
+            for (int i = 0; i < colors.Length; i++)
+                colors[i].A = 255;
+
             using (
                 var texture = new Texture2D(
                     GraphicsDevice,
@@ -1260,6 +1265,11 @@ namespace ClassicUO
             {
                 graphicDevice.GetBackBufferData(position, colors, 0, colors.Length);
             }
+
+            // The render target's alpha channel is not fully opaque in the world viewport (lighting
+            // and world compositing leave varying alpha). Screenshots are always opaque, so force it.
+            for (int i = 0; i < colors.Length; i++)
+                colors[i].A = 255;
 
             using (
                 var texture = new Texture2D(
