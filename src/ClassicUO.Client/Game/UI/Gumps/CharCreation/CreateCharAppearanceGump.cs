@@ -219,7 +219,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             // Randomize
             Add
             (
-                new NiceButton(262, 440, 120, 20, ButtonAction.Activate, "Randomize")
+                new NiceButton(510, 5, 120, 20, ButtonAction.Activate, "Randomize")
                 {
                     ButtonParameter = (int) Buttons.Randomize, IsSelectable = false, DisplayBorder = true
                 },
