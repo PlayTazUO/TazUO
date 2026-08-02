@@ -837,77 +837,28 @@ namespace ClassicUO.Configuration
 
         [JsonConverter(typeof(Point2Converter))]
         public Point PlayerOffset { get; set => SetProperty(ref field, value); } = new Point(0, 0);
-
-        [Obsolete]
-        [JsonPropertyName("paperdoll_scale")]
-        public double OldPaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
-
-        [Obsolete]
-        [JsonPropertyName("buy_agent_sub_containers")]
-        public bool OldBuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("disable_targeting_grid_containers")]
-        public bool OldDisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
-        [Obsolete]
-        [JsonPropertyName("controller_enabled")]
-        public bool OldControllerEnabled { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("enable_scavenger")]
-        public bool OldEnableScavenger { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("counter_gump_locked")]
-        public bool OldCounterGumpLocked { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("nearby_loot_conceals_container_on_open")]
-        public bool OldNearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("spell_bar__show_hotkeys")]
-        public bool OldSpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("forced_house_transparency")]
-        public byte OldForcedHouseTransparency { get; set => SetProperty(ref field, value); } = 40;
-
-        [Obsolete]
-        [JsonPropertyName("forced_transparency_house_tile_hue")]
-        public ushort OldForcedTransparencyHouseTileHue { get; set => SetProperty(ref field, value); } = 0;
-
-        [Obsolete]
-        [JsonPropertyName("force_house_transparency")]
-        public bool OldForceHouseTransparency { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("hide_hud_gump_flags")]
-        public ulong OldHideHudGumpFlags { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("disable_gray_enemies")]
-        public bool OldDisableGrayEnemies { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("enable_post_processing_effects")]
-        public bool OldEnablePostProcessingEffects { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("post_processing_type")]
-        public ushort OldPostProcessingType { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("disable_hotkeys")]
-        public bool OldDisableHotkeys { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("disable_dismount_in_war_mode")]
-        public bool OldDisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("enable_a_sync_map_loading")]
-        public bool OldEnableASyncMapLoading { get; set => SetProperty(ref field, value); } = true;
+        public double PaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
+        public bool BuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
+        public bool DisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
+        public bool ControllerEnabled { get; set => SetProperty(ref field, value); } = true;
+        public bool EnableScavenger { get; set => SetProperty(ref field, value); } = true;
+        public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
+        public bool NearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
+        public bool SpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
+        public byte ForcedHouseTransparency { get; set => SetProperty(ref field, value); } = 40;
+        public ushort ForcedTransparencyHouseTileHue { get; set => SetProperty(ref field, value); } = 0;
+        public bool ForceHouseTransparency { get; set => SetProperty(ref field, value); }
+        public ulong HideHudGumpFlags { get; set => SetProperty(ref field, value); }
+        public bool DisableGrayEnemies { get; set => SetProperty(ref field, value); }
+        public bool EnablePostProcessingEffects { get; set => SetProperty(ref field, value); }
+        public ushort PostProcessingType { get; set => SetProperty(ref field, value); }
+        /// <summary>
+        ///     Persistently disable hotkey usage.
+        ///     To merely temporarily disable hotkeys, use <see cref="Game.Managers.Hotkeys.HotKeys.RequestDisableHotkeys" />.
+        /// </summary>
+        public bool PersistentDisableHotkeys { get; set => SetProperty(ref field, value); }
+        public bool DisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
+        public bool EnableASyncMapLoading { get; set => SetProperty(ref field, value); } = true;
 
         [Obsolete]
         [JsonPropertyName("use_grid_layout_container_gumps")]
@@ -1040,22 +991,6 @@ namespace ClassicUO.Configuration
         {
             if (ProfileMigrationVersion < 1) //0
             {
-                EnableASyncMapLoading = OldEnableASyncMapLoading;
-                DisableDismountInWarMode = OldDisableDismountInWarMode;
-                PersistentDisableHotkeys = OldDisableHotkeys;
-                ControllerEnabled = OldControllerEnabled;
-                EnableScavenger = OldEnableScavenger;
-                CounterGumpLocked = OldCounterGumpLocked;
-                NearbyLootConcealsContainerOnOpen = OldNearbyLootConcealsContainerOnOpen;
-                SpellBar_ShowHotkeys = OldSpellBar_ShowHotkeys;
-                ForcedTransparencyHouseTileHue = OldForcedTransparencyHouseTileHue;
-                ForceHouseTransparency = OldForceHouseTransparency;
-                DisableGrayEnemies = OldDisableGrayEnemies;
-                EnablePostProcessingEffects = OldEnablePostProcessingEffects;
-                PostProcessingType = OldPostProcessingType;
-                ForcedHouseTransparency = OldForcedHouseTransparency;
-                HideHudGumpFlags = OldHideHudGumpFlags;
-
                 ProfileMigrationVersion++;
             }
 
@@ -1129,10 +1064,6 @@ namespace ClassicUO.Configuration
 
             if (ProfileMigrationVersion < 5) //4
             {
-                DisableTargetingGridContainers = OldDisableTargetingGridContainers;
-                BuyAgentSubContainers = OldBuyAgentSubContainers;
-                PaperdollScale = OldPaperdollScale;
-
                 ProfileMigrationVersion++;
             }
         }

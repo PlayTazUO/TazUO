@@ -78,10 +78,6 @@ public sealed partial class Profile
         public partial int ProfileMigrationVersion { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "enable_a_sync_map_loading", true)]
-        public partial bool EnableASyncMapLoading { get; set; }
-
-        [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.DISABLE_WEATHER, false)]
         public partial bool DisableWeather { get; set; }
 
@@ -105,51 +101,6 @@ public sealed partial class Profile
         [SqlSetting(SettingsScope.Char, Constants.SqlSettings.QUICK_CURE_SPELL, 11)]
         public partial int QuickCureSpell { get; set; }
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "disable_dismount_in_war_mode", true)]
-        public partial bool DisableDismountInWarMode { get; set; }
-
-        /// <summary>
-        ///     Persistently disable hotkey usage.
-        ///     <p>
-        ///         To merely temporarily disable hotkeys, use <see cref="Game.Managers.Hotkeys.HotKeys.RequestDisableHotkeys" />.
-        ///     </p>
-        /// </summary>
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "disable_hotkeys", false)]
-        public partial bool PersistentDisableHotkeys { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "post_processing_type", (ushort)0)]
-        public partial ushort PostProcessingType { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "enable_post_processing_effects", false)]
-        public partial bool EnablePostProcessingEffects { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "disable_gray_enemies", false)]
-        public partial bool DisableGrayEnemies { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "hide_hud_gump_flags", (ulong)0)]
-        public partial ulong HideHudGumpFlags { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "force_house_transparency", false)]
-        public partial bool ForceHouseTransparency { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "forced_transparency_house_tile_hue", (ushort)0)]
-        public partial ushort ForcedTransparencyHouseTileHue { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "forced_house_transparency", (byte)40)]
-        public partial byte ForcedHouseTransparency { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "spell_bar__show_hotkeys", true)]
-        public partial bool SpellBar_ShowHotkeys { get; set; }
 
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "counter_bar__show_hotkeys", false)]
@@ -163,21 +114,6 @@ public sealed partial class Profile
         [SqlSetting(SettingsScope.Global, "counter_bar__disable_icon_scaling", false)]
         public partial bool CounterBarDisableIconScaling { get; set; }
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "nearby_loot_conceals_container_on_open", true)]
-        public partial bool NearbyLootConcealsContainerOnOpen { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, "counter_gump_locked", false)]
-        public partial bool CounterGumpLocked { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, "enable_scavenger", true)]
-        public partial bool EnableScavenger { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "controller_enabled", true)]
-        public partial bool ControllerEnabled { get; set; }
 
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_TRIGGER, false)]
@@ -318,17 +254,6 @@ public sealed partial class Profile
         [SqlSetting(SettingsScope.Char, "last_loaded", "")]
         public partial string LastLoaded { get; set; }
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "disable_targeting_grid_containers", false)]
-        public partial bool DisableTargetingGridContainers { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "buy_agent_sub_containers", true)]
-        public partial bool BuyAgentSubContainers { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "paperdoll_scale", 1d)]
-        public partial double PaperdollScale { get; set; }
 
         // When true, in-game lights gently ebb and flow like a mild candle flame.
         [JsonIgnore]
