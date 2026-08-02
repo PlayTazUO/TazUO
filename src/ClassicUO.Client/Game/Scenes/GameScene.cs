@@ -62,6 +62,7 @@ namespace ClassicUO.Game.Scenes
         });
 
         private static XBREffect _xbr;
+        private static FSREffect _fsr;
         private bool _alphaChanged;
         private long _alphaTimer;
         private bool _forceStopScene;
@@ -72,6 +73,12 @@ namespace ClassicUO.Game.Scenes
         private readonly LightData[] _lights = new LightData[
             LightsLoader.MAX_LIGHTS_DATA_INDEX_COUNT
         ];
+
+        // Drawn opaque tiles that can occlude a light, bucketed by isometric column (X - Y); rebuilt each frame, queried by AddLight.
+        private readonly Dictionary<int, List<LightOccluder>> _lightOccluders =
+            new Dictionary<int, List<LightOccluder>>();
+        private readonly Stack<List<LightOccluder>> _lightOccluderPool =
+            new Stack<List<LightOccluder>>();
         private Item _multi;
         private Rectangle _rectangleObj = Rectangle.Empty,
             _rectanglePlayer;
@@ -79,6 +86,10 @@ namespace ClassicUO.Game.Scenes
 
         private uint _timeToPlaceMultiInHouseCustomization;
         private const int MAX_TEXTURE_SIZE = 8192;
+
+        // An occluder d tiles in front of a light must stand ~11*d z-units above it to cover it on screen; slop is the tile-thickness leniency.
+        private const int LIGHT_OCCLUSION_STEP = 11;
+        private const int LIGHT_OCCLUSION_SLOP = 6;
         private static PostProcessingType _filterMode = PostProcessingType.Point;
         private PostProcessingType _currentFilter;
         private Effect _postFx;
@@ -449,6 +460,8 @@ namespace ClassicUO.Game.Scenes
             _worldRenderTarget?.Dispose();
             _xbr?.Dispose();
             _xbr = null;
+            _fsr?.Dispose();
+            _fsr = null;
 
             _world.CommandManager.UnRegisterAll();
             _world.Weather.Reset();
@@ -474,38 +487,51 @@ namespace ClassicUO.Game.Scenes
 
         private void SocketOnDisconnected(object sender, SocketError e)
         {
-            if (DisconnectionRequested)
+            // Disconnected is raised from the background network/receive tasks (see AsyncNetClient),
+            // but this handler tears down the scene and adds gumps, which mutates UIManager state
+            // (_gumpTypeList, the Gumps list, etc.). Touching that off the main thread races the
+            // game loop and corrupts those collections. Marshal onto the main thread so all the UI
+            // work runs there; InvokeOnMainThread runs inline when already on the main thread.
+            MainThreadQueue.InvokeOnMainThread(() =>
             {
-                Client.Game.SetScene(new LoginScene(_world));
+                // The callback can be drained a frame later, by which point this scene may already
+                // have been unloaded/replaced; skip the stale teardown then.
+                if (IsDestroyed || Instance != this)
+                    return;
 
-                return;
-            }
-            if (Settings.GlobalSettings.Reconnect)
-            {
-                LoginHandshake.Reconnect = true;
-                _forceStopScene = true;
-            }
-            else
-            {
-                UIManager.Add(
-                    new MessageBoxGump(
-                        _world,
-                        200,
-                        200,
-                        string.Format(
-                            ResGeneral.ConnectionLost0,
-                            StringHelper.AddSpaceBeforeCapital(e.ToString())
-                        ),
-                        s =>
-                        {
-                            if (s)
+                if (DisconnectionRequested)
+                {
+                    Client.Game.SetScene(new LoginScene(_world));
+
+                    return;
+                }
+                if (Settings.GlobalSettings.Reconnect)
+                {
+                    LoginHandshake.Reconnect = true;
+                    _forceStopScene = true;
+                }
+                else
+                {
+                    UIManager.Add(
+                        new MessageBoxGump(
+                            _world,
+                            200,
+                            200,
+                            string.Format(
+                                ResGeneral.ConnectionLost0,
+                                StringHelper.AddSpaceBeforeCapital(e.ToString())
+                            ),
+                            s =>
                             {
-                                Client.Game.SetScene(new LoginScene(_world));
+                                if (s)
+                                {
+                                    Client.Game.SetScene(new LoginScene(_world));
+                                }
                             }
-                        }
-                    )
-                );
-            }
+                        )
+                    );
+                }
+            });
         }
 
         public void RequestQuitGame() => UIManager.Add(
@@ -535,27 +561,24 @@ namespace ClassicUO.Game.Scenes
 
             bool canBeAdded = true;
 
-            int testX = obj.X + 1;
-            int testY = obj.Y + 1;
-
-            GameObject tile = _world.Map.GetTile(testX, testY);
-
-            if (tile != null)
+            // Occluded if a tall enough tile in the light's own column (X - Y) sits in front of it toward the camera.
+            if (_lightOccluders.TryGetValue(obj.X - obj.Y, out List<LightOccluder> occluders))
             {
-                sbyte z5 = (sbyte)(obj.Z + 5);
+                int lightX = obj.X;
+                int lightZ = obj.Z;
 
-                for (GameObject o = tile; o != null; o = o.TNext)
+                for (int i = 0; i < occluders.Count; i++)
                 {
-                    if (
-                        (!(o is Static s) || s.ItemData.IsTransparent)
-                            && (!(o is Multi m) || m.ItemData.IsTransparent)
-                        || !o.AllowedToDraw
-                    )
+                    LightOccluder o = occluders[i];
+                    int d = o.X - lightX;
+
+                    // Only tiles in front of the light (nearer the camera) can hide it.
+                    if (d <= 0)
                     {
                         continue;
                     }
 
-                    if (o.Z < _maxZ && o.Z >= z5)
+                    if (o.Z < _maxZ && o.Z - lightZ >= LIGHT_OCCLUSION_STEP * d - LIGHT_OCCLUSION_SLOP)
                     {
                         canBeAdded = false;
 
@@ -676,6 +699,15 @@ namespace ClassicUO.Game.Scenes
             _renderListAnimations.Clear();
             _renderListEffects.Clear();
             _renderListTransparentObjects.Clear();
+
+            // Recycle this frame's column buckets to the pool so the map rebuilds without allocating.
+            foreach (List<LightOccluder> bucket in _lightOccluders.Values)
+            {
+                bucket.Clear();
+                _lightOccluderPool.Push(bucket);
+            }
+
+            _lightOccluders.Clear();
 
             _foliageCount = 0;
 
@@ -939,6 +971,7 @@ namespace ClassicUO.Game.Scenes
 
             ObjectActionQueue.Instance.Update();
             AutoLootManager.Instance.Update();
+            BandageManager.Instance.Update();
             GridHighlightData.ProcessQueue(_world);
             Profiler.ExitContext("Actions");
 
@@ -1261,6 +1294,10 @@ namespace ClassicUO.Game.Scenes
             {
                 BindXbrParams(gd);
             }
+            else if (_postFx == _fsr && _fsr != null)
+            {
+                BindFsrParams(gd);
+            }
             batcher.Begin(_postFx, Matrix.Identity);
             try { batcher.SetSampler(_postSampler ?? SamplerState.PointClamp); } catch { batcher.SetSampler(SamplerState.PointClamp); }
             batcher.Draw(_worldRenderTarget, destRect, srcRect, new Vector3(0, 0, 1));
@@ -1408,6 +1445,10 @@ namespace ClassicUO.Game.Scenes
 
             hue.Z = 1f;
 
+            bool candleFlicker = ProfileManager.CurrentProfile.CandleFlickerLights;
+            // Time in seconds, used as the phase base for the flicker oscillation.
+            float flickerTime = Time.Ticks / 1000f;
+
             for (int i = 0; i < _lightCount; i++)
             {
                 ref LightData l = ref _lights[i];
@@ -1416,6 +1457,23 @@ namespace ClassicUO.Game.Scenes
                 if (lightInfo.Texture == null)
                 {
                     continue;
+                }
+
+                // Gently modulate each light's intensity so it ebbs and flows like a
+                // candle. A per-light phase seed derived from its position keeps nearby
+                // lights out of sync, and blending two frequencies avoids an obvious
+                // pulse. The amplitude is intentionally small for a subtle effect.
+                if (candleFlicker)
+                {
+                    float seed = l.DrawX * 0.73f + l.DrawY * 1.31f;
+
+                    hue.Z = 1f
+                        + 0.06f * (float)Math.Sin(flickerTime * 3.1f + seed)
+                        + 0.03f * (float)Math.Sin(flickerTime * 7.7f + seed * 1.7f);
+                }
+                else
+                {
+                    hue.Z = 1f;
                 }
 
                 hue.X = l.Color;
@@ -1564,9 +1622,21 @@ namespace ClassicUO.Game.Scenes
 
         private void UpdatePostProcessState(GraphicsDevice gd)
         {
-            if (_currentFilter == _filterMode &&
-                ((_postFx == null && _filterMode != PostProcessingType.Xbr) || (_postFx != null && (_filterMode != PostProcessingType.Xbr || ReferenceEquals(_postFx, _xbr)))))
-                return;
+            if (_currentFilter == _filterMode)
+            {
+                switch (_filterMode)
+                {
+                    case PostProcessingType.Xbr:
+                        if (ReferenceEquals(_postFx, _xbr) && _xbr != null) return;
+                        break;
+                    case PostProcessingType.Fsr:
+                        if (ReferenceEquals(_postFx, _fsr) && _fsr != null) return;
+                        break;
+                    default:
+                        if (_postFx == null) return;
+                        break;
+                }
+            }
 
             _currentFilter = _filterMode;
 
@@ -1582,6 +1652,19 @@ namespace ClassicUO.Game.Scenes
                         else { _xbr = null; _postFx = null; _postSampler = SamplerState.PointClamp; break; }
                     }
                     _postFx = _xbr;
+                    _postSampler = SamplerState.PointClamp;
+                    break;
+
+                case PostProcessingType.Fsr:
+                    if (_fsr == null)
+                    {
+                        _fsr = new FSREffect(gd);
+                        EffectTechnique tech = _fsr.Techniques?["T0"] ??
+                                   (_fsr.Techniques?.Count > 0 ? _fsr.Techniques[0] : null);
+                        if (tech != null) _fsr.CurrentTechnique = tech;
+                        else { _fsr = null; _postFx = null; _postSampler = SamplerState.PointClamp; break; }
+                    }
+                    _postFx = _fsr;
                     _postSampler = SamplerState.PointClamp;
                     break;
 
@@ -1626,6 +1709,30 @@ namespace ClassicUO.Game.Scenes
             _xbr.Parameters?["invTextureSize"]?.SetValue(new Vector2(1f / w, 1f / h));
             _xbr.Parameters?["TextureSizeInv"]?.SetValue(new Vector2(1f / w, 1f / h));
             _xbr.Parameters?["decal"]?.SetValue(_worldRenderTarget);
+        }
+
+        private void BindFsrParams(GraphicsDevice gd)
+        {
+            if (_fsr == null || _worldRenderTarget == null) return;
+
+            try
+            {
+                if (_fsr.Techniques?["T0"] != null)
+                    _fsr.CurrentTechnique = _fsr.Techniques["T0"];
+            }
+            catch (Exception e)
+            {
+                Log.ErrorDebug(e.ToString());
+            }
+
+            float w = _worldRenderTarget.Width;
+            float h = _worldRenderTarget.Height;
+
+            Viewport vp = gd.Viewport;
+            var ortho = Matrix.CreateOrthographicOffCenter(0, vp.Width, vp.Height, 0, 0, 1);
+            _fsr.MatrixTransform?.SetValue(ortho);
+            _fsr.TextureSize?.SetValue(new Vector2(w, h));
+            _fsr.Parameters?["decal"]?.SetValue(_worldRenderTarget);
         }
 
         private static readonly RenderedText _youAreDeadText = RenderedText.Create(
@@ -1692,6 +1799,12 @@ namespace ClassicUO.Game.Scenes
             public int DrawX,
                 DrawY;
         }
+
+        private struct LightOccluder
+        {
+            public int X;
+            public int Z;
+        }
     }
 
     public enum PostProcessingType
@@ -1700,6 +1813,7 @@ namespace ClassicUO.Game.Scenes
         Linear,
         Anisotropic,
         Xbr,
+        Fsr,
         Invalid
     }
 }

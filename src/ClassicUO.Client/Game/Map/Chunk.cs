@@ -492,7 +492,7 @@ namespace ClassicUO.Game.Map
                 }
             }
 
-            if (Node.Next != null || Node.Previous != null)
+            if (Node != null && (Node.Next != null || Node.Previous != null))
             {
                 Node.List?.Remove(Node);
             }
@@ -534,7 +534,7 @@ namespace ClassicUO.Game.Map
                 }
             }
 
-            if (Node.Next != null || Node.Previous != null)
+            if (Node != null && (Node.Next != null || Node.Previous != null))
             {
                 Node.List?.Remove(Node);
             }

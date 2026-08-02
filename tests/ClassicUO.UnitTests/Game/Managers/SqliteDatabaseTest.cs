@@ -28,6 +28,36 @@ namespace ClassicUO.UnitTests.Game.Managers
                 (await c.QueryAsync<string>($"SELECT name FROM pragma_table_info('{table}')")).ToList());
         }
 
+        // Concrete subclass built on the schema-aware constructor + generic row helpers, so tests can
+        // exercise AddOrUpdate/Delete/Get without any hand-written SQL.
+        private sealed class ThingsDatabase : SqliteDatabase
+        {
+            public static readonly SqliteTableSchema Schema = new("things",
+                SqliteColumn.Int("id", primaryKey: true),
+                SqliteColumn.Str("name", notNull: true, def: "''"),
+                SqliteColumn.Int("count", def: "0"));
+
+            public ThingsDatabase(string directory) : base(Schema, "things.db", directory) { }
+
+            public Task<int> SaveAsync(long id, string name, long count) =>
+                AddOrUpdateAsync(new SqliteRow { ["id"] = id, ["name"] = name, ["count"] = count });
+
+            public Task<int> RemoveAsync(long id) => DeleteAsync(new SqliteRow { ["id"] = id });
+
+            public Task<IReadOnlyList<SqliteRow>> AllAsync() => GetAsync();
+
+            public Task<IReadOnlyList<SqliteRow>> ByNameAsync(string name) =>
+                GetAsync(new SqliteRow { ["name"] = name });
+
+            public Task<SqliteRow?> ByIdAsync(long id) => GetFirstAsync(new SqliteRow { ["id"] = id });
+
+            public Task<List<string>> ColumnsAsync() => WithConnectionAsync(async c =>
+                (await c.QueryAsync<string>("SELECT name FROM pragma_table_info('things')")).ToList());
+
+            public Task<T> PragmaAsync<T>(string pragma) =>
+                WithConnectionAsync(c => c.ExecuteScalarAsync<T>($"PRAGMA {pragma}"));
+        }
+
         private readonly string _tempDir;
         private readonly TestDatabase _db;
 
@@ -198,6 +228,86 @@ namespace ClassicUO.UnitTests.Game.Managers
 
             Func<Task> act = () => db.RunAsync(c => c.ExecuteAsync("SELECT 1"));
             await act.Should().ThrowAsync<ObjectDisposedException>();
+        }
+
+        [Fact]
+        public async Task SchemaConstructor_EnsuresTable_OnConstruction()
+        {
+            using var db = new ThingsDatabase(_tempDir);
+
+            File.Exists(Path.Combine(_tempDir, "things.db")).Should().BeTrue();
+            List<string> columns = await db.ColumnsAsync();
+            columns.Should().BeEquivalentTo(new[] { "id", "name", "count" });
+        }
+
+        [Fact]
+        public async Task AddOrUpdateAsync_InsertsThenUpdates_ByPrimaryKey()
+        {
+            using var db = new ThingsDatabase(_tempDir);
+
+            await db.SaveAsync(1, "original", 5);
+
+            SqliteRow? row = await db.ByIdAsync(1);
+            row.Should().NotBeNull();
+            row.Value.Get<string>("name").Should().Be("original");
+            row.Value.Get<int>("count").Should().Be(5);
+
+            // Same primary key -> update, not a duplicate row.
+            await db.SaveAsync(1, "updated", 9);
+
+            IReadOnlyList<SqliteRow> all = await db.AllAsync();
+            all.Should().HaveCount(1);
+            all[0].Get<string>("name").Should().Be("updated");
+            all[0].Get<int>("count").Should().Be(9);
+        }
+
+        [Fact]
+        public async Task GetAsync_WithFilter_ReturnsMatchingRows()
+        {
+            using var db = new ThingsDatabase(_tempDir);
+
+            await db.SaveAsync(1, "apple", 1);
+            await db.SaveAsync(2, "banana", 2);
+            await db.SaveAsync(3, "apple", 3);
+
+            IReadOnlyList<SqliteRow> apples = await db.ByNameAsync("apple");
+            apples.Should().HaveCount(2);
+            apples.Select(r => r.Get<long>("id")).Should().BeEquivalentTo(new long[] { 1, 3 });
+
+            IReadOnlyList<SqliteRow> all = await db.AllAsync();
+            all.Should().HaveCount(3);
+        }
+
+        [Fact]
+        public async Task Connection_UsesWalJournalMode_AndBusyTimeout()
+        {
+            using var db = new ThingsDatabase(_tempDir);
+
+            // WAL lets multiple clients read while one writes; busy_timeout makes a client wait for a lock
+            // another holds rather than failing immediately. Both are required for safe multi-client use.
+            string journalMode = await db.PragmaAsync<string>("journal_mode");
+            journalMode.Should().Be("wal");
+
+            long busyTimeout = await db.PragmaAsync<long>("busy_timeout");
+            busyTimeout.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_RemovesMatchingRow()
+        {
+            using var db = new ThingsDatabase(_tempDir);
+
+            await db.SaveAsync(1, "keep", 1);
+            await db.SaveAsync(2, "remove", 2);
+
+            int deleted = await db.RemoveAsync(2);
+            deleted.Should().Be(1);
+
+            IReadOnlyList<SqliteRow> all = await db.AllAsync();
+            all.Should().HaveCount(1);
+            all[0].Get<long>("id").Should().Be(1);
+
+            (await db.ByIdAsync(2)).Should().BeNull();
         }
 
         [Fact]

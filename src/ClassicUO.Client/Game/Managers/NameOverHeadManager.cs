@@ -398,6 +398,7 @@ namespace ClassicUO.Game.Managers
             }
             catch (Exception ex)
             {
+                // Non-fatal: a failed save (e.g. read-only install dir) must not crash the client
                 Log.Error($"Failed to save nameoverhead.xml: {ex}");
 
                 // Clean up temp file if it exists
@@ -412,7 +413,6 @@ namespace ClassicUO.Game.Managers
                         // Ignore cleanup errors
                     }
                 }
-                throw;
             }
         }
 

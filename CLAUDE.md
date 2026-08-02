@@ -211,3 +211,4 @@ The scripting API documentation is automatically generated during build via the 
 
 - All json serialize and deserialize need to have context generated for them.
 - Don't put a licsense at the top of files you create.
+- Keep code comments to 1 liners as much as possible.

@@ -43,6 +43,11 @@ namespace ClassicUO.Game.Managers
         private readonly SemaphoreSlim _dbLock = new(1, 1);
         private bool _disposed;
 
+        // The primary table this database manages, when constructed with a schema. Null when the
+        // schema-less constructor is used (subclasses that still hand-roll their own SQL). The generic
+        // row helpers (AddOrUpdateAsync/DeleteAsync/GetAsync) require this to be set.
+        private readonly SqliteTableSchema? _schema;
+
         /// <summary>The directory that contains the database file.</summary>
         protected string DataDirectory { get; }
 
@@ -75,8 +80,38 @@ namespace ClassicUO.Game.Managers
             {
                 DataSource = DatabasePath,
                 Mode = SqliteOpenMode.ReadWriteCreate,
-                Cache = SqliteCacheMode.Shared
+                // Private cache (the default). Shared cache is an in-process cache-sharing feature: it
+                // provides no benefit across separate clients/processes and changes locking semantics so
+                // that table-level contention surfaces as SQLITE_LOCKED, which the busy handler does not
+                // retry. WAL journal mode (enabled per connection below) is what actually makes
+                // concurrent multi-client access safe and non-blocking for readers.
+                Cache = SqliteCacheMode.Private
             }.ToString();
+        }
+
+        /// <summary>
+        /// Creates the base database and immediately ensures its primary table matches
+        /// <paramref name="schema"/> - creating it if absent and reconciling columns (adding missing,
+        /// dropping removed) otherwise. This is the recommended constructor: a subclass declares its
+        /// columns once, passes them here, and then works entirely through the generic row helpers
+        /// (<see cref="AddOrUpdateAsync"/>, <see cref="DeleteAsync"/>, <see cref="GetAsync"/>) without
+        /// writing any SQL of its own.
+        /// </summary>
+        /// <param name="schema">The table name and columns to ensure. See <see cref="EnsureTableAsync"/>.</param>
+        /// <param name="dbFileName">The database file name, e.g. <c>"mything.db"</c>.</param>
+        /// <param name="dataDirectory">
+        /// The directory to place the database in. Defaults to the shared <c>{ExecutablePath}/Data</c>
+        /// directory. Provide an explicit directory (e.g. a temp path) to make a subclass unit-testable.
+        /// </param>
+        protected SqliteDatabase(SqliteTableSchema schema, string dbFileName, string dataDirectory = null)
+            : this(dbFileName, dataDirectory)
+        {
+            _schema = schema;
+
+            // Ensure the schema up-front so the row helpers can be used immediately after construction.
+            // Blocking here mirrors the established pattern for these managers (the table must exist
+            // before any query runs) and is safe because nothing else can hold the lock yet.
+            EnsureTableAsync(schema).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -91,15 +126,31 @@ namespace ClassicUO.Game.Managers
             await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                try
+                // Retry loop for cross-process lock contention. busy_timeout (set per connection) already
+                // makes SQLite wait inside the driver for a lock another client holds; this outer loop is
+                // a bounded backstop for the rare case a lock outlives that timeout under heavy multi-client
+                // write load, so an occasional SQLITE_BUSY is retried rather than thrown at the caller.
+                for (int attempt = 0; ; attempt++)
                 {
-                    return await OpenAndRunAsync(operation).ConfigureAwait(false);
-                }
-                catch (SqliteException ex) when (IsCorruptionError(ex) && QuarantineCorruptDatabase(ex))
-                {
-                    // The file was corrupt and has been quarantined; a fresh database will be created
-                    // on this retry. Only one retry is attempted - if it fails again the error propagates.
-                    return await OpenAndRunAsync(operation).ConfigureAwait(false);
+                    try
+                    {
+                        try
+                        {
+                            return await OpenAndRunAsync(operation).ConfigureAwait(false);
+                        }
+                        catch (SqliteException ex) when (IsCorruptionError(ex) && QuarantineCorruptDatabase(ex))
+                        {
+                            // The file was corrupt and has been quarantined; a fresh database will be created
+                            // on this retry. Only one retry is attempted - if it fails again the error propagates.
+                            return await OpenAndRunAsync(operation).ConfigureAwait(false);
+                        }
+                    }
+                    catch (SqliteException ex) when (IsBusyError(ex) && attempt < MAX_BUSY_RETRIES)
+                    {
+                        // Another client held the database longer than busy_timeout. Back off briefly (the
+                        // delay grows with each attempt) and try again; after MAX_BUSY_RETRIES it propagates.
+                        await Task.Delay(BUSY_RETRY_BASE_DELAY_MS * (attempt + 1)).ConfigureAwait(false);
+                    }
                 }
             }
             finally
@@ -120,13 +171,31 @@ namespace ClassicUO.Game.Managers
                 return true;
             });
 
-        /// <summary>Opens a fresh connection, runs the operation, and disposes the connection.</summary>
+        /// <summary>Opens a fresh connection, configures it for multi-client use, runs the operation, and disposes it.</summary>
         private async Task<T> OpenAndRunAsync<T>(Func<SqliteConnection, Task<T>> operation)
         {
             await using SqliteConnection connection = new(ConnectionString);
             await connection.OpenAsync().ConfigureAwait(false);
+            await ConfigureConnectionAsync(connection).ConfigureAwait(false);
             return await operation(connection).ConfigureAwait(false);
         }
+
+        /// <summary>
+        /// Applies the per-connection pragmas that make the database safe and non-blocking under
+        /// concurrent multi-client access:
+        /// <list type="bullet">
+        /// <item><c>busy_timeout</c> - wait this long for a lock another client holds instead of failing
+        /// immediately with SQLITE_BUSY. Per connection, so it is set on every open.</item>
+        /// <item><c>journal_mode=WAL</c> - lets multiple clients read while one writes (the default
+        /// rollback journal takes an exclusive database lock for the whole of every write). WAL is
+        /// persisted in the database header, so re-asserting it here is cheap once it is set.</item>
+        /// <item><c>synchronous=NORMAL</c> - the standard companion to WAL: durable against application
+        /// crashes, trading only the last committed transaction on an OS/power loss for much less fsync
+        /// overhead.</item>
+        /// </list>
+        /// </summary>
+        private static Task ConfigureConnectionAsync(SqliteConnection connection) => connection.ExecuteAsync(
+            $"PRAGMA busy_timeout={BUSY_TIMEOUT_MS}; PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;");
 
         /// <summary>
         /// Ensures a table matches the given <see cref="SqliteTableSchema"/>: creates it
@@ -198,10 +267,19 @@ namespace ClassicUO.Game.Managers
                 if (existingSet.Contains(column.Name))
                     continue;
 
-                // A primary key cannot be added via ALTER TABLE, so never inline it here.
-                await connection.ExecuteAsync(
-                    $"ALTER TABLE {QuoteIdentifier(schema.Name)} ADD COLUMN {column.ToDefinition(includePrimaryKey: false)}"
-                ).ConfigureAwait(false);
+                try
+                {
+                    // A primary key cannot be added via ALTER TABLE, so never inline it here.
+                    await connection.ExecuteAsync(
+                        $"ALTER TABLE {QuoteIdentifier(schema.Name)} ADD COLUMN {column.ToDefinition(includePrimaryKey: false)}"
+                    ).ConfigureAwait(false);
+                }
+                catch (SqliteException ex) when (IsDuplicateColumnError(ex))
+                {
+                    // Another client added this column between our read of the existing columns and this
+                    // ALTER (simultaneous first launch / upgrade). The end state is what we wanted, so the
+                    // race is benign - carry on.
+                }
             }
 
             foreach (string existingColumn in existingColumns)
@@ -209,11 +287,232 @@ namespace ClassicUO.Game.Managers
                 if (desiredSet.Contains(existingColumn))
                     continue;
 
-                await connection.ExecuteAsync(
-                    $"ALTER TABLE {QuoteIdentifier(schema.Name)} DROP COLUMN {QuoteIdentifier(existingColumn)}"
-                ).ConfigureAwait(false);
+                try
+                {
+                    await connection.ExecuteAsync(
+                        $"ALTER TABLE {QuoteIdentifier(schema.Name)} DROP COLUMN {QuoteIdentifier(existingColumn)}"
+                    ).ConfigureAwait(false);
+                }
+                catch (SqliteException ex) when (IsMissingColumnError(ex))
+                {
+                    // Another client already dropped this column concurrently. Benign - the column is gone,
+                    // which is the desired outcome.
+                }
             }
         });
+
+        /// <summary>
+        /// Inserts a row, or updates the existing row when it collides with the table's PRIMARY KEY
+        /// (an <c>INSERT ... ON CONFLICT(pk) DO UPDATE</c> upsert). Only the columns present in
+        /// <paramref name="row"/> are written; non-key columns are updated to the incoming values while
+        /// the key columns identify the row. All SQL is built here from the schema passed to the
+        /// constructor - the caller only supplies the data.
+        /// </summary>
+        /// <param name="row">The row data. Must include every PRIMARY KEY column.</param>
+        /// <returns>The number of rows affected.</returns>
+        protected Task<int> AddOrUpdateAsync(SqliteRow row)
+        {
+            SqliteTableSchema schema = RequireSchema();
+
+            // Keep only columns that are both declared in the schema and supplied on the row, in schema
+            // order so the generated SQL is stable and predictable.
+            List<SqliteColumn> columns = new();
+            foreach (SqliteColumn column in schema.Columns)
+            {
+                if (row.Contains(column.Name))
+                    columns.Add(column);
+            }
+
+            if (columns.Count == 0)
+                throw new ArgumentException("The row has no columns matching the table schema.", nameof(row));
+
+            List<string> primaryKeys = PrimaryKeyColumns(schema);
+
+            DynamicParameters parameters = new();
+            StringBuilder sql = new();
+            sql.Append("INSERT INTO ").Append(QuoteIdentifier(schema.Name)).Append(" (");
+
+            for (int i = 0; i < columns.Count; i++)
+            {
+                if (i > 0)
+                    sql.Append(", ");
+
+                sql.Append(QuoteIdentifier(columns[i].Name));
+            }
+
+            sql.Append(") VALUES (");
+
+            for (int i = 0; i < columns.Count; i++)
+            {
+                if (i > 0)
+                    sql.Append(", ");
+
+                string name = "p" + i;
+                sql.Append('@').Append(name);
+                parameters.Add(name, row[columns[i].Name]);
+            }
+
+            sql.Append(')');
+
+            if (primaryKeys.Count > 0)
+            {
+                sql.Append(" ON CONFLICT(");
+                for (int i = 0; i < primaryKeys.Count; i++)
+                {
+                    if (i > 0)
+                        sql.Append(", ");
+
+                    sql.Append(QuoteIdentifier(primaryKeys[i]));
+                }
+                sql.Append(") DO ");
+
+                // Update every supplied non-key column; if the only supplied columns are the key itself
+                // there is nothing to change, so the conflict is a no-op.
+                List<SqliteColumn> updatable = new();
+                foreach (SqliteColumn column in columns)
+                {
+                    if (!primaryKeys.Contains(column.Name, StringComparer.OrdinalIgnoreCase))
+                        updatable.Add(column);
+                }
+
+                if (updatable.Count == 0)
+                {
+                    sql.Append("NOTHING");
+                }
+                else
+                {
+                    sql.Append("UPDATE SET ");
+                    for (int i = 0; i < updatable.Count; i++)
+                    {
+                        if (i > 0)
+                            sql.Append(", ");
+
+                        string quoted = QuoteIdentifier(updatable[i].Name);
+                        sql.Append(quoted).Append(" = excluded.").Append(quoted);
+                    }
+                }
+            }
+
+            return WithConnectionAsync(connection => connection.ExecuteAsync(sql.ToString(), parameters));
+        }
+
+        /// <summary>
+        /// Deletes every row that matches the equality filter in <paramref name="filter"/> (all supplied
+        /// columns must match, combined with AND). Typically the filter is the row's PRIMARY KEY.
+        /// </summary>
+        /// <param name="filter">The columns to match. Must contain at least one column.</param>
+        /// <returns>The number of rows deleted.</returns>
+        protected Task<int> DeleteAsync(SqliteRow filter)
+        {
+            SqliteTableSchema schema = RequireSchema();
+
+            if (filter.Count == 0)
+                throw new ArgumentException(
+                    "A delete requires at least one filter column; pass the row's key to identify what to delete.",
+                    nameof(filter));
+
+            (string where, DynamicParameters parameters) = BuildWhere(filter);
+            string sql = $"DELETE FROM {QuoteIdentifier(schema.Name)} WHERE {where}";
+
+            return WithConnectionAsync(connection => connection.ExecuteAsync(sql, parameters));
+        }
+
+        /// <summary>
+        /// Reads rows from the table. With no filter it returns every row; otherwise it returns the rows
+        /// whose columns all equal the supplied values (combined with AND). Each result is a
+        /// <see cref="SqliteRow"/> the subclass maps back to its domain type.
+        /// </summary>
+        /// <param name="filter">Optional equality filter. Omit (or pass <c>default</c>) to select all rows.</param>
+        protected async Task<IReadOnlyList<SqliteRow>> GetAsync(SqliteRow filter = default)
+        {
+            SqliteTableSchema schema = RequireSchema();
+
+            StringBuilder sql = new();
+            sql.Append("SELECT * FROM ").Append(QuoteIdentifier(schema.Name));
+
+            DynamicParameters parameters = null;
+            if (filter.Count > 0)
+            {
+                (string where, DynamicParameters whereParams) = BuildWhere(filter);
+                sql.Append(" WHERE ").Append(where);
+                parameters = whereParams;
+            }
+
+            IEnumerable<dynamic> rows = await WithConnectionAsync(connection =>
+                connection.QueryAsync(sql.ToString(), parameters)).ConfigureAwait(false);
+
+            List<SqliteRow> results = new();
+            foreach (IDictionary<string, object> row in rows)
+                results.Add(SqliteRow.FromValues(row));
+
+            return results;
+        }
+
+        /// <summary>
+        /// Reads the first row matching the filter, or <c>null</c> if none match. A convenience over
+        /// <see cref="GetAsync"/> for lookups by a unique key.
+        /// </summary>
+        protected async Task<SqliteRow?> GetFirstAsync(SqliteRow filter = default)
+        {
+            IReadOnlyList<SqliteRow> rows = await GetAsync(filter).ConfigureAwait(false);
+            return rows.Count > 0 ? rows[0] : null;
+        }
+
+        /// <summary>Returns the schema set by the constructor, or throws if the schema-less constructor was used.</summary>
+        private SqliteTableSchema RequireSchema()
+        {
+            if (_schema == null)
+                throw new InvalidOperationException(
+                    "The generic row helpers require a schema. Use the SqliteDatabase(SqliteTableSchema, ...) constructor.");
+
+            return _schema.Value;
+        }
+
+        /// <summary>Returns the PRIMARY KEY column names of a schema, in declaration order.</summary>
+        private static List<string> PrimaryKeyColumns(SqliteTableSchema schema)
+        {
+            List<string> keys = new();
+            foreach (SqliteColumn column in schema.Columns)
+            {
+                if (column.PrimaryKey)
+                    keys.Add(column.Name);
+            }
+
+            return keys;
+        }
+
+        /// <summary>
+        /// Builds a parameterized WHERE fragment matching each column in <paramref name="filter"/> for
+        /// equality (a NULL value becomes <c>IS NULL</c>), combined with AND.
+        /// </summary>
+        private static (string sql, DynamicParameters parameters) BuildWhere(SqliteRow filter)
+        {
+            StringBuilder sql = new();
+            DynamicParameters parameters = new();
+
+            int i = 0;
+            foreach (string column in filter.Columns)
+            {
+                if (i > 0)
+                    sql.Append(" AND ");
+
+                object value = filter[column];
+                if (value is null)
+                {
+                    sql.Append(QuoteIdentifier(column)).Append(" IS NULL");
+                }
+                else
+                {
+                    string name = "w" + i;
+                    sql.Append(QuoteIdentifier(column)).Append(" = @").Append(name);
+                    parameters.Add(name, value);
+                }
+
+                i++;
+            }
+
+            return (sql.ToString(), parameters);
+        }
 
         /// <summary>
         /// Quotes a SQLite identifier (table/column name) so it cannot break out of the surrounding
@@ -242,11 +541,47 @@ namespace ClassicUO.Game.Managers
         private static bool IsCorruptionError(SqliteException ex) =>
             ex.SqliteErrorCode == SQLITE_CORRUPT || ex.SqliteErrorCode == SQLITE_NOTADB;
 
+        /// <summary>
+        /// Returns true if the exception is transient lock contention from another client holding the
+        /// database - the kind of failure a short backoff-and-retry can clear.
+        /// </summary>
+        private static bool IsBusyError(SqliteException ex) =>
+            ex.SqliteErrorCode == SQLITE_BUSY || ex.SqliteErrorCode == SQLITE_LOCKED;
+
+        /// <summary>
+        /// Returns true if an <c>ALTER TABLE ... ADD COLUMN</c> failed because the column already exists -
+        /// i.e. another client added it concurrently. Matched on message text because SQLite reports it
+        /// with the generic SQLITE_ERROR code and no distinct extended code.
+        /// </summary>
+        private static bool IsDuplicateColumnError(SqliteException ex) =>
+            ex.SqliteErrorCode == SQLITE_ERROR &&
+            ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Returns true if an <c>ALTER TABLE ... DROP COLUMN</c> failed because the column is already gone -
+        /// i.e. another client dropped it concurrently. Matched on message text for the same reason as
+        /// <see cref="IsDuplicateColumnError"/>.
+        /// </summary>
+        private static bool IsMissingColumnError(SqliteException ex) =>
+            ex.SqliteErrorCode == SQLITE_ERROR &&
+            ex.Message.Contains("no such column", StringComparison.OrdinalIgnoreCase);
+
         // SQLite primary result codes (see https://www.sqlite.org/rescode.html). A malformed database
         // schema, "database disk image is malformed" all report SQLITE_CORRUPT (11); a file whose header
-        // is not recognizable as a SQLite database reports SQLITE_NOTADB (26).
+        // is not recognizable as a SQLite database reports SQLITE_NOTADB (26). SQLITE_BUSY (5) and
+        // SQLITE_LOCKED (6) are lock contention; a duplicate/missing column on ALTER reports the generic
+        // SQLITE_ERROR (1).
+        private const int SQLITE_ERROR = 1;
+        private const int SQLITE_BUSY = 5;
+        private const int SQLITE_LOCKED = 6;
         private const int SQLITE_CORRUPT = 11;
         private const int SQLITE_NOTADB = 26;
+
+        // How long a connection waits for a lock another client holds before giving up (SQLITE_BUSY), and
+        // the bounded application-level retry that backs it up if a lock outlives that wait.
+        private const int BUSY_TIMEOUT_MS = 30_000;
+        private const int MAX_BUSY_RETRIES = 3;
+        private const int BUSY_RETRY_BASE_DELAY_MS = 50;
 
         /// <summary>
         /// Moves a corrupt database file (and its WAL/SHM/journal sidecars) aside so a fresh, empty

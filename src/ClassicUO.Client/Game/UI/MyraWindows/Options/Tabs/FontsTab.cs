@@ -76,6 +76,9 @@ public static class FontsTab
                 WrapPanel panel = OptionTabCommons.StyledHorizontalWrapPanel(widgets);
                 panel.UniformSizing = true;
                 panel.VerticalAlignment = VerticalAlignment.Center;
+                // Cap to 1000; Wrapping is not perfect, so this sorta forces
+                // a 2-column display by default which generally fits better.
+                panel.MaxWidth = 1000;
                 return panel;
             },
             children
@@ -88,7 +91,6 @@ public static class FontsTab
         Action onAfterUpdate = null
     )
     {
-
         Accessor<string> fontPropToUse;
         Accessor<int> fontSizePropToUse;
         if (onAfterUpdate != null)
@@ -125,7 +127,8 @@ public static class FontsTab
                 5,
                 50,
                 new Accessor<float>(() => fontSizePropToUse.Get(), f => fontSizePropToUse.Set((int)f)),
-                search: new SearchMetadata(label, Keywords: [TazLang.Get("mog_kw_size")])
+                search: new SearchMetadata(label, Keywords: [TazLang.Get("mog_kw_size")]),
+                labelOnLeft: true
             )
         );
     }

@@ -4,9 +4,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Network;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using ClassicUO.Utility.Logging;
-using Lock = System.Threading.Lock;
 
 namespace ClassicUO.Game.Managers
 {
@@ -24,11 +22,24 @@ namespace ClassicUO.Game.Managers
         }
 
         private long _nextBandageTime = 0;
+        private long _bandagingBuffSetTime = 0;
+        private long _nextRetryTime = 0;
         private readonly LinkedList<uint> _pendingHeals = new();
         private readonly HashSet<uint> _enqueuedInGlobalQueue = new();
-        private readonly Lock _queueLock = new();
-        private Timer _retryTimer;
+        private readonly Dictionary<uint, long> _retryDeadlines = new();
+
+        // How often the pending heal queue is re-checked from Update(). Update() runs
+        // every frame, so this throttles the re-check cadence to keep it lightweight.
         private const int RETRY_INTERVAL_MS = 100;
+
+        // Upper bound on how long a single mobile is kept in the retry queue while it
+        // can't actually be healed (e.g. permanently out of range and HP not changing),
+        // so we don't re-queue it forever. Reset whenever a heal is attempted.
+        private const long MAX_RETRY_DURATION_MS = 30_000;
+
+        // Safety net in case a buff-removed event is ever missed: treat the bandaging
+        // buff as expired after this long so the agent can't get stuck never healing.
+        private const long MAX_BANDAGE_BUFF_AGE_MS = 15_000;
 
         public int PendingHealCount => _pendingHeals.Count;
         public int PendingInGlobalQueueCount => _enqueuedInGlobalQueue.Count;
@@ -69,9 +80,20 @@ namespace ClassicUO.Game.Managers
 
         private void OnBuffAdded(object sender, BuffEventArgs e)
         {
-            if (e.Buff.Type == BuffIconType.Healing) HasBandagingBuff = true;
-            if (e.Buff.Type == BuffIconType.Veterinary) HasBandagingBuff = true;
+            if (!IsEnabled) return;
+
+            if (e.Buff.Type == BuffIconType.Healing || e.Buff.Type == BuffIconType.Veterinary)
+            {
+                HasBandagingBuff = true;
+                _bandagingBuffSetTime = Time.Ticks;
+            }
         }
+
+        /// <summary>
+        /// Whether the bandaging buff is currently considered active. Includes a maximum
+        /// age so a missed buff-removed event can't permanently disable healing.
+        /// </summary>
+        private bool IsBandagingBuffActive => HasBandagingBuff && (Time.Ticks - _bandagingBuffSetTime) < MAX_BANDAGE_BUFF_AGE_MS;
 
         private void OnJournalEntryAdded(object sender, JournalEntry e)
         {
@@ -88,7 +110,6 @@ namespace ClassicUO.Game.Managers
                 {
                     _nextBandageTime = 0;
                     HasBandagingBuff = false;
-                    VerifyTimer();
                     return;
                 }
             }
@@ -123,78 +144,126 @@ namespace ClassicUO.Game.Managers
         }
 
         /// <summary>
-        /// Schedules a retry
+        /// Queues a mobile to be re-checked for healing on a later Update().
         /// </summary>
-        private void ScheduleRetry(uint mobileSerial = 0)
+        private void ScheduleRetry(uint mobileSerial)
         {
-            if (!IsEnabled) return;
+            if (!IsEnabled || mobileSerial == 0) return;
 
-            lock (_queueLock)
-                if(!_pendingHeals.Contains(mobileSerial))
-                {
-                    if (mobileSerial == World.Instance.Player)
-                        _pendingHeals.AddFirst(mobileSerial);
-                    else
-                        _pendingHeals.AddLast(mobileSerial);
-                }
+            uint playerSerial = World.Instance?.Player?.Serial ?? 0;
 
-            VerifyTimer();
-        }
-
-        private void VerifyTimer()
-        {
-            lock (_queueLock)
+            if (!_pendingHeals.Contains(mobileSerial))
             {
-                if (!IsEnabled || _pendingHeals.Count == 0)
-                {
-                    DestroyTimer();
-                    return;
-                }
-                _retryTimer ??= new Timer(ProcessRetryQueue, null, RETRY_INTERVAL_MS, RETRY_INTERVAL_MS);
+                if (mobileSerial == playerSerial)
+                    _pendingHeals.AddFirst(mobileSerial);
+                else
+                    _pendingHeals.AddLast(mobileSerial);
             }
-        }
 
-        private void DestroyTimer()
-        {
-            _retryTimer?.Dispose();
-            _retryTimer = null;
+            if (!_retryDeadlines.ContainsKey(mobileSerial))
+                _retryDeadlines[mobileSerial] = Time.Ticks + MAX_RETRY_DURATION_MS;
         }
 
         /// <summary>
-        /// Timer callback to process the retry queue
+        /// Driven from GameScene.Update(). Runs on the main thread, so no locking or
+        /// thread marshaling is needed. Re-checks a single pending heal per interval so
+        /// mobiles that couldn't be healed immediately (distance, timing, no bandages)
+        /// are retried without a background timer.
         /// </summary>
-        private void ProcessRetryQueue(object state)
+        public void Update()
         {
-            uint serial;
-
-            if (World.Instance.Player.FindBandage(BandageGraphic) == null) {
-                VerifyTimer();
-                return; //Return early if we don't have bandages..
+            if (!IsEnabled)
+            {
+                if (_pendingHeals.Count > 0 || _enqueuedInGlobalQueue.Count > 0 || _retryDeadlines.Count > 0)
+                    ClearAllPendingHeals();
+                return;
             }
 
-            // Safely get and remove the first item from the queue
-            lock (_queueLock)
+            if (_pendingHeals.Count == 0)
+                return;
+
+            if (Time.Ticks < _nextRetryTime)
+                return;
+
+            _nextRetryTime = Time.Ticks + RETRY_INTERVAL_MS;
+
+            ProcessPendingHeals();
+        }
+
+        /// <summary>
+        /// Processes a single pending heal. Always called on the main thread from Update().
+        /// </summary>
+        private void ProcessPendingHeals()
+        {
+            try
             {
+                PlayerMobile player = World.Instance?.Player;
+                if (player == null)
+                    return; // Not in game yet (login/logout/world load); keep the queue and retry later.
+
+                // Drop anything that has been un-healable for too long (e.g. no bandages,
+                // or a stuck target) so the queue doesn't keep re-checking it forever.
+                PruneExpiredRetries();
+
+                if (FindBandage() == null)
+                    return; // Return early if we don't have bandages..
+
                 if (_pendingHeals.Count == 0) return;
 
-                serial = _pendingHeals.First.Value;
+                uint serial = _pendingHeals.First.Value;
                 _pendingHeals.RemoveFirst();
-            }
 
-            // Process outside the lock to avoid holding it during game logic
-            Mobile mobile = World.Instance?.Mobiles?.Get(serial);
-            if (ShouldAttemptHeal(mobile))
-            {
-                AttemptHealMobile(mobile);
+                Mobile mobile = World.Instance?.Mobiles?.Get(serial);
+                if (ShouldAttemptHeal(mobile))
+                {
+                    AttemptHealMobile(mobile);
+                }
+                else if (IsHealCandidate(mobile) && !IsRetryExpired(serial))
+                {
+                    // Conditions temporarily not met (e.g., distance, hidden, invul) but
+                    // mobile still needs healing - keep retrying so we don't lose track
+                    ScheduleRetry(serial);
+                }
+                else
+                {
+                    // Recovered, no longer a valid target, or retry window elapsed - stop tracking.
+                    _retryDeadlines.Remove(serial);
+                }
             }
-            else if (IsHealCandidate(mobile))
+            catch (Exception e)
             {
-                // Conditions temporarily not met (e.g., distance, hidden, invul) but
-                // mobile still needs healing - keep retrying so we don't lose track
-                ScheduleRetry(serial);
+                Log.Error($"BandageManager failed while processing the heal retry queue: {e}");
             }
+        }
 
-            VerifyTimer();
+        /// <summary>
+        /// Whether the retry window for a mobile has elapsed without a successful heal attempt.
+        /// </summary>
+        private bool IsRetryExpired(uint serial)
+        {
+            return _retryDeadlines.TryGetValue(serial, out long deadline) && Time.Ticks >= deadline;
+        }
+
+        /// <summary>
+        /// Removes queued heals whose retry window has elapsed so we don't keep
+        /// re-checking targets that can never be healed.
+        /// </summary>
+        private void PruneExpiredRetries()
+        {
+            if (_pendingHeals.Count == 0) return;
+
+            long now = Time.Ticks;
+            LinkedListNode<uint> node = _pendingHeals.First;
+            while (node != null)
+            {
+                LinkedListNode<uint> next = node.Next;
+                if (_retryDeadlines.TryGetValue(node.Value, out long deadline) && now >= deadline)
+                {
+                    _pendingHeals.Remove(node);
+                    _retryDeadlines.Remove(node.Value);
+                }
+                node = next;
+            }
         }
 
         /// <summary>
@@ -277,41 +346,78 @@ namespace ClassicUO.Game.Managers
 
         private void AttemptHealMobile(Mobile mobile)
         {
-            // If using buff checking, only prevent healing if buff is present
-            if (CheckForBuff && HasBandagingBuff)
+            if (mobile == null) return;
+
+            // If using buff checking, only prevent healing while the bandaging buff is present
+            if (CheckForBuff && IsBandagingBuffActive)
             {
                 ScheduleRetry(mobile.Serial);
                 return;
             }
 
-            // If using delay checking (not buff checking), check time delay
-            if (!CheckForBuff && Time.Ticks < _nextBandageTime)
+            // Always honor the minimum time before the next bandage. In buff mode this
+            // covers the short window between sending a heal and the buff packet arriving,
+            // preventing a duplicate bandage from being applied.
+            if (Time.Ticks < _nextBandageTime)
             {
                 ScheduleRetry(mobile.Serial);
                 return;
             }
 
-            // Only enqueue if not already in the global priority queue
-            bool shouldEnqueue;
-            lock (_queueLock) shouldEnqueue = _enqueuedInGlobalQueue.Add(mobile.Serial);
+            // A heal is being attempted, so refresh the retry deadline for this mobile.
+            _retryDeadlines[mobile.Serial] = Time.Ticks + MAX_RETRY_DURATION_MS;
 
-            if (shouldEnqueue) ObjectActionQueue.Instance.Enqueue(new ObjectActionQueueItem(() => ExecuteHealMobile(mobile)), ActionPriority.Immediate);
+            // Only enqueue if not already in the global priority queue. The heal re-validates
+            // when it runs and may not actually fire (mobile recovered, still on the bandage
+            // timer, no bandage, etc.). Only a heal that really went out should reset the shared
+            // action cooldown - otherwise a no-op heal round would stall the player's own queued
+            // loot/move/equip actions. TriggersGlobalCooldown reads the executed result, which
+            // the queue evaluates after the action runs.
+            if (_enqueuedInGlobalQueue.Add(mobile.Serial))
+            {
+                bool healExecuted = false;
+                ObjectActionQueue.Instance.Enqueue(
+                    new ObjectActionQueueItem(() => healExecuted = ExecuteHealMobile(mobile))
+                    {
+                        TriggersGlobalCooldown = () => healExecuted
+                    },
+                    ActionPriority.Immediate);
+            }
+
+            // Keep the mobile queued so we re-check until IsHealCandidate is false, even if no HP-change packet arrives.
+            ScheduleRetry(mobile.Serial);
         }
 
-        private void ExecuteHealMobile(Mobile mobile)
+        /// <summary>
+        /// Sends a heal at execution time if it is still warranted.
+        /// </summary>
+        /// <returns>True if a bandage was actually sent this round; false if the heal was skipped
+        /// (recovered, still throttled, no bandage, etc.). The queue uses this to decide whether
+        /// the heal should reset the shared action cooldown.</returns>
+        private bool ExecuteHealMobile(Mobile mobile)
         {
             // Remove from tracking set now that we're executing
-            lock (_queueLock) _enqueuedInGlobalQueue.Remove(mobile.Serial);
+            _enqueuedInGlobalQueue.Remove(mobile.Serial);
 
             if (World.Instance == null || World.Instance.Player == null || mobile == null)
-                return;
+                return false;
+
+            // Re-validate at execution time. The item may have waited in the queue while the
+            // mobile recovered, another heal completed, or the buff/timer state changed. Without
+            // this a bandage could be wasted on a mobile that no longer needs it, and the per-heal
+            // throttle could be bypassed when several mobiles are enqueued in the same frame.
+            if ((CheckForBuff && IsBandagingBuffActive) || Time.Ticks < _nextBandageTime || !ShouldAttemptHeal(mobile))
+            {
+                ScheduleRetry(mobile.Serial);
+                return false;
+            }
 
             Item bandage = FindBandage();
             if (bandage == null)
             {
                 // No bandage found, schedule retry to check again later
                 ScheduleRetry(mobile.Serial);
-                return;
+                return false;
             }
 
             if (UseNewBandagePacket)
@@ -334,6 +440,7 @@ namespace ClassicUO.Game.Managers
 
             // Schedule recheck in case heal failed and hp stayed the same
             ScheduleRetry(mobile.Serial);
+            return true;
         }
 
         private Item FindBandage()
@@ -363,17 +470,13 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private void ClearAllPendingHeals()
         {
-            lock (_queueLock)
-            {
-                _pendingHeals.Clear();
-                _enqueuedInGlobalQueue.Clear();
-            }
-            DestroyTimer();
+            _pendingHeals.Clear();
+            _enqueuedInGlobalQueue.Clear();
+            _retryDeadlines.Clear();
         }
 
         public void Dispose()
         {
-            DestroyTimer();
             ClearAllPendingHeals();
             EventSink.OnBuffAddedInternal -= OnBuffAdded;
             EventSink.OnBuffRemovedInternal -= OnBuffRemoved;

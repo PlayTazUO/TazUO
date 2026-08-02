@@ -398,6 +398,11 @@ public static class VideoTab
                 TazLang.Get("mog_videotab_lighting_coloredlight"),
                 new Accessor<bool>(() => profile.UseColoredLights),
                 search: new SearchMetadata(TazLang.Get("mog_videotab_lighting_coloredlight"), Keywords: [TazLang.Get("mog_kw_color"), TazLang.Get("mog_kw_light")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_videotab_lighting_candleflicker"),
+                new Accessor<bool>(() => profile.CandleFlickerLights),
+                search: new SearchMetadata(TazLang.Get("mog_videotab_lighting_candleflicker"), Keywords: [TazLang.Get("mog_kw_light")])
             )
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_videotab_lighting_label"), Tags: [TazLang.Get("mog_kw_light")]));
 
@@ -505,7 +510,7 @@ public static class VideoTab
                 Option.ComboBox(
                     TazLang.Get("mog_videotab_misc_postprocessingeffecttype"),
                     profile.PostProcessingType,
-                    ["point", "linear", "anisotropic", "xbr"],
+                    ["point", "linear", "anisotropic", "xbr", "fsr"],
                     i =>
                     {
                         profile.PostProcessingType = (ushort)i;

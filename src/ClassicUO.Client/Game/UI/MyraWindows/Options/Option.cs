@@ -62,7 +62,7 @@ internal static class Option
         SearchMetadata? search = null) =>
         new(() =>
         {
-            MyraCheckButton cb = MyraCheckButton.CreatePropBoundCheckButton(backingProperty, label, tooltip);
+            var cb = MyraCheckButton.CreatePropBoundCheckButton(backingProperty, label, tooltip);
 
             cb.IsCheckedChanged += (_, _) =>
             {

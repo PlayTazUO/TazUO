@@ -1,4 +1,5 @@
 #nullable enable
+
 using System.Collections.Generic;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
@@ -14,12 +15,21 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 public static class InfoBarsTab
 {
     /// <summary>Returns the option fragment containing the info-bar editor widget</summary>
-    internal static IOptionSource GetContent()
-    {
-        return OptionsUi.Vertical(
-            Option.Custom(GetContentWidget, new SearchMetadata(TazLang.Get("mog_buttoninfobar"), Keywords: [TazLang.Get("mog_kw_infobarspaced"), TazLang.Get("mog_kw_infobar"), TazLang.Get("mog_kw_stat")]))
-        ).WithSearch(new SearchMetadata(TazLang.Get("mog_buttoninfobar"), Tags: [TazLang.Get("mog_kw_infobarspaced"), TazLang.Get("mog_kw_infobar"), TazLang.Get("mog_kw_stat")]));
-    }
+    internal static IOptionSource GetContent() =>
+        OptionsUi.Vertical(
+            Option.Custom(
+                GetContentWidget,
+                new SearchMetadata(
+                    TazLang.Get("mog_buttoninfobar"),
+                    Keywords: [TazLang.Get("mog_kw_infobarspaced"), TazLang.Get("mog_kw_infobar"), TazLang.Get("mog_kw_stat")]
+                )
+            )
+        ).WithSearch(
+            new SearchMetadata(
+                TazLang.Get("mog_buttoninfobar"),
+                [TazLang.Get("mog_kw_infobarspaced"), TazLang.Get("mog_kw_infobar"), TazLang.Get("mog_kw_stat")]
+            )
+        );
 
     private static Widget GetContentWidget()
     {

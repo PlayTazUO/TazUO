@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 using ClassicUO.Game;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Configuration;
 
@@ -149,6 +150,18 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "spell_bar__show_hotkeys", true)]
         public partial bool SpellBar_ShowHotkeys { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "counter_bar__show_hotkeys", false)]
+        public partial bool CounterBarShowHotkeys { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "counter_bar__disable_item_scaling", false)]
+        public partial bool CounterBarDisableItemScaling { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "counter_bar__disable_icon_scaling", false)]
+        public partial bool CounterBarDisableIconScaling { get; set; }
 
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "nearby_loot_conceals_container_on_open", true)]
@@ -317,71 +330,18 @@ public sealed partial class Profile
         [SqlSetting(SettingsScope.Global, "paperdoll_scale", 1d)]
         public partial double PaperdollScale { get; set; }
 
+        // When true, in-game lights gently ebb and flow like a mild candle flame.
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "camera_smoothing_factor", 0f)]
-        public partial float CameraSmoothingFactor { get; set; }
+        [SqlSetting(SettingsScope.Global, "candle_flicker_lights", true)]
+        public partial bool CandleFlickerLights { get; set; }
+
+        // Persisted size/position of the Legion Script Manager window. A null value means
+        // "not set": no stored size auto-sizes to content, no stored position centers on open.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "script_manager_window_size")]
+        public partial Point? ScriptManagerWindowSize { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "hide_layers_for_self", true)]
-        public partial bool HideLayersForSelf { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "hidden_layers_enabled", false)]
-        public partial bool HiddenLayersEnabled { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "disable_mouse_interaction_overhead_text", false)]
-        public partial bool DisableMouseInteractionOverheadText { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "use_one_h_p_bar_for_last_attack", true)]
-        public partial bool UseOneHPBarForLastAttack { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Server, "force_resync_on_hang", false)]
-        public partial bool ForceResyncOnHang { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "close_health_bar_if_anchored", false)]
-        public partial bool CloseHealthBarIfAnchored { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "use_last_moved_cooldown_position", true)]
-        public partial bool UseLastMovedCooldownPosition { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, "last_journal_tab", 0)]
-        public partial int LastJournalTab { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, "info_bar_locked", false)]
-        public partial bool InfoBarLocked { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "info_bar_font", "Roboto-Regular")]
-        public partial string InfoBarFont { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "info_bar_font_size", 18)]
-        public partial int InfoBarFontSize { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "item_database_enabled", true)]
-        public partial bool ItemDatabaseEnabled { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "auto_skinning_knife_graphics", "0x2D2C;0x0F52;0x0EC4;0x0EC3;0x13F6;0x13B6")]
-        public partial string AutoSkinningKnifeGraphics { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "auto_skinning_human_corpses", false)]
-        public partial bool AutoSkinningHumanCorpses { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "enable_auto_skinning", false)]
-        public partial bool EnableAutoSkinning { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "auto_loot_human_corpses", false)]
-        public partial bool AutoLootHumanCorpses { get; set; }
+        [SqlSetting(SettingsScope.Char, "script_manager_window_position")]
+        public partial Point? ScriptManagerWindowPosition { get; set; }
 }

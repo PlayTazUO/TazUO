@@ -535,6 +535,14 @@ namespace ClassicUO.Configuration
         public bool GridContainerScaleItems { get; set => SetProperty(ref field, value); } = true;
         public bool GridHighlightLowContrastItems { get; set => SetProperty(ref field, value); } = false;
         public int GridHighlightLowContrastItemsStyle { get; set => SetProperty(ref field, value); } = 0;
+        /// <summary>
+        /// Minimum contrast level used for low-contrast grid item highlighting.
+        /// </summary>
+        public byte GridHighlightLowContrastMinimum
+        {
+            get;
+            set => SetProperty(ref field, Math.Clamp(value, (byte)1, (byte)10));
+        } = 5;
         public bool GridEnableContPreview { get; set => SetProperty(ref field, value); } = true;
         public int Grid_BorderStyle { get; set => SetProperty(ref field, value); } = 0;
         public int Grid_DefaultColumns { get; set => SetProperty(ref field, value); } = 5;
@@ -743,58 +751,26 @@ namespace ClassicUO.Configuration
         #endregion
 
         public string TooltipHeaderFormat { get; set => SetProperty(ref field, value); } = "/c[yellow]{0}";
-
         public bool DisplaySkillBarOnChange { get; set => SetProperty(ref field, value); } = true;
         public string SkillBarFormat { get; set => SetProperty(ref field, value); } = "{0}: {1} / {2}";
-
         public bool DisplayRadius { get; set => SetProperty(ref field, value); } = false;
         public int DisplayRadiusDistance { get; set => SetProperty(ref field, value); } = 10;
         public ushort DisplayRadiusHue { get; set => SetProperty(ref field, value); } = 22;
-
         public bool EnableSpellIndicators { get; set => SetProperty(ref field, value); } = true;
-
         public bool EnableAutoLoot { get; set => SetProperty(ref field, value); } = false;
-        [Obsolete]
-        [JsonPropertyName("auto_loot_human_corpses")]
-        public bool OldAutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
-
-        // Auto skinning: double click a knife/dagger whose graphic is in this list to skin a targeted corpse.
-        // Graphic IDs are separated by ';' and may be hex (0x..) or decimal.
-        [Obsolete]
-        [JsonPropertyName("enable_auto_skinning")]
-        public bool OldEnableAutoSkinning { get; set => SetProperty(ref field, value); } = false;
-
-        [Obsolete]
-        [JsonPropertyName("auto_skinning_human_corpses")]
-        public bool OldAutoSkinningHumanCorpses { get; set => SetProperty(ref field, value); } = false;
-
-        [Obsolete]
-        [JsonPropertyName("auto_skinning_knife_graphics")]
-        public string OldAutoSkinningKnifeGraphics { get; set => SetProperty(ref field, value); } = "0x2D2C;0x0F52;0x0EC4;0x0EC3;0x13F6;0x13B6";
-
-        [Obsolete]
-        [JsonPropertyName("item_database_enabled")]
-        public bool OldItemDatabaseEnabled { get; set => SetProperty(ref field, value); } = true;
-
+        public bool AutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
+        public bool EnableAutoSkinning { get; set => SetProperty(ref field, value); } = false;
+        public bool AutoSkinningHumanCorpses { get; set => SetProperty(ref field, value); } = false;
+        public string AutoSkinningKnifeGraphics { get; set => SetProperty(ref field, value); } = "0x2D2C;0x0F52;0x0EC4;0x0EC3;0x13F6;0x13B6";
+        public bool ItemDatabaseEnabled { get; set => SetProperty(ref field, value); } = true;
         public static uint GumpsVersion { get; private set; }
 
         [JsonConverter(typeof(Point2Converter))]
         public Point InfoBarSize { get; set => SetProperty(ref field, value); } = new Point(400, 20);
-        [Obsolete]
-        [JsonPropertyName("info_bar_locked")]
-        public bool OldInfoBarLocked { get; set => SetProperty(ref field, value); } = false;
-
-        [Obsolete]
-        [JsonPropertyName("info_bar_font")]
-        public string OldInfoBarFont { get; set => SetProperty(ref field, value); } = "Roboto-Regular";
-
-        [Obsolete]
-        [JsonPropertyName("info_bar_font_size")]
-        public int OldInfoBarFontSize { get; set => SetProperty(ref field, value); } = 18;
-
-        [Obsolete]
-        [JsonPropertyName("last_journal_tab")]
-        public int OldLastJournalTab { get; set => SetProperty(ref field, value); } = 0;
+        public bool InfoBarLocked { get; set => SetProperty(ref field, value); } = false;
+        public string InfoBarFont { get; set => SetProperty(ref field, value); } = "Roboto-Regular";
+        public int InfoBarFontSize { get; set => SetProperty(ref field, value); } = 18;
+        public int LastJournalTab { get; set => SetProperty(ref field, value); } = 0;
         public Dictionary<string, MessageType[]> JournalTabs { get; set => SetProperty(ref field, value); } = new Dictionary<string, MessageType[]>()
         {
             { "All", new MessageType[] {
@@ -826,36 +802,16 @@ namespace ClassicUO.Configuration
             }
         };
 
-        [Obsolete]
-        [JsonPropertyName("use_last_moved_cooldown_position")]
-        public bool OldUseLastMovedCooldownPosition { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("close_health_bar_if_anchored")]
-        public bool OldCloseHealthBarIfAnchored { get; set => SetProperty(ref field, value); } = false;
-
+        public bool UseLastMovedCooldownPosition { get; set => SetProperty(ref field, value); } = true;
+        public bool CloseHealthBarIfAnchored { get; set => SetProperty(ref field, value); } = false;
         [JsonConverter(typeof(Point2Converter))]
         public Point SkillProgressBarPosition { get; set => SetProperty(ref field, value); } = Point.Zero;
-
-        [Obsolete]
-        [JsonPropertyName("force_resync_on_hang")]
-        public bool OldForceResyncOnHang { get; set => SetProperty(ref field, value); } = false;
-
-        [Obsolete]
-        [JsonPropertyName("use_one_h_p_bar_for_last_attack")]
-        public bool OldUseOneHPBarForLastAttack { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("disable_mouse_interaction_overhead_text")]
-        public bool OldDisableMouseInteractionOverheadText { get; set => SetProperty(ref field, value); } = false;
-
-        [Obsolete]
-        [JsonPropertyName("hidden_layers_enabled")]
-        public bool OldHiddenLayersEnabled { get; set => SetProperty(ref field, value); } = false;
+        public bool ForceResyncOnHang { get; set => SetProperty(ref field, value); } = false;
+        public bool UseOneHPBarForLastAttack { get; set => SetProperty(ref field, value); } = true;
+        public bool DisableMouseInteractionOverheadText { get; set => SetProperty(ref field, value); } = false;
+        public bool HiddenLayersEnabled { get; set => SetProperty(ref field, value); } = false;
         public List<int> HiddenLayers { get; set => SetProperty(ref field, value); } = new List<int>();
-        [Obsolete]
-        [JsonPropertyName("hide_layers_for_self")]
-        public bool OldHideLayersForSelf { get; set => SetProperty(ref field, value); } = true;
+        public bool HideLayersForSelf { get; set => SetProperty(ref field, value); } = true;
 
         public List<string> AutoOpenXmlGumps { get; set => SetProperty(ref field, value); } = new List<string>();
 
@@ -880,10 +836,6 @@ namespace ClassicUO.Configuration
 
         [JsonConverter(typeof(Point2Converter))]
         public Point PlayerOffset { get; set => SetProperty(ref field, value); } = new Point(0, 0);
-
-        [Obsolete]
-        [JsonPropertyName("camera_smoothing_factor")]
-        public float OldCameraSmoothingFactor { get; set => SetProperty(ref field, value); } = 0f;
 
         [Obsolete]
         [JsonPropertyName("paperdoll_scale")]
@@ -1064,14 +1016,6 @@ namespace ClassicUO.Configuration
             Task<Dictionary<string, string>> serverTask = Client.Settings.GetAllAsync(SettingsScope.Server);
             Task<Dictionary<string, string>> charTask = Client.Settings.GetAllAsync(SettingsScope.Char);
 
-            // Wait for the database reads to finish, then apply the settings inline. AfterLoad already
-            // runs on the main thread (the FNA game loop's Update dispatches network packets, one of
-            // which -> World.CreatePlayer -> ProfileManager.Load -> here), so we can apply directly.
-            // This must complete synchronously before AfterLoad returns because saved gumps are read
-            // later during login (see LoginComplete/ReadGumps) and they need the SQL settings to
-            // already be in place. Previously the apply was queued via MainThreadQueue.EnqueueAction,
-            // so it ran on a later frame - after the gumps had already been created with stale/default
-            // setting values.
             if (Task.WhenAll(globalTask, accountTask, serverTask, charTask).Wait(10000))
             {
                 LoadGeneratedGlobalSqlSettings(globalTask.Result);
@@ -1187,23 +1131,6 @@ namespace ClassicUO.Configuration
                 DisableTargetingGridContainers = OldDisableTargetingGridContainers;
                 BuyAgentSubContainers = OldBuyAgentSubContainers;
                 PaperdollScale = OldPaperdollScale;
-                CameraSmoothingFactor = OldCameraSmoothingFactor;
-                HideLayersForSelf = OldHideLayersForSelf;
-                HiddenLayersEnabled = OldHiddenLayersEnabled;
-                DisableMouseInteractionOverheadText = OldDisableMouseInteractionOverheadText;
-                UseOneHPBarForLastAttack = OldUseOneHPBarForLastAttack;
-                ForceResyncOnHang = OldForceResyncOnHang;
-                CloseHealthBarIfAnchored = OldCloseHealthBarIfAnchored;
-                UseLastMovedCooldownPosition = OldUseLastMovedCooldownPosition;
-                LastJournalTab = OldLastJournalTab;
-                InfoBarLocked = OldInfoBarLocked;
-                InfoBarFont = OldInfoBarFont;
-                InfoBarFontSize = OldInfoBarFontSize;
-                ItemDatabaseEnabled = OldItemDatabaseEnabled;
-                AutoSkinningKnifeGraphics = OldAutoSkinningKnifeGraphics;
-                AutoSkinningHumanCorpses = OldAutoSkinningHumanCorpses;
-                EnableAutoSkinning = OldEnableAutoSkinning;
-                AutoLootHumanCorpses = OldAutoLootHumanCorpses;
 
                 ProfileMigrationVersion++;
             }

@@ -28,10 +28,6 @@ public static class GeneralTabContent
         leftSide.Widgets.Add(new MyraLabel(TazLang.Get("assistant_visualconfig"), MyraLabel.TextStyle.H2));
         rightSide.Widgets.Add(new MyraLabel(TazLang.Get("assistant_delayconfig"), MyraLabel.TextStyle.H2));
 
-        leftSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_camerasmoothing"), out LabeledHorizontalSlider _cSmoothSlider, v => profile.CameraSmoothingFactor = v, 0, 1, profile.CameraSmoothingFactor));
-        _cSmoothSlider.RoundValues = false;
-        _cSmoothSlider.WheelStep = 0.1f;
-
         leftSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.HighlightGameObjects, (b) => profile.HighlightGameObjects = b, TazLang.Get("assistant_highlightgameobjects")));
 
         leftSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.NameOverheadToggled, (b) => profile.NameOverheadToggled = b, TazLang.Get("assistant_shownameplates")));

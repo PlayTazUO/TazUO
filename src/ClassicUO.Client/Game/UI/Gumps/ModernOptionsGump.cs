@@ -1317,7 +1317,7 @@ namespace ClassicUO.Game.UI.Gumps
                     "Processing type",
                     150,
                     ThemeSettings.COMBO_BOX_WIDTH,
-                    ["point", "linear", "anisotropic", "xbr"],
+                    ["point", "linear", "anisotropic", "xbr", "fsr"],
                     profile.PostProcessingType,
                     (s, n) =>
                     {
@@ -3159,6 +3159,14 @@ namespace ClassicUO.Game.UI.Gumps
                     Enum.GetNames(typeof(LowContrastHighlightStyle)), profile.GridHighlightLowContrastItemsStyle,
                     (i, s) => { profile.GridHighlightLowContrastItemsStyle = i; }
                 ), true, page
+            );
+
+            content.AddToRight
+            (
+                new SliderWithLabel
+                (TazLang.Get("mog_tazuo_minimumitemcontrast"), 0, ThemeSettings.SLIDER_WIDTH, 1, 10,
+                    profile.GridHighlightLowContrastMinimum,
+                    (i) => { profile.GridHighlightLowContrastMinimum = (byte)i; }), true, page
             );
 
             content.RemoveIndent();

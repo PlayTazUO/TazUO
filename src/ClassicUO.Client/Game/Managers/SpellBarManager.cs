@@ -28,15 +28,15 @@ public class SpellBarManager
     private const string SAVE_FILE = "SpellBar.json";
     private static SpellBarSettings spellBarSettings;
 
-    public static SpellBarSlot GetSlot(int row, int col)
+    public static CounterBarSlot GetSlot(int row, int col)
     {
         if (!enabled)
-            return SpellBarSlot.Empty();
+            return CounterBarSlot.Empty();
 
-        if(SpellBarRows.Count <= row || row < 0) return SpellBarSlot.Empty();
-        if(SpellBarRows[row].Slots.Length <= col || col < 0) return SpellBarSlot.Empty();
+        if(SpellBarRows.Count <= row || row < 0) return CounterBarSlot.Empty();
+        if(SpellBarRows[row].Slots.Length <= col || col < 0) return CounterBarSlot.Empty();
 
-        return SpellBarRows[row].Slots[col] ?? SpellBarSlot.Empty();
+        return SpellBarRows[row].Slots[col] ?? CounterBarSlot.Empty();
     }
 
     public static string GetControllerButtonsName(int slot)
@@ -127,7 +127,7 @@ public class SpellBarManager
         if (!enabled || !spellBarSettings.Enabled)
             return;
 
-        SpellBarSlot slot = GetSlot(row, col);
+        CounterBarSlot slot = GetSlot(row, col);
 
         if (slot == null || slot.IsEmpty)
             return;
@@ -317,277 +317,18 @@ public class SpellBarManager
     }
 
     private static void SetDefaults() => SpellBarRows = [new SpellBarRow()
-        .SetSlot(0, SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(29)))
-        .SetSlot(1, SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(11)))
-        .SetSlot(2, SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(22)))];
-}
-
-/// <summary>The kind of action stored in a single spell bar slot.</summary>
-public enum SpellBarSlotType { Empty = 0, Spell = 1, Macro = 2, Ability = 3, Script = 4, Skill = 5 }
-
-/// <summary>
-/// A single spell bar slot. Holds one of: nothing, a spell, a macro, or a weapon
-/// (primary/secondary) ability, and centralizes activation, icon, and tooltip resolution.
-/// </summary>
-public class SpellBarSlot
-{
-    /// <summary>What this slot holds (spell, macro, ability, or empty).</summary>
-    public SpellBarSlotType Type { get; set; } = SpellBarSlotType.Empty;
-
-    /// <summary>Full spell index when <see cref="Type"/> is <see cref="SpellBarSlotType.Spell"/>.</summary>
-    public int SpellId { get; set; } = -2;          // Type == Spell
-
-    /// <summary>Macro name when <see cref="Type"/> is <see cref="SpellBarSlotType.Macro"/>.</summary>
-    public string MacroName { get; set; }           // Type == Macro
-
-    /// <summary>Stable relative id (ScriptFile.RelativePath) when <see cref="Type"/> is <see cref="SpellBarSlotType.Script"/>.</summary>
-    public string ScriptId { get; set; }            // Type == Script
-
-    /// <summary>Skill index (matches <see cref="GameActions.UseSkill"/>) when <see cref="Type"/> is <see cref="SpellBarSlotType.Skill"/>.</summary>
-    public int SkillIndex { get; set; } = -1;       // Type == Skill
-
-    /// <summary>True for the primary ability, false for the secondary, when <see cref="Type"/> is <see cref="SpellBarSlotType.Ability"/>.</summary>
-    public bool AbilityPrimary { get; set; }        // Type == Ability (true = primary, false = secondary)
-
-    /// <summary>True when the slot holds nothing.</summary>
-    [JsonIgnore]
-    public bool IsEmpty => Type == SpellBarSlotType.Empty;
-
-    /// <summary>The resolved spell for spell slots, otherwise <see cref="SpellDefinition.EmptySpell"/>.</summary>
-    [JsonIgnore]
-    public SpellDefinition Spell => Type == SpellBarSlotType.Spell ? SpellDefinition.FullIndexGetSpell(SpellId) : SpellDefinition.EmptySpell;
-
-    /// <summary>The spell id for spell slots, or -1 for any other type (used to match cast events).</summary>
-    [JsonIgnore]
-    public int CurrentSpellID => Type == SpellBarSlotType.Spell ? SpellId : -1;
-
-    /// <summary>The loaded script this slot points at (by RelativePath), or null.</summary>
-    [JsonIgnore]
-    public ScriptFile ResolvedScript =>
-        ClassicUO.LegionScripting.LegionScripting.LoadedScripts.FirstOrDefault(f => f.RelativePath == ScriptId);
-
-    /// <summary>True when this is a script slot whose script is currently running.</summary>
-    [JsonIgnore]
-    public bool IsScriptRunning => Type == SpellBarSlotType.Script && (ResolvedScript?.IsPlaying ?? false);
-
-    /// <summary>Friendly name for a script slot: the resolved file name, else the id's basename.</summary>
-    [JsonIgnore]
-    public string ScriptDisplayName =>
-        ResolvedScript?.FileName ??
-        (string.IsNullOrEmpty(ScriptId) ? string.Empty : System.IO.Path.GetFileName(ScriptId));
-
-    /// <summary>Friendly name for a skill slot, resolved from the skill data files, or empty.</summary>
-    [JsonIgnore]
-    public string SkillDisplayName
-    {
-        get
-        {
-            List<SkillEntry> skills = Client.Game?.UO?.FileManager?.Skills?.Skills;
-            if (skills == null)
-                return string.Empty;
-
-            foreach (SkillEntry s in skills)
-                if (s.Index == SkillIndex)
-                    return s.Name;
-
-            return string.Empty;
-        }
-    }
-
-    /// <summary>Toggle decision for a script slot: play when not already running.</summary>
-    public static bool ShouldPlay(bool isRunning) => !isRunning;
-
-    /// <summary>Creates an empty slot.</summary>
-    public static SpellBarSlot Empty() => new SpellBarSlot();
-
-    /// <summary>Creates a spell slot, or an empty slot when <paramref name="spell"/> is null/empty.</summary>
-    public static SpellBarSlot FromSpell(SpellDefinition spell)
-    {
-        if (spell == null || spell == SpellDefinition.EmptySpell)
-            return Empty();
-
-        return new SpellBarSlot { Type = SpellBarSlotType.Spell, SpellId = spell.ID };
-    }
-
-    /// <summary>Creates a macro slot, or an empty slot when <paramref name="macro"/> is null.</summary>
-    public static SpellBarSlot FromMacro(Macro macro)
-    {
-        if (macro == null)
-            return Empty();
-
-        return new SpellBarSlot { Type = SpellBarSlotType.Macro, MacroName = macro.Name };
-    }
-
-    /// <summary>Creates a script slot, or an empty slot when <paramref name="script"/> is null.</summary>
-    public static SpellBarSlot FromScript(ScriptFile script)
-    {
-        if (script == null)
-            return Empty();
-
-        return new SpellBarSlot { Type = SpellBarSlotType.Script, ScriptId = script.RelativePath };
-    }
-
-    /// <summary>Creates an ability slot for the primary (<paramref name="primary"/> true) or secondary ability.</summary>
-    public static SpellBarSlot FromAbility(bool primary) => new SpellBarSlot { Type = SpellBarSlotType.Ability, AbilityPrimary = primary };
-
-    /// <summary>Creates a skill slot, or an empty slot when <paramref name="skillIndex"/> is negative.</summary>
-    public static SpellBarSlot FromSkill(int skillIndex)
-    {
-        if (skillIndex < 0)
-            return Empty();
-
-        return new SpellBarSlot { Type = SpellBarSlotType.Skill, SkillIndex = skillIndex };
-    }
-
-    /// <summary>Performs the slot's action: casts the spell, runs the macro, or triggers the ability.</summary>
-    public void Activate(World world)
-    {
-        switch (Type)
-        {
-            case SpellBarSlotType.Spell:
-                if (Spell != null && Spell != SpellDefinition.EmptySpell)
-                    GameActions.CastSpell(SpellId);
-                break;
-
-            case SpellBarSlotType.Macro:
-                Macro macro = world?.Macros?.FindMacro(MacroName);
-                if (macro != null)
-                {
-                    world.Macros.SetMacroToExecute(macro.Items as MacroObject);
-                    world.Macros.WaitForTargetTimer = 0;
-                    world.Macros.Update();
-                }
-                break;
-
-            case SpellBarSlotType.Ability:
-                if (AbilityPrimary)
-                    GameActions.UsePrimaryAbility(world);
-                else
-                    GameActions.UseSecondaryAbility(world);
-                break;
-
-            case SpellBarSlotType.Script:
-                ScriptFile script = ResolvedScript;
-                if (script != null)
-                {
-                    if (ShouldPlay(script.IsPlaying))
-                        ClassicUO.LegionScripting.LegionScripting.PlayScript(script);
-                    else
-                        ClassicUO.LegionScripting.LegionScripting.StopScript(script);
-                }
-                break;
-
-            case SpellBarSlotType.Skill:
-                if (SkillIndex >= 0)
-                    GameActions.UseSkill(SkillIndex);
-                break;
-        }
-    }
-
-    /// <summary>
-    /// Resolves the player's current primary/secondary ability index (1-based), or 0 when none.
-    /// </summary>
-    public int GetAbilityIndex(World world)
-    {
-        if (Type != SpellBarSlotType.Ability || world?.Player == null)
-            return 0;
-
-        return (byte)world.Player.Abilities[AbilityPrimary ? 0 : 1] & 0x7F;
-    }
-
-    /// <summary>Resolves the gump graphic to draw for this slot, or 0 when there is none.</summary>
-    public ushort GetIconGraphic(World world)
-    {
-        switch (Type)
-        {
-            case SpellBarSlotType.Spell:
-                return (ushort)Spell.GumpIconSmallID;
-
-            case SpellBarSlotType.Macro:
-                return world?.Macros?.FindMacro(MacroName)?.Graphic ?? 0;
-
-            case SpellBarSlotType.Ability:
-                int idx = GetAbilityIndex(world);
-                if (idx >= 1 && idx <= AbilityData.Abilities.Length)
-                    return AbilityData.Abilities[idx - 1].Icon;
-                return 0;
-        }
-
-        return 0;
-    }
-
-    /// <summary>Gets the tooltip text for this slot. Returns false (and empty text) when none applies.</summary>
-    public bool TryGetTooltip(World world, out string text)
-    {
-        switch (Type)
-        {
-            case SpellBarSlotType.Spell:
-                int cliloc = GetSpellTooltip(SpellId);
-                text = cliloc != 0 ? Client.Game.UO.FileManager.Clilocs.GetString(cliloc) : string.Empty;
-                return cliloc != 0;
-
-            case SpellBarSlotType.Macro:
-                text = MacroName ?? string.Empty;
-                return !string.IsNullOrEmpty(text);
-
-            case SpellBarSlotType.Ability:
-                int idx = GetAbilityIndex(world);
-                if (idx >= 1 && idx <= AbilityData.Abilities.Length)
-                {
-                    text = Client.Game.UO.FileManager.Clilocs.GetString(1028838 + (idx - 1));
-                    return true;
-                }
-                break;
-
-            case SpellBarSlotType.Script:
-                text = ScriptDisplayName;
-                return !string.IsNullOrEmpty(text);
-
-            case SpellBarSlotType.Skill:
-                text = SkillDisplayName;
-                return !string.IsNullOrEmpty(text);
-        }
-
-        text = string.Empty;
-        return false;
-    }
-
-    private static int GetSpellTooltip(int id)
-    {
-        if (id >= 1 && id <= 64) // Magery
-            return 3002011 + (id - 1);
-
-        if (id >= 101 && id <= 117) // necro
-            return 1060509 + (id - 101);
-
-        if (id >= 201 && id <= 210) return 1060585 + (id - 201);
-
-        if (id >= 401 && id <= 406) return 1060595 + (id - 401);
-
-        if (id >= 501 && id <= 508) return 1060610 + (id - 501);
-
-        if (id >= 601 && id <= 616) return 1071026 + (id - 601);
-
-        if (id >= 678 && id <= 693) return 1031678 + (id - 678);
-
-        if (id >= 701 && id <= 745)
-        {
-            if (id <= 706) return 1115612 + (id - 701);
-
-            if (id <= 745) return 1155896 + (id - 707);
-        }
-
-        return 0;
-    }
+        .SetSlot(0, CounterBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(29)))
+        .SetSlot(1, CounterBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(11)))
+        .SetSlot(2, CounterBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(22)))];
 }
 
 public class SpellBarRow()
 {
-    private SpellBarSlot[] _slots = CreateEmptySlots();
+    private CounterBarSlot[] _slots = CreateEmptySlots();
 
     // Always a 10-element array with no null entries, even when deserialized from a
     // malformed file (null, short, or containing nulls), since the array is indexed directly.
-    public SpellBarSlot[] Slots
+    public CounterBarSlot[] Slots
     {
         get => _slots;
         set => _slots = NormalizeSlots(value);
@@ -606,40 +347,40 @@ public class SpellBarRow()
 
             Slots = CreateEmptySlots();
             for (int i = 0; i < _slots.Length && i < value.Length; i++)
-                _slots[i] = SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(value[i]));
+                _slots[i] = CounterBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(value[i]));
         }
     }
 
     public ushort RowHue { get; set; }
 
-    public SpellBarRow SetSlot(int slot, SpellBarSlot value)
+    public SpellBarRow SetSlot(int slot, CounterBarSlot value)
     {
         if ((uint)slot >= (uint)_slots.Length)
             return this;
 
-        _slots[slot] = value ?? SpellBarSlot.Empty();
+        _slots[slot] = value ?? CounterBarSlot.Empty();
 
         return this;
     }
 
-    private static SpellBarSlot[] NormalizeSlots(SpellBarSlot[] value)
+    private static CounterBarSlot[] NormalizeSlots(CounterBarSlot[] value)
     {
-        SpellBarSlot[] slots = CreateEmptySlots();
+        CounterBarSlot[] slots = CreateEmptySlots();
 
         if (value == null)
             return slots;
 
         for (int i = 0; i < slots.Length && i < value.Length; i++)
-            slots[i] = value[i] ?? SpellBarSlot.Empty();
+            slots[i] = value[i] ?? CounterBarSlot.Empty();
 
         return slots;
     }
 
-    private static SpellBarSlot[] CreateEmptySlots()
+    private static CounterBarSlot[] CreateEmptySlots()
     {
-        var slots = new SpellBarSlot[10];
+        var slots = new CounterBarSlot[10];
         for (int i = 0; i < slots.Length; i++)
-            slots[i] = SpellBarSlot.Empty();
+            slots[i] = CounterBarSlot.Empty();
         return slots;
     }
 }
@@ -660,8 +401,8 @@ public class SpellBarSettings
 
 [JsonSerializable(typeof(List<SpellBarRow>), GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(SpellBarRow), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(SpellBarSlot), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(SpellBarSlot[]), GenerationMode = JsonSourceGenerationMode.Metadata)]
+[JsonSerializable(typeof(CounterBarSlot), GenerationMode = JsonSourceGenerationMode.Metadata)]
+[JsonSerializable(typeof(CounterBarSlot[]), GenerationMode = JsonSourceGenerationMode.Metadata)]
 public partial class SpellBarRowsContext : JsonSerializerContext { }
 
 [JsonSerializable(typeof(SpellBarSettings))]

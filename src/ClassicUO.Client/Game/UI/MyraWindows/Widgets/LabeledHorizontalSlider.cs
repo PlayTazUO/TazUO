@@ -122,7 +122,7 @@ public class LabeledHorizontalSlider : Grid
         bool labelOnLeft = false
     )
     {
-        HorizontalStackPanel stack = new() { VerticalAlignment = VerticalAlignment.Center };
+        HorizontalStackPanel stack = new() { VerticalAlignment = VerticalAlignment.Center, Spacing = MyraStyle.STANDARD_SPACING };
         LabeledHorizontalSlider s = slider = CreateSliderWithCallback(min, max, value, onChanged);
         if (labelOnLeft)
         {

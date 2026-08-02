@@ -2,6 +2,42 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 5.20.26
+
+### Legion
+* Added `API.ActiveSpells()`, `API.ActiveSpellNames()` and `API.IsSpellActive(spell)` so scripts can see which toggle spells/moves are currently active (the same ones the spell bar highlights) ([bittiez](https://github.com/bittiez))
+
+### Features
+* Option window font selectors are now searchable - [P.R 847](https://github.com/PlayTazUO/TazUO/pull/847) ([yuval-po](https://github.com/yuval-po))
+* Counter bar slots can now trigger Dress or Undress for any dress-agent configuration belonging to the current character - [P.R 844](https://github.com/PlayTazUO/TazUO/pull/844) ([Nesci28](https://github.com/Nesci28))
+* The Legion Script Manager window now remembers its size and position and restores them when reopened - [P.R 828](https://github.com/PlayTazUO/TazUO/pull/828) ([bittiez](https://github.com/bittiez))
+* Added an optional candle flicker effect that makes lights gently ebb and flow (enabled by default, toggle under Video > Lighting) - [P.R 824](https://github.com/PlayTazUO/TazUO/pull/824) ([bittiez](https://github.com/bittiez))
+* Added optional FSR shader to post processing effects - [P.R 821](https://github.com/PlayTazUO/TazUO/pull/821) ([bittiez](https://github.com/bittiez))
+* Assistant Macros tab action selector is now searchable (Searchable Combobox support) - [P.R 823](https://github.com/PlayTazUO/TazUO/pull/823) ([yuval-po](https://github.com/yuval-po))
+* Counter bar cells can now hold any spell bar action (spell, macro, weapon ability, script, or skill) in addition to item counters, with per-cell hotkeys (via the shared hotkey window), optional keybind labels, active-ability highlighting, and a hotkey-press flash - [P.R 812](https://github.com/PlayTazUO/TazUO/pull/812) ([bittiez](https://github.com/bittiez))
+
+### Fixes
+* Guard GameActions.Print against null world(Causing a rare crash when trying to send a message before game world is initialized) - [P.R 852](https://github.com/PlayTazUO/TazUO/pull/852) ([yuval-po](https://github.com/yuval-po))
+* Address a concurrency issue causing a rare crash - [P.R 851](https://github.com/PlayTazUO/TazUO/pull/851) ([yuval-po](https://github.com/yuval-po))
+* Fixed ScriptManagerWindow not restoring to the correct size - [P.R 847](https://github.com/PlayTazUO/TazUO/pull/847) ([yuval-po](https://github.com/yuval-po))
+* Fixed the bandage agent monopolizing the shared action queue: heals still run through the queue, but the queued heal is now re-validated when it runs and only resets the global action cooldown on rounds where a bandage is actually applied - so no-op heal rounds (mobile recovered, still on the bandage timer, no bandage, etc.) no longer stall the player's own queued loot/move/equip actions - [P.R 846](https://github.com/PlayTazUO/TazUO/pull/846) ([bittiez](https://github.com/bittiez))
+* Fixed text draw position bouncing with always show names enabled - [P.R 840](https://github.com/PlayTazUO/TazUO/pull/840) ([bittiez](https://github.com/bittiez))
+* Fixed spell cast bar not drawing based on actual player position - [P.R 839](https://github.com/PlayTazUO/TazUO/pull/839) ([bittiez](https://github.com/bittiez))
+* Fixed unexpected behaviour when clicking outside of an input field - [P.R 837](https://github.com/PlayTazUO/TazUO/pull/837) ([bittiez](https://github.com/bittiez))
+* Fixed mobile names not being drawn at the edge of the screen for off-screen mobiles - [P.R 838](https://github.com/PlayTazUO/TazUO/pull/838) ([bittiez](https://github.com/bittiez))
+* Added a suggested crash fix for "Bad uop file" errors, explaining that a `.uop` data file is corrupt, truncated, or mid-patch and how to resolve it - [P.R 841](https://github.com/PlayTazUO/TazUO/pull/841) ([bittiez](https://github.com/bittiez))
+* Guarded the remaining LegionAPI/ApiUiGump methods that touched the game world, UI manager, or gump controls off the main thread, fixing a double-free malloc crash caused by Legion scripts racing with the main thread - [P.R 836](https://github.com/PlayTazUO/TazUO/pull/836) ([bittiez](https://github.com/bittiez))
+* Fixed NullReferenceException in Chunk.Destroy when Node is null - [P.R 835](https://github.com/PlayTazUO/TazUO/pull/835) ([bittiez](https://github.com/bittiez))
+* Fixed a client crash from oversized font sizes overflowing the font texture atlas ("Could not add rect to the newly created atlas") - [P.R 834](https://github.com/PlayTazUO/TazUO/pull/834) ([bittiez](https://github.com/bittiez))
+* Better light handling for lights under ground - [P.R 825](https://github.com/PlayTazUO/TazUO/pull/825) ([bittiez](https://github.com/bittiez))
+* Fixed NullReferenceException in PartyInviteGump when inviter name is null - [P.R 832](https://github.com/PlayTazUO/TazUO/pull/832) ([bittiez](https://github.com/bittiez))
+* Fixed InvalidCastException in DelayedObjectClickManager.Update - [P.R 831](https://github.com/PlayTazUO/TazUO/pull/831) ([bittiez](https://github.com/bittiez))
+* Removed the Camera Smoothing option; the camera now always stays locked on the player (the smoothing effect caused the camera to lag behind the player) - ([bittiez](https://github.com/bittiez))
+* Hotkey input window doesn't loose keys when releasing them ([bittiez](https://github.com/bittiez))
+* Fixed a journal crash (`InvalidOperation_EnumFailedVersion`) caused by a race while checking the top-most gump for inactive transparency - [P.R 822](https://github.com/PlayTazUO/TazUO/pull/822) ([bittiez](https://github.com/bittiez))
+* Fixed several bandage agent bugs: a client crash from the retry timer touching game state off the main thread, a duplicate bandage in "check for buff" mode, a stuck bandaging buff that could disable healing, and the retry timer spinning indefinitely for un-healable targets - [P.R 826](https://github.com/PlayTazUO/TazUO/pull/826) ([bittiez](https://github.com/bittiez))
+* Reworked the bandage agent to drive its heal retries from the game update loop instead of a background timer, removing the timer/thread-marshaling complexity and making healing more consistent - [P.R 829](https://github.com/PlayTazUO/TazUO/pull/829) ([bittiez](https://github.com/bittiez))
+
 ## V5.17.7
 
 ### Legion
