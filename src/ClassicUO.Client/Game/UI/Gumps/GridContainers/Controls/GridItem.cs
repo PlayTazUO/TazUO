@@ -914,6 +914,9 @@ public class GridItem : Control
         DrawSpotlightRectangle(batcher, InflateRectangle(destination, 2), cellBounds, _lowContrastSpotlightInnerHue);
     }
 
+    private void DrawLowContrastFull(UltimaBatcher2D batcher, Rectangle cellBounds) =>
+        batcher.Draw(_whiteTexture, cellBounds, _lowContrastSpotlightInnerHue);
+
     private void DrawSpotlightRectangle(UltimaBatcher2D batcher, Rectangle rectangle, Rectangle cellBounds, Vector3 hueVector)
     {
         int left = Math.Max(rectangle.Left, cellBounds.Left);
@@ -1103,10 +1106,18 @@ public class GridItem : Control
 
         if (_profile.GridHighlightLowContrastItems && IsLowContrastItem())
         {
-            if ((LowContrastHighlightStyle)_profile.GridHighlightLowContrastItemsStyle == LowContrastHighlightStyle.Spotlight)
-                DrawLowContrastSpotlight(batcher, destination, itemCellBounds);
-            else
-                DrawLowContrastSpriteBorder(batcher, destination, source);
+            switch ((LowContrastHighlightStyle)_profile.GridHighlightLowContrastItemsStyle)
+            {
+                case LowContrastHighlightStyle.Spotlight:
+                    DrawLowContrastSpotlight(batcher, destination, itemCellBounds);
+                    break;
+                case LowContrastHighlightStyle.Full:
+                    DrawLowContrastFull(batcher, itemCellBounds);
+                    break;
+                default:
+                    DrawLowContrastSpriteBorder(batcher, destination, source);
+                    break;
+            }
         }
 
         batcher.Draw(_texture, destination, source, hueVector);
