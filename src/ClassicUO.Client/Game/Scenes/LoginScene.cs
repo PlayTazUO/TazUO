@@ -327,7 +327,7 @@ namespace ClassicUO.Game.Scenes
             if (!string.IsNullOrEmpty(PopupMessage))
             {
                 labelText = PopupMessage;
-                showButtons = LoginButtons.OK;
+                showButtons = Reconnect ? LoginButtons.None : LoginButtons.OK;
                 PopupMessage = null;
             }
             else
@@ -523,6 +523,16 @@ namespace ClassicUO.Game.Scenes
                     break;
 
                 case LoginSteps.PopUpMessage:
+                    if (LoginHandshake.Reconnect)
+                    {
+                        PopupMessage = null;
+                        break;
+                    }
+
+                    LoginHandshake.Instance.Disconnect();
+                    LoginHandshake.Instance.SetLoginStep(LoginSteps.Main);
+
+                    break;
                 case LoginSteps.CharacterSelection:
                     LoginHandshake.Instance.Disconnect();
                     LoginHandshake.Instance.SetLoginStep(LoginSteps.Main);
