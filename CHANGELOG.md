@@ -9,7 +9,7 @@ All notable changes to TazUO will be recorded here.
 * Added a Randomize button to the character creation screen that picks random hair/facial hair styles and random colors (skin, shirt, pants, hair, beard) while keeping the selected race and gender ([bittiez](https://github.com/bittiez))
 
 ### Fixes
-* Fixed in-game screenshots showing the world viewport as partially transparent by forcing the saved image to be fully opaque ([bittiez](https://github.com/bittiez))
+* Fixed in-game screenshots showing the world viewport as partially transparent by forcing the saved image to be fully opaque - [P.R 870](https://github.com/PlayTazUO/TazUO/pull/870) ([bittiez](https://github.com/bittiez))
 * Fix journal partially scrolled sometimes still scrolling up - [P.R 858](https://github.com/PlayTazUO/TazUO/pull/858) ([bittiez](https://github.com/bittiez))
 
 ## 5.20.26
