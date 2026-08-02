@@ -2,7 +2,7 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## In Development
+## 5.20.26
 
 ### Legion
 * Added `API.ActiveSpells()`, `API.ActiveSpellNames()` and `API.IsSpellActive(spell)` so scripts can see which toggle spells/moves are currently active (the same ones the spell bar highlights) ([bittiez](https://github.com/bittiez))
