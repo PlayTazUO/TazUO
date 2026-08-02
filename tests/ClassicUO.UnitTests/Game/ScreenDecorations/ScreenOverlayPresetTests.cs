@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
-using ClassicUO.Game.ScreenOverlays;
-using ClassicUO.Game.ScreenOverlays.Presets;
+using ClassicUO.Game.ScreenDecorations.Overlays;
+using ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 using ClassicUO.Renderer.Effects;
 using FluentAssertions;
 using Xunit;
 
-namespace ClassicUO.UnitTests.Game.ScreenOverlays
+namespace ClassicUO.UnitTests.Game.ScreenDecorations
 {
     public class ScreenOverlayPresetTests
     {

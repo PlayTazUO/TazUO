@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Configuration;
-using ClassicUO.Game.ScreenOverlays;
-using ClassicUO.Game.ScreenOverlays.Presets;
+using ClassicUO.Game.ScreenDecorations.Overlays;
+using ClassicUO.Game.ScreenDecorations.Overlays.Presets;
+using ClassicUO.Game.ScreenDecorations.Shake;
 using ClassicUO.Game.UI;
-using ClassicUO.Game.UI.MyraWindows.Options;
 using ClassicUO.LegionScripting;
 using Myra;
 
@@ -293,7 +293,18 @@ namespace ClassicUO.Game.Managers
             Register("display-overlay-bleed", args => HandleOverlayCommand(args, OverlayId.Bleed, new BleedOverlay()));
             Register("display-overlay-fracture", args => HandleOverlayCommand(args, OverlayId.Fracture, new FractureOverlay()));
             Register("display-overlay-tunnel", args => HandleOverlayCommand(args, OverlayId.TunnelVision, new TunnelVisionOverlay()));
-            Register("display-overlay-trauma", args => ScreenShake.Instance.SetTrauma(ParseFloatCommandArgs(args)));
+            Register("display-overlay-trauma", args =>
+            {
+                int durationSec = 3;
+                float intensity = 1;
+
+                if (args.Length >= 3)
+                    _ = float.TryParse(args[2], out intensity);
+                if (args.Length >= 2)
+                    _ = int.TryParse(args[1], out durationSec);
+
+                ScreenShake.Instance.Trauma(TimeSpan.FromSeconds(durationSec), intensity);
+            });
 
             // Reload the language strings, loading any changes that have been made without having to restart the game
             Register("language-regenerate", _ => TazLang.Load(Settings.GlobalSettings.UILanguage));
@@ -303,9 +314,9 @@ namespace ClassicUO.Game.Managers
         {
             bool show = ParseBooleanCommandArgs(args);
             if (show)
-                ScreenOverlayManager.Instance.Show(id, preset);
+                ScreenOverlayCompositor.Instance.Show(id, preset);
             else
-                ScreenOverlayManager.Instance.Hide(id);
+                ScreenOverlayCompositor.Instance.Hide(id);
         }
 
         private static float ParseFloatCommandArgs(string[] args) => args?.Length > 1 && float.TryParse(args[1], out float value) ? value : 0;

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using ClassicUO.Configuration.FeatureConfigs;
-using ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
-using ClassicUO.Game.ScreenOverlays;
-using ClassicUO.Game.ScreenOverlays.Presets;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Game.ScreenDecorations.Overlays;
+using ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 using ClassicUO.Renderer.Effects;
 using FluentAssertions;
 using Microsoft.Xna.Framework;
@@ -13,18 +13,18 @@ namespace ClassicUO.UnitTests.Configuration
 {
     public class OverlayEffectProfileTests
     {
-        private static string Serialize(ScreenOverlays config) =>
-            JsonSerializer.Serialize(config, ScreenOverlaysJsonContext.DefaultToUse.ScreenOverlays);
+        private static string Serialize(ScreenDecorations config) =>
+            JsonSerializer.Serialize(config, ScreenDecorationsJsonContext.DefaultToUse.ScreenDecorations);
 
-        private static ScreenOverlays Deserialize(string json) =>
-            JsonSerializer.Deserialize(json, ScreenOverlaysJsonContext.DefaultToUse.ScreenOverlays);
+        private static ScreenDecorations Deserialize(string json) =>
+            JsonSerializer.Deserialize(json, ScreenDecorationsJsonContext.DefaultToUse.ScreenDecorations);
 
-        private static ScreenOverlays RoundTrip(ScreenOverlays config) => Deserialize(Serialize(config));
+        private static ScreenDecorations RoundTrip(ScreenDecorations config) => Deserialize(Serialize(config));
 
-        private static ScreenOverlays WithProfile(OverlayEffectProfile profile)
+        private static ScreenDecorations WithProfile(OverlayEffectProfile profile)
         {
-            var config = new ScreenOverlays();
-            config.Bleed.AddProfile(profile);
+            var config = new ScreenDecorations();
+            config.Overlays.Bleed.AddProfile(profile);
             return config;
         }
 
@@ -45,10 +45,10 @@ namespace ClassicUO.UnitTests.Configuration
         {
             OverlayEffectProfile authored = new BleedOverlay().ToProfile("Bleed Copy");
 
-            ScreenOverlays loaded = RoundTrip(WithProfile(authored));
+            ScreenDecorations loaded = RoundTrip(WithProfile(authored));
 
-            loaded.Bleed.Profiles.Should().ContainSingle();
-            loaded.Bleed.Profiles[0].Layers.Should().BeEquivalentTo(authored.Layers);
+            loaded.Overlays.Bleed.Profiles.Should().ContainSingle();
+            loaded.Overlays.Bleed.Profiles[0].Layers.Should().BeEquivalentTo(authored.Layers);
         }
 
         [Fact]
@@ -58,7 +58,7 @@ namespace ClassicUO.UnitTests.Configuration
             authored.FadeInSeconds = 1.25f;
             authored.FadeOutSeconds = 2.5f;
 
-            OverlayEffectProfile loaded = RoundTrip(WithProfile(authored)).Bleed.Profiles[0];
+            OverlayEffectProfile loaded = RoundTrip(WithProfile(authored)).Overlays.Bleed.Profiles[0];
 
             loaded.Name.Should().Be("Bleed Copy");
             loaded.Version.Should().Be(OverlayEffectProfile.CurrentVersion);
@@ -98,9 +98,9 @@ namespace ClassicUO.UnitTests.Configuration
             OverlayParams p = OverlayParams.Default;
             p.Appearance.Tint = new Color(1, 2, 3, 128);
 
-            ScreenOverlays loaded = RoundTrip(WithProfile(new OverlayEffectProfile { Name = "x", Layers = [new OverlayLayer { Params = p }] }));
+            ScreenDecorations loaded = RoundTrip(WithProfile(new OverlayEffectProfile { Name = "x", Layers = [new OverlayLayer { Params = p }] }));
 
-            loaded.Bleed.Profiles[0].Layers[0].Params.Appearance.Tint.Should().Be(new Color(1, 2, 3, 128));
+            loaded.Overlays.Bleed.Profiles[0].Layers[0].Params.Appearance.Tint.Should().Be(new Color(1, 2, 3, 128));
         }
 
         /// <summary>
@@ -183,27 +183,27 @@ namespace ClassicUO.UnitTests.Configuration
         [Fact]
         public void ResolveProfileFallsBackToNullWhenTheProfileIsGone()
         {
-            var config = new ScreenOverlays();
-            config.Bleed.AddProfile(new OverlayEffectProfile { Name = "Wet" });
-            config.Bleed.EffectiveProfile = "Wet";
+            var config = new ScreenDecorations();
+            config.Overlays.Bleed.AddProfile(new OverlayEffectProfile { Name = "Wet" });
+            config.Overlays.Bleed.EffectiveProfile = "Wet";
 
-            config.Bleed.ResolveProfile().Should().NotBeNull();
+            config.Overlays.Bleed.ResolveProfile().Should().NotBeNull();
 
-            config.Bleed.Profiles.Clear();
-            config.Bleed.ResolveProfile().Should().BeNull();
+            config.Overlays.Bleed.Profiles.Clear();
+            config.Overlays.Bleed.ResolveProfile().Should().BeNull();
 
-            config.Bleed.EffectiveProfile = null;
-            config.Bleed.ResolveProfile().Should().BeNull();
+            config.Overlays.Bleed.EffectiveProfile = null;
+            config.Overlays.Bleed.ResolveProfile().Should().BeNull();
         }
 
         [Fact]
         public void AddProfileKeepsNamesUnique()
         {
-            var config = new ScreenOverlays();
+            var config = new ScreenDecorations();
 
-            config.Bleed.AddProfile(new OverlayEffectProfile { Name = "Wet" }).Should().Be("Wet");
-            config.Bleed.AddProfile(new OverlayEffectProfile { Name = "Wet" }).Should().Be("Wet (2)");
-            config.Bleed.AddProfile(new OverlayEffectProfile { Name = "Wet" }).Should().Be("Wet (3)");
+            config.Overlays.Bleed.AddProfile(new OverlayEffectProfile { Name = "Wet" }).Should().Be("Wet");
+            config.Overlays.Bleed.AddProfile(new OverlayEffectProfile { Name = "Wet" }).Should().Be("Wet (2)");
+            config.Overlays.Bleed.AddProfile(new OverlayEffectProfile { Name = "Wet" }).Should().Be("Wet (3)");
         }
 
         /// <summary>
@@ -212,26 +212,26 @@ namespace ClassicUO.UnitTests.Configuration
         [Fact]
         public void ProfilePoolsAreIndependentPerEffect()
         {
-            var config = new ScreenOverlays();
-            config.Bleed.AddProfile(new OverlayEffectProfile { Name = "Wet" });
+            var config = new ScreenDecorations();
+            config.Overlays.Bleed.AddProfile(new OverlayEffectProfile { Name = "Wet" });
 
-            config.Poison.Profiles.Should().BeEmpty();
-            config.Poison.FindProfile("Wet").Should().BeNull();
+            config.Overlays.Poison.Profiles.Should().BeEmpty();
+            config.Overlays.Poison.FindProfile("Wet").Should().BeNull();
 
-            ScreenOverlays loaded = RoundTrip(config);
+            ScreenDecorations loaded = RoundTrip(config);
 
-            loaded.Bleed.Profiles.Should().ContainSingle();
-            loaded.Poison.Profiles.Should().BeEmpty();
+            loaded.Overlays.Bleed.Profiles.Should().ContainSingle();
+            loaded.Overlays.Poison.Profiles.Should().BeEmpty();
         }
 
         [Fact]
         public void GetSettingsReturnsTheEffectsOwnSettings()
         {
-            var config = new ScreenOverlays();
+            var config = new ScreenDecorations();
 
-            config.GetSettings(OverlayEffect.Bleed).Should().BeSameAs(config.Bleed);
-            config.GetSettings(OverlayEffect.Drunk).Should().BeSameAs(config.Drunk);
-            ScreenOverlays.AllEffects.Should().HaveCount(5);
+            config.Overlays.GetSettings(OverlayEffect.Bleed).Should().BeSameAs(config.Overlays.Bleed);
+            config.Overlays.GetSettings(OverlayEffect.Drunk).Should().BeSameAs(config.Overlays.Drunk);
+            OverlaySystemSettings.AllEffects.Should().HaveCount(5);
         }
 
         [Fact]

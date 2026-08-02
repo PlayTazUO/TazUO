@@ -1,4 +1,4 @@
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
 /// <summary>
 /// The overlay effects a player can configure. Each owns its own pool of profiles.

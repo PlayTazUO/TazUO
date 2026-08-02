@@ -85,9 +85,11 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
   ```
 
 ### Comments/Docs
-- A comment must add what the signature doesn't already say: the why, the pitfall, the constraint.
-  Restating the name is noise.
-- No fluff, no meta-references ("per discussion", "per feedback", chat deltas). Must stand alone.
+- XMLDocs: public/internal always, `<param>`/`<returns>`/`<exception>` included.
+  Private/protected when non-trivial.
+- Inline comments welcome on non-trivial code.
+- Content: terse; the why, the pitfall, the constraint. Restating the name is noise. No fluff,
+  no meta-references ("per discussion", chat deltas). Must stand alone.
 
 ### Readability
 - Brevity yes, not at cost of clarity — dense one-liners that hurt reading → normal loop/block.
@@ -115,6 +117,18 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
   provide scrollers. A vertical `WrapPanel` answers an over-tall child by starting a second column,
   so a fixed vertical sequence wants a `StackPanel`.
 - User-facing strings live in `Configuration/language.ini`, read via `TazLang.Get(key, fallback)`.
+
+#### Options tabs
+- Build from `Option.*` / `OptionsUi.*` fragments in `Options/Tabs`; don't hand-build widgets.
+- Every entry gets `SearchMetadata` (label + keywords); groups get `.WithSearch(...)`.
+- A toggle that gates other options → `OptionsUi.CheckBoxGroup`, nested for sub-systems.
+  Never a bare checkbox governing settings elsewhere in the panel.
+- Bind with the expression form where it suffices: `new Accessor<T>(() => obj.Prop)`. Write the
+  get/set pair only for a real side effect (e.g. poking a manager that doesn't watch the config).
+- Fractional sliders need `decimalPlaces` - the default rounds to whole numbers, leaving a 0-1
+  range with only its two ends.
+- Persistence belongs to the config owner, `Profile.Save` for side-file configs. Save eagerly
+  only on structural edits (add/delete/rename), never per keystroke or slider tick.
 
 ### Files
 - No license header on new files.

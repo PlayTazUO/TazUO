@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using ClassicUO.Renderer.Effects;
 using Microsoft.Xna.Framework;
 
-namespace ClassicUO.Game.ScreenOverlays.Presets
+namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets
 {
     /// <summary>
     /// Billowy, drifting gas creeping in from the screen edge.

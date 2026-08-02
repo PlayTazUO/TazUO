@@ -24,6 +24,7 @@ using System.Net.Sockets;
 using ClassicUO.Common;
 using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.Map;
+using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.LegionScripting;
 using ClassicUO.Network.PacketHandlers.Helpers;
@@ -201,6 +202,7 @@ namespace ClassicUO.Game.Scenes
         {
             base.Load();
             GridContainerSaveData.Instance.Load();
+            ScreenOverlayManager.Instance.Start();
 
             Client.Game.UO.GameCursor.ItemHold.Clear();
 
@@ -388,6 +390,7 @@ namespace ClassicUO.Game.Scenes
             GridContainerSaveData.Reset();
             JournalFilterManager.Instance.Save();
 
+            ScreenOverlayManager.Instance.Reset();
             SpellBarManager.Unload();
             SelfHealManager.Unload();
             _autoUnequipActionManager?.Dispose();

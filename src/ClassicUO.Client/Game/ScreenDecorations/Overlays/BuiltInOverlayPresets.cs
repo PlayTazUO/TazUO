@@ -1,7 +1,7 @@
-using ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
-using ClassicUO.Game.ScreenOverlays.Presets;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 
-namespace ClassicUO.Game.ScreenOverlays;
+namespace ClassicUO.Game.ScreenDecorations.Overlays;
 
 /// <summary>
 /// Maps a configurable effect to the code preset that supplies its stock look.

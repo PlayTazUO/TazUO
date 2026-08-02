@@ -112,9 +112,22 @@ internal static class Option
     /// <param name="backingProperty">Accessor for the underlying float value</param>
     /// <param name="labelOnLeft">When <see langword="true"/>, the label is placed to the left of the slider</param>
     /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
+    /// <param name="decimalPlaces">Precision to round to; zero keeps the slider on whole numbers, which
+    /// leaves a 0-1 range with nothing between its ends</param>
     /// <returns>An <see cref="OptionEntry"/> wrapping the slider widget</returns>
-    public static OptionEntry Slider(string label, float min, float max, Accessor<float> backingProperty, bool labelOnLeft = false, SearchMetadata? search = null) =>
-        new(() => OptionsFactory.PropBoundSliderOption(label, backingProperty, min, max, labelOnLeft), search ?? new SearchMetadata(label));
+    public static OptionEntry Slider(
+        string label,
+        float min,
+        float max,
+        Accessor<float> backingProperty,
+        bool labelOnLeft = false,
+        SearchMetadata? search = null,
+        int decimalPlaces = 0
+    ) =>
+        new(
+            () => OptionsFactory.PropBoundSliderOption(label, backingProperty, min, max, labelOnLeft, decimalPlaces),
+            search ?? new SearchMetadata(label)
+        );
 
     /// <summary>
     /// Creates a labeled horizontal slider entry bound to a <see cref="ushort"/> property

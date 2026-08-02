@@ -4,25 +4,37 @@ using System;
 using System.Collections.Generic;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
-using ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
-using ClassicUO.Game.ScreenOverlays;
-using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Overlays;
+using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
 using ClassicUO.Renderer.Effects;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
 using Myra.Graphics2D.UI;
-using ScreenOverlaysConfig = ClassicUO.Configuration.FeatureConfigs.ScreenOverlays.ScreenOverlays;
+using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 /// <summary>Options tab source for the full-screen overlay effects and their profiles</summary>
 public static class VisualEffectsTab
 {
+    /// <summary>Intensities are 0-1: without this the slider rounds to whole numbers and offers only
+    /// its two ends.</summary>
+    private const int INTENSITY_DECIMAL_PLACES = 2;
+
+    private static string OverlayKeyword => TazLang.Get("visualeffects_kw_overlay", "overlay");
+    private static string ShakeKeyword => TazLang.Get("visualeffects_kw_shake", "shake");
+    private static string IntensityKeyword => TazLang.Get("visualeffects_kw_intensity", "intensity");
+    private static string EffectsKeyword => TazLang.Get("visualeffects_kw_effects", "effects");
+
     /// <summary>Returns the tab group containing one sub-tab per configurable effect</summary>
     internal static IOptionSource GetContent()
     {
         var group = new OptionTabGroup();
 
-        foreach (OverlayEffect effect in ScreenOverlaysConfig.AllEffects)
+        group.AddTab(TazLang.Get("visualeffects_general", "General"), GetGeneralSubTabContent);
+
+        foreach (OverlayEffect effect in OverlaySystemSettings.AllEffects)
         {
             OverlayEffect captured = effect;
 
@@ -45,26 +57,71 @@ public static class VisualEffectsTab
             _ => effect.ToString()
         };
 
+    /// <summary>
+    ///     The two systems' own switches. Kept apart from the per-effect tabs because they gate work
+    ///     rather than describe an effect: with these off nothing is scheduled, drawn or shaken for.
+    /// </summary>
+    private static IOptionSource GetGeneralSubTabContent()
+    {
+        DecorationSettings settings = DecorationSettings.Current;
+
+        string master = TazLang.Get("visualeffects_masterenabled", "Enable screen decorations");
+        string overlays = TazLang.Get("visualeffects_overlaysenabled", "Enable screen overlays");
+        string shake = TazLang.Get("visualeffects_shakeenabled", "Enable screen shake");
+
+        // Nested groups: the master switch greys out both systems, and each system greys out its own
+        // intensity, so what a toggle governs is visible rather than merely documented.
+        return OptionsUi.CheckBoxGroup(
+            new PropertyBinder(new Accessor<bool>(() => settings.Enabled), master),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => settings.Overlays.Enabled), overlays),
+                IntensitySlider(
+                    TazLang.Get("visualeffects_overlayintensity", "Overlay intensity"),
+                    new Accessor<float>(() => settings.Overlays.Intensity),
+                    TazLang.Get("visualeffects_kw_overlay", "overlay")
+                )
+            ).WithSearch(new SearchMetadata(overlays, Keywords: [OverlayKeyword, EffectsKeyword])),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => settings.Shake.Enabled), shake),
+                IntensitySlider(
+                    TazLang.Get("visualeffects_shakeintensity", "Shake intensity"),
+                    new Accessor<float>(() => settings.Shake.Intensity),
+                    ShakeKeyword
+                )
+            ).WithSearch(new SearchMetadata(shake, Keywords: [ShakeKeyword, EffectsKeyword]))
+        ).WithSearch(new SearchMetadata(master, Keywords: [OverlayKeyword, ShakeKeyword, EffectsKeyword]));
+    }
+
+    /// <summary>
+    ///     A 0-1 intensity slider. Whole-number rounding is the slider default, which would leave this
+    ///     range with nothing between off and full.
+    /// </summary>
+    /// <param name="label">The slider label.</param>
+    /// <param name="setting">The intensity to bind to.</param>
+    /// <param name="keyword">Extra search keyword naming the system it belongs to.</param>
+    /// <returns>The slider entry.</returns>
+    private static OptionEntry IntensitySlider(string label, Accessor<float> setting, string keyword) =>
+        Option.Slider(
+            label,
+            0f,
+            1f,
+            setting,
+            search: new SearchMetadata(label, Keywords: [keyword, IntensityKeyword, EffectsKeyword]),
+            decimalPlaces: INTENSITY_DECIMAL_PLACES
+        );
+
     private static IOptionSource GetEffectSubTabContent(OverlayEffect effect)
     {
-        OverlayEffectGeneralSettings settings = ScreenOverlaysConfig.Current.GetSettings(effect);
+        OverlayEffectGeneralSettings settings = DecorationSettings.Current.Overlays.GetSettings(effect);
 
         OptionFragment panel = OptionsUi.Vertical(
             Option.Checkbox(
                 TazLang.Get("visualeffects_enabled", "Enable this effect"),
-                new Accessor<bool>(() => settings.Enabled, b =>
-                {
-                    settings.Enabled = b;
-                    ScreenOverlaysConfig.Current.Save();
-                })
+                new Accessor<bool>(() => settings.Enabled)
             ),
             Option.Checkbox(
                 TazLang.Get("visualeffects_fullscreen", "Draw over the whole window"),
-                new Accessor<bool>(() => settings.FullScreen, b =>
-                {
-                    settings.FullScreen = b;
-                    ScreenOverlaysConfig.Current.Save();
-                })
+                new Accessor<bool>(() => settings.FullScreen)
             ),
             Option.Custom(() => BuildProfileEditor(effect, settings))
         );
@@ -106,12 +163,15 @@ public static class VisualEffectsTab
             }
         );
 
-        void Save() => ScreenOverlaysConfig.Current.Save();
+        void Save()
+        {
+            DecorationSettings.Current.Save();
+        }
     }
 
     /// <summary>
-    /// Selecting a profile is what assigns it to the effect; a built-in selection clears the
-    /// assignment so the code preset is used.
+    ///     Selecting a profile is what assigns it to the effect; a built-in selection clears the
+    ///     assignment so the code preset is used.
     /// </summary>
     private static Widget BuildProfileUi(OverlayEffectGeneralSettings settings, OverlayEffectProfile profile, Action save)
     {
@@ -127,8 +187,8 @@ public static class VisualEffectsTab
     }
 
     /// <summary>
-    /// Bakes the code preset for <paramref name="effect"/> into a profile so it can be inspected and
-    /// copied from the editor. Null for effects that have no preset yet.
+    ///     Bakes the code preset for <paramref name="effect" /> into a profile so it can be inspected and
+    ///     copied from the editor. Null for effects that have no preset yet.
     /// </summary>
     private static OverlayEffectProfile? BuildBuiltInProfile(OverlayEffect effect)
     {
@@ -150,17 +210,14 @@ public static class VisualEffectsTab
         string name
     )
     {
-        OverlayEffectProfile created = builtIn?.Clone() ?? new OverlayEffectProfile
-        {
-            Layers = [new OverlayLayer { Params = OverlayParams.Default }]
-        };
+        OverlayEffectProfile created = builtIn?.Clone() ?? new OverlayEffectProfile { Layers = [new OverlayLayer { Params = OverlayParams.Default }] };
 
         created.Name = name;
         created.BasePreset = builtIn?.BasePreset;
 
         settings.AddProfile(created);
         settings.EffectiveProfile = created.Name;
-        ScreenOverlaysConfig.Current.Save();
+        DecorationSettings.Current.Save();
 
         return created;
     }
@@ -173,6 +230,6 @@ public static class VisualEffectsTab
         if (settings.EffectiveProfile == profile.Name)
             settings.EffectiveProfile = null;
 
-        ScreenOverlaysConfig.Current.Save();
+        DecorationSettings.Current.Save();
     }
 }

@@ -6,7 +6,6 @@ using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
-using ClassicUO.Game.ScreenOverlays;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
@@ -26,6 +25,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Network.PacketHandlers;
 using Myra;
 using SDL3;
@@ -689,6 +689,8 @@ namespace ClassicUO
 
             Profiler.ExitContext("SceneRender");
 
+            Rectangle destRect;
+
             Profiler.EnterContext("PluginRender");
             if (useRenderTarget)
             {
@@ -699,7 +701,7 @@ namespace ClassicUO
                 GraphicsDevice.Clear(Color.Black);
 
                 var srcRect = new Rectangle(0, 0, _screenRenderTarget.Width, _screenRenderTarget.Height);
-                Rectangle destRect = srcRect;
+                destRect = srcRect;
 
                 _uoSpriteBatch.Begin();
                 if(RenderScale != 1.0f)
@@ -708,36 +710,28 @@ namespace ClassicUO
                     _uoSpriteBatch.SetSampler(SamplerState.AnisotropicClamp);
                 }
 
-                Profile shakeProfile = ProfileManager.CurrentProfile;
-                if (shakeProfile != null && shakeProfile.ScreenShakeEnabled)
-                {
-                    Point shakeOffset = ScreenShake.Instance.GetOffset(Time.Delta, Microsoft.Xna.Framework.MathHelper.Clamp(shakeProfile.ScreenShakeIntensity, 0f, 1f));
-                    destRect.X += shakeOffset.X;
-                    destRect.Y += shakeOffset.Y;
-                }
-
+                destRect = ScreenOverlayManager.Instance.ApplyShake(destRect);
                 _uoSpriteBatch.Draw(_screenRenderTarget, destRect, srcRect, new Vector3(0, 0, 1f));
                 _uoSpriteBatch.End();
-
-                DrawScreenOverlays(destRect);
             }
             else
             {
                 if(_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
 
-                // Screen shake offsets the render-target blit rectangle above; without a render
-                // target there is no rectangle to offset, so shake is a no-op on this path.
-                DrawScreenOverlays(GraphicsDevice.Viewport.Bounds);
+                destRect = GraphicsDevice.Viewport.Bounds;
             }
+
             Profiler.ExitContext("PluginRender");
+
+            Profiler.EnterContext("ScreenOverlays");
+            ScreenOverlayManager.Instance.Draw(_uoSpriteBatch, destRect);
+            Profiler.ExitContext("ScreenOverlays");
 
             base.Draw(gameTime);
 
             Profiler.ExitContext("Draw");
         }
-
-        private void DrawScreenOverlays(Rectangle destRect) => ScreenOverlayManager.Instance.Draw(_uoSpriteBatch, destRect);
 
         protected override bool BeginDraw() => !_suppressedDraw && base.BeginDraw();
 

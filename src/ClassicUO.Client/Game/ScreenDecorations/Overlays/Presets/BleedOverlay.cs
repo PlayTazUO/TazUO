@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using ClassicUO.Renderer.Effects;
 using Microsoft.Xna.Framework;
 
-namespace ClassicUO.Game.ScreenOverlays.Presets;
+namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 
 /// <summary>
 ///     Dark fluid clinging to the screen border: a broad wet film, distinct rivulets running over

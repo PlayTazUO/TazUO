@@ -8,15 +8,15 @@ using System.Text.Json.Serialization;
 using ClassicUO.Configuration.Json;
 using ClassicUO.Renderer.Effects;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
-[JsonSerializable(typeof(ScreenOverlays), GenerationMode = JsonSourceGenerationMode.Metadata)]
+[JsonSerializable(typeof(ScreenDecorations), GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(OverlayEffectProfile), GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(List<OverlayLayer>), GenerationMode = JsonSourceGenerationMode.Metadata)]
 // OverlayParams and the structs under it are public fields, not properties. Without IncludeFields
 // the whole layer stack serializes as a row of empty objects.
 [JsonSourceGenerationOptions(IncludeFields = true)]
-internal sealed partial class ScreenOverlaysJsonContext : JsonSerializerContext
+internal sealed partial class ScreenDecorationsJsonContext : JsonSerializerContext
 {
     private static Lazy<JsonSerializerOptions> JsonOptions { get; } = new(() =>
     {
@@ -31,5 +31,5 @@ internal sealed partial class ScreenOverlaysJsonContext : JsonSerializerContext
         return options;
     });
 
-    public static ScreenOverlaysJsonContext DefaultToUse { get; } = new(JsonOptions.Value);
+    public static ScreenDecorationsJsonContext DefaultToUse { get; } = new(JsonOptions.Value);
 }

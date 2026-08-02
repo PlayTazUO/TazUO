@@ -371,11 +371,6 @@ namespace ClassicUO.Configuration
         public bool EnableWeatherEffects { get; set => SetProperty(ref field, value); } = false;
         public bool EnableEnhancedWeather { get; set => SetProperty(ref field, value); } = false;
 
-        public bool ScreenOverlaysEnabled { get; set => SetProperty(ref field, value); } = true;
-        public float ScreenOverlayIntensity { get; set => SetProperty(ref field, value); } = 1.0f;
-        public bool ScreenShakeEnabled { get; set => SetProperty(ref field, value); } = true;
-        public float ScreenShakeIntensity { get; set => SetProperty(ref field, value); } = 1.0f;
-
         public bool PartyAura { get; set => SetProperty(ref field, value); }
 
         public bool HideChatGradient { get; set => SetProperty(ref field, value); } = false;
@@ -1195,7 +1190,12 @@ namespace ClassicUO.Configuration
             // Grid highlights live in a separate grid_highlights.json (see GridHighlightsConfig); persist
             // them alongside the profile so in-place rule edits are saved on the same cadence as before.
             if (ReferenceEquals(this, ProfileManager.CurrentProfile))
+            {
                 GridHighlightsConfig.Current.Save();
+
+                // Same arrangement for the screen decoration settings and their overlay profiles.
+                FeatureConfigs.ScreenDecorations.ScreenDecorations.Current.Save();
+            }
 
             // Save opened gumps
             if (saveGumps)

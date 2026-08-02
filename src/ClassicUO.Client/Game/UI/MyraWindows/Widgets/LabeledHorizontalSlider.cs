@@ -96,15 +96,28 @@ public class LabeledHorizontalSlider : Grid
         SetColumn(_valueLabel, 0);
     }
 
-    public static LabeledHorizontalSlider CreateSliderWithCallback(float min, float max, float value, Action<float>? onChanged)
+    /// <param name="decimalPlaces">Precision to round to. Zero keeps the slider on whole numbers;
+    /// anything else also steps the mouse wheel by that precision, since a step of one would take a
+    /// fractional slider from end to end.</param>
+    public static LabeledHorizontalSlider CreateSliderWithCallback(
+        float min,
+        float max,
+        float value,
+        Action<float>? onChanged,
+        int decimalPlaces = 0
+    )
     {
         var slider = new LabeledHorizontalSlider
         {
             Minimum = min,
             Maximum = max,
+            DecimalPlaces = decimalPlaces,
             Value = value,
             VerticalAlignment = VerticalAlignment.Center
         };
+
+        if (decimalPlaces > 0)
+            slider.WheelStep = MathF.Pow(10f, -decimalPlaces);
 
         if (onChanged != null)
             slider.ValueChangedByUser += (_, _) => onChanged(Math.Clamp(slider.Value, min, max));
@@ -119,11 +132,12 @@ public class LabeledHorizontalSlider : Grid
         float min = 0f,
         float max = 100f,
         float value = 0f,
-        bool labelOnLeft = false
+        bool labelOnLeft = false,
+        int decimalPlaces = 0
     )
     {
         HorizontalStackPanel stack = new() { VerticalAlignment = VerticalAlignment.Center, Spacing = MyraStyle.STANDARD_SPACING };
-        LabeledHorizontalSlider s = slider = CreateSliderWithCallback(min, max, value, onChanged);
+        LabeledHorizontalSlider s = slider = CreateSliderWithCallback(min, max, value, onChanged, decimalPlaces);
         if (labelOnLeft)
         {
             stack.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
@@ -138,8 +152,8 @@ public class LabeledHorizontalSlider : Grid
         return stack;
     }
 
-    private static string FormatValue(float v) =>
-        v == (int)v ? ((int)v).ToString() : v.ToString("F1");
+    private string FormatValue(float v) =>
+        v == (int)v ? ((int)v).ToString() : v.ToString($"F{Math.Max(DecimalPlaces, 1)}");
 
     private sealed class OverlayLabel : Label
     {

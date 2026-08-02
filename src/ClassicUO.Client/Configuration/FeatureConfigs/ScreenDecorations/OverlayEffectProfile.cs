@@ -2,10 +2,11 @@
 
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
 using ClassicUO.Renderer.Effects;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
 /// <summary>
 /// A user-authored overlay effect: its layer stack and fade timing.
@@ -13,7 +14,7 @@ namespace ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
 /// Profiles are hand-editable JSON and are not trusted. Every layer is re-clamped by
 /// <see cref="OverlayParams.Clamp"/> when baked, so a file cannot raise the pulse frequency past
 /// the photosensitivity ceiling or exceed
-/// <see cref="Game.ScreenOverlays.ScreenOverlayPreset.MaxLayers"/>.
+/// <see cref="ScreenOverlayPreset.MaxLayers"/>.
 /// </para>
 /// </summary>
 public class OverlayEffectProfile : ObservableSettings, IProfile

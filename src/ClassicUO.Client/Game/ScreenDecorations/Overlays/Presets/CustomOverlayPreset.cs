@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using ClassicUO.Configuration.FeatureConfigs;
-using ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Renderer.Effects;
 
-namespace ClassicUO.Game.ScreenOverlays.Presets;
+namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 
 /// <summary>
 ///     Plays back a user-authored <see cref="OverlayEffectProfile"/>. Built-in presets derive a layer

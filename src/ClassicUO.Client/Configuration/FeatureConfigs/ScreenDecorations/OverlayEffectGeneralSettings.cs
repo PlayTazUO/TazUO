@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
 /// <summary>
 /// Settings shared by every overlay effect, plus the effect's own pool of profiles.

@@ -1,17 +1,23 @@
 using System.Collections.Generic;
-using ClassicUO.Configuration.FeatureConfigs;
-using ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Renderer.Effects;
 using ClassicUO.Utility.Logging;
 
-namespace ClassicUO.Game.ScreenOverlays
+namespace ClassicUO.Game.ScreenDecorations.Overlays
 {
+    /// <summary>
+    /// A slot in the compositor. One overlay per id at a time, so re-showing an id reconfigures what
+    /// is already on screen instead of stacking a second copy of it.
+    /// </summary>
     public enum OverlayId
     {
         Poison,
         Bleed,
         TunnelVision,
-        Fracture
+        Fracture,
+        MortalStrike,
+        Fog,
+        Drunk
     }
 
     /// <summary>

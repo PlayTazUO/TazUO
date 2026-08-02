@@ -96,7 +96,7 @@ namespace ClassicUO.Configuration
             GridContainerBandsConfig.LoadForProfile(ProfilePath);
 
             // Load the screen overlay effects and their profiles.
-            FeatureConfigs.ScreenOverlays.ScreenOverlays.LoadForProfile(ProfilePath);
+            FeatureConfigs.ScreenDecorations.ScreenDecorations.LoadForProfile(ProfilePath);
 
             // Load the tooltip overrides for this profile (migration from the legacy profile lists is
             // handled in Profile.HandleMigration).

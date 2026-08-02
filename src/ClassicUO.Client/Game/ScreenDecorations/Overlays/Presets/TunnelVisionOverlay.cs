@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using ClassicUO.Renderer.Effects;
 using Microsoft.Xna.Framework;
 
-namespace ClassicUO.Game.ScreenOverlays.Presets
+namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets
 {
     /// <summary>
     /// Flat, tightening black vignette. No noise field - motion comes only from the fade envelope
