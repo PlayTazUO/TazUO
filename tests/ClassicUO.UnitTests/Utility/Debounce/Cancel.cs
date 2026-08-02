@@ -13,12 +13,19 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 40);
 
-            debounce.Invoke();
-            debounce.Cancel();
+            try
+            {
+                debounce.Invoke();
+                debounce.Cancel();
 
-            Thread.Sleep(120);
-
-            Volatile.Read(ref calls).Should().Be(0);
+                // The canceled timer must never fire, so the count must stay at zero.
+                TestWait.Until(() => Volatile.Read(ref calls) > 0).Should().BeFalse();
+                Volatile.Read(ref calls).Should().Be(0);
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -27,12 +34,19 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 30);
 
-            debounce.Invoke();
-            debounce.Cancel();
+            try
+            {
+                debounce.Invoke();
+                debounce.Cancel();
 
-            debounce.Invoke();
+                debounce.Invoke();
 
-            TestWait.Until(() => Volatile.Read(ref calls) == 1).Should().BeTrue();
+                TestWait.Until(() => Volatile.Read(ref calls) == 1).Should().BeTrue();
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -40,9 +54,16 @@ namespace ClassicUO.UnitTests.Utility.Debounce
         {
             var debounce = new DebounceClass(() => { }, 30);
 
-            System.Action act = () => debounce.Cancel();
+            try
+            {
+                System.Action act = () => debounce.Cancel();
 
-            act.Should().NotThrow();
+                act.Should().NotThrow();
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]

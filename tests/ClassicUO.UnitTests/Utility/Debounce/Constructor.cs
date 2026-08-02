@@ -26,9 +26,7 @@ namespace ClassicUO.UnitTests.Utility.Debounce
         [Fact]
         public void Zero_WaitMs_Should_Not_Throw()
         {
-            Action act = () => new DebounceClass(() => { }, 0);
-
-            act.Should().NotThrow();
+            using var debounce = new DebounceClass(() => { }, 0);
         }
     }
 }

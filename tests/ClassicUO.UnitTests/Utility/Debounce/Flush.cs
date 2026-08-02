@@ -13,10 +13,17 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 5000);
 
-            debounce.Invoke();
-            debounce.Flush();
+            try
+            {
+                debounce.Invoke();
+                debounce.Flush();
 
-            Volatile.Read(ref calls).Should().Be(1);
+                Volatile.Read(ref calls).Should().Be(1);
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -25,12 +32,21 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 30);
 
-            debounce.Invoke();
-            debounce.Flush();
+            try
+            {
+                debounce.Invoke();
+                debounce.Flush();
 
-            Thread.Sleep(120);
+                Volatile.Read(ref calls).Should().Be(1);
 
-            Volatile.Read(ref calls).Should().Be(1);
+                // The canceled timer must never fire again, so the count must stay at one.
+                TestWait.Until(() => Volatile.Read(ref calls) != 1).Should().BeFalse();
+                Volatile.Read(ref calls).Should().Be(1);
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -39,9 +55,16 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 30);
 
-            debounce.Flush();
+            try
+            {
+                debounce.Flush();
 
-            Volatile.Read(ref calls).Should().Be(0);
+                Volatile.Read(ref calls).Should().Be(0);
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
     }
 }

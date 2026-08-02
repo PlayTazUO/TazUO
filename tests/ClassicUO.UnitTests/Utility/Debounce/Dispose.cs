@@ -16,8 +16,7 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             debounce.Invoke();
             debounce.Dispose();
 
-            Thread.Sleep(120);
-
+            TestWait.Until(() => Volatile.Read(ref calls) > 0).Should().BeFalse();
             Volatile.Read(ref calls).Should().Be(0);
         }
 
@@ -30,8 +29,7 @@ namespace ClassicUO.UnitTests.Utility.Debounce
 
             debounce.Invoke();
 
-            Thread.Sleep(80);
-
+            TestWait.Until(() => Volatile.Read(ref calls) > 0).Should().BeFalse();
             Volatile.Read(ref calls).Should().Be(0);
         }
 

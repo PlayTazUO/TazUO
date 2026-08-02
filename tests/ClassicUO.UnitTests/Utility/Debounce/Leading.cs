@@ -13,10 +13,17 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 200, leading: true, trailing: false);
 
-            debounce.Invoke();
+            try
+            {
+                debounce.Invoke();
 
-            // No polling wait: this must already be true synchronously.
-            Volatile.Read(ref calls).Should().Be(1);
+                // No polling wait: this must already be true synchronously.
+                Volatile.Read(ref calls).Should().Be(1);
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -25,12 +32,19 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 40, leading: true, trailing: true);
 
-            debounce.Invoke();
-            Volatile.Read(ref calls).Should().Be(1);
+            try
+            {
+                debounce.Invoke();
+                Volatile.Read(ref calls).Should().Be(1);
 
-            Thread.Sleep(120);
-
-            Volatile.Read(ref calls).Should().Be(1);
+                // A single call must not produce a trailing invocation either.
+                TestWait.Until(() => Volatile.Read(ref calls) != 1).Should().BeFalse();
+                Volatile.Read(ref calls).Should().Be(1);
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -39,13 +53,20 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 40, leading: true, trailing: true);
 
-            debounce.Invoke();
-            Volatile.Read(ref calls).Should().Be(1);
+            try
+            {
+                debounce.Invoke();
+                Volatile.Read(ref calls).Should().Be(1);
 
-            Thread.Sleep(10);
-            debounce.Invoke();
+                Thread.Sleep(10);
+                debounce.Invoke();
 
-            TestWait.Until(() => Volatile.Read(ref calls) == 2).Should().BeTrue();
+                TestWait.Until(() => Volatile.Read(ref calls) == 2).Should().BeTrue();
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -54,13 +75,24 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 60, leading: true, trailing: false);
 
-            for (int i = 0; i < 5; i++)
+            try
             {
-                debounce.Invoke();
-                Thread.Sleep(10);
-            }
+                for (int i = 0; i < 5; i++)
+                {
+                    debounce.Invoke();
+                    Thread.Sleep(10);
+                }
 
-            Volatile.Read(ref calls).Should().Be(1);
+                Volatile.Read(ref calls).Should().Be(1);
+
+                // Leading-only never fires trailing, even after the burst settles.
+                TestWait.Until(() => Volatile.Read(ref calls) != 1).Should().BeFalse();
+                Volatile.Read(ref calls).Should().Be(1);
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
     }
 }

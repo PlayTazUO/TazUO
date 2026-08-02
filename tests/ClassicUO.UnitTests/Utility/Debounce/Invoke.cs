@@ -13,9 +13,16 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 30);
 
-            debounce.Invoke();
+            try
+            {
+                debounce.Invoke();
 
-            TestWait.Until(() => Volatile.Read(ref calls) == 1).Should().BeTrue();
+                TestWait.Until(() => Volatile.Read(ref calls) == 1).Should().BeTrue();
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -24,17 +31,24 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 60);
 
-            for (int i = 0; i < 10; i++)
+            try
             {
-                debounce.Invoke();
-                Thread.Sleep(10);
+                for (int i = 0; i < 10; i++)
+                {
+                    debounce.Invoke();
+                    Thread.Sleep(10);
+                }
+
+                TestWait.Until(() => Volatile.Read(ref calls) == 1).Should().BeTrue();
+
+                // Make sure no further invocation sneaks in.
+                TestWait.Until(() => Volatile.Read(ref calls) != 1).Should().BeFalse();
+                Volatile.Read(ref calls).Should().Be(1);
             }
-
-            TestWait.Until(() => Volatile.Read(ref calls) == 1).Should().BeTrue();
-
-            // Give it extra time to make sure no further invocation sneaks in.
-            Thread.Sleep(100);
-            Volatile.Read(ref calls).Should().Be(1);
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -43,11 +57,18 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             int calls = 0;
             var debounce = new DebounceClass(() => Interlocked.Increment(ref calls), 30);
 
-            debounce.Invoke();
-            TestWait.Until(() => Volatile.Read(ref calls) == 1).Should().BeTrue();
+            try
+            {
+                debounce.Invoke();
+                TestWait.Until(() => Volatile.Read(ref calls) == 1).Should().BeTrue();
 
-            debounce.Invoke();
-            TestWait.Until(() => Volatile.Read(ref calls) == 2).Should().BeTrue();
+                debounce.Invoke();
+                TestWait.Until(() => Volatile.Read(ref calls) == 2).Should().BeTrue();
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
     }
 }

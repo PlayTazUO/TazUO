@@ -13,13 +13,20 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             string received = null;
             var debounce = new DebounceOfT(arg => received = arg, 40);
 
-            debounce.Invoke("first");
-            Thread.Sleep(10);
-            debounce.Invoke("second");
-            Thread.Sleep(10);
-            debounce.Invoke("third");
+            try
+            {
+                debounce.Invoke("first");
+                Thread.Sleep(10);
+                debounce.Invoke("second");
+                Thread.Sleep(10);
+                debounce.Invoke("third");
 
-            TestWait.Until(() => received == "third").Should().BeTrue();
+                TestWait.Until(() => received == "third").Should().BeTrue();
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
@@ -28,9 +35,16 @@ namespace ClassicUO.UnitTests.Utility.Debounce
             string received = null;
             var debounce = new DebounceOfT(arg => received = arg, 200, leading: true, trailing: false);
 
-            debounce.Invoke("only");
+            try
+            {
+                debounce.Invoke("only");
 
-            received.Should().Be("only");
+                received.Should().Be("only");
+            }
+            finally
+            {
+                debounce.Dispose();
+            }
         }
 
         [Fact]
