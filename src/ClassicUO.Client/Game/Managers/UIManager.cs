@@ -19,6 +19,14 @@ namespace ClassicUO.Game.Managers
     internal static class UIManager
     {
         private static readonly Dictionary<Type, List<IGui>> _gumpTypeList = new();
+
+        // Guards every access to _gumpTypeList and the List<IGui> buckets it holds.
+        // Gumps can be added, removed and looked up from more than one thread (e.g. the
+        // network thread while the game thread is tearing gumps down on scene unload), and
+        // a plain Dictionary corrupts its bucket chains under concurrent access, surfacing as
+        // InvalidOperation_ConcurrentOperationsNotSupported. Monitor is reentrant so nested
+        // calls on the same thread are safe.
+        private static readonly object _gumpTypeListLock = new();
         private static readonly ConcurrentDictionary<uint, Point> _gumpPositionCache = new();
         private static readonly IGui[] _mouseDownControls = new IGui[0xFF];
 
@@ -497,21 +505,24 @@ namespace ClassicUO.Game.Managers
 
         public static T GetGump<T>(uint? serial = null) where T : class, IGui
         {
-            if (!_gumpTypeList.TryGetValue(typeof(T), out List<IGui> list))
+            lock (_gumpTypeListLock)
+            {
+                if (!_gumpTypeList.TryGetValue(typeof(T), out List<IGui> list))
+                    return null;
+
+                list.RemoveAll(i => i.IsDisposed);
+
+                if (list.Count <= 0) return null;
+
+                if (!serial.HasValue)
+                    return list[0] as T;
+
+                foreach (IGui gump in list)
+                    if (gump.LocalSerial == serial.Value)
+                        return gump as T;
+
                 return null;
-
-            list.RemoveAll(i => i.IsDisposed);
-
-            if (list.Count <= 0) return null;
-
-            if(!serial.HasValue)
-                return list[0] as T;
-
-            foreach(IGui gump in list)
-                if (gump.LocalSerial == serial.Value)
-                    return gump as T;
-
-            return null;
+            }
         }
 
         public static Gump GetGump(uint serial)
@@ -680,18 +691,21 @@ namespace ClassicUO.Game.Managers
 
             Type t = gump.GetType();
 
-            if (!_gumpTypeList.TryGetValue(t, out List<IGui> list))
-                return;
-
             // The type list bucket also contains subclass instances (RegisterGump registers
             // each gump under every type in its inheritance chain). Count only instances whose
             // exact runtime type matches so the warning reflects the real number of this gump.
             int count = 0;
 
-            foreach (IGui g in list)
+            lock (_gumpTypeListLock)
             {
-                if (g.GetType() == t)
-                    count++;
+                if (!_gumpTypeList.TryGetValue(t, out List<IGui> list))
+                    return;
+
+                foreach (IGui g in list)
+                {
+                    if (g.GetType() == t)
+                        count++;
+                }
             }
 
             if (count > SAME_TYPE_GUMP_WARN_THRESHOLD)
@@ -708,7 +722,10 @@ namespace ClassicUO.Game.Managers
             }
             Gumps.Clear();
 
-            _gumpTypeList.Clear();
+            lock (_gumpTypeListLock)
+            {
+                _gumpTypeList.Clear();
+            }
         }
 
         /// <summary>
@@ -719,18 +736,21 @@ namespace ClassicUO.Game.Managers
         {
             Type t = item.GetType();
 
-            while (t != null)
+            lock (_gumpTypeListLock)
             {
-                if (t == typeof(Control)) break; //break early at control ( XX <- Gump <- Control -< Object )
-
-                if (!_gumpTypeList.TryGetValue(t, out List<IGui> list))
+                while (t != null)
                 {
-                    list = new List<IGui>();
-                    _gumpTypeList[t] = list;
-                }
-                list.Add(item);
+                    if (t == typeof(Control)) break; //break early at control ( XX <- Gump <- Control -< Object )
 
-                t = t.BaseType;
+                    if (!_gumpTypeList.TryGetValue(t, out List<IGui> list))
+                    {
+                        list = new List<IGui>();
+                        _gumpTypeList[t] = list;
+                    }
+                    list.Add(item);
+
+                    t = t.BaseType;
+                }
             }
         }
 
@@ -742,14 +762,17 @@ namespace ClassicUO.Game.Managers
         {
             Type t = item.GetType();
 
-            while (t != null)
+            lock (_gumpTypeListLock)
             {
-                if (t == typeof(Control)) break;
+                while (t != null)
+                {
+                    if (t == typeof(Control)) break;
 
-                if (_gumpTypeList.TryGetValue(t, out List<IGui> list))
-                    list.Remove(item);
+                    if (_gumpTypeList.TryGetValue(t, out List<IGui> list))
+                        list.Remove(item);
 
-                t = t.BaseType;
+                    t = t.BaseType;
+                }
             }
         }
 
@@ -763,15 +786,20 @@ namespace ClassicUO.Game.Managers
             IGui[] snapshot;
             int count;
 
-            if (!_gumpTypeList.TryGetValue(typeof(T), out List<IGui> list))
-                return false;
+            // Build the snapshot under the lock, then release it before invoking the action so
+            // callbacks that re-enter UIManager (adding/removing gumps) don't run while we hold it.
+            lock (_gumpTypeListLock)
+            {
+                if (!_gumpTypeList.TryGetValue(typeof(T), out List<IGui> list))
+                    return false;
 
-            list.RemoveAll(i => i.IsDisposed);
-            count = list.Count;
-            if (count == 0) return false;
+                list.RemoveAll(i => i.IsDisposed);
+                count = list.Count;
+                if (count == 0) return false;
 
-            snapshot = ArrayPool<IGui>.Shared.Rent(count);
-            list.CopyTo(snapshot, 0);
+                snapshot = ArrayPool<IGui>.Shared.Rent(count);
+                list.CopyTo(snapshot, 0);
+            }
 
             int c = 0;
 
