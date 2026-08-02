@@ -216,6 +216,16 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
                 1
             );
 
+            // Randomize
+            Add
+            (
+                new NiceButton(510, 5, 120, 20, ButtonAction.Activate, "Randomize")
+                {
+                    ButtonParameter = (int) Buttons.Randomize, IsSelectable = false, DisplayBorder = true
+                },
+                1
+            );
+
             _maleRadio.IsClicked = true;
             _humanRadio.IsClicked = true;
             _characterInfo.IsFemale = false;
@@ -576,6 +586,42 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             _paperDoll.RequestUpdate();
         }
 
+        private void RandomizeAppearance()
+        {
+            Random random = new Random();
+            RaceType race = _characterInfo.Race;
+
+            // Random hair style (keeps current race/gender)
+            if (_hairCombobox != null)
+            {
+                int count = CharacterCreationValues.GetHairComboContent(_characterInfo.IsFemale, race).Labels.Length;
+
+                if (count > 0)
+                {
+                    _hairCombobox.SelectedIndex = random.Next(count);
+                }
+            }
+
+            // Random facial hair style
+            if (_facialCombobox != null)
+            {
+                int count = CharacterCreationValues.GetFacialHairComboContent(race).Labels.Length;
+
+                if (count > 0)
+                {
+                    _facialCombobox.SelectedIndex = random.Next(count);
+                }
+            }
+
+            // Random colors for every color picker (skin, shirt, pants, hair, beard)
+            foreach (CustomColorPicker picker in Children.OfType<CustomColorPicker>().ToList())
+            {
+                picker.RandomizeColor(random);
+            }
+
+            _paperDoll.RequestUpdate();
+        }
+
         private void AddCustomColorPicker
         (
             int x,
@@ -760,6 +806,11 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
 
                 case Buttons.Prev:
                     charCreationGump.StepBack();
+
+                    break;
+
+                case Buttons.Randomize:
+                    RandomizeAppearance();
 
                     break;
             }
@@ -994,7 +1045,8 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             ElfButton,
             GargoyleButton,
             Prev,
-            Next
+            Next,
+            Randomize
         }
 
         private class ColorSelectedEventArgs : EventArgs
@@ -1072,6 +1124,23 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             public ushort HueSelected => _colorPicker.Hue;
 
             public event EventHandler<ColorSelectedEventArgs> ColorSelected;
+
+            public void RandomizeColor(Random random)
+            {
+                // Build a throwaway picker box to resolve the available hues for this palette
+                ColorPickerBox box = new ColorPickerBox(_gump.World, 0, 0, _rows, _columns, _cellW, _cellH, _pallet);
+                ushort[] hues = box.Hues;
+
+                if (hues.Length > 0)
+                {
+                    int index = random.Next(hues.Length);
+                    _colorPicker.Hue = hues[index];
+                    _lastSelectedIndex = index;
+                    ColorSelected?.Invoke(this, new ColorSelectedEventArgs(_layer, hues, index));
+                }
+
+                box.Dispose();
+            }
 
             public void SetSelectedIndex(int index)
             {
