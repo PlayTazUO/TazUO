@@ -2,6 +2,11 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 5.21.0
+
+### Features
+* Added a Randomize button to the character creation screen that picks random hair/facial hair styles and random colors (skin, shirt, pants, hair, beard) while keeping the selected race and gender ([bittiez](https://github.com/bittiez))
+
 ## 5.20.26
 
 ### Legion
