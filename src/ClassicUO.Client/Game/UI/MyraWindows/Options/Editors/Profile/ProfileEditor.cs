@@ -158,6 +158,22 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     {
         _isRenaming = true;
         RebuildUi();
+
+        // Only after the rebuild: SetKeyboardFocus goes through the Desktop, which the input box
+        // doesn't have until it has been placed in the tree.
+        FocusRenameInput();
+    }
+
+    /// <summary>
+    ///     Puts the caret in the rename box so the user can type immediately.
+    /// </summary>
+    private void FocusRenameInput()
+    {
+        if (_renameInputBox.Desktop == null)
+            return;
+
+        _renameInputBox.SetKeyboardFocus();
+        _renameInputBox.CursorPosition = _renameInputBox.Text?.Length ?? 0;
     }
 
     /// <summary>
@@ -235,13 +251,18 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <summary>
     ///     Builds the UI for the profile editor.
     /// </summary>
-    /// <returns>The constructed wrap panel.</returns>
-    private WrapPanel Build()
+    /// <returns>The constructed panel.</returns>
+    private StackPanel Build()
     {
         Widget content = _currentConfigUi ?? new Panel();
         content.Enabled = !_isRenaming;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
+        // Stacked, not wrapped. These four are a vertical sequence, and a vertical WrapPanel
+        // answers a config UI taller than the window by starting a second column beside the
+        // toolbar rather than by overflowing into the window's own scroller. The content itself
+        // still wraps horizontally.
+        StackPanel panel = OptionTabCommons.StyledStackPanel(
+            Orientation.Vertical,
             OptionsFactory.CreateSpacer(),
             GetToolbar(),
             OptionsFactory.CreateSpacer(),
@@ -249,6 +270,10 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
                 content
             )
         );
+
+        panel.VerticalAlignment = VerticalAlignment.Top;
+
+        return panel;
     }
 
     /// <summary>
@@ -334,8 +359,6 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
 
         // Ultimately this should always yield 200, but we keep this for the dynamic calculation
         _renameInputBox.Width = PROFILE_BOX_WIDTH - (panelLabel.Measure(new Point(PROFILE_BOX_WIDTH, 60)).X + MyraStyle.STANDARD_SPACING);
-        _renameInputBox.OnGotKeyboardFocus();
-        _renameInputBox.CursorPosition = _renameInputBox?.Text?.Length ?? 0;
 
         StackPanel panel = OptionTabCommons.StyledStackPanel(
             Orientation.Horizontal,

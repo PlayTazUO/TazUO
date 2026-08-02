@@ -34,6 +34,94 @@ ClassicUO.sln
 - **IronPython**: Python scripting integration
 - **Discord SDK**: Discord rich presence integration
 
+
+## Code Style Rules
+
+Applies to new code. Don't refactor existing code to match unless asked.
+Indent/charset/EOL come from `.editorconfig`; this section covers what it can't express.
+
+### Structure
+- DRY. Single responsibility.
+- Funcs ~40 lines ideal; exceed only if split costs more than saves.
+- Params max 4-6; else bundle into struct/class.
+- Files ~500 lines as a guideline, not a cap - 700 is fine. Just keep them small.
+- One public class per file, loosely: 1-2 extra small ones is fine. Several, or largeish → split.
+  Multiple small related classes may share one file; unrelated or large ones get their own.
+- OOP where it genuinely fits.
+
+### Naming
+- Names informative, no single-letter (`op` ok, `o` not), easily cognizable (`selection` ok, `sel`
+  not); well-known shorthand ok (`num`, `i`/`j` loop counters).
+
+### Formatting
+- Lines ~120 ideal, 150 max (logger calls exempt).
+- Multi-param call over limit → one param/line:
+  ```csharp
+  Something(
+      a,
+      b
+  );
+  ```
+- No decorative comment banners.
+- Explicitly specify access modifier.
+- Class composition order, each section in its own `#region` when more than a couple of items:
+  ```
+  Public events
+  Public accessors
+
+  Private events
+  Private members
+  Protected members
+
+  Ctor
+
+  Public methods
+
+  Protected methods
+      Self protected methods
+      Interface protected methods
+
+  Private methods
+  ```
+
+### Comments/Docs
+- A comment must add what the signature doesn't already say: the why, the pitfall, the constraint.
+  Restating the name is noise.
+- No fluff, no meta-references ("per discussion", "per feedback", chat deltas). Must stand alone.
+
+### Readability
+- Brevity yes, not at cost of clarity — dense one-liners that hurt reading → normal loop/block.
+
+### Config Structs
+- 3+ related options (e.g. one feature's toggles) → nested sub-struct, not flat fields on the parent.
+
+### Constants/Enums
+- Magic values → const.
+- Multiple related values (now/future) → enum
+- Many unrelated-shape consts → dedicated constants file
+
+### Interfaces/Types
+- Interface only for multiple real/expected impls; else concrete class/struct. Keep small.
+
+### Shared Logic
+- Logic used by 2+ consumers → dedicated struct/class, not copy-pasted (e.g. temp file IO).
+
+### Serialization
+- All JSON serialize/deserialize needs a generated `JsonSerializerContext`.
+- Regexes invoked more than once → compiled/source-generated, not built per call.
+
+### UI
+- Keep layout responsive: `WrapPanel`, no fixed `Width`/`Height` boxes. Resizable windows already
+  provide scrollers. A vertical `WrapPanel` answers an over-tall child by starting a second column,
+  so a fixed vertical sequence wants a `StackPanel`.
+- User-facing strings live in `Configuration/language.ini`, read via `TazLang.Get(key, fallback)`.
+
+### Files
+- No license header on new files.
+
+### Cross-Platform
+- Decision hurts cross-platform compat → stop, ask user first.
+
 ## Core Features
 
 ### Python Scripting System
@@ -208,6 +296,3 @@ The scripting API documentation is automatically generated during build via the 
 - **FNA Documentation**: https://fna-xna.github.io/
 - **Ultima Online Technical Resources**: Various community sites for UO file format documentation
 - **Discord Community**: Active development and user community
-
-- All json serialize and deserialize need to have context generated for them.
-- Don't put a licsense at the top of files you create.

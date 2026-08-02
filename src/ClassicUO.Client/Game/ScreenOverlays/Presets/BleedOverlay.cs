@@ -61,7 +61,7 @@ public sealed class BleedOverlay : ScreenOverlayPreset
     public float Opacity { get; set; } = 1.0f;
 
     /// <summary>How far in from the screen edge the fluid reaches. Larger is thicker.</summary>
-    public float Reach { get; set; } = 0.26f;
+    public float Reach { get; set; } = 0.2f;
 
     protected override void Bake(List<OverlayLayer> layers)
     {

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Renderer.Effects
@@ -52,6 +53,7 @@ namespace ClassicUO.Renderer.Effects
         /// extends the effect inward on the deep half of the field, so raising it also raises the
         /// average reach - compensate with <see cref="OverlayShape.Reach"/>.
         /// </summary>
+        [Description("How far the boundary can move, as a fraction of the shape distance. Only extends inward, so raising it raises average reach too - compensate with Shape.Reach. Anything organic wants this well above 0.")]
         public float ReachAmount;
 
         /// <summary>
@@ -60,6 +62,7 @@ namespace ClassicUO.Renderer.Effects
         /// fixed length; with it, the gradient is longer where it reaches further, so a deep run
         /// tapers away and a shallow one ends bluntly.
         /// </summary>
+        [Description("How much the same field stretches and compresses Feather. Without it a deep run and a shallow one end just as abruptly.")]
         public float FeatherAmount;
 
         /// <summary>
@@ -69,14 +72,17 @@ namespace ClassicUO.Renderer.Effects
         /// still has to complete several cycles across the screen, or each edge gets one gentle
         /// bulge and stays visibly rectangular.
         /// </summary>
+        [Description("Frequency of the boundary displacement. Must be coarser than Noise.BaseScale or the edge just buzzes, but X still has to cycle several times across the screen or each edge gets one gentle bulge and stays rectangular.")]
         public Vector2 Scale;
 
         /// <summary>
         /// Texture-space velocity of the displacement field. Usually matched to the layer's own
         /// scroll speed so the ragged edge travels with the effect rather than crawling across it.
         /// </summary>
+        [Description("Texture-space velocity of the displacement field. Usually matched to the layer's own scroll so the ragged edge travels with the effect.")]
         public Vector2 Scroll;
 
+        [Description("Which packed noise channel drives the boundary displacement.")]
         public NoiseChannel Channel;
     }
 
@@ -87,6 +93,7 @@ namespace ClassicUO.Renderer.Effects
     public struct OverlayShape
     {
         /// <summary>Centre of the radial falloff in screen uv. (0.5, 0.5) is the middle.</summary>
+        [Description("Centre of the radial falloff in screen uv. (0.5, 0.5) is the middle.")]
         public Vector2 Center;
 
         /// <summary>
@@ -95,12 +102,14 @@ namespace ClassicUO.Renderer.Effects
         /// display a radial shape reaches much further at the corners and the left/right edges than
         /// it does at the top and bottom, so the same value covers noticeably less screen.
         /// </summary>
+        [Description("How far in from the screen edge the effect extends. Larger is thicker.")]
         public float Reach;
 
         /// <summary>
         /// Width of the fade behind the boundary. Wide values thin the effect into a haze; narrow
         /// values give it a defined surface and a more abrupt end.
         /// </summary>
+        [Description("Width of the fade behind the boundary. Wide thins the effect into haze; narrow gives it a defined surface.")]
         public float Feather;
 
         /// <summary>
@@ -113,6 +122,7 @@ namespace ClassicUO.Renderer.Effects
         /// and has no aspect bias.
         /// </para>
         /// </summary>
+        [Description("0 = radial vignette, 1 = border trim. Avoid values in between: the radial term is width-normalised, so any blend lands mostly on the left and right edges. Use CornerBias for corner weighting.")]
         public float EdgeBlend;
 
         /// <summary>
@@ -121,17 +131,22 @@ namespace ClassicUO.Renderer.Effects
         /// as a picture frame. Raising it lets both axes contribute near a corner so the trim
         /// thickens and rounds there, without favouring any one edge.
         /// </summary>
+        [Description("Corner weighting of the border trim, ignored when EdgeBlend is 0. At 0 the trim is a sharp-cornered rectangle; raising it thickens and rounds the corners.")]
         public float CornerBias;
 
+        [Description("Breaks up the shape boundary with its own noise field. Without it the effect ends along a straight iso-line and reads as a rectangle.")]
         public OverlayJitter Jitter;
 
         /// <summary>Unit vector biasing the effect toward one side or corner.</summary>
+        [Description("Unit vector biasing the effect toward one side or corner.")]
         public Vector2 FocusDir;
 
         /// <summary>Higher values tighten the directional lobe.</summary>
+        [Description("Higher values tighten the directional lobe.")]
         public float FocusPower;
 
         /// <summary>0 = uniform all the way round, 1 = fully biased toward <see cref="FocusDir"/>.</summary>
+        [Description("0 = uniform all the way round, 1 = fully biased toward FocusDir.")]
         public float FocusAmount;
     }
 
@@ -145,6 +160,7 @@ namespace ClassicUO.Renderer.Effects
         /// Frequency of the primary field. The X:Y ratio is the anisotropy, and it is the main
         /// control over whether features read as blobs (near 1:1) or as streaks (4:1 and beyond).
         /// </summary>
+        [Description("Frequency of the primary noise field. The X:Y ratio is the anisotropy - near 1:1 reads as blobs, 4:1 and beyond as streaks.")]
         public Vector2 BaseScale;
 
         /// <summary>
@@ -152,14 +168,19 @@ namespace ClassicUO.Renderer.Effects
         /// two layers with matching scroll values but different scales visibly slide against each
         /// other. Prefer to derive scroll from a target screen speed.
         /// </summary>
+        [Description("Texture-space velocity. On-screen speed is Scroll / Scale, so two layers with matching scroll but different scales visibly slide against each other.")]
         public Vector2 BaseScroll;
 
+        [Description("Which packed noise channel the primary field reads. R and G are fBm (organic); B is ridged and A is Worley - both draw cell outlines and suit only cracks and shattering.")]
         public NoiseChannel BaseChannel;
 
         /// <summary>Frequency of the secondary field, whose lookup is warped by the primary.</summary>
+        [Description("Frequency of the secondary field, whose lookup is warped by the primary.")]
         public Vector2 DetailScale;
 
+        [Description("Texture-space velocity of the secondary field.")]
         public Vector2 DetailScroll;
+        [Description("Which packed noise channel the secondary field reads.")]
         public NoiseChannel DetailChannel;
 
         /// <summary>
@@ -167,6 +188,7 @@ namespace ClassicUO.Renderer.Effects
         /// control over character: high values churn and billow (gas), near-zero values let the
         /// pattern translate coherently (fluid, or anything solid).
         /// </summary>
+        [Description("How far the primary field displaces the secondary field's lookup. The gas-versus-fluid dial: high values churn and billow, near-zero lets the pattern translate coherently.")]
         public float WarpStrength;
 
         /// <summary>
@@ -175,18 +197,21 @@ namespace ClassicUO.Renderer.Effects
         /// value, so raising it makes a layer cover more of the screen rather than less, and what it
         /// draws are outlines, so on a soft field it produces bordered cells.
         /// </summary>
+        [Description("Outlines the field's median. Counterintuitive twice over: raising it makes the layer cover more, and what it draws are outlines, so on a soft field it produces bordered cells.")]
         public float RidgeAmount;
 
         /// <summary>
         /// Cut-off applied to the field. Higher keeps less, so the layer gets sparser and its
         /// features narrower.
         /// </summary>
+        [Description("Cut-off applied to the field. Higher keeps less, so the layer gets sparser and its features narrower.")]
         public float Threshold;
 
         /// <summary>
         /// Width of the fade either side of <see cref="Threshold"/>. Small values give hard-edged
         /// surfaces; large values give soft-edged clouds.
         /// </summary>
+        [Description("Width of the fade either side of Threshold. Small gives hard-edged surfaces; large gives soft-edged clouds.")]
         public float Softness;
 
         /// <summary>
@@ -195,6 +220,7 @@ namespace ClassicUO.Renderer.Effects
         /// a geometric form, so a layer that should read as discrete streaks or wisps needs this at
         /// exactly 0 - it is not a way to add weight, only a way to fill the shape in.
         /// </summary>
+        [Description("Solid fill blended under the noise. Anything above 0 makes the shape mask itself visible as a geometric form, so discrete streaks or wisps need exactly 0. Not a way to add weight.")]
         public float FlatFloor;
     }
 
@@ -203,9 +229,11 @@ namespace ClassicUO.Renderer.Effects
     /// </summary>
     public struct OverlayAppearance
     {
+        [Description("Colour of the layer.")]
         public Color Tint;
 
         /// <summary>Peak alpha where the field is fully present.</summary>
+        [Description("Peak alpha where the field is fully present.")]
         public float Opacity;
 
         /// <summary>
@@ -213,15 +241,18 @@ namespace ClassicUO.Renderer.Effects
         /// Presets should leave this as the caller's dial and express their own balance through
         /// <see cref="Opacity"/>.
         /// </summary>
+        [Description("Overall strength, multiplied by the fade envelope and the global setting before upload.")]
         public float Intensity;
 
         /// <summary>
         /// Breathing rate in Hz. Hard-capped at <see cref="OverlayParams.MaxPulseFreqHz"/> for
         /// photosensitivity reasons.
         /// </summary>
+        [Description("Breathing rate in Hz. Hard-capped at 3 Hz for photosensitivity reasons.")]
         public float PulseFreq;
 
         /// <summary>Depth of that breathing, as a fraction of <see cref="Opacity"/>.</summary>
+        [Description("Depth of that breathing, as a fraction of Opacity.")]
         public float PulseAmp;
     }
 
@@ -231,15 +262,18 @@ namespace ClassicUO.Renderer.Effects
         // upward by any preset or setting.
         public const float MaxPulseFreqHz = 3.0f;
 
-        private const float MinFeather = 0.01f;
+        private const float MIN_FEATHER = 0.01f;
 
         // A zero jitter scale collapses the displacement lookup onto a single texel, which reads as
         // a uniform offset rather than a varying boundary. Presets that leave the field unset get
         // this instead.
-        private static readonly Vector2 DefaultJitterScale = new(2f, 2f);
+        private static readonly Vector2 _defaultJitterScale = new(2f, 2f);
 
+        [Description("Where on screen the effect lives: vignette or border shape, how far it extends, and how its boundary breaks up.")]
         public OverlayShape Shape;
+        [Description("How the effect moves and what texture it has.")]
         public OverlayNoise Noise;
+        [Description("Colour and time-varying strength of the effect.")]
         public OverlayAppearance Appearance;
 
         public static OverlayParams Default => new OverlayParams
@@ -255,7 +289,7 @@ namespace ClassicUO.Renderer.Effects
                 {
                     ReachAmount = 0f,
                     FeatherAmount = 0f,
-                    Scale = DefaultJitterScale,
+                    Scale = _defaultJitterScale,
                     Scroll = Vector2.Zero,
                     Channel = NoiseChannel.Red
                 },
@@ -304,7 +338,7 @@ namespace ClassicUO.Renderer.Effects
             Shape.Reach = MathHelper.Clamp(Shape.Reach, 0f, 1f);
             Shape.CornerBias = MathHelper.Clamp(Shape.CornerBias, 0f, 1f);
             Shape.FocusAmount = MathHelper.Clamp(Shape.FocusAmount, 0f, 1f);
-            Shape.Feather = MathHelper.Max(Shape.Feather, MinFeather);
+            Shape.Feather = MathHelper.Max(Shape.Feather, MIN_FEATHER);
 
             // Beyond 1 the displacement exceeds the range of the shape distance itself and the
             // overlay stops having a recognisable shape at all.
@@ -315,7 +349,7 @@ namespace ClassicUO.Renderer.Effects
             Shape.Jitter.FeatherAmount = MathHelper.Clamp(Shape.Jitter.FeatherAmount, 0f, 1f);
 
             if (Shape.Jitter.Scale == Vector2.Zero)
-                Shape.Jitter.Scale = DefaultJitterScale;
+                Shape.Jitter.Scale = _defaultJitterScale;
         }
     }
 }

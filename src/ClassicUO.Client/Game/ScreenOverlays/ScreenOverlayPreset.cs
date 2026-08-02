@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using ClassicUO.Configuration.FeatureConfigs;
+using ClassicUO.Configuration.FeatureConfigs.ScreenOverlays;
 using ClassicUO.Renderer.Effects;
 using ClassicUO.Utility.Logging;
 
@@ -34,6 +36,25 @@ namespace ClassicUO.Game.ScreenOverlays
         /// A single-layer preset appends exactly one.
         /// </summary>
         protected abstract void Bake(List<OverlayLayer> layers);
+
+        /// <summary>
+        /// Snapshots this preset's baked layers as an editable profile, so authoring can start from
+        /// a working composition rather than an empty stack.
+        /// </summary>
+        public OverlayEffectProfile ToProfile(string name)
+        {
+            var layers = new List<OverlayLayer>();
+            BakeClamped(layers);
+
+            return new OverlayEffectProfile
+            {
+                Name = name,
+                BasePreset = GetType().Name,
+                FadeInSeconds = FadeInSeconds,
+                FadeOutSeconds = FadeOutSeconds,
+                Layers = layers
+            };
+        }
 
         /// <summary>
         /// Refills <paramref name="layers"/> with clamped, budget-capped layers. Every layer is

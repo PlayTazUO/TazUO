@@ -158,6 +158,14 @@ public static class MyraStyle
         comboItemStyle.Padding = new Thickness(2);
         comboItemStyle.LabelStyle.Font = _uiFont;
 
+        // Drives PropertyGrid as well as Tree; without this its labels keep the Myra default font
+        // and sit at a different size from every other label in the options window.
+        TreeStyle treeStyle = Stylesheet.Current.TreeStyle;
+        treeStyle.LabelStyle ??= new LabelStyle();
+        treeStyle.LabelStyle.Font = _uiFont;
+        treeStyle.SelectionBackground = new SolidBrush(TazUO_Orange);
+        treeStyle.SelectionHoverBackground = new SolidBrush(new Color(129, 120, 115, 150));
+
         MenuStyle menuStyle = Stylesheet.Current.VerticalMenuStyle;
         menuStyle.Padding = new Thickness(0);
         menuStyle.Margin = new Thickness(0);

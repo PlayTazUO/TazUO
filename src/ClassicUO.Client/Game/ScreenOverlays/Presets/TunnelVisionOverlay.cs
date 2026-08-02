@@ -11,7 +11,7 @@ namespace ClassicUO.Game.ScreenOverlays.Presets
     public sealed class TunnelVisionOverlay : ScreenOverlayPreset
     {
         public float Intensity { get; set; } = 1.0f;
-        public float Opacity { get; set; } = 0.85f;
+        public float Opacity { get; set; } = 0.88f;
         public float Reach { get; set; } = 0.70f;
 
         protected override void Bake(List<OverlayLayer> layers) =>
@@ -48,8 +48,8 @@ namespace ClassicUO.Game.ScreenOverlays.Presets
                         Tint = Color.Black,
                         Opacity = Opacity,
                         Intensity = Intensity,
-                        PulseFreq = 0.12f,
-                        PulseAmp = 0.08f
+                        PulseFreq = 0.05f,
+                        PulseAmp = 0.02f
                     }
                 }
             });
