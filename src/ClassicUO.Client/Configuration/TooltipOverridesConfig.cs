@@ -44,6 +44,16 @@ namespace ClassicUO.Configuration
             return _current;
         }
 
+        /// <summary>Persists the current config and drops the cache so the next profile reloads fresh.</summary>
+        public static void Unload()
+        {
+            if (_current == null)
+                return;
+
+            _current.Save();
+            _current = null;
+        }
+
         /// <summary>
         /// Stores <paramref name="data"/> at its <see cref="ToolTipOverrideData.Index"/>. When the index
         /// is out of range the entry is appended (and its index updated to its new position). Persists on

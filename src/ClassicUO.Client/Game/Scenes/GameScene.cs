@@ -385,6 +385,7 @@ namespace ClassicUO.Game.Scenes
             Instance = null;
 
             CooldownBarsConfig.Unload();
+            TooltipOverridesConfig.Unload();
             GridContainerSaveData.Instance.Save();
             GridContainerSaveData.Reset();
             JournalFilterManager.Instance.Save();
