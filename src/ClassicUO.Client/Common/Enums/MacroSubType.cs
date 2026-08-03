@@ -216,6 +216,7 @@ public enum MacroSubType
     Follower,
     Object,
     Mobile,
+    Friend,
     MscTotalCount,
 
     INVALID_0,
