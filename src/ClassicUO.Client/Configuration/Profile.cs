@@ -453,13 +453,8 @@ namespace ClassicUO.Configuration
         public bool WorldMapShowGridIfZoomed { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapAllowPositionalTarget { get; set => SetProperty(ref field, value); } = true;
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_PORT, 8088)]
-        public partial int WebMapServerPort { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_AUTO_START, false)]
-        public partial bool WebMapAutoStart { get; set; }
+        public int WebMapServerPort { get; set; } = 8088;
+        public bool WebMapAutoStart { get; set; }
 
         public int AutoFollowDistance { get; set => SetProperty(ref field, value); } = 1;
         public bool DisableAutoFollowAlt { get; set => SetProperty(ref field, value); } = false;
@@ -862,6 +857,42 @@ namespace ClassicUO.Configuration
         public double ContextMenuScale { get; set => SetProperty(ref field, value); } = 1f;
         public double TradeGumpScale { get; set => SetProperty(ref field, value); } = 1f;
         public double ServerGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+        [JsonConverter(typeof(Point2Converter))] public Point ScriptManagerWindowPosition { get; set; } = Point.Zero;
+        [JsonConverter(typeof(Point2Converter))] public Point ScriptManagerWindowSize { get; set; } = Point.Zero;
+        public bool CandleFlickerLights { get; set; } = true;
+        public string LastLoaded { get; set; }
+        public bool TreeToStumpsWithinRadius { get; set; }
+        public bool AutoSaveGumpPositions { get; set; }
+        public bool StripChatUsernameId { get; set; }
+        public bool OverheadsScaleWithZoom { get; set; } = true;
+        public string VotedPolls { get; set; }
+        public string BandageAgentJournalMessages { get; set; } = "You apply the bandages;You finish applying;You heal what little;You have been cured;You failed to cure;Your fingers slip";
+        public bool BandageAgentUseJournalTrigger { get; set; }
+        public bool CounterBarDisableIconScaling { get; set; }
+        public bool CounterBarDisableItemScaling { get; set; }
+        public bool CounterBarShowHotkeys { get; set; }
+        public bool QueueManualItemMoves { get; set; }
+        public bool AutoOpenDoorsIfHidden { get; set; } = true;
+        public bool QueueManualItemUses { get; set; }
+        public bool HueCorpseAfterAutoloot { get; set; }
+        public int AutoLootRetryDelay { get; set; } = 5000;
+        public int PathfindingZLevelDiff { get; set; } = 10;
+        public int PathfindingMaxNodes { get; set; } = 150000;
+        public int PathfindingMultiBuffer { get; set; } = 4;
+        public int WorldMapPathfindingMaxNodes { get; set; } = 1000000;
+        public int WorldMapPathfindingMaxRetries { get; set; } = 3;
+        public int WorldMapPathfindingTimeout { get; set; } = 5000;
+        public bool SingleClickMobileSetsLastTarget { get; set; } = true;
+        public bool OutlineMobilesNotoriety { get; set; }
+        public uint DisabledOverheadMessageTypes { get; set; }
+        public bool DisableAutolootCorpseRetry { get; set; } = false;
+        public bool DisableWeather { get; set; }
+        public bool EnablePetScaling { get; set; }
+        public bool AutoUnequipForActions { get; set; }
+        public int MinGumpMoveDistance { get; set; } = 5;
+        public int QuickHealSpell { get; set; } = 29;
+        public int QuickCureSpell { get; set; } = 11;
+
 
         private long lastSave;
 
@@ -908,6 +939,53 @@ namespace ClassicUO.Configuration
 
             if (ProfileMigrationVersion < 5) //4
             {
+                ProfileMigrationVersion++;
+            }
+
+            if (ProfileMigrationVersion < 6)
+            {
+                CounterBarShowHotkeys = OldCounterBarShowHotkeys;
+                CounterBarDisableItemScaling = OldCounterBarDisableItemScaling;
+                CounterBarDisableIconScaling = OldCounterBarDisableIconScaling;
+                BandageAgentUseJournalTrigger = OldBandageAgentUseJournalTrigger;
+                BandageAgentJournalMessages = OldBandageAgentJournalMessages;
+                VotedPolls = OldVotedPolls;
+                OverheadsScaleWithZoom = OldOverheadsScaleWithZoom;
+                StripChatUsernameId = OldStripChatUsernameId;
+                AutoSaveGumpPositions = OldAutoSaveGumpPositions;
+                TreeToStumpsWithinRadius = OldTreeToStumpsWithinRadius;
+                CandleFlickerLights = OldCandleFlickerLights;
+
+                if (OldScriptManagerWindowSize.HasValue)
+                    ScriptManagerWindowSize = OldScriptManagerWindowSize.Value;
+
+                if (OldScriptManagerWindowPosition.HasValue)
+                    ScriptManagerWindowPosition = OldScriptManagerWindowPosition.Value;
+
+                QueueManualItemMoves = OldQueueManualItemMoves;
+                AutoOpenDoorsIfHidden = OldAutoOpenDoorsIfHidden;
+                QueueManualItemUses = OldQueueManualItemUses;
+                HueCorpseAfterAutoloot = OldHueCorpseAfterAutoloot;
+                AutoLootRetryDelay = OldAutoLootRetryDelay;
+                PathfindingZLevelDiff = OldPathfindingZLevelDiff;
+                PathfindingMaxNodes = OldPathfindingMaxNodes;
+                PathfindingMultiBuffer = OldPathfindingMultiBuffer;
+                WorldMapPathfindingMaxNodes = OldWorldMapPathfindingMaxNodes;
+                WorldMapPathfindingMaxRetries = OldWorldMapPathfindingMaxRetries;
+                WorldMapPathfindingTimeout = OldWorldMapPathfindingTimeout;
+                SingleClickMobileSetsLastTarget = OldSingleClickMobileSetsLastTarget;
+                OutlineMobilesNotoriety = OldOutlineMobilesNotoriety;
+                DisabledOverheadMessageTypes = OldDisabledOverheadMessageTypes;
+                DisableAutolootCorpseRetry = OldDisableAutolootCorpseRetry;
+                DisableWeather = OldDisableWeather;
+                EnablePetScaling = OldEnablePetScaling;
+                AutoUnequipForActions = OldAutoUnequipForActions;
+                MinGumpMoveDistance = OldMinGumpMoveDistance;
+                QuickHealSpell = OldQuickHealSpell;
+                QuickCureSpell = OldQuickCureSpell;
+                WebMapServerPort = OldWebMapServerPort;
+                WebMapAutoStart = OldWebMapAutoStart;
+
                 ProfileMigrationVersion++;
             }
 
