@@ -2,24 +2,28 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
-using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
 {
     internal class FriendsListManager
     {
         private static FriendsListManager _instance;
-        private List<FriendEntry> _friends;
-        private string _savePath;
+        private FriendsListSave _save;
         private bool _loaded;
 
         public static FriendsListManager Instance => _instance ??= new FriendsListManager();
 
+        private List<FriendEntry> Friends => _save.Friends;
+
         private FriendsListManager()
         {
-            _friends = new List<FriendEntry>();
+            _save = new FriendsListSave();
             _loaded = false;
         }
 
@@ -32,33 +36,16 @@ namespace ClassicUO.Game.Managers
             if (_loaded)
                 return;
 
-            string serverName = FileSystemHelper.RemoveInvalidChars(World.Instance.ServerName);
-            string serverFolder = Path.Combine(CUOEnviroment.ExecutablePath, "Data", serverName);
-
-            // Create directory if it doesn't exist
-            if (!Directory.Exists(serverFolder))
-                Directory.CreateDirectory(serverFolder);
-
-            _savePath = Path.Combine(serverFolder, "friends.json");
-
-            if (JsonHelper.Load(_savePath, FriendsListJsonContext.Default.ListFriendEntry, out List<FriendEntry> friends))
-            {
-                _friends = friends ?? new List<FriendEntry>();
-            }
-            else
-            {
-                _friends = new List<FriendEntry>();
-            }
-
+            _save = FriendsListSave.LoadWithMigration();
             _loaded = true;
         }
 
         public void Save()
         {
-            if (!_loaded || _savePath == null)
+            if (!_loaded)
                 return;
 
-            JsonHelper.SaveAndBackup(_friends, _savePath, FriendsListJsonContext.Default.ListFriendEntry);
+            _save.Save();
         }
 
         public List<FriendEntry> GetFriends()
@@ -66,7 +53,7 @@ namespace ClassicUO.Game.Managers
             if (!_loaded)
                 Load();
 
-            return new List<FriendEntry>(_friends);
+            return new List<FriendEntry>(Friends);
         }
 
         public bool AddFriend(uint serial, string name)
@@ -78,7 +65,7 @@ namespace ClassicUO.Game.Managers
                 return false;
 
             // Check if friend already exists
-            if (_friends.Exists(f => f.Serial == serial))
+            if (Friends.Exists(f => f.Serial == serial))
                 return false;
 
             var friend = new FriendEntry
@@ -88,7 +75,7 @@ namespace ClassicUO.Game.Managers
                 DateAdded = DateTime.UtcNow
             };
 
-            _friends.Add(friend);
+            Friends.Add(friend);
             Save();
             return true;
         }
@@ -106,11 +93,11 @@ namespace ClassicUO.Game.Managers
             if (!_loaded)
                 Load();
 
-            FriendEntry friend = _friends.Find(f => f.Serial == serial);
+            FriendEntry friend = Friends.Find(f => f.Serial == serial);
             if (friend == null)
                 return false;
 
-            _friends.Remove(friend);
+            Friends.Remove(friend);
             Save();
             return true;
         }
@@ -123,11 +110,11 @@ namespace ClassicUO.Game.Managers
             if (string.IsNullOrWhiteSpace(name))
                 return false;
 
-            FriendEntry friend = _friends.Find(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
+            FriendEntry friend = Friends.Find(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
             if (friend == null)
                 return false;
 
-            _friends.Remove(friend);
+            Friends.Remove(friend);
             Save();
             return true;
         }
@@ -137,7 +124,7 @@ namespace ClassicUO.Game.Managers
             if (!_loaded)
                 Load();
 
-            return _friends.Exists(f => f.Serial == serial);
+            return Friends.Exists(f => f.Serial == serial);
         }
 
         public bool IsFriend(string name)
@@ -148,7 +135,7 @@ namespace ClassicUO.Game.Managers
             if (string.IsNullOrWhiteSpace(name))
                 return false;
 
-            return _friends.Exists(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
+            return Friends.Exists(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
         public FriendEntry GetFriend(uint serial)
@@ -156,7 +143,7 @@ namespace ClassicUO.Game.Managers
             if (!_loaded)
                 Load();
 
-            return _friends.Find(f => f.Serial == serial);
+            return Friends.Find(f => f.Serial == serial);
         }
 
         public FriendEntry GetFriend(string name)
@@ -167,7 +154,7 @@ namespace ClassicUO.Game.Managers
             if (string.IsNullOrWhiteSpace(name))
                 return null;
 
-            return _friends.Find(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
+            return Friends.Find(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
         public IList<uint> GetAllFriends()
@@ -175,7 +162,7 @@ namespace ClassicUO.Game.Managers
             if (!_loaded)
                 Load();
 
-            return new List<uint>(_friends.Select(friend => friend.Serial));
+            return new List<uint>(Friends.Select(friend => friend.Serial));
         }
     }
 
@@ -186,7 +173,57 @@ namespace ClassicUO.Game.Managers
         public DateTime DateAdded { get; set; }
     }
 
+    /// <summary>
+    /// JSON-backed store for the friends list. Persisted to <c>friends.json</c> under the
+    /// <see cref="SettingsScope.Server"/> folder. Saving/loading (with rotating backups) is handled by
+    /// <see cref="JsonSave{T}"/>.
+    /// </summary>
+    public sealed class FriendsListSave : JsonSave<FriendsListSave>
+    {
+        public const string FriendsFileName = "friends.json";
+
+        public List<FriendEntry> Friends { get; set; } = new();
+
+        protected override SettingsScope Scope => SettingsScope.Server;
+
+        protected override string FileName => FriendsFileName;
+
+        protected override JsonTypeInfo<FriendsListSave> TypeInfo => FriendsListJsonContext.Default.FriendsListSave;
+
+        /// <summary>Migrates any legacy bare-array file to the wrapped format, then loads the server's save.</summary>
+        public static FriendsListSave LoadWithMigration()
+        {
+            MigrateLegacyFormatIfNeeded();
+            return Load();
+        }
+
+        // Older versions stored a bare JSON array; rewrite it once into the wrapped format JsonSave expects.
+        private static void MigrateLegacyFormatIfNeeded()
+        {
+            string path = Path.Combine(JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Server), FriendsFileName);
+
+            if (!File.Exists(path))
+                return;
+
+            try
+            {
+                string json = File.ReadAllText(path);
+
+                if (!json.TrimStart().StartsWith('['))
+                    return;
+
+                List<FriendEntry> legacy = JsonSerializer.Deserialize(json, FriendsListJsonContext.Default.ListFriendEntry) ?? new List<FriendEntry>();
+                new FriendsListSave { Friends = legacy }.Save();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error migrating legacy friends list: {ex.Message}");
+            }
+        }
+    }
+
     [JsonSourceGenerationOptions(WriteIndented = true)]
+    [JsonSerializable(typeof(FriendsListSave))]
     [JsonSerializable(typeof(List<FriendEntry>))]
     [JsonSerializable(typeof(FriendEntry))]
     internal sealed partial class FriendsListJsonContext : JsonSerializerContext
