@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Configuration
@@ -11,46 +11,47 @@ namespace ClassicUO.Configuration
     /// <summary>
     /// JSON-backed store for tooltip override rules. Persisted to <c>tooltip_overrides.json</c> in the
     /// current profile's save location. Replaces the legacy parallel <c>ToolTipOverride_*</c> lists on
-    /// <see cref="Profile"/>, which are migrated across during profile migration.
+    /// <see cref="Profile"/>, which are migrated across during profile migration. Saving/loading (with
+    /// rotating backups) is handled by <see cref="JsonSave{T}"/>.
     /// </summary>
-    public sealed class TooltipOverridesConfig
+    public sealed class TooltipOverridesConfig : JsonSave<TooltipOverridesConfig>
     {
-        public const string FileName = "tooltip_overrides.json";
+        public const string TooltipOverridesFileName = "tooltip_overrides.json";
 
         public List<ToolTipOverrideData> Overrides { get; set; } = new();
+
+        /// <summary>Lives in the profile folder alongside the other per-character configs.</summary>
+        protected override SettingsScope Scope => SettingsScope.Char;
+
+        protected override string FileName => TooltipOverridesFileName;
+
+        protected override JsonTypeInfo<TooltipOverridesConfig> TypeInfo => TooltipOverridesJsonContext.DefaultToUse.TooltipOverridesConfig;
 
         private static TooltipOverridesConfig _current;
 
         /// <summary>The tooltip-override config for the currently loaded profile.</summary>
         public static TooltipOverridesConfig Current => _current ??= Load(ProfileManager.ProfilePath);
 
-        private static string GetFilePath() =>
-            string.IsNullOrEmpty(ProfileManager.ProfilePath) ? null : Path.Combine(ProfileManager.ProfilePath, FileName);
-
         /// <summary>
-        /// Loads the tooltip-override config from <paramref name="profilePath"/> and sets it as
-        /// <see cref="Current"/>. Called on every profile load so the cache tracks the active profile.
+        /// Loads the tooltip-override config for the given profile and sets it as <see cref="Current"/>.
+        /// Called on every profile load so the cache tracks the active profile. The <paramref name="profilePath"/>
+        /// is the current profile folder, which is also the <see cref="SettingsScope.Char"/> location.
         /// </summary>
-        public static TooltipOverridesConfig Load(string profilePath)
+        public static new TooltipOverridesConfig Load(string profilePath)
         {
-            string file = string.IsNullOrEmpty(profilePath) ? null : Path.Combine(profilePath, FileName);
-
-            _current = (file != null && File.Exists(file)
-                           ? ConfigurationResolver.Load<TooltipOverridesConfig>(file, TooltipOverridesJsonContext.DefaultToUse.TooltipOverridesConfig)
-                           : null)
-                       ?? new TooltipOverridesConfig();
-
+            _current = JsonSave<TooltipOverridesConfig>.Load();
             _current.Reindex();
             return _current;
         }
 
-        public void Save()
+        /// <summary>Persists the current config and drops the cache so the next profile reloads fresh.</summary>
+        public static void Unload()
         {
-            string file = GetFilePath();
-            if (file == null)
+            if (_current == null)
                 return;
 
-            ConfigurationResolver.Save(this, file, TooltipOverridesJsonContext.DefaultToUse.TooltipOverridesConfig);
+            _current.Save();
+            _current = null;
         }
 
         /// <summary>
