@@ -10,7 +10,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using ClassicUO.Common;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Utility.Logging;
@@ -553,24 +552,21 @@ namespace ClassicUO.Game.Managers
         {
             if (_loaded) return;
 
-            Task.Factory.StartNew(() =>
+            try
             {
-                try
-                {
-                    MigrateOldLocationIfNeeded();
-                    MigrateLegacyFormatIfNeeded();
+                MigrateOldLocationIfNeeded();
+                MigrateLegacyFormatIfNeeded();
 
-                    _data = AutoLootData.Load();
-                    _currentList = null;
-                    EnsureAtLeastOneList();
-                    _loaded = true;
-                }
-                catch
-                {
-                    Log.Error("There was an error loading your auto loot config file, please check it with a json validator.");
-                    _loaded = false;
-                }
-            });
+                _data = AutoLootData.Load();
+                _currentList = null;
+                EnsureAtLeastOneList();
+                _loaded = true;
+            }
+            catch
+            {
+                Log.Error("There was an error loading your auto loot config file, please check it with a json validator.");
+                _loaded = false;
+            }
         }
 
         /// <summary>The full path to the current profile's auto loot config file.</summary>
