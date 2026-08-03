@@ -22,13 +22,13 @@ public static class SamplingLayers
     /// Enough taps that the default radius resolves as a blur rather than as separate ghosts, and no
     /// more. Raise it with the radius, not on its own.
     /// </summary>
-    private const int DEFAULT_BLUR_TAPS = 12;
+    private const OverlaySampleTaps DEFAULT_BLUR_TAPS = OverlaySampleTaps.Twelve;
 
     /// <summary>
     /// Fewer than the disk needs: radial taps land on a line rather than spread over an area, so the
     /// gaps between them are far less visible.
     /// </summary>
-    private const int DEFAULT_RADIAL_TAPS = 8;
+    private const OverlaySampleTaps DEFAULT_RADIAL_TAPS = OverlaySampleTaps.Eight;
 
     /// <summary>Frequency of the field that breaks up the strength when a shape asks to swim. Coarse
     /// on purpose - at detail frequency the distortion boils instead of drifting.</summary>
@@ -43,7 +43,7 @@ public static class SamplingLayers
     /// <param name="radius">Blur radius as a fraction of screen width.</param>
     /// <param name="taps">Samples taken per pixel; the whole cost of the layer.</param>
     /// <returns>The layer.</returns>
-    public static OverlayLayer Blur(SamplingShape shape, float radius, int taps = DEFAULT_BLUR_TAPS) =>
+    public static OverlayLayer Blur(SamplingShape shape, float radius, OverlaySampleTaps taps = DEFAULT_BLUR_TAPS) =>
         Build(
             shape,
             new OverlaySampling
@@ -63,7 +63,7 @@ public static class SamplingLayers
     /// from the centre.</param>
     /// <param name="taps">Samples taken per pixel; the whole cost of the layer.</param>
     /// <returns>The layer.</returns>
-    public static OverlayLayer Radial(SamplingShape shape, float zoom, int taps = DEFAULT_RADIAL_TAPS) =>
+    public static OverlayLayer Radial(SamplingShape shape, float zoom, OverlaySampleTaps taps = DEFAULT_RADIAL_TAPS) =>
         Build(
             shape,
             new OverlaySampling
@@ -120,11 +120,13 @@ public static class SamplingLayers
                 },
                 Appearance = new OverlayAppearance
                 {
+                    // Tint is unused - the sampling techniques return scene colour in its place - but
+                    // white keeps it harmless if a profile is later switched to a painting mode.
                     Tint = Color.White,
                     Opacity = shape.Strength,
                     Intensity = 1f,
-                    PulseFreq = 0f,
-                    PulseAmp = 0f
+                    PulseFreq = shape.PulseFreq,
+                    PulseAmp = shape.PulseAmp
                 },
                 Sampling = sampling
             }

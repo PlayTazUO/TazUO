@@ -14,9 +14,11 @@ public class ScreenDecorations : ObservableSettings
 {
     public const string FileName = "screen_decorations.json";
 
-    /// <summary>Master switch over both systems. Off means no overlay is scheduled, drawn or shaken
-    /// for - not merely hidden.</summary>
-    public bool Enabled { get; set => SetField(ref field, value); } = true;
+    /// <summary>
+    /// Master switch over both systems. Off means no overlay is scheduled, drawn or shaken for - not
+    /// merely hidden. Off by default: these effects obscure the world, so they are opt-in.
+    /// </summary>
+    public bool Enabled { get; set => SetField(ref field, value); }
 
     public OverlaySystemSettings Overlays { get; set => SetField(ref field, value); } = new();
 

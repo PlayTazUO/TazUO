@@ -25,6 +25,30 @@ namespace ClassicUO.Renderer.Effects
     }
 
     /// <summary>
+    /// Samples a distortion takes per pixel, which is its entire cost.
+    /// <para>
+    /// A closed set rather than a number: the count is the bound of an unrolled loop in the shader,
+    /// so each one is separately compiled and only these exist. Named for the count because that is
+    /// the cost - "Medium" would hide the one thing worth knowing.
+    /// </para>
+    /// </summary>
+    public enum OverlaySampleTaps
+    {
+        /// <summary>Cheapest. Enough only for a small radius; wider blurs break into ghost copies.</summary>
+        Four = 4,
+
+        /// <summary>Enough for a subtle blur or for radial, whose taps fall on a line rather than
+        /// spreading over an area.</summary>
+        Eight = 8,
+
+        /// <summary>The general-purpose disk count.</summary>
+        Twelve = 12,
+
+        /// <summary>Four times the cost of <see cref="Four"/>. Needed only at large radii.</summary>
+        Sixteen = 16
+    }
+
+    /// <summary>
     /// Distortion of what is already on screen, as opposed to colour painted over it.
     /// <para>
     /// The layer's shape mask doubles as the strength of the distortion: the sampled result is
@@ -52,12 +76,12 @@ namespace ClassicUO.Renderer.Effects
         public float Radius;
 
         /// <summary>
-        /// Extra taps beyond the centre one, and the entire cost of the layer. Too few for the radius
-        /// in use resolves into distinct ghost copies rather than a blur; the honest fix is fewer
-        /// pixels (a tighter mask) rather than more taps.
+        /// Samples taken per pixel, and the entire cost of the layer. Too few for the radius in use
+        /// resolves into distinct ghost copies rather than a blur; the honest fix is fewer pixels (a
+        /// tighter mask) rather than more taps.
         /// </summary>
-        [Description("Extra taps beyond the centre one, and the whole cost of the layer. Too few for the radius shows as distinct ghost copies instead of a blur.")]
-        public int Taps;
+        [Description("Samples taken per pixel, and the whole cost of the layer. Too few for the radius shows as distinct ghost copies instead of a blur.")]
+        public OverlaySampleTaps Taps;
 
         /// <summary>
         /// How far along the centre ray the radial taps march, as a fraction of the distance from

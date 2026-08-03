@@ -11,7 +11,7 @@ namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 /// </summary>
 public class OverlaySystemSettings : ObservableSettings
 {
-    public bool Enabled { get; set => SetField(ref field, value); } = true;
+    public bool Enabled { get; set => SetField(ref field, value); }
 
     /// <summary>Scales every overlay's intensity. Clamped to [0, 1] where it is consumed.</summary>
     public float Intensity { get; set => SetField(ref field, value); } = 1f;

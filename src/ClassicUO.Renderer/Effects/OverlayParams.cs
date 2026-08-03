@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using Microsoft.Xna.Framework;
 
@@ -262,11 +263,9 @@ namespace ClassicUO.Renderer.Effects
         // upward by any preset or setting.
         public const float MaxPulseFreqHz = 3.0f;
 
-        /// <summary>
-        /// Tap ceiling for a sampling layer. Every tap is a texture fetch for every pixel the layer
-        /// covers, and past this the returns are invisible while the cost is not.
-        /// </summary>
-        public const int MaxSampleTaps = 24;
+        /// <summary>Tap count used where a stored one is not a defined
+        /// <see cref="OverlaySampleTaps"/>, which only a hand-edited profile can produce.</summary>
+        private const OverlaySampleTaps DEFAULT_SAMPLE_TAPS = OverlaySampleTaps.Twelve;
 
         /// <summary>Blur radius ceiling as a fraction of screen width. Beyond this the frame is
         /// unreadable rather than merely blurred.</summary>
@@ -339,7 +338,7 @@ namespace ClassicUO.Renderer.Effects
             {
                 Mode = OverlaySampleMode.None,
                 Radius = 0.012f,
-                Taps = 12,
+                Taps = DEFAULT_SAMPLE_TAPS,
                 Zoom = 0.15f,
                 Aberration = 0.01f
             }
@@ -379,9 +378,10 @@ namespace ClassicUO.Renderer.Effects
             Sampling.Zoom = MathHelper.Clamp(Sampling.Zoom, 0f, 1f);
             Sampling.Aberration = MathHelper.Clamp(Sampling.Aberration, 0f, MaxSampleAberration);
 
-            // At zero taps the disk and radial loops collapse to the centre sample, which is the
-            // undistorted frame drawn over itself - a wasted pass rather than a no-op.
-            Sampling.Taps = (int)MathHelper.Clamp(Sampling.Taps, 1, MaxSampleTaps);
+            // Only the defined counts have a compiled technique, and a profile is hand-editable
+            // JSON: an out-of-range value would otherwise reach the technique lookup.
+            if (!Enum.IsDefined(Sampling.Taps))
+                Sampling.Taps = DEFAULT_SAMPLE_TAPS;
         }
     }
 }

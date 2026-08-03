@@ -1311,6 +1311,10 @@ namespace ClassicUO.Game.Scenes
             {
                 BindFsrParams(gd);
             }
+            // Viewport-scoped shake rides this blit rather than the window one, so the world moves
+            // under the gumps instead of taking them with it.
+            destRect = ScreenOverlayManager.Instance.ApplyViewportShake(destRect);
+
             batcher.Begin(_postFx, Matrix.Identity);
             try { batcher.SetSampler(_postSampler ?? SamplerState.PointClamp); } catch { batcher.SetSampler(SamplerState.PointClamp); }
             batcher.Draw(_worldRenderTarget, destRect, srcRect, new Vector3(0, 0, 1));

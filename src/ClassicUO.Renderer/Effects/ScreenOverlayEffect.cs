@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -44,7 +45,6 @@ namespace ClassicUO.Renderer.Effects
             SceneOffset = Parameters["SceneOffset"];
             SceneScale = Parameters["SceneScale"];
             SampleRadius = Parameters["SampleRadius"];
-            SampleTaps = Parameters["SampleTaps"];
             SampleZoom = Parameters["SampleZoom"];
             SampleAberration = Parameters["SampleAberration"];
 
@@ -55,9 +55,27 @@ namespace ClassicUO.Renderer.Effects
             PulseAmp = Parameters["PulseAmp"];
 
             _tintTechnique = Techniques["T0"];
-            _blurTechnique = Techniques["Blur"];
-            _radialTechnique = Techniques["Radial"];
             _chromaticTechnique = Techniques["Chromatic"];
+
+            _blurTechniques = TechniquesPerTapCount("Blur");
+            _radialTechniques = TechniquesPerTapCount("Radial");
+        }
+
+        /// <summary>
+        /// Resolves the one technique per <see cref="OverlaySampleTaps"/> value, each named for its
+        /// count, into a table indexed by that count.
+        /// </summary>
+        /// <param name="prefix">Technique name without the count, e.g. "Blur".</param>
+        /// <returns>Techniques indexed by tap count; entries between the defined counts are null.</returns>
+        private EffectTechnique[] TechniquesPerTapCount(string prefix)
+        {
+            OverlaySampleTaps[] counts = Enum.GetValues<OverlaySampleTaps>();
+            var techniques = new EffectTechnique[(int)counts[^1] + 1];
+
+            foreach (OverlaySampleTaps taps in counts)
+                techniques[(int)taps] = Techniques[$"{prefix}{(int)taps}"];
+
+            return techniques;
         }
 
         public EffectParameter MatrixTransform { get; }
@@ -93,7 +111,6 @@ namespace ClassicUO.Renderer.Effects
         public EffectParameter SceneOffset { get; }
         public EffectParameter SceneScale { get; }
         public EffectParameter SampleRadius { get; }
-        public EffectParameter SampleTaps { get; }
         public EffectParameter SampleZoom { get; }
         public EffectParameter SampleAberration { get; }
 
@@ -104,23 +121,39 @@ namespace ClassicUO.Renderer.Effects
         public EffectParameter PulseAmp { get; }
 
         private readonly EffectTechnique _tintTechnique;
-        private readonly EffectTechnique _blurTechnique;
-        private readonly EffectTechnique _radialTechnique;
         private readonly EffectTechnique _chromaticTechnique;
+
+        /// <summary>Blur techniques indexed by tap count, so selection is one array read.</summary>
+        private readonly EffectTechnique[] _blurTechniques;
+
+        /// <summary>Radial techniques, indexed the same way as <see cref="_blurTechniques"/>.</summary>
+        private readonly EffectTechnique[] _radialTechniques;
 
         /// <summary>
         /// Points <see cref="Effect.CurrentTechnique"/> at the pass implementing
-        /// <paramref name="mode"/>.
+        /// <paramref name="sampling"/>.
+        /// <para>
+        /// The tap count selects a technique rather than being uploaded as a uniform: it is the
+        /// bound of an unrolled loop and has to be known when the shader is compiled. See
+        /// SampleDisk in ScreenOverlay.fx for what a uniform bound costs.
+        /// </para>
         /// </summary>
-        /// <param name="mode">What the layer does with the frame behind it.</param>
-        public void SetTechnique(OverlaySampleMode mode) =>
-            CurrentTechnique = mode switch
+        /// <param name="sampling">The layer's distortion settings, already clamped.</param>
+        public void SetTechnique(in OverlaySampling sampling)
+        {
+            EffectTechnique technique = sampling.Mode switch
             {
-                OverlaySampleMode.Blur => _blurTechnique,
-                OverlaySampleMode.Radial => _radialTechnique,
+                OverlaySampleMode.Blur => _blurTechniques[(int)sampling.Taps],
+                OverlaySampleMode.Radial => _radialTechniques[(int)sampling.Taps],
                 OverlaySampleMode.Chromatic => _chromaticTechnique,
                 _ => _tintTechnique
             };
+
+            // Assigning this crosses into FNA3D, so it is worth not repeating for a run of layers
+            // that all want the same pass - which is every tint-only overlay.
+            if (!ReferenceEquals(technique, CurrentTechnique))
+                CurrentTechnique = technique;
+        }
 
         /// <summary>
         /// Uploads one overlay's parameters. <paramref name="p"/> must already be clamped
@@ -195,7 +228,6 @@ namespace ClassicUO.Renderer.Effects
                 new Vector2(sampling.Radius * scene.Scale.X, sampling.Radius * aspect * scene.Scale.Y)
             );
 
-            SampleTaps.SetValue((float)sampling.Taps);
             SampleZoom.SetValue(sampling.Zoom);
 
             // Scales the centre ray, which already carries SceneScale, so it needs no mapping of its

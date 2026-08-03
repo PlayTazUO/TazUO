@@ -43,7 +43,6 @@ float  FlatFloor;     // solid fill under the noise; 1 = flat colour, 0 = fully 
 float2 SceneOffset;      // uv of the quad's origin within the scene texture
 float2 SceneScale;       // uv size of the quad within the scene texture
 float2 SampleRadius;     // disk radius for the blur, aspect-corrected so it stays circular
-float  SampleTaps;       // extra taps beyond the centre one
 float  SampleZoom;       // radial blur: how far along the centre ray the taps march
 float2 SampleAberration; // chromatic: red/blue separation along the centre ray
 
@@ -148,13 +147,19 @@ float2 CentreRay(float2 uv)
 // Golden-angle spiral over a disk: sqrt(t) keeps the points area-uniform rather than bunched at the
 // centre, and the irrational angle step means no tap count lands on a visible rosette. Weighted
 // down toward the rim so the result reads as a soft blur instead of a hard-edged smear of copies.
+//
+// taps must be a literal at every call site. HLSL inlines these, so a literal makes the bound a
+// compile-time constant and [unroll] turns the loop into straight-line instructions. Passing a
+// uniform instead compiles to rep/break_lt, which does not survive translation to GL - the loop
+// exits immediately, leaving only the centre sample, which is the untouched frame drawn over
+// itself. That failure is completely invisible, which is why the tap count is baked per technique.
 float3 SampleDisk(float2 uv, int taps)
 {
     float2 base = SceneUv(uv);
     float3 sum = tex2D(SceneSampler, base).rgb;
     float total = 1.0;
 
-    [loop]
+    [unroll]
     for (int i = 1; i <= taps; i++)
     {
         float t = (float)i / (float)taps;
@@ -170,14 +175,15 @@ float3 SampleDisk(float2 uv, int taps)
 }
 
 // Taps march back along the centre ray, so the streaks converge on Center. Zoom blur, and the one
-// that reads as head-spin rather than as out-of-focus.
+// that reads as head-spin rather than as out-of-focus. taps is a literal for the same reason as in
+// SampleDisk.
 float3 SampleRadial(float2 uv, int taps)
 {
     float2 base = SceneUv(uv);
     float2 ray = CentreRay(uv) * SampleZoom;
     float3 sum = tex2D(SceneSampler, base).rgb;
 
-    [loop]
+    [unroll]
     for (int i = 1; i <= taps; i++)
     {
         float t = (float)i / (float)taps;
@@ -249,17 +255,32 @@ float4 main_fragment(PS_INPUT IN) : COLOR0
 // The sampling techniques all return the distorted scene at the layer's own alpha. Straight-alpha
 // blending then resolves to lerp(sharp, distorted, alpha) against the frame already on screen, so
 // the shape mask doubles as the strength of the distortion at no extra cost.
-float4 blur_fragment(PS_INPUT IN) : COLOR0
-{
-    float alpha = OverlayAlpha(IN.TexCoord);
-    return float4(SampleDisk(IN.TexCoord, (int)SampleTaps), alpha);
-}
+//
+// One technique per tap count, stamped out below. The count cannot be a uniform (see SampleDisk),
+// so the caller picks the technique matching the quality it wants and pays exactly that many taps.
+#define BLUR_FRAGMENT(name, taps)                                   \
+    float4 name(PS_INPUT IN) : COLOR0                               \
+    {                                                               \
+        float alpha = OverlayAlpha(IN.TexCoord);                    \
+        return float4(SampleDisk(IN.TexCoord, taps), alpha);        \
+    }
 
-float4 radial_fragment(PS_INPUT IN) : COLOR0
-{
-    float alpha = OverlayAlpha(IN.TexCoord);
-    return float4(SampleRadial(IN.TexCoord, (int)SampleTaps), alpha);
-}
+#define RADIAL_FRAGMENT(name, taps)                                 \
+    float4 name(PS_INPUT IN) : COLOR0                               \
+    {                                                               \
+        float alpha = OverlayAlpha(IN.TexCoord);                    \
+        return float4(SampleRadial(IN.TexCoord, taps), alpha);      \
+    }
+
+BLUR_FRAGMENT(blur4_fragment, 4)
+BLUR_FRAGMENT(blur8_fragment, 8)
+BLUR_FRAGMENT(blur12_fragment, 12)
+BLUR_FRAGMENT(blur16_fragment, 16)
+
+RADIAL_FRAGMENT(radial4_fragment, 4)
+RADIAL_FRAGMENT(radial8_fragment, 8)
+RADIAL_FRAGMENT(radial12_fragment, 12)
+RADIAL_FRAGMENT(radial16_fragment, 16)
 
 float4 chromatic_fragment(PS_INPUT IN) : COLOR0
 {
@@ -276,23 +297,25 @@ technique T0
     }
 }
 
-technique Blur
-{
-    pass P0
-    {
-        VertexShader = compile vs_3_0 main_vertex();
-        PixelShader = compile ps_3_0 blur_fragment();
+#define SAMPLING_TECHNIQUE(name, fragment) \
+    technique name                         \
+    {                                      \
+        pass P0                            \
+        {                                  \
+            VertexShader = compile vs_3_0 main_vertex(); \
+            PixelShader = compile ps_3_0 fragment();     \
+        }                                  \
     }
-}
 
-technique Radial
-{
-    pass P0
-    {
-        VertexShader = compile vs_3_0 main_vertex();
-        PixelShader = compile ps_3_0 radial_fragment();
-    }
-}
+SAMPLING_TECHNIQUE(Blur4, blur4_fragment)
+SAMPLING_TECHNIQUE(Blur8, blur8_fragment)
+SAMPLING_TECHNIQUE(Blur12, blur12_fragment)
+SAMPLING_TECHNIQUE(Blur16, blur16_fragment)
+
+SAMPLING_TECHNIQUE(Radial4, radial4_fragment)
+SAMPLING_TECHNIQUE(Radial8, radial8_fragment)
+SAMPLING_TECHNIQUE(Radial12, radial12_fragment)
+SAMPLING_TECHNIQUE(Radial16, radial16_fragment)
 
 technique Chromatic
 {

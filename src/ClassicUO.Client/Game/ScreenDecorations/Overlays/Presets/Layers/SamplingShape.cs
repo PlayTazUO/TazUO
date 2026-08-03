@@ -23,6 +23,21 @@ public readonly record struct SamplingShape(
     float Swim = 0f
 )
 {
+    /// <summary>
+    /// Rate the whole distortion breathes at, in Hz. Init-only rather than a constructor parameter
+    /// because most distortions want none, and the two pulse controls are worth naming at the call
+    /// site - a bare pair of floats on the end of six others says nothing.
+    /// <para>
+    /// Distinct from <see cref="Swim" />: swim varies strength across the screen at one moment, pulse
+    /// varies it across time everywhere at once. Together they give waves that arrive and recede
+    /// rather than a texture that merely churns.
+    /// </para>
+    /// </summary>
+    public float PulseFreq { get; init; }
+
+    /// <summary>Depth of that breathing, as a fraction of <see cref="Strength" />.</summary>
+    public float PulseAmp { get; init; }
+
     /// <summary>Distortion around the screen edge, fading toward a clear centre.</summary>
     /// <param name="reach">How far in it extends.</param>
     /// <param name="feather">Length of the fade.</param>
@@ -31,27 +46,6 @@ public readonly record struct SamplingShape(
     /// <returns>The shape.</returns>
     public static SamplingShape Vignette(float reach, float feather, float strength, float swim = 0f) =>
         new(reach, feather, 0f, strength, swim);
-
-    /// <summary>
-    /// The same, following the screen border per axis rather than a circle. Even all the way round
-    /// on a widescreen display, where a vignette is not.
-    /// </summary>
-    /// <param name="reach">How far in it extends.</param>
-    /// <param name="feather">Length of the fade.</param>
-    /// <param name="strength">Peak strength at the edge.</param>
-    /// <param name="swim">Noise modulation of that strength.</param>
-    /// <returns>The shape.</returns>
-    public static SamplingShape Border(float reach, float feather, float strength, float swim = 0f) =>
-        new(reach, feather, 1f, strength, swim);
-
-    /// <summary>Uniform distortion over the whole quad, with no falloff at all.</summary>
-    /// <param name="strength">Strength everywhere.</param>
-    /// <param name="swim">Noise modulation of that strength.</param>
-    /// <returns>The shape.</returns>
-    public static SamplingShape Everywhere(float strength, float swim = 0f) =>
-        new(1f, MIN_FEATHER, 0f, strength, swim);
-
-    private const float MIN_FEATHER = 0.01f;
 
     /// <summary>The shape block this describes.</summary>
     /// <returns>Shape parameters ready for an <see cref="OverlayParams"/>.</returns>

@@ -101,7 +101,7 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
         /// </summary>
         /// <param name="layers">The baked stack, in draw order.</param>
         /// <param name="presetName">Name used to identify the offending preset in the log.</param>
-        internal static void WarnOnMisplacedSampling(List<OverlayLayer> layers, string presetName)
+        private static void WarnOnMisplacedSampling(List<OverlayLayer> layers, string presetName)
         {
             bool paintedBelow = false;
             bool sampledBelow = false;

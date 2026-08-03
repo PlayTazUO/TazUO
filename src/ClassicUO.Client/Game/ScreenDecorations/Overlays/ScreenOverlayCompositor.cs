@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using ClassicUO.Configuration;
-
 using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Renderer;
 using ClassicUO.Renderer.Effects;
+using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -94,6 +93,10 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
         /// <summary>Frame the per-frame bookkeeping last ran on, so the second pass of a frame does
         /// not advance fades twice. Negative until the first pass.</summary>
         private long _advancedTick = -1;
+
+        /// <summary>Scopes already reported as having no scene to sample, so the warning cannot
+        /// repeat every frame.</summary>
+        private readonly HashSet<OverlayScope> _sceneWarned = [];
 
         /// <summary>
         /// Activates (or re-configures, if already active) an overlay. Fades in from its current
@@ -216,7 +219,10 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
                         continue;
 
                     if (p.Sampling.ReadsScene && !scene.IsAvailable)
+                    {
+                        WarnSceneUnavailable(scope);
                         continue;
+                    }
 
                     var wanted = layer.Blend.ToBlendState();
 
@@ -235,7 +241,7 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
                         sceneBound = true;
                     }
 
-                    _effect.SetTechnique(p.Sampling.Mode);
+                    _effect.SetTechnique(p.Sampling);
                     _effect.Apply(p, _time, screenSize, globalIntensity, sceneMap);
 
                     batcher.Begin(_effect);
@@ -249,6 +255,19 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
 
             batcher.SetSampler(null);
             batcher.SetBlendState(null);
+        }
+
+        /// <summary>
+        /// Reports a distortion layer dropped for want of a scene to read, once per scope. Silence
+        /// here is indistinguishable from a mistuned effect, and the causes are all invisible from
+        /// the preset: no screen render target, or a scene pass that never composited one.
+        /// </summary>
+        private void WarnSceneUnavailable(OverlayScope scope)
+        {
+            if (!_sceneWarned.Add(scope))
+                return;
+
+            Log.Warn($"Overlay sampling layers skipped in the {scope} pass: no scene texture to read.");
         }
 
         /// <summary>

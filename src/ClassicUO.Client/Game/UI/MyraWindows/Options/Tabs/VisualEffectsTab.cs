@@ -90,9 +90,27 @@ public static class VisualEffectsTab
                     TazLang.Get("visualeffects_shakeintensity", "Shake intensity"),
                     new Accessor<float>(() => settings.Shake.Intensity),
                     ShakeKeyword
-                )
+                ),
+                ShakeFullScreenCheckbox(settings)
             ).WithSearch(new SearchMetadata(shake, Keywords: [ShakeKeyword, EffectsKeyword]))
         ).WithSearch(new SearchMetadata(master, Keywords: [OverlayKeyword, ShakeKeyword, EffectsKeyword]));
+    }
+
+    /// <summary>
+    ///     Whether shake displaces the whole window or only the game world. The per-effect tabs carry
+    ///     the same choice for overlays; shake has one switch because it is one effect.
+    /// </summary>
+    /// <param name="settings">The decoration settings to bind against.</param>
+    /// <returns>The checkbox entry.</returns>
+    private static OptionEntry ShakeFullScreenCheckbox(DecorationSettings settings)
+    {
+        string label = TazLang.Get("visualeffects_shakefullscreen", "Shake the whole window");
+
+        return Option.Checkbox(
+            label,
+            new Accessor<bool>(() => settings.Shake.FullScreen),
+            search: new SearchMetadata(label, Keywords: [ShakeKeyword, EffectsKeyword])
+        );
     }
 
     /// <summary>

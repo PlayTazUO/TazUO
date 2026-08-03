@@ -30,6 +30,10 @@ public sealed class FogOverlay : ScreenOverlayPreset
     /// screen like a lens.</summary>
     private const float BLUR_SWIM = 0.45f;
 
+    /// <summary>How much shorter than the blur the wash stops, so the softening arrives before the
+    /// colour does rather than the two announcing themselves together.</summary>
+    private const float WASH_REACH_MARGIN = 0.045f;
+
     public float Intensity { get; set; } = 1.0f;
 
     /// <summary>Colour of the wash over the blurred band.</summary>
@@ -66,9 +70,7 @@ public sealed class FogOverlay : ScreenOverlayPreset
                 Shape = new OverlayShape
                 {
                     Center = new Vector2(0.5f, 0.5f),
-                    // Stops slightly shorter than the blur, so the softening arrives before the
-                    // colour does rather than the two announcing themselves together.
-                    Reach = Reach * 0.92f,
+                    Reach = LayerReach.Shallower(Reach, WASH_REACH_MARGIN),
                     Feather = WASH_FEATHER,
                     EdgeBlend = 0.00f,
                     FocusDir = new Vector2(0f, -1f),

@@ -85,6 +85,12 @@ internal sealed class ScreenOverlayManager
 
     private CancellationTokenSource? _cancellation;
 
+    /// <summary>This frame's shake displacement and the frame it was sampled on. Render thread
+    /// only, so they are not under <see cref="_sync"/>.</summary>
+    private Point _shakeOffset;
+
+    private long _shakeTick = -1;
+
     /// <summary>Set while a pass is queued or running, so a slow frame cannot leave several passes
     /// stacked up waiting on the main thread.</summary>
     private bool _passPending;
@@ -103,23 +109,61 @@ internal sealed class ScreenOverlayManager
     #region Public methods
 
     /// <summary>
-    /// Offsets the blit rectangle by the current screen shake. Must be applied before the render
-    /// target is drawn with it: that blit is the only thing that can move the world, and
-    /// <see cref="Draw"/> is then given the same shaken rectangle so overlays travel with it.
+    /// Offsets the window blit by this frame's shake, when shake is window-scoped. Applied to the
+    /// rectangle the screen render target is drawn with, which is the only thing that can displace
+    /// the UI along with the world.
     /// </summary>
     /// <param name="destRect">The rectangle the render target is about to be drawn into.</param>
-    /// <returns>The same rectangle, displaced by this frame's shake.</returns>
-    public Rectangle ApplyShake(Rectangle destRect)
+    /// <returns>The same rectangle, displaced if the shake covers the window.</returns>
+    public Rectangle ApplyWindowShake(Rectangle destRect)
     {
-        DecorationSettings settings = DecorationSettings.Current;
+        // Called unconditionally, because this is what advances the decay - see FrameShakeOffset.
+        Point offset = FrameShakeOffset();
 
-        // GetOffset is what decays the trauma, so it is called even while shake is off - at zero
-        // intensity - rather than banking whatever was pending until it is switched back on.
-        float intensity = settings.ShakeActive ? MathHelper.Clamp(settings.Shake.Intensity, 0f, 1f) : 0f;
-
-        destRect.Offset(ScreenShake.Instance.GetOffset(Time.Delta, intensity));
+        if (DecorationSettings.Current.Shake.FullScreen)
+            destRect.Offset(offset);
 
         return destRect;
+    }
+
+    /// <summary>
+    /// Offsets the world composite by this frame's shake, when shake is viewport-scoped. Applied
+    /// inside the scene so the gumps and cursor stay put while the world moves under them.
+    /// </summary>
+    /// <param name="destRect">The rectangle the world render target is about to be drawn into.</param>
+    /// <returns>The same rectangle, displaced if the shake is confined to the viewport.</returns>
+    public Rectangle ApplyViewportShake(Rectangle destRect)
+    {
+        Point offset = FrameShakeOffset();
+
+        if (!DecorationSettings.Current.Shake.FullScreen)
+            destRect.Offset(offset);
+
+        return destRect;
+    }
+
+    /// <summary>
+    /// This frame's shake displacement, computed once however many passes ask for it.
+    /// <para>
+    /// Sampling is what decays the trauma, so it must happen exactly once per frame: twice and the
+    /// shake dies at double speed, never and it accumulates. It is also sampled while shake is
+    /// switched off - at zero intensity - so pending trauma drains away rather than being banked
+    /// until someone turns it back on.
+    /// </para>
+    /// </summary>
+    private Point FrameShakeOffset()
+    {
+        if (_shakeTick == Time.Ticks)
+            return _shakeOffset;
+
+        _shakeTick = Time.Ticks;
+
+        DecorationSettings settings = DecorationSettings.Current;
+        float intensity = settings.ShakeActive ? MathHelper.Clamp(settings.Shake.Intensity, 0f, 1f) : 0f;
+
+        _shakeOffset = ScreenShake.Instance.GetOffset(Time.Delta, intensity);
+
+        return _shakeOffset;
     }
 
     /// <summary>

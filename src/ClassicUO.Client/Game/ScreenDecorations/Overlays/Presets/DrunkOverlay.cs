@@ -29,6 +29,10 @@ public sealed class DrunkOverlay : ScreenOverlayPreset
 
     private const float VIGNETTE_FEATHER = 0.50f;
 
+    /// <summary>How far short of the blur the vignette stops. Wide: the smear has to be well
+    /// established before any darkening starts, or the two arrive as one edge.</summary>
+    private const float VIGNETTE_REACH_MARGIN = 0.32f;
+
     public float Intensity { get; set; } = 1.0f;
 
     /// <summary>Vignette colour. Warm and dim, not black - a black vignette reads as passing out.</summary>
@@ -65,7 +69,7 @@ public sealed class DrunkOverlay : ScreenOverlayPreset
                 Shape = new OverlayShape
                 {
                     Center = new Vector2(0.5f, 0.5f),
-                    Reach = 0.60f,
+                    Reach = LayerReach.Shallower(BLUR_REACH, VIGNETTE_REACH_MARGIN),
                     Feather = VIGNETTE_FEATHER,
                     EdgeBlend = 0.00f,
                     FocusDir = new Vector2(0f, -1f),

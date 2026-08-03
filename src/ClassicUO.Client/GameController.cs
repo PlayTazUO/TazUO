@@ -711,7 +711,7 @@ namespace ClassicUO
                     _uoSpriteBatch.SetSampler(SamplerState.AnisotropicClamp);
                 }
 
-                destRect = ScreenOverlayManager.Instance.ApplyShake(destRect);
+                destRect = ScreenOverlayManager.Instance.ApplyWindowShake(destRect);
                 _uoSpriteBatch.Draw(_screenRenderTarget, destRect, srcRect, new Vector3(0, 0, 1f));
                 _uoSpriteBatch.End();
             }

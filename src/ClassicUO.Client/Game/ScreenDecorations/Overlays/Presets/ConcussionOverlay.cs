@@ -28,6 +28,10 @@ public sealed class ConcussionOverlay : ScreenOverlayPreset
 
     private const float VIGNETTE_FEATHER = 0.42f;
 
+    /// <summary>How far short of the split the vignette stops, so the fringing is already visible
+    /// before the frame starts darkening.</summary>
+    private const float VIGNETTE_REACH_MARGIN = 0.43f;
+
     public float Intensity { get; set; } = 1.0f;
 
     public Color Hue { get; set; } = new(28, 20, 24);
@@ -64,7 +68,7 @@ public sealed class ConcussionOverlay : ScreenOverlayPreset
                 Shape = new OverlayShape
                 {
                     Center = new Vector2(0.5f, 0.5f),
-                    Reach = 0.52f,
+                    Reach = LayerReach.Shallower(SPLIT_REACH, VIGNETTE_REACH_MARGIN),
                     Feather = VIGNETTE_FEATHER,
                     EdgeBlend = 0.00f,
                     Jitter = new OverlayJitter

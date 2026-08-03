@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.ScreenDecorations.Overlays.Presets;
+using ClassicUO.Game.ScreenDecorations.Overlays.Presets.Layers;
 using ClassicUO.Renderer.Effects;
 using FluentAssertions;
 using Xunit;
@@ -94,20 +97,96 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
             };
 
         /// <summary>
+        /// Selected by role rather than by index: the preset also bakes a distortion layer, and
+        /// which position that occupies is a composition detail these assertions do not care about.
+        /// </summary>
+        private static List<OverlayLayer> PaintedLayers(ScreenOverlayPreset preset) =>
+            Bake(preset).Where(l => !l.Params.Sampling.ReadsScene).ToList();
+
+        /// <summary>
         /// The gas layer alone tints without ever obscuring, which reads as a colour filter rather
         /// than as being poisoned. The dark wash under it is what does the occluding.
         /// </summary>
         [Fact]
         public void PoisonBakesAGasLayerOverADarkerWash()
         {
-            List<OverlayLayer> layers = Bake(new PoisonOverlay());
+            List<OverlayLayer> painted = PaintedLayers(new PoisonOverlay());
 
-            layers.Should().HaveCount(2);
-            Brightness(layers[0]).Should().BeLessThan(Brightness(layers[1]));
+            painted.Should().HaveCount(2);
+            Brightness(painted[0]).Should().BeLessThan(Brightness(painted[1]));
 
             // Mostly floored, so it is a field rather than a pattern - anything legible in it would
             // fight the gas above it.
-            layers[0].Params.Noise.FlatFloor.Should().BeGreaterThan(0.5f);
+            painted[0].Params.Noise.FlatFloor.Should().BeGreaterThan(0.5f);
+        }
+
+        /// <summary>
+        /// Every stacked preset draws deepest first, so reach has to fall monotonically through the
+        /// stack. An inversion puts a layer's boundary inside one it is meant to sit behind, which is
+        /// the one arrangement that looks broken rather than merely mistuned - and for the sampling
+        /// presets it also means the distortion stops short of the colour it exists to soften.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(BuiltInEffects))]
+        public void EveryPresetOrdersItsLayersFromDeepestToShallowest(OverlayEffect effect)
+        {
+            ScreenOverlayPreset? preset = BuiltInOverlayPresets.Create(effect);
+
+            if (preset == null)
+                return;
+
+            List<float> reaches = Bake(preset).Select(l => l.Params.Shape.Reach).ToList();
+
+            reaches.Should().BeInDescendingOrder();
+        }
+
+        /// <summary>
+        /// The stagger has to survive the whole range of the knob, not merely its default. Deriving
+        /// the layers by multiplying Reach satisfies the default and fails at both ends: proportional
+        /// margins collapse toward zero as Reach falls, and the deepest layer saturates first as it
+        /// rises, so the shallower ones climb to meet a pinned one.
+        /// </summary>
+        [Theory]
+        [InlineData(0.02f)]
+        [InlineData(0.2f)]
+        [InlineData(0.5f)]
+        [InlineData(1f)]
+        public void StackedPresetsStayStaggeredAtEveryReach(float reach)
+        {
+            AssertStaggered(Bake(new PoisonOverlay { Reach = reach }));
+            AssertStaggered(Bake(new BleedOverlay { Reach = reach }));
+            AssertStaggered(Bake(new FogOverlay { Reach = reach }));
+        }
+
+        /// <summary>
+        /// Ordered, with no layer collapsed to zero reach - a layer that is not drawn at all.
+        /// <para>
+        /// Boundaries must also stay distinct, but only while any of them is still on screen.
+        /// Converging at full reach is the accepted outcome of asking for an effect that covers
+        /// everything: the masks saturate, so no boundary is visible for them to coincide on. The
+        /// arrangement that actually reads as a hard ring is several boundaries landing together in
+        /// the middle of the screen, which is what the margins prevent.
+        /// </para>
+        /// </summary>
+        private static void AssertStaggered(List<OverlayLayer> layers)
+        {
+            List<float> reaches = layers.Select(l => l.Params.Shape.Reach).ToList();
+
+            reaches.Should().BeInDescendingOrder();
+            reaches.Should().OnlyContain(r => r > 0f);
+
+            if (reaches[0] < LayerReach.Max)
+                reaches.Distinct().Should().HaveCount(reaches.Count);
+        }
+
+        public static TheoryData<OverlayEffect> BuiltInEffects()
+        {
+            var data = new TheoryData<OverlayEffect>();
+
+            foreach (OverlayEffect effect in Enum.GetValues<OverlayEffect>())
+                data.Add(effect);
+
+            return data;
         }
 
         /// <summary>
@@ -117,16 +196,16 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         [Fact]
         public void PoisonFlowsUpwardWithTheGasOutrunningTheWash()
         {
-            List<OverlayLayer> layers = Bake(new PoisonOverlay());
+            List<OverlayLayer> painted = PaintedLayers(new PoisonOverlay());
 
-            foreach (OverlayLayer layer in layers)
+            foreach (OverlayLayer layer in painted)
                 layer.Params.Noise.BaseScroll.Y.Should().BePositive();
 
             // Parallax: the near, lighter layer has to move faster than the heavy one behind it, or
             // the pair reads as flat.
-            ScreenSpeed(layers[1].Params.Noise.BaseScroll, layers[1].Params.Noise.BaseScale)
+            ScreenSpeed(painted[1].Params.Noise.BaseScroll, painted[1].Params.Noise.BaseScale)
                 .Should()
-                .BeGreaterThan(ScreenSpeed(layers[0].Params.Noise.BaseScroll, layers[0].Params.Noise.BaseScale));
+                .BeGreaterThan(ScreenSpeed(painted[0].Params.Noise.BaseScroll, painted[0].Params.Noise.BaseScale));
         }
 
         [Fact]

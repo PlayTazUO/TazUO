@@ -1,3 +1,4 @@
+using System;
 using ClassicUO.Renderer.Effects;
 using FluentAssertions;
 using Microsoft.Xna.Framework;
@@ -23,29 +24,49 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
             new OverlaySampling { Mode = mode }.ReadsScene.Should().BeTrue();
         }
 
-        /// <summary>Zero taps would collapse the disk and radial loops onto the centre sample, which
-        /// draws the undistorted frame over itself.</summary>
-        [Fact]
-        public void ClampFloorsTapsAtOne()
+        /// <summary>
+        /// Only counts with a compiled technique exist. A profile is hand-editable JSON, so an
+        /// undefined value has to be repaired before it reaches the technique lookup - zero taps in
+        /// particular would collapse the loops onto the centre sample, drawing the undistorted frame
+        /// over itself, which is visible as nothing at all.
+        /// </summary>
+        [Theory]
+        [InlineData(0)]
+        [InlineData(7)]
+        [InlineData(-4)]
+        [InlineData(999)]
+        public void ClampRepairsUndefinedTapCounts(int stored)
         {
             OverlayParams p = OverlayParams.Default;
-            p.Sampling.Taps = 0;
+            p.Sampling.Taps = (OverlaySampleTaps)stored;
             p.Clamp();
 
-            p.Sampling.Taps.Should().Be(1);
+            Enum.IsDefined(p.Sampling.Taps).Should().BeTrue();
+        }
+
+        [Theory]
+        [InlineData(OverlaySampleTaps.Four)]
+        [InlineData(OverlaySampleTaps.Eight)]
+        [InlineData(OverlaySampleTaps.Twelve)]
+        [InlineData(OverlaySampleTaps.Sixteen)]
+        public void ClampKeepsDefinedTapCounts(OverlaySampleTaps taps)
+        {
+            OverlayParams p = OverlayParams.Default;
+            p.Sampling.Taps = taps;
+            p.Clamp();
+
+            p.Sampling.Taps.Should().Be(taps);
         }
 
         [Fact]
-        public void ClampCapsTapsAndRadiiAtTheirCeilings()
+        public void ClampCapsRadiiAtTheirCeilings()
         {
             OverlayParams p = OverlayParams.Default;
-            p.Sampling.Taps = OverlayParams.MaxSampleTaps * 4;
             p.Sampling.Radius = 10f;
             p.Sampling.Aberration = 10f;
             p.Sampling.Zoom = 10f;
             p.Clamp();
 
-            p.Sampling.Taps.Should().Be(OverlayParams.MaxSampleTaps);
             p.Sampling.Radius.Should().Be(OverlayParams.MaxSampleRadius);
             p.Sampling.Aberration.Should().Be(OverlayParams.MaxSampleAberration);
             p.Sampling.Zoom.Should().Be(1f);

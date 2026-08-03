@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.Game.ScreenDecorations.Overlays;
@@ -74,8 +75,8 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         [Fact]
         public void SwimIsTakenOffTheFlatFloorSoStrengthVaries()
         {
-            OverlayLayer steady = SamplingLayers.Blur(SamplingShape.Everywhere(1f), 0.01f);
-            OverlayLayer swimming = SamplingLayers.Blur(SamplingShape.Everywhere(1f, 0.5f), 0.01f);
+            OverlayLayer steady = SamplingLayers.Blur(SamplingShape.Vignette(1f, 0.4f, 1f), 0.01f);
+            OverlayLayer swimming = SamplingLayers.Blur(SamplingShape.Vignette(1f, 0.4f, 1f, 0.5f), 0.01f);
 
             steady.Params.Noise.FlatFloor.Should().Be(1f);
             swimming.Params.Noise.FlatFloor.Should().BeApproximately(0.5f, 1e-5f);
@@ -90,24 +91,6 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
                           .BeApproximately(0.65f, 1e-5f);
         }
 
-        /// <summary>
-        /// A border trim with square corners reads as a picture frame. CornerBias rounds it, and is
-        /// measured per axis so it carries no aspect bias - unlike blending toward the radial term.
-        /// </summary>
-        [Fact]
-        public void BorderShapesWeightTheirCornersAndVignettesDoNot()
-        {
-            SamplingLayers.Blur(SamplingShape.Border(0.3f, 0.2f, 1f), 0.01f)
-                          .Params.Shape.CornerBias
-                          .Should()
-                          .BeGreaterThan(0f);
-
-            SamplingLayers.Blur(SamplingShape.Vignette(0.3f, 0.2f, 1f), 0.01f)
-                          .Params.Shape.CornerBias
-                          .Should()
-                          .Be(0f);
-        }
-
         /// <summary>Clamped by Clamp(), but the presets should be shipping usable values in the
         /// first place rather than relying on being caught.</summary>
         [Theory]
@@ -118,7 +101,7 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
 
             OverlaySampling sampling = Bake(preset).First(l => l.Params.Sampling.ReadsScene).Params.Sampling;
 
-            sampling.Taps.Should().BeInRange(1, OverlayParams.MaxSampleTaps);
+            Enum.IsDefined(sampling.Taps).Should().BeTrue();
             sampling.Radius.Should().BeLessThanOrEqualTo(OverlayParams.MaxSampleRadius);
             sampling.Aberration.Should().BeLessThanOrEqualTo(OverlayParams.MaxSampleAberration);
             sampling.Zoom.Should().BeInRange(0f, 1f);

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ClassicUO.Game.ScreenDecorations.Overlays.Presets.Layers;
 using ClassicUO.Renderer.Effects;
 using Microsoft.Xna.Framework;
 
@@ -42,10 +43,12 @@ public sealed class BleedOverlay : ScreenOverlayPreset
     private const float RUNS_OPACITY_SCALE = 0.96f;
     private const float HIGHLIGHT_OPACITY_SCALE = 0.14f;
 
-    // Each pass stops slightly shorter than the one below it, so the composite thins out toward the
-    // middle of the screen instead of all three ending together.
-    private const float RUNS_REACH_SCALE = 0.90f;
-    private const float HIGHLIGHT_REACH_SCALE = 0.82f;
+    // Each pass stops shorter than the one below it, so the composite thins out toward the middle of
+    // the screen instead of all three ending together. Fixed margins rather than fractions of Reach:
+    // this preset's Reach defaults to 0.2, where proportional margins are only a couple of
+    // hundredths wide and the three boundaries land on top of one another.
+    private const float RUNS_REACH_MARGIN = 0.045f;
+    private const float HIGHLIGHT_REACH_MARGIN = 0.040f;
 
     public float Intensity { get; set; } = 1.0f;
 
@@ -62,6 +65,13 @@ public sealed class BleedOverlay : ScreenOverlayPreset
 
     /// <summary>How far in from the screen edge the fluid reaches. Larger is thicker.</summary>
     public float Reach { get; set; } = 0.2f;
+
+    /// <summary>Stops short of the film below it.</summary>
+    private float RunsReach => LayerReach.Shallower(Reach, RUNS_REACH_MARGIN);
+
+    /// <summary>Shortest of the three, measured off the runs rather than off <see cref="Reach" /> so
+    ///     the order holds however the knob is set.</summary>
+    private float HighlightReach => LayerReach.Shallower(RunsReach, HIGHLIGHT_REACH_MARGIN);
 
     protected override void Bake(List<OverlayLayer> layers)
     {
@@ -135,7 +145,7 @@ public sealed class BleedOverlay : ScreenOverlayPreset
                 Shape = new OverlayShape
                 {
                     Center = new Vector2(0.5f, 0.5f),
-                    Reach = Reach * RUNS_REACH_SCALE,
+                    Reach = RunsReach,
                     // Narrow, so a run ends rather than trailing off into haze.
                     Feather = 0.12f,
                     EdgeBlend = 1.00f,
@@ -188,7 +198,7 @@ public sealed class BleedOverlay : ScreenOverlayPreset
                 Shape = new OverlayShape
                 {
                     Center = new Vector2(0.5f, 0.5f),
-                    Reach = Reach * HIGHLIGHT_REACH_SCALE,
+                    Reach = HighlightReach,
                     Feather = 0.10f,
                     EdgeBlend = 1.00f,
                     CornerBias = 1.00f,
