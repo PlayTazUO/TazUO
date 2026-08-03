@@ -18,8 +18,8 @@ namespace ClassicUO.Configuration
         /// <summary>The configured spells. Keyed by <see cref="SpellRangeInfo.ID"/> once loaded into the manager.</summary>
         public List<SpellRangeInfo> Spells { get; set; } = new();
 
-        /// <summary>Shared across all profiles, so it lives in the global <c>Data</c> folder.</summary>
-        protected override SettingsScope Scope => SettingsScope.Global;
+        /// <summary>Shared across all profiles, so it lives in the global <c>Server</c> folder.</summary>
+        protected override SettingsScope Scope => SettingsScope.Server;
 
         protected override string FileName => "SpellVisualRange.json";
 
