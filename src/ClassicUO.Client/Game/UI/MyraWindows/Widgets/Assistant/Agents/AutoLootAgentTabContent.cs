@@ -113,6 +113,11 @@ public static class AutoLootAgentTabContent
             b => profile.AutoSkinningHumanCorpses = b,
             TazLang.Get("autoskinning_humancorpses", "Skin Human Corpses"),
             TazLang.Get("autoskinning_humancorpses_tooltip", "Also auto skin human/humanoid corpses.")));
+        skinRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.AutoSkinningAnyTargetType,
+            b => profile.AutoSkinningAnyTargetType = b,
+            TazLang.Get("autoskinning_anytargettype", "Any Target Type"),
+            TazLang.Get("autoskinning_anytargettype_tooltip", "Respond to any target cursor type when skinning. Enable if your server sends a non-neutral (e.g. harmful) target for the skinning knife and auto skinning isn't working.")));
         skinRow.Widgets.Add(new MyraButton(TazLang.Get("autoskinning_targetweapon", "Target Skinning Weapon"), () =>
         {
             World.Instance.TargetManager.SetTargeting(targeted =>

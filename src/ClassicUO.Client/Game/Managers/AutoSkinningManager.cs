@@ -106,7 +106,9 @@ public sealed class AutoSkinningManager
                 return;
 
             // Queue the corpse serial to answer the server target request produced by using the knife.
-            TargetManager.SetAutoTarget(corpseSerial, TargetType.Neutral);
+            // Some servers send a non-neutral cursor for skinning, so optionally match any target type.
+            bool matchAnyTargetType = ProfileManager.CurrentProfile?.AutoSkinningAnyTargetType ?? false;
+            TargetManager.SetAutoTarget(corpseSerial, TargetType.Neutral, matchAnyTargetType);
 
             // ignoreQueue: this is already running inside the action queue, don't re-enqueue.
             GameActions.DoubleClick(world, knifeSerial, false, true);
