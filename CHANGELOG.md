@@ -14,6 +14,7 @@ All notable changes to TazUO will be recorded here.
 
 ### Misc
 * Updated to latest FNA release ([bittiez](https://github.com/bittiez))
+* Converted previous ResGumps language system into TazLang language.ini system ([bittiez](https://github.com/bittiez))
 
 ## 5.20.26
 
