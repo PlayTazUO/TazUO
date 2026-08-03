@@ -108,6 +108,27 @@ description:  Base class for all Python-accessible game world objects.  Encapsul
 
 ---
 
+### Highlight
+`(hue)`
+ Highlight this object by setting its hue. The original hue is remembered so it can be restored.
+ Call with `None` to restore the original hue.
+ Example:
+ ```py
+ obj.Highlight(0x0021)
+ obj.Highlight(None)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `hue` | `ushort?` | ✅ Yes | The hue to apply, or `null` to restore the original hue. |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
 ### HasLineOfSightFrom
 `(observer)`
  Determines if there is line of sight from the specified observer to this object.

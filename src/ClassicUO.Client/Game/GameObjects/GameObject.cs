@@ -121,6 +121,13 @@ namespace ClassicUO.Game.GameObjects
                 hue = value;
             }
         }
+
+        /// <summary>
+        /// The hue captured before a highlight was applied. Null when no highlight is active,
+        /// allowing the original hue to be restored later.
+        /// </summary>
+        public ushort? OriginalHue { get; set; }
+
         public Vector3 Offset;
 
         /// <summary>
