@@ -5,7 +5,6 @@ using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework.Graphics;
@@ -130,7 +129,7 @@ namespace ClassicUO
             if (!Directory.Exists(clientPath))
             {
                 Log.Error("Invalid client directory: " + clientPath);
-                Client.ShowErrorMessage(string.Format(ResErrorMessages.ClientPathIsNotAValidUODirectory, clientPath));
+                Client.ShowErrorMessage(string.Format(TazLang.Get("client_path_is_not_avalid_uodirectory"), clientPath));
 
                 throw new InvalidClientDirectory($"'{clientPath}' is not a valid directory");
             }

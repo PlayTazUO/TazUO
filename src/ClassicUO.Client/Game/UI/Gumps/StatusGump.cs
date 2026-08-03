@@ -7,7 +7,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Assets;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 
@@ -454,7 +453,7 @@ namespace ClassicUO.Game.UI.Gumps
                     61,
                     66,
                     12,
-                    Client.Game.UO.FileManager.Clilocs.GetString(3000080, ResGeneral.Hits),
+                    Client.Game.UO.FileManager.Clilocs.GetString(3000080, TazLang.Get("hits")),
                     0
                 )
                 { CanMove = true }
@@ -468,7 +467,7 @@ namespace ClassicUO.Game.UI.Gumps
                     73,
                     66,
                     12,
-                    Client.Game.UO.FileManager.Clilocs.GetString(1061151, ResGeneral.Mana),
+                    Client.Game.UO.FileManager.Clilocs.GetString(1061151, TazLang.Get("mana")),
                     0
                 )
                 { CanMove = true }
@@ -510,7 +509,7 @@ namespace ClassicUO.Game.UI.Gumps
                     109,
                     66,
                     12,
-                    Client.Game.UO.FileManager.Clilocs.GetString(1061154, ResGeneral.Weight),
+                    Client.Game.UO.FileManager.Clilocs.GetString(1061154, TazLang.Get("weight")),
                     0
                 )
                 { CanMove = true }
@@ -914,7 +913,7 @@ namespace ClassicUO.Game.UI.Gumps
                         126,
                         59,
                         24,
-                        Client.Game.UO.FileManager.Clilocs.GetString(1061151, ResGeneral.Mana),
+                        Client.Game.UO.FileManager.Clilocs.GetString(1061151, TazLang.Get("mana")),
                         0
                     )
                     { CanMove = true }
@@ -1022,7 +1021,7 @@ namespace ClassicUO.Game.UI.Gumps
                         126,
                         65,
                         24,
-                        Client.Game.UO.FileManager.Clilocs.GetString(1061154, ResGeneral.Weight),
+                        Client.Game.UO.FileManager.Clilocs.GetString(1061154, TazLang.Get("weight")),
                         0
                     )
                     { CanMove = true }

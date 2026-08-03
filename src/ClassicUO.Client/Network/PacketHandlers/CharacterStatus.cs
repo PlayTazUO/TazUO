@@ -4,7 +4,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.IO;
-using ClassicUO.Resources;
 
 namespace ClassicUO.Network.PacketHandlers;
 
@@ -84,8 +83,8 @@ internal static class CharacterStatus
                             GameActions.Print(
                                 world,
                                 string.Format(
-                                    ResGeneral.Your0HasChangedBy1ItIsNow2,
-                                    ResGeneral.Strength,
+                                    TazLang.Get("your0_has_changed_by1_it_is_now2"),
+                                    TazLang.Get("strength_lower"),
                                     deltaStr,
                                     str
                                 ),
@@ -99,8 +98,8 @@ internal static class CharacterStatus
                             GameActions.Print(
                                 world,
                                 string.Format(
-                                    ResGeneral.Your0HasChangedBy1ItIsNow2,
-                                    ResGeneral.Dexterity,
+                                    TazLang.Get("your0_has_changed_by1_it_is_now2"),
+                                    TazLang.Get("dexterity_lower"),
                                     deltaDex,
                                     dex
                                 ),
@@ -114,8 +113,8 @@ internal static class CharacterStatus
                             GameActions.Print(
                                 world,
                                 string.Format(
-                                    ResGeneral.Your0HasChangedBy1ItIsNow2,
-                                    ResGeneral.Intelligence,
+                                    TazLang.Get("your0_has_changed_by1_it_is_now2"),
+                                    TazLang.Get("intelligence_lower"),
                                     deltaInt,
                                     intell
                                 ),

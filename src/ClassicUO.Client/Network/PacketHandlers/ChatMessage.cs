@@ -4,7 +4,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
-using ClassicUO.Resources;
 
 namespace ClassicUO.Network.PacketHandlers;
 
@@ -82,7 +81,7 @@ internal static class ChatMessage
 
                 GameActions.Print(
                     world,
-                    string.Format(ResGeneral.YouHaveJoinedThe0Channel, channelName),
+                    string.Format(TazLang.Get("you_have_joined_the0_channel"), channelName),
                     ProfileManager.CurrentProfile.ChatMessageHue,
                     MessageType.Regular,
                     1
@@ -96,7 +95,7 @@ internal static class ChatMessage
 
                 GameActions.Print(
                     world,
-                    string.Format(ResGeneral.YouHaveLeftThe0Channel, channelName),
+                    string.Format(TazLang.Get("you_have_left_the0_channel"), channelName),
                     ProfileManager.CurrentProfile.ChatMessageHue,
                     MessageType.Regular,
                     1

@@ -14,7 +14,6 @@ using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.LegionScripting;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
@@ -592,7 +591,7 @@ internal static class GameActions
                 var messageBox = new QuestionGump
                 (
                     world,
-                    ResGeneral.ThisMayFlagYouCriminal,
+                    TazLang.Get("this_may_flag_you_criminal"),
                     s =>
                     {
                         if (s)
@@ -1371,7 +1370,7 @@ internal static class GameActions
 
         if (!world.Items.Contains(bag))
         {
-            Print(world, ResGeneral.GrabBagNotFound);
+            Print(world, TazLang.Get("grab_bag_not_found"));
             ProfileManager.CurrentProfile.GrabBagSerial = 0;
             bag = backpack.Serial;
         }

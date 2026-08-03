@@ -1,7 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
-using ClassicUO.Resources;
 using System;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.Data
 {
@@ -57,6 +57,6 @@ namespace ClassicUO.Game.Data
 
         public int Index { get; }
 
-        public override string ToString() => string.Format(ResGeneral.Name0Val1, Name, Value);
+        public override string ToString() => string.Format(TazLang.Get("name0_val1"), Name, Value);
     }
 }

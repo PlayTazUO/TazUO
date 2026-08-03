@@ -5,7 +5,6 @@ using ClassicUO.Game;
 using ClassicUO.Game.Managers;
 using ClassicUO.IO;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using SDL3;
@@ -202,7 +201,7 @@ namespace ClassicUO
                 }
                 else if ((flags & INVALID_UO_VERSION) != 0)
                 {
-                    Client.ShowErrorMessage(ResGeneral.YourUOClientVersionIsInvalid);
+                    Client.ShowErrorMessage(TazLang.Get("your_uoclient_version_is_invalid"));
                 }
             }
             else

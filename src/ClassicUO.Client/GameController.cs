@@ -1236,7 +1236,7 @@ namespace ClassicUO
             {
                 texture.SetData(colors);
                 texture.SaveAsPng(fileStream, texture.Width, texture.Height);
-                string message = string.Format(ResGeneral.ScreenshotStoredIn0, path);
+                string message = string.Format(TazLang.Get("screenshot_stored_in0"), path);
 
                 if (
                     ProfileManager.CurrentProfile == null
@@ -1297,7 +1297,7 @@ namespace ClassicUO
 
                 using FileStream fileStream = File.Create(path);
                 texture.SaveAsPng(fileStream, texture.Width, texture.Height);
-                string message = string.Format(ResGeneral.ScreenshotStoredIn0, path);
+                string message = string.Format(TazLang.Get("screenshot_stored_in0"), path);
 
                 if (ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage)
                 {
