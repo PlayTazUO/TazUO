@@ -262,6 +262,20 @@ namespace ClassicUO.Renderer.Effects
         // upward by any preset or setting.
         public const float MaxPulseFreqHz = 3.0f;
 
+        /// <summary>
+        /// Tap ceiling for a sampling layer. Every tap is a texture fetch for every pixel the layer
+        /// covers, and past this the returns are invisible while the cost is not.
+        /// </summary>
+        public const int MaxSampleTaps = 24;
+
+        /// <summary>Blur radius ceiling as a fraction of screen width. Beyond this the frame is
+        /// unreadable rather than merely blurred.</summary>
+        public const float MaxSampleRadius = 0.06f;
+
+        /// <summary>Chromatic separation ceiling. Past this the three channels stop reading as one
+        /// image.</summary>
+        public const float MaxSampleAberration = 0.05f;
+
         private const float MIN_FEATHER = 0.01f;
 
         // A zero jitter scale collapses the displacement lookup onto a single texel, which reads as
@@ -275,6 +289,8 @@ namespace ClassicUO.Renderer.Effects
         public OverlayNoise Noise;
         [Description("Colour and time-varying strength of the effect.")]
         public OverlayAppearance Appearance;
+        [Description("Distortion of what is already on screen, instead of colour painted over it. A layer using this must sit below whatever it is meant to affect.")]
+        public OverlaySampling Sampling;
 
         public static OverlayParams Default => new OverlayParams
         {
@@ -318,6 +334,14 @@ namespace ClassicUO.Renderer.Effects
                 Intensity = 1f,
                 PulseFreq = 0f,
                 PulseAmp = 0f
+            },
+            Sampling = new OverlaySampling
+            {
+                Mode = OverlaySampleMode.None,
+                Radius = 0.012f,
+                Taps = 12,
+                Zoom = 0.15f,
+                Aberration = 0.01f
             }
         };
 
@@ -350,6 +374,14 @@ namespace ClassicUO.Renderer.Effects
 
             if (Shape.Jitter.Scale == Vector2.Zero)
                 Shape.Jitter.Scale = _defaultJitterScale;
+
+            Sampling.Radius = MathHelper.Clamp(Sampling.Radius, 0f, MaxSampleRadius);
+            Sampling.Zoom = MathHelper.Clamp(Sampling.Zoom, 0f, 1f);
+            Sampling.Aberration = MathHelper.Clamp(Sampling.Aberration, 0f, MaxSampleAberration);
+
+            // At zero taps the disk and radial loops collapse to the centre sample, which is the
+            // undistorted frame drawn over itself - a wasted pass rather than a no-op.
+            Sampling.Taps = (int)MathHelper.Clamp(Sampling.Taps, 1, MaxSampleTaps);
         }
     }
 }

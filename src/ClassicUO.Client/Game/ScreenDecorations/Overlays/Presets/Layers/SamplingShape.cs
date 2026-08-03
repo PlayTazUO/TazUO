@@ -1,0 +1,70 @@
+using ClassicUO.Renderer.Effects;
+using Microsoft.Xna.Framework;
+
+namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets.Layers;
+
+/// <summary>
+/// Where a sampling layer distorts and how hard, without the caller having to restate the whole
+/// shape block. The mask is the distortion strength - it is what the sampled frame is composited at
+/// - so these are the only shape controls a distortion normally needs.
+/// </summary>
+/// <param name="Reach">How far in from the screen edge the distortion extends. 1 covers everything.</param>
+/// <param name="Feather">Length of the fade behind that boundary.</param>
+/// <param name="EdgeBlend">0 = radial vignette, 1 = border trim.</param>
+/// <param name="Strength">Peak strength where the mask is full: 1 fully replaces the sharp frame.</param>
+/// <param name="Swim">How much noise breaks the strength up, 0 = perfectly even. Gives blur that
+/// drifts and breathes rather than sitting still, at no extra cost - the noise field is sampled
+/// either way.</param>
+public readonly record struct SamplingShape(
+    float Reach,
+    float Feather,
+    float EdgeBlend,
+    float Strength,
+    float Swim = 0f
+)
+{
+    /// <summary>Distortion around the screen edge, fading toward a clear centre.</summary>
+    /// <param name="reach">How far in it extends.</param>
+    /// <param name="feather">Length of the fade.</param>
+    /// <param name="strength">Peak strength at the edge.</param>
+    /// <param name="swim">Noise modulation of that strength.</param>
+    /// <returns>The shape.</returns>
+    public static SamplingShape Vignette(float reach, float feather, float strength, float swim = 0f) =>
+        new(reach, feather, 0f, strength, swim);
+
+    /// <summary>
+    /// The same, following the screen border per axis rather than a circle. Even all the way round
+    /// on a widescreen display, where a vignette is not.
+    /// </summary>
+    /// <param name="reach">How far in it extends.</param>
+    /// <param name="feather">Length of the fade.</param>
+    /// <param name="strength">Peak strength at the edge.</param>
+    /// <param name="swim">Noise modulation of that strength.</param>
+    /// <returns>The shape.</returns>
+    public static SamplingShape Border(float reach, float feather, float strength, float swim = 0f) =>
+        new(reach, feather, 1f, strength, swim);
+
+    /// <summary>Uniform distortion over the whole quad, with no falloff at all.</summary>
+    /// <param name="strength">Strength everywhere.</param>
+    /// <param name="swim">Noise modulation of that strength.</param>
+    /// <returns>The shape.</returns>
+    public static SamplingShape Everywhere(float strength, float swim = 0f) =>
+        new(1f, MIN_FEATHER, 0f, strength, swim);
+
+    private const float MIN_FEATHER = 0.01f;
+
+    /// <summary>The shape block this describes.</summary>
+    /// <returns>Shape parameters ready for an <see cref="OverlayParams"/>.</returns>
+    internal OverlayShape ToShape() =>
+        new()
+        {
+            Center = new Vector2(0.5f, 0.5f),
+            Reach = Reach,
+            Feather = Feather,
+            EdgeBlend = EdgeBlend,
+            CornerBias = EdgeBlend > 0f ? 1f : 0f,
+            FocusDir = new Vector2(0f, -1f),
+            FocusPower = 1f,
+            FocusAmount = 0f
+        };
+}

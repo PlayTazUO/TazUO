@@ -123,12 +123,23 @@ internal sealed class ScreenOverlayManager
     }
 
     /// <summary>
-    /// Draws whatever overlays are running.
+    /// Draws the viewport-scoped overlays. Called by the scene once the world is composited but
+    /// before any gump is drawn, which is what keeps them off the UI.
+    /// </summary>
+    /// <param name="batcher">The batcher to draw with; must not be mid-batch.</param>
+    /// <param name="viewport">The game viewport, in the batcher's coordinate space.</param>
+    /// <param name="scene">The world as already rendered, for layers that distort it.</param>
+    public void DrawViewportOverlays(UltimaBatcher2D batcher, Rectangle viewport, ScreenOverlaySource scene) =>
+        ScreenOverlayCompositor.Instance.Draw(batcher, viewport, OverlayScope.Viewport, scene);
+
+    /// <summary>
+    /// Draws the window-scoped overlays, over everything the frame has drawn.
     /// </summary>
     /// <param name="batcher">The batcher to draw with; must not be mid-batch.</param>
     /// <param name="destRect">The rectangle the screen was blitted into, shake included.</param>
-    public void Draw(UltimaBatcher2D batcher, Rectangle destRect) =>
-        ScreenOverlayCompositor.Instance.Draw(batcher, destRect);
+    /// <param name="scene">The composited frame, for layers that distort it.</param>
+    public void DrawFullScreenOverlays(UltimaBatcher2D batcher, Rectangle destRect, ScreenOverlaySource scene) =>
+        ScreenOverlayCompositor.Instance.Draw(batcher, destRect, OverlayScope.FullScreen, scene);
 
     /// <summary>
     /// Begins reconciling on an interval. Idempotent - a second call while already running does
@@ -267,7 +278,9 @@ internal sealed class ScreenOverlayManager
         if (preset == null)
             return;
 
-        ScreenOverlayCompositor.Instance.Show(mapping.Id, preset, mapping.Priority, settings.FullScreen);
+        OverlayScope scope = settings.FullScreen ? OverlayScope.FullScreen : OverlayScope.Viewport;
+
+        ScreenOverlayCompositor.Instance.Show(mapping.Id, preset, mapping.Priority, scope);
 
         lock (_sync)
             _shown.Add(mapping.Id);

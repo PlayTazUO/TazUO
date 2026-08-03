@@ -2,6 +2,11 @@ float4x4 MatrixTransform;
 
 sampler NoiseSampler : register(s0);
 
+// The frame as it stood before this overlay pass. Bound only for sampling layers; the tint
+// technique never reads it. Slot 3 because slots 1 and 2 hold the hue lookup tables, which are
+// bound once at startup for the whole session.
+sampler SceneSampler : register(s3);
+
 // ---- Shape: where on screen the effect lives -------------------------------
 float2 Center;        // vignette centre in screen uv; (0.5, 0.5) is the middle
 float2 AspectScale;   // (1, height/width); keeps the radial falloff circular
@@ -31,6 +36,16 @@ float  RidgeAmount;   // 0 = billowy fbm, 1 = sharp ridges/cracks
 float  Threshold;     // how much of the field survives; higher = sparser
 float  Softness;      // hardness of the surviving field's edges
 float  FlatFloor;     // solid fill under the noise; 1 = flat colour, 0 = fully noise-driven
+
+// ---- Sampling: distortion of what is already on screen ---------------------
+// All offsets are in scene-texture uv and are pre-multiplied by SceneScale on the CPU, so nothing
+// here has to know where the quad sits inside the scene texture.
+float2 SceneOffset;      // uv of the quad's origin within the scene texture
+float2 SceneScale;       // uv size of the quad within the scene texture
+float2 SampleRadius;     // disk radius for the blur, aspect-corrected so it stays circular
+float  SampleTaps;       // extra taps beyond the centre one
+float  SampleZoom;       // radial blur: how far along the centre ray the taps march
+float2 SampleAberration; // chromatic: red/blue separation along the centre ray
 
 // ---- Appearance ------------------------------------------------------------
 float3 Tint;
@@ -115,9 +130,84 @@ float NoiseField(float2 uv)
     return lerp(n, ridge * ridge, RidgeAmount);
 }
 
-float4 main_fragment(PS_INPUT IN) : COLOR0
+// ---- Sampling helpers ------------------------------------------------------
+
+float2 SceneUv(float2 uv)
 {
-    float shape = ShapeDistance(IN.TexCoord);
+    return SceneOffset + uv * SceneScale;
+}
+
+// The ray from the shape centre out to this pixel, in scene-texture uv. Both the radial blur and
+// the chromatic split march along it, which is what makes them read as lens artefacts rather than
+// as a screen-space smear.
+float2 CentreRay(float2 uv)
+{
+    return (uv - Center) * SceneScale;
+}
+
+// Golden-angle spiral over a disk: sqrt(t) keeps the points area-uniform rather than bunched at the
+// centre, and the irrational angle step means no tap count lands on a visible rosette. Weighted
+// down toward the rim so the result reads as a soft blur instead of a hard-edged smear of copies.
+float3 SampleDisk(float2 uv, int taps)
+{
+    float2 base = SceneUv(uv);
+    float3 sum = tex2D(SceneSampler, base).rgb;
+    float total = 1.0;
+
+    [loop]
+    for (int i = 1; i <= taps; i++)
+    {
+        float t = (float)i / (float)taps;
+        float angle = (float)i * 2.39996323;
+        float2 dir = float2(cos(angle), sin(angle)) * sqrt(t);
+        float weight = 1.0 - t * 0.5;
+
+        sum += tex2Dlod(SceneSampler, float4(base + dir * SampleRadius, 0, 0)).rgb * weight;
+        total += weight;
+    }
+
+    return sum / total;
+}
+
+// Taps march back along the centre ray, so the streaks converge on Center. Zoom blur, and the one
+// that reads as head-spin rather than as out-of-focus.
+float3 SampleRadial(float2 uv, int taps)
+{
+    float2 base = SceneUv(uv);
+    float2 ray = CentreRay(uv) * SampleZoom;
+    float3 sum = tex2D(SceneSampler, base).rgb;
+
+    [loop]
+    for (int i = 1; i <= taps; i++)
+    {
+        float t = (float)i / (float)taps;
+        sum += tex2Dlod(SceneSampler, float4(base - ray * t, 0, 0)).rgb;
+    }
+
+    return sum / (float)(taps + 1);
+}
+
+// Red and blue pulled apart along the centre ray, green left where it is. Splitting radially rather
+// than along a fixed axis is what makes it look like a lens: nothing separates at the centre and the
+// fringing grows toward the corners.
+float3 SampleChromatic(float2 uv)
+{
+    float2 base = SceneUv(uv);
+    float2 split = CentreRay(uv) * SampleAberration;
+
+    return float3(
+        tex2D(SceneSampler, base + split).r,
+        tex2D(SceneSampler, base).g,
+        tex2D(SceneSampler, base - split).b
+    );
+}
+
+// Everything the shape and noise machinery contributes, shared by every technique: 0 where the
+// effect is absent, up to Opacity where it is fully present. Clips rather than returning 0 so a
+// pixel outside the shape never reaches a texture fetch.
+float OverlayAlpha(float2 uv)
+{
+    float shape = ShapeDistance(uv);
 
     // Conservative early-out ahead of the texture fetches: the displacement below is bounded by
     // +/- JitterReach * 0.5, so nothing past that margin can survive the real mask test.
@@ -131,7 +221,7 @@ float4 main_fragment(PS_INPUT IN) : COLOR0
     // Reusing the detail noise makes the boundary buzz at the same rate as the texture; a slow field
     // instead makes some columns reach much deeper than their neighbours and hold it, which is what
     // a run of fluid actually does.
-    float jitter = dot(tex2D(NoiseSampler, IN.TexCoord * JitterScale + Time * JitterScroll), JitterChannel);
+    float jitter = dot(tex2D(NoiseSampler, uv * JitterScale + Time * JitterScroll), JitterChannel);
     float flux = (jitter - 0.5) * 2.0;
 
     // The same field also stretches and compresses the falloff, so the effect does not merely reach
@@ -140,16 +230,41 @@ float4 main_fragment(PS_INPUT IN) : COLOR0
     // bluntly, instead of every column sharing one profile at a different offset.
     float feather = max(Feather * (1.0 + flux * JitterFeather), 0.01);
 
-    float mask = ShapeMask(IN.TexCoord, shape + flux * 0.5 * JitterReach, feather);
+    float mask = ShapeMask(uv, shape + flux * 0.5 * JitterReach, feather);
     clip(mask - 0.002);
 
-    float n = NoiseField(IN.TexCoord);
+    float n = NoiseField(uv);
     float shaped = smoothstep(Threshold - Softness, Threshold + Softness, n);
     float field = lerp(shaped, 1.0, FlatFloor);
     float pulse = 1.0 + PulseAmp * sin(Time * PulseFreq * 6.28318530718); // 2 pi
 
-    float alpha = saturate(mask * field * Opacity * Intensity * pulse);
-    return float4(Tint, alpha);
+    return saturate(mask * field * Opacity * Intensity * pulse);
+}
+
+float4 main_fragment(PS_INPUT IN) : COLOR0
+{
+    return float4(Tint, OverlayAlpha(IN.TexCoord));
+}
+
+// The sampling techniques all return the distorted scene at the layer's own alpha. Straight-alpha
+// blending then resolves to lerp(sharp, distorted, alpha) against the frame already on screen, so
+// the shape mask doubles as the strength of the distortion at no extra cost.
+float4 blur_fragment(PS_INPUT IN) : COLOR0
+{
+    float alpha = OverlayAlpha(IN.TexCoord);
+    return float4(SampleDisk(IN.TexCoord, (int)SampleTaps), alpha);
+}
+
+float4 radial_fragment(PS_INPUT IN) : COLOR0
+{
+    float alpha = OverlayAlpha(IN.TexCoord);
+    return float4(SampleRadial(IN.TexCoord, (int)SampleTaps), alpha);
+}
+
+float4 chromatic_fragment(PS_INPUT IN) : COLOR0
+{
+    float alpha = OverlayAlpha(IN.TexCoord);
+    return float4(SampleChromatic(IN.TexCoord), alpha);
 }
 
 technique T0
@@ -158,5 +273,32 @@ technique T0
     {
         VertexShader = compile vs_3_0 main_vertex();
         PixelShader = compile ps_3_0 main_fragment();
+    }
+}
+
+technique Blur
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 main_vertex();
+        PixelShader = compile ps_3_0 blur_fragment();
+    }
+}
+
+technique Radial
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 main_vertex();
+        PixelShader = compile ps_3_0 radial_fragment();
+    }
+}
+
+technique Chromatic
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 main_vertex();
+        PixelShader = compile ps_3_0 chromatic_fragment();
     }
 }

@@ -25,6 +25,7 @@ using ClassicUO.Common;
 using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.Map;
 using ClassicUO.Game.ScreenDecorations.Manager;
+using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.LegionScripting;
 using ClassicUO.Network.PacketHandlers.Helpers;
@@ -197,6 +198,10 @@ namespace ClassicUO.Game.Scenes
 
         private uint _lastResync = Time.Ticks;
         private Matrix _worldRtMatrix;
+
+        /// <summary>The crop of <see cref="_worldRenderTarget"/> that fills the viewport this frame.
+        /// Varies with the camera zoom.</summary>
+        private Rectangle _worldSrcRect;
 
         public override void Load()
         {
@@ -1237,6 +1242,20 @@ namespace ClassicUO.Game.Scenes
             gd.Clear(ClearOptions.Stencil, Color.Transparent, 0f, 0);
             Profiler.ExitContext("DrawOverlays");
 
+            // Here rather than at the end of the frame so gumps draw over them: viewport-scoped
+            // decorations are meant to colour the world, not the UI sitting on it. Drawn in screen
+            // space - the camera viewport is restored above - so Camera.Bounds is the target as-is.
+            //
+            // The world target is handed over as the scene source for layers that distort the frame.
+            // It is already a separate texture, so nothing has to be copied - at the cost of holding
+            // the world before lights and overheads were composited over it.
+            Profiler.EnterContext("ScreenDecorations");
+
+            var scene = new ScreenOverlaySource(_worldRenderTarget, _worldSrcRect);
+            ScreenOverlayManager.Instance.DrawViewportOverlays(batcher, Camera.Bounds, scene);
+
+            Profiler.ExitContext("ScreenDecorations");
+
             Profiler.ExitContext("GameSceneDraw");
 
             return base.Draw(batcher);
@@ -1277,6 +1296,10 @@ namespace ClassicUO.Game.Scenes
             int srcY = (rtH - srcH) / 2;
             var srcRect = new Rectangle(srcX, srcY, srcW, srcH);
             var destRect = new Rectangle(0, 0, vpW, vpH);
+
+            // Kept for the overlay pass at the end of the frame: the crop is what maps the viewport
+            // back onto the world target, and the zoom that determines it is recomputed here.
+            _worldSrcRect = srcRect;
 
             UpdatePostProcessState(gd);
 

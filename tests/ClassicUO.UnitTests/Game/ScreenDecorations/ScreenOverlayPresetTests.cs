@@ -89,10 +89,45 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         public static IEnumerable<object[]> SingleLayerPresets() =>
             new[]
             {
-                new object[] { new PoisonOverlay() },
                 new object[] { new TunnelVisionOverlay() },
                 new object[] { new FractureOverlay() }
             };
+
+        /// <summary>
+        /// The gas layer alone tints without ever obscuring, which reads as a colour filter rather
+        /// than as being poisoned. The dark wash under it is what does the occluding.
+        /// </summary>
+        [Fact]
+        public void PoisonBakesAGasLayerOverADarkerWash()
+        {
+            List<OverlayLayer> layers = Bake(new PoisonOverlay());
+
+            layers.Should().HaveCount(2);
+            Brightness(layers[0]).Should().BeLessThan(Brightness(layers[1]));
+
+            // Mostly floored, so it is a field rather than a pattern - anything legible in it would
+            // fight the gas above it.
+            layers[0].Params.Noise.FlatFloor.Should().BeGreaterThan(0.5f);
+        }
+
+        /// <summary>
+        /// Gas rises. Positive V scroll walks the sample point down the texture, which carries the
+        /// pattern up the screen - the opposite sign from the bleed preset's flow.
+        /// </summary>
+        [Fact]
+        public void PoisonFlowsUpwardWithTheGasOutrunningTheWash()
+        {
+            List<OverlayLayer> layers = Bake(new PoisonOverlay());
+
+            foreach (OverlayLayer layer in layers)
+                layer.Params.Noise.BaseScroll.Y.Should().BePositive();
+
+            // Parallax: the near, lighter layer has to move faster than the heavy one behind it, or
+            // the pair reads as flat.
+            ScreenSpeed(layers[1].Params.Noise.BaseScroll, layers[1].Params.Noise.BaseScale)
+                .Should()
+                .BeGreaterThan(ScreenSpeed(layers[0].Params.Noise.BaseScroll, layers[0].Params.Noise.BaseScale));
+        }
 
         [Fact]
         public void BleedBakesDarkBasalLayersUnderASingleAdditiveHighlight()

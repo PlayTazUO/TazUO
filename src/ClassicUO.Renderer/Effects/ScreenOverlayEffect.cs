@@ -41,11 +41,23 @@ namespace ClassicUO.Renderer.Effects
             Softness = Parameters["Softness"];
             FlatFloor = Parameters["FlatFloor"];
 
+            SceneOffset = Parameters["SceneOffset"];
+            SceneScale = Parameters["SceneScale"];
+            SampleRadius = Parameters["SampleRadius"];
+            SampleTaps = Parameters["SampleTaps"];
+            SampleZoom = Parameters["SampleZoom"];
+            SampleAberration = Parameters["SampleAberration"];
+
             Tint = Parameters["Tint"];
             Opacity = Parameters["Opacity"];
             Intensity = Parameters["Intensity"];
             PulseFreq = Parameters["PulseFreq"];
             PulseAmp = Parameters["PulseAmp"];
+
+            _tintTechnique = Techniques["T0"];
+            _blurTechnique = Techniques["Blur"];
+            _radialTechnique = Techniques["Radial"];
+            _chromaticTechnique = Techniques["Chromatic"];
         }
 
         public EffectParameter MatrixTransform { get; }
@@ -78,18 +90,55 @@ namespace ClassicUO.Renderer.Effects
         public EffectParameter Softness { get; }
         public EffectParameter FlatFloor { get; }
 
+        public EffectParameter SceneOffset { get; }
+        public EffectParameter SceneScale { get; }
+        public EffectParameter SampleRadius { get; }
+        public EffectParameter SampleTaps { get; }
+        public EffectParameter SampleZoom { get; }
+        public EffectParameter SampleAberration { get; }
+
         public EffectParameter Tint { get; }
         public EffectParameter Opacity { get; }
         public EffectParameter Intensity { get; }
         public EffectParameter PulseFreq { get; }
         public EffectParameter PulseAmp { get; }
 
+        private readonly EffectTechnique _tintTechnique;
+        private readonly EffectTechnique _blurTechnique;
+        private readonly EffectTechnique _radialTechnique;
+        private readonly EffectTechnique _chromaticTechnique;
+
+        /// <summary>
+        /// Points <see cref="Effect.CurrentTechnique"/> at the pass implementing
+        /// <paramref name="mode"/>.
+        /// </summary>
+        /// <param name="mode">What the layer does with the frame behind it.</param>
+        public void SetTechnique(OverlaySampleMode mode) =>
+            CurrentTechnique = mode switch
+            {
+                OverlaySampleMode.Blur => _blurTechnique,
+                OverlaySampleMode.Radial => _radialTechnique,
+                OverlaySampleMode.Chromatic => _chromaticTechnique,
+                _ => _tintTechnique
+            };
+
         /// <summary>
         /// Uploads one overlay's parameters. <paramref name="p"/> must already be clamped
         /// (<see cref="OverlayParams.Clamp"/>) and have <paramref name="globalIntensity"/> folded in
         /// by the caller.
         /// </summary>
-        public void Apply(in OverlayParams p, float time, Vector2 screenSize, float globalIntensity)
+        /// <param name="p">The layer's clamped parameters.</param>
+        /// <param name="time">Animation time in seconds, wrapped by the caller.</param>
+        /// <param name="screenSize">Pixel size of the quad being filled.</param>
+        /// <param name="globalIntensity">The user's overall overlay strength.</param>
+        /// <param name="scene">Where that quad sits inside the scene texture. Ignored by tint layers.</param>
+        public void Apply(
+            in OverlayParams p,
+            float time,
+            Vector2 screenSize,
+            float globalIntensity,
+            OverlaySceneMap scene
+        )
         {
             Center.SetValue(p.Shape.Center);
             AspectScale.SetValue(new Vector2(1f, screenSize.Y / screenSize.X));
@@ -119,11 +168,39 @@ namespace ClassicUO.Renderer.Effects
             Softness.SetValue(p.Noise.Softness);
             FlatFloor.SetValue(p.Noise.FlatFloor);
 
+            if (p.Sampling.ReadsScene)
+                ApplySampling(p.Sampling, screenSize, scene);
+
             Tint.SetValue(p.Appearance.Tint.ToVector3());
             Opacity.SetValue(p.Appearance.Opacity);
             Intensity.SetValue(p.Appearance.Intensity * globalIntensity);
             PulseFreq.SetValue(p.Appearance.PulseFreq);
             PulseAmp.SetValue(p.Appearance.PulseAmp);
+        }
+
+        /// <summary>
+        /// Converts the sampling knobs into scene-texture uv, so the shader never has to know where
+        /// the quad sits or what shape the screen is.
+        /// </summary>
+        private void ApplySampling(in OverlaySampling sampling, Vector2 screenSize, OverlaySceneMap scene)
+        {
+            SceneOffset.SetValue(scene.Offset);
+            SceneScale.SetValue(scene.Scale);
+
+            // Radius is a fraction of width. Equal pixel counts vertically need the width-to-height
+            // ratio folded in, or the disk comes out as an ellipse on any non-square quad.
+            float aspect = screenSize.Y > 0f ? screenSize.X / screenSize.Y : 1f;
+
+            SampleRadius.SetValue(
+                new Vector2(sampling.Radius * scene.Scale.X, sampling.Radius * aspect * scene.Scale.Y)
+            );
+
+            SampleTaps.SetValue((float)sampling.Taps);
+            SampleZoom.SetValue(sampling.Zoom);
+
+            // Scales the centre ray, which already carries SceneScale, so it needs no mapping of its
+            // own - and must stay isotropic or the split stops following the ray.
+            SampleAberration.SetValue(new Vector2(sampling.Aberration, sampling.Aberration));
         }
     }
 }

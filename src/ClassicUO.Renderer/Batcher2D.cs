@@ -49,6 +49,13 @@ namespace ClassicUO.Renderer
         );
         private readonly RasterizerState _rasterizerState;
         private SamplerState _sampler;
+
+        /// <summary>
+        /// Sampler for <see cref="SpareTextureSlot"/>. Point by default, matching the slots either
+        /// side of it, so a caller that never asks for anything else is unaffected.
+        /// </summary>
+        private SamplerState _spareSampler = SamplerState.PointClamp;
+
         private bool _started;
         private DepthStencilState _stencil;
 
@@ -64,6 +71,12 @@ namespace ClassicUO.Renderer
         private Texture2D[] _textureInfo;
         private PositionNormalTextureColor4[] _vertexInfo;
 
+        /// <summary>
+        /// The one texture slot no built-in shader binds. Slot 0 is the sprite being drawn and slots
+        /// 1 and 2 hold the hue lookup tables, bound once at startup and never rebound - taking
+        /// either of those for scratch use breaks hueing for the rest of the session.
+        /// </summary>
+        public const int SpareTextureSlot = 3;
 
         public UltimaBatcher2D(GraphicsDevice device)
         {
@@ -1537,7 +1550,7 @@ namespace ClassicUO.Renderer
             GraphicsDevice.SamplerStates[0] = _sampler;
             GraphicsDevice.SamplerStates[1] = SamplerState.PointClamp;
             GraphicsDevice.SamplerStates[2] = SamplerState.PointClamp;
-            GraphicsDevice.SamplerStates[3] = SamplerState.PointClamp;
+            GraphicsDevice.SamplerStates[SpareTextureSlot] = _spareSampler;
 
             GraphicsDevice.Indices = _indexBuffer;
             GraphicsDevice.SetVertexBuffer(_vertexBuffer);
@@ -1766,6 +1779,19 @@ namespace ClassicUO.Renderer
             Flush();
 
             _sampler = sampler ?? SamplerState.PointClamp;
+        }
+
+        /// <summary>
+        /// Sets the sampler for <see cref="SpareTextureSlot"/>, the one slot no built-in shader
+        /// binds. The other three carry the draw texture and the two hue lookup tables, which are
+        /// index lookups and must stay point-sampled.
+        /// </summary>
+        /// <param name="sampler">The sampler to use, or null to restore point sampling.</param>
+        public void SetSpareSampler(SamplerState sampler)
+        {
+            Flush();
+
+            _spareSampler = sampler ?? SamplerState.PointClamp;
         }
 
         private unsafe int UpdateVertexBuffer(int start, int count)

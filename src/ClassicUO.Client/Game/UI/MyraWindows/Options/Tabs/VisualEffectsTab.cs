@@ -8,8 +8,8 @@ using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
-using ClassicUO.Renderer.Effects;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Renderer.Effects;
 using Myra.Graphics2D.UI;
 using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
 
@@ -18,8 +18,10 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 /// <summary>Options tab source for the full-screen overlay effects and their profiles</summary>
 public static class VisualEffectsTab
 {
-    /// <summary>Intensities are 0-1: without this the slider rounds to whole numbers and offers only
-    /// its two ends.</summary>
+    /// <summary>
+    ///     Intensities are 0-1: without this the slider rounds to whole numbers and offers only
+    ///     its two ends.
+    /// </summary>
     private const int INTENSITY_DECIMAL_PLACES = 2;
 
     private static string OverlayKeyword => TazLang.Get("visualeffects_kw_overlay", "overlay");
@@ -54,6 +56,7 @@ public static class VisualEffectsTab
             OverlayEffect.MortalStrike => TazLang.Get("visualeffects_mortalstrike", "Mortal Strike"),
             OverlayEffect.Fog => TazLang.Get("visualeffects_fog", "Fog"),
             OverlayEffect.Drunk => TazLang.Get("visualeffects_drunk", "Drunk"),
+            OverlayEffect.Concussion => TazLang.Get("visualeffects_concussion", "Concussion"),
             _ => effect.ToString()
         };
 

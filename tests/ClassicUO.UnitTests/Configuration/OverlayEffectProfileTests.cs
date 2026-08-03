@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using ClassicUO.Configuration.FeatureConfigs;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
@@ -231,7 +232,15 @@ namespace ClassicUO.UnitTests.Configuration
 
             config.Overlays.GetSettings(OverlayEffect.Bleed).Should().BeSameAs(config.Overlays.Bleed);
             config.Overlays.GetSettings(OverlayEffect.Drunk).Should().BeSameAs(config.Overlays.Drunk);
-            OverlaySystemSettings.AllEffects.Should().HaveCount(5);
+
+            // Every effect must have a block of its own, so adding one to the enum without giving it
+            // a home fails here rather than at runtime. Counting them instead would only fail when
+            // the enum grows, which is the case that is already correct.
+            OverlaySystemSettings.AllEffects
+                                 .Select(config.Overlays.GetSettings)
+                                 .Should()
+                                 .OnlyHaveUniqueItems()
+                                 .And.HaveSameCount(OverlaySystemSettings.AllEffects);
         }
 
         [Fact]

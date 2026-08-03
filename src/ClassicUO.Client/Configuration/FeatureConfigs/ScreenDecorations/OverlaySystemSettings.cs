@@ -21,6 +21,7 @@ public class OverlaySystemSettings : ObservableSettings
     public OverlayEffectGeneralSettings MortalStrike { get; set => SetField(ref field, value); } = new();
     public OverlayEffectGeneralSettings Fog { get; set => SetField(ref field, value); } = new();
     public OverlayEffectGeneralSettings Drunk { get; set => SetField(ref field, value); } = new();
+    public OverlayEffectGeneralSettings Concussion { get; set => SetField(ref field, value); } = new();
 
     public static IReadOnlyList<OverlayEffect> AllEffects { get; } = Enum.GetValues<OverlayEffect>();
 
@@ -39,6 +40,7 @@ public class OverlaySystemSettings : ObservableSettings
             OverlayEffect.MortalStrike => MortalStrike,
             OverlayEffect.Fog => Fog,
             OverlayEffect.Drunk => Drunk,
+            OverlayEffect.Concussion => Concussion,
             _ => throw new ArgumentOutOfRangeException(nameof(effect), effect, null)
         };
 }

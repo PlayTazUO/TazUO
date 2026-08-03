@@ -13,11 +13,26 @@ using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorati
 
 namespace ClassicUO.Game.ScreenDecorations.Overlays
 {
+    /// <summary>Where an overlay is drawn, and so at which point in the frame.</summary>
+    internal enum OverlayScope
+    {
+        /// <summary>Over the game world only, under every gump. Drawn by the scene.</summary>
+        Viewport,
+
+        /// <summary>Over the whole window, UI included. Drawn after everything else.</summary>
+        FullScreen
+    }
+
     /// <summary>
-    /// Owns and draws the active set of full-screen status overlays (poison, bleed, tunnel vision,
-    /// fracture, ...). Each overlay is one or more ordered layers, drawn back-to-front as one draw
-    /// call each. Skips all work - no texture allocation, no GPU state changes - when the master
-    /// toggle is off or nothing is active.
+    /// Owns and draws the active set of status overlays (poison, bleed, tunnel vision, fracture,
+    /// ...). Each overlay is one or more ordered layers, drawn back-to-front as one draw call each.
+    /// Skips all work - no texture allocation, no GPU state changes - when the master toggle is off
+    /// or nothing is active.
+    /// <para>
+    /// Drawn in two passes per frame, one per <see cref="OverlayScope"/>, because the two sit either
+    /// side of the UI. Per-frame bookkeeping (time, fades, draw order) runs on whichever pass comes
+    /// first, so a frame that skips one of them still advances.
+    /// </para>
     /// <para>
     /// Composition only: it draws what it is told to and knows nothing about why. What the player's
     /// state means for which overlay runs is <see cref="ScreenOverlayManager"/>'s business.
@@ -48,6 +63,13 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
         private const float MIN_FADE_SECONDS = 0.01f;
         private const float TIME_WRAP_SECONDS = 3600f;
 
+        /// <summary>
+        /// Texture slot the shader's SceneSampler reads. The batcher owns slot 0 for the sprite
+        /// being drawn, and slots 1 and 2 are the hue lookup tables - bound once at startup and
+        /// never rebound, so borrowing one would break hueing for the rest of the session.
+        /// </summary>
+        private const int SCENE_SAMPLER = UltimaBatcher2D.SpareTextureSlot;
+
         internal sealed class ActiveOverlay
         {
             public ScreenOverlayPreset Preset;
@@ -56,8 +78,8 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
             public float Envelope;
             public bool Hiding;
 
-            /// <summary>Draw over the whole window rather than just the game viewport.</summary>
-            public bool FullScreen;
+            /// <summary>Which pass draws it, and so what it is allowed to cover.</summary>
+            public OverlayScope Scope;
         }
 
         private readonly Dictionary<OverlayId, ActiveOverlay> _active = new();
@@ -69,6 +91,10 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
         private ScreenOverlayEffect _effect;
         private float _time;
 
+        /// <summary>Frame the per-frame bookkeeping last ran on, so the second pass of a frame does
+        /// not advance fades twice. Negative until the first pass.</summary>
+        private long _advancedTick = -1;
+
         /// <summary>
         /// Activates (or re-configures, if already active) an overlay. Fades in from its current
         /// envelope value, never popping. Over the concurrency cap, the lowest-priority active
@@ -77,15 +103,20 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
         /// <param name="id">The slot to occupy; one overlay per slot.</param>
         /// <param name="preset">What to draw.</param>
         /// <param name="priority">Higher composites on top and survives the concurrency cap.</param>
-        /// <param name="fullScreen">Draw over the whole window instead of the game viewport.</param>
-        public void Show(OverlayId id, ScreenOverlayPreset preset, int priority = 0, bool fullScreen = false)
+        /// <param name="scope">Where it is drawn; the game viewport by default.</param>
+        public void Show(
+            OverlayId id,
+            ScreenOverlayPreset preset,
+            int priority = 0,
+            OverlayScope scope = OverlayScope.Viewport
+        )
         {
             if (_active.TryGetValue(id, out ActiveOverlay existing))
             {
                 existing.Preset = preset;
                 existing.Priority = priority;
                 existing.Hiding = false;
-                existing.FullScreen = fullScreen;
+                existing.Scope = scope;
                 preset.BakeClamped(existing.Layers);
                 return;
             }
@@ -113,7 +144,7 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
                 Priority = priority,
                 Envelope = 0f,
                 Hiding = false,
-                FullScreen = fullScreen
+                Scope = scope
             };
 
             preset.BakeClamped(added.Layers);
@@ -130,20 +161,25 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
                 o.Hiding = true;
         }
 
-        public void Draw(UltimaBatcher2D batcher, Rectangle destRect)
+        /// <summary>
+        /// Draws the overlays belonging to <paramref name="scope"/>.
+        /// </summary>
+        /// <param name="batcher">The batcher to draw with; must not be mid-batch.</param>
+        /// <param name="destRect">The rectangle to fill, in the batcher's coordinate space.</param>
+        /// <param name="scope">Which half of the active set to draw.</param>
+        /// <param name="scene">The frame as it stood before this pass, for layers that distort it
+        /// rather than paint over it. Those layers are skipped where no source is available.</param>
+        public void Draw(UltimaBatcher2D batcher, Rectangle destRect, OverlayScope scope, ScreenOverlaySource scene)
         {
             DecorationSettings settings = DecorationSettings.Current;
 
             if (!settings.OverlaysActive || _active.Count == 0)
                 return;
 
-            float dt = Time.Delta;
-            _time = (_time + dt) % TIME_WRAP_SECONDS;
+            AdvanceFrame();
 
-            AdvanceEnvelopes(dt);
-            BuildDrawOrder();
-
-            if (_drawOrder.Count == 0)
+            // Checked before any GPU state is touched: the other pass usually has nothing to do.
+            if (!HasDrawable(scope, scene.IsAvailable))
                 return;
 
             GraphicsDevice gd = batcher.GraphicsDevice;
@@ -153,24 +189,23 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
             var ortho = Matrix.CreateOrthographicOffCenter(0, vp.Width, vp.Height, 0, 0, 1);
             float globalIntensity = MathHelper.Clamp(settings.Overlays.Intensity, 0f, 1f);
 
-            // Neither the technique nor the projection varies per layer, so they are uploaded once.
-            _effect.CurrentTechnique = _effect.Techniques["T0"];
+            // The projection does not vary per layer, so it is uploaded once. The technique does -
+            // a sampling layer runs a different pixel shader from a tint layer.
             _effect.MatrixTransform.SetValue(ortho);
 
             batcher.SetSampler(SamplerState.LinearWrap);
             BlendState activeBlend = null;
+            bool sceneBound = false;
 
-            // Resolved on first use: a frame whose overlays are all full-screen never asks the scene
-            // where the viewport is, and a frame with nothing to draw returned above.
-            Rectangle? viewport = null;
+            // Feeds the shader's aspect and distance maths, so it has to be the rectangle being
+            // filled - a viewport overlay given the window size would sample as if full screen.
+            var screenSize = new Vector2(destRect.Width, destRect.Height);
+            OverlaySceneMap sceneMap = scene.ToMap();
 
             foreach (ActiveOverlay o in _drawOrder)
             {
-                Rectangle target = o.FullScreen ? destRect : viewport ??= ViewportWithin(destRect, vp);
-
-                // Feeds the shader's aspect and distance maths, so it has to be the rectangle being
-                // filled - a viewport overlay given the window size would sample as if full screen.
-                var screenSize = new Vector2(target.Width, target.Height);
+                if (o.Scope != scope)
+                    continue;
 
                 foreach (OverlayLayer layer in o.Layers)
                 {
@@ -178,6 +213,9 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
                     p.Appearance.Intensity *= o.Envelope;
 
                     if (p.Appearance.Intensity <= 0f)
+                        continue;
+
+                    if (p.Sampling.ReadsScene && !scene.IsAvailable)
                         continue;
 
                     var wanted = layer.Blend.ToBlendState();
@@ -191,42 +229,90 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
                         activeBlend = wanted;
                     }
 
-                    _effect.Apply(p, _time, screenSize, globalIntensity);
+                    if (p.Sampling.ReadsScene && !sceneBound)
+                    {
+                        BindScene(batcher, scene);
+                        sceneBound = true;
+                    }
+
+                    _effect.SetTechnique(p.Sampling.Mode);
+                    _effect.Apply(p, _time, screenSize, globalIntensity, sceneMap);
 
                     batcher.Begin(_effect);
-                    batcher.Draw(_noiseTexture, target, Vector3.Zero, 0f);
+                    batcher.Draw(_noiseTexture, destRect, Vector3.Zero, 0f);
                     batcher.End();
                 }
             }
+
+            if (sceneBound)
+                UnbindScene(batcher);
 
             batcher.SetSampler(null);
             batcher.SetBlendState(null);
         }
 
         /// <summary>
-        /// The game viewport, expressed in the same space as <paramref name="destRect"/>.
-        /// <para>
-        /// <see cref="Camera.Bounds"/> is the viewport in window coordinates, kept current by
-        /// WorldViewportGump as it is moved and resized, so there is nothing to look up per frame.
-        /// It is scaled here because destRect carries the render scale - and its origin, because it
-        /// carries the screen shake.
-        /// </para>
+        /// Linear so taps between texels are interpolated rather than snapped, and clamped because a
+        /// tap that runs off the edge of the scene must smear the border pixel rather than fetch the
+        /// opposite side of the screen. Set through the batcher, which reasserts every sampler on
+        /// each flush and would otherwise overwrite it.
         /// </summary>
-        private static Rectangle ViewportWithin(Rectangle destRect, Viewport window)
+        private static void BindScene(UltimaBatcher2D batcher, ScreenOverlaySource scene)
         {
-            Rectangle bounds = Client.Game.Scene?.Camera.Bounds ?? Rectangle.Empty;
+            batcher.GraphicsDevice.Textures[SCENE_SAMPLER] = scene.Texture;
+            batcher.SetSpareSampler(SamplerState.LinearClamp);
+        }
 
-            if (bounds.IsEmpty || window.Width <= 0)
-                return destRect;
+        /// <summary>
+        /// Mandatory before the frame ends. The scene texture is a render target that gets bound for
+        /// drawing again next frame, and binding a target still bound as a texture is an error.
+        /// </summary>
+        private static void UnbindScene(UltimaBatcher2D batcher)
+        {
+            batcher.SetSpareSampler(null);
+            batcher.GraphicsDevice.Textures[SCENE_SAMPLER] = null;
+        }
 
-            float scale = destRect.Width / (float)window.Width;
+        /// <summary>
+        /// Advances animation time, fades and draw order, once per frame regardless of how many
+        /// passes call it.
+        /// </summary>
+        private void AdvanceFrame()
+        {
+            if (_advancedTick == Time.Ticks)
+                return;
 
-            return new Rectangle(
-                destRect.X + (int)(bounds.X * scale),
-                destRect.Y + (int)(bounds.Y * scale),
-                (int)(bounds.Width * scale),
-                (int)(bounds.Height * scale)
-            );
+            _advancedTick = Time.Ticks;
+
+            float dt = Time.Delta;
+            _time = (_time + dt) % TIME_WRAP_SECONDS;
+
+            AdvanceEnvelopes(dt);
+            BuildDrawOrder();
+        }
+
+        /// <summary>
+        /// Whether this pass has anything to draw at all, checked before any GPU state is touched.
+        /// A pass whose only layers need the scene and cannot have it counts as empty.
+        /// </summary>
+        private bool HasDrawable(OverlayScope scope, bool sceneAvailable)
+        {
+            foreach (ActiveOverlay o in _drawOrder)
+            {
+                if (o.Scope != scope)
+                    continue;
+
+                if (sceneAvailable)
+                    return true;
+
+                foreach (OverlayLayer layer in o.Layers)
+                {
+                    if (!layer.Params.Sampling.ReadsScene)
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>

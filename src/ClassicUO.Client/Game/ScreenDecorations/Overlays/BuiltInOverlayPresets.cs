@@ -18,6 +18,9 @@ public static class BuiltInOverlayPresets
         {
             OverlayEffect.Bleed => new BleedOverlay(),
             OverlayEffect.Poison => new PoisonOverlay(),
+            OverlayEffect.Fog => new FogOverlay(),
+            OverlayEffect.Drunk => new DrunkOverlay(),
+            OverlayEffect.Concussion => new ConcussionOverlay(),
             _ => null
         };
 }

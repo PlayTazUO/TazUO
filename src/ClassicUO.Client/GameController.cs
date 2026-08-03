@@ -26,6 +26,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ClassicUO.Game.ScreenDecorations.Manager;
+using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Network.PacketHandlers;
 using Myra;
 using SDL3;
@@ -725,7 +726,15 @@ namespace ClassicUO
             Profiler.ExitContext("PluginRender");
 
             Profiler.EnterContext("ScreenOverlays");
-            ScreenOverlayManager.Instance.Draw(_uoSpriteBatch, destRect);
+
+            // The offscreen target still holds what was just blitted to the window, so overlays that
+            // distort the frame have a readable copy of it without anything being copied. Without
+            // the target there is no second surface and those layers sit out the frame.
+            ScreenOverlaySource scene = useRenderTarget
+                ? new ScreenOverlaySource(_screenRenderTarget, _screenRenderTarget.Bounds)
+                : ScreenOverlaySource.None;
+
+            ScreenOverlayManager.Instance.DrawFullScreenOverlays(_uoSpriteBatch, destRect, scene);
             Profiler.ExitContext("ScreenOverlays");
 
             base.Draw(gameTime);

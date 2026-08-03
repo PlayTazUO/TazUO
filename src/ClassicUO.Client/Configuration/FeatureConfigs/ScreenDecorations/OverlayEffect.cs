@@ -9,5 +9,6 @@ public enum OverlayEffect
     Poison,
     MortalStrike,
     Fog,
-    Drunk
+    Drunk,
+    Concussion
 }
