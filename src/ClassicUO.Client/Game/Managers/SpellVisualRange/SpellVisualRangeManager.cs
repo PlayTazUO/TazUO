@@ -24,7 +24,7 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
         public DateTime LastSpellTime { get; private set; } = DateTime.Now;
         public Dictionary<int, SpellRangeInfo> SpellRangeCache => spellRangeCache;
 
-        private string savePath = Path.Combine(CUOEnviroment.ExecutablePath ?? "", "Data", "Profiles", "SpellVisualRange.json");
+        private SpellVisualRangeConfig config;
         private string overridePath = Path.Combine(ProfileManager.ProfilePath ?? "", "SpellVisualRange.json");
 
         private Dictionary<int, SpellRangeInfo> spellRangeCache = new();
@@ -251,48 +251,73 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
             spellRangeCache.Clear();
             Task.Factory.StartNew(() =>
             {
-                if (!File.Exists(savePath))
+                config = SpellVisualRangeConfig.Load();
+
+                if (config.Spells.Count > 0)
                 {
-                    //CreateAndLoadDataFile();
-                    Assembly assembly = GetType().Assembly;
-
-                    string resourceName = "ClassicUO.Game.Managers.DefaultSpellIndicatorConfig.json";
-
-                    try
-                    {
-                        using Stream stream = assembly.GetManifestResourceStream(resourceName);
-
-                        using var reader = new StreamReader(stream);
-
-                        LoadFromString(reader.ReadToEnd());
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e.ToString());
-                        CreateAndLoadDataFile();
-                    }
-
+                    foreach (SpellRangeInfo entry in config.Spells) spellRangeCache[entry.ID] = entry;
                     AfterLoad();
                     loaded = true;
-                    Save();
+                    return;
                 }
-                else
-                    try
-                    {
-                        string data = File.ReadAllText(savePath);
-                        SpellRangeInfo[] fileData = JsonSerializer.Deserialize(data, SpellRangeInfoJsonContext.Default.SpellRangeInfoArray);
 
-                        foreach (SpellRangeInfo entry in fileData) spellRangeCache.Add(entry.ID, entry);
-                        AfterLoad();
-                        loaded = true;
-                    }
-                    catch
-                    {
-                        CreateAndLoadDataFile();
-                        AfterLoad();
-                        loaded = true;
-                    }
+                // No saved config yet - seed from the legacy array file, then the embedded defaults, and persist.
+                if (!TryLoadLegacyFile() && !TryLoadEmbeddedDefaults())
+                    CreateAndLoadDataFile();
+
+                AfterLoad();
+                loaded = true;
+                PersistCache();
             });
+        }
+
+        /// <summary>Migrates the old bare-array save file (Data/Profiles/SpellVisualRange.json) into the cache.</summary>
+        private bool TryLoadLegacyFile()
+        {
+            string legacyPath = Path.Combine(CUOEnviroment.ExecutablePath ?? "", "Data", "Profiles", "SpellVisualRange.json");
+
+            if (!File.Exists(legacyPath))
+                return false;
+
+            try
+            {
+                SpellRangeInfo[] fileData = JsonSerializer.Deserialize(File.ReadAllText(legacyPath), SpellRangeInfoJsonContext.Default.SpellRangeInfoArray);
+
+                if (fileData == null || fileData.Length == 0)
+                    return false;
+
+                foreach (SpellRangeInfo entry in fileData) spellRangeCache[entry.ID] = entry;
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.ToString());
+                return false;
+            }
+        }
+
+        /// <summary>Seeds the cache from the embedded default indicator config.</summary>
+        private bool TryLoadEmbeddedDefaults()
+        {
+            try
+            {
+                Assembly assembly = GetType().Assembly;
+                using Stream stream = assembly.GetManifestResourceStream("ClassicUO.Game.Managers.DefaultSpellIndicatorConfig.json");
+                using var reader = new StreamReader(stream);
+
+                SpellRangeInfo[] fileData = JsonSerializer.Deserialize(reader.ReadToEnd(), SpellRangeInfoJsonContext.Default.SpellRangeInfoArray);
+
+                if (fileData == null || fileData.Length == 0)
+                    return false;
+
+                foreach (SpellRangeInfo entry in fileData) spellRangeCache[entry.ID] = entry;
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.ToString());
+                return false;
+            }
         }
 
         private void LoadOverrides()
@@ -384,11 +409,6 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
             foreach (KeyValuePair<int, SpellDefinition> entry in SpellsSpellweaving.GetAllSpells) spellRangeCache.TryAdd(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
             foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMysticism.GetAllSpells) spellRangeCache.TryAdd(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
             foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMastery.GetAllSpells) spellRangeCache.TryAdd(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
-
-            Task.Factory.StartNew(() =>
-            {
-                Save();
-            });
         }
 
         public void DelayedSave()
@@ -417,26 +437,15 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
                 hasPendingChanges = false;
             }
 
-            string tempPath = null;
-            try
-            {
-                tempPath = Path.GetTempFileName();
-                string fileData = JsonSerializer.Serialize(spellRangeCache.Values.ToArray(), SpellRangeInfoJsonContext.Default.SpellRangeInfoArray);
-                File.WriteAllText(tempPath, fileData);
+            PersistCache();
+        }
 
-                if (File.Exists(savePath))
-                    File.Delete(savePath);
-                File.Move(tempPath, savePath);
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Save failed: {e}");
-            }
-            finally
-            {
-                if (tempPath != null && File.Exists(tempPath))
-                    File.Delete(tempPath);
-            }
+        /// <summary>Writes the current cache to disk via the JsonSave base class (atomic + rotating backups).</summary>
+        private void PersistCache()
+        {
+            config ??= new SpellVisualRangeConfig();
+            config.Spells = spellRangeCache.Values.ToList();
+            config.Save();
         }
 
         public void Save()

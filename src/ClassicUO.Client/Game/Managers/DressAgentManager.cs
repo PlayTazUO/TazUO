@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Common.Enums;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Game.UI.Gumps;
@@ -29,11 +30,13 @@ namespace ClassicUO.Game.Managers
             private set => field = value;
         }
 
-        public List<DressConfig> CurrentPlayerConfigs { get; private set; } = new();
+        private DressConfigSave _save = new();
+
+        public List<DressConfig> CurrentPlayerConfigs => _save.Configs;
         public List<DressConfig> OtherCharacterConfigs { get; private set; } = new();
         public bool IsLoaded { get; private set; }
 
-        private readonly string _saveFileName = "dress_configs.json";
+        private const string SaveFileName = DressConfigSave.DressConfigsFileName;
 
         private Layer[] _forbiddenLayers = [Layer.Backpack, Layer.Beard, Layer.Hair, Layer.ShopBuy, Layer.ShopBuyRestock, Layer.ShopSell, Layer.Bank];
 
@@ -44,29 +47,16 @@ namespace ClassicUO.Game.Managers
             if (ProfileManager.ProfilePath == null)
                 return;
 
-            string savePath = Path.Combine(ProfileManager.ProfilePath, _saveFileName);
             string characterName = ProfileManager.CurrentProfile?.CharacterName ?? "";
 
-            if (File.Exists(savePath))
-                try
-                {
-                    string json = File.ReadAllText(savePath);
-                    CurrentPlayerConfigs = JsonSerializer.Deserialize(json, DressAgentJsonContext.Default.ListDressConfig) ?? new List<DressConfig>();
+            _save = DressConfigSave.LoadForCurrentProfile();
 
-                    // Ensure all configs have the correct character name and clean up null items
-                    foreach (DressConfig config in CurrentPlayerConfigs)
-                    {
-                        config.CharacterName = characterName;
-                        CleanupNullItems(config);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Utility.Logging.Log.Error($"Error loading dress configs: {ex.Message}");
-                    CurrentPlayerConfigs = new List<DressConfig>();
-                }
-            else
-                CurrentPlayerConfigs = new List<DressConfig>();
+            // Ensure all configs have the correct character name and clean up null items
+            foreach (DressConfig config in _save.Configs)
+            {
+                config.CharacterName = characterName;
+                CleanupNullItems(config);
+            }
 
             LoadOtherCharacterConfigs();
 
@@ -109,12 +99,11 @@ namespace ClassicUO.Game.Managers
                             if (characterName == currentCharacterName)
                                 continue;
 
-                            string configFilePath = Path.Combine(characterPath, _saveFileName);
+                            string configFilePath = Path.Combine(characterPath, SaveFileName);
                             if (File.Exists(configFilePath))
                                 try
                                 {
-                                    string json = File.ReadAllText(configFilePath);
-                                    List<DressConfig> configs = JsonSerializer.Deserialize(json, DressAgentJsonContext.Default.ListDressConfig) ?? new List<DressConfig>();
+                                    List<DressConfig> configs = DressConfigSave.ReadConfigsFromFile(configFilePath);
 
                                     foreach (DressConfig config in configs)
                                     {
@@ -191,22 +180,13 @@ namespace ClassicUO.Game.Managers
             if (ProfileManager.ProfilePath == null || !IsLoaded)
                 return;
 
-            try
+            // Clean up null items before saving
+            foreach (DressConfig config in _save.Configs)
             {
-                // Clean up null items before saving
-                foreach (DressConfig config in CurrentPlayerConfigs)
-                {
-                    CleanupNullItems(config);
-                }
+                CleanupNullItems(config);
+            }
 
-                string json = JsonSerializer.Serialize(CurrentPlayerConfigs, DressAgentJsonContext.Default.ListDressConfig);
-                string savePath = Path.Combine(ProfileManager.ProfilePath, _saveFileName);
-                FileSystemHelper.WriteAllTextSafe(savePath, json);
-            }
-            catch (Exception ex)
-            {
-                Utility.Logging.Log.Error($"Error saving dress configs: {ex.Message}");
-            }
+            _save.Save();
         }
 
         public DressConfig CreateNewConfig(string name)
@@ -489,10 +469,73 @@ namespace ClassicUO.Game.Managers
         public byte Layer { get; set; }
     }
 
+    /// <summary>
+    /// JSON-backed store for a character's dress configs. Persisted to <c>dress_configs.json</c> in the
+    /// current profile folder. Saving/loading (with rotating backups) is handled by <see cref="JsonSave{T}"/>.
+    /// </summary>
+    public sealed class DressConfigSave : JsonSave<DressConfigSave>
+    {
+        public const string DressConfigsFileName = "dress_configs.json";
+
+        public List<DressConfig> Configs { get; set; } = new();
+
+        protected override SettingsScope Scope => SettingsScope.Char;
+
+        protected override string FileName => DressConfigsFileName;
+
+        protected override JsonTypeInfo<DressConfigSave> TypeInfo => DressAgentJsonContext.Default.DressConfigSave;
+
+        /// <summary>Migrates any legacy bare-array file to the wrapped format, then loads the current profile's save.</summary>
+        public static DressConfigSave LoadForCurrentProfile()
+        {
+            MigrateLegacyFormatIfNeeded();
+            return Load();
+        }
+
+        /// <summary>
+        /// Reads dress configs from a file, accepting both the legacy bare-array format
+        /// (<c>List&lt;DressConfig&gt;</c>) and the current wrapped <see cref="DressConfigSave"/> format.
+        /// </summary>
+        public static List<DressConfig> ReadConfigsFromFile(string path)
+        {
+            string json = File.ReadAllText(path);
+
+            if (json.TrimStart().StartsWith('['))
+                return JsonSerializer.Deserialize(json, DressAgentJsonContext.Default.ListDressConfig) ?? new List<DressConfig>();
+
+            return JsonSerializer.Deserialize(json, DressAgentJsonContext.Default.DressConfigSave)?.Configs ?? new List<DressConfig>();
+        }
+
+        // Older versions stored a bare JSON array; rewrite it once into the wrapped format JsonSave expects.
+        private static void MigrateLegacyFormatIfNeeded()
+        {
+            string path = Path.Combine(JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Char), DressConfigsFileName);
+
+            if (!File.Exists(path))
+                return;
+
+            try
+            {
+                string json = File.ReadAllText(path);
+
+                if (!json.TrimStart().StartsWith('['))
+                    return;
+
+                List<DressConfig> legacy = JsonSerializer.Deserialize(json, DressAgentJsonContext.Default.ListDressConfig) ?? new List<DressConfig>();
+                new DressConfigSave { Configs = legacy }.Save();
+            }
+            catch (Exception ex)
+            {
+                Utility.Logging.Log.Error($"Error migrating legacy dress configs: {ex.Message}");
+            }
+        }
+    }
+
     [JsonSerializable(typeof(DressConfig), GenerationMode = JsonSourceGenerationMode.Metadata)]
     [JsonSerializable(typeof(DressItem), GenerationMode = JsonSourceGenerationMode.Metadata)]
     [JsonSerializable(typeof(List<DressConfig>), GenerationMode = JsonSourceGenerationMode.Metadata)]
     [JsonSerializable(typeof(List<DressItem>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+    [JsonSerializable(typeof(DressConfigSave), GenerationMode = JsonSourceGenerationMode.Metadata)]
     internal partial class DressAgentJsonContext : JsonSerializerContext
     {
     }
