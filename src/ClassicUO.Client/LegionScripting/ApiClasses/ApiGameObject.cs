@@ -117,6 +117,44 @@ public class ApiGameObject
     }
 
     /// <summary>
+    /// Highlight this object by setting its hue. The original hue is remembered so it can be restored.
+    /// Call with <c>None</c> to restore the original hue.
+    /// Example:
+    /// ```py
+    /// obj.Highlight(0x0021)
+    /// obj.Highlight(None)
+    /// ```
+    /// </summary>
+    /// <param name="hue">The hue to apply, or <c>null</c> to restore the original hue.</param>
+    public virtual void Highlight(ushort? hue = null)
+    {
+        if (_gameObject == null || _gameObject.IsDestroyed)
+            return;
+
+        MainThreadQueue.EnqueueAction(() => ApplyHighlight(_gameObject, hue));
+    }
+
+    /// <summary>
+    /// Applies or clears a highlight hue on a single game object. Must run on the main thread.
+    /// </summary>
+    private protected static void ApplyHighlight(GameObject obj, ushort? hue)
+    {
+        if (obj == null || obj.IsDestroyed)
+            return;
+
+        if (hue.HasValue)
+        {
+            obj.OriginalHue ??= obj.Hue; //Remember the original hue only on the first highlight.
+            obj.Hue = hue.Value;
+        }
+        else if (obj.OriginalHue.HasValue)
+        {
+            obj.Hue = obj.OriginalHue.Value;
+            obj.OriginalHue = null;
+        }
+    }
+
+    /// <summary>
     /// Determines if there is line of sight from the specified observer to this object.
     /// If no observer is specified, it defaults to the player.
     /// </summary>

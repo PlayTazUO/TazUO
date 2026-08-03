@@ -59,6 +59,19 @@ class ApiGameObject:
         """
         pass
 
+    def Highlight(self, hue: "int | None" = None) -> None:
+        """
+         Highlight this object by setting its hue. The original hue is remembered so it can be restored.
+         Call with `None` to restore the original hue.
+         Example:
+         ```py
+         obj.Highlight(0x0021)
+         obj.Highlight(None)
+         ```
+        
+        """
+        pass
+
     def HasLineOfSightFrom(self, observer: "ApiGameObject" = None) -> "bool":
         """
          Determines if there is line of sight from the specified observer to this object.
@@ -199,6 +212,20 @@ class ApiMobile(ApiEntity):
     Backpack: ApiItem = None
     Mount: ApiItem = None
     __class__: str = None
+
+    def Highlight(self, hue: "int | None" = None) -> None:
+        """
+         Highlight this mobile and all of its equipped items with the given hue.
+         The original hues are remembered so they can be restored.
+         Call with `None` to restore the mobile and its equipped items to their original hues.
+         Example:
+         ```py
+         mob.Highlight(0x0021)
+         mob.Highlight(None)
+         ```
+        
+        """
+        pass
 
     def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10) -> "str":
         """
