@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Input;
-using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
 using System.Threading.Tasks;
 using ClassicUO.Game.Data;
@@ -60,7 +59,7 @@ namespace ClassicUO.Game.Managers
                 {
                     if (_world.Player != null)
                     {
-                        GameActions.Print(_world, string.Format(ResGeneral.CurrentDateTimeNowIs0, DateTime.Now));
+                        GameActions.Print(_world, string.Format(TazLang.Get("current_date_time_now_is0"), DateTime.Now));
                     }
                 }
             );
@@ -369,7 +368,7 @@ namespace ClassicUO.Game.Managers
             if (entity != null)
             {
                 _world.TargetManager.Target(entity);
-                GameActions.Print(_world, string.Format(ResGeneral.ItemID0Hue1, entity.Graphic, entity.Hue));
+                GameActions.Print(_world, string.Format(TazLang.Get("item_id0_hue1"), entity.Graphic, entity.Hue));
             }
         }
     }

@@ -12,7 +12,6 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Utility.Platforms;
 using SDL3;
@@ -673,7 +672,7 @@ namespace ClassicUO.Game.UI.Gumps
                         break;
 
                     case ChatMode.Emote:
-                        text = ResGeneral.EmoteChar + text + ResGeneral.EmoteChar;
+                        text = TazLang.Get("emote_char") + text + TazLang.Get("emote_char");
                         GameActions.Say(text, ProfileManager.CurrentProfile.EmoteHue, MessageType.Emote);
 
                         break;

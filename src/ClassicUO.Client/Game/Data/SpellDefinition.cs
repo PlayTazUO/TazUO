@@ -2,7 +2,6 @@
 
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using System;
 using System.Collections.Generic;
@@ -352,68 +351,68 @@ namespace ClassicUO.Game.Data
                     {
                         // britanian reagents
                         case Reagents.BlackPearl:
-                            sb.Append(ResGeneral.BlackPearl);
+                            sb.Append(TazLang.Get("black_pearl"));
 
                             break;
 
                         case Reagents.Bloodmoss:
-                            sb.Append(ResGeneral.Bloodmoss);
+                            sb.Append(TazLang.Get("bloodmoss"));
 
                             break;
 
                         case Reagents.Garlic:
-                            sb.Append(ResGeneral.Garlic);
+                            sb.Append(TazLang.Get("garlic"));
 
                             break;
 
                         case Reagents.Ginseng:
-                            sb.Append(ResGeneral.Ginseng);
+                            sb.Append(TazLang.Get("ginseng"));
 
                             break;
 
                         case Reagents.MandrakeRoot:
-                            sb.Append(ResGeneral.MandrakeRoot);
+                            sb.Append(TazLang.Get("mandrake_root"));
 
                             break;
 
                         case Reagents.Nightshade:
-                            sb.Append(ResGeneral.Nightshade);
+                            sb.Append(TazLang.Get("nightshade"));
 
                             break;
 
                         case Reagents.SulfurousAsh:
-                            sb.Append(ResGeneral.SulfurousAsh);
+                            sb.Append(TazLang.Get("sulfurous_ash"));
 
                             break;
 
                         case Reagents.SpidersSilk:
-                            sb.Append(ResGeneral.SpidersSilk);
+                            sb.Append(TazLang.Get("spiders_silk"));
 
                             break;
 
                         // pagan reagents
                         case Reagents.BatWing:
-                            sb.Append(ResGeneral.BatWing);
+                            sb.Append(TazLang.Get("bat_wing"));
 
                             break;
 
                         case Reagents.GraveDust:
-                            sb.Append(ResGeneral.GraveDust);
+                            sb.Append(TazLang.Get("grave_dust"));
 
                             break;
 
                         case Reagents.DaemonBlood:
-                            sb.Append(ResGeneral.DaemonBlood);
+                            sb.Append(TazLang.Get("daemon_blood"));
 
                             break;
 
                         case Reagents.NoxCrystal:
-                            sb.Append(ResGeneral.NoxCrystal);
+                            sb.Append(TazLang.Get("nox_crystal"));
 
                             break;
 
                         case Reagents.PigIron:
-                            sb.Append(ResGeneral.PigIron);
+                            sb.Append(TazLang.Get("pig_iron"));
 
                             break;
 

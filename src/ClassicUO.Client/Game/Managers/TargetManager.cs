@@ -8,7 +8,6 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using System;
 using System.Threading;
@@ -479,7 +478,7 @@ namespace ClassicUO.Game.Managers
                         if (SerialHelper.IsItem(serial))
                         {
                             ProfileManager.CurrentProfile.GrabBagSerial = serial;
-                            GameActions.Print(_world, string.Format(ResGeneral.GrabBagSet0, serial));
+                            GameActions.Print(_world, string.Format(TazLang.Get("grab_bag_set0"), serial));
                         }
 
                         ClearTargetingWithoutTargetCancelPacket();
