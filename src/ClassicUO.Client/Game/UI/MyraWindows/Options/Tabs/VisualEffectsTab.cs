@@ -178,8 +178,9 @@ public static class VisualEffectsTab
             on => ScreenOverlayManager.Instance.SetPreview(effect, on),
             TazLang.Get(
                 "visualeffects_preview_tooltip",
-                "Shows this effect regardless of your character's state. One at a time, and still "
-                + "subject to the switches on the General tab. Ends when the options are closed."
+                "Shows this effect regardless of your character's state.\n"
+                + "One at a time, and still subject to the switches on the\n"
+                + "General tab. Ends when the options are closed."
             )
         );
     }

@@ -27,6 +27,12 @@ public sealed class DrunkOverlay : ScreenOverlayPreset
     /// than as motion.</summary>
     private const float BLUR_SWIM = 0.65f;
 
+    /// <summary>Rate the smear itself swells at, on top of the vignette's own slower breathing.</summary>
+    private const float BLUR_PULSE_FREQ = 0.27f;
+
+    /// <summary>Depth of that swell, as a fraction of <see cref="Blur" />.</summary>
+    private const float BLUR_PULSE_AMP = 0.22f;
+
     private const float VIGNETTE_FEATHER = 0.50f;
 
     /// <summary>How far short of the blur the vignette stops. Wide: the smear has to be well
@@ -48,14 +54,15 @@ public sealed class DrunkOverlay : ScreenOverlayPreset
 
     protected override void Bake(List<OverlayLayer> layers)
     {
+        SamplingShape blurShape = SamplingShape.Vignette(BLUR_REACH, BLUR_FEATHER, Blur, BLUR_SWIM) with
+        {
+            PulseFreq = BLUR_PULSE_FREQ,
+            PulseAmp = BLUR_PULSE_AMP
+        };
+
         // Bottom layer: it samples the pre-pass frame, so the vignette below it would be replaced
         // rather than smeared.
-        layers.Add(
-            SamplingLayers.Radial(
-                SamplingShape.Vignette(BLUR_REACH, BLUR_FEATHER, Blur, BLUR_SWIM),
-                Zoom
-            )
-        );
+        layers.Add(SamplingLayers.Radial(blurShape, Zoom));
 
         layers.Add(BakeVignette());
     }
