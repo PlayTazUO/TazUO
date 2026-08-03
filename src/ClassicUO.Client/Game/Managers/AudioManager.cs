@@ -42,7 +42,7 @@ namespace ClassicUO.Game.Managers
             try
             {
                 if(!System.Diagnostics.Debugger.IsAttached)
-                    new DynamicSoundEffectInstance(0, AudioChannels.Mono).Dispose();
+                    new DynamicSoundEffectInstance(1000, AudioChannels.Mono).Dispose();
                 else //Fix for rider debugging not having audio apparently
                     _canReproduceAudio = false;
             }
