@@ -71,6 +71,19 @@ internal sealed class PacketParser
         (fromPlugins ? _pluginsBuffer : _buffer).Enqueue(data);
     }
 
+    public void ClearBuffers()
+    {
+        lock (_buffer)
+        {
+            _buffer.Clear();
+        }
+
+        lock (_pluginsBuffer)
+        {
+            _pluginsBuffer.Clear();
+        }
+    }
+
     #endregion
 
     #region Privates
