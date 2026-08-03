@@ -4,7 +4,6 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 
 namespace ClassicUO.Game.UI.Gumps
 {

@@ -7,7 +7,6 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.HotkeyInput;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;

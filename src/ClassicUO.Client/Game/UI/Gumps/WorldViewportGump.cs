@@ -14,7 +14,6 @@ using ClassicUO.Input;
 using ClassicUO.LegionScripting;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;

@@ -9,7 +9,6 @@ using System.Text.Json.Serialization;
 using System.Xml;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Scenes;
-using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers

@@ -16,7 +16,6 @@ using ClassicUO.LegionScripting;
 using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;

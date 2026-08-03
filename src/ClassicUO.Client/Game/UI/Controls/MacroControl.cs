@@ -8,7 +8,6 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Common.Enums;
-using ClassicUO.Resources;
 using SDL3;
 using Microsoft.Xna.Framework;
 using ClassicUO.Renderer.Gumps;

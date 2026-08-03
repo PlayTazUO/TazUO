@@ -7,7 +7,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
 using Myra.Graphics2D.TextureAtlases;
 using Myra.Graphics2D.UI;
