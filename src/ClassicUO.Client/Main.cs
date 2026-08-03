@@ -229,6 +229,12 @@ namespace ClassicUO
             }
 
             Log.Trace("Closing...");
+
+            // Force full process termination. The game loop has returned and all cleanup has run,
+            // but lingering foreground threads (script threads, native plugin host, HttpListener,
+            // IronPython, etc.) can keep the process alive after the window closes. Environment.Exit
+            // guarantees the process ends so no background process is left running.
+            Environment.Exit(0);
         }
 
         private static void ReadSettingsFromArgs(string[] args)
