@@ -181,7 +181,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     new LoadingGump
                     (
                         World,
-                        string.Format(ResGumps.PermanentlyDelete0, charName),
+                        string.Format(TazLang.Get("permanently_delete0"), charName),
                         LoginButtons.OK | LoginButtons.Cancel,
                         buttonID =>
                         {

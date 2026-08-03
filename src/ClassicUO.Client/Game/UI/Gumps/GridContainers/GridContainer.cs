@@ -501,7 +501,7 @@ public partial class GridContainer : ResizableGump
             _setLootBag.SetTooltip(TazLang.Get("gridcontainer_setlootbag_tooltip", "For double click looting only"));
             _setLootBag.MouseUp += (s, e) =>
             {
-                GameActions.Print(World, Resources.ResGumps.TargetContainerToGrabItemsInto);
+                GameActions.Print(World, TazLang.Get("target_container_to_grab_items_into"));
                 World.TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
             };
         }

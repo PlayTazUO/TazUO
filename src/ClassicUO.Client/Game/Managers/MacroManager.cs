@@ -2190,7 +2190,7 @@ namespace ClassicUO.Game.Managers
                 }
 
                 case MacroType.SetGrabBag:
-                    GameActions.Print(_world, ResGumps.TargetContainerToGrabItemsInto);
+                    GameActions.Print(_world, TazLang.Get("target_container_to_grab_items_into"));
                     _world.TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
 
                     break;

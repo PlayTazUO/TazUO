@@ -418,7 +418,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                     else
                     {
-                        Log.Error(ResGumps.IndexOutOfbounds);
+                        Log.Error(TazLang.Get("index_out_ofbounds"));
                     }
                 }
             }
@@ -572,8 +572,8 @@ namespace ClassicUO.Game.UI.Gumps
                 });
 
                 ContextMenu = new ContextMenuControl(_gump);
-                ContextMenu.Add(ResGumps.UseObject, Use);
-                ContextMenu.Add(ResGumps.Remove, RemoveItem);
+                ContextMenu.Add(TazLang.Get("use_object"), Use);
+                ContextMenu.Add(TazLang.Get("remove"), RemoveItem);
                 ContextMenu.Add(TazLang.Get("spellbar_setspell"), GenSpellList());
                 ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_quicksetspell"), QuickSetSpell));
 

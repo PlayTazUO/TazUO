@@ -11,6 +11,7 @@ using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
+using ClassicUO.Configuration;
 using MathHelper = ClassicUO.Utility.MathHelper;
 
 namespace ClassicUO.Game.UI.Gumps.CharCreation
@@ -65,7 +66,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
 
             if (city == null)
             {
-                Log.Error(ResGumps.NoCityFound);
+                Log.Error(TazLang.Get("no_city_found"));
                 Dispose();
 
                 return;

@@ -9,6 +9,7 @@ using ClassicUO.Input;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -83,7 +84,7 @@ namespace ClassicUO.Game.UI.Gumps
                         spellsOnPage = 4;
                     }
 
-                    var text = new Label(ResGumps.Index, false, 0x0288, font: 6) { X = indexX, Y = 6 };
+                    var text = new Label(TazLang.Get("index"), false, 0x0288, font: 6) { X = indexX, Y = 6 };
                     Add(text, page);
 
                     for (int i = 0; i < spellsOnPage; i++)
@@ -136,7 +137,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         text = new Label
                         (
-                            ResGumps.PrimaryAbilityIcon,
+                            TazLang.Get("primary_ability_icon"),
                             false,
                             0x0288,
                             80,
@@ -158,7 +159,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         text = new Label
                         (
-                            ResGumps.SecondaryAbilityIcon,
+                            TazLang.Get("secondary_ability_icon"),
                             false,
                             0x0288,
                             80,

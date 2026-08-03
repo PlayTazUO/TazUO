@@ -261,7 +261,7 @@ namespace ClassicUO.Game.UI.Controls
                 return;
 
             UpdateValueInHotkeyBox();
-            UIManager.Add(new MessageBoxGump(_world, 250, 150, string.Format(ResGumps.ThisKeyCombinationAlreadyExists, option.Name), null));
+            UIManager.Add(new MessageBoxGump(_world, 250, 150, string.Format(TazLang.Get("this_key_combination_already_exists"), option.Name), null));
         }
 
         private void BoxOnHotkeyCancelled(object sender, EventArgs e)

@@ -75,7 +75,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             );
 
-            Add(new Label(ResGumps.ObjectInformation, true, 1153, font: 3) { X = 20, Y = 10 });
+            Add(new Label(TazLang.Get("object_information"), true, 1153, font: 3) { X = 20, Y = 10 });
 
             Add
             (

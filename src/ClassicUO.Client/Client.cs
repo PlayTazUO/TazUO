@@ -144,7 +144,7 @@ namespace ClassicUO
                 if (!ClientVersionHelper.TryParseFromFile(Path.Combine(clientPath, "client.exe"), out clientVersionText) || !ClientVersionHelper.IsClientVersionValid(clientVersionText, out clientVersion))
                 {
                     Log.Error("Invalid client version: " + clientVersionText);
-                    Client.ShowErrorMessage(string.Format(ResGumps.ImpossibleToDefineTheClientVersion0, clientVersionText));
+                    Client.ShowErrorMessage(string.Format(TazLang.Get("impossible_to_define_the_client_version0"), clientVersionText));
 
                     throw new InvalidClientVersion($"Invalid client version: '{clientVersionText}'");
                 }

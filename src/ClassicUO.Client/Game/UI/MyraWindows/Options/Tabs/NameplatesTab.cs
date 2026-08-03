@@ -168,7 +168,7 @@ public static class NameplatesTab
                 World.Instance,
                 250,
                 150,
-                string.Format(ResGumps.ThisKeyCombinationAlreadyExists, option.Name),
+                string.Format(TazLang.Get("this_key_combination_already_exists"), option.Name),
                 null
             )
         );

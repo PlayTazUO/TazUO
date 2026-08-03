@@ -9,6 +9,7 @@ using ClassicUO.Network;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -43,7 +44,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             var text = new Label
             (
-                ResGumps.Channels,
+                TazLang.Get("channels"),
                 false,
                 0x0386,
                 345,
@@ -104,7 +105,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             text = new Label
             (
-                ResGumps.YourCurrentChannel,
+                TazLang.Get("your_current_channel"),
                 false,
                 0x0386,
                 345,
@@ -168,7 +169,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             text = new Label
             (
-                ResGumps.Join,
+                TazLang.Get("join"),
                 false,
                 0x0386,
                 0,
@@ -183,7 +184,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             text = new Label
             (
-                ResGumps.Leave,
+                TazLang.Get("leave"),
                 false,
                 0x0386,
                 0,
@@ -198,7 +199,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             text = new Label
             (
-                ResGumps.Create,
+                TazLang.Get("create"),
                 false,
                 0x0386,
                 0,
@@ -313,7 +314,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 var text = new Label
                 (
-                    ResGumps.CreateAChannel,
+                    TazLang.Get("create_achannel"),
                     true,
                     0x23,
                     Width - 4,
@@ -340,7 +341,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 text = new Label
                 (
-                    ResGumps.Name,
+                    TazLang.Get("name"),
                     true,
                     0x23,
                     Width - 4,

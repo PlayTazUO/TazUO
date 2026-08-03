@@ -43,7 +43,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             const ushort DARK_MODE_JOURNAL_HUE = 903;
 
-            string str = ResGumps.DarkMode;
+            string str = TazLang.Get("dark_mode");
             int width = Client.Game.UO.FileManager.Fonts.GetWidthASCII(6, str);
 
             Checkbox darkMode;

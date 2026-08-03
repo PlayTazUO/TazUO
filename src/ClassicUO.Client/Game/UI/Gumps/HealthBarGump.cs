@@ -1724,7 +1724,7 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                     );
 
-                    _name = ResGumps.Self;
+                    _name = TazLang.Get("self");
                 }
                 else
                 {

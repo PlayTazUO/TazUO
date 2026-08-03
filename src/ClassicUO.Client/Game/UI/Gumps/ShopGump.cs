@@ -656,7 +656,7 @@ namespace ClassicUO.Game.UI.Gumps
                     return;
                 }
 
-                string subname = string.Format(ResGumps.Item0Price1, itemName, Price);
+                string subname = string.Format(TazLang.Get("item0_price1"), itemName, Price);
 
                 Add(
                     _name = new Label(
@@ -761,7 +761,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 _name.Text = new_name
                     ? $"{s}: {Price}"
-                    : string.Format(ResGumps.Item0Price1, s, Price);
+                    : string.Format(TazLang.Get("item0_price1"), s, Price);
                 WantUpdateSize = false;
             }
 

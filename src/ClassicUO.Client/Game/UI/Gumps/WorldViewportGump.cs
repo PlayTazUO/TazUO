@@ -91,7 +91,7 @@ namespace ClassicUO.Game.UI.Gumps
             _button.MouseExit += (sender, e) => _button.Alpha = 0.3f;
             _button.Alpha = 0.3f;
 
-            _button.SetTooltip(ResGumps.ResizeGameWindow);
+            _button.SetTooltip(TazLang.Get("resize_game_window"));
             Width = scene.Camera.Bounds.Width + borderOffset;
             Height = scene.Camera.Bounds.Height + borderOffset;
 

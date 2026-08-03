@@ -1384,7 +1384,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 var dialog = new EntryDialog
                 (
-                    World, 250, 150, ResGumps.MacroName, name =>
+                    World, 250, 150, TazLang.Get("macro_name"), name =>
                     {
                         if (string.IsNullOrWhiteSpace(name))
                         {
@@ -1472,7 +1472,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     var dialog = new QuestionGump
                     (
-                        World, ResGumps.MacroDeleteConfirmation, b =>
+                        World, TazLang.Get("macro_delete_confirmation"), b =>
                         {
                             if (!b)
                             {
@@ -2854,7 +2854,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     var dialog = new QuestionGump
                     (
-                        World, ResGumps.MacroDeleteConfirmation, b =>
+                        World, TazLang.Get("macro_delete_confirmation"), b =>
                         {
                             if (!b)
                             {
@@ -5436,7 +5436,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Add
                 (
                     c = new ModernButton(0, _hotkeyBox.Height + 3, 200, 40, ButtonAction.Activate,
-                        ResGumps.CreateMacroButton, ThemeSettings.BUTTON_FONT_COLOR)
+                        TazLang.Get("create_macro_button"), ThemeSettings.BUTTON_FONT_COLOR)
                     {
                         ButtonParameter = (int)buttonsOption.CreateNewMacro, IsSelectable = true, IsSelected = true
                     }
@@ -5445,7 +5445,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Add
                 (
                     c = new ModernButton(c.Width + c.X + 10, c.Y, 200, 40, ButtonAction.Activate,
-                        ResGumps.MacroButtonEditor, ThemeSettings.BUTTON_FONT_COLOR)
+                        TazLang.Get("macro_button_editor"), ThemeSettings.BUTTON_FONT_COLOR)
                     {
                         ButtonParameter = (int)buttonsOption.OpenButtonEditor, IsSelectable = true, IsSelected = true
                     }
@@ -5455,7 +5455,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 Add
                 (
-                    c = new ModernButton(0, c.Y + 5, 75, 40, ButtonAction.Activate, ResGumps.Add,
+                    c = new ModernButton(0, c.Y + 5, 75, 40, ButtonAction.Activate, TazLang.Get("add"),
                         ThemeSettings.BUTTON_FONT_COLOR)
                     {
                         ButtonParameter = (int)buttonsOption.AddBtn, IsSelectable = false
@@ -5617,7 +5617,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         SetupKeyByDefault();
                         UIManager.Add(new MessageBoxGump(world, 250, 150,
-                            string.Format(ResGumps.ThisKeyCombinationAlreadyExists, macro.Name), null));
+                            string.Format(TazLang.Get("this_key_combination_already_exists"), macro.Name), null));
 
                         return;
                     }
@@ -5635,7 +5635,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         SetupKeyByDefault();
                         UIManager.Add(new MessageBoxGump(world, 250, 150,
-                            string.Format(ResGumps.ThisKeyCombinationAlreadyExists, macro.Name), null));
+                            string.Format(TazLang.Get("this_key_combination_already_exists"), macro.Name), null));
 
                         return;
                     }
@@ -5653,7 +5653,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         SetupKeyByDefault();
                         UIManager.Add(new MessageBoxGump(world, 250, 150,
-                            string.Format(ResGumps.ThisKeyCombinationAlreadyExists, macro.Name), null));
+                            string.Format(TazLang.Get("this_key_combination_already_exists"), macro.Name), null));
 
                         return;
                     }
@@ -5776,7 +5776,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     Add
                     (
-                        c = new ModernButton(mainBox.Width + 10, 0, 75, 40, ButtonAction.Activate, ResGumps.Remove,
+                        c = new ModernButton(mainBox.Width + 10, 0, 75, 40, ButtonAction.Activate, TazLang.Get("remove"),
                             ThemeSettings.BUTTON_FONT_COLOR)
                         {
                             ButtonParameter = (int)buttonsOption.RemoveBtn, IsSelectable = false
@@ -6179,7 +6179,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 UpdateValueInHotkeyBox();
                 UIManager.Add(new MessageBoxGump(world, 250, 150,
-                    string.Format(ResGumps.ThisKeyCombinationAlreadyExists, option.Name), null));
+                    string.Format(TazLang.Get("this_key_combination_already_exists"), option.Name), null));
             }
 
             private void BoxOnHotkeyCancelled(object sender, EventArgs e)
