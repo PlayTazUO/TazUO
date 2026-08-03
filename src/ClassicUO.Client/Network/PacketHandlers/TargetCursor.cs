@@ -20,7 +20,7 @@ internal static class TargetCursor
             world.Party.PartyHealTimer = 0;
             world.Party.PartyHealTarget = 0;
         }
-        else if (TargetManager.NextAutoTarget.IsSet && TargetManager.NextAutoTarget.ExpectedTargetType == targetType)
+        else if (TargetManager.NextAutoTarget.IsSet && TargetManager.NextAutoTarget.Matches(targetType))
             world.TargetManager.Target(TargetManager.NextAutoTarget.TargetSerial);
 
         // Always clear after any target cursor (no queuing)
