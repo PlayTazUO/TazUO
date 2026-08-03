@@ -34,6 +34,16 @@ namespace ClassicUO.Configuration
         /// <summary>The grid-highlight config for the currently loaded profile.</summary>
         public static GridHighlightsConfig Current => _current ??= LoadForCurrentProfile();
 
+        public static void Unload()
+        {
+            if (_current == null)
+                return;
+            
+            _current.Save();
+            _current.Highlights.Clear();
+            _current = null;
+        }
+
         /// <summary>
         /// Loads (or migrates) the grid-highlight config for the given profile and sets it as
         /// <see cref="Current"/>. Returns <see langword="true"/> when a migration from the legacy
