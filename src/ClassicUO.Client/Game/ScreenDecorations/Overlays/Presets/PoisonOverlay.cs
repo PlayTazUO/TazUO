@@ -77,7 +77,7 @@ public sealed class PoisonOverlay : ScreenOverlayPreset
 
     /// <summary>Held near half so the sharp frame keeps showing through and the screen never
     ///     stops being legible at full poison.</summary>
-    private const float BLUR_STRENGTH = 0.65f;
+    private const float BLUR_STRENGTH = 0.72f;
 
     /// <summary>Part of the strength is noise-driven, so the soft patches drift instead of sitting
     ///     in fixed positions - a static blur reads as a dirty screen. Kept off the pulse's share so

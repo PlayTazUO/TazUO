@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
@@ -135,6 +136,8 @@ public static class VisualEffectsTab
     {
         OverlayEffectGeneralSettings settings = DecorationSettings.Current.Overlays.GetSettings(effect);
 
+        // Switches first, then the profile editor under a rule: the editor is a panel of its own with
+        // its own toolbar, and without a break the two read as one undifferentiated column.
         OptionFragment panel = OptionsUi.Vertical(
             Option.Checkbox(
                 TazLang.Get("visualeffects_enabled", "Enable this effect"),
@@ -144,14 +147,41 @@ public static class VisualEffectsTab
                 TazLang.Get("visualeffects_fullscreen", "Draw over the whole window"),
                 new Accessor<bool>(() => settings.FullScreen)
             ),
+            PreviewCheckbox(effect),
+            Option.Custom(OptionTabCommons.StyledHorizontalSeparator),
             Option.Custom(() => BuildProfileEditor(effect, settings))
         );
 
-        // The profile editor doesn't fit the search results page, and the two checkboxes above it
-        // aren't worth splitting the fragment for.
+        // The profile editor doesn't fit the search results page, and the switches above it aren't
+        // worth splitting the fragment for.
         panel.InheritsSearch = false;
 
         return panel;
+    }
+
+    /// <summary>
+    ///     Shows the effect on demand, so it can be tuned without waiting to be poisoned. Ignores both
+    ///     the effect's own enabled switch and the player's state - the usual reason to preview one is
+    ///     to decide whether to turn it on at all.
+    /// </summary>
+    /// <param name="effect">The effect this tab configures.</param>
+    /// <returns>The checkbox entry.</returns>
+    private static OptionEntry PreviewCheckbox(OverlayEffect effect)
+    {
+        // Read at build time rather than bound: a preview can also be ended from elsewhere - closing
+        // the options, or leaving the world - and the tab is rebuilt on every visit anyway.
+        bool previewing = ScreenOverlayManager.Instance.IsPreviewing(effect);
+
+        return Option.Checkbox(
+            TazLang.Get("visualeffects_preview", "Preview this effect"),
+            previewing,
+            on => ScreenOverlayManager.Instance.SetPreview(effect, on),
+            TazLang.Get(
+                "visualeffects_preview_tooltip",
+                "Shows this effect regardless of your character's state. One at a time, and still "
+                + "subject to the switches on the General tab. Ends when the options are closed."
+            )
+        );
     }
 
     private static Widget BuildProfileEditor(OverlayEffect effect, OverlayEffectGeneralSettings settings)

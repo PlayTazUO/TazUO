@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -480,6 +481,17 @@ public class OptionsWindow : MyraControl
             _optionsPanel.Widgets.Add(source.Render());
 
         SelectedCategoryChanged?.Invoke(this, category);
+    }
+
+    /// <summary>
+    ///     Ends any effect preview started from the Visual Effects tab. The preview exists to be
+    ///     looked at while tuning; nothing outside this window can turn it off, so leaving it running
+    ///     would strand an overlay on screen with no visible control for it.
+    /// </summary>
+    public override void Dispose()
+    {
+        ScreenOverlayManager.Instance.ClearPreview();
+        base.Dispose();
     }
 
     #region Static Methods

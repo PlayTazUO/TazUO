@@ -69,10 +69,16 @@ internal sealed class ScreenOverlayManager
     /// </summary>
     private static readonly EffectMapping[] _mappings =
     [
-        new(PlayerCondition.MortalStruck, OverlayEffect.MortalStrike, OverlayId.MortalStrike, 30, 0.45f),
-        new(PlayerCondition.Poisoned, OverlayEffect.Poison, OverlayId.Poison, 20, 0f),
-        new(PlayerCondition.Bleeding, OverlayEffect.Bleed, OverlayId.Bleed, 10, 0.25f)
+        new(PlayerCondition.MortalStruck, OverlayEffect.MortalStrike, 30, 0.45f),
+        new(PlayerCondition.Poisoned, OverlayEffect.Poison, 20, 0f),
+        new(PlayerCondition.Bleeding, OverlayEffect.Bleed, 10, 0.25f)
     ];
+
+    /// <summary>
+    /// Priority a previewed overlay composites at. Above every mapping, so previewing an effect
+    /// while the player happens to be poisoned shows the one that was asked for.
+    /// </summary>
+    private const int PREVIEW_PRIORITY = 100;
 
     /// <summary>Guards the fields below. Never held across a reconcile pass - that runs on the main
     /// thread, and blocking the timer thread on it would let passes queue up behind a stalled
@@ -94,6 +100,14 @@ internal sealed class ScreenOverlayManager
     /// <summary>Set while a pass is queued or running, so a slow frame cannot leave several passes
     /// stacked up waiting on the main thread.</summary>
     private bool _passPending;
+
+    /// <summary>
+    /// The effect being previewed from the options, shown regardless of the player's state and of
+    /// its own enabled toggle - the point of a preview is to see an effect you have not turned on
+    /// yet. One at a time: several at once would composite together and show nothing useful about
+    /// any of them.
+    /// </summary>
+    private OverlayEffect? _preview;
 
     private bool IsRunning
     {
@@ -206,6 +220,59 @@ internal sealed class ScreenOverlayManager
     }
 
     /// <summary>
+    /// Whether <paramref name="effect" /> is the one currently being previewed.
+    /// </summary>
+    /// <param name="effect">The effect to test.</param>
+    /// <returns>True if it is the active preview.</returns>
+    public bool IsPreviewing(OverlayEffect effect)
+    {
+        lock (_sync)
+            return _preview == effect;
+    }
+
+    /// <summary>
+    /// Shows or stops showing <paramref name="effect" /> irrespective of the player's state, for
+    /// tuning it in the options.
+    /// <para>
+    /// Starting one preview stops any other. Takes effect on the next reconcile pass rather than
+    /// immediately, so it goes through the same path as a real onset and cannot leave the compositor
+    /// holding something the manager has forgotten about.
+    /// </para>
+    /// <para>
+    /// Still subject to the two system toggles: with screen decorations or overlays switched off
+    /// nothing is drawn, and a preview is not a reason to override that.
+    /// </para>
+    /// </summary>
+    /// <param name="effect">The effect to preview.</param>
+    /// <param name="previewing">True to show it, false to stop.</param>
+    public void SetPreview(OverlayEffect effect, bool previewing)
+    {
+        lock (_sync)
+        {
+            if (!previewing && _preview != effect)
+                return;
+
+            _preview = previewing ? effect : null;
+        }
+
+        QueuePass();
+    }
+
+    /// <summary>Stops any preview. For closing the options, where nothing is left to drive it.</summary>
+    public void ClearPreview()
+    {
+        lock (_sync)
+        {
+            if (_preview == null)
+                return;
+
+            _preview = null;
+        }
+
+        QueuePass();
+    }
+
+    /// <summary>
     /// Stops reconciling and fades out everything that was running. For leaving the world, where the
     /// state that justified an overlay is about to stop existing.
     /// </summary>
@@ -219,6 +286,7 @@ internal sealed class ScreenOverlayManager
             cancellation = _cancellation;
             _cancellation = null;
             _passPending = false;
+            _preview = null;
 
             shown = [.. _shown];
             _shown.Clear();
@@ -288,18 +356,41 @@ internal sealed class ScreenOverlayManager
             bool systemActive = settings.OverlaysActive;
             PlayerCondition conditions = systemActive ? PlayerConditionReader.ReadPlayer() : PlayerCondition.None;
 
-            foreach (EffectMapping mapping in _mappings)
-            {
-                OverlayEffectGeneralSettings effect = settings.Overlays.GetSettings(mapping.Effect);
-                bool wanted = systemActive && effect.Enabled && (conditions & mapping.Condition) != 0;
+            OverlayEffect? preview;
 
-                if (wanted == IsShown(mapping.Id))
+            lock (_sync)
+                preview = _preview;
+
+            // Every effect, not just the mapped ones: an effect with no condition behind it still
+            // has to be reconciled, or a preview of it could never be taken down again.
+            foreach (OverlayEffect effect in OverlaySystemSettings.AllEffects)
+            {
+                OverlayEffectGeneralSettings effectSettings = settings.Overlays.GetSettings(effect);
+                EffectMapping? mapping = FindMapping(effect);
+
+                bool triggered = effectSettings.Enabled
+                                 && mapping != null
+                                 && (conditions & mapping.Value.Condition) != 0;
+
+                bool previewing = effect == preview;
+                bool wanted = systemActive && (triggered || previewing);
+                OverlayId id = SlotFor(effect);
+
+                if (wanted == IsShown(id))
                     continue;
 
-                if (wanted)
-                    Start(mapping, effect);
-                else
-                    Stop(mapping.Id);
+                if (!wanted)
+                {
+                    Stop(id);
+                    continue;
+                }
+
+                // A preview outranks anything the player's state asks for, and fires no onset shake:
+                // it is being looked at deliberately, not reacted to.
+                int priority = previewing ? PREVIEW_PRIORITY : mapping!.Value.Priority;
+                float trauma = previewing ? 0f : mapping!.Value.OnsetTrauma;
+
+                Start(effect, effectSettings, priority, trauma);
             }
         }
         finally
@@ -315,23 +406,67 @@ internal sealed class ScreenOverlayManager
             return _shown.Contains(id);
     }
 
-    private void Start(in EffectMapping mapping, OverlayEffectGeneralSettings settings)
+    /// <summary>
+    /// Hands one effect to the compositor and records that it is running.
+    /// </summary>
+    /// <param name="effect">The effect to show.</param>
+    /// <param name="settings">Its settings, supplying the profile and the drawing scope.</param>
+    /// <param name="priority">Composite order against the other active overlays.</param>
+    /// <param name="onsetTrauma">Screen shake to fire alongside it; zero for none.</param>
+    private void Start(OverlayEffect effect, OverlayEffectGeneralSettings settings, int priority, float onsetTrauma)
     {
-        ScreenOverlayPreset? preset = ResolvePreset(mapping.Effect, settings);
+        ScreenOverlayPreset? preset = ResolvePreset(effect, settings);
 
         if (preset == null)
             return;
 
+        OverlayId id = SlotFor(effect);
         OverlayScope scope = settings.FullScreen ? OverlayScope.FullScreen : OverlayScope.Viewport;
 
-        ScreenOverlayCompositor.Instance.Show(mapping.Id, preset, mapping.Priority, scope);
+        ScreenOverlayCompositor.Instance.Show(id, preset, priority, scope);
 
         lock (_sync)
-            _shown.Add(mapping.Id);
+            _shown.Add(id);
 
         // Gated separately: someone who turned shake off still wants the tint.
-        if (mapping.OnsetTrauma > 0f && DecorationSettings.Current.ShakeActive)
-            ScreenShake.Instance.Trauma(ShakeRequest.Decay(_onsetShakeDuration, mapping.OnsetTrauma));
+        if (onsetTrauma > 0f && DecorationSettings.Current.ShakeActive)
+            ScreenShake.Instance.Trauma(ShakeRequest.Decay(_onsetShakeDuration, onsetTrauma));
+    }
+
+    /// <summary>
+    /// The compositor slot an effect occupies. One per effect, so showing an effect twice replaces
+    /// rather than stacks.
+    /// </summary>
+    /// <param name="effect">The effect to place.</param>
+    /// <returns>Its slot.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">The effect has no slot, which means one was
+    /// added to <see cref="OverlayEffect" /> without a home here.</exception>
+    private static OverlayId SlotFor(OverlayEffect effect) =>
+        effect switch
+        {
+            OverlayEffect.Bleed => OverlayId.Bleed,
+            OverlayEffect.Poison => OverlayId.Poison,
+            OverlayEffect.MortalStrike => OverlayId.MortalStrike,
+            OverlayEffect.Fog => OverlayId.Fog,
+            OverlayEffect.Drunk => OverlayId.Drunk,
+            OverlayEffect.Concussion => OverlayId.Concussion,
+            _ => throw new ArgumentOutOfRangeException(nameof(effect), effect, "No overlay slot for this effect.")
+        };
+
+    /// <summary>
+    /// The player state that triggers <paramref name="effect" />, if any.
+    /// </summary>
+    /// <param name="effect">The effect to look up.</param>
+    /// <returns>Its mapping, or null for an effect nothing triggers yet.</returns>
+    private static EffectMapping? FindMapping(OverlayEffect effect)
+    {
+        foreach (EffectMapping mapping in _mappings)
+        {
+            if (mapping.Effect == effect)
+                return mapping;
+        }
+
+        return null;
     }
 
     private void Stop(OverlayId id)
@@ -361,13 +496,11 @@ internal sealed class ScreenOverlayManager
 
     /// <param name="Condition">The player state that calls for this effect.</param>
     /// <param name="Effect">The configurable effect, and so the settings and profiles behind it.</param>
-    /// <param name="Id">The compositor slot it occupies.</param>
     /// <param name="Priority">Higher composites on top and survives the concurrency cap.</param>
     /// <param name="OnsetTrauma">Screen shake to fire when it starts; zero for none.</param>
     private readonly record struct EffectMapping(
         PlayerCondition Condition,
         OverlayEffect Effect,
-        OverlayId Id,
         int Priority,
         float OnsetTrauma
     );
