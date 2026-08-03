@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Timers;
 using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
@@ -27,26 +29,14 @@ namespace ClassicUO.Game.Managers
             private set => field = value;
         }
 
-        public List<OrganizerConfig> OrganizerConfigs { get; private set; } = new();
+        private OrganizerConfigSave _save = new();
 
-        private static string GetDataPath()
-        {
-            string dataPath = ProfileManager.ProfilePath;
-            if (!Directory.Exists(dataPath))
-                Directory.CreateDirectory(dataPath);
-            return dataPath;
-        }
+        public List<OrganizerConfig> OrganizerConfigs => _save.Configs;
 
         public static void Load()
         {
             Instance = new OrganizerAgent();
-            string newPath = Path.Combine(GetDataPath(), "OrganizerConfig.json");
-            string oldPath = Path.Combine(CUOEnviroment.ExecutablePath, "Data");
-            if(File.Exists(oldPath))
-                File.Move(oldPath, newPath);
-
-            if (JsonHelper.Load<List<OrganizerConfig>>(newPath, OrganizerAgentContext.Default.ListOrganizerConfig, out List<OrganizerConfig> configs))
-                Instance.OrganizerConfigs = configs;
+            Instance._save = OrganizerConfigSave.LoadForCurrentProfile();
         }
 
         public void OrganizerCommand(string[] args)
@@ -71,7 +61,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void Save() => JsonHelper.SaveAndBackup(OrganizerConfigs, Path.Combine(GetDataPath(), "OrganizerConfig.json"), OrganizerAgentContext.Default.ListOrganizerConfig);
+        public void Save() => _save.Save();
 
         public OrganizerConfig FindConfig(string nameOrIndex)
         {
@@ -463,8 +453,57 @@ namespace ClassicUO.Game.Managers
 
     [JsonSerializable(typeof(List<OrganizerConfig>))]
     [JsonSerializable(typeof(OrganizerConfig))]
+    [JsonSerializable(typeof(OrganizerConfigSave))]
     internal partial class OrganizerAgentContext : JsonSerializerContext
     { }
+
+    /// <summary>
+    /// JSON-backed store for a character's organizer configs. Persisted to <c>OrganizerConfig.json</c> in the
+    /// current profile folder. Saving/loading (with rotating backups) is handled by <see cref="JsonSave{T}"/>.
+    /// </summary>
+    internal sealed class OrganizerConfigSave : JsonSave<OrganizerConfigSave>
+    {
+        public const string OrganizerConfigFileName = "OrganizerConfig.json";
+
+        public List<OrganizerConfig> Configs { get; set; } = new();
+
+        protected override SettingsScope Scope => SettingsScope.Char;
+
+        protected override string FileName => OrganizerConfigFileName;
+
+        protected override JsonTypeInfo<OrganizerConfigSave> TypeInfo => OrganizerAgentContext.Default.OrganizerConfigSave;
+
+        /// <summary>Migrates any legacy bare-array file to the wrapped format, then loads the current profile's save.</summary>
+        public static OrganizerConfigSave LoadForCurrentProfile()
+        {
+            MigrateLegacyFormatIfNeeded();
+            return Load();
+        }
+
+        // Older versions stored a bare JSON array; rewrite it once into the wrapped format JsonSave expects.
+        private static void MigrateLegacyFormatIfNeeded()
+        {
+            string path = Path.Combine(JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Char), OrganizerConfigFileName);
+
+            if (!File.Exists(path))
+                return;
+
+            try
+            {
+                string json = File.ReadAllText(path);
+
+                if (!json.TrimStart().StartsWith('['))
+                    return;
+
+                List<OrganizerConfig> legacy = JsonSerializer.Deserialize(json, OrganizerAgentContext.Default.ListOrganizerConfig) ?? new List<OrganizerConfig>();
+                new OrganizerConfigSave { Configs = legacy }.Save();
+            }
+            catch (Exception ex)
+            {
+                Utility.Logging.Log.Error($"Error migrating legacy organizer configs: {ex.Message}");
+            }
+        }
+    }
 
     internal class OrganizerConfig
     {
