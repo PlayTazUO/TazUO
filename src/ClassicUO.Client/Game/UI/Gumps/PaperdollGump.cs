@@ -842,6 +842,9 @@ namespace ClassicUO.Game.UI.Gumps
 
                 AcceptMouseInput = true;
 
+                // Show the layer name when the slot is empty (item gumps show their own tooltip on top)
+                SetTooltip(layer.ToString());
+
                 WantUpdateSize = false;
             }
 
