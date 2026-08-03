@@ -1,13 +1,14 @@
-﻿using ClassicUO.Configuration;
+using ClassicUO.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Map;
-using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
 {
@@ -33,10 +34,34 @@ namespace ClassicUO.Game.Managers
         public ushort Hue { get; set; }
     }
 
+    /// <summary>Legacy source-gen context used only to read the old profile-scoped TileMarkers.json.</summary>
     [JsonSerializable(typeof(List<TileMarkerEntry>))]
     [JsonSourceGenerationOptions(WriteIndented = true)]
     internal partial class TileMarkerJsonContext : JsonSerializerContext
     {
+    }
+
+    /// <summary>Source-gen context for the server-scoped <see cref="TileMarkerConfig"/> save.</summary>
+    [JsonSerializable(typeof(TileMarkerConfig))]
+    [JsonSourceGenerationOptions(WriteIndented = true)]
+    internal partial class TileMarkerConfigJsonContext : JsonSerializerContext
+    {
+    }
+
+    /// <summary>
+    /// JSON-backed store for marked tiles. Persisted to <c>TileMarkers.json</c> under the
+    /// <see cref="SettingsScope.Server"/> folder. Saving/loading (with rotating backups) is handled by
+    /// <see cref="JsonSave{T}"/>.
+    /// </summary>
+    internal sealed class TileMarkerConfig : JsonSave<TileMarkerConfig>
+    {
+        public List<TileMarkerEntry> Markers { get; set; } = new();
+
+        protected override SettingsScope Scope => SettingsScope.Server;
+
+        protected override string FileName => "TileMarkers.json";
+
+        protected override JsonTypeInfo<TileMarkerConfig> TypeInfo => TileMarkerConfigJsonContext.Default.TileMarkerConfig;
     }
 
     internal class TileMarkerManager
@@ -44,10 +69,12 @@ namespace ClassicUO.Game.Managers
         public static TileMarkerManager Instance { get; private set; } = new TileMarkerManager();
 
         private Dictionary<TileLocation, ushort> markedTiles = new Dictionary<TileLocation, ushort>();
+        private TileMarkerConfig config;
 
         private TileMarkerManager() { Load(); }
 
-        private string SavePath => Path.Combine(ProfileManager.ProfilePath ?? CUOEnviroment.ExecutablePath, "TileMarkers.json");
+        /// <summary>The old profile-scoped location, migrated to the server scope on first load.</summary>
+        private static string LegacySavePath => Path.Combine(ProfileManager.ProfilePath ?? CUOEnviroment.ExecutablePath, "TileMarkers.json");
 
         public void AddTile(int x, int y, int map, ushort hue)
         {
@@ -74,33 +101,44 @@ namespace ClassicUO.Game.Managers
 
         public void Save()
         {
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(SavePath));
-                var entries = markedTiles.Select(kvp => new TileMarkerEntry { Location = kvp.Key, Hue = kvp.Value }).ToList();
-                string json = JsonSerializer.Serialize(entries, TileMarkerJsonContext.Default.ListTileMarkerEntry);
-                FileSystemHelper.WriteAllTextSafe(SavePath, json);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to save marked tile data: {ex.Message}");
-            }
+            config.Markers = markedTiles.Select(kvp => new TileMarkerEntry { Location = kvp.Key, Hue = kvp.Value }).ToList();
+            config.Save();
         }
 
         private void Load()
         {
+            MigrateLegacyFile();
+
+            config = TileMarkerConfig.Load();
+            markedTiles = config.Markers.ToDictionary(e => e.Location, e => e.Hue);
+        }
+
+        /// <summary>Moves the old profile-scoped TileMarkers.json into the server-scoped location, once.</summary>
+        private void MigrateLegacyFile()
+        {
             try
             {
-                if (!File.Exists(SavePath)) return;
+                string legacy = LegacySavePath;
+                if (!File.Exists(legacy)) return;
 
-                string json = File.ReadAllText(SavePath);
+                // Don't clobber an existing server-scoped save.
+                if (File.Exists(new TileMarkerConfig().FilePath))
+                {
+                    return;
+                }
+
+                string json = File.ReadAllText(legacy);
                 List<TileMarkerEntry> entries = JsonSerializer.Deserialize(json, TileMarkerJsonContext.Default.ListTileMarkerEntry) ?? new List<TileMarkerEntry>();
-                markedTiles = entries.ToDictionary(e => e.Location, e => e.Hue);
+
+                var migrated = new TileMarkerConfig { Markers = entries };
+                migrated.Save();
+
+                File.Delete(legacy);
+                Log.Trace($"Migrated tile markers from '{legacy}' to '{migrated.FilePath}'.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to load marked tile data: {ex.Message}");
-                markedTiles = new Dictionary<TileLocation, ushort>();
+                Log.Error($"Failed to migrate tile marker data: {ex.Message}");
             }
         }
 
