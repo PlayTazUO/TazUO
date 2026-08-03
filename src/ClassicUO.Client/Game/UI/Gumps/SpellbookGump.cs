@@ -10,7 +10,6 @@ using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -321,7 +320,7 @@ namespace ClassicUO.Game.UI.Gumps
                             : _spellBookType == SpellBookType.Chivalry))
                     {
                         var label = new Label(
-                            ResGumps.TithingPointsAvailable + World.Player.TithingPoints,
+                            TazLang.Get("tithing_points_available") + World.Player.TithingPoints,
                             false,
                             0x0288,
                             font: 6
@@ -344,7 +343,7 @@ namespace ClassicUO.Game.UI.Gumps
                         dataX = 225;
                     }
 
-                    var text = new Label(ResGumps.Index, false, 0x0288, font: 6)
+                    var text = new Label(TazLang.Get("index"), false, 0x0288, font: 6)
                     {
                         X = indexX,
                         Y = 10
@@ -354,7 +353,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     if (_spellBookType == SpellBookType.Mastery && j >= 1)
                     {
-                        text = new Label(ResGumps.Abilities, false, 0x0288, font: 6)
+                        text = new Label(TazLang.Get("abilities"), false, 0x0288, font: 6)
                         {
                             X = dataX,
                             Y = 30
@@ -433,7 +432,7 @@ namespace ClassicUO.Game.UI.Gumps
                     else if (_spellBookType == SpellBookType.Mastery)
                     {
                         text = new Label(
-                            page == pagesToFill ? ResGumps.Passive : ResGumps.Activated,
+                            page == pagesToFill ? TazLang.Get("passive") : TazLang.Get("activated"),
                             false,
                             0x0288,
                             font: 6
@@ -739,7 +738,7 @@ namespace ClassicUO.Game.UI.Gumps
                         _dataBox.Add(new GumpPicTiled(iconX, 88, 120, 5, 0x0835), page1);
                     }
 
-                    var text = new Label(ResGumps.Reagents, false, 0x0288, font: 6)
+                    var text = new Label(TazLang.Get("reagents"), false, 0x0288, font: 6)
                     {
                         X = iconX,
                         Y = 92
@@ -1243,7 +1242,7 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         y = 148;
                         text = string.Format(
-                            ResGumps.Upkeep0Mana1MinSkill2,
+                            TazLang.Get("upkeep0_mana1_min_skill2"),
                             def.TithingCost,
                             manaCost,
                             minSkill
@@ -1251,7 +1250,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                     else
                     {
-                        text = string.Format(ResGumps.ManaCost0MinSkill1, manaCost, minSkill);
+                        text = string.Format(TazLang.Get("mana_cost0_min_skill1"), manaCost, minSkill);
                     }
 
                     return;
@@ -1271,7 +1270,7 @@ namespace ClassicUO.Game.UI.Gumps
                     break;
             }
 
-            text = string.Format(ResGumps.ManaCost0MinSkill1, manaCost, minSkill);
+            text = string.Format(TazLang.Get("mana_cost0_min_skill1"), manaCost, minSkill);
         }
 
         private void SetActivePage(int page)

@@ -8,7 +8,6 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Common.Enums;
-using ClassicUO.Resources;
 using SDL3;
 using Microsoft.Xna.Framework;
 using ClassicUO.Renderer.Gumps;
@@ -97,7 +96,7 @@ namespace ClassicUO.Game.UI.Controls
                     150,
                     25,
                     ButtonAction.Activate,
-                    ResGumps.CreateMacroButton,
+                    TazLang.Get("create_macro_button"),
                     0,
                     TEXT_ALIGN_TYPE.TS_CENTER
                 ) { ButtonParameter = (int)buttonsOption.CreateNewMacro, IsSelectable = true, IsSelected = true }
@@ -111,7 +110,7 @@ namespace ClassicUO.Game.UI.Controls
                     150,
                     25,
                     ButtonAction.Activate,
-                    ResGumps.MacroButtonEditor,
+                    TazLang.Get("macro_button_editor"),
                     0,
                     TEXT_ALIGN_TYPE.TS_CENTER
                 )
@@ -141,7 +140,7 @@ namespace ClassicUO.Game.UI.Controls
                         50,
                         25,
                         ButtonAction.Activate,
-                        ResGumps.Add
+                        TazLang.Get("add")
                     )
                     { ButtonParameter = (int)buttonsOption.AddBtn, IsSelectable = false }
                 );
@@ -156,7 +155,7 @@ namespace ClassicUO.Game.UI.Controls
                         170,
                         25,
                         ButtonAction.Activate,
-                        ResGumps.OpenMacroSettings
+                        TazLang.Get("open_macro_settings")
                     )
                     { ButtonParameter = (int)buttonsOption.OpenMacroOptions, IsSelectable = false }
                 );
@@ -339,7 +338,7 @@ namespace ClassicUO.Game.UI.Controls
                     }
 
                     SetupKeyByDefault();
-                    UIManager.Add(new MessageBoxGump(_gump.World, 250, 150, string.Format(ResGumps.ThisKeyCombinationAlreadyExists, macro.Name), null));
+                    UIManager.Add(new MessageBoxGump(_gump.World, 250, 150, string.Format(TazLang.Get("this_key_combination_already_exists"), macro.Name), null));
 
                     return;
                 }
@@ -356,7 +355,7 @@ namespace ClassicUO.Game.UI.Controls
                     }
 
                     SetupKeyByDefault();
-                    UIManager.Add(new MessageBoxGump(_gump.World, 250, 150, string.Format(ResGumps.ThisKeyCombinationAlreadyExists, macro.Name), null));
+                    UIManager.Add(new MessageBoxGump(_gump.World, 250, 150, string.Format(TazLang.Get("this_key_combination_already_exists"), macro.Name), null));
 
                     return;
                 }
@@ -373,7 +372,7 @@ namespace ClassicUO.Game.UI.Controls
                     }
 
                     SetupKeyByDefault();
-                    UIManager.Add(new MessageBoxGump(_gump.World, 250, 150, string.Format(ResGumps.ThisKeyCombinationAlreadyExists, macro.Name), null));
+                    UIManager.Add(new MessageBoxGump(_gump.World, 250, 150, string.Format(TazLang.Get("this_key_combination_already_exists"), macro.Name), null));
 
                     return;
                 }
@@ -499,7 +498,7 @@ namespace ClassicUO.Game.UI.Controls
                         50,
                         25,
                         ButtonAction.Activate,
-                        ResGumps.Remove,
+                        TazLang.Get("remove"),
                         0,
                         TEXT_ALIGN_TYPE.TS_CENTER
                     )

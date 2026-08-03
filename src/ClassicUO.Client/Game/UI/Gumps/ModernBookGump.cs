@@ -9,9 +9,9 @@ using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -187,7 +187,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             _titleTextBox.SetText(title);
             _titleTextBox.TextChanged += PageZero_TextChanged;
-            Add(new Label(ResGumps.By, true, 1) { X = 40, Y = 130 }, 1);
+            Add(new Label(TazLang.Get("by"), true, 1) { X = 40, Y = 130 }, 1);
 
             Add
             (

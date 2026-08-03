@@ -1,8 +1,8 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Game.Managers;
-using ClassicUO.Resources;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Controls
 {
@@ -48,7 +48,7 @@ namespace ClassicUO.Game.UI.Controls
                 60,
                 25,
                 ButtonAction.Activate,
-                ResGumps.Delete
+                TazLang.Get("delete")
             ) { ButtonParameter = 999 };
 
             deleteButton.MouseUp += (sender, e) =>

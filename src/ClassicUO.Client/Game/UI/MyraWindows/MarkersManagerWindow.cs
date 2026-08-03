@@ -7,10 +7,10 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
 using Myra.Graphics2D.TextureAtlases;
 using Myra.Graphics2D.UI;
+using ClassicUO.Configuration;
 using static ClassicUO.Game.UI.Gumps.WorldMapGump;
 
 namespace ClassicUO.Game.UI.MyraWindows;
@@ -42,7 +42,7 @@ public sealed class MarkersManagerWindow : MyraControl
 
     private static List<WMapMarkerFile> MarkerFiles => _markerFiles;
 
-    public MarkersManagerWindow(World world) : base(ResGumps.MarkersManager)
+    public MarkersManagerWindow(World world) : base(TazLang.Get("markers_manager"))
     {
         _world = world;
         Build();
@@ -98,7 +98,7 @@ public sealed class MarkersManagerWindow : MyraControl
     {
         var toolbar = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
 
-        var searchBox = new MyraInputBox { Text = _filterText, HintText = ResGumps.MarkerSearch, Width = 220 };
+        var searchBox = new MyraInputBox { Text = _filterText, HintText = TazLang.Get("marker_search"), Width = 220 };
         searchBox.TextChangedByUser += (_, _) =>
         {
             _filterText = searchBox.Text ?? "";
@@ -175,12 +175,12 @@ public sealed class MarkersManagerWindow : MyraControl
         if (editable)
             columns.Add(GridColumnInfo.Auto(""));
 
-        columns.Add(GridColumnInfo.Auto(ResGumps.MarkerIcon));
-        columns.Add(GridColumnInfo.Auto(ResGumps.MarkerName));
-        columns.Add(GridColumnInfo.Auto(ResGumps.MarkerX));
-        columns.Add(GridColumnInfo.Auto(ResGumps.MarkerY));
+        columns.Add(GridColumnInfo.Auto(TazLang.Get("marker_icon")));
+        columns.Add(GridColumnInfo.Auto(TazLang.Get("marker_name")));
+        columns.Add(GridColumnInfo.Auto(TazLang.Get("marker_x")));
+        columns.Add(GridColumnInfo.Auto(TazLang.Get("marker_y")));
         columns.Add(GridColumnInfo.Auto("Map"));
-        columns.Add(GridColumnInfo.Auto(ResGumps.MarkerColor));
+        columns.Add(GridColumnInfo.Auto(TazLang.Get("marker_color")));
         columns.Add(GridColumnInfo.Auto("Zoom"));
         columns.Add(GridColumnInfo.Auto(""));
 
@@ -221,11 +221,11 @@ public sealed class MarkersManagerWindow : MyraControl
 
         if (editable)
         {
-            actions.Widgets.Add(new MyraButton(ResGumps.Edit, () => EditMarker(file, marker, realIdx)));
-            actions.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(ResGumps.Remove, () => RemoveMarker(file, marker))));
+            actions.Widgets.Add(new MyraButton(TazLang.Get("edit"), () => EditMarker(file, marker, realIdx)));
+            actions.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(TazLang.Get("remove"), () => RemoveMarker(file, marker))));
         }
 
-        actions.Widgets.Add(new MyraButton(ResGumps.MarkerGoTo, () => GoToMarker(marker)));
+        actions.Widgets.Add(new MyraButton(TazLang.Get("marker_go_to"), () => GoToMarker(marker)));
 
         grid.AddWidget(actions, row, col);
     }
