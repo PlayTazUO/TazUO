@@ -184,6 +184,10 @@ namespace ClassicUO
                 AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)c;
                 packetsProcessed++;
             }
+
+            // Plugin packets are buffered separately and would sit unprocessed
+            // if no network packets arrived this frame, so always drain them.
+            PacketParser.Instance.ParsePluginsPackets(Client.Game.UO.World);
         }
 
         protected override void LoadContent()

@@ -41,6 +41,11 @@ internal sealed class PacketParser
         return ParsePackets(world, _buffer, true) + ParsePackets(world, _pluginsBuffer, false);
     }
 
+    public int ParsePluginsPackets(World world)
+    {
+        return ParsePackets(world, _pluginsBuffer, false);
+    }
+
     public void AddHandler(uint id, PacketHandler handler, bool allowOverride = true)
     {
         if (id >= _handlers.Length)
