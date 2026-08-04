@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility.Logging;
-using Dapper;
-using Dapper.Contrib.Extensions;
 
 namespace ClassicUO.LegionScripting
 {
@@ -137,19 +135,8 @@ namespace ClassicUO.LegionScripting
         private sealed class PersistentVarsDb : SqliteDatabase
         {
             // Column names must stay exactly as-is (including "scope_key") - this table already
-            // exists on disk for every existing install, and EnsureTableAsync only adds/drops
-            // columns, it never renames or migrates data between them.
-            [Table("persistent_vars")]
-            private sealed class PersistentVarRecord
-            {
-                [ExplicitKey]
-                public string id { get; set; }
-                public string scope { get; set; }
-                public string scope_key { get; set; }
-                public string key { get; set; }
-                public string value { get; set; }
-            }
-
+            // exists on disk for every existing install, and the base schema reconciliation only
+            // adds/drops columns, it never renames or migrates data between them.
             private static readonly SqliteTableSchema Schema = new("persistent_vars",
                 SqliteColumn.Str("id", primaryKey: true, notNull: true, def: "''"),
                 SqliteColumn.Str("scope", notNull: true),
@@ -157,27 +144,37 @@ namespace ClassicUO.LegionScripting
                 SqliteColumn.Str("key", notNull: true),
                 SqliteColumn.Str("value", notNull: true));
 
-            public PersistentVarsDb() : base(DB_FILE)
+            // The schema constructor ensures the table; only the index and one-time id backfill remain.
+            public PersistentVarsDb() : base(Schema, DB_FILE)
             {
                 InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
             }
 
             private async Task InitializeAsync()
             {
-                await EnsureTableAsync(Schema).ConfigureAwait(false);
-
-                await WithConnectionAsync(connection => connection.ExecuteAsync("""
-                                                                                 CREATE INDEX IF NOT EXISTS idx_scope_scopekey
-                                                                                 ON persistent_vars(scope, scope_key)
-                                                                                 """)).ConfigureAwait(false);
+                // Index creation and the one-time id backfill cannot be expressed through the generic
+                // row helpers, so they run as raw statements through the base class.
+                await ExecuteAsync("""
+                                   CREATE INDEX IF NOT EXISTS idx_scope_scopekey
+                                   ON persistent_vars(scope, scope_key)
+                                   """).ConfigureAwait(false);
 
                 // Rows written before the "id" column existed (every install prior to this change)
                 // need it backfilled once, otherwise they become orphaned and unreadable through the
                 // id-based lookups below.
-                await WithConnectionAsync(connection => connection.ExecuteAsync("""
-                                                                                 UPDATE persistent_vars SET id = scope || char(31) || scope_key || char(31) || key
-                                                                                 WHERE id IS NULL OR id = ''
-                                                                                 """)).ConfigureAwait(false);
+                await ExecuteAsync("""
+                                   UPDATE persistent_vars SET id = scope || char(31) || scope_key || char(31) || key
+                                   WHERE id IS NULL OR id = ''
+                                   """).ConfigureAwait(false);
+
+                // Migrated tables gained "id" via ALTER TABLE, which cannot declare it a primary key,
+                // so it has no unique constraint there. The upsert's ON CONFLICT("id") requires one;
+                // this index supplies it (fresh tables already declare id PRIMARY KEY). Created after
+                // the backfill so every id is populated and unique before the constraint is enforced.
+                await ExecuteAsync("""
+                                   CREATE UNIQUE INDEX IF NOT EXISTS idx_persistent_vars_id
+                                   ON persistent_vars(id)
+                                   """).ConfigureAwait(false);
             }
 
             // The embedded character between segments is U+001F (unit separator, matches
@@ -185,38 +182,28 @@ namespace ClassicUO.LegionScripting
             // concatenated into a single explicit key.
             private static string MakeId(string scope, string scopeKey, string key) => $"{scope}{scopeKey}{key}";
 
-            public Task<string> GetValueAsync(string scope, string scopeKey, string key) => WithConnectionAsync(async connection =>
+            public async Task<string> GetValueAsync(string scope, string scopeKey, string key)
             {
-                PersistentVarRecord record = await connection.GetAsync<PersistentVarRecord>(MakeId(scope, scopeKey, key)).ConfigureAwait(false);
-                return record?.value;
+                SqliteRow? row = await GetFirstAsync(new SqliteRow { ["id"] = MakeId(scope, scopeKey, key) }).ConfigureAwait(false);
+                return row?.Get<string>("value");
+            }
+
+            public Task<int> SaveValueAsync(string scope, string scopeKey, string key, string value) => AddOrUpdateAsync(new SqliteRow
+            {
+                ["id"] = MakeId(scope, scopeKey, key),
+                ["scope"] = scope,
+                ["scope_key"] = scopeKey,
+                ["key"] = key,
+                ["value"] = value ?? ""
             });
 
-            public Task SaveValueAsync(string scope, string scopeKey, string key, string value) => WithConnectionAsync(async connection =>
-            {
-                string id = MakeId(scope, scopeKey, key);
-                PersistentVarRecord existing = await connection.GetAsync<PersistentVarRecord>(id).ConfigureAwait(false);
-
-                if (existing == null)
-                {
-                    await connection.InsertAsync(new PersistentVarRecord { id = id, scope = scope, scope_key = scopeKey, key = key, value = value ?? "" }).ConfigureAwait(false);
-                }
-                else
-                {
-                    existing.value = value ?? "";
-                    await connection.UpdateAsync(existing).ConfigureAwait(false);
-                }
-            });
-
-            public Task DeleteValueAsync(string scope, string scopeKey, string key) => WithConnectionAsync(connection =>
-                connection.DeleteAsync(new PersistentVarRecord { id = MakeId(scope, scopeKey, key) }));
+            public Task<int> DeleteValueAsync(string scope, string scopeKey, string key) => DeleteAsync(
+                new SqliteRow { ["id"] = MakeId(scope, scopeKey, key) });
 
             public async Task<Dictionary<string, string>> GetAllAsync(string scope, string scopeKey)
             {
-                IEnumerable<PersistentVarRecord> rows = await WithConnectionAsync(connection =>
-                    connection.GetAllAsync<PersistentVarRecord>()).ConfigureAwait(false);
-
-                return rows.Where(r => r.scope == scope && r.scope_key == scopeKey)
-                            .ToDictionary(r => r.key, r => r.value);
+                IReadOnlyList<SqliteRow> rows = await GetAsync(new SqliteRow { ["scope"] = scope, ["scope_key"] = scopeKey }).ConfigureAwait(false);
+                return rows.ToDictionary(r => r.Get<string>("key"), r => r.Get<string>("value"));
             }
         }
     }
