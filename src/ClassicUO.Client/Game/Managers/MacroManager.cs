@@ -2051,6 +2051,7 @@ namespace ClassicUO.Game.Managers
                     // 2 - Follower (only your followers)
                     // 3 - Object (???)
                     // 4 - Mobile (any mobiles)
+                    // 5 - Friend (only mobiles on your friends list)
                     var scantype = (ScanTypeObject)(macro.SubCode - MacroSubType.Hostile);
 
                     if (scanRange == ScanModeObject.Nearest)
