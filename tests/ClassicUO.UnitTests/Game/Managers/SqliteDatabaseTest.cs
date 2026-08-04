@@ -324,6 +324,77 @@ namespace ClassicUO.UnitTests.Game.Managers
             act.Should().NotThrow();
         }
 
+        // Simulates the persistent_vars table on an install that predates the "id" column: the schema
+        // constructor adds id via ALTER TABLE, which cannot declare a PRIMARY KEY, so the declared-PK
+        // upsert only resolves its ON CONFLICT("id") target once a unique index exists.
+        private sealed class MigratedTableDatabase : SqliteDatabase
+        {
+            public static readonly SqliteTableSchema MigratedSchema = new("persistent_vars",
+                SqliteColumn.Str("id", primaryKey: true, notNull: true, def: "''"),
+                SqliteColumn.Str("scope", notNull: true),
+                SqliteColumn.Str("scope_key", notNull: true),
+                SqliteColumn.Str("key", notNull: true),
+                SqliteColumn.Str("value", notNull: true));
+
+            public MigratedTableDatabase(string directory) : base(MigratedSchema, "test.db", directory) { }
+
+            public Task<int> UpsertAsync(SqliteRow row) => AddOrUpdateAsync(row);
+
+            public Task<SqliteRow?> FirstAsync(SqliteRow filter) => GetFirstAsync(filter);
+
+            public Task RunAsync(Func<SqliteConnection, Task> operation) => WithConnectionAsync(operation);
+        }
+
+        [Fact]
+        public async Task AddOrUpdateAsync_OnMigratedTable_NeedsUniqueIndex_ForConflictTarget()
+        {
+            // Pre-id table shape: composite PK, no id column.
+            await _db.RunAsync(c => c.ExecuteAsync(
+                "CREATE TABLE persistent_vars (scope TEXT NOT NULL, scope_key TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (scope, scope_key, key))"));
+            _db.Dispose();
+
+            using var db = new MigratedTableDatabase(_tempDir);
+
+            // Populate ids exactly like the persistent-vars backfill does; on a migrated table the id
+            // column has no uniqueness of its own yet.
+            await db.RunAsync(c => c.ExecuteAsync(
+                "UPDATE persistent_vars SET id = scope || char(31) || scope_key || char(31) || key WHERE id IS NULL OR id = ''"));
+
+            SqliteRow row = new()
+            {
+                ["id"] = "a\x1fb\x1fc",
+                ["scope"] = "a",
+                ["scope_key"] = "b",
+                ["key"] = "c",
+                ["value"] = "v"
+            };
+
+            // Without a unique constraint the upsert's ON CONFLICT("id") has no target to resolve.
+            Func<Task> beforeIndex = () => db.UpsertAsync(row);
+            await beforeIndex.Should().ThrowAsync<SqliteException>();
+
+            // The persistent-vars migration creates a unique index; the upsert then works and, on a
+            // second call, updates the existing row instead of failing or duplicating it.
+            await db.RunAsync(c => c.ExecuteAsync(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_persistent_vars_id ON persistent_vars(id)"));
+
+            Func<Task> afterIndex = () => db.UpsertAsync(row);
+            await afterIndex.Should().NotThrowAsync();
+
+            await db.UpsertAsync(new SqliteRow
+            {
+                ["id"] = "a\x1fb\x1fc",
+                ["scope"] = "a",
+                ["scope_key"] = "b",
+                ["key"] = "c",
+                ["value"] = "updated"
+            });
+
+            SqliteRow? stored = await db.FirstAsync(new SqliteRow { ["id"] = "a\x1fb\x1fc" });
+            stored.Should().NotBeNull();
+            stored.Value.Get<string>("value").Should().Be("updated");
+        }
+
         public void Dispose()
         {
             _db.Dispose();

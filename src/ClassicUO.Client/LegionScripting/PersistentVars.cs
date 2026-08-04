@@ -166,6 +166,15 @@ namespace ClassicUO.LegionScripting
                                    UPDATE persistent_vars SET id = scope || char(31) || scope_key || char(31) || key
                                    WHERE id IS NULL OR id = ''
                                    """).ConfigureAwait(false);
+
+                // Migrated tables gained "id" via ALTER TABLE, which cannot declare it a primary key,
+                // so it has no unique constraint there. The upsert's ON CONFLICT("id") requires one;
+                // this index supplies it (fresh tables already declare id PRIMARY KEY). Created after
+                // the backfill so every id is populated and unique before the constraint is enforced.
+                await ExecuteAsync("""
+                                   CREATE UNIQUE INDEX IF NOT EXISTS idx_persistent_vars_id
+                                   ON persistent_vars(id)
+                                   """).ConfigureAwait(false);
             }
 
             // The embedded character between segments is U+001F (unit separator, matches
