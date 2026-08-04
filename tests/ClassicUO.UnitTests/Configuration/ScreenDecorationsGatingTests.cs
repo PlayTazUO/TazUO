@@ -22,7 +22,7 @@ namespace ClassicUO.UnitTests.Configuration
             settings.OverlaysActive.Should().BeFalse();
             settings.ShakeActive.Should().BeFalse();
 
-            foreach (OverlayEffect effect in OverlaySystemSettings.AllEffects)
+            foreach (OverlayEffectSlot effect in OverlaySystemSettings.AllEffects)
                 settings.Overlays.GetSettings(effect).Enabled.Should().BeFalse();
         }
 
@@ -35,7 +35,7 @@ namespace ClassicUO.UnitTests.Configuration
 
             settings.Shake.FullScreen.Should().BeFalse();
 
-            foreach (OverlayEffect effect in OverlaySystemSettings.AllEffects)
+            foreach (OverlayEffectSlot effect in OverlaySystemSettings.AllEffects)
                 settings.Overlays.GetSettings(effect).FullScreen.Should().BeFalse();
         }
 

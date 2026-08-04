@@ -13,14 +13,14 @@ public static class BuiltInOverlayPresets
     /// <see cref="Renderer.Effects.OverlayParams.Default"/> instead. TunnelVision and Fracture
     /// exist as presets but have no effect slot to hang off.
     /// </summary>
-    public static ScreenOverlayPreset Create(OverlayEffect effect) =>
-        effect switch
+    public static ScreenOverlayPreset Create(OverlayEffectSlot effectSlot) =>
+        effectSlot switch
         {
-            OverlayEffect.Bleed => new BleedOverlay(),
-            OverlayEffect.Poison => new PoisonOverlay(),
-            OverlayEffect.Fog => new FogOverlay(),
-            OverlayEffect.Drunk => new DrunkOverlay(),
-            OverlayEffect.Concussion => new ConcussionOverlay(),
+            OverlayEffectSlot.Bleed => new BleedOverlay(),
+            OverlayEffectSlot.Poison => new PoisonOverlay(),
+            OverlayEffectSlot.Fog => new FogOverlay(),
+            OverlayEffectSlot.Drunk => new DrunkOverlay(),
+            OverlayEffectSlot.Concussion => new ConcussionOverlay(),
             _ => null
         };
 }

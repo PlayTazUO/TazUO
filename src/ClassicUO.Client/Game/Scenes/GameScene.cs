@@ -1252,7 +1252,7 @@ namespace ClassicUO.Game.Scenes
             Profiler.EnterContext("ScreenDecorations");
 
             var scene = new ScreenOverlaySource(_worldRenderTarget, _worldSrcRect);
-            ScreenOverlayManager.Instance.DrawViewportOverlays(batcher, Camera.Bounds, scene);
+            ScreenOverlayManager.DrawViewportOverlays(batcher, Camera.Bounds, scene);
 
             Profiler.ExitContext("ScreenDecorations");
 

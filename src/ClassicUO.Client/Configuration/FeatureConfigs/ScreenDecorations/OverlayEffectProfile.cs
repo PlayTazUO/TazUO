@@ -43,9 +43,9 @@ public class OverlayEffectProfile : ObservableSettings, IProfile
 
     // Deliberately not observable. The options UI rebuilds an editor whenever its profile raises
     // PropertyChanged, which would tear the fade inputs out from under the user mid-edit.
-    public float FadeInSeconds { get; set; } = 0.4f;
+    public float FadeInSeconds { get; set; } = 0.6f;
 
-    public float FadeOutSeconds { get; set; } = 0.8f;
+    public float FadeOutSeconds { get; set; } = 2f;
 
     /// <summary>Back-to-front: index 0 is drawn first. One draw call each.</summary>
     public List<OverlayLayer> Layers { get; set => SetField(ref field, value); } = [];

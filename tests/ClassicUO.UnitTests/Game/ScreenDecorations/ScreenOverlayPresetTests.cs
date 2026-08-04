@@ -128,9 +128,9 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         /// </summary>
         [Theory]
         [MemberData(nameof(BuiltInEffects))]
-        public void EveryPresetOrdersItsLayersFromDeepestToShallowest(OverlayEffect effect)
+        public void EveryPresetOrdersItsLayersFromDeepestToShallowest(OverlayEffectSlot effectSlot)
         {
-            ScreenOverlayPreset? preset = BuiltInOverlayPresets.Create(effect);
+            ScreenOverlayPreset? preset = BuiltInOverlayPresets.Create(effectSlot);
 
             if (preset == null)
                 return;
@@ -179,11 +179,11 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
                 reaches.Distinct().Should().HaveCount(reaches.Count);
         }
 
-        public static TheoryData<OverlayEffect> BuiltInEffects()
+        public static TheoryData<OverlayEffectSlot> BuiltInEffects()
         {
-            var data = new TheoryData<OverlayEffect>();
+            var data = new TheoryData<OverlayEffectSlot>();
 
-            foreach (OverlayEffect effect in Enum.GetValues<OverlayEffect>())
+            foreach (OverlayEffectSlot effect in Enum.GetValues<OverlayEffectSlot>())
                 data.Add(effect);
 
             return data;

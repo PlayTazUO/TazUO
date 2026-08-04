@@ -23,24 +23,24 @@ public class OverlaySystemSettings : ObservableSettings
     public OverlayEffectGeneralSettings Drunk { get; set => SetField(ref field, value); } = new();
     public OverlayEffectGeneralSettings Concussion { get; set => SetField(ref field, value); } = new();
 
-    public static IReadOnlyList<OverlayEffect> AllEffects { get; } = Enum.GetValues<OverlayEffect>();
+    public static IReadOnlyList<OverlayEffectSlot> AllEffects { get; } = Enum.GetValues<OverlayEffectSlot>();
 
     /// <summary>
-    /// The settings block backing <paramref name="effect"/>.
+    /// The settings block backing <paramref name="effectSlot"/>.
     /// </summary>
-    /// <param name="effect">The effect to look up.</param>
+    /// <param name="effectSlot">The effect to look up.</param>
     /// <returns>Its settings; never null.</returns>
     /// <exception cref="ArgumentOutOfRangeException">The effect has no settings block, which means
-    /// one was added to <see cref="OverlayEffect"/> without a home here.</exception>
-    public OverlayEffectGeneralSettings GetSettings(OverlayEffect effect) =>
-        effect switch
+    /// one was added to <see cref="OverlayEffectSlot"/> without a home here.</exception>
+    public OverlayEffectGeneralSettings GetSettings(OverlayEffectSlot effectSlot) =>
+        effectSlot switch
         {
-            OverlayEffect.Bleed => Bleed,
-            OverlayEffect.Poison => Poison,
-            OverlayEffect.MortalStrike => MortalStrike,
-            OverlayEffect.Fog => Fog,
-            OverlayEffect.Drunk => Drunk,
-            OverlayEffect.Concussion => Concussion,
-            _ => throw new ArgumentOutOfRangeException(nameof(effect), effect, null)
+            OverlayEffectSlot.Bleed => Bleed,
+            OverlayEffectSlot.Poison => Poison,
+            OverlayEffectSlot.MortalStrike => MortalStrike,
+            OverlayEffectSlot.Fog => Fog,
+            OverlayEffectSlot.Drunk => Drunk,
+            OverlayEffectSlot.Concussion => Concussion,
+            _ => throw new ArgumentOutOfRangeException(nameof(effectSlot), effectSlot, null)
         };
 }

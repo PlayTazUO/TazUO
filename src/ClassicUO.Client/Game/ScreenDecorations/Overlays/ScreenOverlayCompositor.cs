@@ -77,6 +77,10 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
             public float Envelope;
             public bool Hiding;
 
+            /// <summary>What the occurrence that raised this asked for, over the profile's own
+            /// values. Held rather than baked in, so it can be restated without a re-bake.</summary>
+            public OverlayModulation Modulation = OverlayModulation.Default;
+
             /// <summary>Which pass draws it, and so what it is allowed to cover.</summary>
             public OverlayScope Scope;
         }
@@ -112,6 +116,26 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
             ScreenOverlayPreset preset,
             int priority = 0,
             OverlayScope scope = OverlayScope.Viewport
+        ) =>
+            Show(id, preset, OverlayModulation.Default, priority, scope);
+
+        /// <summary>
+        /// Activates (or re-configures, if already active) an overlay, scaled by what the occurrence
+        /// behind it asked for. Restating the modulation on an already-active overlay adjusts it in
+        /// place: the envelope is untouched, so a nearer second earthquake strengthens the one on
+        /// screen rather than restarting its fade.
+        /// </summary>
+        /// <param name="id">The slot to occupy; one overlay per slot.</param>
+        /// <param name="preset">What to draw.</param>
+        /// <param name="modulation">How this occurrence departs from the preset's own values.</param>
+        /// <param name="priority">Higher composites on top and survives the concurrency cap.</param>
+        /// <param name="scope">Where it is drawn; the game viewport by default.</param>
+        public void Show(
+            OverlayId id,
+            ScreenOverlayPreset preset,
+            OverlayModulation modulation,
+            int priority = 0,
+            OverlayScope scope = OverlayScope.Viewport
         )
         {
             if (_active.TryGetValue(id, out ActiveOverlay existing))
@@ -120,6 +144,7 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
                 existing.Priority = priority;
                 existing.Hiding = false;
                 existing.Scope = scope;
+                existing.Modulation = modulation;
                 preset.BakeClamped(existing.Layers);
                 return;
             }
@@ -147,6 +172,7 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
                 Priority = priority,
                 Envelope = 0f,
                 Hiding = false,
+                Modulation = modulation,
                 Scope = scope
             };
 
@@ -213,7 +239,10 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
                 foreach (OverlayLayer layer in o.Layers)
                 {
                     OverlayParams p = layer.Params;
-                    p.Appearance.Intensity *= o.Envelope;
+
+                    // Envelope is the fade; modulation is what the occurrence asked for. Both scale
+                    // the authored value rather than replacing it, so a profile stays the ceiling.
+                    p.Appearance.Intensity *= o.Envelope * o.Modulation.Intensity;
 
                     if (p.Appearance.Intensity <= 0f)
                         continue;

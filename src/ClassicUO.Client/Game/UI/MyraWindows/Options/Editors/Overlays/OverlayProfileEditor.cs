@@ -14,6 +14,7 @@ using FontStashSharp.RichText;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.Properties;
+using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Editors.Overlays;
 
@@ -84,7 +85,7 @@ internal sealed class OverlayProfileEditor : Widget
         Children.Add(BuildLayerGrid());
     }
 
-    private Widget BuildFadeRow() =>
+    private WrapPanel BuildFadeRow() =>
         OptionTabCommons.StyledHorizontalWrapPanel(
             LabeledFloat(
                 TazLang.Get("visualeffects_fadein", "Fade in (s)"),

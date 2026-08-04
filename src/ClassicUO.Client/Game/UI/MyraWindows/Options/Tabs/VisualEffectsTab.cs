@@ -37,9 +37,9 @@ public static class VisualEffectsTab
 
         group.AddTab(TazLang.Get("visualeffects_general", "General"), GetGeneralSubTabContent);
 
-        foreach (OverlayEffect effect in OverlaySystemSettings.AllEffects)
+        foreach (OverlayEffectSlot effect in OverlaySystemSettings.AllEffects)
         {
-            OverlayEffect captured = effect;
+            OverlayEffectSlot captured = effect;
 
             // Empty metadata to keep the profile editors out of search results, as the nameplate
             // profiles tab does - they don't render meaningfully there.
@@ -49,16 +49,16 @@ public static class VisualEffectsTab
         return group;
     }
 
-    private static string EffectLabel(OverlayEffect effect) =>
-        effect switch
+    private static string EffectLabel(OverlayEffectSlot effectSlot) =>
+        effectSlot switch
         {
-            OverlayEffect.Bleed => TazLang.Get("visualeffects_bleed", "Bleed"),
-            OverlayEffect.Poison => TazLang.Get("visualeffects_poison", "Poison"),
-            OverlayEffect.MortalStrike => TazLang.Get("visualeffects_mortalstrike", "Mortal Strike"),
-            OverlayEffect.Fog => TazLang.Get("visualeffects_fog", "Fog"),
-            OverlayEffect.Drunk => TazLang.Get("visualeffects_drunk", "Drunk"),
-            OverlayEffect.Concussion => TazLang.Get("visualeffects_concussion", "Concussion"),
-            _ => effect.ToString()
+            OverlayEffectSlot.Bleed => TazLang.Get("visualeffects_bleed", "Bleed"),
+            OverlayEffectSlot.Poison => TazLang.Get("visualeffects_poison", "Poison"),
+            OverlayEffectSlot.MortalStrike => TazLang.Get("visualeffects_mortalstrike", "Mortal Strike"),
+            OverlayEffectSlot.Fog => TazLang.Get("visualeffects_fog", "Fog"),
+            OverlayEffectSlot.Drunk => TazLang.Get("visualeffects_drunk", "Drunk"),
+            OverlayEffectSlot.Concussion => TazLang.Get("visualeffects_concussion", "Concussion"),
+            _ => effectSlot.ToString()
         };
 
     /// <summary>
@@ -132,9 +132,9 @@ public static class VisualEffectsTab
             decimalPlaces: INTENSITY_DECIMAL_PLACES
         );
 
-    private static IOptionSource GetEffectSubTabContent(OverlayEffect effect)
+    private static IOptionSource GetEffectSubTabContent(OverlayEffectSlot effectSlot)
     {
-        OverlayEffectGeneralSettings settings = DecorationSettings.Current.Overlays.GetSettings(effect);
+        OverlayEffectGeneralSettings settings = DecorationSettings.Current.Overlays.GetSettings(effectSlot);
 
         // Switches first, then the profile editor under a rule: the editor is a panel of its own with
         // its own toolbar, and without a break the two read as one undifferentiated column.
@@ -147,9 +147,9 @@ public static class VisualEffectsTab
                 TazLang.Get("visualeffects_fullscreen", "Draw over the whole window"),
                 new Accessor<bool>(() => settings.FullScreen)
             ),
-            PreviewCheckbox(effect),
+            PreviewCheckbox(effectSlot),
             Option.Custom(OptionTabCommons.StyledHorizontalSeparator),
-            Option.Custom(() => BuildProfileEditor(effect, settings))
+            Option.Custom(() => BuildProfileEditor(effectSlot, settings))
         );
 
         // The profile editor doesn't fit the search results page, and the switches above it aren't
@@ -164,18 +164,18 @@ public static class VisualEffectsTab
     ///     the effect's own enabled switch and the player's state - the usual reason to preview one is
     ///     to decide whether to turn it on at all.
     /// </summary>
-    /// <param name="effect">The effect this tab configures.</param>
+    /// <param name="effectSlot">The effect this tab configures.</param>
     /// <returns>The checkbox entry.</returns>
-    private static OptionEntry PreviewCheckbox(OverlayEffect effect)
+    private static OptionEntry PreviewCheckbox(OverlayEffectSlot effectSlot)
     {
         // Read at build time rather than bound: a preview can also be ended from elsewhere - closing
         // the options, or leaving the world - and the tab is rebuilt on every visit anyway.
-        bool previewing = ScreenOverlayManager.Instance.IsPreviewing(effect);
+        bool previewing = ScreenOverlayManager.Instance.IsPreviewing(effectSlot);
 
         return Option.Checkbox(
             TazLang.Get("visualeffects_preview", "Preview this effect"),
             previewing,
-            on => ScreenOverlayManager.Instance.SetPreview(effect, on),
+            on => ScreenOverlayManager.Instance.SetPreview(effectSlot, on),
             TazLang.Get(
                 "visualeffects_preview_tooltip",
                 "Shows this effect regardless of your character's state.\n"
@@ -185,9 +185,9 @@ public static class VisualEffectsTab
         );
     }
 
-    private static Widget BuildProfileEditor(OverlayEffect effect, OverlayEffectGeneralSettings settings)
+    private static Widget BuildProfileEditor(OverlayEffectSlot effectSlot, OverlayEffectGeneralSettings settings)
     {
-        OverlayEffectProfile? builtIn = BuildBuiltInProfile(effect);
+        OverlayEffectProfile? builtIn = BuildBuiltInProfile(effectSlot);
 
         List<OverlayEffectProfile> initial = builtIn == null
             ? [.. settings.Profiles]
@@ -239,18 +239,18 @@ public static class VisualEffectsTab
     }
 
     /// <summary>
-    ///     Bakes the code preset for <paramref name="effect" /> into a profile so it can be inspected and
+    ///     Bakes the code preset for <paramref name="effectSlot" /> into a profile so it can be inspected and
     ///     copied from the editor. Null for effects that have no preset yet.
     /// </summary>
-    private static OverlayEffectProfile? BuildBuiltInProfile(OverlayEffect effect)
+    private static OverlayEffectProfile? BuildBuiltInProfile(OverlayEffectSlot effectSlot)
     {
         // Creates a new instance of the hardcoded preset. Note this is an ephemeral object that is not actually saved anywhere.
-        ScreenOverlayPreset preset = BuiltInOverlayPresets.Create(effect);
+        ScreenOverlayPreset preset = BuiltInOverlayPresets.Create(effectSlot);
 
         if (preset == null)
             return null;
 
-        OverlayEffectProfile profile = preset.ToProfile($"{EffectLabel(effect)} {TazLang.Get("visualeffects_builtinsuffix", "(built-in)")}");
+        OverlayEffectProfile profile = preset.ToProfile($"{EffectLabel(effectSlot)} {TazLang.Get("visualeffects_builtinsuffix", "(built-in)")}");
         profile.IsBuiltIn = true;
 
         return profile;

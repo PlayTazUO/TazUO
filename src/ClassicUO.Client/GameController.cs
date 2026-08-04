@@ -734,7 +734,7 @@ namespace ClassicUO
                 ? new ScreenOverlaySource(_screenRenderTarget, _screenRenderTarget.Bounds)
                 : ScreenOverlaySource.None;
 
-            ScreenOverlayManager.Instance.DrawFullScreenOverlays(_uoSpriteBatch, destRect, scene);
+            ScreenOverlayManager.DrawFullScreenOverlays(_uoSpriteBatch, destRect, scene);
             Profiler.ExitContext("ScreenOverlays");
 
             base.Draw(gameTime);

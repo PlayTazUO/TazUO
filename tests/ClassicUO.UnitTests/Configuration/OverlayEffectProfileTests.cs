@@ -230,8 +230,8 @@ namespace ClassicUO.UnitTests.Configuration
         {
             var config = new ScreenDecorations();
 
-            config.Overlays.GetSettings(OverlayEffect.Bleed).Should().BeSameAs(config.Overlays.Bleed);
-            config.Overlays.GetSettings(OverlayEffect.Drunk).Should().BeSameAs(config.Overlays.Drunk);
+            config.Overlays.GetSettings(OverlayEffectSlot.Bleed).Should().BeSameAs(config.Overlays.Bleed);
+            config.Overlays.GetSettings(OverlayEffectSlot.Drunk).Should().BeSameAs(config.Overlays.Drunk);
 
             // Every effect must have a block of its own, so adding one to the enum without giving it
             // a home fails here rather than at runtime. Counting them instead would only fail when

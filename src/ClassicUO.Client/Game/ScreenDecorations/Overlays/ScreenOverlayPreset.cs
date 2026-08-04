@@ -35,8 +35,15 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays
         /// </summary>
         public const int MaxLayers = 4;
 
-        public float FadeInSeconds { get; set; } = 0.4f;
-        public float FadeOutSeconds { get; set; } = 0.8f;
+        /// <summary>
+        /// Onset is quicker than release, and both are unhurried. Arriving reads as something
+        /// happening to the player, so it wants to be noticed; leaving is only the absence of that,
+        /// and a fast fade-out draws attention to the effect ending rather than to being well again.
+        /// Kept in step with <see cref="OverlayEffectProfile"/>'s own defaults.
+        /// </summary>
+        public float FadeInSeconds { get; set; } = 0.6f;
+
+        public float FadeOutSeconds { get; set; } = 2f;
 
         /// <summary>
         /// Appends this preset's layers back-to-front: index 0 is drawn first and ends up underneath.

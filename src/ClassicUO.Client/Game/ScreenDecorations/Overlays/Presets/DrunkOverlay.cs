@@ -31,7 +31,7 @@ public sealed class DrunkOverlay : ScreenOverlayPreset
     private const float BLUR_PULSE_FREQ = 0.27f;
 
     /// <summary>Depth of that swell, as a fraction of <see cref="Blur" />.</summary>
-    private const float BLUR_PULSE_AMP = 0.22f;
+    private const float BLUR_PULSE_AMP = 0.28f;
 
     private const float VIGNETTE_FEATHER = 0.50f;
 
