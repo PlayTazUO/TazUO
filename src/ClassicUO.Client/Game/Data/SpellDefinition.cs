@@ -168,7 +168,7 @@ namespace ClassicUO.Game.Data
                 {
                     foreach (SpellJson spell in spells)
                     {
-                        var spellDef = new SpellDefinition(spell.SpellName, spell.SpellIndex, spell.GumpIcon, spell.SmallGumpIcon, spell.PowerWords, spell.ManaCost, spell.MinSkill, spell.TithingCost, spell.TargetType, spell.AllReagents);
+                        var spellDef = new SpellDefinition(spell.SpellName, spell.SpellIndex, spell.GumpIcon, spell.SmallGumpIcon, spell.PowerWords, spell.ManaCost, spell.MinSkill, spell.TithingCost, spell.TargetType, 0, spell.AllReagents);
 
                         switch (spell.School)
                         {
@@ -552,6 +552,7 @@ namespace ClassicUO.Game.Data
                 minskill,
                 tithing,
                 target,
+                0,
                 regs
             );
 

@@ -6,7 +6,6 @@ description: ApiUiGump class documentation
 ## Properties
 *No properties found.*
 
-*No fields found.*
 
 ## Enums
 *No enums found.*
