@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using ClassicUO.Assets;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 
@@ -12,6 +13,8 @@ namespace ClassicUO.Game.Data
         private static readonly Dictionary<int, SpellDefinition> _spellsDict;
 
         private static string[] _spRegsChars;
+
+        private static string _spellBookName = SpellBookType.Magery.ToString();
 
         static SpellsMagery()
         {
@@ -27,6 +30,7 @@ namespace ClassicUO.Game.Data
                         0x1B58,
                         "Uus Jux",
                         TargetType.Harmful,
+                        3002011,
                         Reagents.Bloodmoss,
                         Reagents.Nightshade
                     )
@@ -40,6 +44,7 @@ namespace ClassicUO.Game.Data
                         0x1B59,
                         "In Mani Ylem",
                         TargetType.Neutral,
+                        3002012,
                         Reagents.Garlic,
                         Reagents.Ginseng,
                         Reagents.MandrakeRoot
@@ -54,6 +59,7 @@ namespace ClassicUO.Game.Data
                         0x1B5A,
                         "Rel Wis",
                         TargetType.Harmful,
+                        3002013,
                         Reagents.Nightshade,
                         Reagents.Ginseng
                     )
@@ -67,6 +73,7 @@ namespace ClassicUO.Game.Data
                         0x1B5B,
                         "In Mani",
                         TargetType.Beneficial,
+                        3002014,
                         Reagents.Garlic,
                         Reagents.Ginseng,
                         Reagents.SpidersSilk
@@ -81,6 +88,7 @@ namespace ClassicUO.Game.Data
                         0x1B5C,
                         "In Por Ylem",
                         TargetType.Harmful,
+                        3002015,
                         Reagents.SulfurousAsh
                     )
                 },
@@ -93,6 +101,7 @@ namespace ClassicUO.Game.Data
                         0x1B5D,
                         "In Lor",
                         TargetType.Beneficial,
+                        3002016,
                         Reagents.SpidersSilk,
                         Reagents.SulfurousAsh
                     )
@@ -106,6 +115,7 @@ namespace ClassicUO.Game.Data
                         0x1B5E,
                         "Flam Sanct",
                         TargetType.Beneficial,
+                        3002017,
                         Reagents.Garlic,
                         Reagents.SpidersSilk,
                         Reagents.SulfurousAsh
@@ -120,6 +130,7 @@ namespace ClassicUO.Game.Data
                         0x1B5F,
                         "Des Mani",
                         TargetType.Harmful,
+                        3002018,
                         Reagents.Garlic,
                         Reagents.Nightshade
                     )
@@ -134,6 +145,7 @@ namespace ClassicUO.Game.Data
                         0x1B60,
                         "Ex Uus",
                         TargetType.Beneficial,
+                        3002019,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot
                     )
@@ -147,6 +159,7 @@ namespace ClassicUO.Game.Data
                         0x1B61,
                         "Uus Wis",
                         TargetType.Beneficial,
+                        3002020,
                         Reagents.Nightshade,
                         Reagents.MandrakeRoot
                     )
@@ -160,6 +173,7 @@ namespace ClassicUO.Game.Data
                         0x1B62,
                         "An Nox",
                         TargetType.Beneficial,
+                        3002021,
                         Reagents.Garlic,
                         Reagents.Ginseng
                     )
@@ -173,6 +187,7 @@ namespace ClassicUO.Game.Data
                         0x1B63,
                         "An Mani",
                         TargetType.Harmful,
+                        3002022,
                         Reagents.Nightshade,
                         Reagents.SpidersSilk
                     )
@@ -186,6 +201,7 @@ namespace ClassicUO.Game.Data
                         0x1B64,
                         "In Jux",
                         TargetType.Neutral,
+                        3002023,
                         Reagents.Garlic,
                         Reagents.SpidersSilk,
                         Reagents.SulfurousAsh
@@ -200,6 +216,7 @@ namespace ClassicUO.Game.Data
                         0x1B65,
                         "An Jux",
                         TargetType.Neutral,
+                        3002024,
                         Reagents.Bloodmoss,
                         Reagents.SulfurousAsh
                     )
@@ -213,6 +230,7 @@ namespace ClassicUO.Game.Data
                         0x1B66,
                         "Uus Sanct",
                         TargetType.Beneficial,
+                        3002025,
                         Reagents.Garlic,
                         Reagents.Ginseng,
                         Reagents.SulfurousAsh
@@ -227,6 +245,7 @@ namespace ClassicUO.Game.Data
                         0x1B67,
                         "Uus Mani",
                         TargetType.Beneficial,
+                        3002026,
                         Reagents.MandrakeRoot,
                         Reagents.Nightshade
                     )
@@ -241,6 +260,7 @@ namespace ClassicUO.Game.Data
                         0x1B68,
                         "Rel Sanct",
                         TargetType.Beneficial,
+                        3002027,
                         Reagents.Garlic,
                         Reagents.MandrakeRoot
                     )
@@ -253,6 +273,7 @@ namespace ClassicUO.Game.Data
                         0x1B69,
                         "Vas Flam",
                         TargetType.Harmful,
+                        3002028,
                         Reagents.BlackPearl
                     )
                 },
@@ -265,6 +286,7 @@ namespace ClassicUO.Game.Data
                         0x1B6a,
                         "An Por",
                         TargetType.Neutral,
+                        3002029,
                         Reagents.Bloodmoss,
                         Reagents.Garlic,
                         Reagents.SulfurousAsh
@@ -278,6 +300,7 @@ namespace ClassicUO.Game.Data
                         0x1B6b,
                         "In Nox",
                         TargetType.Harmful,
+                        3002030,
                         Reagents.Nightshade
                     )
                 },
@@ -290,6 +313,7 @@ namespace ClassicUO.Game.Data
                         0x1B6c,
                         "Ort Por Ylem",
                         TargetType.Neutral,
+                        3002031,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot
                     )
@@ -303,6 +327,7 @@ namespace ClassicUO.Game.Data
                         0x1B6d,
                         "Rel Por",
                         TargetType.Neutral,
+                        3002032,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot
                     )
@@ -316,6 +341,7 @@ namespace ClassicUO.Game.Data
                         0x1B6e,
                         "Ex Por",
                         TargetType.Neutral,
+                        3002033,
                         Reagents.Bloodmoss,
                         Reagents.SulfurousAsh
                     )
@@ -329,6 +355,7 @@ namespace ClassicUO.Game.Data
                         0x1B6f,
                         "In Sanct Ylem",
                         TargetType.Neutral,
+                        3002034,
                         Reagents.Bloodmoss,
                         Reagents.Garlic
                     )
@@ -343,6 +370,7 @@ namespace ClassicUO.Game.Data
                         0x1B70,
                         "Vas An Nox",
                         TargetType.Beneficial,
+                        3002035,
                         Reagents.Garlic,
                         Reagents.Ginseng,
                         Reagents.MandrakeRoot
@@ -357,6 +385,7 @@ namespace ClassicUO.Game.Data
                         0x1B71,
                         "Vas Uus Sanct",
                         TargetType.Beneficial,
+                        3002036,
                         Reagents.Garlic,
                         Reagents.Ginseng,
                         Reagents.MandrakeRoot,
@@ -372,6 +401,7 @@ namespace ClassicUO.Game.Data
                         0x1B72,
                         "Des Sanct",
                         TargetType.Harmful,
+                        3002037,
                         Reagents.Garlic,
                         Reagents.Nightshade,
                         Reagents.SulfurousAsh
@@ -386,6 +416,7 @@ namespace ClassicUO.Game.Data
                         0x1B73,
                         "In Flam Grav",
                         TargetType.Neutral,
+                        3002038,
                         Reagents.BlackPearl,
                         Reagents.SpidersSilk,
                         Reagents.SulfurousAsh
@@ -400,6 +431,7 @@ namespace ClassicUO.Game.Data
                         0x1B74,
                         "In Vas Mani",
                         TargetType.Beneficial,
+                        3002039,
                         Reagents.Garlic,
                         Reagents.Ginseng,
                         Reagents.MandrakeRoot,
@@ -415,6 +447,7 @@ namespace ClassicUO.Game.Data
                         0x1B75,
                         "Por Ort Grav",
                         TargetType.Harmful,
+                        3002040,
                         Reagents.MandrakeRoot,
                         Reagents.SulfurousAsh
                     )
@@ -428,6 +461,7 @@ namespace ClassicUO.Game.Data
                         0x1B76,
                         "Ort Rel",
                         TargetType.Harmful,
+                        3002041,
                         Reagents.BlackPearl,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk
@@ -442,6 +476,7 @@ namespace ClassicUO.Game.Data
                         0x1B77,
                         "Kal Ort Por",
                         TargetType.Neutral,
+                        3002042,
                         Reagents.BlackPearl,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot
@@ -457,6 +492,7 @@ namespace ClassicUO.Game.Data
                         0x1B78,
                         "In Jux Hur Ylem",
                         TargetType.Neutral,
+                        3002043,
                         Reagents.BlackPearl,
                         Reagents.MandrakeRoot,
                         Reagents.Nightshade
@@ -471,6 +507,7 @@ namespace ClassicUO.Game.Data
                         0x1B79,
                         "An Grav",
                         TargetType.Neutral,
+                        3002044,
                         Reagents.BlackPearl,
                         Reagents.Garlic,
                         Reagents.SpidersSilk,
@@ -486,6 +523,7 @@ namespace ClassicUO.Game.Data
                         0x1B7a,
                         "Kal In Ex",
                         TargetType.Neutral,
+                        3002045,
                         Reagents.Bloodmoss,
                         Reagents.Garlic,
                         Reagents.Nightshade
@@ -500,6 +538,7 @@ namespace ClassicUO.Game.Data
                         0x1B7b,
                         "In Jux Sanct",
                         TargetType.Beneficial,
+                        3002046,
                         Reagents.Garlic,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk
@@ -514,6 +553,7 @@ namespace ClassicUO.Game.Data
                         0x1B7c,
                         "Por Corp Wis",
                         TargetType.Harmful,
+                        3002047,
                         Reagents.BlackPearl,
                         Reagents.MandrakeRoot,
                         Reagents.Nightshade,
@@ -529,6 +569,7 @@ namespace ClassicUO.Game.Data
                         0x1B7d,
                         "An Ex Por",
                         TargetType.Harmful,
+                        3002048,
                         Reagents.Garlic,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk
@@ -543,6 +584,7 @@ namespace ClassicUO.Game.Data
                         0x1B7e,
                         "In Nox Grav",
                         TargetType.Neutral,
+                        3002049,
                         Reagents.BlackPearl,
                         Reagents.Nightshade,
                         Reagents.SpidersSilk
@@ -557,6 +599,7 @@ namespace ClassicUO.Game.Data
                         0x1B7f,
                         "Kal Xen",
                         TargetType.Neutral,
+                        3002050,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk
@@ -572,6 +615,7 @@ namespace ClassicUO.Game.Data
                         0x1B80,
                         "An Ort",
                         TargetType.Neutral,
+                        3002051,
                         Reagents.Garlic,
                         Reagents.MandrakeRoot,
                         Reagents.SulfurousAsh
@@ -586,6 +630,7 @@ namespace ClassicUO.Game.Data
                         0x1B81,
                         "Corp Por",
                         TargetType.Harmful,
+                        3002052,
                         Reagents.BlackPearl,
                         Reagents.Nightshade
                     )
@@ -599,6 +644,7 @@ namespace ClassicUO.Game.Data
                         0x1B82,
                         "Vas Ort Flam",
                         TargetType.Harmful,
+                        3002053,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot
                     )
@@ -612,6 +658,7 @@ namespace ClassicUO.Game.Data
                         0x1B83,
                         "An Lor Xen",
                         TargetType.Beneficial,
+                        3002054,
                         Reagents.Bloodmoss,
                         Reagents.Nightshade
                     )
@@ -625,6 +672,7 @@ namespace ClassicUO.Game.Data
                         0x1B84,
                         "Kal Por Ylem",
                         TargetType.Neutral,
+                        3002055,
                         Reagents.BlackPearl,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot
@@ -639,6 +687,7 @@ namespace ClassicUO.Game.Data
                         0x1B85,
                         "Vas Des Sanct",
                         TargetType.Harmful,
+                        3002056,
                         Reagents.Garlic,
                         Reagents.MandrakeRoot,
                         Reagents.Nightshade,
@@ -654,6 +703,7 @@ namespace ClassicUO.Game.Data
                         0x1B86,
                         "In Ex Grav",
                         TargetType.Neutral,
+                        3002057,
                         Reagents.BlackPearl,
                         Reagents.Ginseng,
                         Reagents.SpidersSilk
@@ -668,6 +718,7 @@ namespace ClassicUO.Game.Data
                         0x1B87,
                         "Wis Quas",
                         TargetType.Neutral,
+                        3002058,
                         Reagents.Bloodmoss,
                         Reagents.SulfurousAsh
                     )
@@ -682,6 +733,7 @@ namespace ClassicUO.Game.Data
                         0x1B88,
                         "Vas Ort Grav",
                         TargetType.Harmful,
+                        3002059,
                         Reagents.BlackPearl,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
@@ -697,6 +749,7 @@ namespace ClassicUO.Game.Data
                         0x1B89,
                         "In Sanct Grav",
                         TargetType.Neutral,
+                        3002060,
                         Reagents.BlackPearl,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk,
@@ -712,6 +765,7 @@ namespace ClassicUO.Game.Data
                         0x1B8a,
                         "Kal Vas Flam",
                         TargetType.Harmful,
+                        3002061,
                         Reagents.SpidersSilk,
                         Reagents.SulfurousAsh
                     )
@@ -725,6 +779,7 @@ namespace ClassicUO.Game.Data
                         0x1B8b,
                         "Vas Rel Por",
                         TargetType.Neutral,
+                        3002062,
                         Reagents.BlackPearl,
                         Reagents.MandrakeRoot,
                         Reagents.SulfurousAsh
@@ -739,6 +794,7 @@ namespace ClassicUO.Game.Data
                         0x1B8c,
                         "Ort Sanct",
                         TargetType.Harmful,
+                        3002063,
                         Reagents.BlackPearl,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
@@ -754,6 +810,7 @@ namespace ClassicUO.Game.Data
                         0x1B8d,
                         "Vas An Ort",
                         TargetType.Neutral,
+                        3002064,
                         Reagents.BlackPearl,
                         Reagents.Garlic,
                         Reagents.MandrakeRoot,
@@ -769,6 +826,7 @@ namespace ClassicUO.Game.Data
                         0x1B8e,
                         "Flam Kal Des Ylem",
                         TargetType.Harmful,
+                        3002065,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk,
@@ -784,6 +842,7 @@ namespace ClassicUO.Game.Data
                         0x1B8f,
                         "Vas Ylem Rel",
                         TargetType.Neutral,
+                        3002066,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk
@@ -799,6 +858,7 @@ namespace ClassicUO.Game.Data
                         0x1B90,
                         "In Vas Por",
                         TargetType.Harmful,
+                        3002067,
                         Reagents.Bloodmoss,
                         Reagents.Ginseng,
                         Reagents.MandrakeRoot,
@@ -814,6 +874,7 @@ namespace ClassicUO.Game.Data
                         0x1B91,
                         "Vas Corp Por",
                         TargetType.Neutral,
+                        3002068,
                         Reagents.BlackPearl,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
@@ -829,6 +890,7 @@ namespace ClassicUO.Game.Data
                         0x1B92,
                         "An Corp",
                         TargetType.Beneficial,
+                        3002069,
                         Reagents.Bloodmoss,
                         Reagents.Ginseng,
                         Reagents.Garlic
@@ -843,6 +905,7 @@ namespace ClassicUO.Game.Data
                         0x1B93,
                         "Kal Vas Xen Hur",
                         TargetType.Neutral,
+                        3002070,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk
@@ -857,6 +920,7 @@ namespace ClassicUO.Game.Data
                         0x1B94,
                         "Kal Vas Xen Corp",
                         TargetType.Neutral,
+                        3002071,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk,
@@ -872,6 +936,7 @@ namespace ClassicUO.Game.Data
                         0x1B95,
                         "Kal Vas Xen Ylem",
                         TargetType.Neutral,
+                        3002072,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk
@@ -886,6 +951,7 @@ namespace ClassicUO.Game.Data
                         0x1B96,
                         "Kal Vas Xen Flam",
                         TargetType.Neutral,
+                        3002073,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk,
@@ -901,6 +967,7 @@ namespace ClassicUO.Game.Data
                         0x1B97,
                         "Kal Vas Xen An Flam",
                         TargetType.Neutral,
+                        3002074,
                         Reagents.Bloodmoss,
                         Reagents.MandrakeRoot,
                         Reagents.SpidersSilk
@@ -914,11 +981,29 @@ namespace ClassicUO.Game.Data
         public static IReadOnlyDictionary<int, SpellDefinition> GetAllSpells => _spellsDict;
         internal static int MaxSpellCount => _spellsDict.Count;
 
-        public static string[] CircleNames { get; } =
+        private static string[] _circleNames;
+        public static string[] CircleNames => _circleNames ??= GetCircleNames();
+
+        private static string[] GetCircleNames()
         {
-            "First Circle", "Second Circle", "Third Circle", "Fourth Circle", "Fifth Circle", "Sixth Circle",
-            "Seventh Circle", "Eighth Circle"
-        };
+            return new string[]
+            {
+                ClilocOrFallback(1044369, "First Circle"),
+                ClilocOrFallback(1044370, "Second Circle"),
+                ClilocOrFallback(1044371, "Third Circle"),
+                ClilocOrFallback(1044372, "Fourth Circle"),
+                ClilocOrFallback(1044373, "Fifth Circle"),
+                ClilocOrFallback(1044374, "Sixth Circle"),
+                ClilocOrFallback(1044375, "Seventh Circle"),
+                ClilocOrFallback(1044376, "Eighth Circle")
+            };
+        }
+
+        private static string ClilocOrFallback(int clilocNumber, string fallback)
+        {
+            string cliloc = Client.Game.UO.FileManager.Clilocs?.GetString(clilocNumber);
+            return !string.IsNullOrEmpty(cliloc) ? cliloc : fallback;
+        }
 
         public static string[] SpecialReagentsChars
         {

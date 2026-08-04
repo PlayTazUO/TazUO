@@ -25,6 +25,7 @@ namespace ClassicUO.Game.Data
                         23,
                         40,
                         TargetType.Neutral,
+                        1060509,
                         Reagents.DaemonBlood,
                         Reagents.GraveDust
                     )
@@ -40,6 +41,7 @@ namespace ClassicUO.Game.Data
                         13,
                         20,
                         TargetType.Harmful,
+                        1060510,
                         Reagents.DaemonBlood
                     )
                 },
@@ -54,6 +56,7 @@ namespace ClassicUO.Game.Data
                         11,
                         20,
                         TargetType.Harmful,
+                        1060511,
                         Reagents.BatWing,
                         Reagents.GraveDust
                     )
@@ -69,6 +72,7 @@ namespace ClassicUO.Game.Data
                         7,
                         0,
                         TargetType.Neutral,
+                        1060512,
                         Reagents.PigIron
                     )
                 },
@@ -83,6 +87,7 @@ namespace ClassicUO.Game.Data
                         11,
                         20,
                         TargetType.Harmful,
+                        1060513,
                         Reagents.BatWing,
                         Reagents.NoxCrystal
                     )
@@ -98,6 +103,7 @@ namespace ClassicUO.Game.Data
                         11,
                         40,
                         TargetType.Neutral,
+                        1060514,
                         Reagents.BatWing,
                         Reagents.DaemonBlood
                     )
@@ -113,6 +119,7 @@ namespace ClassicUO.Game.Data
                         25,
                         70,
                         TargetType.Neutral,
+                        1060515,
                         Reagents.DaemonBlood,
                         Reagents.GraveDust,
                         Reagents.NoxCrystal
@@ -129,6 +136,7 @@ namespace ClassicUO.Game.Data
                         17,
                         30,
                         TargetType.Harmful,
+                        1060516,
                         Reagents.BatWing,
                         Reagents.DaemonBlood,
                         Reagents.PigIron
@@ -145,6 +153,7 @@ namespace ClassicUO.Game.Data
                         5,
                         20,
                         TargetType.Harmful,
+                        1060517,
                         Reagents.GraveDust,
                         Reagents.PigIron
                     )
@@ -160,6 +169,7 @@ namespace ClassicUO.Game.Data
                         17,
                         50,
                         TargetType.Harmful,
+                        1060518,
                         Reagents.NoxCrystal
                     )
                 },
@@ -174,6 +184,7 @@ namespace ClassicUO.Game.Data
                         29,
                         65,
                         TargetType.Harmful,
+                        1060519,
                         Reagents.DaemonBlood,
                         Reagents.NoxCrystal
                     )
@@ -189,6 +200,7 @@ namespace ClassicUO.Game.Data
                         17,
                         30,
                         TargetType.Neutral,
+                        1060520,
                         Reagents.BatWing,
                         Reagents.DaemonBlood,
                         Reagents.GraveDust
@@ -205,6 +217,7 @@ namespace ClassicUO.Game.Data
                         25,
                         99,
                         TargetType.Neutral,
+                        1060521,
                         Reagents.BatWing,
                         Reagents.NoxCrystal,
                         Reagents.PigIron
@@ -221,6 +234,7 @@ namespace ClassicUO.Game.Data
                         41,
                         80,
                         TargetType.Harmful,
+                        1060522,
                         Reagents.BatWing,
                         Reagents.GraveDust,
                         Reagents.PigIron
@@ -237,6 +251,7 @@ namespace ClassicUO.Game.Data
                         23,
                         60,
                         TargetType.Harmful,
+                        1060523,
                         Reagents.GraveDust,
                         Reagents.NoxCrystal,
                         Reagents.PigIron
@@ -253,6 +268,7 @@ namespace ClassicUO.Game.Data
                         17,
                         20,
                         TargetType.Neutral,
+                        1060524,
                         Reagents.NoxCrystal,
                         Reagents.PigIron
                     )
@@ -268,6 +284,7 @@ namespace ClassicUO.Game.Data
                         40,
                         80,
                         TargetType.Neutral,
+                        1060525,
                         Reagents.NoxCrystal,
                         Reagents.GraveDust
                     )

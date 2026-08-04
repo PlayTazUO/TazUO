@@ -125,7 +125,7 @@ public class SpellQuickSearch : NineSliceGump
             }
 
             text?.Dispose();
-            Add(text = TextBox.GetOne(spell.Name, TrueTypeLoader.EMBEDDED_FONT, 18, color, TextBox.RTLOptions.Default(Width - Height)));
+            Add(text = TextBox.GetOne(spell.GetLocalizedName(), TrueTypeLoader.EMBEDDED_FONT, 18, color, TextBox.RTLOptions.Default(Width - Height)));
             text.X = Height;
             text.Y = (Height - text.Height) >> 1;
         }

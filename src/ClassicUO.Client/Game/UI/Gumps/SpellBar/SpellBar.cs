@@ -526,7 +526,7 @@ public class SpellBar : Gump
 
                 var entry = new ContextMenuItemEntry(TazLang.Get("spellschool_magery"));
                 foreach (SpellDefinition spell in SpellsMagery.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
+                    entry.Add(new ContextMenuItemEntry(spell.GetLocalizedName(), () =>
                     {
                         SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
@@ -535,7 +535,7 @@ public class SpellBar : Gump
 
                 entry = new ContextMenuItemEntry(TazLang.Get("spellschool_necromancy"));
                 foreach (SpellDefinition spell in SpellsNecromancy.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
+                    entry.Add(new ContextMenuItemEntry(spell.GetLocalizedName(), () =>
                     {
                         SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
@@ -544,7 +544,7 @@ public class SpellBar : Gump
 
                 entry = new ContextMenuItemEntry(TazLang.Get("spellschool_chivalry"));
                 foreach (SpellDefinition spell in SpellsChivalry.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
+                    entry.Add(new ContextMenuItemEntry(spell.GetLocalizedName(), () =>
                     {
                         SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
@@ -553,7 +553,7 @@ public class SpellBar : Gump
 
                 entry = new ContextMenuItemEntry(TazLang.Get("spellschool_bushido"));
                 foreach (SpellDefinition spell in SpellsBushido.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
+                    entry.Add(new ContextMenuItemEntry(spell.GetLocalizedName(), () =>
                     {
                         SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
@@ -562,7 +562,7 @@ public class SpellBar : Gump
 
                 entry = new ContextMenuItemEntry(TazLang.Get("spellschool_ninjitsu"));
                 foreach (SpellDefinition spell in SpellsNinjitsu.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
+                    entry.Add(new ContextMenuItemEntry(spell.GetLocalizedName(), () =>
                     {
                         SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
@@ -571,7 +571,7 @@ public class SpellBar : Gump
 
                 entry = new ContextMenuItemEntry(TazLang.Get("spellschool_spellweaving"));
                 foreach (SpellDefinition spell in SpellsSpellweaving.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
+                    entry.Add(new ContextMenuItemEntry(spell.GetLocalizedName(), () =>
                     {
                         SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
@@ -580,7 +580,7 @@ public class SpellBar : Gump
 
                 entry = new ContextMenuItemEntry(TazLang.Get("spellschool_mysticism"));
                 foreach (SpellDefinition spell in SpellsMysticism.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
+                    entry.Add(new ContextMenuItemEntry(spell.GetLocalizedName(), () =>
                     {
                         SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));
@@ -589,7 +589,7 @@ public class SpellBar : Gump
 
                 entry = new ContextMenuItemEntry(TazLang.Get("spellschool_mastery"));
                 foreach (SpellDefinition spell in SpellsMastery.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
+                    entry.Add(new ContextMenuItemEntry(spell.GetLocalizedName(), () =>
                     {
                         SetSlot(CounterBarSlot.FromSpell(spell), row, col);
                     }));

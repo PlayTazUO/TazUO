@@ -159,7 +159,7 @@ namespace ClassicUO.Game.Managers
                                 var sb = new ValueStringBuilder(currentProfile.SpellDisplayFormat.AsSpan());
                                 {
                                     sb.Replace("{power}".AsSpan(), spell.PowerWords.AsSpan());
-                                    sb.Replace("{spell}".AsSpan(), spell.Name.AsSpan());
+                                    sb.Replace("{spell}".AsSpan(), spell.GetLocalizedName().AsSpan());
 
                                     text = sb.ToString().Trim();
                                 }
