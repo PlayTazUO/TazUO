@@ -12,6 +12,7 @@ All notable changes to TazUO will be recorded here.
 * Added tooltips to empty slots on paperdoll for what layer they are ([bittiez](https://github.com/bittiez))
 * Added a screenshot on death option(enabled by default) - [P.R 857](https://github.com/PlayTazUO/TazUO/pull/857) ([bittiez](https://github.com/bittiez))
 * Added a Randomize button to the character creation screen that picks random hair/facial hair styles and random colors (skin, shirt, pants, hair, beard) while keeping the selected race and gender ([bittiez](https://github.com/bittiez))
+* Spell names, reagent names, and magic circle names now use server cliloc strings when available, falling back to the built-in English strings otherwise - [P.R 885](https://github.com/PlayTazUO/TazUO/pull/885) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * MacroManager select next/previous/nearest with the Hostile scan type now skips anyone on the friends list - [P.R 880](https://github.com/PlayTazUO/TazUO/pull/880) ([bittiez](https://github.com/bittiez))
