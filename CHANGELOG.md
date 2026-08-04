@@ -9,6 +9,7 @@ All notable changes to TazUO will be recorded here.
 
 ### Features
 * Added Friend option to Select Nearest macro - ([bittiez](https://github.com/bittiez))
+* Added tooltips to empty slots on paperdoll for what layer they are ([bittiez](https://github.com/bittiez))
 * Added a screenshot on death option(enabled by default) - [P.R 857](https://github.com/PlayTazUO/TazUO/pull/857) ([bittiez](https://github.com/bittiez))
 * Added a Randomize button to the character creation screen that picks random hair/facial hair styles and random colors (skin, shirt, pants, hair, beard) while keeping the selected race and gender ([bittiez](https://github.com/bittiez))
 
