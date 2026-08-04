@@ -15,6 +15,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using System.Xml;
 using System.ComponentModel;
@@ -84,11 +85,18 @@ namespace ClassicUO.Configuration
 
 
 
-    public sealed partial class Profile : INotifyPropertyChanged
+    public sealed partial class Profile : JsonSave<Profile>, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private static Profile _defaultPreview;
+
+        /// <summary>Lives in the profile folder as <c>profile.json</c>.</summary>
+        protected override SettingsScope Scope => SettingsScope.Char;
+
+        protected override string FileName => "profile.json";
+
+        protected override JsonTypeInfo<Profile> TypeInfo => ProfileJsonContext.DefaultToUse.Profile;
 
         /// <summary>
         /// A cached default profile with safe default settings, used as a fallback when no profile
@@ -998,6 +1006,13 @@ namespace ClassicUO.Configuration
                         File.Delete(f);
                 }
 
+                dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Char);
+                foreach (string f in Directory.EnumerateFiles(dir, "*.bak*"))
+                {
+                    if (!f.Contains("grid_container"))
+                        File.Delete(f);
+                }
+
                 dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Server);
                 foreach (string f in Directory.EnumerateFiles(dir, "*.backup*"))
                 {
@@ -1060,13 +1075,9 @@ namespace ClassicUO.Configuration
                 return;
 
             Log.Trace($"Saving path:\t\t{path}");
-            string filePath = Path.Combine(path, "profile.json");
 
-            // Create backup rotation before saving
-            CreateBackupRotation(filePath);
-
-            // Save profile settings
-            ConfigurationResolver.Save(this, filePath, ProfileJsonContext.DefaultToUse.Profile);
+            // Atomic write with rotating backups, handled by JsonSave.
+            SaveTo(Path.Combine(path, "profile.json"));
 
             // Grid highlights live in a separate grid_highlights.json (see GridHighlightsConfig); persist
             // them alongside the profile so in-place rule edits are saved on the same cadence as before.
@@ -1081,47 +1092,9 @@ namespace ClassicUO.Configuration
             lastSave = Time.Ticks;
         }
 
-        public void SaveAsFile(string path, string filename) => ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
+        public void SaveAsFile(string path, string filename) => SaveTo(Path.Combine(path, filename));
 
-        private void CreateBackupRotation(string filePath)
-        {
-            if (!File.Exists(filePath))
-                return;
-
-            string backup3 = filePath + ".bak3";
-            string backup2 = filePath + ".bak2";
-            string backup1 = filePath + ".bak1";
-
-            try
-            {
-                // Remove oldest backup if it exists
-                if (File.Exists(backup3))
-                {
-                    File.Delete(backup3);
-                }
-
-                // Rotate backups: .bak2 -> .bak3, .bak1 -> .bak2
-                if (File.Exists(backup2))
-                {
-                    File.Move(backup2, backup3);
-                }
-
-                if (File.Exists(backup1))
-                {
-                    File.Move(backup1, backup2);
-                }
-
-                // Copy current file to .bak1
-                File.Copy(filePath, backup1);
-            }
-            catch (IOException e)
-            {
-                // Log backup rotation failure but don't prevent the save
-                Log.Error($"Failed to create backup rotation: {e}");
-            }
-        }
-
-        public void SaveAs(string path, string filename = "default.json") => ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
+        public void SaveAs(string path, string filename = "default.json") => SaveTo(Path.Combine(path, filename));
 
         private void SaveGumps(World world, string path)
         {
