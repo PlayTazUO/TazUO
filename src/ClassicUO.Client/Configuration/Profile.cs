@@ -1006,6 +1006,13 @@ namespace ClassicUO.Configuration
                         File.Delete(f);
                 }
 
+                dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Char);
+                foreach (string f in Directory.EnumerateFiles(dir, "*.bak*"))
+                {
+                    if (!f.Contains("grid_container"))
+                        File.Delete(f);
+                }
+
                 dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Server);
                 foreach (string f in Directory.EnumerateFiles(dir, "*.backup*"))
                 {
