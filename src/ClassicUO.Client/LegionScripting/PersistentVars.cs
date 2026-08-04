@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility.Logging;
-using Dapper;
 
 namespace ClassicUO.LegionScripting
 {
@@ -153,18 +152,20 @@ namespace ClassicUO.LegionScripting
 
             private async Task InitializeAsync()
             {
-                await WithConnectionAsync(connection => connection.ExecuteAsync("""
-                                                                                 CREATE INDEX IF NOT EXISTS idx_scope_scopekey
-                                                                                 ON persistent_vars(scope, scope_key)
-                                                                                 """)).ConfigureAwait(false);
+                // Index creation and the one-time id backfill cannot be expressed through the generic
+                // row helpers, so they run as raw statements through the base class.
+                await ExecuteAsync("""
+                                   CREATE INDEX IF NOT EXISTS idx_scope_scopekey
+                                   ON persistent_vars(scope, scope_key)
+                                   """).ConfigureAwait(false);
 
                 // Rows written before the "id" column existed (every install prior to this change)
                 // need it backfilled once, otherwise they become orphaned and unreadable through the
                 // id-based lookups below.
-                await WithConnectionAsync(connection => connection.ExecuteAsync("""
-                                                                                 UPDATE persistent_vars SET id = scope || char(31) || scope_key || char(31) || key
-                                                                                 WHERE id IS NULL OR id = ''
-                                                                                 """)).ConfigureAwait(false);
+                await ExecuteAsync("""
+                                   UPDATE persistent_vars SET id = scope || char(31) || scope_key || char(31) || key
+                                   WHERE id IS NULL OR id = ''
+                                   """).ConfigureAwait(false);
             }
 
             // The embedded character between segments is U+001F (unit separator, matches

@@ -171,6 +171,14 @@ namespace ClassicUO.Game.Managers
                 return true;
             });
 
+        /// <summary>
+        /// Executes a raw SQL statement against a fresh connection while holding the database lock,
+        /// returning the number of rows affected. For statements the generic row helpers cannot
+        /// express, such as one-off data migrations and index creation.
+        /// </summary>
+        protected Task<int> ExecuteAsync(string sql) =>
+            WithConnectionAsync(connection => connection.ExecuteAsync(sql));
+
         /// <summary>Opens a fresh connection, configures it for multi-client use, runs the operation, and disposes it.</summary>
         private async Task<T> OpenAndRunAsync<T>(Func<SqliteConnection, Task<T>> operation)
         {
