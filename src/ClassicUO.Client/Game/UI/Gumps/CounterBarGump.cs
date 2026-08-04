@@ -787,7 +787,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     var entry = new ContextMenuItemEntry(label);
                     foreach (SpellDefinition spell in spells)
-                        entry.Add(new ContextMenuItemEntry(spell.Name, () => SetSlot(CounterBarSlot.FromSpell(spell))));
+                        entry.Add(new ContextMenuItemEntry(spell.GetLocalizedName(), () => SetSlot(CounterBarSlot.FromSpell(spell))));
                     list.Add(entry);
                 }
 

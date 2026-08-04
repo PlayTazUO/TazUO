@@ -25,6 +25,7 @@ namespace ClassicUO.Game.Data
                         0,
                         25,
                         TargetType.Harmful,
+                        1060595,
                         Reagents.None
                     )
                 },
@@ -39,6 +40,7 @@ namespace ClassicUO.Game.Data
                         10,
                         25,
                         TargetType.Beneficial,
+                        1060596,
                         Reagents.None
                     )
                 },
@@ -53,6 +55,7 @@ namespace ClassicUO.Game.Data
                         10,
                         60,
                         TargetType.Beneficial,
+                        1060597,
                         Reagents.None
                     )
                 },
@@ -67,6 +70,7 @@ namespace ClassicUO.Game.Data
                         5,
                         40,
                         TargetType.Harmful,
+                        1060598,
                         Reagents.None
                     )
                 },
@@ -81,6 +85,7 @@ namespace ClassicUO.Game.Data
                         10,
                         50,
                         TargetType.Harmful,
+                        1060599,
                         Reagents.None
                     )
                 },
@@ -95,6 +100,7 @@ namespace ClassicUO.Game.Data
                         10,
                         70,
                         TargetType.Harmful,
+                        1060600,
                         Reagents.None
                     )
                 }

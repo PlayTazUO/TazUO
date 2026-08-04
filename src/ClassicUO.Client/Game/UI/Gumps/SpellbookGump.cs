@@ -319,8 +319,15 @@ namespace ClassicUO.Game.UI.Gumps
                             ? _spellBookType == SpellBookType.Chivalry || _spellBookType == SpellBookType.Cleric
                             : _spellBookType == SpellBookType.Chivalry))
                     {
+                        var tithingStr = Client.Game.UO.FileManager.Clilocs?.GetString(1062102);
+                        var availStr = Client.Game.UO.FileManager.Clilocs?.GetString(1062103);
+                        string tithingLabel;
+                        if (!string.IsNullOrEmpty(tithingStr) && !string.IsNullOrEmpty(availStr))
+                            tithingLabel = $"{tithingStr}\n{availStr}";
+                        else
+                            tithingLabel = TazLang.Get("tithing_points_available");
                         var label = new Label(
-                            TazLang.Get("tithing_points_available") + World.Player.TithingPoints,
+                            $"{tithingLabel} {World.Player.TithingPoints}",
                             false,
                             0x0288,
                             font: 6
@@ -389,7 +396,7 @@ namespace ClassicUO.Game.UI.Gumps
                                 icon.MouseDoubleClick += OnIconDoubleClick;
                                 icon.DragBegin += OnIconDragBegin;
 
-                                text = new Label(spell.Name, false, 0x0288, 80, 6)
+                                text = new Label(spell.GetLocalizedName(), false, 0x0288, 80, 6)
                                 {
                                     X = 225 + 44 + 4,
                                     Y = iconMY + 2
@@ -738,7 +745,8 @@ namespace ClassicUO.Game.UI.Gumps
                         _dataBox.Add(new GumpPicTiled(iconX, 88, 120, 5, 0x0835), page1);
                     }
 
-                    var text = new Label(TazLang.Get("reagents"), false, 0x0288, font: 6)
+                    var reagentsLabel = Client.Game.UO.FileManager.Clilocs?.GetString(3001017) ?? TazLang.Get("reagents");
+                    var text = new Label(reagentsLabel, false, 0x0288, font: 6)
                     {
                         X = iconX,
                         Y = 92
@@ -1083,7 +1091,7 @@ namespace ClassicUO.Game.UI.Gumps
                 default:
                 case SpellBookType.Magery:
                     SpellDefinition def = SpellsMagery.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.GetLocalizedName();
                     abbreviature = SpellsMagery.SpecialReagentsChars[offset];
                     reagents = def.CreateReagentListString("\n");
 
@@ -1091,7 +1099,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Necromancy:
                     def = SpellsNecromancy.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.GetLocalizedName();
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
 
@@ -1099,7 +1107,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Chivalry:
                     def = SpellsChivalry.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.GetLocalizedName();
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
 
@@ -1107,7 +1115,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Bushido:
                     def = SpellsBushido.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.GetLocalizedName();
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
 
@@ -1115,7 +1123,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Ninjitsu:
                     def = SpellsNinjitsu.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.GetLocalizedName();
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
 
@@ -1123,7 +1131,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Spellweaving:
                     def = SpellsSpellweaving.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.GetLocalizedName();
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
 
@@ -1131,7 +1139,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Mysticism:
                     def = SpellsMysticism.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.GetLocalizedName();
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
 
@@ -1139,7 +1147,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Mastery:
                     def = SpellsMastery.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.GetLocalizedName();
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
 
@@ -1147,7 +1155,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Druidic when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
                     def = SpellsDruid.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.GetLocalizedName();
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
 
@@ -1155,7 +1163,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Cleric when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
                     def = SpellsCleric.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.GetLocalizedName();
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
 
