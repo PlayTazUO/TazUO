@@ -16,6 +16,7 @@ All notable changes to TazUO will be recorded here.
 * Spell names, reagent names, and magic circle names now use server cliloc strings when available, falling back to the built-in English strings otherwise - [P.R 885](https://github.com/PlayTazUO/TazUO/pull/885) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed an `IO_SharingViolation_File` crash when running multiple TazUO clients against a shared `Data/language.*.ini`; language files are now opened with shared read/write access and rewritten atomically via a temp file so concurrent clients can read and merge them without collisions ([bittiez](https://github.com/bittiez))
 * Fixed a NullReferenceException when toggling "Stay active" in the nameplate manager gump on shards whose gumpart is missing the radio button art; failed button construction is now handled gracefully instead of leaving a broken control behind ([bittiez](https://github.com/bittiez))
 * Fixed empty chat input entries being saved to the message history - [P.R 900](https://github.com/PlayTazUO/TazUO/pull/900) ([bittiez](https://github.com/bittiez))
 * Fixed a rare "The deque is empty" crash when processing mobile movement steps, caused by the steps deque being cleared concurrently while the main thread removed a step ([bittiez](https://github.com/bittiez))
