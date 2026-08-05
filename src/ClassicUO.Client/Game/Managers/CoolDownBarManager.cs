@@ -56,7 +56,7 @@ namespace ClassicUO.Game.Managers
             if (replace || skipIfExists)
                 for (int i = 0; i < coolDownBars.Length; i++)
                 {
-                    if (coolDownBars[i] != null && !coolDownBars[i].IsDisposed && coolDownBars[i].textLabel.Text == _name)
+                    if (coolDownBars[i] != null && !coolDownBars[i].IsDisposed && coolDownBars[i].Name == _name)
                     {
                         //An instance is already on-screen. Preserve the running countdown and do not add a new one.
                         if (skipIfExists)
@@ -78,5 +78,42 @@ namespace ClassicUO.Game.Managers
                 }
             }
         }
+
+        public static CoolDownBar FindCoolDownBar(string name)
+        {
+            for (int i = 0; i < coolDownBars.Length; i++)
+                if (coolDownBars[i] != null && !coolDownBars[i].IsDisposed && coolDownBars[i].Name == name)
+                    return coolDownBars[i];
+            return null;
+        }
+
+        public static void UpdateCoolDownBar(string name, TimeSpan? maxValue = null, TimeSpan? currentValue = null)
+        {
+            CoolDownBar bar = FindCoolDownBar(name);
+            bar?.Update(maxValue, currentValue);
+        }
+
+        public static void RestartCoolDownBar(string name)
+        {
+            CoolDownBar bar = FindCoolDownBar(name);
+            bar?.Restart();
+        }
+
+        public static void DeleteCoolDownBar(string name)
+        {
+            CoolDownBar bar = FindCoolDownBar(name);
+            if (bar == null)
+                return;
+
+            bar.Dispose();
+            for (int i = 0; i < coolDownBars.Length; i++)
+                if (coolDownBars[i] == bar)
+                {
+                    coolDownBars[i] = null;
+                    return;
+                }
+        }
+
+        public static bool CoolDownBarExists(string name) => FindCoolDownBar(name) != null;
     }
 }
