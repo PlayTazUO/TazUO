@@ -15,6 +15,7 @@ All notable changes to TazUO will be recorded here.
 * Spell names, reagent names, and magic circle names now use server cliloc strings when available, falling back to the built-in English strings otherwise - [P.R 885](https://github.com/PlayTazUO/TazUO/pull/885) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed a rare "The deque is empty" crash when processing mobile movement steps, caused by the steps deque being cleared concurrently while the main thread removed a step ([bittiez](https://github.com/bittiez))
 * Minor UI bug fixes in modern paperdoll and myra windows ([bittiez](https://github.com/bittiez))
 * MacroManager select next/previous/nearest with the Hostile scan type now skips anyone on the friends list - [P.R 880](https://github.com/PlayTazUO/TazUO/pull/880) ([bittiez](https://github.com/bittiez))
 * Auto skinning now responds to any target cursor type instead of only neutral, so it works on servers that send a different target type for the skinning knife - [P.R 879](https://github.com/PlayTazUO/TazUO/pull/879) ([bittiez](https://github.com/bittiez))
