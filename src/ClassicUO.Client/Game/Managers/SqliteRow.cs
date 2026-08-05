@@ -96,7 +96,7 @@ namespace ClassicUO.Game.Managers
             return true;
         }
 
-        /// <summary>Builds a <see cref="SqliteRow"/> from an existing dictionary (e.g. a Dapper result row).</summary>
+        /// <summary>Builds a <see cref="SqliteRow"/> from an existing dictionary (e.g. a reader row).</summary>
         internal static SqliteRow FromValues(IDictionary<string, object> values)
         {
             Dictionary<string, object> copy = new(values.Count, StringComparer.OrdinalIgnoreCase);
