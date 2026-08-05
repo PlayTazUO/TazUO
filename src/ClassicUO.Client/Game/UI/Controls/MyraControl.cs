@@ -100,14 +100,8 @@ public class MyraControl : IGui
     private void DesktopOnTouchUp(object sender, EventArgs e) =>
         OnMouseUp(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
 
-    private void DesktopOnTouchDown(object sender, EventArgs e)
-    {
-        if (!Mouse.LButtonPressed && Mouse.RButtonPressed){
-            Dispose();
-            return;
-        }
+    private void DesktopOnTouchDown(object sender, EventArgs e) =>
         OnMouseDown(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
-    }
 
     private void DesktopOnWidgetGotKeyboardFocus(object sender, GenericEventArgs<Widget> e)
     {
@@ -160,7 +154,7 @@ public class MyraControl : IGui
     public int ActivePage { get; set; }
     public List<IGui> Children { get; } = new();
     public ClickPriority Priority { get; set; }
-    public bool CanCloseWithRightClick { get; } = true;
+    public bool CanCloseWithRightClick { get; set; } = true;
     public bool IsModal { get; } = false;
     public float Alpha { get; set; }
     public bool WantUpdateSize { get; set; }
@@ -339,6 +333,7 @@ public class MyraControl : IGui
     {
         if (IsDisposed)
             return;
+        IsFocused = false;
         _disposeRequested = true;
     }
 
@@ -421,8 +416,8 @@ public class MyraControl : IGui
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeMouseWheel(MouseEventType delta) { }
 
-    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public void InvokeMouseCloseGumpWithRClick() { }
+    /// <summary>Right-click close is handled by UIManager through the IGui close flow.</summary>
+    public void InvokeMouseCloseGumpWithRClick() => CloseWithRightClick();
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeDragBegin(Point position) { }
@@ -433,7 +428,7 @@ public class MyraControl : IGui
 
     public virtual void HitTest(Point position, ref IGui res)
     {
-        if (!IsVisible || !IsEnabled || IsDisposed || !AcceptMouseInput)
+        if (!IsVisible || !IsEnabled || IsDisposed || !AcceptMouseInput || _disposeRequested)
             return;
 
         if (
@@ -452,7 +447,11 @@ public class MyraControl : IGui
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void ChangePage(int pageIndex) { }
 
-    public void CloseWithRightClick() => Dispose();
+    public void CloseWithRightClick()
+    {
+        if (CanCloseWithRightClick)
+            Dispose();
+    }
 
     public bool Contains(int x, int y)
     {
