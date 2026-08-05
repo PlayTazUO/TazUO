@@ -617,7 +617,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             string fullText = text;
             ChatMode modMode = sentMode;
-            if(_messageHistory.Count < 1 || (_messageHistory[_messageHistory.Count - 1].Item1 != sentMode || _messageHistory[_messageHistory.Count - 1].Item2 != fullText))
+            if(!string.IsNullOrEmpty(fullText) && (_messageHistory.Count < 1 || (_messageHistory[_messageHistory.Count - 1].Item1 != sentMode || _messageHistory[_messageHistory.Count - 1].Item2 != fullText)))
             {
                 //Add to history if last message was not the same
                 _messageHistory.Add(new Tuple<ChatMode, string>(modMode, fullText));
