@@ -878,7 +878,11 @@ namespace ClassicUO.Game.GameObjects
                         Offset.X = 0;
                         Offset.Y = 0;
                         Offset.Z = 0;
-                        Steps.RemoveFromFront();
+
+                        if (Steps.Count != 0)
+                        {
+                            Steps.RemoveFromFront();
+                        }
 
                         if (Steps.Count == 0)
                         {
