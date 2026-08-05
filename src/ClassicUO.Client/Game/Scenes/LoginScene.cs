@@ -387,6 +387,7 @@ namespace ClassicUO.Game.Scenes
             NetClient.Socket.Disconnected -= OnNetClientDisconnected;
             NetClient.Socket?.Disconnect();
             AsyncNetClient.Socket = new AsyncNetClient();
+            ClassicUO.Network.PacketHandlers.Handler.Reset();
             NetClient.Socket.Connected += OnNetClientConnected;
             NetClient.Socket.Disconnected += OnNetClientDisconnected;
             NetClient.Socket.Connect(Settings.GlobalSettings.IP, Settings.GlobalSettings.Port);
@@ -733,6 +734,7 @@ namespace ClassicUO.Game.Scenes
             
             NetClient.Socket.Disconnect().Wait();
             AsyncNetClient.Socket = new AsyncNetClient();
+            ClassicUO.Network.PacketHandlers.Handler.Reset();
             EncryptionHelper.Initialize(false, seed, (ENCRYPTION_TYPE)Settings.GlobalSettings.Encryption);
 
             NetClient.Socket.Connect(new IPAddress(ip).ToString(), port).Wait();

@@ -164,6 +164,19 @@ namespace ClassicUO.Network
             (fromPlugins ? _pluginsBuffer : _buffer).Enqueue(data);
         }
 
+        public void Reset()
+        {
+            lock (_buffer)
+            {
+                _buffer.Clear();
+            }
+
+            lock (_pluginsBuffer)
+            {
+                _pluginsBuffer.Clear();
+            }
+        }
+
         private void AnalyzePacket(ReadOnlySpan<byte> data, int offset)
         {
             if (data.IsEmpty)
