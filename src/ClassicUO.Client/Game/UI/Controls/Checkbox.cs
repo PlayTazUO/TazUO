@@ -74,7 +74,7 @@ namespace ClassicUO.Game.UI.Controls
 
         public override ClickPriority Priority => ClickPriority.High;
 
-        public string Text => _text.Text;
+        public string Text => _text?.Text ?? string.Empty;
 
         public event EventHandler ValueChanged;
 
