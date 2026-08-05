@@ -6,6 +6,7 @@ All notable changes to TazUO will be recorded here.
 
 ### Legion
 * Added `Highlight(hue)` to game objects, setting the hue and remembering the original so it can be restored with `Highlight(None)`; on mobiles it also recolors all equipped items - [P.R 881](https://github.com/PlayTazUO/TazUO/pull/881) ([bittiez](https://github.com/bittiez))
+* Added `API.UpdateCooldown(name, maxValue, currentValue)`, `API.RestartCooldown(name)`, `API.DeleteCooldown(name)` and `API.CooldownExists(name)` to manage cooldown bars created with `API.CreateCooldownBar` ([bittiez](https://github.com/bittiez))
 
 ### Features
 * Added Friend option to Select Nearest macro - ([bittiez](https://github.com/bittiez))
