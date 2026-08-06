@@ -2,7 +2,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using ClassicUO.Utility.Logging;
 using ClassicUO.Utility.Platforms;
 
 namespace ClassicUO.Utility
@@ -26,16 +25,13 @@ namespace ClassicUO.Utility
         {
             if (Environment.Is64BitProcess && !ManagedZlibForced)
             {
-                ICompressor native = PlatformHelper.IsWindows ? (ICompressor) new Compressor64() : new CompressorUnix64();
-
-                if (native.IsAvailable())
+                if(PlatformHelper.IsWindows)
                 {
-                    _compressor = native;
+                    _compressor = new Compressor64();
                 }
                 else
                 {
-                    Log.Warn("Native zlib is not available; falling back to managed zlib.");
-                    _compressor = new ManagedUniversal();
+                    _compressor = new CompressorUnix64();
                 }
             }
             else
@@ -97,8 +93,6 @@ namespace ClassicUO.Utility
         {
             string Version { get; }
 
-            bool IsAvailable();
-
             ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength);
             ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength, ZLibQuality quality);
 
@@ -110,18 +104,6 @@ namespace ClassicUO.Utility
         private sealed class Compressor64 : ICompressor
         {
             public string Version => SafeNativeMethods.zlibVersion();
-
-            public bool IsAvailable()
-            {
-                try
-                {
-                    SafeNativeMethods.zlibVersion();
-
-                    return true;
-                }
-                catch (DllNotFoundException) { return false; }
-                catch (BadImageFormatException) { return false; }
-            }
 
             public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength) => SafeNativeMethods.compress(dest, ref destLength, source, sourceLength);
 
@@ -160,18 +142,6 @@ namespace ClassicUO.Utility
         private sealed class CompressorUnix64 : ICompressor
         {
             public string Version => SafeNativeMethods.zlibVersion();
-
-            public bool IsAvailable()
-            {
-                try
-                {
-                    SafeNativeMethods.zlibVersion();
-
-                    return true;
-                }
-                catch (DllNotFoundException) { return false; }
-                catch (BadImageFormatException) { return false; }
-            }
 
             public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength)
             {
@@ -233,8 +203,6 @@ namespace ClassicUO.Utility
         private sealed class ManagedUniversal : ICompressor
         {
             public string Version => "1.2.11";
-
-            public bool IsAvailable() => true;
 
             public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength)
             {
