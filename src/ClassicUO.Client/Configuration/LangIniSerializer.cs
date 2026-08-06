@@ -64,7 +64,7 @@ namespace ClassicUO.Configuration
                 throw new Exception("Failed to find language file.");
             }
 
-            using FileStream dest = File.Create(destPath);
+            using FileStream dest = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
             stream.CopyTo(dest);
         }
 
@@ -98,7 +98,7 @@ namespace ClassicUO.Configuration
             var lines = new List<string>();
             if (File.Exists(userFilePath))
             {
-                foreach (string rawLine in File.ReadAllLines(userFilePath))
+                foreach (string rawLine in FileSystemHelper.ReadAllLinesShared(userFilePath))
                 {
                     string trimmed = rawLine.TrimStart();
                     if (trimmed.Length == 0 || trimmed[0] == ';')

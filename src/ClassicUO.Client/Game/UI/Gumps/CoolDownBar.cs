@@ -18,6 +18,7 @@ namespace ClassicUO.Game.UI.Gumps
         private DateTime expire;
         private TimeSpan duration;
         private int startX, startY;
+        public string Name { get; }
         private readonly bool isBuffBar;
 
         private GumpPic gumpPic;
@@ -65,6 +66,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             #region LABELS
+            Name = _name;
             if (_name.Length > 17)
             {
                 _name = _name.Substring(0, 16) + "..";
@@ -91,6 +93,22 @@ namespace ClassicUO.Game.UI.Gumps
             Add(textLabel);
             Add(cooldownLabel);
             #endregion
+        }
+
+        public TimeSpan Remaining => expire - DateTime.Now;
+
+        public void Update(TimeSpan? maxValue = null, TimeSpan? currentValue = null)
+        {
+            if (maxValue.HasValue)
+                duration = maxValue.Value;
+
+            if (currentValue.HasValue)
+                expire = DateTime.Now + currentValue.Value;
+        }
+
+        public void Restart()
+        {
+            expire = DateTime.Now + duration;
         }
 
         public override void Update()
@@ -128,7 +146,7 @@ namespace ClassicUO.Game.UI.Gumps
                 int offset = 0;
                 if (gumpPic != null)
                     offset = gumpPic.Width;
-                foreground.Width = (int)((remaing.TotalSeconds / duration.TotalSeconds) * (COOL_DOWN_WIDTH - offset));
+                foreground.Width = Math.Max(0, Math.Min(COOL_DOWN_WIDTH - offset, (int)((remaing.TotalSeconds / duration.TotalSeconds) * (COOL_DOWN_WIDTH - offset))));
                 cooldownLabel.Text = ((int)remaing.TotalSeconds).ToString();
             }
 

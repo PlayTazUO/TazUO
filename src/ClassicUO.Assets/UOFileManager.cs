@@ -51,6 +51,7 @@ namespace ClassicUO.Assets
         public ClientVersion Version { get; }
         public string BasePath { get; }
         public bool IsUOPInstallation { get; private set; }
+        public TimeSpan LoadTime { get; private set; }
 
         public AnimationsLoader Animations { get; }
         public AnimDataLoader AnimData { get; }
@@ -368,7 +369,8 @@ namespace ClassicUO.Assets
             TrueTypeLoader.Instance.SetImageResolver(Arts, graphicsDevice);
 
             stopwatch.Stop();
-            Log.Trace($"Files loaded in: {stopwatch.ElapsedMilliseconds} ms!");
+            LoadTime = stopwatch.Elapsed;
+            Log.Trace($"Files loaded in: {LoadTime.TotalMilliseconds:F0} ms!");
         }
 
         private void ReadArtDefFile()

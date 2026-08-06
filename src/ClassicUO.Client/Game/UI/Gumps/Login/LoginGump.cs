@@ -421,6 +421,21 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 _textboxAccount.SetKeyboardFocus();
             }
 
+#if DEBUG
+            var loadTimeLabel = new Label
+            (
+                $"Asset load: {Client.Game.UO.FileManager.LoadTime.TotalMilliseconds:F0} ms",
+                false,
+                0x034E,
+                font: 9
+            )
+            {
+                Y = 5
+            };
+            loadTimeLabel.X = 640 - loadTimeLabel.Width - 5;
+            Add(loadTimeLabel);
+#endif
+
             Add
             (
                 new Label(TazLang.Get("uoversion", [Settings.GlobalSettings.ClientVersion]), false, 0x034E, font: 9)

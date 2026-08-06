@@ -1977,6 +1977,50 @@ def CreateCooldownBar(seconds: "float", text: "str", hue: "int") -> None:
     """
     pass
 
+def UpdateCooldown(name: "str", maxValue: "float" = -1, currentValue: "float" = -1) -> None:
+    """
+     Updates an existing cooldown bar. Only the provided values are applied.
+     Example:
+     ```py
+     API.UpdateCooldown("Healing", maxValue=10, currentValue=5)
+     ```
+    
+    """
+    pass
+
+def RestartCooldown(name: "str") -> None:
+    """
+     Restarts the countdown of an existing cooldown bar to its full duration.
+     Example:
+     ```py
+     API.RestartCooldown("Healing")
+     ```
+    
+    """
+    pass
+
+def DeleteCooldown(name: "str") -> None:
+    """
+     Deletes an existing cooldown bar.
+     Example:
+     ```py
+     API.DeleteCooldown("Healing")
+     ```
+    
+    """
+    pass
+
+def CooldownExists(name: "str") -> "bool":
+    """
+     Checks whether a cooldown bar with the given name exists.
+     Example:
+     ```py
+     if API.CooldownExists("Healing"):
+     ```
+    
+    """
+    pass
+
 def IgnoreObject(serial: "int") -> None:
     """
      Adds an item or mobile to your ignore list.

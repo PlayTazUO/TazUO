@@ -1946,6 +1946,53 @@ namespace ClassicUO.LegionScripting
             (() => { Game.Managers.CoolDownBarManager.AddCoolDownBar(World, TimeSpan.FromSeconds(seconds), text, hue, false); });
 
         /// <summary>
+        /// Updates an existing cooldown bar. Only the provided values are applied.
+        /// Example:
+        /// ```py
+        /// API.UpdateCooldown("Healing", maxValue=10, currentValue=5)
+        /// ```
+        /// </summary>
+        /// <param name="name">Name of the cooldown bar to update</param>
+        /// <param name="maxValue">New total duration in seconds. Omit or pass -1 to leave unchanged</param>
+        /// <param name="currentValue">New remaining time in seconds. Omit or pass -1 to leave unchanged</param>
+        public void UpdateCooldown(string name, double maxValue = -1, double currentValue = -1) => OnMain
+            (() => { Game.Managers.CoolDownBarManager.UpdateCoolDownBar(name, maxValue > 0 ? TimeSpan.FromSeconds(maxValue) : null, currentValue > 0 ? TimeSpan.FromSeconds(currentValue) : null); });
+
+        /// <summary>
+        /// Restarts the countdown of an existing cooldown bar to its full duration.
+        /// Example:
+        /// ```py
+        /// API.RestartCooldown("Healing")
+        /// ```
+        /// </summary>
+        /// <param name="name">Name of the cooldown bar to restart</param>
+        public void RestartCooldown(string name) => OnMain
+            (() => { Game.Managers.CoolDownBarManager.RestartCoolDownBar(name); });
+
+        /// <summary>
+        /// Deletes an existing cooldown bar.
+        /// Example:
+        /// ```py
+        /// API.DeleteCooldown("Healing")
+        /// ```
+        /// </summary>
+        /// <param name="name">Name of the cooldown bar to delete</param>
+        public void DeleteCooldown(string name) => OnMain
+            (() => { Game.Managers.CoolDownBarManager.DeleteCoolDownBar(name); });
+
+        /// <summary>
+        /// Checks whether a cooldown bar with the given name exists.
+        /// Example:
+        /// ```py
+        /// if API.CooldownExists("Healing"):
+        /// ```
+        /// </summary>
+        /// <param name="name">Name of the cooldown bar to check</param>
+        /// <returns>True if the cooldown bar exists, false otherwise</returns>
+        public bool CooldownExists(string name) => OnMain
+            (() => Game.Managers.CoolDownBarManager.CoolDownBarExists(name));
+
+        /// <summary>
         /// Adds an item or mobile to your ignore list.
         /// These are unique lists per script. Ignoring an item in one script, will not affect other running scripts.
         /// Example:
