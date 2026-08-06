@@ -4,7 +4,6 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -27,7 +26,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Alpha = 0.8f
             };
 
-            var text = new Label(string.Format(ResGumps.P0HasInvitedYouToParty, mobile == null || string.IsNullOrEmpty(mobile.Name) ? ResGumps.NoName : mobile.Name), true, 15)
+            var text = new Label(string.Format(TazLang.Get("p0_has_invited_you_to_party"), mobile == null || string.IsNullOrEmpty(mobile.Name) ? TazLang.Get("no_name") : mobile.Name), true, 15)
             {
                 X = Client.Game.Scene.Camera.Bounds.Width / 2 - 115,
                 Y = 165
@@ -40,7 +39,7 @@ namespace ClassicUO.Game.UI.Gumps
                 45,
                 25,
                 ButtonAction.Activate,
-                ResGumps.Accept
+                TazLang.Get("accept")
             );
 
             var declineButton = new NiceButton
@@ -50,7 +49,7 @@ namespace ClassicUO.Game.UI.Gumps
                 45,
                 25,
                 ButtonAction.Activate,
-                ResGumps.Decline
+                TazLang.Get("decline")
             );
 
             Add(partyGumpBackground);

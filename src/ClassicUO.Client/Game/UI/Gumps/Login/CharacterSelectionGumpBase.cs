@@ -8,7 +8,6 @@ using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using SDL3;
@@ -181,7 +180,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     new LoadingGump
                     (
                         World,
-                        string.Format(ResGumps.PermanentlyDelete0, charName),
+                        string.Format(TazLang.Get("permanently_delete0"), charName),
                         LoginButtons.OK | LoginButtons.Cancel,
                         buttonID =>
                         {

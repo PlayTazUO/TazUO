@@ -8,7 +8,6 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using SDL3;
@@ -85,7 +84,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
                 Add
                 (
-                    new Label(ResGumps.SelectWhichShardToPlayOn, false, textColor, font: 9)
+                    new Label(TazLang.Get("select_which_shard_to_play_on"), false, textColor, font: 9)
                     {
                         X = 155, Y = 70
                     }
@@ -93,7 +92,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
                 Add
                 (
-                    new Label(ResGumps.Latency, false, textColor, font: 9)
+                    new Label(TazLang.Get("latency"), false, textColor, font: 9)
                     {
                         X = 400, Y = 70
                     }
@@ -101,7 +100,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
                 Add
                 (
-                    new Label(ResGumps.PacketLoss, false, textColor, font: 9)
+                    new Label(TazLang.Get("packet_loss"), false, textColor, font: 9)
                     {
                         X = 470, Y = 70
                     }
@@ -109,7 +108,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
                 Add
                 (
-                    new Label(ResGumps.SortBy, false, textColor, font: 9)
+                    new Label(TazLang.Get("sort_by"), false, textColor, font: 9)
                     {
                         X = 153, Y = 368
                     }

@@ -6,8 +6,8 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -77,7 +77,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
 
 
-                    var text = new Label(ResGumps.Index, false, 0x0288, font: 6) { X = indexX, Y = 10 };
+                    var text = new Label(TazLang.Get("index"), false, 0x0288, font: 6) { X = indexX, Y = 10 };
                     Add(text, page);
 
                     for (int i = 0; i < abilityOnPage; i++)
@@ -153,7 +153,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (passive)
                 {
-                    text = new Label(ResGumps.Passive, false, 0x0288, font: 6)
+                    text = new Label(TazLang.Get("passive"), false, 0x0288, font: 6)
                     {
                         X = iconTextX,
                         Y = 64

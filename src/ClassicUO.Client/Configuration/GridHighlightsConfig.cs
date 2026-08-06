@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 
 namespace ClassicUO.Configuration
@@ -11,21 +13,36 @@ namespace ClassicUO.Configuration
     /// <summary>
     /// JSON-backed store for grid-highlight rules. Persisted to <c>grid_highlights.json</c> in the
     /// current profile's save location. Replaces the in-profile <see cref="Profile.GridHighlightSetup"/>
-    /// storage, which is migrated on first load so existing highlights are preserved.
+    /// storage, which is migrated on first load so existing highlights are preserved. Saving/loading
+    /// (with rotating backups) is handled by <see cref="JsonSave{T}"/>.
     /// </summary>
-    public sealed class GridHighlightsConfig
+    public sealed class GridHighlightsConfig : JsonSave<GridHighlightsConfig>
     {
-        public const string FileName = "grid_highlights.json";
+        private const string GridHighlightsFileName = "grid_highlights.json";
 
         public List<GridHighlightSetupEntry> Highlights { get; set; } = new();
+
+        /// <summary>Lives in the profile folder alongside the other per-character configs.</summary>
+        protected override SettingsScope Scope => SettingsScope.Char;
+
+        protected override string FileName => GridHighlightsFileName;
+
+        protected override JsonTypeInfo<GridHighlightsConfig> TypeInfo => GridHighlightsJsonContext.DefaultToUse.GridHighlightsConfig;
 
         private static GridHighlightsConfig _current;
 
         /// <summary>The grid-highlight config for the currently loaded profile.</summary>
         public static GridHighlightsConfig Current => _current ??= LoadForCurrentProfile();
 
-        private static string GetFilePath() =>
-            string.IsNullOrEmpty(ProfileManager.ProfilePath) ? null : Path.Combine(ProfileManager.ProfilePath, FileName);
+        public static void Unload()
+        {
+            if (_current == null)
+                return;
+            
+            _current.Save();
+            _current.Highlights.Clear();
+            _current = null;
+        }
 
         /// <summary>
         /// Loads (or migrates) the grid-highlight config for the given profile and sets it as
@@ -35,12 +52,11 @@ namespace ClassicUO.Configuration
         /// </summary>
         public static bool LoadForProfile(string profilePath, Profile profile)
         {
-            string file = string.IsNullOrEmpty(profilePath) ? null : Path.Combine(profilePath, FileName);
+            string file = string.IsNullOrEmpty(profilePath) ? null : Path.Combine(profilePath, GridHighlightsFileName);
 
             if (file != null && File.Exists(file))
             {
-                _current = ConfigurationResolver.Load<GridHighlightsConfig>(file, GridHighlightsJsonContext.DefaultToUse.GridHighlightsConfig)
-                           ?? new GridHighlightsConfig();
+                _current = Load();
                 return false;
             }
 
@@ -54,15 +70,6 @@ namespace ClassicUO.Configuration
         {
             LoadForProfile(ProfileManager.ProfilePath, ProfileManager.CurrentProfile);
             return _current;
-        }
-
-        public void Save()
-        {
-            string file = GetFilePath();
-            if (file == null)
-                return;
-
-            ConfigurationResolver.Save(this, file, GridHighlightsJsonContext.DefaultToUse.GridHighlightsConfig);
         }
 
         /// <summary>

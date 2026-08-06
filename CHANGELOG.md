@@ -2,6 +2,35 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 5.22.15
+
+### Legion
+* Added `Highlight(hue)` to game objects, setting the hue and remembering the original so it can be restored with `Highlight(None)`; on mobiles it also recolors all equipped items - [P.R 881](https://github.com/PlayTazUO/TazUO/pull/881) ([bittiez](https://github.com/bittiez))
+* Added `API.UpdateCooldown(name, maxValue, currentValue)`, `API.RestartCooldown(name)`, `API.DeleteCooldown(name)` and `API.CooldownExists(name)` to manage cooldown bars created with `API.CreateCooldownBar` ([bittiez](https://github.com/bittiez))
+
+### Features
+* Added Friend option to Select Nearest macro - ([bittiez](https://github.com/bittiez))
+* Added tooltips to empty slots on paperdoll for what layer they are ([bittiez](https://github.com/bittiez))
+* Added a screenshot on death option(enabled by default) - [P.R 857](https://github.com/PlayTazUO/TazUO/pull/857) ([bittiez](https://github.com/bittiez))
+* Added a Randomize button to the character creation screen that picks random hair/facial hair styles and random colors (skin, shirt, pants, hair, beard) while keeping the selected race and gender ([bittiez](https://github.com/bittiez))
+* Spell names, reagent names, and magic circle names now use server cliloc strings when available, falling back to the built-in English strings otherwise - [P.R 885](https://github.com/PlayTazUO/TazUO/pull/885) ([bittiez](https://github.com/bittiez))
+
+### Fixes
+* Fixed an `IO_SharingViolation_File` crash when running multiple TazUO clients against a shared `Data/language.*.ini`; language files are now opened with shared read/write access and rewritten atomically via a temp file so concurrent clients can read and merge them without collisions ([bittiez](https://github.com/bittiez))
+* Fixed a NullReferenceException when toggling "Stay active" in the nameplate manager gump on shards whose gumpart is missing the radio button art; failed button construction is now handled gracefully instead of leaving a broken control behind ([bittiez](https://github.com/bittiez))
+* Fixed empty chat input entries being saved to the message history - [P.R 900](https://github.com/PlayTazUO/TazUO/pull/900) ([bittiez](https://github.com/bittiez))
+* Fixed a rare "The deque is empty" crash when processing mobile movement steps, caused by the steps deque being cleared concurrently while the main thread removed a step ([bittiez](https://github.com/bittiez))
+* Minor UI bug fixes in modern paperdoll and myra windows ([bittiez](https://github.com/bittiez))
+* MacroManager select next/previous/nearest with the Hostile scan type now skips anyone on the friends list - [P.R 880](https://github.com/PlayTazUO/TazUO/pull/880) ([bittiez](https://github.com/bittiez))
+* Auto skinning now responds to any target cursor type instead of only neutral, so it works on servers that send a different target type for the skinning knife - [P.R 879](https://github.com/PlayTazUO/TazUO/pull/879) ([bittiez](https://github.com/bittiez))
+* Fixed in-game screenshots showing the world viewport as partially transparent by forcing the saved image to be fully opaque - [P.R 870](https://github.com/PlayTazUO/TazUO/pull/870) ([bittiez](https://github.com/bittiez))
+* Fix journal partially scrolled sometimes still scrolling up - [P.R 858](https://github.com/PlayTazUO/TazUO/pull/858) ([bittiez](https://github.com/bittiez))
+
+### Misc
+* Updated to latest FNA release ([bittiez](https://github.com/bittiez))
+* Converted previous ResGumps language system into TazLang language.ini system ([bittiez](https://github.com/bittiez))
+* Converted ResGeneral and ResErrorMessages into TazLang language.ini system ([bittiez](https://github.com/bittiez))
+
 ## 5.20.26
 
 ### Legion

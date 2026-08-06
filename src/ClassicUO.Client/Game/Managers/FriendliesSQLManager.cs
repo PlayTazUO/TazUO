@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ClassicUO.Utility.Logging;
-using Dapper;
-using Dapper.Contrib.Extensions;
 
 namespace ClassicUO.Game.Managers
 {
@@ -21,39 +19,28 @@ namespace ClassicUO.Game.Managers
             private set => field = value;
         }
 
-        [Table("friendlies")]
-        private sealed class FriendlyRecord
-        {
-            [ExplicitKey]
-            public long Serial { get; set; }
-            public string Name { get; set; }
-        }
-
         private const string DB_FILE = "friendlies.db";
 
         private static readonly SqliteTableSchema FriendliesSchema = new("friendlies",
             SqliteColumn.Int("serial", primaryKey: true),
             SqliteColumn.Str("name", notNull: true));
 
-        public FriendliesSQLManager() : base(DB_FILE)
+        // The schema constructor ensures the table; only the index creation remains.
+        public FriendliesSQLManager() : base(FriendliesSchema, DB_FILE)
         {
             InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
-        // Table creation/migration goes through the base class's schema reconciliation. The index
-        // is unrelated to table structure, so it's still created directly. Row-level CRUD below goes
-        // through Dapper.Contrib's typed helpers (Get/GetAll/Insert/Update/Delete/DeleteAll) instead
-        // of hand-written SQL.
+        // Index creation cannot be expressed through the generic row helpers, so it runs as a raw
+        // statement through the base class.
         private async Task InitializeAsync()
         {
             try
             {
-                await EnsureTableAsync(FriendliesSchema).ConfigureAwait(false);
-
-                await WithConnectionAsync(connection => connection.ExecuteAsync("""
-                                                                                 CREATE INDEX IF NOT EXISTS idx_name
-                                                                                 ON friendlies(name)
-                                                                                 """)).ConfigureAwait(false);
+                await ExecuteAsync("""
+                                   CREATE INDEX IF NOT EXISTS idx_name
+                                   ON friendlies(name)
+                                   """).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -73,16 +60,7 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                await WithConnectionAsync(async connection =>
-                {
-                    FriendlyRecord record = new() { Serial = serial, Name = name ?? string.Empty };
-                    FriendlyRecord existing = await connection.GetAsync<FriendlyRecord>((long)serial).ConfigureAwait(false);
-
-                    if (existing == null)
-                        await connection.InsertAsync(record).ConfigureAwait(false);
-                    else
-                        await connection.UpdateAsync(record).ConfigureAwait(false);
-                }).ConfigureAwait(false);
+                await AddOrUpdateAsync(new SqliteRow { ["serial"] = serial, ["name"] = name ?? string.Empty }).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -100,8 +78,7 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                await WithConnectionAsync(connection =>
-                    connection.DeleteAsync(new FriendlyRecord { Serial = serial })).ConfigureAwait(false);
+                await DeleteAsync(new SqliteRow { ["serial"] = serial }).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -119,9 +96,7 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                return await WithConnectionAsync(async connection =>
-                    await connection.GetAsync<FriendlyRecord>((long)serial).ConfigureAwait(false) != null)
-                    .ConfigureAwait(false);
+                return (await GetFirstAsync(new SqliteRow { ["serial"] = serial }).ConfigureAwait(false)).HasValue;
             }
             catch (Exception ex)
             {
@@ -140,11 +115,8 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                return await WithConnectionAsync(async connection =>
-                {
-                    FriendlyRecord existing = await connection.GetAsync<FriendlyRecord>((long)serial).ConfigureAwait(false);
-                    return existing?.Name;
-                }).ConfigureAwait(false);
+                SqliteRow? row = await GetFirstAsync(new SqliteRow { ["serial"] = serial }).ConfigureAwait(false);
+                return row?.Get<string>("name");
             }
             catch (Exception ex)
             {
@@ -162,11 +134,8 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                return await WithConnectionAsync(async connection =>
-                {
-                    IEnumerable<FriendlyRecord> rows = await connection.GetAllAsync<FriendlyRecord>().ConfigureAwait(false);
-                    return rows.ToDictionary(r => (uint)r.Serial, r => r.Name);
-                }).ConfigureAwait(false);
+                IReadOnlyList<SqliteRow> rows = await GetAsync().ConfigureAwait(false);
+                return rows.ToDictionary(r => (uint)r.Get<long>("serial"), r => r.Get<string>("name"));
             }
             catch (Exception ex)
             {
@@ -184,7 +153,8 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                await WithConnectionAsync(connection => connection.DeleteAllAsync<FriendlyRecord>()).ConfigureAwait(false);
+                // A full-table delete has no filter for DeleteAsync, so it runs as a raw statement.
+                await ExecuteAsync("DELETE FROM friendlies").ConfigureAwait(false);
             }
             catch (Exception ex)
             {

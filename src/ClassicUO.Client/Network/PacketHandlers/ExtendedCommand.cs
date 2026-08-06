@@ -10,9 +10,9 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
 using ClassicUO.Network.PacketHandlers.Helpers;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Network.PacketHandlers;
 
@@ -137,7 +137,7 @@ internal static class ExtendedCommand
 
                     if (crafterNameLen > 0)
                     {
-                        strBuffer.Append(ResGeneral.CraftedBy);
+                        strBuffer.Append(TazLang.Get("crafted_by"));
                         strBuffer.Append(p.ReadASCII(crafterNameLen));
                     }
                 }

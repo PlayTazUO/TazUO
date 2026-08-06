@@ -14,7 +14,6 @@ using ClassicUO.Input;
 using ClassicUO.LegionScripting;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
@@ -91,7 +90,7 @@ namespace ClassicUO.Game.UI.Gumps
             _button.MouseExit += (sender, e) => _button.Alpha = 0.3f;
             _button.Alpha = 0.3f;
 
-            _button.SetTooltip(ResGumps.ResizeGameWindow);
+            _button.SetTooltip(TazLang.Get("resize_game_window"));
             Width = scene.Camera.Bounds.Width + borderOffset;
             Height = scene.Camera.Bounds.Height + borderOffset;
 

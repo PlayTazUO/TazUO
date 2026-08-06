@@ -73,7 +73,10 @@ namespace ClassicUO.Configuration
             string fileToLoad = Path.Combine(path, "profile.json");
 
             ProfilePath = path;
-            CurrentProfile = ConfigurationResolver.Load<Profile>(fileToLoad, ProfileJsonContext.DefaultToUse.Profile) ?? NewFromDefault();
+
+            // Load through JsonSave (which recovers from the rotating backups), falling back to the
+            // default.json template when the character has no saved profile yet.
+            CurrentProfile = File.Exists(fileToLoad) ? Profile.Load() : NewFromDefault();
 
             CurrentProfile.Username = username;
             CurrentProfile.ServerName = servername;
@@ -83,13 +86,13 @@ namespace ClassicUO.Configuration
             // Load (or migrate from the in-profile GridHighlightSetup / legacy per-list storage) the grid highlights.
             if (GridHighlightsConfig.LoadForProfile(ProfilePath, CurrentProfile))
             {
-                ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
+                CurrentProfile.Save();
             }
 
             // Load (or migrate from the legacy per-list profile storage) the cooldown-bar rules.
             if (CooldownBarsConfig.LoadForProfile(ProfilePath, CurrentProfile))
             {
-                ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
+                CurrentProfile.Save();
             }
 
             // Load the grid-container band layout rules for this profile.

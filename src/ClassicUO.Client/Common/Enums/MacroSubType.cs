@@ -216,12 +216,12 @@ public enum MacroSubType
     Follower,
     Object,
     Mobile,
+    Friend, //Uses one reserved INVALID_ slot below so values past 215 stay put
     MscTotalCount,
 
     INVALID_0,
     INVALID_1,
     INVALID_2,
-    INVALID_3,
 
 
     ConfusionBlastPotion = 215,

@@ -8,7 +8,6 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Assets;
-using ClassicUO.Resources;
 using System.Collections.Generic;
 using ClassicUO.Utility;
 
@@ -325,7 +324,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             }
             else
             {
-                UIManager.GetGump<CharCreationGump>()?.ShowMessage(Client.Game.UO.Version <= ClientVersion.CV_5090 ? ResGumps.YouMustHaveThreeUniqueSkillsChosen : Client.Game.UO.FileManager.Clilocs.GetString(1080032));
+                UIManager.GetGump<CharCreationGump>()?.ShowMessage(Client.Game.UO.Version <= ClientVersion.CV_5090 ? TazLang.Get("you_must_have_three_unique_skills_chosen") : Client.Game.UO.FileManager.Clilocs.GetString(1080032));
 
                 return false;
             }

@@ -12,7 +12,6 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
@@ -282,7 +281,7 @@ namespace ClassicUO.Game.Scenes
                 case MessageType.Limit3Spell:
 
                     if (e.Parent == null || !SerialHelper.IsValid(e.Parent.Serial))
-                        name = ProfileManager.CurrentProfile?.HideJournalSystemPrefix == true ? null : ResGeneral.System;
+                        name = ProfileManager.CurrentProfile?.HideJournalSystemPrefix == true ? null : TazLang.Get("system");
                     else
                         name = e.Name;
 
@@ -291,7 +290,7 @@ namespace ClassicUO.Game.Scenes
 
                 case MessageType.System:
                     if (string.IsNullOrEmpty(e.Name) || string.Equals(e.Name, "system", StringComparison.InvariantCultureIgnoreCase))
-                        name = ProfileManager.CurrentProfile?.HideJournalSystemPrefix == true ? null : ResGeneral.System;
+                        name = ProfileManager.CurrentProfile?.HideJournalSystemPrefix == true ? null : TazLang.Get("system");
                     else
                         name = e.Name;
 
@@ -318,7 +317,7 @@ namespace ClassicUO.Game.Scenes
                     }
                     else if (string.IsNullOrEmpty(e.Name))
                     {
-                        name = ResGeneral.YouSee;
+                        name = TazLang.Get("you_see");
                     }
                     else
                     {
@@ -337,21 +336,21 @@ namespace ClassicUO.Game.Scenes
 
                 case MessageType.Party:
                     text = e.Text;
-                    name = string.Format(ResGeneral.Party0, e.Name);
+                    name = string.Format(TazLang.Get("party0"), e.Name);
                     hue = ProfileManager.CurrentProfile.PartyMessageHue;
 
                     break;
 
                 case MessageType.Alliance:
                     text = e.Text;
-                    name = string.Format(ResGeneral.Alliance0, e.Name);
+                    name = string.Format(TazLang.Get("alliance0"), e.Name);
                     hue = ProfileManager.CurrentProfile.AllyMessageHue;
 
                     break;
 
                 case MessageType.Guild:
                     text = e.Text;
-                    name = string.Format(ResGeneral.Guild0, e.Name);
+                    name = string.Format(TazLang.Get("guild0"), e.Name);
                     hue = ProfileManager.CurrentProfile.GuildMessageHue;
 
                     break;
@@ -384,6 +383,9 @@ namespace ClassicUO.Game.Scenes
 
             Instance = null;
 
+            GridHighlightsConfig.Unload();
+            CooldownBarsConfig.Unload();
+            TooltipOverridesConfig.Unload();
             GridContainerSaveData.Instance.Save();
             GridContainerSaveData.Reset();
             JournalFilterManager.Instance.Save();
@@ -518,7 +520,7 @@ namespace ClassicUO.Game.Scenes
                             200,
                             200,
                             string.Format(
-                                ResGeneral.ConnectionLost0,
+                                TazLang.Get("connection_lost0"),
                                 StringHelper.AddSpaceBeforeCapital(e.ToString())
                             ),
                             s =>
@@ -1736,7 +1738,7 @@ namespace ClassicUO.Game.Scenes
         }
 
         private static readonly RenderedText _youAreDeadText = RenderedText.Create(
-            ResGeneral.YouAreDead,
+            TazLang.Get("you_are_dead"),
             0xFFFF,
             3,
             false,
@@ -1781,7 +1783,7 @@ namespace ClassicUO.Game.Scenes
 
                 _world.MessageManager.HandleMessage(
                     _world.Player,
-                    ResGeneral.StoppedFollowing,
+                    TazLang.Get("stopped_following"),
                     string.Empty,
                     0,
                     MessageType.Regular,

@@ -8,8 +8,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using ClassicUO.Common;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Utility.Logging;
@@ -90,7 +90,6 @@ namespace ClassicUO.Game.Managers
         private AutoLootData _data = new ();
         private AutoLootList _currentList;
         private bool _loaded = false;
-        private readonly string _savePath;
         private long _nextLootTime = Time.Ticks;
         private long _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
         private ProgressBarGump _progressBarGump;
@@ -102,7 +101,6 @@ namespace ClassicUO.Game.Managers
         private AutoLootManager()
         {
             _world = Client.Game.UO.World;
-            _savePath = Path.Combine(ProfileManager.ProfilePath, "AutoLoot.json");
             EnsureAtLeastOneList();
         }
 
@@ -554,50 +552,57 @@ namespace ClassicUO.Game.Managers
         {
             if (_loaded) return;
 
-            Task.Factory.StartNew(() =>
+            try
             {
-                string oldPath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Profiles", "AutoLoot.json");
-                if(File.Exists(oldPath))
-                    File.Move(oldPath, _savePath);
+                MigrateOldLocationIfNeeded();
+                MigrateLegacyFormatIfNeeded();
 
-                if (!File.Exists(_savePath))
-                {
-                    _data = new AutoLootData();
-                    EnsureAtLeastOneList();
-                    Log.Error("Auto loot save path not found, creating new..");
-                    _loaded = true;
-                }
-                else
-                {
-                    Log.Info($"Loading: {_savePath}");
-                    try
-                    {
-                        if (IsLegacyFormat(_savePath))
-                        {
-                            // Legacy files stored a flat list of entries; migrate them into a "Default" list.
-                            JsonHelper.Load(_savePath, AutoLootJsonContext.Default.ListAutoLootConfigEntry, out List<AutoLootConfigEntry> legacy);
+                _data = AutoLootData.Load();
+                _currentList = null;
+                EnsureAtLeastOneList();
+                _loaded = true;
+            }
+            catch
+            {
+                Log.Error("There was an error loading your auto loot config file, please check it with a json validator.");
+                _loaded = false;
+            }
+        }
 
-                            _data = new AutoLootData();
-                            _data.Lists.Add(new AutoLootList { Name = DefaultListName, Entries = legacy ?? new List<AutoLootConfigEntry>() });
-                        }
-                        else
-                        {
-                            JsonHelper.Load(_savePath, AutoLootJsonContext.Default.AutoLootData, out AutoLootData data);
-                            _data = data ?? new AutoLootData();
-                        }
+        /// <summary>The full path to the current profile's auto loot config file.</summary>
+        private static string SavePath => Path.Combine(JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Char), AutoLootData.AutoLootFileName);
 
-                        _currentList = null;
-                        EnsureAtLeastOneList();
-                        _loaded = true;
-                    }
-                    catch
-                    {
-                        Log.Error("There was an error loading your auto loot config file, please check it with a json validator.");
-                        _loaded = false;
-                    }
+        /// <summary>
+        /// Moves the very old <c>Data/Profiles/AutoLoot.json</c> into the current profile folder, if present.
+        /// </summary>
+        private static void MigrateOldLocationIfNeeded()
+        {
+            string oldPath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Profiles", AutoLootData.AutoLootFileName);
+            string newPath = SavePath;
 
-                }
-            });
+            if (File.Exists(oldPath) && !File.Exists(newPath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+                File.Move(oldPath, newPath);
+            }
+        }
+
+        /// <summary>
+        /// Rewrites a legacy flat-list config (a JSON array of entries) into the wrapped
+        /// <see cref="AutoLootData"/> format so <see cref="JsonSave{T}"/> can load it. The legacy file is
+        /// rotated into the backups folder as part of the save.
+        /// </summary>
+        private static void MigrateLegacyFormatIfNeeded()
+        {
+            string path = SavePath;
+
+            if (!File.Exists(path) || !IsLegacyFormat(path)) return;
+
+            JsonHelper.Load(path, AutoLootJsonContext.Default.ListAutoLootConfigEntry, out List<AutoLootConfigEntry> legacy);
+
+            var data = new AutoLootData();
+            data.Lists.Add(new AutoLootList { Name = DefaultListName, Entries = legacy ?? new List<AutoLootConfigEntry>() });
+            data.Save();
         }
 
         /// <summary>
@@ -621,15 +626,16 @@ namespace ClassicUO.Game.Managers
 
         public void Save()
         {
-            if (_loaded)
-                try
-                {
-                    if (_currentList != null)
-                        _data.SelectedUid = _currentList.Uid;
+            if (!_loaded) return;
 
-                    JsonHelper.SaveAndBackup(_data, _savePath, AutoLootJsonContext.Default.AutoLootData);
-                }
-                catch (Exception e) { Console.WriteLine(e.ToString()); }
+            try
+            {
+                if (_currentList != null)
+                    _data.SelectedUid = _currentList.Uid;
+
+                _data.Save();
+            }
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
 
         public void ClearActiveLootQueue()
@@ -692,7 +698,7 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                string configPath = Path.Combine(characterPath, "AutoLoot.json");
+                string configPath = Path.Combine(characterPath, AutoLootData.AutoLootFileName);
                 if (File.Exists(configPath))
                 {
                     if (IsLegacyFormat(configPath))
@@ -803,11 +809,21 @@ namespace ClassicUO.Game.Managers
 
         /// <summary>
         /// Root persisted object holding every loot list and the currently selected one.
+        /// Saving/loading (with rotating backups) is handled by <see cref="JsonSave{T}"/>.
         /// </summary>
-        public class AutoLootData
+        public class AutoLootData : JsonSave<AutoLootData>
         {
+            public const string AutoLootFileName = "AutoLoot.json";
+
             public List<AutoLootList> Lists { get; set; } = new();
             public string SelectedUid { get; set; } = "";
+
+            /// <summary>Lives in the profile folder alongside the other per-character configs.</summary>
+            protected override SettingsScope Scope => SettingsScope.Char;
+
+            protected override string FileName => AutoLootFileName;
+
+            protected override JsonTypeInfo<AutoLootData> TypeInfo => AutoLootJsonContext.Default.AutoLootData;
         }
 
         public class AutoLootConfigEntry

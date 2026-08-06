@@ -184,6 +184,10 @@ namespace ClassicUO
                 AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)c;
                 packetsProcessed++;
             }
+
+            // Plugin packets are buffered separately and would sit unprocessed
+            // if no network packets arrived this frame, so always drain them.
+            PacketParser.Instance.ParsePluginsPackets(Client.Game.UO.World);
         }
 
         protected override void LoadContent()
@@ -1185,7 +1189,7 @@ namespace ClassicUO
             base.OnExiting(sender, args);
         }
 
-        private void TakeScreenshot()
+        public void TakeScreenshot(string prefix = "screenshot")
         {
             string screenshotsFolder = FileSystemHelper.CreateFolderIfNotExists(
                 CUOEnviroment.ExecutablePath,
@@ -1196,7 +1200,7 @@ namespace ClassicUO
 
             string path = Path.Combine(
                 screenshotsFolder,
-                $"screenshot_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
+                $"{prefix}_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
             );
 
             Color[] colors;
@@ -1218,6 +1222,11 @@ namespace ClassicUO
                 GraphicsDevice.GetBackBufferData(colors);
             }
 
+            // The render target's alpha channel is not fully opaque in the world viewport (lighting
+            // and world compositing leave varying alpha). Screenshots are always opaque, so force it.
+            for (int i = 0; i < colors.Length; i++)
+                colors[i].A = 255;
+
             using (
                 var texture = new Texture2D(
                     GraphicsDevice,
@@ -1231,7 +1240,7 @@ namespace ClassicUO
             {
                 texture.SetData(colors);
                 texture.SaveAsPng(fileStream, texture.Width, texture.Height);
-                string message = string.Format(ResGeneral.ScreenshotStoredIn0, path);
+                string message = string.Format(TazLang.Get("screenshot_stored_in0"), path);
 
                 if (
                     ProfileManager.CurrentProfile == null
@@ -1261,6 +1270,11 @@ namespace ClassicUO
                 graphicDevice.GetBackBufferData(position, colors, 0, colors.Length);
             }
 
+            // The render target's alpha channel is not fully opaque in the world viewport (lighting
+            // and world compositing leave varying alpha). Screenshots are always opaque, so force it.
+            for (int i = 0; i < colors.Length; i++)
+                colors[i].A = 255;
+
             using (
                 var texture = new Texture2D(
                     GraphicsDevice,
@@ -1287,7 +1301,7 @@ namespace ClassicUO
 
                 using FileStream fileStream = File.Create(path);
                 texture.SaveAsPng(fileStream, texture.Width, texture.Height);
-                string message = string.Format(ResGeneral.ScreenshotStoredIn0, path);
+                string message = string.Format(TazLang.Get("screenshot_stored_in0"), path);
 
                 if (ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage)
                 {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Configuration
@@ -71,7 +72,7 @@ namespace ClassicUO.Configuration
                 target = enPath;
             }
 
-            Dictionary<string, string> dict = LangIniSerializer.Parse(File.ReadAllText(target));
+            Dictionary<string, string> dict = LangIniSerializer.Parse(FileSystemHelper.ReadAllTextShared(target));
             LangIniSerializer.MergeIfStale(target, dict);
 
             dict.Remove("_version");

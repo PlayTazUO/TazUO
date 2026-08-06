@@ -10,7 +10,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps
@@ -257,7 +256,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         SetTooltip(
                             string.Format(
-                                ResGumps.TimeLeft,
+                                TazLang.Get("time_left"),
                                 Icon.Text,
                                 span.Hours,
                                 span.Minutes,
@@ -269,7 +268,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (span.Hours > 0)
                         {
-                            _gText.Text = string.Format(ResGumps.Span0Hours, span.Hours);
+                            _gText.Text = string.Format(TazLang.Get("span0_hours"), span.Hours);
                         }
                         else
                         {

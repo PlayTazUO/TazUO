@@ -178,6 +178,9 @@ namespace ClassicUO.Game.UI.Gumps
         {
             foreach (RadioButton button in _overheadButtons)
             {
+                if (button.IsDisposed)
+                    continue;
+
                 button.IsChecked = NameOverHeadManager.LastActiveNameOverheadOption.Replace("\\u0026", "&") == button.Text;
             }
         }
@@ -186,6 +189,8 @@ namespace ClassicUO.Game.UI.Gumps
         {
             foreach (RadioButton button in _overheadButtons)
                 Remove(button);
+
+            _overheadButtons.Clear();
 
             DrawChoiceButtons();
         }
@@ -197,7 +202,10 @@ namespace ClassicUO.Game.UI.Gumps
 
             for (int i = 0; i < options.Count; i++)
             {
-                biggestWidth = Math.Max(biggestWidth, AddOverheadOptionButton(options[i], i).Width);
+                RadioButton button = AddOverheadOptionButton(options[i], i);
+
+                if (button != null)
+                    biggestWidth = Math.Max(biggestWidth, button.Width);
             }
 
             _alpha.Width = biggestWidth;
@@ -223,6 +231,13 @@ namespace ClassicUO.Game.UI.Gumps
                     IsChecked = NameOverHeadManager.LastActiveNameOverheadOption.Replace("\\u0026", "&") == option.Name,
                 }
             );
+
+            if (button.IsDisposed)
+            {
+                Remove(button);
+
+                return null;
+            }
 
             if (button.IsChecked)
             {

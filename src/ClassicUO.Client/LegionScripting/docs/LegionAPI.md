@@ -13,15 +13,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  `API.Msg("An example")`.
 :::
 
-:::tip[API.py File]
-If you download the [API.py](https://github.com/PlayTazUO/TazUO/blob/dev/src/ClassicUO.Client/LegionScripting/docs/API.py) file, put it in the same folder as your python scripts and add `import API` to your script, that will enable some mild form of autocomplete in an editor like VS Code.  
 
-You can now type `-updateapi` in game to download the latest API.py file.
-:::
-
-[Additional notes](../notes/)  
-
-*This was generated on `8/1/26`.*
+*This was generated on `8/5/26`.*
 
 ## Properties
 ### `Events`
@@ -1447,6 +1440,84 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `hue` | `ushort` | ❌ No | Hue to color the cooldown bar |
 
 **Return Type:** `void` *(Does not return anything)*
+
+---
+
+### UpdateCooldown
+`(name, maxValue, currentValue)`
+ Updates an existing cooldown bar. Only the provided values are applied.
+ Example:
+ ```py
+ API.UpdateCooldown("Healing", maxValue=10, currentValue=5)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | ❌ No | Name of the cooldown bar to update |
+| `maxValue` | `double` | ✅ Yes | New total duration in seconds. Omit or pass -1 to leave unchanged |
+| `currentValue` | `double` | ✅ Yes | New remaining time in seconds. Omit or pass -1 to leave unchanged |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### RestartCooldown
+`(name)`
+ Restarts the countdown of an existing cooldown bar to its full duration.
+ Example:
+ ```py
+ API.RestartCooldown("Healing")
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | ❌ No | Name of the cooldown bar to restart |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### DeleteCooldown
+`(name)`
+ Deletes an existing cooldown bar.
+ Example:
+ ```py
+ API.DeleteCooldown("Healing")
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | ❌ No | Name of the cooldown bar to delete |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### CooldownExists
+`(name)`
+ Checks whether a cooldown bar with the given name exists.
+ Example:
+ ```py
+ if API.CooldownExists("Healing"):
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | ❌ No | Name of the cooldown bar to check |
+
+**Return Type:** `bool`
 
 ---
 

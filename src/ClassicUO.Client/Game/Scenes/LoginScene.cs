@@ -10,7 +10,6 @@ using ClassicUO.Game.UI.Gumps.CharCreation;
 using ClassicUO.Game.UI.Gumps.Login;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 
@@ -335,32 +334,32 @@ namespace ClassicUO.Game.Scenes
                 switch (CurrentLoginStep)
                 {
                     case LoginSteps.Connecting:
-                        labelText = Client.Game.UO.FileManager.Clilocs.GetString(3000002, ResGeneral.Connecting); // "Connecting..."
+                        labelText = Client.Game.UO.FileManager.Clilocs.GetString(3000002, TazLang.Get("connecting")); // "Connecting..."
 
                         showButtons = LoginButtons.Cancel;
 
                         break;
 
                     case LoginSteps.VerifyingAccount:
-                        labelText = Client.Game.UO.FileManager.Clilocs.GetString(3000003, ResGeneral.VerifyingAccount); // "Verifying Account..."
+                        labelText = Client.Game.UO.FileManager.Clilocs.GetString(3000003, TazLang.Get("verifying_account")); // "Verifying Account..."
 
                         showButtons = LoginButtons.Cancel;
 
                         break;
 
                     case LoginSteps.LoginInToServer:
-                        labelText = Client.Game.UO.FileManager.Clilocs.GetString(3000053, ResGeneral.LoggingIntoShard); // logging into shard
+                        labelText = Client.Game.UO.FileManager.Clilocs.GetString(3000053, TazLang.Get("logging_into_shard")); // logging into shard
 
                         showButtons = LoginButtons.Cancel;
                         break;
 
                     case LoginSteps.EnteringBritania:
-                        labelText = Client.Game.UO.FileManager.Clilocs.GetString(3000001, ResGeneral.EnteringBritannia); // Entering Britania...
+                        labelText = Client.Game.UO.FileManager.Clilocs.GetString(3000001, TazLang.Get("entering_britannia")); // Entering Britania...
 
                         break;
 
                     case LoginSteps.CharacterCreationDone:
-                        labelText = ResGeneral.CreatingCharacter;
+                        labelText = TazLang.Get("creating_character");
 
                         break;
                 }

@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Configuration
 {
@@ -41,21 +43,26 @@ namespace ClassicUO.Configuration
     /// <summary>
     /// JSON-backed store for cooldown-bar rules. Persisted to <c>cooldownbars.json</c> in the
     /// current profile's save location. Replaces the legacy per-list storage on <see cref="Profile"/>,
-    /// which is migrated on first load.
+    /// which is migrated on first load. Saving/loading (with rotating backups) is handled by
+    /// <see cref="JsonSave{T}"/>.
     /// </summary>
-    public sealed class CooldownBarsConfig
+    public sealed class CooldownBarsConfig : JsonSave<CooldownBarsConfig>
     {
-        public const string FileName = "cooldownbars.json";
+        private const string CooldownBarsFileName = "cooldownbars.json";
 
         public List<CooldownBarConfigEntry> Bars { get; set; } = new();
+
+        /// <summary>Lives in the profile folder alongside the other per-character configs.</summary>
+        protected override SettingsScope Scope => SettingsScope.Char;
+
+        protected override string FileName => CooldownBarsFileName;
+
+        protected override JsonTypeInfo<CooldownBarsConfig> TypeInfo => CooldownBarsJsonContext.DefaultToUse.CooldownBarsConfig;
 
         private static CooldownBarsConfig _current;
 
         /// <summary>The cooldown-bar config for the currently loaded profile.</summary>
         public static CooldownBarsConfig Current => _current ??= LoadForCurrentProfile();
-
-        private static string GetFilePath() =>
-            string.IsNullOrEmpty(ProfileManager.ProfilePath) ? null : Path.Combine(ProfileManager.ProfilePath, FileName);
 
         /// <summary>
         /// Loads (or migrates) the cooldown-bar config for the given profile and sets it as
@@ -65,12 +72,11 @@ namespace ClassicUO.Configuration
         /// </summary>
         public static bool LoadForProfile(string profilePath, Profile profile)
         {
-            string file = string.IsNullOrEmpty(profilePath) ? null : Path.Combine(profilePath, FileName);
+            string file = string.IsNullOrEmpty(profilePath) ? null : Path.Combine(profilePath, CooldownBarsFileName);
 
             if (file != null && File.Exists(file))
             {
-                _current = ConfigurationResolver.Load<CooldownBarsConfig>(file, CooldownBarsJsonContext.DefaultToUse.CooldownBarsConfig)
-                           ?? new CooldownBarsConfig();
+                _current = Load();
                 return false;
             }
 
@@ -80,19 +86,19 @@ namespace ClassicUO.Configuration
             return migrated;
         }
 
+        public static void Unload()
+        {
+            if (_current == null)
+                return;
+            
+            _current.Save();
+            _current = null;
+        }
+
         private static CooldownBarsConfig LoadForCurrentProfile()
         {
             LoadForProfile(ProfileManager.ProfilePath, ProfileManager.CurrentProfile);
             return _current;
-        }
-
-        public void Save()
-        {
-            string file = GetFilePath();
-            if (file == null)
-                return;
-
-            ConfigurationResolver.Save(this, file, CooldownBarsJsonContext.DefaultToUse.CooldownBarsConfig);
         }
 
         /// <summary>

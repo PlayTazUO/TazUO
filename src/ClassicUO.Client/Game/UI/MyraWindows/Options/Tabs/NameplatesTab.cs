@@ -7,7 +7,6 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.HotkeyInput;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
@@ -168,7 +167,7 @@ public static class NameplatesTab
                 World.Instance,
                 250,
                 150,
-                string.Format(ResGumps.ThisKeyCombinationAlreadyExists, option.Name),
+                string.Format(TazLang.Get("this_key_combination_already_exists"), option.Name),
                 null
             )
         );

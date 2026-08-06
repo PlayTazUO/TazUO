@@ -8,6 +8,7 @@ namespace ClassicUO.Game
         Party,
         Followers,
         Objects,
-        Mobiles
+        Mobiles,
+        Friend
     }
 }

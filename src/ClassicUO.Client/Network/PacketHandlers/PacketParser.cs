@@ -41,6 +41,11 @@ internal sealed class PacketParser
         return ParsePackets(world, _buffer, true) + ParsePackets(world, _pluginsBuffer, false);
     }
 
+    public int ParsePluginsPackets(World world)
+    {
+        return ParsePackets(world, _pluginsBuffer, false);
+    }
+
     public void AddHandler(uint id, PacketHandler handler, bool allowOverride = true)
     {
         if (id >= _handlers.Length)
@@ -64,6 +69,19 @@ internal sealed class PacketParser
             return;
 
         (fromPlugins ? _pluginsBuffer : _buffer).Enqueue(data);
+    }
+
+    public void ClearBuffers()
+    {
+        lock (_buffer)
+        {
+            _buffer.Clear();
+        }
+
+        lock (_pluginsBuffer)
+        {
+            _pluginsBuffer.Clear();
+        }
     }
 
     #endregion

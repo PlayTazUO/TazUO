@@ -3,7 +3,7 @@
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -47,7 +47,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             var text = new Label
             (
-                ResGumps.ChooseName,
+                TazLang.Get("choose_name"),
                 true,
                 23,
                 Width - 17,
@@ -75,7 +75,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             text = new Label
             (
-                ResGumps.Name,
+                TazLang.Get("name"),
                 true,
                 0x033,
                 0,

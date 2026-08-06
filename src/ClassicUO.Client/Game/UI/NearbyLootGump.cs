@@ -102,7 +102,7 @@ namespace ClassicUO.Game.UI
             {
                 if (e.Button != MouseButtonType.Left) return;
 
-                GameActions.Print(World, Resources.ResGumps.TargetContainerToGrabItemsInto);
+                GameActions.Print(World, TazLang.Get("target_container_to_grab_items_into"));
                 World.TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
             };
 

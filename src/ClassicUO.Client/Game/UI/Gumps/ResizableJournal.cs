@@ -678,6 +678,12 @@ namespace ClassicUO.Game.UI.Gumps
                         ClearSelection();
                     }
 
+                    //Trimming from the top shifts content up, so drop the scroll value by the removed height to keep the view anchored on the same lines.
+                    if (!maxScroll && removed != null && CanBeDrawn(removed.TextType, removed.MessageType))
+                    {
+                        _scrollBar.Value = Math.Max(_scrollBar.MinValue, _scrollBar.Value - removed.EntryText.Height);
+                    }
+
                     removed?.Destroy();
                 }
 

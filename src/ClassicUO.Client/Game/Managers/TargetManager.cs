@@ -8,7 +8,6 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using System;
 using System.Threading;
@@ -133,18 +132,25 @@ namespace ClassicUO.Game.Managers
     {
         public uint TargetSerial { get; set; }
         public TargetType ExpectedTargetType { get; set; }
+        // When true, respond to any target cursor type instead of only ExpectedTargetType.
+        public bool MatchAnyTargetType { get; set; }
         public bool IsSet => TargetSerial != 0;
 
-        public void Set(uint serial, TargetType targetType)
+        public void Set(uint serial, TargetType targetType, bool matchAnyTargetType = false)
         {
             TargetSerial = serial;
             ExpectedTargetType = targetType;
+            MatchAnyTargetType = matchAnyTargetType;
         }
+
+        // Returns true if this auto target should respond to the given cursor target type.
+        public bool Matches(TargetType targetType) => MatchAnyTargetType || ExpectedTargetType == targetType;
 
         public void Clear()
         {
             TargetSerial = 0;
             ExpectedTargetType = TargetType.Cancel;
+            MatchAnyTargetType = false;
         }
     }
 
@@ -267,7 +273,7 @@ namespace ClassicUO.Game.Managers
             _targetCursorId = cursorID;
         }
 
-        public static void SetAutoTarget(uint serial, TargetType targetType) => NextAutoTarget.Set(serial, targetType);
+        public static void SetAutoTarget(uint serial, TargetType targetType, bool matchAnyTargetType = false) => NextAutoTarget.Set(serial, targetType, matchAnyTargetType);
 
         public void CancelTarget()
         {
@@ -479,7 +485,7 @@ namespace ClassicUO.Game.Managers
                         if (SerialHelper.IsItem(serial))
                         {
                             ProfileManager.CurrentProfile.GrabBagSerial = serial;
-                            GameActions.Print(_world, string.Format(ResGeneral.GrabBagSet0, serial));
+                            GameActions.Print(_world, string.Format(TazLang.Get("grab_bag_set0"), serial));
                         }
 
                         ClearTargetingWithoutTargetCancelPacket();

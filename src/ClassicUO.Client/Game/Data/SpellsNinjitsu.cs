@@ -25,6 +25,7 @@ namespace ClassicUO.Game.Data
                         20,
                         60,
                         TargetType.Harmful,
+                        1060610,
                         Reagents.None
                     )
                 },
@@ -39,6 +40,7 @@ namespace ClassicUO.Game.Data
                         30,
                         85,
                         TargetType.Harmful,
+                        1060611,
                         Reagents.None
                     )
                 },
@@ -53,6 +55,7 @@ namespace ClassicUO.Game.Data
                         0,
                         10,
                         TargetType.Beneficial,
+                        1060612,
                         Reagents.None
                     )
                 },
@@ -67,6 +70,7 @@ namespace ClassicUO.Game.Data
                         25,
                         80,
                         TargetType.Harmful,
+                        1060613,
                         Reagents.None
                     )
                 },
@@ -81,6 +85,7 @@ namespace ClassicUO.Game.Data
                         20,
                         30,
                         TargetType.Harmful,
+                        1060614,
                         Reagents.None
                     )
                 },
@@ -95,6 +100,7 @@ namespace ClassicUO.Game.Data
                         30,
                         20,
                         TargetType.Harmful,
+                        1060615,
                         Reagents.None
                     )
                 },
@@ -109,6 +115,7 @@ namespace ClassicUO.Game.Data
                         15,
                         50,
                         TargetType.Neutral,
+                        1060616,
                         Reagents.None
                     )
                 },
@@ -123,6 +130,7 @@ namespace ClassicUO.Game.Data
                         10,
                         40,
                         TargetType.Neutral,
+                        1060617,
                         Reagents.None
                     )
                 }

@@ -7,7 +7,6 @@ using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using SDL3;
@@ -265,7 +264,7 @@ namespace ClassicUO.Game.Managers
             (
                 new Macro
                 (
-                    ResGeneral.Paperdoll,
+                    TazLang.Get("paperdoll"),
                     (SDL_Keycode)112,
                     true,
                     false,
@@ -283,7 +282,7 @@ namespace ClassicUO.Game.Managers
             (
                 new Macro
                 (
-                    ResGeneral.Options,
+                    TazLang.Get("options"),
                     (SDL_Keycode)111,
                     true,
                     false,
@@ -301,7 +300,7 @@ namespace ClassicUO.Game.Managers
             (
                 new Macro
                 (
-                    ResGeneral.Journal,
+                    TazLang.Get("journal"),
                     (SDL_Keycode)106,
                     true,
                     false,
@@ -319,7 +318,7 @@ namespace ClassicUO.Game.Managers
             (
                 new Macro
                 (
-                    ResGeneral.Backpack,
+                    TazLang.Get("backpack"),
                     (SDL_Keycode)105,
                     true,
                     false,
@@ -692,7 +691,7 @@ namespace ClassicUO.Game.Managers
                         switch (macro.Code)
                         {
                             case MacroType.Emote:
-                                text = ResGeneral.EmoteChar + text + ResGeneral.EmoteChar;
+                                text = TazLang.Get("emote_char") + text + TazLang.Get("emote_char");
                                 type = MessageType.Emote;
                                 hue = ProfileManager.CurrentProfile.EmoteHue;
 
@@ -1825,7 +1824,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.AlwaysRun:
                     ProfileManager.CurrentProfile.AlwaysRun = !ProfileManager.CurrentProfile.AlwaysRun;
 
-                    GameActions.Print(_world, ProfileManager.CurrentProfile.AlwaysRun ? ResGeneral.AlwaysRunIsNowOn : ResGeneral.AlwaysRunIsNowOff);
+                    GameActions.Print(_world, ProfileManager.CurrentProfile.AlwaysRun ? TazLang.Get("always_run_is_now_on") : TazLang.Get("always_run_is_now_off"));
 
                     break;
 
@@ -1990,7 +1989,7 @@ namespace ClassicUO.Game.Managers
 
                         _world.ClientViewRange = res;
 
-                        GameActions.Print(_world, string.Format(ResGeneral.ClientViewRangeIsNow0, res));
+                        GameActions.Print(_world, string.Format(TazLang.Get("client_view_range_is_now0"), res));
                     }
 
                     break;
@@ -2003,7 +2002,7 @@ namespace ClassicUO.Game.Managers
                         _world.ClientViewRange = Constants.MAX_VIEW_RANGE;
                     }
 
-                    GameActions.Print(_world, string.Format(ResGeneral.ClientViewRangeIsNow0, _world.ClientViewRange));
+                    GameActions.Print(_world, string.Format(TazLang.Get("client_view_range_is_now0"), _world.ClientViewRange));
 
                     break;
 
@@ -2015,25 +2014,25 @@ namespace ClassicUO.Game.Managers
                         _world.ClientViewRange = Constants.MIN_VIEW_RANGE;
                     }
 
-                    GameActions.Print(_world, string.Format(ResGeneral.ClientViewRangeIsNow0, _world.ClientViewRange));
+                    GameActions.Print(_world, string.Format(TazLang.Get("client_view_range_is_now0"), _world.ClientViewRange));
 
                     break;
 
                 case MacroType.MaxUpdateRange:
                     _world.ClientViewRange = Constants.MAX_VIEW_RANGE;
-                    GameActions.Print(_world, string.Format(ResGeneral.ClientViewRangeIsNow0, _world.ClientViewRange));
+                    GameActions.Print(_world, string.Format(TazLang.Get("client_view_range_is_now0"), _world.ClientViewRange));
 
                     break;
 
                 case MacroType.MinUpdateRange:
                     _world.ClientViewRange = Constants.MIN_VIEW_RANGE;
-                    GameActions.Print(_world, string.Format(ResGeneral.ClientViewRangeIsNow0, _world.ClientViewRange));
+                    GameActions.Print(_world, string.Format(TazLang.Get("client_view_range_is_now0"), _world.ClientViewRange));
 
                     break;
 
                 case MacroType.DefaultUpdateRange:
                     _world.ClientViewRange = Constants.MAX_VIEW_RANGE;
-                    GameActions.Print(_world, string.Format(ResGeneral.ClientViewRangeIsNow0, _world.ClientViewRange));
+                    GameActions.Print(_world, string.Format(TazLang.Get("client_view_range_is_now0"), _world.ClientViewRange));
 
                     break;
 
@@ -2052,6 +2051,7 @@ namespace ClassicUO.Game.Managers
                     // 2 - Follower (only your followers)
                     // 3 - Object (???)
                     // 4 - Mobile (any mobiles)
+                    // 5 - Friend (only mobiles on your friends list)
                     var scantype = (ScanTypeObject)(macro.SubCode - MacroSubType.Hostile);
 
                     if (scanRange == ScanModeObject.Nearest)
@@ -2174,7 +2174,7 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.Grab:
-                    GameActions.Print(_world, ResGeneral.TargetAnItemToGrabIt);
+                    GameActions.Print(_world, TazLang.Get("target_an_item_to_grab_it"));
                     _world.TargetManager.SetTargeting(CursorTarget.Grab, 0, TargetType.Neutral);
 
                     break;
@@ -2190,7 +2190,7 @@ namespace ClassicUO.Game.Managers
                 }
 
                 case MacroType.SetGrabBag:
-                    GameActions.Print(_world, ResGumps.TargetContainerToGrabItemsInto);
+                    GameActions.Print(_world, TazLang.Get("target_container_to_grab_items_into"));
                     _world.TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
 
                     break;
@@ -2632,7 +2632,7 @@ namespace ClassicUO.Game.Managers
                     if (ent != null)
                     {
                         if (!ProfileManager.CurrentProfile.HideMacroTargetMessage)
-                            GameActions.MessageOverhead(_world, string.Format(ResGeneral.Target0, ent.Name), Notoriety.GetHue(((Mobile)ent).NotorietyFlag), _world.Player);
+                            GameActions.MessageOverhead(_world, string.Format(TazLang.Get("target0"), ent.Name), Notoriety.GetHue(((Mobile)ent).NotorietyFlag), _world.Player);
 
                         _world.TargetManager.NewTargetSystemSerial = serial;
                         _world.TargetManager.SelectedTarget = serial;
@@ -2646,7 +2646,7 @@ namespace ClassicUO.Game.Managers
                     if (ent != null)
                     {
                         if (!ProfileManager.CurrentProfile.HideMacroTargetMessage)
-                            GameActions.MessageOverhead(_world, string.Format(ResGeneral.Target0, ent.Name), 992, _world.Player);
+                            GameActions.MessageOverhead(_world, string.Format(TazLang.Get("target0"), ent.Name), 992, _world.Player);
                         _world.TargetManager.SelectedTarget = serial;
                         _world.TargetManager.LastTargetInfo.SetEntity(serial);
 
@@ -2655,7 +2655,7 @@ namespace ClassicUO.Game.Managers
                 }
             }
 
-            GameActions.Print(_world, ResGeneral.EntityNotFound);
+            GameActions.Print(_world, TazLang.Get("entity_not_found"));
         }
 
         private int ProcessLoopContainer(MacroLoopContainer container)

@@ -15,6 +15,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using System.Xml;
 using System.ComponentModel;
@@ -84,11 +85,18 @@ namespace ClassicUO.Configuration
 
 
 
-    public sealed partial class Profile : INotifyPropertyChanged
+    public sealed partial class Profile : JsonSave<Profile>, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private static Profile _defaultPreview;
+
+        /// <summary>Lives in the profile folder as <c>profile.json</c>.</summary>
+        protected override SettingsScope Scope => SettingsScope.Char;
+
+        protected override string FileName => "profile.json";
+
+        protected override JsonTypeInfo<Profile> TypeInfo => ProfileJsonContext.DefaultToUse.Profile;
 
         /// <summary>
         /// A cached default profile with safe default settings, used as a fallback when no profile
@@ -245,6 +253,7 @@ namespace ClassicUO.Configuration
         public List<string> ScriptHotkeys { get; set => SetProperty(ref field, value); } = new List<string>();
 
         public bool EnableDeathScreen { get; set => SetProperty(ref field, value); } = true;
+        public bool ScreenshotOnDeath { get; set => SetProperty(ref field, value); } = true;
         public bool EnableBlackWhiteEffect { get; set => SetProperty(ref field, value); } = true;
         public ushort HiddenBodyHue { get; set => SetProperty(ref field, value); } = 0x038E;
         public byte HiddenBodyAlpha { get; set => SetProperty(ref field, value); } = 40;
@@ -452,13 +461,8 @@ namespace ClassicUO.Configuration
         public bool WorldMapShowGridIfZoomed { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapAllowPositionalTarget { get; set => SetProperty(ref field, value); } = true;
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_PORT, 8088)]
-        public partial int WebMapServerPort { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_AUTO_START, false)]
-        public partial bool WebMapAutoStart { get; set; }
+        public int WebMapServerPort { get; set; } = 8088;
+        public bool WebMapAutoStart { get; set; }
 
         public int AutoFollowDistance { get; set => SetProperty(ref field, value); } = 1;
         public bool DisableAutoFollowAlt { get; set => SetProperty(ref field, value); } = false;
@@ -503,27 +507,8 @@ namespace ClassicUO.Configuration
 
         #region GRID CONTAINER
 
-        /// <summary>
-        ///     Which container style newly opened (non-corpse) containers use. Persisted via the
-        ///     <see cref="ContainerStyleValue"/> SQL setting.
-        /// </summary>
-        [JsonIgnore]
-        public ContainerStyle ContainerStyle
-        {
-            get => (ContainerStyle)ContainerStyleValue;
-            set => ContainerStyleValue = (int)value;
-        }
-
-        /// <summary>
-        ///     Which container style corpses open in. Persisted via the
-        ///     <see cref="CorpseContainerStyleValue"/> SQL setting.
-        /// </summary>
-        [JsonIgnore]
-        public CorpseContainerStyle CorpseContainerStyle
-        {
-            get => (CorpseContainerStyle)CorpseContainerStyleValue;
-            set => CorpseContainerStyleValue = (int)value;
-        }
+        public ContainerStyle ContainerStyle { get; set => SetProperty(ref field, value); }
+        public CorpseContainerStyle CorpseContainerStyle { get; set => SetProperty(ref field, value); }
 
         public bool GridContainersDefaultToOldStyleView { get; set => SetProperty(ref field, value); } = false;
         public int GridContainerViewMode { get; set => SetProperty(ref field, value); } = 0; // 0 = Grid, 1 = List
@@ -836,170 +821,86 @@ namespace ClassicUO.Configuration
 
         [JsonConverter(typeof(Point2Converter))]
         public Point PlayerOffset { get; set => SetProperty(ref field, value); } = new Point(0, 0);
+        public double PaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
+        public bool BuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
+        public bool DisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
+        public bool ControllerEnabled { get; set => SetProperty(ref field, value); } = true;
+        public bool EnableScavenger { get; set => SetProperty(ref field, value); } = true;
+        public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
+        public bool NearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
+        public bool SpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
+        public byte ForcedHouseTransparency { get; set => SetProperty(ref field, value); } = 40;
+        public ushort ForcedTransparencyHouseTileHue { get; set => SetProperty(ref field, value); } = 0;
+        public bool ForceHouseTransparency { get; set => SetProperty(ref field, value); }
+        public ulong HideHudGumpFlags { get; set => SetProperty(ref field, value); }
+        public bool DisableGrayEnemies { get; set => SetProperty(ref field, value); }
+        public bool EnablePostProcessingEffects { get; set => SetProperty(ref field, value); }
+        public ushort PostProcessingType { get; set => SetProperty(ref field, value); }
+        /// <summary>
+        ///     Persistently disable hotkey usage.
+        ///     To merely temporarily disable hotkeys, use <see cref="Game.Managers.Hotkeys.HotKeys.RequestDisableHotkeys" />.
+        /// </summary>
+        public bool PersistentDisableHotkeys { get; set => SetProperty(ref field, value); }
+        public bool DisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
+        public bool EnableASyncMapLoading { get; set => SetProperty(ref field, value); } = true;
+        public bool UseGridLayoutContainerGumps { get; set => SetProperty(ref field, value); } = true;
+        public int GridLootType { get; set => SetProperty(ref field, value); } // 0 = none, 1 = only grid, 2 = both
+        public bool ModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }
+        public bool JournalAnchorEnabled { get; set => SetProperty(ref field, value); } = false;
+        public bool EnableAutoLootProgressBar { get; set => SetProperty(ref field, value); } = true;
+        public bool UseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
+        public int NearbyLootGumpHeight { get; set => SetProperty(ref field, value); } = 550;
+        public bool ForceTooltipsOnOldClients { get; set => SetProperty(ref field, value); } = true;
+        public bool NearbyLootOpensHumanCorpses { get; set => SetProperty(ref field, value); }
+        public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 100;
+        public bool SellAgentEnabled { get; set => SetProperty(ref field, value); }
+        public int SellAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
+        public int SellAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
+        public bool BuyAgentEnabled { get; set => SetProperty(ref field, value); }
+        public int BuyAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
+        public int BuyAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
+        public uint SOSGumpID { get; set => SetProperty(ref field, value); } = 1915258020;
+        public double StatusGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+        public double SkillsGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+        public double ContextMenuScale { get; set => SetProperty(ref field, value); } = 1f;
+        public double TradeGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+        public double ServerGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+        [JsonConverter(typeof(Point2Converter))] public Point ScriptManagerWindowPosition { get; set; } = Point.Zero;
+        [JsonConverter(typeof(Point2Converter))] public Point ScriptManagerWindowSize { get; set; } = Point.Zero;
+        public bool CandleFlickerLights { get; set; } = true;
+        public string LastLoaded { get; set; }
+        public bool TreeToStumpsWithinRadius { get; set; }
+        public bool AutoSaveGumpPositions { get; set; }
+        public bool StripChatUsernameId { get; set; }
+        public bool OverheadsScaleWithZoom { get; set; } = true;
+        public string VotedPolls { get; set; }
+        public string BandageAgentJournalMessages { get; set; } = "You apply the bandages;You finish applying;You heal what little;You have been cured;You failed to cure;Your fingers slip";
+        public bool BandageAgentUseJournalTrigger { get; set; }
+        public bool CounterBarDisableIconScaling { get; set; }
+        public bool CounterBarDisableItemScaling { get; set; }
+        public bool CounterBarShowHotkeys { get; set; }
+        public bool QueueManualItemMoves { get; set; }
+        public bool AutoOpenDoorsIfHidden { get; set; } = true;
+        public bool QueueManualItemUses { get; set; }
+        public bool HueCorpseAfterAutoloot { get; set; }
+        public int AutoLootRetryDelay { get; set; } = 5000;
+        public int PathfindingZLevelDiff { get; set; } = 10;
+        public int PathfindingMaxNodes { get; set; } = 150000;
+        public int PathfindingMultiBuffer { get; set; } = 4;
+        public int WorldMapPathfindingMaxNodes { get; set; } = 1000000;
+        public int WorldMapPathfindingMaxRetries { get; set; } = 3;
+        public int WorldMapPathfindingTimeout { get; set; } = 5000;
+        public bool SingleClickMobileSetsLastTarget { get; set; } = true;
+        public bool OutlineMobilesNotoriety { get; set; }
+        public uint DisabledOverheadMessageTypes { get; set; }
+        public bool DisableAutolootCorpseRetry { get; set; } = false;
+        public bool DisableWeather { get; set; }
+        public bool EnablePetScaling { get; set; }
+        public bool AutoUnequipForActions { get; set; }
+        public int MinGumpMoveDistance { get; set; } = 5;
+        public int QuickHealSpell { get; set; } = 29;
+        public int QuickCureSpell { get; set; } = 11;
 
-        [Obsolete]
-        [JsonPropertyName("paperdoll_scale")]
-        public double OldPaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
-
-        [Obsolete]
-        [JsonPropertyName("buy_agent_sub_containers")]
-        public bool OldBuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("disable_targeting_grid_containers")]
-        public bool OldDisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
-        [Obsolete]
-        [JsonPropertyName("controller_enabled")]
-        public bool OldControllerEnabled { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("enable_scavenger")]
-        public bool OldEnableScavenger { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("counter_gump_locked")]
-        public bool OldCounterGumpLocked { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("nearby_loot_conceals_container_on_open")]
-        public bool OldNearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("spell_bar__show_hotkeys")]
-        public bool OldSpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("forced_house_transparency")]
-        public byte OldForcedHouseTransparency { get; set => SetProperty(ref field, value); } = 40;
-
-        [Obsolete]
-        [JsonPropertyName("forced_transparency_house_tile_hue")]
-        public ushort OldForcedTransparencyHouseTileHue { get; set => SetProperty(ref field, value); } = 0;
-
-        [Obsolete]
-        [JsonPropertyName("force_house_transparency")]
-        public bool OldForceHouseTransparency { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("hide_hud_gump_flags")]
-        public ulong OldHideHudGumpFlags { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("disable_gray_enemies")]
-        public bool OldDisableGrayEnemies { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("enable_post_processing_effects")]
-        public bool OldEnablePostProcessingEffects { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("post_processing_type")]
-        public ushort OldPostProcessingType { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("disable_hotkeys")]
-        public bool OldDisableHotkeys { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("disable_dismount_in_war_mode")]
-        public bool OldDisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("enable_a_sync_map_loading")]
-        public bool OldEnableASyncMapLoading { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("use_grid_layout_container_gumps")]
-        public bool OldUseGridLayoutContainerGumps { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("grid_loot_type")]
-        public int OldGridLootType { get; set => SetProperty(ref field, value); } // 0 = none, 1 = only grid, 2 = both
-
-        // Stored as the old CorpseContainerStyle enum ordinal: 0 = Default, 1 = Grid, 2 = Original
-        [Obsolete]
-        [JsonPropertyName("corpse_container_style")]
-        public int OldCorpseContainerStyle { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("modern_paperdoll_anchor_enabled")]
-        public bool OldModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("journal_anchor_enabled")]
-        public bool OldJournalAnchorEnabled { get; set => SetProperty(ref field, value); } = false;
-
-        [Obsolete]
-        [JsonPropertyName("enable_auto_loot_progress_bar")]
-        public bool OldEnableAutoLootProgressBar { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("use_w_a_s_d_instead_arrow_keys")]
-        public bool OldUseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("nearby_loot_gump_height")]
-        public int OldNearbyLootGumpHeight { get; set => SetProperty(ref field, value); } = 550;
-
-        [Obsolete]
-        [JsonPropertyName("force_tooltips_on_old_clients")]
-        public bool OldForceTooltipsOnOldClients { get; set => SetProperty(ref field, value); } = true;
-
-        [Obsolete]
-        [JsonPropertyName("nearby_loot_opens_human_corpses")]
-        public bool OldNearbyLootOpensHumanCorpses { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("turn_delay")]
-        public ushort OldTurnDelay { get; set => SetProperty(ref field, value); } = 100;
-
-        [Obsolete]
-        [JsonPropertyName("sell_agent_enabled")]
-        public bool OldSellAgentEnabled { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("sell_agent_max_uniques")]
-        public int OldSellAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
-
-        [Obsolete]
-        [JsonPropertyName("sell_agent_max_items")]
-        public int OldSellAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
-
-        [Obsolete]
-        [JsonPropertyName("buy_agent_enabled")]
-        public bool OldBuyAgentEnabled { get; set => SetProperty(ref field, value); }
-
-        [Obsolete]
-        [JsonPropertyName("buy_agent_max_uniques")]
-        public int OldBuyAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
-
-        [Obsolete]
-        [JsonPropertyName("buy_agent_max_items")]
-        public int OldBuyAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
-
-        [Obsolete]
-        [JsonPropertyName("s_o_s_gump_i_d")]
-        public uint OldSOSGumpID { get; set => SetProperty(ref field, value); } = 1915258020;
-
-        [Obsolete]
-        [JsonPropertyName("status_gump_scale")]
-        public double OldStatusGumpScale { get; set => SetProperty(ref field, value); } = 1f;
-
-        [Obsolete]
-        [JsonPropertyName("skills_gump_scale")]
-        public double OldSkillsGumpScale { get; set => SetProperty(ref field, value); } = 1f;
-
-        [Obsolete]
-        [JsonPropertyName("context_menu_scale")]
-        public double OldContextMenuScale { get; set => SetProperty(ref field, value); } = 1f;
-
-        [Obsolete]
-        [JsonPropertyName("trade_gump_scale")]
-        public double OldTradeGumpScale { get; set => SetProperty(ref field, value); } = 1f;
-
-        [Obsolete]
-        [JsonPropertyName("server_gump_scale")]
-        public double OldServerGumpScale { get; set => SetProperty(ref field, value); } = 1f;
 
         private long lastSave;
 
@@ -1037,103 +938,90 @@ namespace ClassicUO.Configuration
 
         private void HandleMigration()
         {
-            if (ProfileMigrationVersion < 1) //0
-            {
-                EnableASyncMapLoading = OldEnableASyncMapLoading;
-                DisableDismountInWarMode = OldDisableDismountInWarMode;
-                PersistentDisableHotkeys = OldDisableHotkeys;
-                ControllerEnabled = OldControllerEnabled;
-                EnableScavenger = OldEnableScavenger;
-                CounterGumpLocked = OldCounterGumpLocked;
-                NearbyLootConcealsContainerOnOpen = OldNearbyLootConcealsContainerOnOpen;
-                SpellBar_ShowHotkeys = OldSpellBar_ShowHotkeys;
-                ForcedTransparencyHouseTileHue = OldForcedTransparencyHouseTileHue;
-                ForceHouseTransparency = OldForceHouseTransparency;
-                DisableGrayEnemies = OldDisableGrayEnemies;
-                EnablePostProcessingEffects = OldEnablePostProcessingEffects;
-                PostProcessingType = OldPostProcessingType;
-                ForcedHouseTransparency = OldForcedHouseTransparency;
-                HideHudGumpFlags = OldHideHudGumpFlags;
-
-                ProfileMigrationVersion++;
-            }
-
-            if (ProfileMigrationVersion < 2) //1
-            {
-                // The old "Enable grid containers" toggle becomes the new Container Style dropdown.
-                ContainerStyle = OldUseGridLayoutContainerGumps ? ContainerStyle.Grid : ContainerStyle.Original;
-
-                // The old grid loot type and corpse container style settings are merged into a single
-                // Corpse Container Style dropdown. Grid loot took precedence when it was enabled; the
-                // old "both" mode (2) is preserved as the combined loot-gump-plus-container style.
-                if (OldGridLootType == 1)
-                {
-                    CorpseContainerStyle = CorpseContainerStyle.OldGridLoot;
-                }
-                else if (OldGridLootType == 2)
-                {
-                    CorpseContainerStyle = CorpseContainerStyle.OldGridLootAndContainer;
-                }
-                else
-                {
-                    switch (OldCorpseContainerStyle)
-                    {
-                        case 1: // old CorpseContainerStyle.Grid
-                            CorpseContainerStyle = CorpseContainerStyle.Grid;
-                            break;
-                        case 2: // old CorpseContainerStyle.Original
-                            CorpseContainerStyle = CorpseContainerStyle.Original;
-                            break;
-                        default: // old CorpseContainerStyle.Default followed the global container style
-                            CorpseContainerStyle = OldUseGridLayoutContainerGumps ? CorpseContainerStyle.Grid : CorpseContainerStyle.Original;
-                            break;
-                    }
-                }
-
-                ProfileMigrationVersion++;
-            }
-
-            if (ProfileMigrationVersion < 3) //2
-            {
-                ModernPaperdollAnchorEnabled = OldModernPaperdollAnchorEnabled;
-                JournalAnchorEnabled = OldJournalAnchorEnabled;
-                EnableAutoLootProgressBar = OldEnableAutoLootProgressBar;
-                UseWASDInsteadArrowKeys = OldUseWASDInsteadArrowKeys;
-                NearbyLootGumpHeight = OldNearbyLootGumpHeight;
-                ForceTooltipsOnOldClients = OldForceTooltipsOnOldClients;
-                NearbyLootOpensHumanCorpses = OldNearbyLootOpensHumanCorpses;
-                TurnDelay = OldTurnDelay;
-                SellAgentEnabled = OldSellAgentEnabled;
-                SellAgentMaxUniques = OldSellAgentMaxUniques;
-                SellAgentMaxItems = OldSellAgentMaxItems;
-                BuyAgentEnabled = OldBuyAgentEnabled;
-                BuyAgentMaxUniques = OldBuyAgentMaxUniques;
-                BuyAgentMaxItems = OldBuyAgentMaxItems;
-                SOSGumpID = OldSOSGumpID;
-                StatusGumpScale = OldStatusGumpScale;
-                SkillsGumpScale = OldSkillsGumpScale;
-                ContextMenuScale = OldContextMenuScale;
-                TradeGumpScale = OldTradeGumpScale;
-                ServerGumpScale = OldServerGumpScale;
-
-                ProfileMigrationVersion++;
-            }
-
             if (ProfileMigrationVersion < 4) //3
             {
                 MigrateToolTipOverrides();
 
-                ProfileMigrationVersion++;
+                ProfileMigrationVersion = 4;
             }
 
             if (ProfileMigrationVersion < 5) //4
             {
-                DisableTargetingGridContainers = OldDisableTargetingGridContainers;
-                BuyAgentSubContainers = OldBuyAgentSubContainers;
-                PaperdollScale = OldPaperdollScale;
+                ProfileMigrationVersion++;
+            }
+
+            if (ProfileMigrationVersion < 6)
+            {
+                CounterBarShowHotkeys = OldCounterBarShowHotkeys;
+                CounterBarDisableItemScaling = OldCounterBarDisableItemScaling;
+                CounterBarDisableIconScaling = OldCounterBarDisableIconScaling;
+                BandageAgentUseJournalTrigger = OldBandageAgentUseJournalTrigger;
+                BandageAgentJournalMessages = OldBandageAgentJournalMessages;
+                VotedPolls = OldVotedPolls;
+                OverheadsScaleWithZoom = OldOverheadsScaleWithZoom;
+                StripChatUsernameId = OldStripChatUsernameId;
+                AutoSaveGumpPositions = OldAutoSaveGumpPositions;
+                TreeToStumpsWithinRadius = OldTreeToStumpsWithinRadius;
+                CandleFlickerLights = OldCandleFlickerLights;
+
+                if (OldScriptManagerWindowSize.HasValue)
+                    ScriptManagerWindowSize = OldScriptManagerWindowSize.Value;
+
+                if (OldScriptManagerWindowPosition.HasValue)
+                    ScriptManagerWindowPosition = OldScriptManagerWindowPosition.Value;
+
+                QueueManualItemMoves = OldQueueManualItemMoves;
+                AutoOpenDoorsIfHidden = OldAutoOpenDoorsIfHidden;
+                QueueManualItemUses = OldQueueManualItemUses;
+                HueCorpseAfterAutoloot = OldHueCorpseAfterAutoloot;
+                AutoLootRetryDelay = OldAutoLootRetryDelay;
+                PathfindingZLevelDiff = OldPathfindingZLevelDiff;
+                PathfindingMaxNodes = OldPathfindingMaxNodes;
+                PathfindingMultiBuffer = OldPathfindingMultiBuffer;
+                WorldMapPathfindingMaxNodes = OldWorldMapPathfindingMaxNodes;
+                WorldMapPathfindingMaxRetries = OldWorldMapPathfindingMaxRetries;
+                WorldMapPathfindingTimeout = OldWorldMapPathfindingTimeout;
+                SingleClickMobileSetsLastTarget = OldSingleClickMobileSetsLastTarget;
+                OutlineMobilesNotoriety = OldOutlineMobilesNotoriety;
+                DisabledOverheadMessageTypes = OldDisabledOverheadMessageTypes;
+                DisableAutolootCorpseRetry = OldDisableAutolootCorpseRetry;
+                DisableWeather = OldDisableWeather;
+                EnablePetScaling = OldEnablePetScaling;
+                AutoUnequipForActions = OldAutoUnequipForActions;
+                MinGumpMoveDistance = OldMinGumpMoveDistance;
+                QuickHealSpell = OldQuickHealSpell;
+                QuickCureSpell = OldQuickCureSpell;
+                WebMapServerPort = OldWebMapServerPort;
+                WebMapAutoStart = OldWebMapAutoStart;
 
                 ProfileMigrationVersion++;
             }
+
+            try //Cleanup old backups from previous save system
+            {
+                string dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Char);
+                foreach (string f in Directory.EnumerateFiles(dir, "*.backup*"))
+                {
+                    if (!f.Contains("grid_container"))
+                        File.Delete(f);
+                }
+
+                dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Char);
+                foreach (string f in Directory.EnumerateFiles(dir, "*.bak*"))
+                {
+                    if (!f.Contains("grid_container"))
+                        File.Delete(f);
+                }
+
+                dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Server);
+                foreach (string f in Directory.EnumerateFiles(dir, "*.backup*"))
+                {
+                    if (!f.Contains("grid_container"))
+                        File.Delete(f);
+                }
+            }
+            catch
+            {}
         }
 
         /// <summary>
@@ -1187,13 +1075,9 @@ namespace ClassicUO.Configuration
                 return;
 
             Log.Trace($"Saving path:\t\t{path}");
-            string filePath = Path.Combine(path, "profile.json");
 
-            // Create backup rotation before saving
-            CreateBackupRotation(filePath);
-
-            // Save profile settings
-            ConfigurationResolver.Save(this, filePath, ProfileJsonContext.DefaultToUse.Profile);
+            // Atomic write with rotating backups, handled by JsonSave.
+            SaveTo(Path.Combine(path, "profile.json"));
 
             // Grid highlights live in a separate grid_highlights.json (see GridHighlightsConfig); persist
             // them alongside the profile so in-place rule edits are saved on the same cadence as before.
@@ -1208,47 +1092,9 @@ namespace ClassicUO.Configuration
             lastSave = Time.Ticks;
         }
 
-        public void SaveAsFile(string path, string filename) => ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
+        public void SaveAsFile(string path, string filename) => SaveTo(Path.Combine(path, filename));
 
-        private void CreateBackupRotation(string filePath)
-        {
-            if (!File.Exists(filePath))
-                return;
-
-            string backup3 = filePath + ".bak3";
-            string backup2 = filePath + ".bak2";
-            string backup1 = filePath + ".bak1";
-
-            try
-            {
-                // Remove oldest backup if it exists
-                if (File.Exists(backup3))
-                {
-                    File.Delete(backup3);
-                }
-
-                // Rotate backups: .bak2 -> .bak3, .bak1 -> .bak2
-                if (File.Exists(backup2))
-                {
-                    File.Move(backup2, backup3);
-                }
-
-                if (File.Exists(backup1))
-                {
-                    File.Move(backup1, backup2);
-                }
-
-                // Copy current file to .bak1
-                File.Copy(filePath, backup1);
-            }
-            catch (IOException e)
-            {
-                // Log backup rotation failure but don't prevent the save
-                Log.Error($"Failed to create backup rotation: {e}");
-            }
-        }
-
-        public void SaveAs(string path, string filename = "default.json") => ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
+        public void SaveAs(string path, string filename = "default.json") => SaveTo(Path.Combine(path, filename));
 
         private void SaveGumps(World world, string path)
         {

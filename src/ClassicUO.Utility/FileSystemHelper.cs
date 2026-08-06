@@ -140,6 +140,7 @@ namespace ClassicUO.Utility
 
         /// <summary>
         /// Safely write a file in try/catch.
+        /// Writes to a temp file and atomically replaces the target so concurrent readers never see partial content.
         /// Will log the error on failure.
         /// </summary>
         /// <param name="filePath"></param>
@@ -147,15 +148,55 @@ namespace ClassicUO.Utility
         /// <returns>true/false</returns>
         public static bool WriteAllLinesSafe(string filePath, List<string> lines)
         {
-            try 
+            string tempPath = $"{filePath}.{Environment.ProcessId}.tmp";
+
+            try
             {
-                File.WriteAllLines(filePath, lines, Encoding.UTF8);
+                using (FileStream fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                using (StreamWriter writer = new StreamWriter(fs, new UTF8Encoding(false)))
+                {
+                    foreach (string line in lines)
+                        writer.WriteLine(line);
+                }
+
+                File.Move(tempPath, filePath, true);
+
                 return true;
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 Log.Error(e.ToString());
+
+                try { File.Delete(tempPath); } catch { }
+
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Reads all lines with a shared handle so multiple clients can access the file concurrently.
+        /// </summary>
+        public static string[] ReadAllLinesShared(string filePath)
+        {
+            using FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(fs, new UTF8Encoding(false));
+            var lines = new List<string>();
+
+            while (reader.ReadLine() is { } line)
+                lines.Add(line);
+
+            return lines.ToArray();
+        }
+
+        /// <summary>
+        /// Reads all text with a shared handle so multiple clients can access the file concurrently.
+        /// </summary>
+        public static string ReadAllTextShared(string filePath)
+        {
+            using FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(fs, new UTF8Encoding(false));
+
+            return reader.ReadToEnd();
         }
 
         /// <summary>

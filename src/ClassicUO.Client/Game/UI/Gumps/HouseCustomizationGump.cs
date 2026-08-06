@@ -9,9 +9,9 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Assets;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 using ClassicUO.Game.Scenes;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -71,7 +71,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(ResGumps.Walls);
+            button.SetTooltip(TazLang.Get("walls"));
             Add(button);
 
             button = new Button((int)ID_GUMP_CUSTOM_HOUSE.ID_GCH_STATE_DOOR, 0x5657, 0x5659, 0x5658)
@@ -81,7 +81,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(ResGumps.Doors);
+            button.SetTooltip(TazLang.Get("doors"));
             Add(button);
 
             button = new Button(
@@ -96,7 +96,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(ResGumps.Floors);
+            button.SetTooltip(TazLang.Get("floors"));
             Add(button);
 
             button = new Button(
@@ -111,7 +111,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(ResGumps.Stairs);
+            button.SetTooltip(TazLang.Get("stairs"));
             Add(button);
 
             button = new Button((int)ID_GUMP_CUSTOM_HOUSE.ID_GCH_STATE_ROOF, 0x5788, 0x578A, 0x5789)
@@ -121,7 +121,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(ResGumps.Roofs);
+            button.SetTooltip(TazLang.Get("roofs"));
             Add(button);
 
             button = new Button((int)ID_GUMP_CUSTOM_HOUSE.ID_GCH_STATE_MISC, 0x5663, 0x5665, 0x5664)
@@ -131,7 +131,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(ResGumps.Miscellaneous);
+            button.SetTooltip(TazLang.Get("miscellaneous"));
             Add(button);
 
             button = new Button((int)ID_GUMP_CUSTOM_HOUSE.ID_GCH_STATE_MENU, 0x566C, 0x566E, 0x566D)
@@ -141,7 +141,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(ResGumps.SystemMenu);
+            button.SetTooltip(TazLang.Get("system_menu"));
             Add(button);
 
             _textComponents = new Label(string.Empty, false, 0x0481, font: 9)
@@ -173,7 +173,7 @@ namespace ClassicUO.Game.UI.Gumps
                 AcceptMouseInput = true
             };
 
-            _textCost.SetTooltip(ResGumps.Cost);
+            _textCost.SetTooltip(TazLang.Get("cost"));
             Add(_textCost);
 
             //HitBox box = new HitBox(36, 137, 84, 23)
@@ -232,7 +232,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(ResGumps.Erase);
+            button.SetTooltip(TazLang.Get("erase"));
             _dataBoxGUI.Add(button);
 
             button = new Button(
@@ -247,7 +247,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(ResGumps.EyedropperTool);
+            button.SetTooltip(TazLang.Get("eyedropper_tool"));
             Add(button);
 
             ushort[] floorVisionGraphic1 = { 0x572E, 0x5734, 0x5731 };
@@ -275,7 +275,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(string.Format(ResGumps.Store0Visibility, 1));
+            button.SetTooltip(string.Format(TazLang.Get("store0_visibility"), 1));
             _dataBoxGUI.Add(button);
 
             button = new Button(
@@ -290,7 +290,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(string.Format(ResGumps.GoToStory0, 1));
+            button.SetTooltip(string.Format(TazLang.Get("go_to_story0"), 1));
             _dataBoxGUI.Add(button);
 
             button = new Button(
@@ -305,7 +305,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(string.Format(ResGumps.GoToStory0, 1));
+            button.SetTooltip(string.Format(TazLang.Get("go_to_story0"), 1));
             _dataBoxGUI.Add(button);
 
             floorVisionGraphic = floorVisionGraphic2[
@@ -326,7 +326,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(string.Format(ResGumps.Store0Visibility, 2));
+            button.SetTooltip(string.Format(TazLang.Get("store0_visibility"), 2));
             _dataBoxGUI.Add(button);
 
             button = new Button(
@@ -341,7 +341,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(string.Format(ResGumps.GoToStory0, 2));
+            button.SetTooltip(string.Format(TazLang.Get("go_to_story0"), 2));
             _dataBoxGUI.Add(button);
 
             button = new Button(
@@ -356,7 +356,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonAction = ButtonAction.Activate
             };
 
-            button.SetTooltip(string.Format(ResGumps.GoToStory0, 2));
+            button.SetTooltip(string.Format(TazLang.Get("go_to_story0"), 2));
             _dataBoxGUI.Add(button);
 
             graphicOffset = _customHouseManager.CurrentFloor == 3 ? 3 : 0;
@@ -380,7 +380,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(string.Format(ResGumps.Store0Visibility, 3));
+                button.SetTooltip(string.Format(TazLang.Get("store0_visibility"), 3));
                 _dataBoxGUI.Add(button);
 
                 button = new Button(
@@ -395,7 +395,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(string.Format(ResGumps.GoToStory0, 3));
+                button.SetTooltip(string.Format(TazLang.Get("go_to_story0"), 3));
                 _dataBoxGUI.Add(button);
 
                 button = new Button(
@@ -410,7 +410,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(string.Format(ResGumps.GoToStory0, 3));
+                button.SetTooltip(string.Format(TazLang.Get("go_to_story0"), 3));
                 _dataBoxGUI.Add(button);
 
                 floorVisionGraphic = floorVisionGraphic2[
@@ -432,7 +432,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(string.Format(ResGumps.Store0Visibility, 4));
+                button.SetTooltip(string.Format(TazLang.Get("store0_visibility"), 4));
                 _dataBoxGUI.Add(button);
 
                 button = new Button(
@@ -447,7 +447,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(string.Format(ResGumps.GoToStory0, 4));
+                button.SetTooltip(string.Format(TazLang.Get("go_to_story0"), 4));
                 _dataBoxGUI.Add(button);
 
                 button = new Button(
@@ -462,7 +462,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(string.Format(ResGumps.GoToStory0, 4));
+                button.SetTooltip(string.Format(TazLang.Get("go_to_story0"), 4));
                 _dataBoxGUI.Add(button);
             }
             else
@@ -483,7 +483,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(string.Format(ResGumps.Store0Visibility, 3));
+                button.SetTooltip(string.Format(TazLang.Get("store0_visibility"), 3));
                 _dataBoxGUI.Add(button);
 
                 button = new Button(
@@ -498,7 +498,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(string.Format(ResGumps.GoToStory0, 3));
+                button.SetTooltip(string.Format(TazLang.Get("go_to_story0"), 3));
                 _dataBoxGUI.Add(button);
 
                 button = new Button(
@@ -513,7 +513,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(string.Format(ResGumps.GoToStory0, 3));
+                button.SetTooltip(string.Format(TazLang.Get("go_to_story0"), 3));
                 _dataBoxGUI.Add(button);
             }
 
@@ -569,7 +569,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(ResGumps.PreviousPage);
+                button.SetTooltip(TazLang.Get("previous_page"));
                 _dataBoxGUI.Add(button);
 
                 button = new Button(
@@ -584,7 +584,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(ResGumps.NextPage);
+                button.SetTooltip(TazLang.Get("next_page"));
                 _dataBoxGUI.Add(button);
             }
 
@@ -872,7 +872,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(ResGumps.ToCustomHouseManagerCategory);
+                button.SetTooltip(TazLang.Get("to_custom_house_manager_category"));
                 _dataBoxGUI.Add(button);
 
                 _dataBoxGUI.Add(new GumpPic(218, 4, 0x55F4, 0));
@@ -891,7 +891,7 @@ namespace ClassicUO.Game.UI.Gumps
                         ButtonAction = ButtonAction.Activate
                     };
 
-                    button.SetTooltip(ResGumps.WindowToggle);
+                    button.SetTooltip(TazLang.Get("window_toggle"));
                     _dataBoxGUI.Add(button);
                 }
                 else
@@ -908,7 +908,7 @@ namespace ClassicUO.Game.UI.Gumps
                         ButtonAction = ButtonAction.Activate
                     };
 
-                    button.SetTooltip(ResGumps.WindowToggle);
+                    button.SetTooltip(TazLang.Get("window_toggle"));
                     _dataBoxGUI.Add(button);
                 }
             }
@@ -1326,7 +1326,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(ResGumps.ToCustomHouseManagerCategory);
+                button.SetTooltip(TazLang.Get("to_custom_house_manager_category"));
                 _dataBoxGUI.Add(button);
 
                 button = new Button(
@@ -1341,7 +1341,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(ResGumps.LowerRoofPlacementLevel);
+                button.SetTooltip(TazLang.Get("lower_roof_placement_level"));
                 _dataBoxGUI.Add(button);
 
                 button = new Button(
@@ -1356,7 +1356,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ButtonAction = ButtonAction.Activate
                 };
 
-                button.SetTooltip(ResGumps.RaiseRoofPlacementLevel);
+                button.SetTooltip(TazLang.Get("raise_roof_placement_level"));
                 _dataBoxGUI.Add(button);
 
                 _dataBoxGUI.Add(new GumpPic(583, 4, 0x55F4, 0));
@@ -1507,7 +1507,7 @@ namespace ClassicUO.Game.UI.Gumps
                 0x098D,
                 0x098D,
                 0x098D,
-                ResGumps.Backup,
+                TazLang.Get("backup"),
                 0,
                 true,
                 0,
@@ -1520,7 +1520,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontCenter = true
             };
 
-            button.SetTooltip(ResGumps.StoreDesignInProgress);
+            button.SetTooltip(TazLang.Get("store_design_in_progress"));
             _dataBox.Add(button);
 
             button = new Button(
@@ -1528,7 +1528,7 @@ namespace ClassicUO.Game.UI.Gumps
                 0x098D,
                 0x098D,
                 0x098D,
-                ResGumps.Restore,
+                TazLang.Get("restore"),
                 0,
                 true,
                 0,
@@ -1541,7 +1541,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontCenter = true
             };
 
-            button.SetTooltip(ResGumps.RestoreYourDesign);
+            button.SetTooltip(TazLang.Get("restore_your_design"));
             _dataBox.Add(button);
 
             button = new Button(
@@ -1549,7 +1549,7 @@ namespace ClassicUO.Game.UI.Gumps
                 0x098D,
                 0x098D,
                 0x098D,
-                ResGumps.Sync,
+                TazLang.Get("sync"),
                 0,
                 true,
                 0,
@@ -1562,7 +1562,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontCenter = true
             };
 
-            button.SetTooltip(ResGumps.SynchronizeDesignStateWithServer);
+            button.SetTooltip(TazLang.Get("synchronize_design_state_with_server"));
             _dataBox.Add(button);
 
             button = new Button(
@@ -1570,7 +1570,7 @@ namespace ClassicUO.Game.UI.Gumps
                 0x098D,
                 0x098D,
                 0x098D,
-                ResGumps.Clear,
+                TazLang.Get("clear"),
                 0,
                 true,
                 0,
@@ -1583,7 +1583,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontCenter = true
             };
 
-            button.SetTooltip(ResGumps.ClearAllChanges);
+            button.SetTooltip(TazLang.Get("clear_all_changes"));
             _dataBox.Add(button);
 
             button = new Button(
@@ -1591,7 +1591,7 @@ namespace ClassicUO.Game.UI.Gumps
                 0x098D,
                 0x098D,
                 0x098D,
-                ResGumps.Commit,
+                TazLang.Get("commit"),
                 0,
                 true,
                 0,
@@ -1604,7 +1604,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontCenter = true
             };
 
-            button.SetTooltip(ResGumps.SaveExistingChanges);
+            button.SetTooltip(TazLang.Get("save_existing_changes"));
             _dataBox.Add(button);
 
             button = new Button(
@@ -1612,7 +1612,7 @@ namespace ClassicUO.Game.UI.Gumps
                 0x098D,
                 0x098D,
                 0x098D,
-                ResGumps.Revert,
+                TazLang.Get("revert"),
                 0,
                 true,
                 0,
@@ -1625,7 +1625,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontCenter = true
             };
 
-            button.SetTooltip(ResGumps.RevertYourDesign);
+            button.SetTooltip(TazLang.Get("revert_your_design"));
             _dataBox.Add(button);
         }
 

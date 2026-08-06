@@ -6,7 +6,6 @@ using System.Xml;
 using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
@@ -40,7 +39,7 @@ namespace ClassicUO.Game.Managers
 
                 if (IgnoredCharsList.Contains(charName))
                 {
-                    GameActions.Print(_world, string.Format(ResGumps.AddToIgnoreListExist, charName));
+                    GameActions.Print(_world, string.Format(TazLang.Get("add_to_ignore_list_exist"), charName));
                     return;
                 }
 
@@ -48,11 +47,11 @@ namespace ClassicUO.Game.Managers
                 // Redraw list of chars
                 UIManager.ForEach<IgnoreManagerGump>(g => g.Redraw());
 
-                GameActions.Print(_world,string.Format(ResGumps.AddToIgnoreListSuccess, charName));
+                GameActions.Print(_world,string.Format(TazLang.Get("add_to_ignore_list_success"), charName));
                 return;
             }
 
-            GameActions.Print(_world,string.Format(ResGumps.AddToIgnoreListNotMobile));
+            GameActions.Print(_world,string.Format(TazLang.Get("add_to_ignore_list_not_mobile")));
         }
 
         /// <summary>

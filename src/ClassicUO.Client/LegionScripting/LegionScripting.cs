@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Configuration;
@@ -13,7 +12,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Utility.Logging;
 using IronPython.Hosting;
 using Microsoft.Scripting.Hosting;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.LegionScripting.ApiClasses;
@@ -24,11 +22,6 @@ using SourceCodeKind = Microsoft.Scripting.SourceCodeKind;
 
 namespace ClassicUO.LegionScripting
 {
-    [JsonSerializable(typeof(LScriptSettings))]
-    public partial class LScriptJsonContext : JsonSerializerContext
-    {
-    }
-
     internal static class LegionScripting
     {
         public static string ScriptPath;
@@ -385,47 +378,20 @@ namespace ClassicUO.LegionScripting
 
         private static void LoadLScriptSettings()
         {
-            string path = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "lscript.json");
+            LScriptSettings = JsonSave<LScriptSettings>.Load();
 
-            try
+            for (int i = 0; i < LScriptSettings.CharAutoStartScripts.Count; i++)
             {
-                if (File.Exists(path))
-                {
-                    LScriptSettings = JsonSerializer.Deserialize(File.ReadAllText(path), LScriptJsonContext.Default.LScriptSettings);
-
-                    for (int i = 0; i < LScriptSettings.CharAutoStartScripts.Count; i++)
-                    {
-                        KeyValuePair<string, List<string>> val = LScriptSettings.CharAutoStartScripts.ElementAt(i);
-                        val.Value.RemoveAll(script => LoadedScripts.All(s => s.FileName != script));
-                    }
-
-                    LScriptSettings.GlobalAutoStartScripts.RemoveAll(script => LoadedScripts.All(s => s.FileName != script));
-
-                    return;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Unexpected error: {ex}");
+                KeyValuePair<string, List<string>> val = LScriptSettings.CharAutoStartScripts.ElementAt(i);
+                val.Value.RemoveAll(script => LoadedScripts.All(s => s.FileName != script));
             }
 
-            LScriptSettings = new LScriptSettings();
+            LScriptSettings.GlobalAutoStartScripts.RemoveAll(script => LoadedScripts.All(s => s.FileName != script));
         }
 
         private static void SaveScriptSettings()
         {
-            string path = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "lscript.json");
-
-            string json = JsonSerializer.Serialize(LScriptSettings, LScriptJsonContext.Default.LScriptSettings);
-
-            try
-            {
-                File.WriteAllText(path, json);
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Error saving lscript settings: {e}");
-            }
+            LScriptSettings?.Save();
         }
 
         public static void Unload()
@@ -453,9 +419,9 @@ namespace ClassicUO.LegionScripting
 
                 // Route to correct executor based on script type
                 if (script.Type == ScriptFile.ScriptType.CSharp)
-                    script.ScriptThread = new Thread(() => ExecuteCSharpScript(script)) { Name = $"Legion: {script.FileName}" };
+                    script.ScriptThread = new Thread(() => ExecuteCSharpScript(script)) { Name = $"Legion: {script.FileName}", IsBackground = true };
                 else
-                    script.ScriptThread = new Thread(() => ExecutePythonScript(script)) { Name = $"Legion: {script.FileName}" };
+                    script.ScriptThread = new Thread(() => ExecutePythonScript(script)) { Name = $"Legion: {script.FileName}", IsBackground = true };
 
                 if(!PyThreads.TryAdd(script.ScriptThread.ManagedThreadId, script))
                     PyThreads[script.ScriptThread.ManagedThreadId] = script;

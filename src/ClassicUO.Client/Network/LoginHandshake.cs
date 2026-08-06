@@ -7,7 +7,6 @@ using ClassicUO.Game;
 using ClassicUO.Game.Scenes;
 using ClassicUO.IO;
 using ClassicUO.Network.Encryption;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 
@@ -80,6 +79,8 @@ namespace ClassicUO.Network
                 return;
             }
 
+            ClassicUO.Network.PacketHandlers.PacketParser.Instance.ClearBuffers();
+
             Account = account;
             Password = password;
             IP = ip;
@@ -89,8 +90,10 @@ namespace ClassicUO.Network
 
             if (!Reconnect)
             {
-                SetLoginStep(LoginSteps.Connecting);
+                _reconnectTryCounter = 1;
             }
+
+            SetLoginStep(LoginSteps.Connecting);
 
             AsyncNetClient.Socket.Connected -= OnNetClientConnected;
             AsyncNetClient.Socket.Disconnected -= OnNetClientDisconnected;
@@ -417,7 +420,7 @@ namespace ClassicUO.Network
             {
                 Reconnect = true;
                 SetError(msg: string.Format(
-                                             ResGeneral.ReconnectPleaseWait01,
+                                             TazLang.Get("reconnect_please_wait01"),
                                              _reconnectTryCounter,
                                              StringHelper.AddSpaceBeforeCapital(e.ToString())
                                          ));
@@ -425,7 +428,7 @@ namespace ClassicUO.Network
             else
             {
                 SetError(msg: string.Format(
-                                                  ResGeneral.ConnectionLost0,
+                                                  TazLang.Get("connection_lost0"),
                                                   StringHelper.AddSpaceBeforeCapital(e.ToString())
                                               ));
             }
@@ -440,6 +443,8 @@ namespace ClassicUO.Network
             AsyncNetClient.Socket.Disconnected -= OnNetClientDisconnected;
             AsyncNetClient.Socket.Disconnect().Wait();
             AsyncNetClient.Socket = new AsyncNetClient();
+
+            ClassicUO.Network.PacketHandlers.PacketParser.Instance.ClearBuffers();
 
             _retries++;
             Log.TraceDebug($"[HandShake] Reconnecting to relay server...");
