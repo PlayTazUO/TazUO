@@ -2,6 +2,11 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## In Development
+
+### Misc
+* When built in Debug there is now an asset load time on the login scene ([bittiez](https://github.com/bittiez))
+
 ## 5.22.15
 
 ### Legion
