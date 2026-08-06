@@ -3,62 +3,83 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Renderer.Effects;
-using FontStashSharp.RichText;
+using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
+using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
-using Myra.Graphics2D.UI.Properties;
 using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Editors.Overlays;
 
 /// <summary>
-/// Edits one <see cref="OverlayEffectProfile"/>: its fade timing and one layer at a time, the layer
-/// itself through a <see cref="PropertyGrid"/> over <see cref="OverlayLayer"/>.
+/// Composes one <see cref="EffectProfile"/>: its scope, fade timing and shake, and its layer stack
+/// one layer at a time - each through a <see cref="StyledPropertyGrid"/> over the concrete
+/// <see cref="LayerEffect"/>.
 /// <para>
-/// Reflecting over the layer struct rather than hand-listing its parameters is deliberate - the
-/// shader has around thirty five of them and they change as it is tuned.
+/// Reflecting over the effect rather than hand-listing its parameters is deliberate: the shader has
+/// around thirty five of them and they change as it is tuned. Because the effect types are narrow,
+/// the grid shows exactly the knobs the chosen technique reads - there is no radius on a chromatic
+/// layer to mis-set or to explain away.
 /// </para>
 /// </summary>
 internal sealed class OverlayProfileEditor : Widget
 {
+    #region Private members
+
     private const int INPUT_WIDTH = 80;
+    private const int NAME_INPUT_WIDTH = 160;
     private const float MAX_FADE_SECONDS = 10f;
 
-    private const int ROW_SPACING = 12;
-    private const int COLUMN_SPACING = 12;
-    private const int GROUP_SPACING = 10;
+    /// <summary>Padlock, U+1F512. Present in Noto Sans Symbols 2, absent from the body font.</summary>
+    private const string READ_ONLY_GLYPH = "🔒";
 
-    private const int GLYPH_FONT_SIZE = 24;
-    private const int GLYPH_BUTTON_SIZE = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE;
+    private const int BANNER_GLYPH_SIZE = 26;
 
-    /// <summary>Extra gap between an editor and its reset button, on top of the row's own spacing.</summary>
-    private const int RESET_BUTTON_GAP = 2;
+    /// <summary>Warm enough to read as a notice rather than as disabled text.</summary>
+    private static readonly Color _readOnlyTint = new(235, 200, 120);
+
+    /// <summary>The banner's border is the same tint, held well back so it frames without shouting.</summary>
+    private const float BANNER_BORDER_ALPHA = 0.35f;
 
     /// <summary>
-    /// Nudge for the expander glyph, which sits above the centre of its line: the symbol font's
-    /// ascent leaves more room over the arrow than under it.
+    /// Reset targets, one per technique. Built on demand and kept, because every lookup reads one
+    /// through reflection and a technique's defaults never change within a session.
     /// </summary>
-    private const int EXPANDER_MARK_TOP_OFFSET = 2;
+    private static readonly Dictionary<Type, LayerEffect> _defaultsByTechnique = [];
 
-    /// <summary>Reset targets. Boxed once: every lookup reads it through reflection.</summary>
-    private static readonly object _defaultLayer = new OverlayLayer { Params = OverlayParams.Default };
-
-    private readonly OverlayEffectProfile _profile;
+    private readonly EffectProfile _profile;
     private readonly Action _onChanged;
 
     /// <summary>Built-in profiles are shown so they can be read and copied, never edited.</summary>
     private readonly bool _readOnly;
 
+    /// <summary>Input reused across rebuilds, so the caret survives one. Mirrors the profile
+    /// editor's own rename box.</summary>
+    private readonly MyraInputBox _renameInput = new() { Width = NAME_INPUT_WIDTH };
+
     private int _selectedLayer;
 
-    public OverlayProfileEditor(OverlayEffectProfile profile, Action onChanged)
+    /// <summary>Whether the layer toolbar is showing its rename controls instead of the picker.</summary>
+    private bool _isRenamingLayer;
+
+    #endregion
+
+    #region Ctor
+
+    /// <summary>
+    /// Builds the composer for one profile.
+    /// </summary>
+    /// <param name="profile">The profile to edit.</param>
+    /// <param name="onChanged">Invoked after every change that should be persisted.</param>
+    /// <exception cref="ArgumentNullException">Either argument is null.</exception>
+    public OverlayProfileEditor(EffectProfile profile, Action onChanged)
     {
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(onChanged);
@@ -71,47 +92,204 @@ internal sealed class OverlayProfileEditor : Widget
         // but a vertical WrapPanel here would answer an expanded parameter table by moving it into
         // a second column beside the toolbar.
         ChildrenLayout = new StackPanelLayout(Orientation.Vertical) { Spacing = MyraStyle.STANDARD_SPACING };
+
         Rebuild();
     }
+
+    #endregion
+
+    #region Private methods
 
     private void Rebuild()
     {
         _selectedLayer = Math.Clamp(_selectedLayer, 0, Math.Max(_profile.Layers.Count - 1, 0));
 
         Children.Clear();
+
+        if (_readOnly)
+            Children.Add(BuildReadOnlyBanner());
+
+        Children.Add(BuildPresentationRow());
         Children.Add(BuildFadeRow());
+        Children.Add(BuildShakeRow());
+        Children.Add(OptionTabCommons.StyledHorizontalSeparator());
         Children.Add(BuildLayerToolbar());
+        Children.Add(BuildLayerIdentityRow());
         Children.Add(OptionTabCommons.StyledHorizontalSeparator());
         Children.Add(BuildLayerGrid());
     }
 
-    private WrapPanel BuildFadeRow() =>
-        OptionTabCommons.StyledHorizontalWrapPanel(
-            LabeledFloat(
-                TazLang.Get("visualeffects_fadein", "Fade in (s)"),
-                _profile.FadeInSeconds,
-                v => _profile.FadeInSeconds = v
-            ),
-            LabeledFloat(
-                TazLang.Get("visualeffects_fadeout", "Fade out (s)"),
-                _profile.FadeOutSeconds,
-                v => _profile.FadeOutSeconds = v
+    /// <summary>
+    /// Says outright that nothing below can be changed. Myra greys a disabled widget only where its
+    /// style defines a disabled brush, so several of these controls look editable until clicked -
+    /// the banner is what makes the state legible regardless.
+    /// </summary>
+    private static Widget BuildReadOnlyBanner()
+    {
+        var banner = new HorizontalStackPanel
+        {
+            Spacing = MyraStyle.STANDARD_SPACING,
+            Padding = new Thickness(8, 6),
+            Background = new SolidBrush(new Color(0, 0, 0, 60)),
+            Border = new SolidBrush(_readOnlyTint * BANNER_BORDER_ALPHA),
+            BorderThickness = new Thickness(1),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        banner.Widgets.Add(MyraLabel.Symbol(READ_ONLY_GLYPH, BANNER_GLYPH_SIZE, _readOnlyTint));
+
+        banner.Widgets.Add(
+            new MyraLabel(
+                TazLang.Get(
+                    "visualeffects_builtinreadonly",
+                    "Built-in effect - read only. Use Add to copy it, then edit the copy."
+                ),
+                MyraLabel.TextStyle.P
+            )
+            {
+                TextColor = _readOnlyTint,
+                VerticalAlignment = VerticalAlignment.Center
+            }
+        );
+
+        return banner;
+    }
+
+    /// <summary>
+    /// What the look covers, and the switch that shows it on demand. Preview ignores every rule and
+    /// the player's state: the usual reason to look at an effect is to decide whether to wire one
+    /// up at all.
+    /// </summary>
+    private WrapPanel BuildPresentationRow()
+    {
+        MyraCheckButton preview = MyraCheckButton.CreateWithCallback(
+            ScreenOverlayManager.Instance.IsPreviewing(_profile.Id),
+            on => ScreenOverlayManager.Instance.SetPreview(_profile.Id, on)
+        );
+
+        preview.Tooltip = TazLang.Get(
+            "visualeffects_preview_tooltip",
+            "Shows this effect regardless of your character's state, shake\n"
+            + "included. Still subject to the switches on the General tab,\n"
+            + "and ends when the options are closed."
+        );
+
+        MyraCheckButton fullScreen = Editable(
+            MyraCheckButton.CreateWithCallback(
+                _profile.FullScreen,
+                on =>
+                {
+                    _profile.FullScreen = on;
+                    _onChanged();
+                }
             )
         );
 
-    private Widget LabeledFloat(string label, float value, Action<float> commit)
+        fullScreen.Tooltip = TazLang.Get(
+            "visualeffects_fullscreen_tooltip",
+            "Covers the gumps and cursor as well as the world, and shakes\n"
+            + "the whole window rather than only the viewport."
+        );
+
+        return Row(
+            Labelled(TazLang.Get("visualeffects_preview", "Preview this effect"), preview),
+            Labelled(TazLang.Get("visualeffects_fullscreen", "Draw over the whole window"), fullScreen)
+        );
+    }
+
+    private WrapPanel BuildFadeRow() =>
+        Row(
+            LabelledFloat(
+                TazLang.Get("visualeffects_fadein", "Fade in (s)"),
+                _profile.Fade.InSeconds,
+                MAX_FADE_SECONDS,
+                value => _profile.Fade.InSeconds = value
+            ),
+            LabelledFloat(
+                TazLang.Get("visualeffects_fadeout", "Fade out (s)"),
+                _profile.Fade.OutSeconds,
+                MAX_FADE_SECONDS,
+                value => _profile.Fade.OutSeconds = value
+            )
+        );
+
+    /// <summary>
+    /// Shake belongs to the look rather than to the trigger: how hard a thing hits is part of what
+    /// it feels like, and the occurrence's own strength scales it.
+    /// <para>
+    /// The fields are always present and merely disabled while the switch is off. Hiding them would
+    /// reflow every row beneath on each click, and a control that vanishes teaches nothing about
+    /// what turning it on would offer.
+    /// </para>
+    /// </summary>
+    private Widget BuildShakeRow()
+    {
+        ShakeSpec? shake = _profile.Shake;
+
+        MyraCheckButton enabled = Editable(
+            MyraCheckButton.CreateWithCallback(
+                shake != null,
+                on =>
+                {
+                    _profile.Shake = on ? new ShakeSpec() : null;
+                    _onChanged();
+                    Rebuild();
+                }
+            )
+        );
+
+        enabled.Tooltip = TazLang.Get(
+            "visualeffects_shake_tooltip",
+            "Fired once as the effect arrives, scaled by how strong the\n"
+            + "occurrence is. Which rectangle it displaces follows the\n"
+            + "scope switch above."
+        );
+
+        // Bound to a throwaway spec while shake is off, so the grid can render its defaults without
+        // the row having to special-case a null. Disabled, so those edits go nowhere.
+        var grid = new StyledPropertyGrid(static () => new ShakeSpec())
+        {
+            Object = shake ?? new ShakeSpec()
+        };
+
+        grid.Enabled = shake != null && !_readOnly;
+
+        var stack = new VerticalStackPanel
+        {
+            Spacing = MyraStyle.STANDARD_SPACING,
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+
+        stack.Widgets.Add(Row(Labelled(TazLang.Get("visualeffects_shake", "Shakes the screen"), enabled)));
+        stack.Widgets.Add(grid);
+
+        grid.PropertyChanged += (_, _) =>
+        {
+            if (_readOnly || _profile.Shake == null)
+                return;
+
+            _onChanged();
+        };
+
+        return stack;
+    }
+
+    private Widget LabelledFloat(string label, float value, float maximum, Action<float> commit)
     {
         var input = new FloatInputBox
         {
             MinValue = 0f,
-            MaxValue = MAX_FADE_SECONDS,
+            MaxValue = maximum,
             Width = INPUT_WIDTH,
             Enabled = !_readOnly,
-            Value = value
+            Value = value,
+            VerticalAlignment = VerticalAlignment.Center
         };
 
         // Committing on focus loss rather than per keystroke; the value is persisted, and a save on
-        // every character typed is both wasteful and jumpy.
+        // every character typed is both wasteful and jumpy. Nothing is rebuilt here - see the
+        // rename flow for why a rebuild on focus loss is the wrong shape.
         input.KeyboardFocusChanged += (_, _) =>
         {
             if (input.IsKeyboardFocused)
@@ -121,27 +299,30 @@ internal sealed class OverlayProfileEditor : Widget
             _onChanged();
         };
 
-        return OptionTabCommons.StyledStackPanel(
-            Orientation.Horizontal,
-            new MyraLabel(label, MyraLabel.TextStyle.P) { VerticalAlignment = VerticalAlignment.Center },
-            input
-        );
+        return Labelled(label, input);
     }
 
-    private Widget BuildLayerToolbar()
+    /// <summary>
+    /// Which layer is being edited, how it is named, and the two ways to change how many there are.
+    /// <para>
+    /// Renaming swaps the picker for an input and a pair of buttons, exactly as the profile editor
+    /// above it does. An inline box committing on focus loss was tried first and is the wrong shape:
+    /// committing means rebuilding the row to re-label the picker, which tears the widget tree down
+    /// under whatever the user clicked next - so the click that moved focus never lands.
+    /// </para>
+    /// </summary>
+    private Widget BuildLayerToolbar() => _isRenamingLayer ? BuildRenameToolbar() : BuildPickerToolbar();
+
+    private Widget BuildPickerToolbar()
     {
-        bool canAdd = !_readOnly && _profile.Layers.Count < ScreenOverlayPreset.MaxLayers;
-        bool canRemove = !_readOnly && _profile.Layers.Count > 1;
+        bool hasLayer = SelectedLayer() != null;
+        bool canAdd = !_readOnly && _profile.Layers.Count < OverlayLayerStack.MaxLayers;
+        bool canEdit = !_readOnly && hasLayer;
 
-        string layerWord = TazLang.Get("visualeffects_layer", "Layer");
+        string[] names = LayerNames();
 
-        string[] names = Enumerable
-            .Range(1, _profile.Layers.Count)
-            .Select(i => $"{layerWord} {i}")
-            .ToArray();
-
-        Widget combo = OptionTabCommons.CreateOptionsComboBox(
-            layerWord,
+        Widget layers = OptionTabCommons.CreateOptionsComboBox(
+            TazLang.Get("visualeffects_layer", "Layer"),
             names.ElementAtOrDefault(_selectedLayer) ?? string.Empty,
             names,
             selected =>
@@ -156,48 +337,179 @@ internal sealed class OverlayProfileEditor : Widget
             }
         );
 
-        combo.Margin = new Thickness(0, 0, 20, 0);
+        layers.Margin = new Thickness(0, 0, 20, 0);
 
-        return OptionTabCommons.StyledHorizontalWrapPanel(
-            combo,
+        return Row(
+            layers,
+            new MyraButton(TazLang.Get("visualeffects_renamelayer", "Rename"), BeginRenameLayer) { Enabled = canEdit },
             new MyraButton(TazLang.Get("visualeffects_addlayer", "Add layer"), AddLayer) { Enabled = canAdd },
             MyraStyle.ApplyButtonDangerStyle(
-                new MyraButton(TazLang.Get("visualeffects_removelayer", "Remove layer"), RemoveLayer) { Enabled = canRemove }
+                new MyraButton(TazLang.Get("visualeffects_removelayer", "Remove layer"), RemoveLayer) { Enabled = canEdit }
             )
         );
     }
 
+    private Widget BuildRenameToolbar()
+    {
+        _renameInput.Text = SelectedLayer()?.Name ?? string.Empty;
+        _renameInput.VerticalAlignment = VerticalAlignment.Center;
+        _renameInput.Tooltip = TazLang.Get("visualeffects_layername_tooltip", "Leave blank to name the layer after its technique.");
+
+        return Row(
+            Labelled(TazLang.Get("visualeffects_layername", "Name"), _renameInput),
+            new MyraButton(TazLang.Get("profileeditor_save", "Save"), CommitRenameLayer),
+            new MyraButton(TazLang.Get("profileeditor_cancel", "Cancel"), CancelRenameLayer)
+        );
+    }
+
+    private void BeginRenameLayer()
+    {
+        _isRenamingLayer = true;
+        Rebuild();
+
+        // Only after the rebuild: SetKeyboardFocus goes through the Desktop, which the input box
+        // does not have until it has been placed in the tree.
+        if (_renameInput.Desktop == null)
+            return;
+
+        _renameInput.SetKeyboardFocus();
+        _renameInput.CursorPosition = _renameInput.Text?.Length ?? 0;
+    }
+
+    private void CommitRenameLayer()
+    {
+        ProfileLayer? layer = SelectedLayer();
+        _isRenamingLayer = false;
+
+        if (layer == null)
+        {
+            Rebuild();
+            return;
+        }
+
+        string? name = string.IsNullOrWhiteSpace(_renameInput.Text) ? null : _renameInput.Text.Trim();
+
+        if (name != layer.Name)
+        {
+            layer.Name = name;
+            _onChanged();
+        }
+
+        Rebuild();
+    }
+
+    private void CancelRenameLayer()
+    {
+        _isRenamingLayer = false;
+        Rebuild();
+    }
+
     /// <summary>
-    /// The grid edits a boxed copy of the layer, which is what lets it write through the nested
-    /// value types; the box is copied back into the list on every change.
+    /// What technique the selected layer draws with, and how it composites. Both belong to the stack
+    /// rather than to the look, which is why neither is in the grid below.
+    /// </summary>
+    private Widget BuildLayerIdentityRow()
+    {
+        ProfileLayer? layer = SelectedLayer();
+
+        if (layer == null)
+            return new Panel();
+
+        return Row(TechniqueCombo(layer), BlendCombo(layer));
+    }
+
+    /// <summary>
+    /// The technique this layer draws with. Changing it swaps the effect for a fresh one of the
+    /// chosen type, carrying across everything the two share - the knobs that disappear are the ones
+    /// the new technique has no use for.
+    /// </summary>
+    private Widget TechniqueCombo(ProfileLayer layer)
+    {
+        IReadOnlyList<LayerEffect> techniques = LayerEffectFactory.CreateAll();
+        string[] names = [.. techniques.Select(technique => technique.TechniqueName)];
+
+        Widget combo = OptionTabCommons.CreateOptionsComboBox(
+            TazLang.Get("visualeffects_technique", "Technique"),
+            layer.Effect?.TechniqueName ?? string.Empty,
+            names,
+            selected =>
+            {
+                LayerEffect? replacement = techniques.FirstOrDefault(entry => entry.TechniqueName == selected);
+
+                if (layer.Effect == null || replacement == null || replacement.TechniqueName == layer.Effect.TechniqueName)
+                    return;
+
+                layer.Effect = LayerEffectFactory.ChangeTechnique(layer.Effect, replacement);
+
+                _onChanged();
+                Rebuild();
+            },
+            TazLang.Get(
+                "visualeffects_technique_tooltip",
+                "What the layer draws: a colour painted over the scene, or one\n"
+                + "of the three ways of distorting it. A distortion must sit below\n"
+                + "anything it is meant to affect."
+            )
+        );
+
+        combo.Enabled = !_readOnly;
+        combo.Margin = new Thickness(0, 0, 20, 0);
+
+        return combo;
+    }
+
+    /// <summary>
+    /// How the selected layer combines with what is beneath it. On the stack rather than in the
+    /// parameter grid because it is a property of the composition, not of the look.
+    /// </summary>
+    private Widget BlendCombo(ProfileLayer layer)
+    {
+        Widget combo = OptionTabCommons.CreateOptionsComboBox(
+            TazLang.Get("visualeffects_blend", "Blend"),
+            layer.Blend.ToString(),
+            Enum.GetNames<OverlayBlend>(),
+            selected =>
+            {
+                if (!Enum.TryParse(selected, out OverlayBlend blend) || layer.Blend == blend)
+                    return;
+
+                layer.Blend = blend;
+                _onChanged();
+            }
+        );
+
+        combo.Enabled = !_readOnly;
+
+        return combo;
+    }
+
+    /// <summary>Layers are named by their technique and position unless the user named them, so the
+    /// list says what each one is rather than merely how many there are.</summary>
+    private string[] LayerNames() =>
+        [
+            .. _profile.Layers.Select(
+                (layer, index) =>
+                    $"{index + 1}. {layer.Name ?? layer.Effect?.TechniqueName ?? TazLang.Get("visualeffects_emptylayer", "Empty")}"
+            )
+        ];
+
+    /// <summary>
+    /// The selected layer's own parameters. The grid writes straight through to the effect, which is
+    /// a reference type, so nothing has to be copied back.
     /// </summary>
     private Widget BuildLayerGrid()
     {
-        if (_profile.Layers.Count == 0)
+        if (SelectedLayer()?.Effect is not { } effect)
             return new MyraLabel(TazLang.Get("visualeffects_nolayers", "This profile has no layers."), MyraLabel.TextStyle.P);
 
-        object boxed = _profile.Layers[_selectedLayer];
-
-        var grid = new PropertyGrid
-        {
-            IgnoreCollections = true,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            RowSpacing = ROW_SPACING,
-            ColumnSpacing = COLUMN_SPACING,
-            GroupSpacing = GROUP_SPACING,
-            GroupSeparators = true,
-            ToggleGroupsOnSingleClick = true,
-            DefaultValueProvider = DefaultValueOf,
-            ResetButtonFactory = CreateResetButton,
-            MarkContentFactory = CreateExpanderMark
-        };
+        var grid = new StyledPropertyGrid(() => DefaultFor(effect.GetType()));
 
         // Assigning it builds the rows, and the sub-grids copy the settings above from their parent
         // as they are created.
-        grid.Object = boxed;
+        grid.Object = effect;
 
-        // After the rows exist: Enabled is pushed to the children present at the time it is set,
-        // so disabling an empty grid would leave everything built afterwards editable.
+        // After the rows exist: Enabled is pushed to the children present at the time it is set, so
+        // disabling an empty grid would leave everything built afterwards editable.
         grid.Enabled = !_readOnly;
 
         grid.PropertyChanged += (_, _) =>
@@ -205,98 +517,54 @@ internal sealed class OverlayProfileEditor : Widget
             if (_readOnly)
                 return;
 
-            _profile.Layers[_selectedLayer] = (OverlayLayer)boxed;
             _onChanged();
         };
 
         return grid;
     }
 
-    /// <summary>
-    /// The grid's own reset button and expander mark are drawn from the skin's 8px tree glyphs.
-    /// Both are supplied from here instead, out of the symbol font the rest of the UI uses.
-    /// </summary>
-    private static Widget CreateResetButton(Record record, Action reset)
+    private ProfileLayer? SelectedLayer() =>
+        _selectedLayer >= 0 && _selectedLayer < _profile.Layers.Count ? _profile.Layers[_selectedLayer] : null;
+
+    /// <summary>Marks a control as belonging to the profile rather than to the session, so a shipped
+    /// look cannot be edited through it.</summary>
+    private T Editable<T>(T widget) where T : Widget
     {
-        var button = new Button
-        {
-            Width = GLYPH_BUTTON_SIZE,
-            Height = GLYPH_BUTTON_SIZE,
-            Tooltip = TazLang.Get("visualeffects_resettodefault", "Reset to default"),
-            Content = GlyphLabel(StyleConstantsDefaults.RESET_LABEL_ICON_TEXT),
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(RESET_BUTTON_GAP, 0, 0, 0)
-        };
+        widget.Enabled = !_readOnly;
 
-        button.Click += (_, _) => reset();
+        return widget;
+    }
 
-        return button;
+    private static LayerEffect? DefaultFor(Type technique)
+    {
+        if (_defaultsByTechnique.TryGetValue(technique, out LayerEffect? pristine))
+            return pristine;
+
+        pristine = Activator.CreateInstance(technique) as LayerEffect;
+
+        if (pristine != null)
+            _defaultsByTechnique[technique] = pristine;
+
+        return pristine;
     }
 
     /// <summary>
-    /// Unsized, unlike the reset glyph: the mark's own button has had its padding stripped, so a
-    /// fixed-height label would draw its text from the top of that box instead of centred in it.
+    /// Appends a layer, copying the shape and noise of the one on screen where there is one: a new
+    /// layer is nearly always a variation of the one being tuned, and a pristine one shares no
+    /// scale, channel or reach with it. Its technique is picked afterwards, in the row above the
+    /// grid, since changing one keeps everything the two techniques have in common.
     /// </summary>
-    private static Widget CreateExpanderMark(bool expanded) =>
-        new MyraLabel(expanded ? "⮟" : "⮞", GLYPH_FONT_SIZE)
-        {
-            Font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, GLYPH_FONT_SIZE),
-            Wrap = false,
-            SingleLine = true,
-            TextAlign = TextHorizontalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Top = EXPANDER_MARK_TOP_OFFSET
-        };
-
-    /// <summary>
-    /// Sized to fill its button, whose own padding is what keeps the glyph centred.
-    /// </summary>
-    private static MyraLabel GlyphLabel(string glyph) =>
-        new(glyph, GLYPH_FONT_SIZE)
-        {
-            Font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, GLYPH_FONT_SIZE),
-            Wrap = false,
-            SingleLine = true,
-            TextAlign = TextHorizontalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Width = GLYPH_BUTTON_SIZE,
-            Height = GLYPH_BUTTON_SIZE
-        };
-
-    /// <summary>
-    /// Walks <see cref="_defaultLayer"/> down the same path the grid is showing, so every parameter
-    /// gets its reset value from <see cref="OverlayParams.Default"/> rather than from a duplicated
-    /// table of constants.
-    /// </summary>
-    private static object DefaultValueOf(PropertyGrid grid, Record record)
-    {
-        object owner = _defaultLayer;
-
-        foreach (Record step in grid.ParentRecords)
-        {
-            owner = step.GetValue(owner);
-
-            if (owner == null)
-                return null;
-        }
-
-        return record.GetValue(owner);
-    }
-
     private void AddLayer()
     {
-        if (_profile.Layers.Count >= ScreenOverlayPreset.MaxLayers)
+        if (_readOnly || _profile.Layers.Count >= OverlayLayerStack.MaxLayers)
             return;
 
-        // Seeded from the layer on screen rather than from Default: a new layer is nearly always a
-        // variation of the one being tuned, and Default shares no scale, channel or tint with it.
-        OverlayLayer seed = _profile.Layers.Count > 0
-            ? _profile.Layers[_selectedLayer]
-            : new OverlayLayer { Params = OverlayParams.Default };
+        var added = new TintEffect();
 
-        _profile.Layers.Add(seed);
+        if (SelectedLayer()?.Effect is { } seed)
+            LayerEffectFactory.ChangeTechnique(seed, added);
+
+        _profile.Layers.Add(new ProfileLayer { Effect = added });
         _selectedLayer = _profile.Layers.Count - 1;
 
         _onChanged();
@@ -305,13 +573,45 @@ internal sealed class OverlayProfileEditor : Widget
 
     private void RemoveLayer()
     {
-        if (_profile.Layers.Count <= 1)
+        if (_readOnly || _profile.Layers.Count == 0)
             return;
 
         _profile.Layers.RemoveAt(_selectedLayer);
-        _selectedLayer = Math.Min(_selectedLayer, _profile.Layers.Count - 1);
+        _selectedLayer = Math.Min(_selectedLayer, Math.Max(_profile.Layers.Count - 1, 0));
 
         _onChanged();
         Rebuild();
     }
+
+    /// <summary>
+    /// One row of the composer. Everything in it is centred on the row's own axis, because these
+    /// rows mix combo boxes, buttons and inputs of different heights and a top-aligned button beside
+    /// a combo reads as a mistake.
+    /// </summary>
+    /// <param name="content">The row's widgets, in order.</param>
+    /// <returns>The row.</returns>
+    private static WrapPanel Row(params Widget[] content)
+    {
+        foreach (Widget widget in content)
+            widget.VerticalAlignment = VerticalAlignment.Center;
+
+        return OptionTabCommons.StyledHorizontalWrapPanel(content);
+    }
+
+    private static Widget Labelled(string label, Widget content)
+    {
+        content.VerticalAlignment = VerticalAlignment.Center;
+
+        StackPanel panel = OptionTabCommons.StyledStackPanel(
+            Orientation.Horizontal,
+            new MyraLabel(label, MyraLabel.TextStyle.P) { VerticalAlignment = VerticalAlignment.Center },
+            content
+        );
+
+        panel.VerticalAlignment = VerticalAlignment.Center;
+
+        return panel;
+    }
+
+    #endregion
 }

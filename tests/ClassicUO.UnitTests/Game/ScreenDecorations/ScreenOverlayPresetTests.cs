@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 using ClassicUO.Game.ScreenDecorations.Overlays.Presets.Layers;
@@ -47,9 +45,9 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         [Fact]
         public void EveryLayerIsClampedIndependently()
         {
-            List<OverlayLayer> layers = Bake(new UnsafePreset(ScreenOverlayPreset.MaxLayers));
+            List<OverlayLayer> layers = Bake(new UnsafePreset(OverlayLayerStack.MaxLayers));
 
-            layers.Should().HaveCount(ScreenOverlayPreset.MaxLayers);
+            layers.Should().HaveCount(OverlayLayerStack.MaxLayers);
 
             foreach (OverlayLayer layer in layers)
             {
@@ -62,9 +60,9 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         [Fact]
         public void LayerCountIsCappedAtMaxLayers()
         {
-            List<OverlayLayer> layers = Bake(new UnsafePreset(ScreenOverlayPreset.MaxLayers + 3));
+            List<OverlayLayer> layers = Bake(new UnsafePreset(OverlayLayerStack.MaxLayers + 3));
 
-            layers.Should().HaveCount(ScreenOverlayPreset.MaxLayers);
+            layers.Should().HaveCount(OverlayLayerStack.MaxLayers);
         }
 
         [Fact]
@@ -127,14 +125,9 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         /// presets it also means the distortion stops short of the colour it exists to soften.
         /// </summary>
         [Theory]
-        [MemberData(nameof(BuiltInEffects))]
-        public void EveryPresetOrdersItsLayersFromDeepestToShallowest(OverlayEffectSlot effectSlot)
+        [MemberData(nameof(ShippedPresets))]
+        public void EveryPresetOrdersItsLayersFromDeepestToShallowest(ScreenOverlayPreset preset)
         {
-            ScreenOverlayPreset? preset = BuiltInOverlayPresets.Create(effectSlot);
-
-            if (preset == null)
-                return;
-
             List<float> reaches = Bake(preset).Select(l => l.Params.Shape.Reach).ToList();
 
             reaches.Should().BeInDescendingOrder();
@@ -179,15 +172,19 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
                 reaches.Distinct().Should().HaveCount(reaches.Count);
         }
 
-        public static TheoryData<OverlayEffectSlot> BuiltInEffects()
-        {
-            var data = new TheoryData<OverlayEffectSlot>();
-
-            foreach (OverlayEffectSlot effect in Enum.GetValues<OverlayEffectSlot>())
-                data.Add(effect);
-
-            return data;
-        }
+        /// <summary>Every preset the client ships, which is exactly the set the built-in profiles are
+        /// seeded from.</summary>
+        public static IEnumerable<object[]> ShippedPresets() =>
+            new[]
+            {
+                new object[] { new PoisonOverlay() },
+                new object[] { new BleedOverlay() },
+                new object[] { new FogOverlay() },
+                new object[] { new DrunkOverlay() },
+                new object[] { new ConcussionOverlay() },
+                new object[] { new TunnelVisionOverlay() },
+                new object[] { new FractureOverlay() }
+            };
 
         /// <summary>
         /// Gas rises. Positive V scroll walks the sample point down the texture, which carries the

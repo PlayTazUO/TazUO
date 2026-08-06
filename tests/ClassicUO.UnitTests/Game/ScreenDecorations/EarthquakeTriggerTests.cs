@@ -1,5 +1,5 @@
-using ClassicUO.Game.ScreenDecorations.Manager.Triggers;
-using ClassicUO.Game.ScreenDecorations.Overlays;
+using ClassicUO.Game.ScreenDecorations.Triggers;
+using ClassicUO.Game.ScreenDecorations.Triggers.Definitions;
 using FluentAssertions;
 using Xunit;
 
@@ -62,16 +62,17 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         }
 
         /// <summary>
-        /// Only the parameterless constructor sets <see cref="OverlayModulation.Intensity"/> to 1, so
-        /// a <c>default</c> would leave an overlay at zero strength - invisible rather than unscaled.
+        /// Only the parameterless constructor sets <see cref="TriggerSignal.Intensity"/> to 1, so a
+        /// <c>default</c> would leave an occurrence at zero strength - invisible rather than
+        /// unscaled.
         /// </summary>
         [Fact]
-        public void DefaultModulationLeavesTheProfileAlone()
+        public void DefaultSignalLeavesTheProfileAlone()
         {
-            OverlayModulation.Default.Intensity.Should().Be(1f);
-            OverlayModulation.Default.OnsetTrauma.Should().Be(0f);
+            TriggerSignal.Default.Intensity.Should().Be(1f);
+            TriggerSignal.Default.Duration.Should().BeNull();
 
-            new OverlayModulation { OnsetTrauma = 0.5f }.Intensity.Should().Be(1f);
+            new TriggerSignal { Duration = System.TimeSpan.FromSeconds(1) }.Intensity.Should().Be(1f);
         }
     }
 }

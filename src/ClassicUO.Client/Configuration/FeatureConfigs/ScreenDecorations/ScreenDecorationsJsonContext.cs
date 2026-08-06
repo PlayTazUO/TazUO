@@ -11,10 +11,14 @@ using ClassicUO.Renderer.Effects;
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
 [JsonSerializable(typeof(ScreenDecorations), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(OverlayEffectProfile), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(List<OverlayLayer>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-// OverlayParams and the structs under it are public fields, not properties. Without IncludeFields
-// the whole layer stack serializes as a row of empty objects.
+[JsonSerializable(typeof(EffectProfile), GenerationMode = JsonSourceGenerationMode.Metadata)]
+[JsonSerializable(typeof(OverlayRule), GenerationMode = JsonSourceGenerationMode.Metadata)]
+// The two polymorphic hierarchies. Their subtypes are reached through the [JsonDerivedType]
+// attributes on these bases, which is also what writes and reads the discriminator.
+[JsonSerializable(typeof(LayerEffect), GenerationMode = JsonSourceGenerationMode.Metadata)]
+[JsonSerializable(typeof(TriggerParameters), GenerationMode = JsonSourceGenerationMode.Metadata)]
+// OverlayShape, OverlayNoise and the structs under them are public fields, not properties. Without
+// IncludeFields the whole layer stack serializes as a row of empty objects.
 [JsonSourceGenerationOptions(IncludeFields = true)]
 internal sealed partial class ScreenDecorationsJsonContext : JsonSerializerContext
 {

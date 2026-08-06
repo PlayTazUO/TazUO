@@ -52,6 +52,17 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     /// <summary>Visual styling applied to the underlying table view</summary>
     public RulebaseStyleOptions TableStyleOptions { get; } = new();
 
+    /// <summary>
+    /// Whether a newly created rule is inserted at the top of the table rather than appended.
+    /// <para>
+    /// Opt-in, because position is precedence in some rulebases and merely order in others: putting
+    /// a new rule first suits one where the user is expected to keep refining what wins, and reads
+    /// as arbitrary reordering in one where it is a plain list. Either way the whole table is
+    /// re-stamped afterwards, so <see cref="IRule.Order"/> stays in step with what is on screen.
+    /// </para>
+    /// </summary>
+    public bool AddNewRulesFirst { get; init; }
+
     /// <summary>The label displayed above the toolbar; set its <c>Text</c> to title the rulebase</summary>
     public Label TitleLabel => _titleLabel;
 
@@ -317,13 +328,30 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         return panel;
     }
 
-    /// <summary>Appends a rule, assigns it the next order value, selects it, and raises <see cref="RuleCrud"/></summary>
+    /// <summary>
+    /// Places a rule per <see cref="AddNewRulesFirst"/>, gives it an order value, selects it, and
+    /// raises <see cref="RuleCrud"/>. The event is raised last, so a handler that persists the rule
+    /// sees the position it ended up in.
+    /// </summary>
     /// <param name="rule">The rule to add</param>
     private void AddRule(TRule rule)
     {
-        rule.Order = GetNextOrder();
-        Rules.Add(rule);
-        SelectedIndex = Rules.Count - 1;
+        if (AddNewRulesFirst)
+        {
+            Rules.Insert(0, rule);
+            SelectedIndex = 0;
+
+            // Everything below it moved down, so the whole table is re-stamped rather than only the
+            // newcomer given a number.
+            RecalculateOrder();
+        }
+        else
+        {
+            rule.Order = GetNextOrder();
+            Rules.Add(rule);
+            SelectedIndex = Rules.Count - 1;
+        }
+
         RuleCrud?.Invoke(this, new RuleCrudEventArgs<TRule>(rule, RuleCrudEventType.Create));
     }
 

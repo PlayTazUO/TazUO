@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Configuration;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Game.ScreenDecorations.Overlays;
-using ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 using ClassicUO.Game.ScreenDecorations.Shake;
 using ClassicUO.Game.UI;
 using ClassicUO.LegionScripting;
@@ -289,10 +289,10 @@ namespace ClassicUO.Game.Managers
             Register("myra-draw-widget-frames", args => MyraEnvironment.DrawWidgetsFrames = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-frames", args => MyraEnvironment.DrawMouseHoveredWidgetFrame = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-info", args => MyraEnvironment.DrawMouseHoveredWidgetInfo = ParseBooleanCommandArgs(args));
-            Register("display-overlay-poison", args => HandleOverlayCommand(args, OverlayId.Poison, new PoisonOverlay()));
-            Register("display-overlay-bleed", args => HandleOverlayCommand(args, OverlayId.Bleed, new BleedOverlay()));
-            Register("display-overlay-fracture", args => HandleOverlayCommand(args, OverlayId.Fracture, new FractureOverlay()));
-            Register("display-overlay-tunnel", args => HandleOverlayCommand(args, OverlayId.TunnelVision, new TunnelVisionOverlay()));
+            Register("display-overlay-poison", args => HandleOverlayCommand(args, BuiltInProfiles.Ids.Poison));
+            Register("display-overlay-bleed", args => HandleOverlayCommand(args, BuiltInProfiles.Ids.Bleed));
+            Register("display-overlay-fracture", args => HandleOverlayCommand(args, BuiltInProfiles.Ids.Fracture));
+            Register("display-overlay-tunnel", args => HandleOverlayCommand(args, BuiltInProfiles.Ids.TunnelVision));
             Register("display-overlay-trauma", args =>
             {
                 int durationSec = 3;
@@ -303,20 +303,30 @@ namespace ClassicUO.Game.Managers
                 if (args.Length >= 2)
                     _ = int.TryParse(args[1], out durationSec);
 
-                ScreenShake.Instance.Trauma(TimeSpan.FromSeconds(durationSec), intensity);
+                ScreenShake.Viewport.Trauma(TimeSpan.FromSeconds(durationSec), intensity);
             });
 
             // Reload the language strings, loading any changes that have been made without having to restart the game
             Register("language-regenerate", _ => TazLang.Load(Settings.GlobalSettings.UILanguage));
         }
 
-        private static void HandleOverlayCommand(string[] args, OverlayId id, ScreenOverlayPreset preset)
+        /// <summary>
+        /// Shows or hides a shipped look directly, bypassing the rulebase. The profile's own id
+        /// doubles as the compositor slot, which no rule can collide with.
+        /// </summary>
+        /// <param name="args">Command arguments; the first is parsed as a boolean.</param>
+        /// <param name="profileId">The built-in profile to draw.</param>
+        private static void HandleOverlayCommand(string[] args, Guid profileId)
         {
-            bool show = ParseBooleanCommandArgs(args);
-            if (show)
-                ScreenOverlayCompositor.Instance.Show(id, preset);
+            EffectProfile profile = BuiltInProfiles.Find(profileId);
+
+            if (profile == null)
+                return;
+
+            if (ParseBooleanCommandArgs(args))
+                ScreenOverlayCompositor.Instance.Show(profileId, profile);
             else
-                ScreenOverlayCompositor.Instance.Hide(id);
+                ScreenOverlayCompositor.Instance.Hide(profileId);
         }
 
         private static float ParseFloatCommandArgs(string[] args) => args?.Length > 1 && float.TryParse(args[1], out float value) ? value : 0;

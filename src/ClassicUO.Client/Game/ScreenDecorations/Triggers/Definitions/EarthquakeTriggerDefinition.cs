@@ -1,22 +1,67 @@
+#nullable enable
+
 using System;
+using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
-using ClassicUO.Game.ScreenDecorations.Overlays;
 
-namespace ClassicUO.Game.ScreenDecorations.Manager.Triggers;
+namespace ClassicUO.Game.ScreenDecorations.Triggers.Definitions;
 
 /// <summary>
-/// The ground moving, taken from the earthquake sound the server plays. Headless: the packet says a
-/// quake happened and nothing says when it stopped, so one occurrence runs for a fixed span.
+/// The ground moving, taken from the earthquake sound the server plays.
+/// </summary>
+public sealed class EarthquakeTriggerDefinition : ITriggerDefinition
+{
+    /// <inheritdoc />
+    public string Id => "earthquake";
+
+    /// <inheritdoc />
+    public string DisplayName => TazLang.Get("overlaytrigger_earthquake", "Earthquake sound");
+
+    /// <inheritdoc />
+    public TriggerKind Kind => TriggerKind.Event;
+
+    /// <inheritdoc />
+    public Type? ParameterType => null;
+
+    /// <summary>Nothing announces the end of a quake; the signal's own duration retires it.</summary>
+    public bool IsStateful => false;
+
+    /// <inheritdoc />
+    public ITriggerInstance Create(TriggerParameters? parameters) => new EarthquakeTrigger();
+
+    /// <inheritdoc />
+    public TriggerParameters? CreateDefaultParameters() => null;
+}
+
+/// <summary>
+/// Listens for the client's earthquake sound. Headless: the packet says a quake happened and nothing
+/// says when it stopped, so one occurrence runs for a fixed span.
 /// <para>
 /// Scaled by how near the sound is, because the same quake felt across the map and underfoot should
 /// not read the same. The sound carries the tile it came from, which is the only distance
 /// information available - there is no quake packet to ask.
 /// </para>
 /// </summary>
-public sealed class EarthquakeTrigger : IEffectEventTrigger
+public sealed class EarthquakeTrigger : IEventTrigger
 {
+    #region Public events
+
+    /// <inheritdoc />
+    public event EventHandler<TriggerFiredArgs>? Fired;
+
+    /// <summary>Never raised - nothing announces the end of a quake, and the signal's own duration
+    /// is what retires it. Accessors are empty rather than the event being omitted, because the
+    /// manager subscribes to every event trigger without asking which shape it is.</summary>
+    public event EventHandler? Ended
+    {
+        add { }
+        remove { }
+    }
+
+    #endregion
+
     #region Private members
 
     private const int EARTHQUAKE_SOUND_INDEX = 755;
@@ -28,47 +73,30 @@ public sealed class EarthquakeTrigger : IEffectEventTrigger
     /// </summary>
     private const float MIN_INTENSITY = 0.25f;
 
-    private const float MIN_TRAUMA = 0.10f;
-
-    /// <summary>Kept well under 1: this shakes on top of whatever the overlay itself is doing, and
-    /// the pair at full strength is unplayable rather than dramatic.</summary>
-    private const float MAX_TRAUMA = 1f;
-
-    #endregion
-
-    #region Public accessors
-
-    public event EventHandler<EffectActivationArgs> Activated;
-
-    /// <summary>Never raised. Nothing announces the end of a quake; <see cref="HeadlessDuration" />
-    /// is what retires it.</summary>
-    public event EventHandler Deactivated;
-
-    public OverlayEffectSlot EffectSlot => OverlayEffectSlot.Concussion;
-
-    /// <summary>Above the ambient status effects. A quake is a discrete event, and losing it to a
-    /// tint the player has been sitting under for a minute would be the wrong way round.</summary>
-    public int Priority => 40;
-
     /// <summary>
     /// Roughly how long the client's own earthquake sound runs. Restarted rather than stacked if a
     /// second quake lands inside it, so a sustained sequence holds the effect up throughout.
     /// </summary>
-    public TimeSpan? HeadlessDuration => TimeSpan.FromSeconds(3);
+    private const float OCCURRENCE_SECONDS = 3f;
 
     #endregion
 
     #region Public methods
 
-    public void Register() => EventSink.SoundPlayed += OnSoundPlayed;
+    /// <inheritdoc />
+    public void Attach() => EventSink.SoundPlayed += OnSoundPlayed;
 
-    public void UnRegister() => EventSink.SoundPlayed -= OnSoundPlayed;
+    /// <inheritdoc />
+    public void Detach() => EventSink.SoundPlayed -= OnSoundPlayed;
+
+    /// <inheritdoc />
+    public void Dispose() => Detach();
 
     #endregion
 
     #region Private methods
 
-    private void OnSoundPlayed(object sender, SoundEventArgs e)
+    private void OnSoundPlayed(object? sender, SoundEventArgs e)
     {
         if (e.Index != EARTHQUAKE_SOUND_INDEX)
             return;
@@ -80,12 +108,12 @@ public sealed class EarthquakeTrigger : IEffectEventTrigger
         (bool inWorld, int playerX, int playerY, int viewRange) = MainThreadQueue.BubblingInvokeOnMainThread(
             () =>
             {
-                World world = World.Instance;
-                PlayerMobile player = world?.Player;
+                World? world = World.Instance;
+                PlayerMobile? player = world?.Player;
 
                 return player == null
                     ? (false, 0, 0, 0)
-                    : (true, player.X, player.Y, world.ClientViewRange);
+                    : (true, player.X, player.Y, world!.ClientViewRange);
             }
         );
 
@@ -97,13 +125,13 @@ public sealed class EarthquakeTrigger : IEffectEventTrigger
         if (nearness <= 0f)
             return;
 
-        var modulation = new OverlayModulation
+        var signal = new TriggerSignal
         {
             Intensity = Lerp(MIN_INTENSITY, 1f, nearness),
-            OnsetTrauma = Lerp(MIN_TRAUMA, MAX_TRAUMA, nearness)
+            Duration = TimeSpan.FromSeconds(OCCURRENCE_SECONDS)
         };
 
-        Activated?.Invoke(this, new EffectActivationArgs(modulation));
+        Fired?.Invoke(this, new TriggerFiredArgs { Signal = signal });
     }
 
     /// <summary>

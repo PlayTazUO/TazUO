@@ -3,6 +3,7 @@ using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.MyraWindows.Options.Tabs.VisualEffects;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;

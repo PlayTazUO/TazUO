@@ -11,13 +11,6 @@ public class ShakeSystemSettings : ObservableSettings
 {
     public bool Enabled { get; set => SetField(ref field, value); }
 
-    /// <summary>
-    /// Shakes the whole window rather than only the game world. Off by default, matching the
-    /// overlays: displacing the gumps and the cursor along with the world makes the UI hard to use
-    /// for as long as the shake lasts.
-    /// </summary>
-    public bool FullScreen { get; set => SetField(ref field, value); }
-
     /// <summary>Scales the shake offset. Clamped to [0, 1] where it is consumed.</summary>
     public float Intensity { get; set => SetField(ref field, value); } = 1f;
 }

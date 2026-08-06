@@ -1,3 +1,4 @@
+using System.Linq;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using FluentAssertions;
 using Xunit;
@@ -22,8 +23,9 @@ namespace ClassicUO.UnitTests.Configuration
             settings.OverlaysActive.Should().BeFalse();
             settings.ShakeActive.Should().BeFalse();
 
-            foreach (OverlayEffectSlot effect in OverlaySystemSettings.AllEffects)
-                settings.Overlays.GetSettings(effect).Enabled.Should().BeFalse();
+            // Including the shipped rules: a clean profile must not start distorting anyone's screen
+            // just because the client knows how to.
+            settings.Overlays.ResolveRules().Should().OnlyContain(rule => !rule.Enabled);
         }
 
         /// <summary>Both systems stay inside the game world unless asked otherwise, so neither can
@@ -33,10 +35,9 @@ namespace ClassicUO.UnitTests.Configuration
         {
             var settings = new ScreenDecorations();
 
-            settings.Shake.FullScreen.Should().BeFalse();
-
-            foreach (OverlayEffectSlot effect in OverlaySystemSettings.AllEffects)
-                settings.Overlays.GetSettings(effect).FullScreen.Should().BeFalse();
+            // One switch per look governs both halves of its scope: which pass draws it, and which
+            // rectangle its shake displaces.
+            settings.Overlays.AllProfiles().Should().OnlyContain(profile => !profile.FullScreen);
         }
 
         [Fact]

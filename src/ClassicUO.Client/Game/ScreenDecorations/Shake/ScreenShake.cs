@@ -25,7 +25,28 @@ namespace ClassicUO.Game.ScreenDecorations.Shake
     {
         #region Public accessors
 
-        public static ScreenShake Instance { get; } = new();
+        /// <summary>
+        /// Shake confined to the game world, leaving the gumps and cursor still.
+        /// </summary>
+        public static ScreenShake Viewport { get; } = new(0f);
+
+        /// <summary>
+        /// Shake that displaces the whole window, UI included.
+        /// <para>
+        /// A separate accumulator rather than a flag on the offset, because the two are applied to
+        /// different rectangles at different points in the frame: one profile can shake the world
+        /// while another shakes the window, and each has to decay on its own. Their contributions
+        /// compound on the world, which is correct - two things really are shaking it.
+        /// </para>
+        /// </summary>
+        public static ScreenShake Window { get; } = new(PHASE_STEP * 0.5f);
+
+        /// <summary>
+        /// The accumulator a request of the given scope belongs to.
+        /// </summary>
+        /// <param name="fullScreen">Whether the shake should displace the whole window.</param>
+        /// <returns>The accumulator.</returns>
+        public static ScreenShake For(bool fullScreen) => fullScreen ? Window : Viewport;
 
         public bool IsShaking
         {
@@ -72,8 +93,12 @@ namespace ClassicUO.Game.ScreenDecorations.Shake
 
         #region Ctor
 
-        private ScreenShake()
+        /// <param name="phaseOffset">Where this accumulator starts walking the noise table. Set
+        /// apart per instance so two scopes shaking at once do not sample in lockstep, which would
+        /// read as one shake at twice the amplitude.</param>
+        private ScreenShake(float phaseOffset)
         {
+            _nextPhase = phaseOffset;
             _noiseX = BuildSmoothedNoise(1);
             _noiseY = BuildSmoothedNoise(2);
         }

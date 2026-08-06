@@ -8,6 +8,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
@@ -84,6 +85,13 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// </summary>
     private bool _isRenaming;
 
+    /// <summary>
+    ///     Whether a newly created profile goes to the top of the list rather than the bottom. Opt-in:
+    ///     it suits a library the user adds to often, and reads as arbitrary reordering everywhere
+    ///     else.
+    /// </summary>
+    private readonly bool _newestFirst;
+
     #endregion Members
 
     #region Accessores
@@ -105,12 +113,14 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <param name="onDeleteProfile">The action to perform when deleting a profile.</param>
     /// <param name="profiles">The initial list of profiles.</param>
     /// <param name="onRenameProfile">An optional action to perform after renaming a profile.</param>
+    /// <param name="newestFirst">When true, newly created profiles are listed first.</param>
     public ProfileEditor(
         Func<TProfile, Widget> getConfigUiForProfile,
         Func<string, TProfile> createProfile,
         Action<TProfile> onDeleteProfile,
         IEnumerable<TProfile> profiles = null,
-        Action<TProfile> onRenameProfile = null
+        Action<TProfile> onRenameProfile = null,
+        bool newestFirst = false
     )
     {
         ArgumentNullException.ThrowIfNull(getConfigUiForProfile);
@@ -121,6 +131,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
         _createProfile = createProfile;
         _onDeleteProfile = onDeleteProfile;
         _onRenameProfile = onRenameProfile;
+        _newestFirst = newestFirst;
 
         foreach (TProfile profile in profiles ?? [])
             AddProfile(profile);
@@ -147,7 +158,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private void OnAdd()
     {
         TProfile newProfile = _createProfile(GetNextProfileName());
-        AddProfile(newProfile);
+        AddProfile(newProfile, _newestFirst);
         ChangeOrUpdateProfile(newProfile);
     }
 
@@ -329,23 +340,37 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     }
 
     /// <summary>
-    ///     Gets the profiles combo box stack panel.
+    ///     Gets the profiles combo box stack panel. Searchable, because a library grows and scrolling
+    ///     a long alphabetical list to find one look is the slowest way to do it.
     /// </summary>
     /// <returns>The profiles combo box stack panel.</returns>
     private Widget GetProfilesCombo()
     {
         string selectedProfileName = _selectedProfile?.Name ?? Profiles.FirstOrDefault()?.Name ?? string.Empty;
 
-        Widget combo = OptionTabCommons.CreateOptionsComboBox(TazLang.Get("profileeditor_profile"),
+        // addSelectedItemIfMissing is off: every name shown comes from Profiles, so a missing one
+        // would be a bug rather than a stale setting worth preserving.
+        var combo = new ContainsLevenshteinComboBox(
             selectedProfileName,
-            Profiles?.Select(p => p.Name) ?? [],
-            OnProfileSelected
-        );
+            Profiles.Select(profile => profile.Name),
+            name =>
+            {
+                if (name != null)
+                    OnProfileSelected(name);
+            },
+            addSelectedItemIfMissing: false
+        )
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            TooltipSelector = name => name
+        };
+
+        MyraStyle.ApplySearchComboBoxPopupBorder(combo);
 
         combo.Width = PROFILE_BOX_WIDTH;
         combo.Margin = _profileBoxMargins;
 
-        return combo;
+        return new MyraLabel(TazLang.Get("profileeditor_profile"), MyraLabel.TextStyle.P).PlaceBefore(combo);
     }
 
     /// <summary>
@@ -389,10 +414,16 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     ///     Adds a profile to the editor.
     /// </summary>
     /// <param name="profile">The profile to add.</param>
-    private void AddProfile(TProfile profile)
+    /// <param name="atTop">When true, the profile is listed first rather than last.</param>
+    private void AddProfile(TProfile profile, bool atTop = false)
     {
         profile.PropertyChanged += OnProfilePropertyChanged;
-        Profiles.Add(profile);
+
+        if (atTop)
+            Profiles.Insert(0, profile);
+        else
+            Profiles.Add(profile);
+
         _profileRefs.Add(profile);
     }
 

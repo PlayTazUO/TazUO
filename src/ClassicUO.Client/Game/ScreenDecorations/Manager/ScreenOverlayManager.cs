@@ -5,21 +5,18 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Game.Managers;
-using ClassicUO.Game.ScreenDecorations.Manager.Triggers;
 using ClassicUO.Game.ScreenDecorations.Overlays;
-using ClassicUO.Game.ScreenDecorations.Overlays.Presets;
+using ClassicUO.Game.ScreenDecorations.Rules;
 using ClassicUO.Game.ScreenDecorations.Shake;
+using ClassicUO.Game.ScreenDecorations.Triggers;
 using ClassicUO.Renderer;
-using Microsoft.Xna.Framework;
 using ClassicUO.Utility.Logging;
+using Microsoft.Xna.Framework;
 
 // The settings class shares its name with its namespace, which shadows it here.
 using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
-using Lock = System.Threading.Lock;
 
 namespace ClassicUO.Game.ScreenDecorations.Manager;
 
@@ -28,28 +25,15 @@ namespace ClassicUO.Game.ScreenDecorations.Manager;
 /// state - screen shake included. <see cref="ScreenOverlayCompositor"/> is told what to draw and
 /// nothing more.
 /// <para>
-/// Reconciles rather than reacts: on each pass it works out the set of overlays the player's state
-/// and the current settings call for, and moves the compositor towards it. A missed transition
-/// therefore cannot leave an overlay stuck on, and toggling an effect off, or editing its profile in
-/// the options, lands on the next pass.
-/// </para>
-/// <para>
-/// Those passes run on a timer of their own rather than per frame - status changes at human pace,
-/// and a quarter-second of latency on a poison tint is not perceptible. The timer thread only asks
-/// for a pass; the pass itself is marshalled onto the main thread, because it reads live game
-/// objects and mutates the compositor's active set while the draw loop is walking it.
-/// </para>
-/// <para>
-/// The timer exists only while there is something for it to do: in the world, with overlays
-/// switched on. Switching them off tears the loop down rather than leaving it waking the main
-/// thread twice a second to re-discover that the feature is disabled, which is the state most
-/// clients are in.
+/// Reconciles rather than reacts: on each pass it works out the set of overlays the rules in force
+/// call for, and moves the compositor towards it. A missed transition therefore cannot leave an
+/// overlay stuck on, and disabling a rule, re-pointing it, or editing its profile lands on the next
+/// pass.
 /// </para>
 /// <para>
 /// Threading: every entry point except the shake accessors is main thread only, asserted in debug
-/// builds. Only <see cref="_cancellation"/> and <see cref="_passPending"/> cross threads - the timer
-/// touches nothing else - so they alone are under <see cref="_sync"/> and the rest of the state
-/// needs no guarding.
+/// builds. <see cref="OverlayPassScheduler"/> owns the whole of the concurrency, and passes are the
+/// only way into this class's state, so none of it needs guarding.
 /// </para>
 /// </summary>
 internal sealed class ScreenOverlayManager
@@ -70,56 +54,46 @@ internal sealed class ScreenOverlayManager
     #region Private members
 
     /// <summary>
-    /// Gap between reconcile passes. The floor on how long an overlay can lag the state that
-    /// justifies it, and half the average lag.
-    /// </summary>
-    private static readonly TimeSpan _reconcileInterval = TimeSpan.FromMilliseconds(350);
-
-    /// <summary>How hard an onset shake hits and for how long. Shaped as an impact: full strength
-    /// immediately, falling away.</summary>
-    private static readonly TimeSpan _onsetShakeDuration = TimeSpan.FromSeconds(0.6);
-
-    /// <summary>
-    /// Priority a previewed overlay composites at. Above every mapping, so previewing an effect
-    /// while the player happens to be poisoned shows the one that was asked for.
+    /// Priority a previewed overlay composites at. Above every rule, so previewing a look while the
+    /// player happens to be poisoned shows the one that was asked for.
     /// </summary>
     private const int PREVIEW_PRIORITY = 100;
 
     /// <summary>
-    /// Guards <see cref="_cancellation"/> and <see cref="_passPending"/>, the only state the timer
-    /// thread reaches. Never held across a reconcile pass - that runs on the main thread, and
-    /// blocking the timer thread on it would let passes queue up behind a stalled frame.
+    /// Compositor slot the preview occupies. A fixed id rather than the previewed profile's, so
+    /// previewing a look a rule is already showing does not fight that rule for its slot.
     /// </summary>
-    private readonly Lock _sync = new();
+    private static readonly Guid _previewSlot = new("e4d1a7c8-9f52-4b6e-8a31-0c7d5e29b184");
 
-    /// <summary>Cancels the reconcile loop. Null exactly when no loop is running, which is what
-    /// <see cref="IsRunning"/> reports. Read from the timer thread by <see cref="QueuePass"/>.</summary>
-    private CancellationTokenSource? _cancellation;
+    private readonly OverlayPassScheduler _scheduler;
 
-    /// <summary>Set while a pass is queued or running, so a slow frame cannot leave several passes
-    /// stacked up waiting on the main thread. Set by the timer thread, cleared by the main
-    /// one.</summary>
-    private bool _passPending;
-
-    /// <summary>What this manager has asked for, and on what terms. Not the compositor's own set:
-    /// that one still holds overlays part-way through their fade-out, which must not read as
-    /// "already showing". The demand is kept so a pass can tell a restated one from an unchanged
-    /// one and re-apply only when something actually moved.</summary>
-    private readonly Dictionary<OverlayId, OverlayDemand> _showing = [];
+    /// <summary>The rules in force, and the live trigger watching for each. Rebuilt whenever the
+    /// rulebase changes; disabled rules are absent, so their triggers cost nothing.</summary>
+    private readonly Dictionary<Guid, WatchedRule> _watching = [];
 
     /// <summary>
-    /// Registered event triggers and the latest signal each has raised. Keyed by the trigger itself
-    /// - it is already unique and the caller already holds it, so handing back an id would only be
-    /// one more thing to lose.
+    /// The same rules in table order, which is what makes evaluation first-match. A dictionary's
+    /// enumeration order is an implementation detail, and precedence is not.
     /// </summary>
-    private readonly Dictionary<IEffectEventTrigger, EventSignal> _eventTriggers = [];
+    private readonly List<WatchedRule> _ordered = [];
 
-    /// <summary>Whether the shipped event triggers have been created. Once per session, not once
-    /// per world: registrations outlive a trip to the login screen.</summary>
-    private bool _builtInTriggersAdded;
+    /// <summary>Effects already claimed this pass, so a lower rule cannot restate one. Reused so a
+    /// pass allocates nothing.</summary>
+    private readonly HashSet<Guid> _claimed = [];
 
-    /// <summary>Whether the world is loaded. One half of what decides the loop runs; the settings
-    /// are the other half.</summary>
+    /// <summary>What this manager has asked the compositor for, and on what terms. Not the
+    /// compositor's own set: that one still holds overlays part-way through their fade-out, which
+    /// must not read as "already showing".</summary>
+    private readonly Dictionary<Guid, ShownState> _showing = [];
+
+    /// <summary>This pass's answer. Reused so a pass allocates nothing.</summary>
+    private readonly Dictionary<Guid, RuleDemand> _desired = [];
+
+    /// <summary>Slots being taken down this pass. Reused for the same reason.</summary>
+    private readonly List<Guid> _retiring = [];
+
+    /// <summary>Whether the world is loaded. One half of what decides passes run; the settings are
+    /// the other half.</summary>
     private bool _inWorld;
 
     /// <summary>
@@ -129,27 +103,28 @@ internal sealed class ScreenOverlayManager
     /// </summary>
     private DecorationSettings? _watched;
 
-    /// <summary>This frame's shake displacement and the frame it was sampled on. Render thread
-    /// only.</summary>
-    private Point _shakeOffset;
+    /// <summary>
+    /// This frame's shake displacement per scope, and the frame each was sampled on. Indexed by
+    /// scope (0 viewport, 1 window) because the two decay independently. Render thread only.
+    /// </summary>
+    private readonly Point[] _shakeOffset = new Point[2];
 
-    private long _shakeTick = -1;
+    private readonly long[] _shakeTick = [-1, -1];
 
     /// <summary>
-    /// The effect being previewed from the options, shown regardless of the player's state and of
-    /// its own enabled toggle - the point of a preview is to see an effect you have not turned on
-    /// yet. One at a time: several at once would composite together and show nothing useful about
-    /// any of them.
+    /// The profile being previewed from the options, shown regardless of the player's state and of
+    /// any rule - the point of a preview is to see a look nothing is raising yet. One at a time:
+    /// several at once would composite together and show nothing useful about any of them.
     /// </summary>
-    private OverlayEffectSlot? _preview;
+    private Guid? _previewProfileId;
 
-    private bool IsRunning
+    #endregion
+
+    #region Ctor
+
+    private ScreenOverlayManager()
     {
-        get
-        {
-            lock (_sync)
-                return _cancellation != null;
-        }
+        _scheduler = new OverlayPassScheduler(RunPass);
     }
 
     #endregion
@@ -165,11 +140,7 @@ internal sealed class ScreenOverlayManager
     /// <returns>The same rectangle, displaced if the shake covers the window.</returns>
     public Rectangle ApplyWindowShake(Rectangle destRect)
     {
-        // Called unconditionally, because this is what advances the decay - see FrameShakeOffset.
-        Point offset = FrameShakeOffset();
-
-        if (DecorationSettings.Current.Shake.FullScreen)
-            destRect.Offset(offset);
+        destRect.Offset(FrameShakeOffset(fullScreen: true));
 
         return destRect;
     }
@@ -182,36 +153,9 @@ internal sealed class ScreenOverlayManager
     /// <returns>The same rectangle, displaced if the shake is confined to the viewport.</returns>
     public Rectangle ApplyViewportShake(Rectangle destRect)
     {
-        Point offset = FrameShakeOffset();
-
-        if (!DecorationSettings.Current.Shake.FullScreen)
-            destRect.Offset(offset);
+        destRect.Offset(FrameShakeOffset(fullScreen: false));
 
         return destRect;
-    }
-
-    /// <summary>
-    /// This frame's shake displacement, computed once however many passes ask for it.
-    /// <para>
-    /// Sampling is what decays the trauma, so it must happen exactly once per frame: twice and the
-    /// shake dies at double speed, never and it accumulates. It is also sampled while shake is
-    /// switched off - at zero intensity - so pending trauma drains away rather than being banked
-    /// until someone turns it back on.
-    /// </para>
-    /// </summary>
-    private Point FrameShakeOffset()
-    {
-        if (_shakeTick == Time.Ticks)
-            return _shakeOffset;
-
-        _shakeTick = Time.Ticks;
-
-        DecorationSettings settings = DecorationSettings.Current;
-        float intensity = settings.ShakeActive ? MathHelper.Clamp(settings.Shake.Intensity, 0f, 1f) : 0f;
-
-        _shakeOffset = ScreenShake.Instance.GetOffset(Time.Delta, intensity);
-
-        return _shakeOffset;
     }
 
     /// <summary>
@@ -237,8 +181,8 @@ internal sealed class ScreenOverlayManager
     /// Marks the world as loaded and starts reconciling, if the settings call for it. Idempotent - a
     /// second call while already in the world does nothing.
     /// <para>
-    /// Also subscribes to the two switches that gate the whole system, so turning overlays on or off
-    /// starts or stops the loop then and there rather than on the next pass - there is no next pass
+    /// Also subscribes to the switches that gate the whole system, so turning overlays on or off
+    /// starts or stops the work then and there rather than on the next pass - there is no next pass
     /// once it has stopped.
     /// </para>
     /// </summary>
@@ -249,101 +193,79 @@ internal sealed class ScreenOverlayManager
         if (_inWorld)
             return;
 
-        AddBuiltInEventTriggers();
-
         _inWorld = true;
         Watch(DecorationSettings.Current);
 
-        foreach (IEffectEventTrigger trigger in _eventTriggers.Keys)
-            AttachTrigger(trigger);
-
-        SyncReconciler();
+        SyncRules();
     }
 
     /// <summary>
-    /// Adds an event-driven trigger. It begins listening at once if the world is loaded, and on the
-    /// next <see cref="Start" /> otherwise - a registration survives a trip to the login screen.
-    /// <para>
-    /// The trigger is its own handle: pass the same instance to <see cref="UnregisterTrigger" />.
-    /// Registering one twice does nothing.
-    /// </para>
+    /// Rebuilds the live wiring from the rulebase. For the options, which edit rules in place: those
+    /// edits raise no collection change, and a rule pointed at a new trigger has to stop watching the
+    /// old one.
     /// </summary>
-    /// <param name="trigger">The trigger to add.</param>
-    /// <exception cref="ArgumentNullException">The trigger is null.</exception>
-    public void RegisterTrigger(IEffectEventTrigger trigger)
-    {
-        AssertMainThread();
-        ArgumentNullException.ThrowIfNull(trigger);
-
-        if (!_eventTriggers.TryAdd(trigger, new EventSignal()))
-            return;
-
-        trigger.Activated += OnTriggerActivated;
-        trigger.Deactivated += OnTriggerDeactivated;
-
-        if (_inWorld)
-            AttachTrigger(trigger);
-    }
-
-    /// <summary>
-    /// Removes a trigger added by <see cref="RegisterTrigger" /> and drops whatever it was asking
-    /// for. Unknown triggers are ignored.
-    /// </summary>
-    /// <param name="trigger">The instance that was registered.</param>
-    public void UnregisterTrigger(IEffectEventTrigger trigger)
+    public void RulesChanged()
     {
         AssertMainThread();
 
-        if (trigger == null || !_eventTriggers.Remove(trigger))
-            return;
-
-        trigger.Activated -= OnTriggerActivated;
-        trigger.Deactivated -= OnTriggerDeactivated;
-
-        if (_inWorld)
-            DetachTrigger(trigger);
-
-        // Its signal is gone, so anything it was holding up should come down.
-        QueuePass();
+        SyncRules();
     }
 
     /// <summary>
-    /// Whether <paramref name="effectSlot" /> is the one currently being previewed.
+    /// Re-applies everything on screen, picking up edits to the looks themselves. For the profile
+    /// composer: a layer change does not alter what any rule is asserting, so without this the
+    /// reconcile pass would find nothing to do and the compositor would keep drawing the stack it
+    /// baked when the effect was raised.
     /// </summary>
-    /// <param name="effectSlot">The effect to test.</param>
+    public void ProfilesChanged()
+    {
+        AssertMainThread();
+
+        // Forgetting the terms rather than hiding anything: the next pass re-states every live
+        // occurrence, which is what re-bakes it, and does so without restarting a single fade.
+        _showing.Clear();
+
+        _scheduler.Queue();
+    }
+
+    /// <summary>
+    /// Whether <paramref name="profileId"/> is the look currently being previewed.
+    /// </summary>
+    /// <param name="profileId">The profile to test.</param>
     /// <returns>True if it is the active preview.</returns>
-    public bool IsPreviewing(OverlayEffectSlot effectSlot)
+    public bool IsPreviewing(Guid profileId)
     {
         AssertMainThread();
 
-        return _preview == effectSlot;
+        return _previewProfileId == profileId;
     }
 
     /// <summary>
-    /// Shows or stops showing <paramref name="effectSlot" /> irrespective of the player's state, for
-    /// tuning it in the options.
+    /// Shows or stops showing a look irrespective of the player's state, for tuning it in the
+    /// options.
     /// <para>
-    /// Starting one preview stops any other. Takes effect on the next reconcile pass rather than
-    /// immediately, so it goes through the same path as a real onset and cannot leave the compositor
-    /// holding something the manager has forgotten about.
+    /// Starting one preview stops any other. Takes effect on the next pass rather than immediately,
+    /// so it goes through the same path as a real occurrence and cannot leave the compositor holding
+    /// something the manager has forgotten about. It fires no shake: the look is being examined, not
+    /// reacted to.
     /// </para>
     /// <para>
     /// Still subject to the two system toggles: with screen decorations or overlays switched off
     /// nothing is drawn, and a preview is not a reason to override that.
     /// </para>
     /// </summary>
-    /// <param name="effectSlot">The effect to preview.</param>
+    /// <param name="profileId">The profile to preview.</param>
     /// <param name="previewing">True to show it, false to stop.</param>
-    public void SetPreview(OverlayEffectSlot effectSlot, bool previewing)
+    public void SetPreview(Guid profileId, bool previewing)
     {
         AssertMainThread();
 
-        if (!previewing && _preview != effectSlot)
+        if (!previewing && _previewProfileId != profileId)
             return;
 
-        _preview = previewing ? effectSlot : null;
+        _previewProfileId = previewing ? profileId : null;
 
-        QueuePass();
+        _scheduler.Queue();
     }
 
     /// <summary>Stops any preview. For closing the options, where nothing is left to drive it.</summary>
@@ -351,12 +273,12 @@ internal sealed class ScreenOverlayManager
     {
         AssertMainThread();
 
-        if (_preview == null)
+        if (_previewProfileId == null)
             return;
 
-        _preview = null;
+        _previewProfileId = null;
 
-        QueuePass();
+        _scheduler.Queue();
     }
 
     /// <summary>
@@ -369,15 +291,7 @@ internal sealed class ScreenOverlayManager
 
         _inWorld = false;
         Unwatch();
-
-        // Triggers stay registered but stop listening, and anything they were asserting is dropped:
-        // the world their signals described is going away.
-        foreach ((IEffectEventTrigger trigger, EventSignal signal) in _eventTriggers)
-        {
-            DetachTrigger(trigger);
-            signal.Clear();
-        }
-
+        TearDownWatching();
         SyncReconciler();
     }
 
@@ -385,120 +299,154 @@ internal sealed class ScreenOverlayManager
 
     #region Private methods
 
-    /// <summary>Registers the triggers shipped with the client, once per session.</summary>
-    private void AddBuiltInEventTriggers()
+    /// <summary>
+    /// One scope's shake displacement for this frame, computed once however many passes ask for it.
+    /// <para>
+    /// Sampling is what decays the trauma, so each accumulator must be sampled exactly once per
+    /// frame: twice and the shake dies at double speed, never and it accumulates. Both are also
+    /// sampled while shake is switched off - at zero intensity - so pending trauma drains away
+    /// rather than being banked until someone turns it back on.
+    /// </para>
+    /// </summary>
+    /// <param name="fullScreen">Which accumulator to read.</param>
+    /// <returns>The displacement, zero while shake is off.</returns>
+    private Point FrameShakeOffset(bool fullScreen)
     {
-        if (_builtInTriggersAdded)
-            return;
+        int scope = fullScreen ? 1 : 0;
 
-        _builtInTriggersAdded = true;
+        if (_shakeTick[scope] == Time.Ticks)
+            return _shakeOffset[scope];
 
-        foreach (IEffectEventTrigger trigger in EffectTriggerRegistry.CreateEventTriggers())
-            RegisterTrigger(trigger);
+        _shakeTick[scope] = Time.Ticks;
+
+        DecorationSettings settings = DecorationSettings.Current;
+        float intensity = settings.ShakeActive ? MathHelper.Clamp(settings.Shake.Intensity, 0f, 1f) : 0f;
+
+        _shakeOffset[scope] = ScreenShake.For(fullScreen).GetOffset(Time.Delta, intensity);
+
+        return _shakeOffset[scope];
     }
 
     /// <summary>
-    /// Lets a trigger hook its own event source. Wrapped, because that is arbitrary code and one
-    /// trigger failing to attach must not stop the rest - or the world - from coming up.
+    /// Rebuilds <see cref="_watching"/> from the rules in force. A full teardown rather than a diff:
+    /// this runs on a person editing the rulebase, not per frame, and reconciling instance lifetimes
+    /// against changed parameters would be far more machinery than the case is worth.
     /// </summary>
-    /// <param name="trigger">The trigger to attach.</param>
-    private static void AttachTrigger(IEffectEventTrigger trigger)
+    private void SyncRules()
     {
+        AssertMainThread();
+
+        TearDownWatching();
+
+        OverlaySystemSettings overlays = DecorationSettings.Current.Overlays;
+
+        foreach (OverlayRule rule in overlays.ResolveRules())
+        {
+            WatchedRule? watched = Build(rule, overlays);
+
+            if (watched == null)
+                continue;
+
+            _watching[rule.Id] = watched;
+            _ordered.Add(watched);
+
+            if (_inWorld)
+                watched.Attach(ApplyFired, ApplyEnded);
+        }
+
+        SyncReconciler();
+    }
+
+    /// <summary>
+    /// Wires one rule up, or reports why it cannot be. A rule that names something this build does
+    /// not have is skipped rather than fatal: it may have been written by a newer client, or point
+    /// at a profile that has since been deleted.
+    /// </summary>
+    /// <param name="rule">The rule to wire.</param>
+    /// <param name="overlays">The settings supplying the profile pool.</param>
+    /// <returns>The live wiring, or null if the rule cannot run.</returns>
+    private static WatchedRule? Build(OverlayRule rule, OverlaySystemSettings overlays)
+    {
+        if (!rule.Enabled)
+            return null;
+
+        ITriggerDefinition? definition = TriggerCatalog.Instance.Find(rule.Trigger.DefinitionId);
+
+        if (definition == null)
+        {
+            Log.Warn($"Overlay rule '{rule.Name}' names an unknown trigger '{rule.Trigger.DefinitionId}' and will not run.");
+            return null;
+        }
+
+        EffectProfile? profile = overlays.FindProfile(rule.ProfileId);
+
+        if (profile == null)
+        {
+            Log.Warn($"Overlay rule '{rule.Name}' points at a profile that no longer exists and will not run.");
+            return null;
+        }
+
         try
         {
-            trigger.Register();
+            ITriggerInstance instance = definition.Create(rule.Trigger.Parameters ?? definition.CreateDefaultParameters());
+
+            return new WatchedRule(rule, profile, instance, definition.Kind);
         }
         catch (Exception e)
         {
-            Log.Error($"Overlay trigger {trigger.GetType().Name} failed to register: {e}");
+            Log.Error($"Overlay rule '{rule.Name}' could not build its trigger: {e}");
+            return null;
         }
     }
 
-    /// <summary>Unhooks a trigger's event source. Wrapped for the same reason as
-    /// <see cref="AttachTrigger" />, and more so: failing here leaks a subscription.</summary>
-    /// <param name="trigger">The trigger to detach.</param>
-    private static void DetachTrigger(IEffectEventTrigger trigger)
+    /// <summary>Detaches, unsubscribes and disposes every live trigger.</summary>
+    private void TearDownWatching()
     {
-        try
+        foreach (WatchedRule watched in _ordered)
         {
-            trigger.UnRegister();
+            watched.Detach();
+            watched.Dispose();
         }
-        catch (Exception e)
-        {
-            Log.Error($"Overlay trigger {trigger.GetType().Name} failed to unregister: {e}");
-        }
+
+        _watching.Clear();
+        _ordered.Clear();
     }
 
     /// <summary>
     /// Records an occurrence. Marshalled, because a trigger raises this from wherever its source
     /// lives and the rest of this class is main thread only.
     /// </summary>
-    private void OnTriggerActivated(object sender, EffectActivationArgs e)
-    {
-        if (sender is not IEffectEventTrigger trigger)
-            return;
+    private void ApplyFired(WatchedRule watched, TriggerSignal signal) =>
+        MainThreadQueue.InvokeOnMainThread(
+            () =>
+            {
+                AssertMainThread();
 
-        OverlayModulation modulation = e?.Modulation ?? OverlayModulation.Default;
+                // Re-synced away between the raise and this running, if it was marshalled.
+                if (!IsCurrent(watched))
+                    return;
 
-        MainThreadQueue.InvokeOnMainThread(() => ApplyActivation(trigger, modulation));
-    }
+                watched.Raise(signal);
+                _scheduler.Queue();
+            }
+        );
 
-    private void OnTriggerDeactivated(object sender, EventArgs e)
-    {
-        if (sender is not IEffectEventTrigger trigger)
-            return;
+    private void ApplyEnded(WatchedRule watched) =>
+        MainThreadQueue.InvokeOnMainThread(
+            () =>
+            {
+                AssertMainThread();
 
-        MainThreadQueue.InvokeOnMainThread(() => ApplyDeactivation(trigger));
-    }
+                if (!IsCurrent(watched))
+                    return;
 
-    /// <summary>
-    /// Raises a trigger's signal. Re-activating one already up restates its modulation and, for a
-    /// headless trigger, restarts the clock - a second quake landing inside the first extends it
-    /// rather than being swallowed.
-    /// </summary>
-    /// <param name="trigger">The trigger that fired.</param>
-    /// <param name="modulation">What it is asking for.</param>
-    private void ApplyActivation(IEffectEventTrigger trigger, OverlayModulation modulation)
-    {
-        AssertMainThread();
+                watched.ClearSignal();
+                _scheduler.Queue();
+            }
+        );
 
-        // Unregistered between the raise and this running, if it was marshalled.
-        if (!_eventTriggers.TryGetValue(trigger, out EventSignal signal))
-            return;
-
-        signal.Active = true;
-        signal.Modulation = modulation;
-        signal.ExpiresAt = trigger.HeadlessDuration is { } duration ? DateTime.UtcNow + duration : null;
-
-        QueuePass();
-    }
-
-    private void ApplyDeactivation(IEffectEventTrigger trigger)
-    {
-        AssertMainThread();
-
-        if (!_eventTriggers.TryGetValue(trigger, out EventSignal signal) || !signal.Active)
-            return;
-
-        signal.Clear();
-        QueuePass();
-    }
-
-    /// <summary>
-    /// Retires headless signals whose span has run out. They have no second event to end them, so
-    /// the pass that would otherwise only read state is what takes them down.
-    /// </summary>
-    private void ExpireHeadlessSignals()
-    {
-        DateTime now = DateTime.UtcNow;
-
-        foreach (EventSignal signal in _eventTriggers.Values)
-        {
-            // Null never compares true, which is what leaves stateful signals alone.
-            if (signal.Active && signal.ExpiresAt <= now)
-                signal.Clear();
-        }
-    }
+    private bool IsCurrent(WatchedRule watched) =>
+        _watching.TryGetValue(watched.Rule.Id, out WatchedRule? current) && ReferenceEquals(current, watched);
 
     /// <summary>
     /// Attaches to the switches that gate the system. Both objects are needed: property change
@@ -526,14 +474,25 @@ internal sealed class ScreenOverlayManager
     }
 
     /// <summary>
-    /// Not filtered by property name: the two that matter are on different objects, and the work
-    /// this does when nothing relevant changed is a bool comparison under a lock, at the rate a
-    /// person can move an options widget.
+    /// A changed pool means the wiring is stale; anything else only decides whether the work runs at
+    /// all. Not filtered more finely than that: the cost of reconciling when nothing relevant moved
+    /// is a bool comparison under a lock, at the rate a person can move an options widget.
     /// </summary>
-    private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e) => SyncReconciler();
+    private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(OverlaySystemSettings.Rules)
+            or nameof(OverlaySystemSettings.Profiles)
+            or nameof(OverlaySystemSettings.BuiltInRuleStates))
+        {
+            SyncRules();
+            return;
+        }
+
+        SyncReconciler();
+    }
 
     /// <summary>
-    /// Brings the reconcile loop in line with whether anything could need it. Starting fires a pass
+    /// Brings the background work in line with whether anything could need it. Starting fires a pass
     /// immediately rather than after the first interval, so an overlay the player already qualifies
     /// for does not wait to appear; stopping fades out whatever was showing, since nothing is left
     /// to take it down later.
@@ -544,296 +503,210 @@ internal sealed class ScreenOverlayManager
 
         bool wanted = _inWorld && DecorationSettings.Current.OverlaysActive;
 
-        CancellationTokenSource? started = null;
-        CancellationTokenSource? stopped = null;
+        _scheduler.SetRunning(wanted);
 
-        lock (_sync)
+        if (!wanted)
         {
-            if (wanted == (_cancellation != null))
-                return;
+            // A preview cannot outlive the passes: with nothing reconciling, there would be no path
+            // back from it.
+            _previewProfileId = null;
 
-            if (wanted)
-            {
-                started = _cancellation = new CancellationTokenSource();
-            }
-            else
-            {
-                stopped = _cancellation;
-                _cancellation = null;
-                _passPending = false;
-            }
-        }
+            foreach (Guid id in _showing.Keys)
+                ScreenOverlayCompositor.Instance.Hide(id);
 
-        if (started != null)
-        {
-            CancellationToken token = started.Token;
-
-            _ = Task.Run(() => ReconcilerLoop(token), token);
-            QueuePass();
+            _showing.Clear();
 
             return;
         }
 
-        stopped?.Cancel();
-        stopped?.Dispose();
-
-        // A preview cannot outlive the loop: with nothing reconciling, there would be no path back
-        // from it.
-        _preview = null;
-
-        foreach (OverlayId id in _showing.Keys)
-            ScreenOverlayCompositor.Instance.Hide(id);
-
-        _showing.Clear();
+        _scheduler.SetPollingNeeded(NeedsPolling());
+        _scheduler.Queue();
     }
 
-    private async Task ReconcilerLoop(CancellationToken token)
+    private bool NeedsPolling()
     {
-        try
+        foreach (WatchedRule watched in _ordered)
         {
-            using var timer = new PeriodicTimer(_reconcileInterval);
+            if (watched.Kind == TriggerKind.Poll)
+                return true;
+        }
 
-            while (await timer.WaitForNextTickAsync(token))
-                QueuePass();
-        }
-        catch (OperationCanceledException)
-        {
-            // Reset() during the wait. Nothing to unwind: it has already cleared the overlays.
-        }
-        catch (Exception e)
-        {
-            // The loop is the only thing driving overlays; dying silently would leave them frozen
-            // on whatever was last shown, with no clue as to why.
-            Log.Error($"Screen overlay reconcile loop stopped: {e}");
-        }
+        return false;
     }
 
     /// <summary>
-    /// Asks for a pass on the main thread. Drops the request when no loop is running, so callers
-    /// that fire on demand - <see cref="SetPreview"/> - cost nothing while the system is off.
-    /// </summary>
-    private void QueuePass()
-    {
-        lock (_sync)
-        {
-            if (_passPending || _cancellation == null)
-                return;
-
-            _passPending = true;
-        }
-
-        MainThreadQueue.EnqueueAction(RunPass);
-    }
-
-    /// <summary>
-    /// Main thread. Reads the player's state and brings the compositor in line with it.
+    /// Main thread. Reads what every rule is asserting and brings the compositor in line with it.
     /// </summary>
     private void RunPass()
     {
-        try
-        {
-            // A pass queued just before Reset() still runs; without this it would re-show what Reset
-            // just took down.
-            if (!IsRunning)
-                return;
+        ExpireLapsedSignals();
+        Resolve();
+        Reconcile();
 
-            DecorationSettings settings = DecorationSettings.Current;
-
-            // Nothing is wanted while the system is off. The loop is normally torn down before a
-            // pass can observe that, but reconciling it anyway is what keeps a missed transition
-            // from leaving an overlay stuck on screen.
-            bool systemActive = settings.OverlaysActive;
-            OverlayEffectSlot? preview = _preview;
-
-            ExpireHeadlessSignals();
-
-            // Every effect, not just the triggered ones: an effect nothing triggers still has to be
-            // reconciled, or a preview of it could never be taken down again.
-            foreach (OverlayEffectSlot effect in OverlaySystemSettings.AllEffects)
-            {
-                OverlayEffectGeneralSettings effectSettings = settings.Overlays.GetSettings(effect);
-                OverlayId id = SlotFor(effect);
-
-                OverlayDemand? demand = systemActive
-                    ? ResolveDemand(effect, effectSettings, effect == preview)
-                    : null;
-
-                bool shown = _showing.TryGetValue(id, out OverlayDemand current);
-
-                if (demand == null)
-                {
-                    if (shown)
-                        Stop(id);
-
-                    continue;
-                }
-
-                // Already running on the same terms. One effect owns one slot, so a second reason to
-                // show it has nothing left to do - but a changed one does, since the occurrence
-                // behind it may have grown.
-                if (shown && current == demand.Value)
-                    continue;
-
-                Start(effect, effectSettings, demand.Value, shown);
-            }
-        }
-        finally
-        {
-            lock (_sync)
-                _passPending = false;
-        }
+        _scheduler.ScheduleExpiry(NextExpiry());
     }
 
-    /// <summary>
-    /// What, if anything, is asking for <paramref name="effectSlot" /> right now.
-    /// <para>
-    /// A preview answers before any condition is read. It is deliberate, so the player's state is
-    /// irrelevant, and so is the effect's own toggle - previewing is how you decide whether to set
-    /// that toggle at all. It also fires no onset shake: it is being looked at, not reacted to.
-    /// </para>
-    /// <para>
-    /// Event triggers answer next, because their signals are already known where a poll has to reach
-    /// into the game. An occurrence outranks an ambient state for the same effect regardless of
-    /// priority - only one instance can be up, and the discrete thing that just happened is the one
-    /// worth showing.
-    /// </para>
-    /// <para>
-    /// Failing that, the first polling trigger that fires wins and the rest go unevaluated. A
-    /// further match could not change what is drawn, and the conditions reach into live game state,
-    /// which is worth not doing for no result.
-    /// </para>
-    /// </summary>
-    /// <param name="effectSlot">The effect to judge.</param>
-    /// <param name="settings">Its settings, for the enabled toggle.</param>
-    /// <param name="previewing">Whether this is the effect being previewed from the options.</param>
-    /// <returns>How it should composite, or null if nothing wants it.</returns>
-    private OverlayDemand? ResolveDemand(
-        OverlayEffectSlot effectSlot,
-        OverlayEffectGeneralSettings settings,
-        bool previewing
-    )
+    /// <summary>Retires occurrences whose declared span has run out.</summary>
+    private void ExpireLapsedSignals()
     {
-        if (previewing)
-            return new OverlayDemand(PREVIEW_PRIORITY, OverlayModulation.Default);
+        DateTime now = DateTime.UtcNow;
 
-        if (!settings.Enabled)
-            return null;
-
-        OverlayDemand? fromEvent = ResolveEventDemand(effectSlot);
-
-        if (fromEvent != null)
-            return fromEvent;
-
-        foreach (EffectPollingTrigger trigger in EffectTriggerRegistry.GetTriggersForEffect(effectSlot))
-        {
-            if (IsTriggerConditionMet(trigger))
-                return new OverlayDemand(trigger.Priority, new OverlayModulation { OnsetTrauma = trigger.OnsetTrauma });
-        }
-
-        return null;
+        foreach (WatchedRule watched in _ordered)
+            watched.ExpireIfLapsed(now);
     }
 
-    /// <summary>
-    /// The strongest live event signal for <paramref name="effectSlot" />. Highest priority wins where
-    /// several are up at once, since that is the one the compositor would favour anyway.
-    /// </summary>
-    /// <param name="effectSlot">The effect to look for.</param>
-    /// <returns>Its demand, or null if no registered trigger is asserting it.</returns>
-    private OverlayDemand? ResolveEventDemand(OverlayEffectSlot effectSlot)
+    /// <summary>When the soonest live occurrence lapses, or null if none will.</summary>
+    private DateTime? NextExpiry()
     {
-        OverlayDemand? best = null;
+        DateTime? earliest = null;
 
-        foreach ((IEffectEventTrigger trigger, EventSignal signal) in _eventTriggers)
+        foreach (WatchedRule watched in _ordered)
         {
-            if (!signal.Active || trigger.EffectSlot != effectSlot)
+            if (watched.ExpiresAt is not { } at)
                 continue;
 
-            if (best == null || trigger.Priority > best.Value.Priority)
-                best = new OverlayDemand(trigger.Priority, signal.Modulation);
+            if (earliest == null || at < earliest)
+                earliest = at;
         }
 
-        return best;
+        return earliest;
     }
 
     /// <summary>
-    /// Evaluates one trigger's condition. Conditions are arbitrary delegates reading live game
-    /// state; one throwing must not take down the pass and leave every other effect unreconciled.
+    /// Fills <see cref="_desired"/> with everything that should be composited right now.
+    /// <para>
+    /// First match wins, firewall-style: the table is walked top to bottom and the first firing rule
+    /// claims its effect, so every rule below it that raises the same look is skipped. Without that,
+    /// two rules on one profile would composite twice, and where the look decides something singular
+    /// - whether the shake moves the window or only the world - there would be no answer as to which
+    /// of them meant it.
+    /// </para>
+    /// <para>
+    /// Claimed per profile rather than per rule, because the profile is what "the same effect" means
+    /// here. Two rules raising genuinely different looks both draw, which is what composition is for.
+    /// </para>
     /// </summary>
-    /// <param name="pollingTrigger">The trigger to test.</param>
-    /// <returns>Whether it fires, false if it threw.</returns>
-    private static bool IsTriggerConditionMet(EffectPollingTrigger pollingTrigger)
+    private void Resolve()
     {
-        try
-        {
-            return pollingTrigger.Condition();
-        }
-        catch (Exception e)
-        {
-            Log.Warn($"Failed to evaluate overlay condition: {e}");
-            return false;
-        }
-    }
+        _desired.Clear();
+        _claimed.Clear();
 
-    /// <summary>
-    /// Hands one effect to the compositor and records the terms it is running on.
-    /// </summary>
-    /// <param name="effectSlot">The effect to show.</param>
-    /// <param name="settings">Its settings, supplying the profile and the drawing scope.</param>
-    /// <param name="demand">What is asking for it, and how.</param>
-    /// <param name="restating">Whether this is adjusting an overlay already on screen rather than
-    /// raising a new one.</param>
-    private void Start(
-        OverlayEffectSlot effectSlot,
-        OverlayEffectGeneralSettings settings,
-        OverlayDemand demand,
-        bool restating
-    )
-    {
-        ScreenOverlayPreset? preset = ResolvePreset(effectSlot, settings);
+        DecorationSettings settings = DecorationSettings.Current;
 
-        if (preset == null)
+        // Nothing is wanted while the system is off. The work is normally torn down before a pass
+        // can observe that, but reconciling anyway is what keeps a missed transition from leaving an
+        // overlay stuck on screen.
+        if (!settings.OverlaysActive)
             return;
 
-        OverlayId id = SlotFor(effectSlot);
-        OverlayScope scope = settings.FullScreen ? OverlayScope.FullScreen : OverlayScope.Viewport;
+        SelectFirstMatches(_ordered, _claimed, _desired);
 
-        ScreenOverlayCompositor.Instance.Show(id, preset, demand.Modulation, demand.Priority, scope);
-        _showing[id] = demand;
+        if (_previewProfileId is not { } previewId)
+            return;
 
-        // Only a genuine onset shakes. Restating a modulation is the same occurrence continuing, and
-        // re-hitting the player for it would turn a sustained effect into a rattle.
-        if (restating || demand.Modulation.OnsetTrauma <= 0f)
+        EffectProfile? preview = settings.Overlays.FindProfile(previewId);
+
+        if (preview != null)
+            _desired[_previewSlot] = new RuleDemand(_previewSlot, preview, PREVIEW_PRIORITY, TriggerSignal.Default);
+    }
+
+    /// <summary>
+    /// Walks the rules in table order and lets the first firing one claim each effect.
+    /// <para>
+    /// Internal and static so the precedence rule can be exercised on its own: it is the one part of
+    /// a pass that is a policy rather than plumbing.
+    /// </para>
+    /// </summary>
+    /// <param name="ordered">The rules in force, in table order.</param>
+    /// <param name="claimed">Scratch set of already-claimed profile ids; cleared by the caller.</param>
+    /// <param name="desired">Filled with the winning demand per effect, keyed by rule id.</param>
+    internal static void SelectFirstMatches(
+        List<WatchedRule> ordered,
+        HashSet<Guid> claimed,
+        Dictionary<Guid, RuleDemand> desired
+    )
+    {
+        foreach (WatchedRule watched in ordered)
+        {
+            // Checked before sampling, so a rule that lost the effect to one above it does not even
+            // reach into live game state to find out it was not needed.
+            if (claimed.Contains(watched.Profile.Id))
+                continue;
+
+            TriggerSignal? signal = watched.Sample();
+
+            if (signal == null)
+                continue;
+
+            claimed.Add(watched.Profile.Id);
+
+            desired[watched.Rule.Id] = new RuleDemand(
+                watched.Rule.Id,
+                watched.Profile,
+                watched.Rule.Priority,
+                signal.Value
+            );
+        }
+    }
+
+    /// <summary>Moves the compositor to <see cref="_desired"/>.</summary>
+    private void Reconcile()
+    {
+        _retiring.Clear();
+
+        foreach (Guid id in _showing.Keys)
+        {
+            if (!_desired.ContainsKey(id))
+                _retiring.Add(id);
+        }
+
+        foreach (Guid id in _retiring)
+        {
+            ScreenOverlayCompositor.Instance.Hide(id);
+            _showing.Remove(id);
+        }
+
+        foreach (RuleDemand demand in _desired.Values)
+        {
+            var state = new ShownState(demand.Priority, demand.Signal.Intensity);
+            bool shown = _showing.TryGetValue(demand.RuleId, out ShownState current);
+
+            // Already running on the same terms. A restated occurrence still has work to do, since
+            // the one behind it may have grown.
+            if (shown && current == state)
+                continue;
+
+            ScreenOverlayCompositor.Instance.Show(demand.RuleId, demand.Profile, demand.Signal.Intensity, demand.Priority);
+            _showing[demand.RuleId] = state;
+
+            if (!shown)
+                FireOnsetShake(demand);
+        }
+    }
+
+    /// <summary>
+    /// Hits the player with whatever shake the look includes, once, as it arrives. Restating an
+    /// occurrence is the same one continuing, and re-hitting for it would turn a sustained effect
+    /// into a rattle.
+    /// <para>
+    /// Fires for a preview too: a preview is a rehearsal of the whole look, and shake is part of
+    /// what a look is. It still only fires on onset, so toggling the preview shakes once.
+    /// </para>
+    /// </summary>
+    /// <param name="demand">The occurrence being raised.</param>
+    private static void FireOnsetShake(RuleDemand demand)
+    {
+        if (demand.Profile.Shake is not { } shake || shake.Trauma <= 0f)
             return;
 
         // Gated separately: someone who turned shake off still wants the tint.
-        if (DecorationSettings.Current.ShakeActive)
-            ScreenShake.Instance.Trauma(ShakeRequest.Decay(_onsetShakeDuration, demand.Modulation.OnsetTrauma));
-    }
+        if (!DecorationSettings.Current.ShakeActive)
+            return;
 
-    /// <summary>
-    /// The compositor slot an effect occupies. One per effect, so showing an effect twice replaces
-    /// rather than stacks.
-    /// </summary>
-    /// <param name="effectSlot">The effect to place.</param>
-    /// <returns>Its slot.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">The effect has no slot, which means one was
-    /// added to <see cref="OverlayEffectSlot" /> without a home here.</exception>
-    private static OverlayId SlotFor(OverlayEffectSlot effectSlot) =>
-        effectSlot switch
-        {
-            OverlayEffectSlot.Bleed => OverlayId.Bleed,
-            OverlayEffectSlot.Poison => OverlayId.Poison,
-            OverlayEffectSlot.MortalStrike => OverlayId.MortalStrike,
-            OverlayEffectSlot.Fog => OverlayId.Fog,
-            OverlayEffectSlot.Drunk => OverlayId.Drunk,
-            OverlayEffectSlot.Concussion => OverlayId.Concussion,
-            _ => throw new ArgumentOutOfRangeException(nameof(effectSlot), effectSlot, @"No overlay slot for this effect")
-        };
-
-    private void Stop(OverlayId id)
-    {
-        ScreenOverlayCompositor.Instance.Hide(id);
-        _showing.Remove(id);
+        // The look's own scope decides which rectangle moves, so one profile can rattle the world
+        // while another rattles the window. The envelope - ramps, gradient, rate - is the profile's
+        // too; nothing here reshapes it beyond scaling by how strong this occurrence is.
+        ScreenShake.For(demand.Profile.FullScreen).Trauma(shake.ToRequest(demand.Signal.Intensity));
     }
 
     /// <summary>
@@ -846,55 +719,14 @@ internal sealed class ScreenOverlayManager
     private static void AssertMainThread([CallerMemberName] string? caller = null) =>
         Debug.Assert(MainThreadQueue.IsMainThread, $"ScreenOverlayManager.{caller} must run on the main thread");
 
-    /// <summary>
-    /// The user's chosen profile if there is one, otherwise the stock look. Null for an effect that
-    /// has neither, which is how the ones without a built-in preset stay dormant until someone
-    /// authors a profile for them.
-    /// </summary>
-    private static ScreenOverlayPreset? ResolvePreset(OverlayEffectSlot effectSlot, OverlayEffectGeneralSettings settings)
-    {
-        OverlayEffectProfile? profile = settings.ResolveProfile();
-
-        if (profile != null)
-            return new CustomOverlayPreset(profile);
-
-        return BuiltInOverlayPresets.Create(effectSlot);
-    }
-
     #endregion
 
     /// <summary>
-    /// A settled call for one effect to be showing, with whatever the winning trigger - or the
-    /// preview - asks it to composite as. Null instead of this means nothing wants the effect.
-    /// <para>
-    /// Compared by value between passes, which is what tells a restated demand from an unchanged
-    /// one: a trigger asking for more than it was is a re-apply, everything else is a no-op.
-    /// </para>
+    /// The terms one slot is currently running on. Compared by value between passes, which is what
+    /// tells a restated occurrence from an unchanged one: a trigger asking for more than it was is a
+    /// re-apply, everything else is a no-op.
     /// </summary>
     /// <param name="Priority">Higher composites on top and survives the concurrency cap.</param>
-    /// <param name="Modulation">How far this occurrence departs from the effect's profile.</param>
-    private readonly record struct OverlayDemand(int Priority, OverlayModulation Modulation);
-
-    /// <summary>
-    /// The latest thing one registered event trigger said. Mutable and long-lived - a signal
-    /// outlives the events that change it - so a class rather than a struct in the dictionary.
-    /// </summary>
-    private sealed class EventSignal
-    {
-        /// <summary>Whether the occurrence is currently being asserted.</summary>
-        public bool Active;
-
-        /// <summary>What the most recent activation asked for.</summary>
-        public OverlayModulation Modulation = OverlayModulation.Default;
-
-        /// <summary>When a headless activation lapses, or null for a trigger that ends itself.</summary>
-        public DateTime? ExpiresAt;
-
-        /// <summary>Drops the signal, whichever shape it was.</summary>
-        public void Clear()
-        {
-            Active = false;
-            ExpiresAt = null;
-        }
-    }
+    /// <param name="Intensity">How strongly the occurrence behind it asked to be drawn.</param>
+    private readonly record struct ShownState(int Priority, float Intensity);
 }
