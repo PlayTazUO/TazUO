@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Fixes
+* Fixed a NullReferenceException when scrolling with the opacity hotkey after the current profile is unloaded - [P.R 910](https://github.com/PlayTazUO/TazUO/pull/910) ([bittiez](https://github.com/bittiez))
+
 ### Misc
 * When built in Debug there is now an asset load time on the login scene ([bittiez](https://github.com/bittiez))
 * Moved Cliloc load to load async, improving load times when starting the client - [P.R 899](https://github.com/PlayTazUO/TazUO/pull/899) ([bittiez](https://github.com/bittiez))
