@@ -47,6 +47,11 @@ public static class MovementTab
                     TazLang.Get("mog_movementtab_doors_autoopenhidden"),
                     new Accessor<bool>(() => profile.AutoOpenDoorsIfHidden),
                     search: new SearchMetadata(TazLang.Get("mog_movementtab_doors_autoopenhidden"), Keywords: [TazLang.Get("mog_kw_door"), TazLang.Get("mog_kw_hidden")])
+                ),
+                Option.Checkbox(
+                    TazLang.Get("mog_movementtab_doors_autoclosedoors"),
+                    new Accessor<bool>(() => ProfileManager.GlobalSettings.AutoCloseDoors),
+                    search: new SearchMetadata(TazLang.Get("mog_movementtab_doors_autoclosedoors"), Keywords: [TazLang.Get("mog_kw_door")])
                 )
             ).WithSearch(new SearchMetadata(TazLang.Get("mog_movementtab_label"), Tags: [TazLang.Get("mog_kw_movement")], Keywords: [TazLang.Get("mog_kw_door")])),
             Option.Checkbox(
