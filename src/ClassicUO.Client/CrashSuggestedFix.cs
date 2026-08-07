@@ -121,6 +121,11 @@ namespace ClassicUO
                     return pluginFix;
                 }
 
+                if (TryGetPluginPacketCrashFix(exception, out string pluginPacketFix))
+                {
+                    return pluginPacketFix;
+                }
+
                 if (TryGetMapLoaderCrashFix(exception, out string mapFix))
                 {
                     return mapFix;
@@ -353,6 +358,43 @@ namespace ClassicUO
             sb.AppendLine("   Many assistants load the UO art/map files themselves and will crash if that path is wrong or the files are missing.");
             sb.AppendLine("3. Verify the plugin supports your client version and this build of TazUO.");
             sb.AppendLine("4. If it keeps crashing, send this crash log to the plugin's author.");
+
+            fix = sb.ToString();
+            return true;
+        }
+
+        private static bool TryGetPluginPacketCrashFix(Exception e, out string fix)
+        {
+            fix = null;
+
+            // ToString() on the top-level exception includes the stack traces of any inner
+            // (and aggregated) exceptions, so we can inspect the whole chain in one string.
+            string details = e.ToString();
+
+            if (string.IsNullOrEmpty(details))
+                return false;
+
+            // A crash inside OnPluginRecv/OnPluginSend means a third-party plugin called the
+            // client's packet-injection API (for example an assistant's SendToClient) at
+            // runtime and handed it a buffer that was too small - typically because the packet
+            // grew larger than the buffer the plugin allocated for it. The destination-too-short
+            // ArgumentException is the classic symptom of this.
+            bool crashedInPluginPacketApi =
+                details.Contains("ClassicUO.Network.Plugin.OnPluginRecv") ||
+                details.Contains("ClassicUO.Network.Plugin.OnPluginSend");
+
+            if (!crashedInPluginPacketApi)
+                return false;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("A plugin crashed TazUO while injecting a network packet into the client.");
+            sb.AppendLine("The error above was thrown when a third-party plugin (for example an assistant such as Razor) used the client's packet-injection API and handed over a packet that did not fit its allocated buffer.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. Update the plugin (and any of its scripting add-ons) to the latest version - this crash is usually a plugin bug, not a TazUO bug.");
+            sb.AppendLine("2. Temporarily disable the plugin to confirm it is the cause.");
+            sb.AppendLine("3. Make sure the plugin is pointed at the same UO data directory TazUO uses and that its files are not corrupt or out of date.");
+            sb.AppendLine("4. If it keeps happening, report the crash log to the plugin's author, noting which script or feature was running when it occurred.");
 
             fix = sb.ToString();
             return true;
