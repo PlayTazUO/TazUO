@@ -800,6 +800,8 @@ namespace ClassicUO
                     break;
 
                 case SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED:
+                    // Ensure no modifier state from a focus switch lingers
+                    Keyboard.ClearModifiers();
                     if (_pluginsInitialized)
                         Plugin.OnFocusGained();
                     break;
@@ -807,6 +809,7 @@ namespace ClassicUO
                 case SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST:
                     // Drop tracked key state so a key held while we lose focus doesn't stick "pressed"
                     // for polled hotkeys (the key-up may never reach us).
+                    Keyboard.ClearModifiers();
                     ClassicUO.Game.Managers.Hotkeys.HotKeys.ClearHeldKeys();
                     if (_pluginsInitialized)
                         Plugin.OnFocusLost();
