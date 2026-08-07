@@ -1,7 +1,9 @@
+using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
+using ClassicUO.Network;
 using ClassicUO.Renderer;
 
 namespace ClassicUO.Network.PacketHandlers;
@@ -19,15 +21,43 @@ internal static class DyeData
         int x = (Client.Game.Window.ClientBounds.Width >> 1) - (gumpInfo.UV.Width >> 1);
         int y = (Client.Game.Window.ClientBounds.Height >> 1) - (gumpInfo.UV.Height >> 1);
 
-        ColorPickerGump gump = UIManager.GetGump<ColorPickerGump>(serial);
-
-        if (gump == null || gump.IsDisposed || gump.Graphic != graphic)
+        if (ProfileManager.GlobalSettings.UseModernColorPicker)
         {
-            gump?.Dispose();
+            UIManager.GetGump<ModernColorPicker>(serial)?.Dispose();
 
-            gump = new ColorPickerGump(world, serial, graphic, x, y, null);
+            UIManager.Add(new ModernColorPicker(
+                world,
+                hue =>
+                {
+                    AsyncNetClient.Socket.Send_DyeDataResponse(serial, graphic, hue);
+                    UIManager.GetGump<ModernColorPicker>(serial)?.Dispose();
+                },
+                serial,
+                false,
+                GetDefaultDyeHues()
+            ));
+        } 
+        else 
+        {
+            ColorPickerGump gump = UIManager.GetGump<ColorPickerGump>(serial);
 
-            UIManager.Add(gump);
+            if (gump == null || gump.IsDisposed || gump.Graphic != graphic)
+            {
+                gump?.Dispose();
+
+                gump = new ColorPickerGump(world, serial, graphic, x, y, null);
+
+                UIManager.Add(gump);
+            }
         }
+    }
+
+    // Mirrors the default palette of ColorPickerBox (rows=10, columns=20) at graduation 1
+    private static ushort[] GetDefaultDyeHues()
+    {
+        ushort[] hues = new ushort[200];
+        for (int i = 0; i < hues.Length; i++)
+            hues[i] = (ushort)(3 + i * 5);
+        return hues;
     }
 }
