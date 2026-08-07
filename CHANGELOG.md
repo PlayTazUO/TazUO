@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Added an option to use the modern color picker for things like dye tubs - [P.R 920](https://github.com/PlayTazUO/TazUO/pull/920) ([bittiez](https://github.com/bittiez))
 * Added option to allow auto open door system to also close doors - [P.R 919](https://github.com/PlayTazUO/TazUO/pull/919) ([bittiez](https://github.com/bittiez))
 
 ### Legion
