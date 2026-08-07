@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Features
+* Added option to allow auto open door system to also close doors - [P.R 919](https://github.com/PlayTazUO/TazUO/pull/919) ([bittiez](https://github.com/bittiez))
+
 ### Legion
 * Added optional font size to ApiUiTtfTextInputField control - [P.R 912](https://github.com/PlayTazUO/TazUO/pull/912) ([bittiez](https://github.com/bittiez))
 
