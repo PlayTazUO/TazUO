@@ -133,6 +133,11 @@ namespace ClassicUO.Network
                     }
                 }
 
+                // Persist the previously loaded settings while the old server scope is still active,
+                // so switching servers doesn't discard unsaved changes to the previous server/account.
+                ProfileManager.SaveServerSettings();
+                ProfileManager.SaveAccountSettings();
+
                 World.Instance.ServerName = serverName;
                 LastServerNum = (ushort)(1 + ServerIndex);
                 LastServerName = Servers[ServerIndex].Name;
