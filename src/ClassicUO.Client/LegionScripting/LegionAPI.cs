@@ -4112,8 +4112,8 @@ namespace ClassicUO.LegionScripting
         /// <summary>
         /// Use API.Gumps.CreateGumpTextBox instead.
         /// </summary>
-        public ApiUiTtfTextInputField CreateGumpTextBox(string text = "", int width = 200, int height = 30, bool multiline = false)
-            => Gumps.CreateGumpTextBox(text, width, height, multiline);
+        public ApiUiTtfTextInputField CreateGumpTextBox(string text = "", int width = 200, int height = 30, bool multiline = false, float fontSize = 20)
+            => Gumps.CreateGumpTextBox(text, width, height, multiline, fontSize);
         /// <summary>
         /// Use API.Gumps.CreateGumpTTFLabel instead.
         /// </summary>

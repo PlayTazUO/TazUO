@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Legion
+* Added optional font size to ApiUiTtfTextInputField control - [P.R 912](https://github.com/PlayTazUO/TazUO/pull/912) ([bittiez](https://github.com/bittiez))
+
 ### Fixes
 * Fixed a crash (`NoAudioHardwareException`) when the audio device becomes unavailable while sounds are still held by the client; sound instances are now disposed deterministically instead of being left to the garbage collector, so the audio finalizer can no longer crash the client - [P.R 916](https://github.com/PlayTazUO/TazUO/pull/916) ([bittiez](https://github.com/bittiez))
 * Fixed the Alt/Shift/Ctrl modifier state getting stuck after Alt+Tab, since the key-up event is never delivered when the window loses focus; modifiers are now cleared on focus loss/gain ([bittiez](https://github.com/bittiez))
