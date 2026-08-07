@@ -15,6 +15,7 @@ namespace ClassicUO.Game.UI.Gumps
         private const int SLIDER_MAX = 4;
         private readonly ColorPickerBox _box;
         private readonly StaticPic _dyeTybeImage;
+        private readonly Label _hueLabel;
 
         private readonly ushort _graphic;
         private readonly Action<ushort> _okClicked;
@@ -65,13 +66,25 @@ namespace ClassicUO.Game.UI.Gumps
 
             slider.ValueChanged += (sender, e) => { _box.Graduation = slider.Value; };
             Add(_box = new ColorPickerBox(World, 34, 34));
-            _box.ColorSelectedIndex += (sender, e) => { _dyeTybeImage.Hue = _box.SelectedHue; };
+            _box.ColorSelectedIndex += (sender, e) =>
+            {
+                _dyeTybeImage.Hue = _box.SelectedHue;
+                _hueLabel.Text = $"0x{_box.SelectedHue:X4}";
+            };
 
             Add
             (
                 _dyeTybeImage = new StaticPic(0x0FAB, 0)
                 {
                     X = 200, Y = 78
+                }
+            );
+
+            Add
+            (
+                _hueLabel = new Label($"0x{_box.SelectedHue:X4}", true, 0xffff, style: FontStyle.BlackBorder)
+                {
+                    X = 196, Y = 100, AcceptMouseInput = false
                 }
             );
 
