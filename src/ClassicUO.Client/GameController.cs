@@ -271,6 +271,8 @@ namespace ClassicUO
             );
 
             Audio?.StopMusic();
+            Audio?.StopSounds();
+            Audio?.StopAmbientSound();
             VoiceRecognitionManager.Instance.Dispose();
             Settings.GlobalSettings.Save();
 

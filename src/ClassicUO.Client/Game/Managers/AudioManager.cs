@@ -499,7 +499,7 @@ namespace ClassicUO.Game.Managers
             if (_currentAmbient != null)
             {
                 _currentAmbient.IsLooping = false;
-                _currentAmbient.Stop();
+                _currentAmbient.Dispose();
                 _currentAmbient = null;
             }
 
@@ -518,7 +518,7 @@ namespace ClassicUO.Game.Managers
             {
                 LinkedListNode<UOSound> next = first.Next;
 
-                first.Value.Stop();
+                first.Value.Dispose();
 
                 _currentSounds.Remove(first);
 
@@ -590,7 +590,7 @@ namespace ClassicUO.Game.Managers
 
                 if (!first.Value.IsPlaying(Time.Ticks))
                 {
-                    first.Value.Stop();
+                    first.Value.Dispose();
                     _currentSounds.Remove(first);
                 }
 
