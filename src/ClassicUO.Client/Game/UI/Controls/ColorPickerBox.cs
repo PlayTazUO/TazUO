@@ -189,6 +189,14 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
+        public override void OnMouseOver(int x, int y)
+        {
+            base.OnMouseOver(x, y);
+
+            if (Mouse.LButtonPressed)
+                SetSelectedIndex(x, y);
+        }
+
         private void SetSelectedIndex(int x, int y)
         {
             int row = x / (Width / _columns);

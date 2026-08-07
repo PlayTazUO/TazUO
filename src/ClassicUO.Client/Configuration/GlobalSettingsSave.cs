@@ -19,5 +19,10 @@ namespace ClassicUO.Configuration
         /// player walks past are toggled (opened or closed) instead of only opened.
         /// </summary>
         public bool AutoCloseDoors { get; set; }
+
+        /// <summary>
+        /// When true, use the modern color picker gump for selecting hues.
+        /// </summary>
+        public bool UseModernColorPicker { get; set; }
     }
 }
