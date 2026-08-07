@@ -202,6 +202,10 @@ namespace ClassicUO.Game.UI.Gumps
             (new CheckboxWithLabel(TazLang.Get("auto_open_doors_hidden"), isChecked: profile.AutoOpenDoorsIfHidden, valueChanged: (b) => { profile.AutoOpenDoorsIfHidden = b; }),
                 true, page);
 
+            content.AddToRight
+            (new CheckboxWithLabel(TazLang.Get("mog_general_autoclosedoors"), isChecked: ProfileManager.GlobalSettings.AutoCloseDoors, valueChanged: (b) => { ProfileManager.GlobalSettings.AutoCloseDoors = b; }),
+                true, page);
+
             content.RemoveIndent();
 
             content.BlankLine();

@@ -13,5 +13,11 @@ namespace ClassicUO.Configuration
         protected override string FileName => "global_settings.json";
 
         protected override JsonTypeInfo<GlobalSettingsSave> TypeInfo => ScopedSettingsJsonContext.DefaultToUse.GlobalSettingsSave;
+
+        /// <summary>
+        /// When true, auto-open uses doors regardless of their open/closed state, so doors the
+        /// player walks past are toggled (opened or closed) instead of only opened.
+        /// </summary>
+        public bool AutoCloseDoors { get; set; }
     }
 }
