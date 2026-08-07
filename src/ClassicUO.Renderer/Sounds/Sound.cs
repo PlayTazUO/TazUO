@@ -63,5 +63,20 @@ namespace ClassicUO.Renderer.Sounds
 
             return null;
         }
+
+        public void DisposeAll()
+        {
+            for (int i = 0; i < _sounds.Length; i++)
+            {
+                _sounds[i]?.Dispose();
+                _sounds[i] = null;
+            }
+
+            for (int i = 0; i < _musics.Length; i++)
+            {
+                _musics[i]?.Dispose();
+                _musics[i] = null;
+            }
+        }
     }
 }

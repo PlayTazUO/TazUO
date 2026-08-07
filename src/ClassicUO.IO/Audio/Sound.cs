@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework.Audio;
 using System;
 using static System.String;
@@ -99,12 +100,29 @@ namespace ClassicUO.IO.Audio
 
                 if (!SoundInstance.IsDisposed)
                 {
-                    SoundInstance.Stop();
-                    SoundInstance.Dispose();
+                    try
+                    {
+                        SoundInstance.Stop();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warn($"Failed to stop sound instance for '{Name}': {ex.Message}");
+                    }
+
+                    try
+                    {
+                        SoundInstance.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warn($"Failed to dispose sound instance for '{Name}': {ex.Message}");
+                    }
                 }
 
                 SoundInstance = null;
             }
+
+            AfterStop();
         }
 
         protected DynamicSoundEffectInstance SoundInstance;

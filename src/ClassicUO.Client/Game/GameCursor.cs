@@ -364,9 +364,7 @@ namespace ClassicUO.Game
                             break;
                     }
 
-                    float scale = Client.Game.RenderScale;
-
-                    _aura.Draw(sb, (int)(Mouse.Position.X * scale), (int)(Mouse.Position.Y * scale), hue, 0f);
+                    _aura.Draw(sb, Mouse.Position.X, Mouse.Position.Y, hue, 0f);
                 }
 
                 if (ProfileManager.CurrentProfile.ShowTargetRangeIndicator)
