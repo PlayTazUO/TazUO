@@ -8,6 +8,12 @@ public class ApiUiTtfTextInputField(TTFTextInputField textInputField) : ApiUiBas
 {
     public string Text => GetProp(() => textInputField.Text, string.Empty);
 
+    public float FontSize
+    {
+        get => GetProp(() => textInputField.FontSize);
+        set => SetProp(() => textInputField.SetFontSize(value));
+    }
+
     public int CaretIndex => GetProp(() => textInputField.CaretIndex);
 
     public bool NumbersOnly
