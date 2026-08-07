@@ -117,6 +117,9 @@ namespace ClassicUO
             MainThreadQueue.Load();
 
             PreloadSettings();
+
+            // Machine-wide JSON settings; loaded once at startup and persisted on exit.
+            ProfileManager.LoadGlobalSettings();
             if (GraphicManager.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
             {
                 GraphicManager.GraphicsProfile = GraphicsProfile.HiDef;
@@ -275,6 +278,7 @@ namespace ClassicUO
             Audio?.StopAmbientSound();
             VoiceRecognitionManager.Instance.Dispose();
             Settings.GlobalSettings.Save();
+            ProfileManager.SaveGlobalSettings();
 
             if (_pluginsInitialized)
                 Plugin.OnClosing();

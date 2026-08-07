@@ -137,6 +137,11 @@ namespace ClassicUO.Network
                 LastServerNum = (ushort)(1 + ServerIndex);
                 LastServerName = Servers[ServerIndex].Name;
 
+                // Server folder is known now, and the account folder nests under it, so both
+                // scoped settings can be resolved and loaded at this point.
+                ProfileManager.LoadServerSettings();
+                ProfileManager.LoadAccountSettings();
+
                 SetLoginStep(LoginSteps.LoginInToServer);
 
                 AsyncNetClient.Socket.Send_SelectServer(index);
@@ -347,6 +352,14 @@ namespace ClassicUO.Network
             Log.TraceDebug($"[HandShake] Set login step to {step}.");
             CurrentLoginStep = step;
             LoginStepChanged?.Invoke(this, step);
+
+            // Returning to Main means we've left the account/server context (e.g. stepping back
+            // from server or character selection), so persist those scoped settings.
+            if (step == LoginSteps.Main)
+            {
+                ProfileManager.SaveServerSettings();
+                ProfileManager.SaveAccountSettings();
+            }
         }
 
         /// <summary>
