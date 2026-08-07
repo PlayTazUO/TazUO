@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Fixes
+* Fixed target aura not in the correct spot when game scaled - [P.R 911](https://github.com/PlayTazUO/TazUO/pull/911) ([bittiez](https://github.com/bittiez))
 * Fixed a NullReferenceException when scrolling with the opacity hotkey after the current profile is unloaded - [P.R 910](https://github.com/PlayTazUO/TazUO/pull/910) ([bittiez](https://github.com/bittiez))
 
 ### Misc
