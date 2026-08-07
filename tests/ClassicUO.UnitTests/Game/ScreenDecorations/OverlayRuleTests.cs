@@ -228,5 +228,55 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
                 definition.Create(parameters).Should().NotBeNull();
             }
         }
+
+        /// <summary>
+        /// An id is the rule's identity, so two entries carrying the same one are one rule stored
+        /// twice. Configs written while the rulebase announced a creation twice carry exactly that,
+        /// and would otherwise show the rule again on every restart.
+        /// </summary>
+        [Fact]
+        public void ARuleStoredTwiceResolvesOnce()
+        {
+            var config = new DecorationSettings();
+            OverlayRule rule = UserRule("Doubled", 5);
+
+            config.Overlays.Rules.Add(rule);
+            config.Overlays.Rules.Add(rule);
+
+            config.Overlays.ResolveRules().Count(entry => entry.Id == rule.Id).Should().Be(1);
+        }
+
+        /// <summary>Resolving has to clear the duplicate out of the stored list too, or the next save
+        /// writes it straight back.</summary>
+        [Fact]
+        public void ResolvingClearsStoredDuplicates()
+        {
+            var config = new DecorationSettings();
+            OverlayRule kept = UserRule("Kept", 0);
+
+            config.Overlays.Rules.Add(kept);
+            config.Overlays.Rules.Add(kept);
+            config.Overlays.Rules.Add(UserRule("Other", 1));
+
+            config.Overlays.ResolveRules();
+
+            config.Overlays.Rules.Should().HaveCount(2);
+            config.Overlays.Rules.Select(rule => rule.Id).Should().OnlyHaveUniqueItems();
+        }
+
+        /// <summary>Two rules that merely look alike are still two rules; only a shared id makes them
+        /// one.</summary>
+        [Fact]
+        public void RulesThatOnlyLookAlikeBothSurvive()
+        {
+            var config = new DecorationSettings();
+
+            config.Overlays.Rules.Add(UserRule("Same name", 0));
+            config.Overlays.Rules.Add(UserRule("Same name", 1));
+
+            config.Overlays.ResolveRules();
+
+            config.Overlays.Rules.Should().HaveCount(2);
+        }
     }
 }

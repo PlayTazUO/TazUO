@@ -500,11 +500,16 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     {
         IsInEditor = false;
 
+        // AddRule raises RuleCrud itself, once the rule has its final position. Forwarding as well
+        // would hand every consumer the same creation twice - which a consumer that appends the rule
+        // to a stored list has no way to tell from two separate ones.
         if (args.Event == RuleCrudEventType.Create)
+        {
             AddRule(args.Rule);
-        else
-            RefreshTable();
+            return;
+        }
 
+        RefreshTable();
         RuleCrud?.Invoke(this, args);
     }
 

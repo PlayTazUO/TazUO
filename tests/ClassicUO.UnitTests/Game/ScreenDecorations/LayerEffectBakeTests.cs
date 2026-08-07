@@ -149,6 +149,7 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
                 new object[] { BuiltInProfiles.Ids.Poison, new PoisonOverlay() },
                 new object[] { BuiltInProfiles.Ids.Bleed, new BleedOverlay() },
                 new object[] { BuiltInProfiles.Ids.Fog, new FogOverlay() },
+                new object[] { BuiltInProfiles.Ids.Overcast, new OvercastOverlay() },
                 new object[] { BuiltInProfiles.Ids.Drunk, new DrunkOverlay() },
                 new object[] { BuiltInProfiles.Ids.Concussion, new ConcussionOverlay() },
                 new object[] { BuiltInProfiles.Ids.TunnelVision, new TunnelVisionOverlay() },

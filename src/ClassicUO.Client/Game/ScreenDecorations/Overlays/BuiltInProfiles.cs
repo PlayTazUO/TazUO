@@ -38,6 +38,7 @@ public static class BuiltInProfiles
         public static readonly Guid Bleed = new("0e778268-d89d-4538-80c6-621ca768a4b2");
         public static readonly Guid Poison = new("1c419034-7c0f-4e65-a3af-81f27a1e0efa");
         public static readonly Guid Fog = new("7195989d-5c02-47b8-bcd9-b91aaaafaa99");
+        public static readonly Guid Overcast = new("7a15dbd7-4e13-4fc6-a776-808254ef7224");
         public static readonly Guid Drunk = new("271f1b8f-13b1-4a4a-acc4-a9784852398b");
         public static readonly Guid Concussion = new("b7b6a46c-9899-4d6f-8493-cd22d695c0fb");
         public static readonly Guid TunnelVision = new("b006e04f-3087-4ac7-bdbb-0c903d35792d");
@@ -103,6 +104,7 @@ public static class BuiltInProfiles
         FromPreset(Ids.Poison, BuiltInName(TazLang.Get("visualeffects_poison", "Poison")), new PoisonOverlay(), Shake(POISON_TRAUMA)),
         FromPreset(Ids.Bleed, BuiltInName(TazLang.Get("visualeffects_bleed", "Bleed")), new BleedOverlay()),
         FromPreset(Ids.Fog, BuiltInName(TazLang.Get("visualeffects_fog", "Fog")), new FogOverlay()),
+        FromPreset(Ids.Overcast, BuiltInName(TazLang.Get("visualeffects_overcast", "Overcast")), new OvercastOverlay()),
         FromPreset(Ids.Drunk, BuiltInName(TazLang.Get("visualeffects_drunk", "Drunk")), new DrunkOverlay()),
         FromPreset(Ids.Concussion, BuiltInName(TazLang.Get("visualeffects_concussion", "Concussion")), new ConcussionOverlay()),
         FromPreset(Ids.TunnelVision, BuiltInName(TazLang.Get("visualeffects_tunnelvision", "Tunnel vision")), new TunnelVisionOverlay()),

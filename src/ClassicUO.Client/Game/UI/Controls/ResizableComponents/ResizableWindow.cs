@@ -484,16 +484,26 @@ public class ResizableWindow : Window, IDisposable
         if (_resetSizeButton != null)
             return;
 
-        var label = new MyraLabel(StyleConstantsDefaults.RESET_LABEL_ICON_TEXT, 24)
+        // Padding, margins and nudge all come from the shared constants rather than being chosen
+        // here, so this lands on the same pixel as the property grid's reset button - it is the same
+        // glyph at the same size in the same sized button, and the two sitting differently is
+        // exactly the kind of drift a hand-built icon button produces.
+        var label = new MyraLabel(StyleConstantsDefaults.RESET_LABEL_ICON_TEXT, StyleConstantsDefaults.RESET_ICON_FONT_SIZE)
         {
-            Font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 24),
+            Font = TrueTypeLoader.Instance.GetFont(
+                EmbeddedFontNames.NOTO_SANS_2_SYMBOLS,
+                StyleConstantsDefaults.RESET_ICON_FONT_SIZE
+            ),
             Wrap = false,
             SingleLine = true,
             TextAlign = TextHorizontalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE
+            Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
+            Padding = new Thickness(0),
+            Margin = new Thickness(0),
+            Top = StyleConstantsDefaults.RESET_ICON_TOP_OFFSET
         };
 
         _resetSizeButton = new Myra.Graphics2D.UI.Button
@@ -502,7 +512,9 @@ public class ResizableWindow : Window, IDisposable
             Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
             Tooltip = TazLang.Get("uicommons_resetwindowsize_tooltip"),
             Content = label,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(0),
+            Margin = new Thickness(0)
         };
 
         _resetSizeButton.TouchDown += OnResetSizeButtonClick;

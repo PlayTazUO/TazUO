@@ -90,6 +90,8 @@ public class OverlaySystemSettings : ObservableSettings
     /// <returns>Fresh rule objects for the shipped ones; the stored instances for the rest.</returns>
     public List<OverlayRule> ResolveRules()
     {
+        PruneDuplicateRules();
+
         var resolved = new List<OverlayRule>();
 
         foreach (OverlayRule rule in BuiltInRules.Create())
@@ -158,6 +160,23 @@ public class OverlaySystemSettings : ObservableSettings
     #endregion
 
     #region Private methods
+
+    /// <summary>
+    /// Drops any rule sharing an id with an earlier one, keeping the first.
+    /// <para>
+    /// An id is the rule's identity - it is what an override and the manager's own bookkeeping key
+    /// off - so two entries carrying the same one are one rule stored twice, never two rules. Only
+    /// a hand-edited file should be able to produce that; configs written before the rulebase
+    /// stopped announcing a creation twice also carry them, and this is what clears them out.
+    /// </para>
+    /// </summary>
+    private void PruneDuplicateRules()
+    {
+        var seen = new HashSet<Guid>(Rules.Count);
+
+        if (Rules.RemoveAll(rule => !seen.Add(rule.Id)) > 0)
+            OnPropertyChanged(nameof(Rules));
+    }
 
     private static bool NameMatches(EffectProfile profile, string name) =>
         string.Equals(profile.Name, name, StringComparison.OrdinalIgnoreCase);

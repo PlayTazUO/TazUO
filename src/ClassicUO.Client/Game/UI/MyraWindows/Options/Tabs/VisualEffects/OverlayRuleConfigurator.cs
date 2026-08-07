@@ -8,6 +8,7 @@ using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Game.ScreenDecorations.Triggers;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Myra.Graphics2D.UI;
 using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
 
@@ -144,12 +145,9 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
 
     private Widget TriggerCombo(List<ITriggerDefinition> definitions, ITriggerDefinition? selected)
     {
-        string[] names = [.. definitions.Select(entry => entry.DisplayName)];
-
-        Widget combo = OptionTabCommons.CreateOptionsComboBox(
-            TazLang.Get("visualeffects_ruletrigger", "Trigger"),
-            selected?.DisplayName ?? string.Empty,
-            names,
+        ContainsLevenshteinComboBox combo = SearchableCombo(
+            selected?.DisplayName,
+            definitions.Select(entry => entry.DisplayName),
             chosen =>
             {
                 ITriggerDefinition? definition = definitions.FirstOrDefault(entry => entry.DisplayName == chosen);
@@ -164,19 +162,16 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
             }
         );
 
-        combo.Width = INPUT_WIDTH;
-
-        return combo;
+        return Labelled(TazLang.Get("visualeffects_ruletrigger", "Trigger"), combo);
     }
 
     private Widget ProfileCombo(List<EffectProfile> profiles)
     {
         EffectProfile? selected = profiles.FirstOrDefault(profile => profile.Id == _draft.ProfileId);
 
-        Widget combo = OptionTabCommons.CreateOptionsComboBox(
-            TazLang.Get("visualeffects_ruleeffect", "Effect"),
-            selected?.Name ?? string.Empty,
-            [.. profiles.Select(profile => profile.Name)],
+        ContainsLevenshteinComboBox combo = SearchableCombo(
+            selected?.Name,
+            profiles.Select(profile => profile.Name),
             chosen =>
             {
                 EffectProfile? profile = profiles.FirstOrDefault(entry => entry.Name == chosen);
@@ -186,7 +181,44 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
             }
         );
 
-        combo.Width = INPUT_WIDTH;
+        return Labelled(TazLang.Get("visualeffects_ruleeffect", "Effect"), combo);
+    }
+
+    /// <summary>
+    /// A type-to-filter combo, matching the profile library's. The effect list grows with every look
+    /// the user authors and the trigger list with every definition shipped, so both are the kind of
+    /// list that stops being scrollable long before it stops being useful.
+    /// </summary>
+    /// <param name="selected">The name to show, or null where nothing resolves.</param>
+    /// <param name="items">The names to offer.</param>
+    /// <param name="onChosen">Called with the chosen name.</param>
+    /// <returns>The combo.</returns>
+    private static ContainsLevenshteinComboBox SearchableCombo(
+        string? selected,
+        IEnumerable<string> items,
+        Action<string> onChosen
+    )
+    {
+        // addSelectedItemIfMissing is off: everything offered comes from the live catalogue or
+        // library, so a name that is not in it points at something deleted and must not be
+        // re-presented as a valid choice.
+        var combo = new ContainsLevenshteinComboBox(
+            selected ?? string.Empty,
+            items,
+            chosen =>
+            {
+                if (chosen != null)
+                    onChosen(chosen);
+            },
+            addSelectedItemIfMissing: false
+        )
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            TooltipSelector = name => name,
+            Width = INPUT_WIDTH
+        };
+
+        MyraStyle.ApplySearchComboBoxPopupBorder(combo);
 
         return combo;
     }

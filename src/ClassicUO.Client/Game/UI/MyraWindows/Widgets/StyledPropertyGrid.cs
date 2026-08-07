@@ -1,7 +1,9 @@
 #nullable enable
 
 using System;
+using ClassicUO.Assets;
 using ClassicUO.Configuration;
+using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.Properties;
@@ -32,7 +34,7 @@ internal sealed class StyledPropertyGrid : PropertyGrid
     /// <summary>Extra gap between an editor and its reset button, on top of the row's own spacing.</summary>
     private const int RESET_BUTTON_GAP = 2;
 
-    private static readonly int _glyphFontSize = MyraLabel.SymbolFontSize;
+    private const int GLYPH_FONT_SIZE = StyleConstantsDefaults.RESET_ICON_FONT_SIZE;
 
     private readonly Func<object?>? _pristine;
 
@@ -70,32 +72,33 @@ internal sealed class StyledPropertyGrid : PropertyGrid
     /// <summary>
     /// The grid's own reset button is drawn from the skin's tree glyphs. Supplied from here instead,
     /// out of the symbol font the rest of the UI uses.
+    /// <para>
+    /// Built through the shared icon-button factory rather than assembled here, so it carries the
+    /// same zeroed padding and margins as every other glyph button. <see cref="MyraLabel.Symbol"/>
+    /// is the wrong tool for this: its nudge exists to seat a glyph on a line of text, and inside a
+    /// fixed-size button - where the label is explicitly sized and centred - it only pushes the icon
+    /// low.
+    /// </para>
     /// </summary>
     private static Widget CreateResetButton(Record record, Action reset)
     {
-        MyraLabel glyph = MyraLabel.Symbol(StyleConstantsDefaults.RESET_LABEL_ICON_TEXT, _glyphFontSize);
+        BasicButton button = OptionTabCommons.StyledTextIconButton(
+            StyleConstantsDefaults.RESET_LABEL_ICON_TEXT,
+            TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, GLYPH_FONT_SIZE),
+            reset,
+            TazLang.Get("visualeffects_resettodefault", "Reset to default"),
+            GLYPH_BUTTON_SIZE,
+            GLYPH_BUTTON_SIZE,
+            StyleConstantsDefaults.RESET_ICON_TOP_OFFSET
+        );
 
-        // Sized to fill its button, whose own padding is what keeps the glyph centred.
-        glyph.Width = GLYPH_BUTTON_SIZE;
-        glyph.Height = GLYPH_BUTTON_SIZE;
-
-        var button = new Button
-        {
-            Width = GLYPH_BUTTON_SIZE,
-            Height = GLYPH_BUTTON_SIZE,
-            Tooltip = TazLang.Get("visualeffects_resettodefault", "Reset to default"),
-            Content = glyph,
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(RESET_BUTTON_GAP, 0, 0, 0)
-        };
-
-        button.Click += (_, _) => reset();
+        button.Margin = new Thickness(RESET_BUTTON_GAP, 0, 0, 0);
 
         return button;
     }
 
     private static Widget CreateExpanderMark(bool expanded) =>
-        MyraLabel.Symbol(expanded ? "⮟" : "⮞", _glyphFontSize);
+        MyraLabel.Symbol(expanded ? "⮟" : "⮞", GLYPH_FONT_SIZE);
 
     /// <summary>
     /// Walks the pristine instance down the same path the grid is showing.

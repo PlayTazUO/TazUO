@@ -31,6 +31,18 @@ public static class StyleConstantsDefaults
     /// </summary>
     public const string RESET_LABEL_ICON_TEXT = "⭯";
 
+    /// <summary>
+    /// Point size the reset glyph is drawn at inside a <see cref="TOOLBAR_BUTTON_SIZE"/> button.
+    /// </summary>
+    public const int RESET_ICON_FONT_SIZE = 24;
+
+    /// <summary>
+    /// Vertical nudge for the reset glyph within its button. At this size the symbol font's line box
+    /// is a little taller than the button, so the glyph sits low without it; every glyph needs its
+    /// own value, since their baselines are not consistent with one another.
+    /// </summary>
+    public const int RESET_ICON_TOP_OFFSET = 1;
+
     public const int TOOLBAR_BUTTON_SIZE = 28;
 
     #region Inputs
