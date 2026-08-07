@@ -776,7 +776,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpTextBox(self, text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False) -> "ApiUiTtfTextInputField":
+    def CreateGumpTextBox(self, text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False, fontSize: "float" = 20) -> "ApiUiTtfTextInputField":
         """
          Create a text area control.
          Example:
@@ -1143,6 +1143,7 @@ class ApiUiTiledGumpPic(ApiUiBaseControl):
 class ApiUiTtfTextInputField(ApiUiBaseControl):
     ""
     Text: str = None
+    FontSize: float = None
     CaretIndex: int = None
     NumbersOnly: bool = None
     AcceptKeyboardInput: bool = None
@@ -3132,7 +3133,7 @@ def CreateGumpRadioButton(text: "str" = "", group: "int" = 0, inactive: "int" = 
     """
     pass
 
-def CreateGumpTextBox(text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False) -> "ApiUiTtfTextInputField":
+def CreateGumpTextBox(text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False, fontSize: "float" = 20) -> "ApiUiTtfTextInputField":
     """
      Use API.Gumps.CreateGumpTextBox instead.
     
