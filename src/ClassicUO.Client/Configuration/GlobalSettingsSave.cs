@@ -1,0 +1,17 @@
+using System.Text.Json.Serialization.Metadata;
+
+namespace ClassicUO.Configuration
+{
+    /// <summary>
+    /// Machine-wide settings that live in the shared <c>Data</c> folder. Loaded once at startup via
+    /// <see cref="ProfileManager.LoadGlobalSettings"/> and persisted when the client exits.
+    /// </summary>
+    public sealed class GlobalSettingsSave : JsonSave<GlobalSettingsSave>
+    {
+        protected override SettingsScope Scope => SettingsScope.Global;
+
+        protected override string FileName => "global_settings.json";
+
+        protected override JsonTypeInfo<GlobalSettingsSave> TypeInfo => ScopedSettingsJsonContext.DefaultToUse.GlobalSettingsSave;
+    }
+}
