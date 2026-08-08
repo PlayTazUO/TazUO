@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Configuration;
@@ -9,7 +10,7 @@ namespace ClassicUO.LegionScripting
     /// JSON-backed store for Legion script settings. Persisted to <c>lscript.json</c> in the shared
     /// <c>Data</c> folder. Saving/loading (with rotating backups) is handled by <see cref="JsonSave{T}"/>.
     /// </summary>
-    public class LScriptSettings : JsonSave<LScriptSettings>
+    public class LScriptSettings : JsonSave<LScriptSettings>, INotifyPropertyChanged
     {
         private const string LScriptSettingsFileName = "lscript.json";
 

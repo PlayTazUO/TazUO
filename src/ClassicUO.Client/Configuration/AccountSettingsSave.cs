@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text.Json.Serialization.Metadata;
 
 namespace ClassicUO.Configuration
@@ -7,7 +8,7 @@ namespace ClassicUO.Configuration
     /// server and account are known (see <see cref="ProfileManager.LoadAccountSettings"/>) and persisted when
     /// leaving the account/server.
     /// </summary>
-    public sealed class AccountSettingsSave : JsonSave<AccountSettingsSave>
+    public sealed class AccountSettingsSave : JsonSave<AccountSettingsSave>, INotifyPropertyChanged
     {
         protected override SettingsScope Scope => SettingsScope.Account;
 

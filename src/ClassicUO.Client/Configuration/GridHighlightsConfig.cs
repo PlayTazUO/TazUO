@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -16,7 +17,7 @@ namespace ClassicUO.Configuration
     /// storage, which is migrated on first load so existing highlights are preserved. Saving/loading
     /// (with rotating backups) is handled by <see cref="JsonSave{T}"/>.
     /// </summary>
-    public sealed class GridHighlightsConfig : JsonSave<GridHighlightsConfig>
+    public sealed class GridHighlightsConfig : JsonSave<GridHighlightsConfig>, INotifyPropertyChanged
     {
         private const string GridHighlightsFileName = "grid_highlights.json";
 

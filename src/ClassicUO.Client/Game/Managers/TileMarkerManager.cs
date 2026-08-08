@@ -9,6 +9,7 @@ using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Map;
 using ClassicUO.Utility.Logging;
+using System.ComponentModel;
 
 namespace ClassicUO.Game.Managers
 {
@@ -53,7 +54,7 @@ namespace ClassicUO.Game.Managers
     /// <see cref="SettingsScope.Server"/> folder. Saving/loading (with rotating backups) is handled by
     /// <see cref="JsonSave{T}"/>.
     /// </summary>
-    internal sealed class TileMarkerConfig : JsonSave<TileMarkerConfig>
+    internal sealed class TileMarkerConfig : JsonSave<TileMarkerConfig>, INotifyPropertyChanged
     {
         public List<TileMarkerEntry> Markers { get; set; } = new();
 

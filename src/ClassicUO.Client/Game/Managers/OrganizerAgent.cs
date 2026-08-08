@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -461,7 +462,7 @@ namespace ClassicUO.Game.Managers
     /// JSON-backed store for a character's organizer configs. Persisted to <c>OrganizerConfig.json</c> in the
     /// current profile folder. Saving/loading (with rotating backups) is handled by <see cref="JsonSave{T}"/>.
     /// </summary>
-    internal sealed class OrganizerConfigSave : JsonSave<OrganizerConfigSave>
+    internal sealed class OrganizerConfigSave : JsonSave<OrganizerConfigSave>, INotifyPropertyChanged
     {
         public const string OrganizerConfigFileName = "OrganizerConfig.json";
 

@@ -35,7 +35,7 @@ internal static class GameActions
     {
         if (!player.IsDead)
         {
-            if (war && ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableMusic)
+            if (war && ProfileManager.GlobalSettings != null && ProfileManager.GlobalSettings.EnableMusic)
             {
                 Client.Game.Audio.PlayMusic((RandomHelper.GetValue(0, 3) % 3) + 38, true);
             }

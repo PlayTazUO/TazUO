@@ -572,16 +572,16 @@ namespace ClassicUO.Game
                 return;
             }
 
-            Profile currentProfile = ProfileManager.CurrentProfile;
-            if (currentProfile == null || !currentProfile.EnableSound || !currentProfile.EnableRainSound)
+            GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+            if (globalSettings == null || !globalSettings.EnableSound || !globalSettings.EnableRainSound)
             {
                 return;
             }
 
             const float SOUND_DELTA = 250.0f;
-            float volume = currentProfile.SoundVolume / SOUND_DELTA;
+            float volume = globalSettings.SoundVolume / SOUND_DELTA;
 
-            if (!Client.Game.IsActive && !currentProfile.ReproduceSoundsInBackground)
+            if (!Client.Game.IsActive && !globalSettings.ReproduceSoundsInBackground)
             {
                 volume = 0;
             }
@@ -661,17 +661,17 @@ namespace ClassicUO.Game
                 return;
             }
 
-            Profile currentProfile = ProfileManager.CurrentProfile;
-            if (currentProfile == null || !currentProfile.EnableSound || !currentProfile.EnableRainSound)
+            GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+            if (globalSettings == null || !globalSettings.EnableSound || !globalSettings.EnableRainSound)
             {
                 Client.Game.Audio.SetAmbientVolume(0);
                 return;
             }
 
             const float SOUND_DELTA = 250.0f;
-            float volume = currentProfile.SoundVolume / SOUND_DELTA;
+            float volume = globalSettings.SoundVolume / SOUND_DELTA;
 
-            if (!Client.Game.IsActive && !currentProfile.ReproduceSoundsInBackground)
+            if (!Client.Game.IsActive && !globalSettings.ReproduceSoundsInBackground)
             {
                 volume = 0;
             }
