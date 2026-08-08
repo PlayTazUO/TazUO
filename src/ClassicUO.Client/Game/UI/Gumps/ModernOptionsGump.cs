@@ -202,6 +202,10 @@ namespace ClassicUO.Game.UI.Gumps
             (new CheckboxWithLabel(TazLang.Get("auto_open_doors_hidden"), isChecked: profile.AutoOpenDoorsIfHidden, valueChanged: (b) => { profile.AutoOpenDoorsIfHidden = b; }),
                 true, page);
 
+            content.AddToRight
+            (new CheckboxWithLabel(TazLang.Get("mog_general_autoclosedoors"), isChecked: ProfileManager.GlobalSettings.AutoCloseDoors, valueChanged: (b) => { ProfileManager.GlobalSettings.AutoCloseDoors = b; }),
+                true, page);
+
             content.RemoveIndent();
 
             content.BlankLine();
@@ -569,8 +573,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                new CheckboxWithLabel(TazLang.Get("mog_general_enablecot"), isChecked: profile.UseCircleOfTransparency,
-                    valueChanged: (b) => { profile.UseCircleOfTransparency = b; }), true,
+                new CheckboxWithLabel(TazLang.Get("mog_general_enablecot"), isChecked: ProfileManager.GlobalSettings.UseCircleOfTransparency,
+                    valueChanged: (b) => { ProfileManager.GlobalSettings.UseCircleOfTransparency = b; }), true,
                 page
             );
 
@@ -582,7 +586,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (
                     TazLang.Get("mog_general_cotdistance"), 0, ThemeSettings.SLIDER_WIDTH,
                     Constants.MIN_CIRCLE_OF_TRANSPARENCY_RADIUS, Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS,
-                    profile.CircleOfTransparencyRadius, (r) => { profile.CircleOfTransparencyRadius = r; }
+                    ProfileManager.GlobalSettings.CircleOfTransparencyRadius, (r) => { ProfileManager.GlobalSettings.CircleOfTransparencyRadius = r; }
                 ), true, page
             );
 
@@ -595,8 +599,8 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         TazLang.Get("mog_general_cottypeoptfull"), TazLang.Get("mog_general_cottypeoptgrad"),
                         TazLang.Get("mog_general_cottypeoptmodern")
-                    }, profile.CircleOfTransparencyType,
-                    (s, n) => { profile.CircleOfTransparencyType = s; }
+                    }, ProfileManager.GlobalSettings.CircleOfTransparencyType,
+                    (s, n) => { ProfileManager.GlobalSettings.CircleOfTransparencyType = s; }
                 ), true, page
             );
 
@@ -821,24 +825,24 @@ namespace ClassicUO.Game.UI.Gumps
 
             Control c;
 
-            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_sound_enablesound"), 0, profile.EnableSound,
-                (b) => { profile.EnableSound = b; }));
+            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_sound_enablesound"), 0, ProfileManager.GlobalSettings.EnableSound,
+                (b) => { ProfileManager.GlobalSettings.EnableSound = b; }));
             PositionHelper.PositionControl(c);
             PositionHelper.Indent();
 
             scroll.Add(c = new SliderWithLabel(TazLang.Get("mog_sound_sharedvolume"), 0, ThemeSettings.SLIDER_WIDTH, 0, 100,
-                profile.SoundVolume, (i) => { profile.SoundVolume = i; }));
+                ProfileManager.GlobalSettings.SoundVolume, (i) => { ProfileManager.GlobalSettings.SoundVolume = i; }));
             PositionHelper.PositionControl(c);
             PositionHelper.RemoveIndent();
             PositionHelper.BlankLine();
 
-            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_sound_enablemusic"), 0, profile.EnableMusic,
-                (b) => { profile.EnableMusic = b; }));
+            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_sound_enablemusic"), 0, ProfileManager.GlobalSettings.EnableMusic,
+                (b) => { ProfileManager.GlobalSettings.EnableMusic = b; }));
             PositionHelper.PositionControl(c);
             PositionHelper.Indent();
 
             scroll.Add(c = new SliderWithLabel(TazLang.Get("mog_sound_sharedvolume"), 0, ThemeSettings.SLIDER_WIDTH, 0, 100,
-                profile.MusicVolume, (i) => { profile.MusicVolume = i; }));
+                ProfileManager.GlobalSettings.MusicVolume, (i) => { ProfileManager.GlobalSettings.MusicVolume = i; }));
             PositionHelper.PositionControl(c);
             PositionHelper.RemoveIndent();
             PositionHelper.BlankLine();
@@ -856,23 +860,23 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.RemoveIndent();
             PositionHelper.BlankLine();
 
-            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_sound_playfootsteps"), 0, profile.EnableFootstepsSound,
-                (b) => { profile.EnableFootstepsSound = b; }));
+            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_sound_playfootsteps"), 0, ProfileManager.GlobalSettings.EnableFootstepsSound,
+                (b) => { ProfileManager.GlobalSettings.EnableFootstepsSound = b; }));
             PositionHelper.PositionControl(c);
             PositionHelper.BlankLine();
 
-            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("sound_play_rain", "Play rain sound"), 0, profile.EnableRainSound,
-                (b) => { profile.EnableRainSound = b; }));
+            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("sound_play_rain", "Play rain sound"), 0, ProfileManager.GlobalSettings.EnableRainSound,
+                (b) => { ProfileManager.GlobalSettings.EnableRainSound = b; }));
             PositionHelper.PositionControl(c);
             PositionHelper.BlankLine();
 
-            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_sound_combatmusic"), 0, profile.EnableCombatMusic,
-                (b) => { profile.EnableCombatMusic = b; }));
+            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_sound_combatmusic"), 0, ProfileManager.GlobalSettings.EnableCombatMusic,
+                (b) => { ProfileManager.GlobalSettings.EnableCombatMusic = b; }));
             PositionHelper.PositionControl(c);
             PositionHelper.BlankLine();
 
-            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_sound_backgroundmusic"), 0, profile.ReproduceSoundsInBackground,
-                (b) => { profile.ReproduceSoundsInBackground = b; }));
+            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_sound_backgroundmusic"), 0, ProfileManager.GlobalSettings.ReproduceSoundsInBackground,
+                (b) => { ProfileManager.GlobalSettings.ReproduceSoundsInBackground = b; }));
             PositionHelper.PositionControl(c);
 
             BuildVoiceRecognition(scroll);

@@ -8,6 +8,10 @@ description: ApiUiTtfTextInputField class documentation
 
 **Type:** `string`
 
+### `FontSize`
+
+**Type:** `float`
+
 ### `CaretIndex`
 
 **Type:** `int`

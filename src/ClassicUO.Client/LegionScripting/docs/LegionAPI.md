@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `8/5/26`.*
+*This was generated on `8/8/26`.*
 
 ## Properties
 ### `Events`
@@ -3318,7 +3318,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ---
 
 ### CreateGumpTextBox
-`(text, width, height, multiline)`
+`(text, width, height, multiline, fontSize)`
  Use API.Gumps.CreateGumpTextBox instead.
 
 
@@ -3330,6 +3330,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `width` | `int` | ✅ Yes |  |
 | `height` | `int` | ✅ Yes |  |
 | `multiline` | `bool` | ✅ Yes |  |
+| `fontSize` | `float` | ✅ Yes |  |
 
 **Return Type:** `ApiUiTtfTextInputField`
 

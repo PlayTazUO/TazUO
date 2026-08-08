@@ -2,6 +2,30 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 5.24.5
+
+### Features
+* Added an option to use the modern color picker for things like dye tubs - [P.R 920](https://github.com/PlayTazUO/TazUO/pull/920) ([bittiez](https://github.com/bittiez))
+* Added option to allow auto open door system to also close doors - [P.R 919](https://github.com/PlayTazUO/TazUO/pull/919) ([bittiez](https://github.com/bittiez))
+
+### Legion
+* Added optional font size to ApiUiTtfTextInputField control - [P.R 912](https://github.com/PlayTazUO/TazUO/pull/912) ([bittiez](https://github.com/bittiez))
+
+### Fixes
+* Fixed characters remaining mounted upon death on POL servers - [P.R 923](https://github.com/PlayTazUO/TazUO/pull/923) ([bittiez](https://github.com/bittiez))
+* Auto skinning was not firing for old grid loot style ([bittiez](https://github.com/bittiez))
+* Query for criminal action should not continue reopening for the same serial ([bittiez](https://github.com/bittiez))
+* Fixed a crash (`NoAudioHardwareException`) when the audio device becomes unavailable while sounds are still held by the client; sound instances are now disposed deterministically instead of being left to the garbage collector, so the audio finalizer can no longer crash the client - [P.R 916](https://github.com/PlayTazUO/TazUO/pull/916) ([bittiez](https://github.com/bittiez))
+* Fixed the Alt/Shift/Ctrl modifier state getting stuck after Alt+Tab, since the key-up event is never delivered when the window loses focus; modifiers are now cleared on focus loss/gain ([bittiez](https://github.com/bittiez))
+* Added a suggested crash fix for plugins crashing TazUO while injecting a network packet into the client (e.g. an assistant's `SendToClient` passing a packet that does not fit its buffer), pointing the user at the plugin rather than TazUO ([bittiez](https://github.com/bittiez))
+* Fixed target aura not in the correct spot when game scaled - [P.R 911](https://github.com/PlayTazUO/TazUO/pull/911) ([bittiez](https://github.com/bittiez))
+* Fixed a NullReferenceException when scrolling with the opacity hotkey after the current profile is unloaded - [P.R 910](https://github.com/PlayTazUO/TazUO/pull/910) ([bittiez](https://github.com/bittiez))
+
+### Misc
+* When built in Debug there is now an asset load time on the login scene ([bittiez](https://github.com/bittiez))
+* Moved Cliloc load to load async, improving load times when starting the client - [P.R 899](https://github.com/PlayTazUO/TazUO/pull/899) ([bittiez](https://github.com/bittiez))
+* Migrated circle of transparency and sound/music settings (master sound/music volume, footsteps, rain, combat music, background audio) from per-character profiles to global settings ([bittiez](https://github.com/bittiez))
+
 ## 5.22.15
 
 ### Legion

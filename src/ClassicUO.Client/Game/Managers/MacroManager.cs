@@ -1806,7 +1806,7 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.CircleTrans:
-                    ProfileManager.CurrentProfile.UseCircleOfTransparency = !ProfileManager.CurrentProfile.UseCircleOfTransparency;
+                    ProfileManager.GlobalSettings.UseCircleOfTransparency = !ProfileManager.GlobalSettings.UseCircleOfTransparency;
 
                     break;
 

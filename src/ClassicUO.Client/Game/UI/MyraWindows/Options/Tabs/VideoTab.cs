@@ -525,19 +525,19 @@ public static class VideoTab
                 )
             ).WithSearch(new SearchMetadata(TazLang.Get("mog_videotab_misc_label"), [TazLang.Get("mog_kw_postprocessing")], [TazLang.Get("mog_kw_post"), TazLang.Get("mog_kw_process")])),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.UseCircleOfTransparency), TazLang.Get("mog_general_enablecot")),
+                new PropertyBinder(new Accessor<bool>(() => ProfileManager.GlobalSettings.UseCircleOfTransparency), TazLang.Get("mog_general_enablecot")),
                 Option.Slider(
                     TazLang.Get("mog_general_cotdistance"),
                     Constants.MIN_CIRCLE_OF_TRANSPARENCY_RADIUS,
                     Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS,
-                    new Accessor<float>(() => profile.CircleOfTransparencyRadius, f => profile.CircleOfTransparencyRadius = (int)f),
+                    new Accessor<float>(() => ProfileManager.GlobalSettings.CircleOfTransparencyRadius, f => ProfileManager.GlobalSettings.CircleOfTransparencyRadius = (int)f),
                     search: new SearchMetadata(TazLang.Get("mog_general_cotdistance"), Keywords: [TazLang.Get("mog_kw_cot"), TazLang.Get("mog_kw_distance")])
                 ),
                 Option.ComboBox(
                     TazLang.Get("mog_general_cottype"),
-                    profile.CircleOfTransparencyType,
+                    ProfileManager.GlobalSettings.CircleOfTransparencyType,
                     [TazLang.Get("mog_general_cottypeoptfull"), TazLang.Get("mog_general_cottypeoptgrad"), TazLang.Get("mog_general_cottypeoptmodern")],
-                    i => profile.CircleOfTransparencyType = i,
+                    i => ProfileManager.GlobalSettings.CircleOfTransparencyType = i,
                     search: new SearchMetadata(TazLang.Get("mog_general_cottype"), Keywords: [TazLang.Get("mog_kw_cot"), TazLang.Get("mog_kw_type")])
                 )
             ).WithSearch(new SearchMetadata(TazLang.Get("mog_videotab_misc_label"), [TazLang.Get("mog_kw_misc")], [TazLang.Get("mog_kw_cot"), TazLang.Get("mog_kw_circle")])),

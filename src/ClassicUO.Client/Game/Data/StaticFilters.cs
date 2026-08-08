@@ -497,7 +497,7 @@ namespace ClassicUO.Game.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsWithinStumpRadius(Vector2 objectScreenPos, Vector2 playerScreenPos, ref bool withinRadius)
         {
-            int radius = ProfileManager.CurrentProfile?.CircleOfTransparencyRadius ?? 0;
+            int radius = ProfileManager.GlobalSettings?.CircleOfTransparencyRadius ?? 0;
 
             // Use the outer threshold when already inside so a small bob past the radius doesn't
             // immediately revert the tree; use the inner threshold when outside so it only converts

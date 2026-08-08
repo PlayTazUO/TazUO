@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -29,8 +32,10 @@ namespace ClassicUO.Configuration
     /// <see cref="System.Text.Json.Serialization.Metadata.JsonTypeInfo{T}"/> via <see cref="TypeInfo"/>.
     /// </summary>
     /// <typeparam name="T">The concrete derived save type.</typeparam>
-    public abstract class JsonSave<T> where T : JsonSave<T>, new()
+    public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged, new()
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         private const int MAX_BACKUPS = 3;
 
         /// <summary>The scope that determines which folder this file is saved in.</summary>
@@ -63,7 +68,7 @@ namespace ClassicUO.Configuration
         /// </summary>
         protected static T LoadFrom(string filePath)
         {
-            T instance = new T();
+            var instance = new T();
 
             using (instance.AcquireLock(filePath))
                 return instance.LoadCore(filePath);
@@ -108,7 +113,7 @@ namespace ClassicUO.Configuration
             if (File.Exists(filePath))
                 Log.Error($"Failed to load JSON save '{filePath}' and all backups; creating a fresh copy.");
 
-            T fresh = new T();
+            var fresh = new T();
             fresh.SaveCore(filePath);
             return fresh;
         }
@@ -231,6 +236,31 @@ namespace ClassicUO.Configuration
         private static string GetBackupDirectory(string filePath) => Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, Constants.BACKUP_FOLDER);
 
         private static string GetBackupPath(string filePath, int index) => Path.Combine(GetBackupDirectory(filePath), $"{Path.GetFileName(filePath)}.{index}");
+
+        /// <summary>
+        /// Updates the given property with the given value if it is different from the current one.
+        /// Raises the <see cref="PropertyChanged" /> event, if a change has occurred
+        /// </summary>
+        /// <param name="storage">The field to update</param>
+        /// <param name="value">The value to set</param>
+        /// <param name="propertyName">The name of the property being updated</param>
+        /// <typeparam name="T">The type of property being updated</typeparam>
+        /// <returns><c>true</c> if a change has occurred, <c>false</c> otherwise</returns>
+        protected bool SetProperty<TT>(ref TT storage, TT value, [CallerMemberName] string propertyName = null)
+        {
+            if (EqualityComparer<TT>.Default.Equals(storage, value))
+                return false;
+
+            storage = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="PropertyChanged"/> event with the specified property name
+        /// </summary>
+        /// <param name="propertyName">The property that was updated. Passed by the compiler.</param>
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         /// <summary>
         /// Acquires a cross-process lock guarding this file. A save can be touched by multiple client

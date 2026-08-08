@@ -22,23 +22,23 @@ public static class SoundsTab
 
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnableSound), TazLang.Get("mog_sound_enablesound")),
+                new PropertyBinder(new Accessor<bool>(() => ProfileManager.GlobalSettings.EnableSound), TazLang.Get("mog_sound_enablesound")),
                 Option.Slider(
                     TazLang.Get("mog_sound_sharedvolume"),
                     0,
                     100,
-                    new Accessor<int>(() => profile.SoundVolume),
+                    new Accessor<int>(() => ProfileManager.GlobalSettings.SoundVolume),
                     search: new SearchMetadata(TazLang.Get("mog_sound_sharedvolume"), Keywords: [TazLang.Get("mog_kw_volume")])
                 )
             ).WithSearch(new SearchMetadata(TazLang.Get("mog_sound_enablesound"), Keywords: [TazLang.Get("mog_kw_sound")])),
             Option.Spacer(),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnableMusic), TazLang.Get("mog_sound_enablemusic")),
+                new PropertyBinder(new Accessor<bool>(() => ProfileManager.GlobalSettings.EnableMusic), TazLang.Get("mog_sound_enablemusic")),
                 Option.Slider(
                     TazLang.Get("mog_sound_sharedvolume"),
                     0,
                     100,
-                    new Accessor<int>(() => profile.MusicVolume),
+                    new Accessor<int>(() => ProfileManager.GlobalSettings.MusicVolume),
                     search: new SearchMetadata(TazLang.Get("mog_sound_sharedvolume"), Keywords: [TazLang.Get("mog_kw_music"), TazLang.Get("mog_kw_volume")])
                 )
             ).WithSearch(new SearchMetadata(TazLang.Get("mog_sound_enablemusic"), Keywords: [TazLang.Get("mog_kw_music")])),
@@ -56,22 +56,22 @@ public static class SoundsTab
             Option.Spacer(),
             Option.Checkbox(
                 TazLang.Get("mog_sound_playfootsteps"),
-                new Accessor<bool>(() => profile.EnableFootstepsSound),
+                new Accessor<bool>(() => ProfileManager.GlobalSettings.EnableFootstepsSound),
                 search: new SearchMetadata(TazLang.Get("mog_sound_playfootsteps"), Keywords: [TazLang.Get("mog_kw_footstep")])
             ),
             Option.Checkbox(
                 playRainSound,
-                new Accessor<bool>(() => profile.EnableRainSound),
+                new Accessor<bool>(() => ProfileManager.GlobalSettings.EnableRainSound),
                 search: new SearchMetadata(playRainSound, Keywords: [TazLang.Get("mog_kw_rain")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_sound_combatmusic"),
-                new Accessor<bool>(() => profile.EnableCombatMusic),
+                new Accessor<bool>(() => ProfileManager.GlobalSettings.EnableCombatMusic),
                 search: new SearchMetadata(TazLang.Get("mog_sound_combatmusic"), Keywords: [TazLang.Get("mog_kw_combat"), TazLang.Get("mog_kw_music")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_sound_backgroundmusic"),
-                new Accessor<bool>(() => profile.ReproduceSoundsInBackground),
+                new Accessor<bool>(() => ProfileManager.GlobalSettings.ReproduceSoundsInBackground),
                 search: new SearchMetadata(TazLang.Get("mog_sound_backgroundmusic"), Keywords: [TazLang.Get("mog_kw_background"), TazLang.Get("mog_kw_music")])
             ),
             Option.Spacer(),

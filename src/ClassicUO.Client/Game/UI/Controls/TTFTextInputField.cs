@@ -29,7 +29,8 @@ namespace ClassicUO.Game.UI.Controls
             string text = "",
             bool numbersOnly = false,
             bool multiline = false,
-            bool convertHtmlColors = true
+            bool convertHtmlColors = true,
+            float fontSize = 20
         )
         {
             WantUpdateSize = false;
@@ -37,7 +38,7 @@ namespace ClassicUO.Game.UI.Controls
             Width = width;
             Height = height;
 
-            TextBox = new StbTextBox(maxCharsCount, maxWidthText, multiline)
+            TextBox = new StbTextBox(maxCharsCount, maxWidthText, multiline, fontSize)
             {
                 X = 4,
                 Width = width - 8,
@@ -102,6 +103,10 @@ namespace ClassicUO.Game.UI.Controls
 
         public void SetText(string text) => TextBox.SetText(text);
 
+        public float FontSize => TextBox.FontSize;
+
+        public void SetFontSize(float fontSize) => TextBox.SetFontSize(fontSize);
+
         public override void OnKeyboardReturn(int textID, string text)
         {
             base.OnKeyboardReturn(textID, text);
@@ -111,9 +116,11 @@ namespace ClassicUO.Game.UI.Controls
         public class StbTextBox : Control, ITextEditHandler
         {
             protected static readonly Color SELECTION_COLOR = new Color() { PackedValue = 0x80a06020 };
-            private const int FONT_SIZE = 20;
             private readonly int _maxCharCount = -1;
+            private int _maxWidth;
+            private float _fontSize = 20;
             private TextBox _placeHolder;
+            private string _placeHolderText;
 
             public bool ConvertHtmlColors { get { return _rendererText.Options.ConvertHtmlColors; } set { _rendererText.Options.ConvertHtmlColors = value; } }
 
@@ -121,7 +128,8 @@ namespace ClassicUO.Game.UI.Controls
             (
                 int max_char_count = -1,
                 int maxWidth = 0,
-                bool multiline = false
+                bool multiline = false,
+                float fontSize = 20
             )
             {
                 AcceptKeyboardInput = true;
@@ -130,17 +138,44 @@ namespace ClassicUO.Game.UI.Controls
                 IsEditable = true;
 
                 _maxCharCount = max_char_count;
+                _maxWidth = maxWidth;
+                _fontSize = fontSize;
 
                 Stb = new TextEdit(this);
 
                 Stb.SingleLine = !multiline;
-                _rendererText = Controls.TextBox.GetOne(string.Empty, TrueTypeLoader.EMBEDDED_FONT, FONT_SIZE, Color.White,
+                _rendererText = Controls.TextBox.GetOne(string.Empty, TrueTypeLoader.EMBEDDED_FONT, _fontSize, Color.White,
                     new TextBox.RTLOptions() { Width = maxWidth > 0 ? maxWidth : null, SupportsCommands = false, IgnoreColorCommands = true, CalculateGlyphs = true, MultiLine = true });
 
-                _rendererCaret = Controls.TextBox.GetOne("_", TrueTypeLoader.EMBEDDED_FONT, FONT_SIZE, Color.White, new TextBox.RTLOptions(){SupportsCommands = false, IgnoreColorCommands = true, CalculateGlyphs = true});
+                _rendererCaret = Controls.TextBox.GetOne("_", TrueTypeLoader.EMBEDDED_FONT, _fontSize, Color.White, new TextBox.RTLOptions(){SupportsCommands = false, IgnoreColorCommands = true, CalculateGlyphs = true});
 
                 Height = _rendererCaret.Height;
                 LoseFocusOnEscapeKey = true;
+            }
+
+            public float FontSize => _fontSize;
+
+            public void SetFontSize(float fontSize)
+            {
+                if (fontSize <= 0)
+                    return;
+
+                _fontSize = fontSize;
+
+                string text = Text;
+
+                _rendererText?.Dispose();
+                _rendererCaret?.Dispose();
+
+                _rendererText = Controls.TextBox.GetOne(text, TrueTypeLoader.EMBEDDED_FONT, _fontSize, Color.White,
+                    new TextBox.RTLOptions() { Width = _maxWidth > 0 ? _maxWidth : null, SupportsCommands = false, IgnoreColorCommands = true, CalculateGlyphs = true, MultiLine = true });
+
+                _rendererCaret = Controls.TextBox.GetOne("_", TrueTypeLoader.EMBEDDED_FONT, _fontSize, Color.White, new TextBox.RTLOptions(){SupportsCommands = false, IgnoreColorCommands = true, CalculateGlyphs = true});
+
+                if (_placeHolderText != null)
+                    SetPlaceholder(_placeHolderText);
+
+                UpdateCaretScreenPosition();
             }
 
             protected TextEdit Stb { get; }
@@ -154,11 +189,13 @@ namespace ClassicUO.Game.UI.Controls
                 if (text == null)
                 {
                     _placeHolder?.Dispose();
+                    _placeHolderText = null;
 
                     return;
                 }
 
-                _placeHolder = Controls.TextBox.GetOne(text, TrueTypeLoader.EMBEDDED_FONT, FONT_SIZE, Color.Gray, Controls.TextBox.RTLOptions.Default());
+                _placeHolderText = text;
+                _placeHolder = Controls.TextBox.GetOne(text, TrueTypeLoader.EMBEDDED_FONT, _fontSize, Color.Gray, Controls.TextBox.RTLOptions.Default());
                 _placeHolder.Alpha = 0.75f;
             }
 

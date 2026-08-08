@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using ClassicUO.Game;
+using ClassicUO.Network;
 using ClassicUO.Utility;
 
 namespace ClassicUO.Configuration
@@ -75,11 +76,14 @@ namespace ClassicUO.Configuration
 
         /// <summary>
         /// The folder name used for the current account, sanitized for use as a path segment.
-        /// Falls back to a literal <c>"Account"</c> when no profile is loaded.
+        /// Falls back to the account currently being logged in, then to a literal <c>"Account"</c>.
         /// </summary>
         public static string GetAccountFolderName()
         {
             string account = ProfileManager.CurrentProfile?.Username;
+
+            if (string.IsNullOrEmpty(account))
+                account = LoginHandshake.Account;
 
             if (string.IsNullOrEmpty(account))
                 account = "Account";

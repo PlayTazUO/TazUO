@@ -204,3 +204,17 @@ jobs:
           allowUpdates: true
           draft: false
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Discord Test Build Available
+        if: steps.pr.outputs.create == 'true'
+        uses: tsickert/discord-webhook@v7.0.0
+        continue-on-error: true
+        with:
+          webhook-url: ${{ secrets.DISCORDWEBHOOK }}
+          content: |
+            # Test build for PR #${{ github.event.inputs.pr_number || github.event.pull_request.number }} is available.
+
+            ${{ steps.pr.outputs.title }}
+
+            [Download here](<https://github.com/${{ github.repository }}/releases/tag/${{ steps.pr.outputs.tag }}>)
+            Or use the [launcher](<https://github.com/bittiez/TUO-Launcher/releases/latest>)

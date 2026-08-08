@@ -35,7 +35,7 @@ internal static class GameActions
     {
         if (!player.IsDead)
         {
-            if (war && ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableMusic)
+            if (war && ProfileManager.GlobalSettings != null && ProfileManager.GlobalSettings.EnableMusic)
             {
                 Client.Game.Audio.PlayMusic((RandomHelper.GetValue(0, 3) % 3) + 38, true);
             }
@@ -580,6 +580,7 @@ internal static class GameActions
         return true;
     }
 
+    private static uint _lastAttackQuery;
     internal static void Attack(World world, uint serial)
     {
         if (ProfileManager.CurrentProfile is { EnabledCriminalActionQuery:true })
@@ -588,6 +589,24 @@ internal static class GameActions
 
             if (m != null && (world.Player.NotorietyFlag == NotorietyFlag.Innocent || world.Player.NotorietyFlag == NotorietyFlag.Ally) && m.NotorietyFlag == NotorietyFlag.Innocent && m != world.Player)
             {
+                bool shouldAdd = true;
+
+                UIManager.ForEach<QuestionGump>(g =>
+                {
+                    if (g.Type == QuestionGump.QuestionType.Attack && _lastAttackQuery == serial){
+                        shouldAdd = false;
+                        return;
+                    }
+
+                    if (g.Type == QuestionGump.QuestionType.Attack && _lastAttackQuery != serial)
+                        g.Dispose();    
+                });
+                
+                if (!shouldAdd)
+                    return;
+
+                _lastAttackQuery = serial;
+
                 var messageBox = new QuestionGump
                 (
                     world,
@@ -599,7 +618,7 @@ internal static class GameActions
                             Socket.Send_AttackRequest(serial);
                         }
                     }
-                );
+                ){ Type = QuestionGump.QuestionType.Attack };
 
                 UIManager.Add(messageBox);
                 return;

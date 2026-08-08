@@ -156,6 +156,7 @@ internal static class OpenContainer
                         UIManager.GetGump<GridLootGump>(serial)?.Dispose();
                         UIManager.Add(new GridLootGump(world, serial));
                         Helpers.SharedStore.RequestedGridLoot = serial;
+                        EventSink.InvokeOnOpenContainer(item, item.Serial);
 
                         // "Old grid loot only" shows just the loot gump; the combined mode also opens the container.
                         if (corpseStyle == CorpseContainerStyle.OldGridLoot)

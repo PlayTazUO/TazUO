@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using ClassicUO.Common;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Utility.Logging;
+using System.ComponentModel;
 
 namespace ClassicUO.Game.Managers
 {
@@ -811,7 +812,7 @@ namespace ClassicUO.Game.Managers
         /// Root persisted object holding every loot list and the currently selected one.
         /// Saving/loading (with rotating backups) is handled by <see cref="JsonSave{T}"/>.
         /// </summary>
-        public class AutoLootData : JsonSave<AutoLootData>
+        public class AutoLootData : JsonSave<AutoLootData>, INotifyPropertyChanged
         {
             public const string AutoLootFileName = "AutoLoot.json";
 

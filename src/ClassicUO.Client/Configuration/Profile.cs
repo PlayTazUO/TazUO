@@ -87,8 +87,6 @@ namespace ClassicUO.Configuration
 
     public sealed partial class Profile : JsonSave<Profile>, INotifyPropertyChanged
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
         private static Profile _defaultPreview;
 
         /// <summary>Lives in the profile folder as <c>profile.json</c>.</summary>
@@ -105,31 +103,6 @@ namespace ClassicUO.Configuration
         /// </summary>
         public static Profile DefaultPreviewProfile => _defaultPreview ??= new Profile();
 
-        /// <summary>
-        /// Raises the <see cref="PropertyChanged"/> event with the specified property name
-        /// </summary>
-        /// <param name="propertyName">The property that was updated. Passed by the compiler.</param>
-        private void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-        /// <summary>
-        /// Updates the given property with the given value if it is different from the current one.
-        /// Raises the <see cref="PropertyChanged" /> event, if a change has occurred
-        /// </summary>
-        /// <param name="storage">The field to update</param>
-        /// <param name="value">The value to set</param>
-        /// <param name="propertyName">The name of the property being updated</param>
-        /// <typeparam name="T">The type of property being updated</typeparam>
-        /// <returns><c>true</c> if a change has occurred, <c>false</c> otherwise</returns>
-        private bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(storage, value))
-                return false;
-
-            storage = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
         [JsonIgnore] public string Username { get; set => SetProperty(ref field, value); }
         [JsonIgnore] public string ServerName { get; set => SetProperty(ref field, value); }
         [JsonIgnore] public string CharacterName { get; set => SetProperty(ref field, value); }
@@ -140,13 +113,21 @@ namespace ClassicUO.Configuration
         public string VoiceModelPath { get; set => SetProperty(ref field, value); } = string.Empty;
 
         // sounds
+        [Obsolete("Remove after 10/8/26")]
         public bool EnableSound { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete("Remove after 10/8/26")]
         public int SoundVolume { get; set => SetProperty(ref field, value); } = 50;
+        [Obsolete("Remove after 10/8/26")]
         public bool EnableMusic { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete("Remove after 10/8/26")]
         public int MusicVolume { get; set => SetProperty(ref field, value); } = 50;
+        [Obsolete("Remove after 10/8/26")]
         public bool EnableFootstepsSound { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete("Remove after 10/8/26")]
         public bool EnableRainSound { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete("Remove after 10/8/26")]
         public bool EnableCombatMusic { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete("Remove after 10/8/26")]
         public bool ReproduceSoundsInBackground { get; set => SetProperty(ref field, value); }
 
         // fonts and speech
@@ -212,9 +193,14 @@ namespace ClassicUO.Configuration
         public bool DisableGargoyleFlyingAnimation { get; set => SetProperty(ref field, value); }
         public int FieldsType { get; set => SetProperty(ref field, value); } // 0 = normal, 1 = static, 2 = tile
         public bool NoColorObjectsOutOfRange { get; set => SetProperty(ref field, value); }
+
+        [Obsolete("Remove after 10/8/26")]
         public bool UseCircleOfTransparency { get; set => SetProperty(ref field, value); }
+        [Obsolete("Remove after 10/8/26")]
         public int CircleOfTransparencyRadius { get; set => SetProperty(ref field, value); } = Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS / 2;
+        [Obsolete("Remove after 10/8/26")]
         public int CircleOfTransparencyType { get; set => SetProperty(ref field, value); } // 0 = normal, 1 = like original client
+
         public int VendorGumpHeight { get; set => SetProperty(ref field, value); } = 350;   //original vendor gump size
         public float DefaultScale { get; set => SetProperty(ref field, value); } = 1.0f;
         public bool EnableMousewheelScaleZoom { get; set => SetProperty(ref field, value); } = true;
@@ -993,6 +979,29 @@ namespace ClassicUO.Configuration
                 QuickCureSpell = OldQuickCureSpell;
                 WebMapServerPort = OldWebMapServerPort;
                 WebMapAutoStart = OldWebMapAutoStart;
+
+                ProfileMigrationVersion++;
+            }
+
+            if (ProfileMigrationVersion < 7)
+            {
+                ProfileManager.GlobalSettings.UseCircleOfTransparency = UseCircleOfTransparency;
+                ProfileManager.GlobalSettings.CircleOfTransparencyRadius = CircleOfTransparencyRadius;
+                ProfileManager.GlobalSettings.CircleOfTransparencyType = CircleOfTransparencyType;
+                
+                ProfileMigrationVersion++;
+            }
+
+            if (ProfileMigrationVersion < 8)
+            {
+                ProfileManager.GlobalSettings.EnableSound = EnableSound;
+                ProfileManager.GlobalSettings.SoundVolume = SoundVolume;
+                ProfileManager.GlobalSettings.EnableMusic = EnableMusic;
+                ProfileManager.GlobalSettings.MusicVolume = MusicVolume;
+                ProfileManager.GlobalSettings.EnableFootstepsSound = EnableFootstepsSound;
+                ProfileManager.GlobalSettings.EnableRainSound = EnableRainSound;
+                ProfileManager.GlobalSettings.EnableCombatMusic = EnableCombatMusic;
+                ProfileManager.GlobalSettings.ReproduceSoundsInBackground = ReproduceSoundsInBackground;
 
                 ProfileMigrationVersion++;
             }

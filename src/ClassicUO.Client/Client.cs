@@ -96,6 +96,7 @@ namespace ClassicUO
 
         public void Unload()
         {
+            Sounds?.DisposeAll();
             FileManager.Dispose();
             World?.Map?.Destroy();
         }

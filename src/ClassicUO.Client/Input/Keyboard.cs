@@ -24,6 +24,11 @@ namespace ClassicUO.Input
         /// </summary>
         public static event Action<SDL.SDL_Keymod> BareModifierEvent;
 
+        public static void ClearModifiers()
+        {
+            Alt = Shift = Ctrl = false;
+        }
+
         public static string NormalizeKeyString(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
