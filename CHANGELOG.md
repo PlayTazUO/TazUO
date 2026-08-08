@@ -24,6 +24,7 @@ All notable changes to TazUO will be recorded here.
 ### Misc
 * When built in Debug there is now an asset load time on the login scene ([bittiez](https://github.com/bittiez))
 * Moved Cliloc load to load async, improving load times when starting the client - [P.R 899](https://github.com/PlayTazUO/TazUO/pull/899) ([bittiez](https://github.com/bittiez))
+* Migrated circle of transparency and sound/music settings (master sound/music volume, footsteps, rain, combat music, background audio) from per-character profiles to global settings ([bittiez](https://github.com/bittiez))
 
 ## 5.22.15
 

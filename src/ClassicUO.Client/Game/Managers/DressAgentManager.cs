@@ -14,6 +14,7 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
 using ClassicUO.Utility;
+using System.ComponentModel;
 
 namespace ClassicUO.Game.Managers
 {
@@ -473,7 +474,7 @@ namespace ClassicUO.Game.Managers
     /// JSON-backed store for a character's dress configs. Persisted to <c>dress_configs.json</c> in the
     /// current profile folder. Saving/loading (with rotating backups) is handled by <see cref="JsonSave{T}"/>.
     /// </summary>
-    public sealed class DressConfigSave : JsonSave<DressConfigSave>
+    public sealed class DressConfigSave : JsonSave<DressConfigSave>, INotifyPropertyChanged
     {
         public const string DressConfigsFileName = "dress_configs.json";
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -34,7 +35,7 @@ namespace ClassicUO.Game.Managers
     /// Server-scoped JSON save holding the graphic replacement filters. Saving/loading (with rotating
     /// backups) is handled by <see cref="JsonSave{T}"/>. The legacy global file is migrated on first load.
     /// </summary>
-    public sealed class GraphicsReplacementSave : JsonSave<GraphicsReplacementSave>
+    public sealed class GraphicsReplacementSave : JsonSave<GraphicsReplacementSave>, INotifyPropertyChanged
     {
         private const string SaveFileName = "GraphicReplacementFilters.json";
 

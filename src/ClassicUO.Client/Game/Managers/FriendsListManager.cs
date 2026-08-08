@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -178,7 +179,7 @@ namespace ClassicUO.Game.Managers
     /// <see cref="SettingsScope.Server"/> folder. Saving/loading (with rotating backups) is handled by
     /// <see cref="JsonSave{T}"/>.
     /// </summary>
-    public sealed class FriendsListSave : JsonSave<FriendsListSave>
+    public sealed class FriendsListSave : JsonSave<FriendsListSave>, INotifyPropertyChanged
     {
         public const string FriendsFileName = "friends.json";
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -46,7 +47,7 @@ namespace ClassicUO.Configuration
     /// which is migrated on first load. Saving/loading (with rotating backups) is handled by
     /// <see cref="JsonSave{T}"/>.
     /// </summary>
-    public sealed class CooldownBarsConfig : JsonSave<CooldownBarsConfig>
+    public sealed class CooldownBarsConfig : JsonSave<CooldownBarsConfig>, INotifyPropertyChanged
     {
         private const string CooldownBarsFileName = "cooldownbars.json";
 

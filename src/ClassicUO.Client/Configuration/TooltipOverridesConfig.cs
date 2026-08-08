@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -14,7 +15,7 @@ namespace ClassicUO.Configuration
     /// <see cref="Profile"/>, which are migrated across during profile migration. Saving/loading (with
     /// rotating backups) is handled by <see cref="JsonSave{T}"/>.
     /// </summary>
-    public sealed class TooltipOverridesConfig : JsonSave<TooltipOverridesConfig>
+    public sealed class TooltipOverridesConfig : JsonSave<TooltipOverridesConfig>, INotifyPropertyChanged
     {
         public const string TooltipOverridesFileName = "tooltip_overrides.json";
 

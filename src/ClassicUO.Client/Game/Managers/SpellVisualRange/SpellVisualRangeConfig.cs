@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -13,7 +14,7 @@ namespace ClassicUO.Configuration
     /// (with rotating backups, atomic writes and a cross-process lock) is handled by
     /// <see cref="JsonSave{T}"/>.
     /// </summary>
-    public sealed class SpellVisualRangeConfig : JsonSave<SpellVisualRangeConfig>
+    public sealed class SpellVisualRangeConfig : JsonSave<SpellVisualRangeConfig>, INotifyPropertyChanged
     {
         /// <summary>The configured spells. Keyed by <see cref="SpellRangeInfo.ID"/> once loaded into the manager.</summary>
         public List<SpellRangeInfo> Spells { get; set; } = new();
