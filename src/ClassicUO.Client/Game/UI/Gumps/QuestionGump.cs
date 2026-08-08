@@ -9,6 +9,7 @@ namespace ClassicUO.Game.UI.Gumps
 {
     public class QuestionGump : Gump
     {
+        public QuestionType Type = QuestionType.Unknown;
         private readonly Action<bool> _result;
 
         public QuestionGump(World world, string message, Action<bool> result) : base(world, 0, 0)
@@ -79,6 +80,12 @@ namespace ClassicUO.Game.UI.Gumps
         {
             Cancel,
             Ok
+        }
+
+        public enum QuestionType
+        {
+            Unknown,
+            Attack
         }
     }
 }
