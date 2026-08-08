@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using Myra.Events;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 
@@ -23,7 +24,7 @@ public class ToggleTextButton : ToggleButton
         Content = new MyraLabel(text, MyraLabel.TextStyle.P);
     }
 
-    public override void OnTouchDown()
+    public override void OnTouchDown(TouchEventArgs args)
     {
         if (!Enabled)
             return;
@@ -31,7 +32,7 @@ public class ToggleTextButton : ToggleButton
         if (SpringLoaded && IsToggled)
             return;
 
-        base.OnTouchDown();
+        base.OnTouchDown(args);
         _onClick?.Invoke(this);
     }
 }

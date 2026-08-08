@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using FontStashSharp;
+using Myra.Events;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 
@@ -57,9 +58,9 @@ public class MyraButton : Button
         Build();
     }
 
-    public override void OnTouchDown()
+    public override void OnTouchDown(TouchEventArgs args)
     {
-        base.OnTouchDown();
+        base.OnTouchDown(args);
 
         if (Enabled)
             OnClick?.Invoke();

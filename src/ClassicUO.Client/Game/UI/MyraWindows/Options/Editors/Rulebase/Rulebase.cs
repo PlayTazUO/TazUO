@@ -13,6 +13,7 @@ using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
+using Myra.Events;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
@@ -536,7 +537,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     private void OnEditorClosed(object? sender, EventArgs e) => IsInEditor = false;
 
     /// <summary>Updates selection based on where the desktop was touched, ignoring touches on the toolbar or an open context menu</summary>
-    private void OnDesktopTouchDown(object? sender, EventArgs e)
+    private void OnDesktopTouchDown(object? sender, TouchEventArgs e)
     {
         if (Desktop?.TouchPosition == null || IsInEditor)
             return;

@@ -11,6 +11,7 @@ using ClassicUO.Input;
 using FontStashSharp;
 using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
+using Myra.Events;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 
@@ -290,7 +291,7 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Initiates a resize operation if the user clicks on a resize handle.
     /// </summary>
-    public override void OnTouchDown()
+    public override void OnTouchDown(TouchEventArgs args)
     {
         // To preserve normal Myra window behavior, we have to consider whether the window is in front.
         // If not, the click is 'directed' to bringing-to-front rather than dragging
@@ -298,7 +299,7 @@ public class ResizableWindow : Window, IDisposable
         if (widgets[^1] != this)
         {
             // The base cals BringToFront so we just let it take control here.
-            base.OnTouchDown();
+            base.OnTouchDown(args);
             // If we ever want the visual cursor style changed right after focusing, we can add it here.
             // Just a nitpick.
             return;

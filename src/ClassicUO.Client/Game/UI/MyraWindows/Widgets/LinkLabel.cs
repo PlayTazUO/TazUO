@@ -1,6 +1,7 @@
 using System;
 using ClassicUO.Utility.Platforms;
 using Microsoft.Xna.Framework;
+using Myra.Events;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
@@ -35,9 +36,9 @@ public class LinkLabel : MyraLabel
         OverTextColor = Color.DeepSkyBlue;
     }
 
-    public override void OnTouchDown()
+    public override void OnTouchDown(TouchEventArgs args)
     {
-        base.OnTouchDown();
+        base.OnTouchDown(args);
         PlatformHelper.LaunchBrowser(_link);
         TextColor = Color.MediumPurple;
     }
