@@ -84,6 +84,7 @@ internal static class Mounts
         _mounts[0x3EE0] = new(0x0675, 0x3EE0, 0); // Horse_Elemental_Fire
         _mounts[0x3EE1] = new(0x0678, 0x3EE1, 0); // Horse_Elemental_Water
         _mounts[0x3EE2] = new(0x0679, 0x3EE2, 0); // Horse_Elemental_Air
+        _mounts[0x3EE4] = new(0x06C1, 0x3EE4, 7); // Horse_True_Britannia
 
         //Load custom mounts for Eventine
         if(Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine)
