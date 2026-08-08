@@ -90,6 +90,8 @@ namespace ClassicUO.Game.GameObjects
                 byte index = (byte)it.Layer;
                 if (index > 0 && index < _equippedLayers.Length && _equippedLayers[index] == it)
                     _equippedLayers[index] = null;
+                if (it.Layer == Layer.Mount && Mount == it)
+                    Mount = null;
             }
             base.Remove(item);
         }
@@ -155,7 +157,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 Item it = Mount;
 
-                if (it != null && !IsDrivingBoat && it.GetGraphicForAnimation() != 0xFFFF)
+                if (it != null && !IsDead && !IsDrivingBoat && it.GetGraphicForAnimation() != 0xFFFF)
                 {
                     return true;
                 }

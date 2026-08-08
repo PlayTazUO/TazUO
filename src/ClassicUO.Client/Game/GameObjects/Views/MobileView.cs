@@ -169,7 +169,7 @@ namespace ClassicUO.Game.GameObjects
 
             sbyte mountOffsetY = 0;
 
-            if (isHuman && mount != null && mount.Graphic != 0x3E96)
+            if (isHuman && !isDead && mount != null && mount.Graphic != 0x3E96)
             {
                 ushort mountGraphic = mount.GetGraphicForAnimation();
                 byte animGroupMount = 0;
@@ -1147,7 +1147,7 @@ namespace ClassicUO.Game.GameObjects
             SpriteInfo spriteInfo;
             bool isUop;
 
-            if (isHuman)
+            if (isHuman && !IsDead)
             {
                 Item mount = Mount;
                 if (mount != null)
