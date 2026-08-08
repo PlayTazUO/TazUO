@@ -44,9 +44,9 @@ public static class NameplatesTab
     {
         var profileEditor = new ProfileEditor<NameOverheadOption>(
             GetEditorForProfile,
-            name =>
+            (name, source) =>
             {
-                var newProfile = new NameOverheadOption(name);
+                NameOverheadOption newProfile = source?.Clone(name) ?? new NameOverheadOption(name);
                 World.Instance.NameOverHeadManager.AddOption(newProfile);
                 return newProfile;
             },

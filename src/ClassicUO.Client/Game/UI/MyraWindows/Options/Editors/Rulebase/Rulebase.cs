@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using FontStashSharp;
@@ -95,19 +96,25 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
 
     #region Members
 
+    /// <summary>
+    /// Point size for the arrows and the plus. They are drawn from a lighter part of the symbol font
+    /// and read small beside the pencil and the cross at a matched size.
+    /// </summary>
+    private const int LARGE_GLYPH = 34;
+
     private readonly IRuleConfigurator<TRule>? _ruleConfigurator;
     private readonly Panel _contentPanel;
     private readonly RulebaseTableView<TRule> _tableView;
 
     // These are initialized in the InitializeToolbar method
     private WrapPanel _toolbar = null!;
-    private BasicButton _addButton = null!;
-    private Widget _editButton = null!;
-    private Widget _deleteButton = null!;
-    private Widget _moveTopButton = null!;
-    private Widget _moveUpButton = null!;
-    private Widget _moveDownButton = null!;
-    private Widget _moveBottomButton = null!;
+    private IconButton _addButton = null!;
+    private IconButton _editButton = null!;
+    private IconButton _deleteButton = null!;
+    private IconButton _moveTopButton = null!;
+    private IconButton _moveUpButton = null!;
+    private IconButton _moveDownButton = null!;
+    private IconButton _moveBottomButton = null!;
 
     private readonly MyraLabel _titleLabel = new(null, MyraLabel.TextStyle.H5) { HorizontalAlignment = HorizontalAlignment.Center };
     private Desktop? _subscribedDesktop;
@@ -186,16 +193,16 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     /// <summary>Creates the toolbar buttons (add/edit/delete/reorder) and sets their initial enabled state</summary>
     private void InitializeToolbar()
     {
-        SpriteFontBase smallNoto = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 28);
-        SpriteFontBase largeNoto = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 42);
-
-        _addButton = OptionTabCommons.StyledTextIconButton("+", largeNoto, () => OpenRuleEditor(false), topOffset: -4);
-        _editButton = OptionTabCommons.StyledTextIconButton("🖉", smallNoto, () => OpenRuleEditor(true), topOffset: 1);
-        _deleteButton = OptionTabCommons.StyledTextIconButton("🗙", smallNoto, DeleteRule, topOffset: -1);
-        _moveTopButton = OptionTabCommons.StyledTextIconButton("⭱", largeNoto, MoveSelectedToTop, topOffset: -4);
-        _moveUpButton = OptionTabCommons.StyledTextIconButton("⭡", largeNoto, () => MoveSelectedBy(-1), topOffset: -4);
-        _moveDownButton = OptionTabCommons.StyledTextIconButton("⭣", largeNoto, () => MoveSelectedBy(1), topOffset: -4);
-        _moveBottomButton = OptionTabCommons.StyledTextIconButton("⭳", largeNoto, MoveSelectedToBottom, topOffset: -4);
+        // Every button here is a bare glyph, so the tooltip is the only thing that names it. Sizes
+        // differ because the glyphs do: the arrows and the plus are drawn from a lighter part of the
+        // symbol font and read small beside the pencil and the cross at a matched point size.
+        _addButton = new IconButton("+", () => OpenRuleEditor(false), TazLang.Get("rulebase_add", "Add a rule"), glyphSize: LARGE_GLYPH);
+        _editButton = new IconButton("\U0001F589", () => OpenRuleEditor(true), TazLang.Get("rulebase_edit", "Edit the selected rule"));
+        _deleteButton = new IconButton("\U0001F5D9", DeleteRule, TazLang.Get("rulebase_delete", "Delete the selected rule"));
+        _moveTopButton = new IconButton("\u2B71", MoveSelectedToTop, TazLang.Get("rulebase_movetop", "Move to the top"), glyphSize: LARGE_GLYPH);
+        _moveUpButton = new IconButton("\u2B61", () => MoveSelectedBy(-1), TazLang.Get("rulebase_moveup", "Move up one"), glyphSize: LARGE_GLYPH);
+        _moveDownButton = new IconButton("\u2B63", () => MoveSelectedBy(1), TazLang.Get("rulebase_movedown", "Move down one"), glyphSize: LARGE_GLYPH);
+        _moveBottomButton = new IconButton("\u2B73", MoveSelectedToBottom, TazLang.Get("rulebase_movebottom", "Move to the bottom"), glyphSize: LARGE_GLYPH);
 
         _toolbar = OptionTabCommons.StyledHorizontalWrapPanel(
             _addButton,
@@ -290,9 +297,9 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     {
         Margin = new Thickness(4);
         Padding = new Thickness(4, 6, 4, 12);
-        Background = new SolidBrush(new Color(0, 0, 0, 25));
-        Border = new SolidBrush(new Color(0, 0, 0, 75));
-        BorderThickness = new Thickness(2);
+        Background = StyleConstantsDefaults.BorderBackgroundBrush;
+        Border = StyleConstantsDefaults.BorderLineBrush;
+        BorderThickness = StyleConstantsDefaults.BorderThickness;
         HorizontalAlignment = HorizontalAlignment.Stretch;
         VerticalAlignment = VerticalAlignment.Stretch;
     }
@@ -451,9 +458,15 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     private void UpdateToolbarState()
     {
         TRule? selectedRule = GetSelectedRule();
-        bool hasSelection = selectedRule != null;
 
-        _addButton.Enabled = !IsInEditor;
+        // Every button here acts on the table's selection, and while a configurator is open the table
+        // is not on screen to have one. Editing, deleting or reordering a row from under an open
+        // editor is at best confusing and at worst destroys the rule being edited - so the whole
+        // toolbar goes dead until the editor is done, not just Add.
+        bool canActOnTable = !IsInEditor;
+        bool hasSelection = canActOnTable && selectedRule != null;
+
+        _addButton.Enabled = canActOnTable;
 
         // If we've no configurator, the 'Add' button simply adds a 'default' rule instance.
         _addButton.OnClick = _ruleConfigurator != null

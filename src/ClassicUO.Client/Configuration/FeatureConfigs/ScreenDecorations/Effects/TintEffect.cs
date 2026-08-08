@@ -3,6 +3,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ClassicUO.Renderer.Effects;
+using Myra.Graphics2D.UI.Properties;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
@@ -17,7 +18,8 @@ public sealed class TintEffect : LayerEffect
     internal const string Discriminator = "tint";
 
     /// <summary>Colour of the layer.</summary>
-    [Description("Colour of the layer.")]
+    [LocalizedDisplayName("visualeffects_layer_tint", "Colour")]
+    [LocalizedDescription("visualeffects_layer_tint_tooltip", "Colour of the layer.")]
     public Color Tint { get; set; } = Color.White;
 
     /// <inheritdoc />

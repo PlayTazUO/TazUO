@@ -41,9 +41,16 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private readonly List<TProfile> _profileRefs = [];
 
     /// <summary>
-    ///     A function that creates a new profile with a given name
+    ///     Brings a new profile into existence under a given name and stores it: from nothing, or as
+    ///     a duplicate of a source profile when one is supplied.
+    ///     <para>
+    ///         One callback rather than two, because creating and copying end the same way - the
+    ///         host adds the profile to whatever pool it owns and persists it. Split apart, every
+    ///         host writes that half twice, and a copy that stores before its contents are filled in
+    ///         persists a blank.
+    ///     </para>
     /// </summary>
-    private readonly Func<string, TProfile> _createProfile;
+    private readonly Func<string, TProfile, TProfile> _createProfile;
 
     /// <summary>
     ///     An action to be invoked when a profile is deleted via the editor's "Delete" button."
@@ -109,14 +116,17 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     ///     Initializes a new instance of the <see cref="ProfileEditor{TProfile}" /> class.
     /// </summary>
     /// <param name="getConfigUiForProfile">The function to retrieve the UI for a profile.</param>
-    /// <param name="createProfile">The function to create a new profile.</param>
+    /// <param name="createProfile">
+    ///     Creates and stores a profile under the given name. The second argument is the profile to
+    ///     duplicate, or <see langword="null" /> to build a fresh one.
+    /// </param>
     /// <param name="onDeleteProfile">The action to perform when deleting a profile.</param>
     /// <param name="profiles">The initial list of profiles.</param>
     /// <param name="onRenameProfile">An optional action to perform after renaming a profile.</param>
     /// <param name="newestFirst">When true, newly created profiles are listed first.</param>
     public ProfileEditor(
         Func<TProfile, Widget> getConfigUiForProfile,
-        Func<string, TProfile> createProfile,
+        Func<string, TProfile, TProfile> createProfile,
         Action<TProfile> onDeleteProfile,
         IEnumerable<TProfile> profiles = null,
         Action<TProfile> onRenameProfile = null,
@@ -155,11 +165,30 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <summary>
     ///     Handles the add profile button click.
     /// </summary>
-    private void OnAdd()
+    private void OnAdd() => Introduce(_createProfile(GetNextProfileName(), default));
+
+    /// <summary>Handles the copy button click.</summary>
+    private void OnCopy()
     {
-        TProfile newProfile = _createProfile(GetNextProfileName());
-        AddProfile(newProfile, _newestFirst);
-        ChangeOrUpdateProfile(newProfile);
+        if (_selectedProfile == null)
+            return;
+
+        Introduce(_createProfile(GetCopyName(_selectedProfile.Name), _selectedProfile));
+    }
+
+    /// <summary>
+    ///     Lists a newly created profile and selects it. Selecting it is the point: creating or
+    ///     copying is nearly always the first step of editing, and leaving the previous one on screen
+    ///     means the change the user makes next lands on the wrong profile.
+    /// </summary>
+    /// <param name="profile">The profile the host created and stored, or null if it declined.</param>
+    private void Introduce(TProfile profile)
+    {
+        if (profile == null)
+            return;
+
+        AddProfile(profile, _newestFirst);
+        ChangeOrUpdateProfile(profile);
     }
 
     /// <summary>
@@ -300,13 +329,27 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private StackPanel GetNormalToolbar()
     {
         bool canEdit = _selectedProfile is { Deletable: true };
-        StackPanel panel = OptionTabCommons.StyledStackPanel(
-            Orientation.Horizontal,
+
+        var buttons = new List<Widget>
+        {
             GetProfilesCombo(),
-            new MyraButton(TazLang.Get("profileeditor_add"), OnAdd),
-            new MyraButton(TazLang.Get("profileeditor_rename"), OnRename) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotrenamebuiltinprofile") },
-            new MyraButton(TazLang.Get("profileeditor_delete"), OnDelete) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotdeletebuiltinprofile") }
+            new MyraButton(TazLang.Get("profileeditor_add"), OnAdd)
+        };
+
+        // Offered for a read-only profile too - that is precisely when it is wanted, since copying
+        // is the only way to get an editable version of one.
+        buttons.Add(
+            new MyraButton(TazLang.Get("profileeditor_copy", "Copy"), OnCopy)
+            {
+                Enabled = _selectedProfile != null,
+                Tooltip = TazLang.Get("profileeditor_copy_tooltip", "Duplicate this profile, and edit the copy.")
+            }
         );
+
+        buttons.Add(new MyraButton(TazLang.Get("profileeditor_rename"), OnRename) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotrenamebuiltinprofile") });
+        buttons.Add(new MyraButton(TazLang.Get("profileeditor_delete"), OnDelete) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotdeletebuiltinprofile") });
+
+        StackPanel panel = OptionTabCommons.StyledStackPanel(Orientation.Horizontal, [.. buttons]);
 
         panel.Margin = new Thickness(0, 0, 0, 10);
 
@@ -547,6 +590,27 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
         foreach (TProfile profile in _profileRefs)
             profile.PropertyChanged -= OnProfilePropertyChanged;
         _profileRefs.Clear();
+    }
+
+    /// <summary>
+    ///     A free name for a copy of <paramref name="original" />, numbered only as far as it has to
+    ///     be so that repeated copying does not produce "X (copy) (copy) (copy)".
+    /// </summary>
+    /// <param name="original">The name being copied from.</param>
+    /// <returns>A name no existing profile holds.</returns>
+    private string GetCopyName(string original)
+    {
+        string candidate = TazLang.Get("profileeditor_copyofx", [original]);
+
+        if (Profiles.All(profile => profile.Name != candidate))
+            return candidate;
+
+        int index = 2;
+
+        while (Profiles.Any(profile => profile.Name == $"{candidate} {index}"))
+            index++;
+
+        return $"{candidate} {index}";
     }
 
     /// <summary>

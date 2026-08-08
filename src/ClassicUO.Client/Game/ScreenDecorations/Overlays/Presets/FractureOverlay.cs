@@ -12,7 +12,7 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets
     {
         public float Intensity { get; set; } = 1.0f;
         public Color Hue { get; set; } = new Color(190, 210, 225);
-        public float Opacity { get; set; } = 0.45f;
+        public float Opacity { get; set; } = 0.65f;
         public float Reach { get; set; } = 0.75f;
 
         protected override void Bake(List<OverlayLayer> layers) =>
@@ -32,7 +32,7 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets
                     },
                     Noise = new OverlayNoise
                     {
-                        BaseScale = new Vector2(1.5f, 1.5f),
+                        BaseScale = new Vector2(3.5f, 3.5f),
                         DetailScale = new Vector2(1.8f, 1.8f),
                         BaseScroll = Vector2.Zero,
                         DetailScroll = Vector2.Zero,

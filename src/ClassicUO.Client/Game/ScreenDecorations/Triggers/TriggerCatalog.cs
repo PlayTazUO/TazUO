@@ -39,7 +39,8 @@ public sealed class TriggerCatalog
         [
             new PlayerPoisonedTriggerDefinition(),
             new EarthquakeTriggerDefinition(),
-            new ChatMessageTriggerDefinition()
+            new ChatMessageTriggerDefinition(),
+            new ObjectPropertiesTriggerDefinition()
         ];
 
         _byId = All.ToFrozenDictionary(definition => definition.Id, StringComparer.OrdinalIgnoreCase);

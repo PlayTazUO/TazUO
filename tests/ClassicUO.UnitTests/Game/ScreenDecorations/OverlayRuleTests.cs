@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.ScreenDecorations.Rules;
 using ClassicUO.Game.ScreenDecorations.Triggers;
+using ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 using FluentAssertions;
 using Xunit;
 using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
@@ -128,6 +130,7 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
                         {
                             Mode = ChatMatchMode.Regex,
                             Pattern = "you feel .*",
+                            CaseSensitive = true,
                             DurationSeconds = 4.5f,
                             FromPlayerOnly = true
                         }
@@ -142,6 +145,7 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
             var parameters = (ChatMessageParameters)loaded.Trigger.Parameters;
             parameters.Mode.Should().Be(ChatMatchMode.Regex);
             parameters.Pattern.Should().Be("you feel .*");
+            parameters.CaseSensitive.Should().BeTrue();
             parameters.DurationSeconds.Should().Be(4.5f);
             parameters.FromPlayerOnly.Should().BeTrue();
             parameters.Duration.Should().Be(TimeSpan.FromSeconds(4.5));

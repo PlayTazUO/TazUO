@@ -3,6 +3,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ClassicUO.Renderer.Effects;
+using Myra.Graphics2D.UI.Properties;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
@@ -18,14 +19,20 @@ public struct PulseSpec
     /// flashing above roughly 3 Hz is a photosensitive-epilepsy hazard, and no profile, rule or
     /// setting may raise it.
     /// </summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_pulse_frequency", "Rate (Hz)")]
+    [LocalizedDescription(
+        "visualeffects_pulse_frequency_tooltip",
         "Breathing rate in Hz. Hard-capped at 3 Hz for photosensitivity\n"
         + "reasons."
     )]
     public float Frequency;
 
     /// <summary>Depth of that breathing, as a fraction of <see cref="LayerEffect.Strength" />.</summary>
-    [Description("Depth of that breathing, as a fraction of Strength.")]
+    [LocalizedDisplayName("visualeffects_pulse_amplitude", "Depth")]
+    [LocalizedDescription(
+        "visualeffects_pulse_amplitude_tooltip",
+        "Depth of that breathing, as a fraction of Strength."
+    )]
     public float Amplitude;
 }
 
@@ -56,14 +63,20 @@ public abstract class LayerEffect
     /// Where on screen it lives and how its boundary breaks up. Every technique masks with this - a
     /// sampling layer's mask doubles as its strength.
     /// </summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_layer_shape", "Shape")]
+    [LocalizedDescription(
+        "visualeffects_layer_shape_tooltip",
         "Where on screen the effect lives: vignette or border shape,\n"
         + "how far it extends, and how its boundary breaks up."
     )]
     public OverlayShape Shape { get; set; } = OverlayParams.Default.Shape;
 
     /// <summary>How it moves and what texture it has.</summary>
-    [Description("How the effect moves and what texture it has.")]
+    [LocalizedDisplayName("visualeffects_layer_noise", "Texture")]
+    [LocalizedDescription(
+        "visualeffects_layer_noise_tooltip",
+        "How the effect moves and what texture it has."
+    )]
     public OverlayNoise Noise { get; set; } = OverlayParams.Default.Noise;
 
     /// <summary>
@@ -71,14 +84,20 @@ public abstract class LayerEffect
     /// a distortion replaces the sharp frame. This is the authored value the runtime stack scales -
     /// trigger intensity, fade envelope and the global setting can only attenuate it.
     /// </summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_layer_strength", "Strength")]
+    [LocalizedDescription(
+        "visualeffects_layer_strength_tooltip",
         "Peak strength where the mask is full: a tint's alpha, or how\n"
         + "far a distortion replaces the sharp frame."
     )]
     public float Strength { get; set; } = OverlayParams.Default.Appearance.Opacity;
 
     /// <summary>How the strength swells over time, or all zero for a steady layer.</summary>
-    [Description("Time-varying swell of the layer's strength.")]
+    [LocalizedDisplayName("visualeffects_layer_pulse", "Pulse")]
+    [LocalizedDescription(
+        "visualeffects_layer_pulse_tooltip",
+        "Time-varying swell of the layer's strength."
+    )]
     public PulseSpec Pulse { get; set; }
 
     /// <summary>Display name for the composer's "add layer" list.</summary>

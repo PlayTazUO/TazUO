@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using Microsoft.Xna.Framework;
+using Myra.Graphics2D.UI.Properties;
 
 namespace ClassicUO.Renderer.Effects
 {
@@ -54,7 +55,9 @@ namespace ClassicUO.Renderer.Effects
         /// extends the effect inward on the deep half of the field, so raising it also raises the
         /// average reach - compensate with <see cref="OverlayShape.Reach"/>.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_jitter_reachamount", "Boundary flux")]
+        [LocalizedDescription(
+            "visualeffects_jitter_reachamount_tooltip",
             "How far the boundary can move, as a fraction of the shape\n"
             + "distance. Only extends inward, so raising it raises average\n"
             + "reach too - compensate with Shape.Reach. Anything organic\n"
@@ -68,7 +71,9 @@ namespace ClassicUO.Renderer.Effects
         /// fixed length; with it, the gradient is longer where it reaches further, so a deep run
         /// tapers away and a shallow one ends bluntly.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_jitter_featheramount", "Falloff flux")]
+        [LocalizedDescription(
+            "visualeffects_jitter_featheramount_tooltip",
             "How much the same field stretches and compresses Feather.\n"
             + "Without it a deep run and a shallow one end just as abruptly."
         )]
@@ -81,7 +86,9 @@ namespace ClassicUO.Renderer.Effects
         /// still has to complete several cycles across the screen, or each edge gets one gentle
         /// bulge and stays visibly rectangular.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_jitter_scale", "Flux frequency")]
+        [LocalizedDescription(
+            "visualeffects_jitter_scale_tooltip",
             "Frequency of the boundary displacement. Must be coarser than\n"
             + "Noise.BaseScale or the edge just buzzes, but X still has to\n"
             + "cycle several times across the screen or each edge gets one\n"
@@ -93,14 +100,19 @@ namespace ClassicUO.Renderer.Effects
         /// Texture-space velocity of the displacement field. Usually matched to the layer's own
         /// scroll speed so the ragged edge travels with the effect rather than crawling across it.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_jitter_scroll", "Flux drift")]
+        [LocalizedDescription(
+            "visualeffects_jitter_scroll_tooltip",
             "Texture-space velocity of the displacement field. Usually\n"
             + "matched to the layer's own scroll so the ragged edge travels\n"
             + "with the effect."
         )]
         public Vector2 Scroll;
 
-        [Description("Which packed noise channel drives the boundary displacement.")]
+        [LocalizedDisplayName("visualeffects_jitter_channel", "Flux source")]
+        [LocalizedDescription(
+            "visualeffects_jitter_channel_tooltip","Which packed noise channel drives the boundary displacement."
+        )]
         public NoiseChannel Channel;
     }
 
@@ -111,7 +123,9 @@ namespace ClassicUO.Renderer.Effects
     public struct OverlayShape
     {
         /// <summary>Centre of the radial falloff in screen uv. (0.5, 0.5) is the middle.</summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_shape_center", "Centre")]
+        [LocalizedDescription(
+            "visualeffects_shape_center_tooltip",
             "Centre of the radial falloff in screen uv. (0.5, 0.5) is the\n"
             + "middle."
         )]
@@ -123,7 +137,9 @@ namespace ClassicUO.Renderer.Effects
         /// display a radial shape reaches much further at the corners and the left/right edges than
         /// it does at the top and bottom, so the same value covers noticeably less screen.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_shape_reach", "Reach")]
+        [LocalizedDescription(
+            "visualeffects_shape_reach_tooltip",
             "How far in from the screen edge the effect extends. Larger is\n"
             + "thicker."
         )]
@@ -133,7 +149,9 @@ namespace ClassicUO.Renderer.Effects
         /// Width of the fade behind the boundary. Wide values thin the effect into a haze; narrow
         /// values give it a defined surface and a more abrupt end.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_shape_feather", "Falloff")]
+        [LocalizedDescription(
+            "visualeffects_shape_feather_tooltip",
             "Width of the fade behind the boundary. Wide thins the effect\n"
             + "into haze; narrow gives it a defined surface."
         )]
@@ -149,7 +167,9 @@ namespace ClassicUO.Renderer.Effects
         /// and has no aspect bias.
         /// </para>
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_shape_edgeblend", "Vignette / border")]
+        [LocalizedDescription(
+            "visualeffects_shape_edgeblend_tooltip",
             "0 = radial vignette, 1 = border trim. Avoid values in between:\n"
             + "the radial term is width-normalised, so any blend lands mostly\n"
             + "on the left and right edges. Use CornerBias for corner\n"
@@ -163,14 +183,18 @@ namespace ClassicUO.Renderer.Effects
         /// as a picture frame. Raising it lets both axes contribute near a corner so the trim
         /// thickens and rounds there, without favouring any one edge.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_shape_cornerbias", "Corner weighting")]
+        [LocalizedDescription(
+            "visualeffects_shape_cornerbias_tooltip",
             "Corner weighting of the border trim, ignored when EdgeBlend is\n"
             + "0. At 0 the trim is a sharp-cornered rectangle; raising it\n"
             + "thickens and rounds the corners."
         )]
         public float CornerBias;
 
-        [Description(
+        [LocalizedDisplayName("visualeffects_shape_jitter", "Boundary break-up")]
+        [LocalizedDescription(
+            "visualeffects_shape_jitter_tooltip",
             "Breaks up the shape boundary with its own noise field. Without\n"
             + "it the effect ends along a straight iso-line and reads as a\n"
             + "rectangle."
@@ -178,15 +202,23 @@ namespace ClassicUO.Renderer.Effects
         public OverlayJitter Jitter;
 
         /// <summary>Unit vector biasing the effect toward one side or corner.</summary>
-        [Description("Unit vector biasing the effect toward one side or corner.")]
+        [LocalizedDisplayName("visualeffects_shape_focusdir", "Bias direction")]
+        [LocalizedDescription(
+            "visualeffects_shape_focusdir_tooltip","Unit vector biasing the effect toward one side or corner."
+        )]
         public Vector2 FocusDir;
 
         /// <summary>Higher values tighten the directional lobe.</summary>
-        [Description("Higher values tighten the directional lobe.")]
+        [LocalizedDisplayName("visualeffects_shape_focuspower", "Bias tightness")]
+        [LocalizedDescription(
+            "visualeffects_shape_focuspower_tooltip","Higher values tighten the directional lobe."
+        )]
         public float FocusPower;
 
         /// <summary>0 = uniform all the way round, 1 = fully biased toward <see cref="FocusDir"/>.</summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_shape_focusamount", "Bias strength")]
+        [LocalizedDescription(
+            "visualeffects_shape_focusamount_tooltip",
             "0 = uniform all the way round, 1 = fully biased toward\n"
             + "FocusDir."
         )]
@@ -203,7 +235,9 @@ namespace ClassicUO.Renderer.Effects
         /// Frequency of the primary field. The X:Y ratio is the anisotropy, and it is the main
         /// control over whether features read as blobs (near 1:1) or as streaks (4:1 and beyond).
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_noise_basescale", "Primary frequency")]
+        [LocalizedDescription(
+            "visualeffects_noise_basescale_tooltip",
             "Frequency of the primary noise field. The X:Y ratio is the\n"
             + "anisotropy - near 1:1 reads as blobs, 4:1 and beyond as\n"
             + "streaks."
@@ -215,14 +249,18 @@ namespace ClassicUO.Renderer.Effects
         /// two layers with matching scroll values but different scales visibly slide against each
         /// other. Prefer to derive scroll from a target screen speed.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_noise_basescroll", "Primary drift")]
+        [LocalizedDescription(
+            "visualeffects_noise_basescroll_tooltip",
             "Texture-space velocity. On-screen speed is Scroll / Scale, so\n"
             + "two layers with matching scroll but different scales visibly\n"
             + "slide against each other."
         )]
         public Vector2 BaseScroll;
 
-        [Description(
+        [LocalizedDisplayName("visualeffects_noise_basechannel", "Primary source")]
+        [LocalizedDescription(
+            "visualeffects_noise_basechannel_tooltip",
             "Which packed noise channel the primary field reads. R and G\n"
             + "are fBm (organic); B is ridged and A is Worley - both draw\n"
             + "cell outlines and suit only cracks and shattering."
@@ -230,15 +268,23 @@ namespace ClassicUO.Renderer.Effects
         public NoiseChannel BaseChannel;
 
         /// <summary>Frequency of the secondary field, whose lookup is warped by the primary.</summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_noise_detailscale", "Detail frequency")]
+        [LocalizedDescription(
+            "visualeffects_noise_detailscale_tooltip",
             "Frequency of the secondary field, whose lookup is warped by\n"
             + "the primary."
         )]
         public Vector2 DetailScale;
 
-        [Description("Texture-space velocity of the secondary field.")]
+        [LocalizedDisplayName("visualeffects_noise_detailscroll", "Detail drift")]
+        [LocalizedDescription(
+            "visualeffects_noise_detailscroll_tooltip","Texture-space velocity of the secondary field."
+        )]
         public Vector2 DetailScroll;
-        [Description("Which packed noise channel the secondary field reads.")]
+        [LocalizedDisplayName("visualeffects_noise_detailchannel", "Detail source")]
+        [LocalizedDescription(
+            "visualeffects_noise_detailchannel_tooltip","Which packed noise channel the secondary field reads."
+        )]
         public NoiseChannel DetailChannel;
 
         /// <summary>
@@ -246,7 +292,9 @@ namespace ClassicUO.Renderer.Effects
         /// control over character: high values churn and billow (gas), near-zero values let the
         /// pattern translate coherently (fluid, or anything solid).
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_noise_warpstrength", "Churn")]
+        [LocalizedDescription(
+            "visualeffects_noise_warpstrength_tooltip",
             "How far the primary field displaces the secondary field's\n"
             + "lookup. The gas-versus-fluid dial: high values churn and\n"
             + "billow, near-zero lets the pattern translate coherently."
@@ -259,7 +307,9 @@ namespace ClassicUO.Renderer.Effects
         /// value, so raising it makes a layer cover more of the screen rather than less, and what it
         /// draws are outlines, so on a soft field it produces bordered cells.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_noise_ridgeamount", "Ridging")]
+        [LocalizedDescription(
+            "visualeffects_noise_ridgeamount_tooltip",
             "Outlines the field's median. Counterintuitive twice over:\n"
             + "raising it makes the layer cover more, and what it draws are\n"
             + "outlines, so on a soft field it produces bordered cells."
@@ -270,7 +320,9 @@ namespace ClassicUO.Renderer.Effects
         /// Cut-off applied to the field. Higher keeps less, so the layer gets sparser and its
         /// features narrower.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_noise_threshold", "Coverage cut-off")]
+        [LocalizedDescription(
+            "visualeffects_noise_threshold_tooltip",
             "Cut-off applied to the field. Higher keeps less, so the layer\n"
             + "gets sparser and its features narrower."
         )]
@@ -280,7 +332,9 @@ namespace ClassicUO.Renderer.Effects
         /// Width of the fade either side of <see cref="Threshold"/>. Small values give hard-edged
         /// surfaces; large values give soft-edged clouds.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_noise_softness", "Edge softness")]
+        [LocalizedDescription(
+            "visualeffects_noise_softness_tooltip",
             "Width of the fade either side of Threshold. Small gives hard-\n"
             + "edged surfaces; large gives soft-edged clouds."
         )]
@@ -292,7 +346,9 @@ namespace ClassicUO.Renderer.Effects
         /// a geometric form, so a layer that should read as discrete streaks or wisps needs this at
         /// exactly 0 - it is not a way to add weight, only a way to fill the shape in.
         /// </summary>
-        [Description(
+        [LocalizedDisplayName("visualeffects_noise_flatfloor", "Solid fill")]
+        [LocalizedDescription(
+            "visualeffects_noise_flatfloor_tooltip",
             "Solid fill blended under the noise. Anything above 0 makes the\n"
             + "shape mask itself visible as a geometric form, so discrete\n"
             + "streaks or wisps need exactly 0. Not a way to add weight."

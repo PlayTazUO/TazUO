@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;

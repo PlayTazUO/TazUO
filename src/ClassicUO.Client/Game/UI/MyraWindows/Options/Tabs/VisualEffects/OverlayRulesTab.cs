@@ -95,6 +95,10 @@ internal static class OverlayRulesTab
         new RulebaseColumn<OverlayRule>
         {
             Header = TazLang.Get("visualeffects_rulename", "Rule"),
+            HeaderTooltip = TazLang.Get(
+                "visualeffects_rulenametooltip",
+                "What you called this rule. Names are yours alone - nothing\nrefers to a rule by one."
+            ),
             Proportion = new Proportion(ProportionType.Auto),
             CellFactory = rule => Text(rule.Name)
         },
@@ -125,6 +129,10 @@ internal static class OverlayRulesTab
         new RulebaseColumn<OverlayRule>
         {
             Header = TazLang.Get("visualeffects_ruleenabled", "Enabled"),
+            HeaderTooltip = TazLang.Get(
+                "visualeffects_ruleenabledtooltip",
+                "Whether this rule is watched at all. A switched-off rule\ncosts nothing and keeps everything it was configured with."
+            ),
             CellContentAlignment = HorizontalAlignment.Center,
             Proportion = new Proportion(ProportionType.Auto),
             CellFactory = rule => MyraCheckButton.CreateWithCallback(

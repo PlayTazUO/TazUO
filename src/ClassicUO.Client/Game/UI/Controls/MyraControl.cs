@@ -376,10 +376,10 @@ public class MyraControl : IGui
     {
         IsFocused = false;
 
-        // A click inside an open context menu is the menu being used, not focus loss.
-        // Closing it here would detach it mid-press and the click would never complete.
-        if (_desktop.ContextMenu is { Visible: true } contextMenu &&
-            contextMenu.ContainsGlobalPoint(new Point(Mouse.Position.X + ParentX, Mouse.Position.Y + ParentY)))
+        // A click inside something the desktop is showing - an open context menu, a dialog put up by
+        // a property grid editor - is that thing being used, not focus loss. Closing it here would
+        // detach it mid-press and the click would never complete.
+        if (IsPointOverDesktop(new Point(Mouse.Position.X + ParentX, Mouse.Position.Y + ParentY), includeRoot: false))
             return;
 
         _desktop.FocusedKeyboardWidget = null;
@@ -447,6 +447,42 @@ public class MyraControl : IGui
         }
     }
 
+    /// <summary>
+    /// Whether a screen point lands on anything this control's desktop is showing.
+    /// <para>
+    /// <see cref="Bounds"/> only ever tracks the root window. Anything opened with
+    /// <c>Show</c>/<c>ShowModal</c> - a colour picker, a file dialog, whatever a property grid
+    /// editor puts up - is added to the desktop beside the root rather than inside it, so a dialog
+    /// that extends past the window is outside <see cref="Bounds"/> entirely. UIManager would then
+    /// hand the click to whatever is underneath, which is the viewport.
+    /// </para>
+    /// </summary>
+    /// <param name="global">The point, in screen coordinates.</param>
+    /// <param name="includeRoot">Whether the root window counts. False where the caller is asking
+    /// specifically about things layered over it.</param>
+    /// <returns>Whether the desktop owns it.</returns>
+    private bool IsPointOverDesktop(Point global, bool includeRoot = true)
+    {
+        if (_desktop == null)
+            return false;
+
+        // ContainsGlobalPoint is what Myra itself uses for IsTouchInside; a hand-rolled rect from
+        // Left/Top disagrees with it over margins and alignment, and drops clicks near the edges.
+        if (_desktop.ContextMenu is { Visible: true } contextMenu && contextMenu.ContainsGlobalPoint(global))
+            return true;
+
+        foreach (Widget widget in _desktop.Widgets)
+        {
+            if (!includeRoot && ReferenceEquals(widget, _desktop.Root))
+                continue;
+
+            if (widget.Visible && widget.ContainsGlobalPoint(global))
+                return true;
+        }
+
+        return false;
+    }
+
     public void HitTest(int x, int y, ref IGui res) => HitTest(new Point(x, y), ref res);
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
@@ -462,15 +498,7 @@ public class MyraControl : IGui
         if (Bounds.Contains(x + ParentX, y + ParentY))
             return true;
 
-        if (_desktop.ContextMenu is { Visible: true } contextMenu)
-        {
-            // ContainsGlobalPoint is what Myra uses for IsTouchInside; a hand-rolled rect from
-            // Left/Top/Bounds disagrees with it (margin/alignment) and drops clicks in the menu.
-            if (contextMenu.ContainsGlobalPoint(new Point(x + ParentX, y + ParentY)))
-                return true;
-        }
-
-        return false;
+        return IsPointOverDesktop(new Point(x + ParentX, y + ParentY));
     }
 
     #region OnEventOccured

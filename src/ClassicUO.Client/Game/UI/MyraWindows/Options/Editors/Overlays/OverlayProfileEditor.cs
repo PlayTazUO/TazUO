@@ -8,6 +8,7 @@ using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
+using ClassicUO.Game.UI.MyraWindows.Theme;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Renderer.Effects;
 using Microsoft.Xna.Framework;
@@ -41,12 +42,6 @@ internal sealed class OverlayProfileEditor : Widget
     private const string READ_ONLY_GLYPH = "🔒";
 
     private const int BANNER_GLYPH_SIZE = 26;
-
-    /// <summary>Warm enough to read as a notice rather than as disabled text.</summary>
-    private static readonly Color _readOnlyTint = new(235, 200, 120);
-
-    /// <summary>The banner's border is the same tint, held well back so it frames without shouting.</summary>
-    private const float BANNER_BORDER_ALPHA = 0.35f;
 
     /// <summary>
     /// Reset targets, one per technique. Built on demand and kept, because every lookup reads one
@@ -109,7 +104,13 @@ internal sealed class OverlayProfileEditor : Widget
         if (_readOnly)
             Children.Add(BuildReadOnlyBanner());
 
-        Children.Add(BuildPresentationRow());
+        Children.Add(BuildPreviewRow());
+
+        // Everything from here down belongs to the profile rather than to the session, so on a
+        // shipped look it is all read-only. Kept together and separated from the preview switch
+        // above, which is the one thing on this panel that can always be changed.
+        Children.Add(OptionTabCommons.StyledHorizontalSeparator());
+        Children.Add(BuildScopeRow());
         Children.Add(BuildFadeRow());
         Children.Add(BuildShakeRow());
         Children.Add(OptionTabCommons.StyledHorizontalSeparator());
@@ -126,18 +127,22 @@ internal sealed class OverlayProfileEditor : Widget
     /// </summary>
     private static Widget BuildReadOnlyBanner()
     {
+        MyraPalette palette = MyraTheme.Current;
+
         var banner = new HorizontalStackPanel
         {
             Spacing = MyraStyle.STANDARD_SPACING,
             Padding = new Thickness(8, 6),
-            Background = new SolidBrush(new Color(0, 0, 0, 60)),
-            Border = new SolidBrush(_readOnlyTint * BANNER_BORDER_ALPHA),
+            Background = new SolidBrush(palette.PanelFill),
+
+            // The banner's border is the notice tint held well back, so it frames without shouting.
+            Border = new SolidBrush(palette.Notice * palette.NoticeBorderAlpha),
             BorderThickness = new Thickness(1),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Center
         };
 
-        banner.Widgets.Add(MyraLabel.Symbol(READ_ONLY_GLYPH, BANNER_GLYPH_SIZE, _readOnlyTint));
+        banner.Widgets.Add(MyraLabel.Symbol(READ_ONLY_GLYPH, BANNER_GLYPH_SIZE, palette.Notice));
 
         banner.Widgets.Add(
             new MyraLabel(
@@ -148,7 +153,7 @@ internal sealed class OverlayProfileEditor : Widget
                 MyraLabel.TextStyle.P
             )
             {
-                TextColor = _readOnlyTint,
+                TextColor = palette.Notice,
                 VerticalAlignment = VerticalAlignment.Center
             }
         );
@@ -157,11 +162,16 @@ internal sealed class OverlayProfileEditor : Widget
     }
 
     /// <summary>
-    /// What the look covers, and the switch that shows it on demand. Preview ignores every rule and
-    /// the player's state: the usual reason to look at an effect is to decide whether to wire one
-    /// up at all.
+    /// The switch that shows the look on demand. Alone on its row, and above the separator, because
+    /// it is a session setting rather than part of the profile - on a shipped look it is the only
+    /// thing here that can be changed at all, and sat beside the profile's own settings it reads as
+    /// though those were editable too.
+    /// <para>
+    /// Preview ignores every rule and the player's state: the usual reason to look at an effect is
+    /// to decide whether to wire one up at all.
+    /// </para>
     /// </summary>
-    private WrapPanel BuildPresentationRow()
+    private WrapPanel BuildPreviewRow()
     {
         MyraCheckButton preview = MyraCheckButton.CreateWithCallback(
             ScreenOverlayManager.Instance.IsPreviewing(_profile.Id),
@@ -175,15 +185,19 @@ internal sealed class OverlayProfileEditor : Widget
             + "and ends when the options are closed."
         );
 
-        MyraCheckButton fullScreen = Editable(
-            MyraCheckButton.CreateWithCallback(
-                _profile.FullScreen,
-                on =>
-                {
-                    _profile.FullScreen = on;
-                    _onChanged();
-                }
-            )
+        return Row(Labelled(TazLang.Get("visualeffects_preview", "Preview this effect"), preview));
+    }
+
+    /// <summary>What the look covers. Stored on the profile, so read-only on a shipped one.</summary>
+    private WrapPanel BuildScopeRow()
+    {
+        MyraCheckButton fullScreen = MyraCheckButton.CreateWithCallback(
+            _profile.FullScreen,
+            on =>
+            {
+                _profile.FullScreen = on;
+                _onChanged();
+            }
         );
 
         fullScreen.Tooltip = TazLang.Get(
@@ -192,10 +206,9 @@ internal sealed class OverlayProfileEditor : Widget
             + "the whole window rather than only the viewport."
         );
 
-        return Row(
-            Labelled(TazLang.Get("visualeffects_preview", "Preview this effect"), preview),
-            Labelled(TazLang.Get("visualeffects_fullscreen", "Draw over the whole window"), fullScreen)
-        );
+        // The label goes with it. Disabling the box alone leaves its caption at full strength, which
+        // is what made these read as editable.
+        return Row(Editable(Labelled(TazLang.Get("visualeffects_fullscreen", "Draw over the whole window"), fullScreen)));
     }
 
     private WrapPanel BuildFadeRow() =>
@@ -227,16 +240,14 @@ internal sealed class OverlayProfileEditor : Widget
     {
         ShakeSpec? shake = _profile.Shake;
 
-        MyraCheckButton enabled = Editable(
-            MyraCheckButton.CreateWithCallback(
-                shake != null,
-                on =>
-                {
-                    _profile.Shake = on ? new ShakeSpec() : null;
-                    _onChanged();
-                    Rebuild();
-                }
-            )
+        MyraCheckButton enabled = MyraCheckButton.CreateWithCallback(
+            shake != null,
+            on =>
+            {
+                _profile.Shake = on ? new ShakeSpec() : null;
+                _onChanged();
+                Rebuild();
+            }
         );
 
         enabled.Tooltip = TazLang.Get(
@@ -261,7 +272,7 @@ internal sealed class OverlayProfileEditor : Widget
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
 
-        stack.Widgets.Add(Row(Labelled(TazLang.Get("visualeffects_shake", "Shakes the screen"), enabled)));
+        stack.Widgets.Add(Row(Editable(Labelled(TazLang.Get("visualeffects_shake", "Shakes the screen"), enabled))));
         stack.Widgets.Add(grid);
 
         grid.PropertyChanged += (_, _) =>
@@ -587,6 +598,11 @@ internal sealed class OverlayProfileEditor : Widget
     /// One row of the composer. Everything in it is centred on the row's own axis, because these
     /// rows mix combo boxes, buttons and inputs of different heights and a top-aligned button beside
     /// a combo reads as a mistake.
+    /// <para>
+    /// <see cref="WrapPanel.Aligned"/> is what makes the centring take effect: unaligned, the panel
+    /// arranges each child into a rectangle of exactly its own measured height, so a child's vertical
+    /// alignment has no room to resolve against and everything seats at the top of the line.
+    /// </para>
     /// </summary>
     /// <param name="content">The row's widgets, in order.</param>
     /// <returns>The row.</returns>
@@ -595,7 +611,10 @@ internal sealed class OverlayProfileEditor : Widget
         foreach (Widget widget in content)
             widget.VerticalAlignment = VerticalAlignment.Center;
 
-        return OptionTabCommons.StyledHorizontalWrapPanel(content);
+        WrapPanel row = OptionTabCommons.StyledHorizontalWrapPanel(content);
+        row.Aligned = true;
+
+        return row;
     }
 
     private static Widget Labelled(string label, Widget content)

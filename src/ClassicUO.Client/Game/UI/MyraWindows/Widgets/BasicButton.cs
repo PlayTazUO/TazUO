@@ -10,7 +10,6 @@ public class BasicButton : Button
     public BasicButton(Action onClick)
     {
         OnClick = onClick;
-        DisabledBackground = Background;
         VerticalAlignment = VerticalAlignment.Center;
     }
 

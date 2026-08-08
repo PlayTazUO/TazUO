@@ -4,6 +4,7 @@ using System;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
+using ClassicUO.Game.UI.MyraWindows.Theme;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.Properties;
@@ -61,8 +62,27 @@ internal sealed class StyledPropertyGrid : PropertyGrid
         ResetButtonFactory = CreateResetButton;
         MarkContentFactory = CreateExpanderMark;
 
-        if (pristine != null)
-            DefaultValueProvider = DefaultValueOf;
+        // Every LocalizedDisplayName/LocalizedDescription in the grid resolves through here.
+        // Per-grid rather than global: only the screens built on this pay for it, and TazLang's
+        // key-plus-fallback shape is exactly what the hook asks for.
+        Localizer = TazLang.Get;
+
+        // Hovering a parameter and scrolling the panel would otherwise edit it. These grids are
+        // long enough to need scrolling and dense enough that the pointer is nearly always over
+        // something.
+        MouseWheelRequiresFocusOnEditors = true;
+
+        if (pristine == null)
+            return;
+
+        DefaultValueProvider = DefaultValueOf;
+
+        // With a default to compare against, a parameter can say whether it has been touched: the
+        // reset button goes dead where there is nothing to undo, and the name is tinted where there
+        // is. Between them they answer "what have I actually changed here", which a grid of thirty
+        // five knobs otherwise cannot.
+        ResetOnlyWhenModified = true;
+        ModifiedNameColor = MyraTheme.Current.ModifiedValue;
     }
 
     #endregion
@@ -82,17 +102,16 @@ internal sealed class StyledPropertyGrid : PropertyGrid
     /// </summary>
     private static Widget CreateResetButton(Record record, Action reset)
     {
-        BasicButton button = OptionTabCommons.StyledTextIconButton(
+        var button = new IconButton(
             StyleConstantsDefaults.RESET_LABEL_ICON_TEXT,
-            TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, GLYPH_FONT_SIZE),
             reset,
             TazLang.Get("visualeffects_resettodefault", "Reset to default"),
             GLYPH_BUTTON_SIZE,
-            GLYPH_BUTTON_SIZE,
-            StyleConstantsDefaults.RESET_ICON_TOP_OFFSET
-        );
-
-        button.Margin = new Thickness(RESET_BUTTON_GAP, 0, 0, 0);
+            GLYPH_FONT_SIZE
+        )
+        {
+            Margin = new Thickness(RESET_BUTTON_GAP, 0, 0, 0)
+        };
 
         return button;
     }

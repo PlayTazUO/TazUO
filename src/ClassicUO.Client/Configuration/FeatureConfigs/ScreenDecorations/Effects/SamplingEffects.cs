@@ -3,6 +3,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ClassicUO.Renderer.Effects;
+using Myra.Graphics2D.UI.Properties;
 
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
@@ -24,7 +25,9 @@ public sealed class BlurEffect : LayerEffect
     /// circular. Capped at <see cref="OverlayParams.MaxSampleRadius" />, past which the frame is
     /// unreadable rather than merely blurred.
     /// </summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_layer_radius", "Radius")]
+    [LocalizedDescription(
+        "visualeffects_layer_radius_tooltip",
         "Blur disk radius as a fraction of screen width. Small values\n"
         + "read as soft focus; past a couple of percent it becomes\n"
         + "frosted glass."
@@ -32,7 +35,9 @@ public sealed class BlurEffect : LayerEffect
     public float Radius { get; set; } = OverlayParams.Default.Sampling.Radius;
 
     /// <summary>Samples taken per pixel, and the whole cost of the layer.</summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_layer_taps", "Samples")]
+    [LocalizedDescription(
+        "visualeffects_layer_taps_tooltip",
         "Samples taken per pixel, and the whole cost of the layer. Too\n"
         + "few for the radius shows as distinct ghost copies instead of a\n"
         + "blur."
@@ -76,7 +81,9 @@ public sealed class RadialBlurEffect : LayerEffect
     /// How far along the centre ray the taps march, as a fraction of the distance from
     /// <see cref="OverlayShape.Center" />.
     /// </summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_layer_zoom", "Zoom")]
+    [LocalizedDescription(
+        "visualeffects_layer_zoom_tooltip",
         "How far along the centre ray the taps march, as a fraction of\n"
         + "the distance from Shape.Center. The centre stays sharp however\n"
         + "high this goes."
@@ -87,7 +94,9 @@ public sealed class RadialBlurEffect : LayerEffect
     /// Samples taken per pixel. Fewer than a disk blur needs: radial taps land on a line rather than
     /// spreading over an area, so the gaps between them are far less visible.
     /// </summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_layer_taps", "Samples")]
+    [LocalizedDescription(
+        "visualeffects_layer_taps_radial_tooltip",
         "Samples taken per pixel, and the whole cost of the layer.\n"
         + "Radial needs fewer than a disk blur - its taps land on a line."
     )]
@@ -133,7 +142,9 @@ public sealed class ChromaticEffect : LayerEffect
     /// makes it read as a lens rather than as a broken image. Capped at
     /// <see cref="OverlayParams.MaxSampleAberration" />.
     /// </summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_layer_aberration", "Separation")]
+    [LocalizedDescription(
+        "visualeffects_layer_aberration_tooltip",
         "Red/blue separation, as a fraction of the distance from\n"
         + "Shape.Center. Nothing separates at the centre and fringing\n"
         + "grows toward the corners."
@@ -141,7 +152,11 @@ public sealed class ChromaticEffect : LayerEffect
     public float Aberration { get; set; } = OverlayParams.Default.Sampling.Aberration;
 
     /// <summary>Samples taken per pixel. The split itself is three taps; this bounds the rest.</summary>
-    [Description("Samples taken per pixel, and the whole cost of the layer.")]
+    [LocalizedDisplayName("visualeffects_layer_taps", "Samples")]
+    [LocalizedDescription(
+        "visualeffects_layer_taps_chromatic_tooltip",
+        "Samples taken per pixel, and the whole cost of the layer."
+    )]
     public OverlaySampleTaps Taps { get; set; } = OverlaySampleTaps.Twelve;
 
     /// <inheritdoc />

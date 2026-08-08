@@ -301,17 +301,14 @@ public class ScriptManagerWindow : MyraControl
         string normalizedGroupName
     )
     {
-        return OptionTabCommons.StyledTextIconButton(
+        return new IconButton(
             isCollapsed ? "⮞" : "⮟",
-            TrueTypeLoader.Instance.GetFont(
-                EmbeddedFontNames.NOTO_SANS_2_SYMBOLS,
-                StyleConstantsDefaults.RESET_ICON_FONT_SIZE
-            ),
             () =>
             {
                 ToggleGroupState(isCollapsed, fullGroupPath, normalizedParentGroup, normalizedGroupName);
                 RebuildScriptList();
-            }
+            },
+            glyphSize: StyleConstantsDefaults.RESET_ICON_FONT_SIZE
         );
     }
 

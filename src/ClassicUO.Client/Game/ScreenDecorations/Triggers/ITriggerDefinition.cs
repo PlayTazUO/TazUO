@@ -2,6 +2,7 @@
 
 using System;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 
 namespace ClassicUO.Game.ScreenDecorations.Triggers;
 

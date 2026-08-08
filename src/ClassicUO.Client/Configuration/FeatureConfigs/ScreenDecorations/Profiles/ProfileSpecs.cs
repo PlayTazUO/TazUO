@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ClassicUO.Game.ScreenDecorations.Shake;
+using Myra.Graphics2D.UI.Properties;
 
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
@@ -64,18 +65,28 @@ public sealed class ShakeSpec
     /// How hard it hits, 0-1, before the occurrence's own intensity and the global shake setting
     /// scale it down.
     /// </summary>
-    [Description("How hard the shake hits, 0-1, at full occurrence strength.")]
+    [LocalizedDisplayName("visualeffects_shake_trauma", "Strength")]
+    [LocalizedDescription(
+        "visualeffects_shake_trauma_tooltip",
+        "How hard the shake hits, 0-1, at full occurrence strength."
+    )]
     public float Trauma { get; set; } = DEFAULT_TRAUMA;
 
     /// <summary>Total length of the shake, ramps included.</summary>
-    [Description("Total length of the shake in seconds, ramps included.")]
+    [LocalizedDisplayName("visualeffects_shake_duration", "Duration (s)")]
+    [LocalizedDescription(
+        "visualeffects_shake_duration_tooltip",
+        "Total length of the shake in seconds, ramps included."
+    )]
     public float DurationSeconds { get; set; } = DEFAULT_DURATION_SECONDS;
 
     /// <summary>
     /// How long it takes to reach full strength. Zero starts at full amplitude on the first frame,
     /// which is what an impact wants and what anything building up does not.
     /// </summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_shake_rampup", "Ramp up (s)")]
+    [LocalizedDescription(
+        "visualeffects_shake_rampup_tooltip",
         "Seconds spent building to full strength. Zero starts at full\n"
         + "amplitude on the first frame - right for an impact, wrong for\n"
         + "anything that should be felt approaching."
@@ -86,7 +97,9 @@ public sealed class ShakeSpec
     /// How long it takes to fall away at the end. Zero stops dead, which is audible as a click in
     /// the motion unless the gradient has already brought it to nothing.
     /// </summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_shake_rampdown", "Ramp down (s)")]
+    [LocalizedDescription(
+        "visualeffects_shake_rampdown_tooltip",
         "Seconds spent falling away at the end. Zero stops dead, which\n"
         + "reads as a jolt unless the gradient already brought it to\n"
         + "nothing."
@@ -94,7 +107,9 @@ public sealed class ShakeSpec
     public float RampDownSeconds { get; set; }
 
     /// <summary>The overall arc across the whole duration, independent of the ramps.</summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_shake_gradient", "Shape")]
+    [LocalizedDescription(
+        "visualeffects_shake_gradient_tooltip",
         "The arc across the whole duration, independent of the ramps.\n"
         + "Constant holds at strength; Decay starts at peak and falls;\n"
         + "Swell builds; Pulse peaks halfway."
@@ -102,7 +117,9 @@ public sealed class ShakeSpec
     public ShakeGradient Gradient { get; set; } = ShakeGradient.Decay;
 
     /// <summary>Easing applied to both ramps and to the gradient.</summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_shake_curve", "Easing")]
+    [LocalizedDescription(
+        "visualeffects_shake_curve_tooltip",
         "Easing applied to both ramps and to the gradient. Smooth is\n"
         + "the least mechanical; EaseIn is slow to build, EaseOut slow\n"
         + "to finish."
@@ -113,7 +130,9 @@ public sealed class ShakeSpec
     /// Shake rate in Hz, or zero for the default. Lower reads as a heavy rumble, higher as a rattle
     /// - it is what separates a quake from a hit far more than trauma does.
     /// </summary>
-    [Description(
+    [LocalizedDisplayName("visualeffects_shake_frequency", "Rate (Hz)")]
+    [LocalizedDescription(
+        "visualeffects_shake_frequency_tooltip",
         "Shake rate in Hz; zero uses the default. Lower reads as a\n"
         + "heavy rumble, higher as a rattle."
     )]

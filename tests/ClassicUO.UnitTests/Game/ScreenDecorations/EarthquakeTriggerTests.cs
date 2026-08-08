@@ -1,4 +1,5 @@
 using ClassicUO.Game.ScreenDecorations.Triggers;
+using ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 using ClassicUO.Game.ScreenDecorations.Triggers.Definitions;
 using FluentAssertions;
 using Xunit;

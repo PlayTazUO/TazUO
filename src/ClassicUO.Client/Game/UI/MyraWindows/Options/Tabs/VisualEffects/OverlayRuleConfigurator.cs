@@ -5,9 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 using ClassicUO.Game.ScreenDecorations.Triggers;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Logic;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Myra.Graphics2D.UI;
 using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
@@ -119,19 +121,44 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
 
         Widget? parameters = ParameterGrid(definition);
 
-        if (parameters == null)
+        if (parameters != null)
         {
-            _root.Widgets.Clear();
-            _root.Widgets.Add(panel);
-
-            return;
+            panel.Widgets.Add(OptionTabCommons.StyledHorizontalSeparator());
+            panel.Widgets.Add(parameters);
         }
 
-        panel.Widgets.Add(OptionTabCommons.StyledHorizontalSeparator());
-        panel.Widgets.Add(parameters);
+        Widget? filter = FilterBuilder();
+
+        if (filter != null)
+        {
+            panel.Widgets.Add(OptionTabCommons.StyledHorizontalSeparator());
+            panel.Widgets.Add(filter);
+        }
 
         _root.Widgets.Clear();
         _root.Widgets.Add(panel);
+    }
+
+    /// <summary>
+    /// The expression editor, for a trigger whose matching is a tree rather than a fixed set of
+    /// fields. Below the grid rather than in it: a bracket nests, grows and shrinks, where a grid row
+    /// is one editor beside one label.
+    /// </summary>
+    /// <returns>The titled builder, or null where the chosen trigger has no expression.</returns>
+    private Widget? FilterBuilder()
+    {
+        if (_draft.Trigger.Parameters is not ILogicFilterParameters filtered)
+            return null;
+
+        var builder = new LogicBuilder(filtered.Filter, filtered.FilterSchema);
+
+        // Nothing is persisted here - the whole editor works on a draft, and Save is what commits it.
+
+        return OptionTabCommons.StyledStackPanel(
+            Orientation.Vertical,
+            new MyraLabel(TazLang.Get("visualeffects_rulefilter", "Match when"), MyraLabel.TextStyle.H5),
+            builder
+        );
     }
 
     private Widget NameInput()
