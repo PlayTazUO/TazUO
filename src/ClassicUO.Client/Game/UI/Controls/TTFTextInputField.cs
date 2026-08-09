@@ -163,12 +163,18 @@ namespace ClassicUO.Game.UI.Controls
                 _fontSize = fontSize;
 
                 string text = Text;
+                bool convertHtmlColors = ConvertHtmlColors;
+                int width = Width;
+                int height = Height;
 
                 _rendererText?.Dispose();
                 _rendererCaret?.Dispose();
 
                 _rendererText = Controls.TextBox.GetOne(text, TrueTypeLoader.EMBEDDED_FONT, _fontSize, Color.White,
-                    new TextBox.RTLOptions() { Width = _maxWidth > 0 ? _maxWidth : null, SupportsCommands = false, IgnoreColorCommands = true, CalculateGlyphs = true, MultiLine = true });
+                    new TextBox.RTLOptions() { Width = _maxWidth > 0 ? _maxWidth : null, SupportsCommands = false, IgnoreColorCommands = true, CalculateGlyphs = true, MultiLine = true, ConvertHtmlColors = convertHtmlColors });
+
+                _rendererText.Width = width;
+                _rendererText.Height = height;
 
                 _rendererCaret = Controls.TextBox.GetOne("_", TrueTypeLoader.EMBEDDED_FONT, _fontSize, Color.White, new TextBox.RTLOptions(){SupportsCommands = false, IgnoreColorCommands = true, CalculateGlyphs = true});
 
