@@ -38,6 +38,13 @@ public readonly record struct SamplingShape(
     /// <summary>Depth of that breathing, as a fraction of <see cref="Strength" />.</summary>
     public float PulseAmp { get; init; }
 
+    /// <summary>Rate the shape's own centre drifts at, in Hz per axis. See
+    /// <see cref="ClassicUO.Renderer.Effects.OverlayParams.OverlayShape.WobbleFreq" />.</summary>
+    public Vector2 WobbleFreq { get; init; }
+
+    /// <summary>Peak drift of the centre, in screen uv.</summary>
+    public float WobbleAmp { get; init; }
+
     /// <summary>Distortion around the screen edge, fading toward a clear centre.</summary>
     /// <param name="reach">How far in it extends.</param>
     /// <param name="feather">Length of the fade.</param>
@@ -53,6 +60,8 @@ public readonly record struct SamplingShape(
         new()
         {
             Center = new Vector2(0.5f, 0.5f),
+            WobbleFreq = WobbleFreq,
+            WobbleAmp = WobbleAmp,
             Reach = Reach,
             Feather = Feather,
             EdgeBlend = EdgeBlend,

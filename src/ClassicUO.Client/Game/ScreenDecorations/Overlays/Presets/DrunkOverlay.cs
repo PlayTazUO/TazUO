@@ -7,7 +7,9 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 
 /// <summary>
 ///     The room going round: a zoom blur streaking outward from the centre, breathing, under a warm
-///     vignette.
+///     vignette. Both layers share a slow wander of their own pivot, so the point everything swims
+///     around drifts rather than sitting locked to screen centre - meant to cost the player some
+///     legibility, not just decorate the border.
 ///     <para>
 ///     Radial rather than a plain blur because the centre of a zoom blur stays sharp however strong
 ///     it is. That is what keeps the effect playable - whatever the player is looking at remains
@@ -17,9 +19,9 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 /// </summary>
 public sealed class DrunkOverlay : ScreenOverlayPreset
 {
-    /// <summary>Reaches nearly to the centre. The zoom's own falloff, not the mask, is what keeps
-    /// the middle of the screen readable.</summary>
-    private const float BLUR_REACH = 0.92f;
+    /// <summary>Nearly full screen. Pushed out from the old default along with the vignette - this
+    /// preset is meant to cost the player something, not just decorate the border.</summary>
+    private const float BLUR_REACH = 0.98f;
 
     private const float BLUR_FEATHER = 0.70f;
 
@@ -28,16 +30,25 @@ public sealed class DrunkOverlay : ScreenOverlayPreset
     private const float BLUR_SWIM = 0.65f;
 
     /// <summary>Rate the smear itself swells at, on top of the vignette's own slower breathing.</summary>
-    private const float BLUR_PULSE_FREQ = 0.27f;
+    private const float BLUR_PULSE_FREQ = 0.22f;
 
     /// <summary>Depth of that swell, as a fraction of <see cref="Blur" />.</summary>
     private const float BLUR_PULSE_AMP = 0.28f;
 
     private const float VIGNETTE_FEATHER = 0.50f;
 
-    /// <summary>How far short of the blur the vignette stops. Wide: the smear has to be well
-    /// established before any darkening starts, or the two arrive as one edge.</summary>
-    private const float VIGNETTE_REACH_MARGIN = 0.32f;
+    /// <summary>How far short of the blur the vignette stops. Narrowed along with the reach increase
+    /// - the smear now establishes so much earlier that the old wide margin left the vignette barely
+    /// reaching past the corners.</summary>
+    private const float VIGNETTE_REACH_MARGIN = 0.16f;
+
+    /// <summary>Drift rate shared by both layers. Different X and Y so the pivot wanders rather than
+    /// swinging like a pendulum; both layers must use the exact same rate and phase or the smear's
+    /// convergence point and the vignette's dark patch visibly split apart.</summary>
+    private static readonly Vector2 WOBBLE_FREQ = new(0.11f, 0.085f);
+
+    /// <summary>Peak drift, in screen uv. Small - this unsteadies the pivot, it does not tour it.</summary>
+    private const float WOBBLE_AMP = 0.2f;
 
     public float Intensity { get; set; } = 1.0f;
 
@@ -49,15 +60,18 @@ public sealed class DrunkOverlay : ScreenOverlayPreset
     /// <summary>How far the streaks march outward, as a fraction of the distance from the centre.</summary>
     public float Zoom { get; set; } = 0.10f;
 
-    /// <summary>Strength of the smear at the screen edge.</summary>
-    public float Blur { get; set; } = 0.80f;
+    /// <summary>Strength of the smear at the screen edge. Pulled back from the old default - it read
+    /// as too deep, more like heavy fog than a light-headed blur.</summary>
+    public float Blur { get; set; } = 0.62f;
 
     protected override void Bake(List<OverlayLayer> layers)
     {
         SamplingShape blurShape = SamplingShape.Vignette(BLUR_REACH, BLUR_FEATHER, Blur, BLUR_SWIM) with
         {
             PulseFreq = BLUR_PULSE_FREQ,
-            PulseAmp = BLUR_PULSE_AMP
+            PulseAmp = BLUR_PULSE_AMP,
+            WobbleFreq = WOBBLE_FREQ,
+            WobbleAmp = WOBBLE_AMP
         };
 
         // Bottom layer: it samples the pre-pass frame, so the vignette below it would be replaced
@@ -76,6 +90,10 @@ public sealed class DrunkOverlay : ScreenOverlayPreset
                 Shape = new OverlayShape
                 {
                     Center = new Vector2(0.5f, 0.5f),
+                    // Shared with the blur layer's shape - same rate and phase, or the smear's
+                    // convergence point and this vignette's dark patch drift apart from each other.
+                    WobbleFreq = WOBBLE_FREQ,
+                    WobbleAmp = WOBBLE_AMP,
                     Reach = LayerReach.Shallower(BLUR_REACH, VIGNETTE_REACH_MARGIN),
                     Feather = VIGNETTE_FEATHER,
                     EdgeBlend = 0.00f,

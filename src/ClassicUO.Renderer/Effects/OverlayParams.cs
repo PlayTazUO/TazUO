@@ -132,6 +132,32 @@ namespace ClassicUO.Renderer.Effects
         public Vector2 Center;
 
         /// <summary>
+        /// Rate <see cref="Center"/> drifts at, in Hz per axis. Different X and Y values give a
+        /// Lissajous wander instead of a back-and-forth pendulum. Zero on either axis holds that axis
+        /// still, so a preset with no wobble simply leaves both at zero rather than needing a
+        /// separate on/off switch.
+        /// </summary>
+        [LocalizedDisplayName("visualeffects_shape_wobblefreq", "Drift rate")]
+        [LocalizedDescription(
+            "visualeffects_shape_wobblefreq_tooltip",
+            "Rate the centre drifts at, in Hz per axis. Different X and Y\n"
+            + "values give a wander instead of a pendulum; zero on an axis\n"
+            + "holds it still."
+        )]
+        public Vector2 WobbleFreq;
+
+        /// <summary>Peak drift of <see cref="Center"/>, in screen uv. Kept small - this is meant to
+        /// unsteady the effect's pivot, not send it touring the screen.</summary>
+        [LocalizedDisplayName("visualeffects_shape_wobbleamp", "Drift range")]
+        [LocalizedDescription(
+            "visualeffects_shape_wobbleamp_tooltip",
+            "Peak drift of the centre, in screen uv. Kept small - this\n"
+            + "unsteadies the pivot rather than sending it touring the\n"
+            + "screen."
+        )]
+        public float WobbleAmp;
+
+        /// <summary>
         /// How far in from the screen edge the effect extends, roughly as a fraction of the distance
         /// to the centre. Larger is thicker. Interacts with <see cref="EdgeBlend"/>: on a widescreen
         /// display a radial shape reaches much further at the corners and the left/right edges than
@@ -428,6 +454,15 @@ namespace ClassicUO.Renderer.Effects
         /// image.</summary>
         public const float MaxSampleAberration = 0.05f;
 
+        /// <summary>Centre-drift rate ceiling, in Hz. A motion-sickness bound rather than the
+        /// flash-hazard one <see cref="MaxPulseFreqHz"/> guards against - past this the pivot swings
+        /// fast enough to read as camera shake rather than an unsteady wander.</summary>
+        public const float MaxWobbleFreqHz = 1.0f;
+
+        /// <summary>Centre-drift range ceiling, in screen uv. Past this the effect's own focal point
+        /// visibly tours the screen instead of just feeling unsteady.</summary>
+        public const float MaxWobbleAmp = 0.15f;
+
         private const float MIN_FEATHER = 0.01f;
 
         // A zero jitter scale collapses the displacement lookup onto a single texel, which reads as
@@ -456,6 +491,8 @@ namespace ClassicUO.Renderer.Effects
             Shape = new OverlayShape
             {
                 Center = new Vector2(0.5f, 0.5f),
+                WobbleFreq = Vector2.Zero,
+                WobbleAmp = 0f,
                 Reach = 0.6f,
                 Feather = 0.3f,
                 EdgeBlend = 0f,
@@ -518,6 +555,10 @@ namespace ClassicUO.Renderer.Effects
 
             Noise.FlatFloor = MathHelper.Clamp(Noise.FlatFloor, 0f, 1f);
             Noise.RidgeAmount = MathHelper.Clamp(Noise.RidgeAmount, 0f, 1f);
+
+            Shape.WobbleFreq.X = MathHelper.Clamp(Shape.WobbleFreq.X, 0f, MaxWobbleFreqHz);
+            Shape.WobbleFreq.Y = MathHelper.Clamp(Shape.WobbleFreq.Y, 0f, MaxWobbleFreqHz);
+            Shape.WobbleAmp = MathHelper.Clamp(Shape.WobbleAmp, 0f, MaxWobbleAmp);
 
             Shape.Reach = MathHelper.Clamp(Shape.Reach, 0f, 1f);
             Shape.CornerBias = MathHelper.Clamp(Shape.CornerBias, 0f, 1f);

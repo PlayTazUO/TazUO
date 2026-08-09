@@ -15,6 +15,8 @@ namespace ClassicUO.Renderer.Effects
             MatrixTransform = Parameters["MatrixTransform"];
 
             Center = Parameters["Center"];
+            WobbleFreq = Parameters["WobbleFreq"];
+            WobbleAmp = Parameters["WobbleAmp"];
             AspectScale = Parameters["AspectScale"];
             Reach = Parameters["Reach"];
             Feather = Parameters["Feather"];
@@ -82,6 +84,8 @@ namespace ClassicUO.Renderer.Effects
         public EffectParameter MatrixTransform { get; }
 
         public EffectParameter Center { get; }
+        public EffectParameter WobbleFreq { get; }
+        public EffectParameter WobbleAmp { get; }
         public EffectParameter AspectScale { get; }
         public EffectParameter Reach { get; }
         public EffectParameter Feather { get; }
@@ -176,6 +180,8 @@ namespace ClassicUO.Renderer.Effects
         )
         {
             Center.SetValue(p.Shape.Center);
+            WobbleFreq.SetValue(p.Shape.WobbleFreq);
+            WobbleAmp.SetValue(p.Shape.WobbleAmp);
             AspectScale.SetValue(new Vector2(1f, screenSize.Y / screenSize.X));
             Reach.SetValue(p.Shape.Reach);
             Feather.SetValue(p.Shape.Feather);

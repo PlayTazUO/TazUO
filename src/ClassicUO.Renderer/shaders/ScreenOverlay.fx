@@ -9,6 +9,8 @@ sampler SceneSampler : register(s3);
 
 // ---- Shape: where on screen the effect lives -------------------------------
 float2 Center;        // vignette centre in screen uv; (0.5, 0.5) is the middle
+float2 WobbleFreq;     // rate Center drifts at, in Hz per axis; 0 holds that axis still
+float  WobbleAmp;      // peak drift of Center, in screen uv
 float2 AspectScale;   // (1, height/width); keeps the radial falloff circular
 float  Reach;         // how far in from the edge the effect extends; larger = thicker
 float  Feather;       // width of the falloff band behind the boundary
@@ -75,12 +77,26 @@ PS_INPUT main_vertex(VS_INPUT IN)
     return OUT;
 }
 
+// Center, drifted by a Lissajous wander when WobbleFreq/WobbleAmp ask for one. Uniform per draw
+// call - both axes read the same Time every pixel - so this costs two sin evaluations for the
+// whole layer, not per pixel. Different X/Y phase (the 1.7 offset) keeps the wander from
+// collapsing onto a straight line when both frequencies happen to match.
+float2 EffectiveCenter()
+{
+    float2 drift = float2(
+        sin(Time * WobbleFreq.x * 6.28318530718),
+        cos(Time * WobbleFreq.y * 6.28318530718 + 1.7)
+    );
+
+    return Center + drift * WobbleAmp;
+}
+
 // How deep into the shape a pixel sits: rises toward the screen edge in border mode, toward the
 // shape's outer ring in radial mode. No texture fetches, so it is cheap enough to gate the
 // early-out below.
 float ShapeDistance(float2 uv)
 {
-    float2 offset = (uv - Center) * AspectScale;
+    float2 offset = (uv - EffectiveCenter()) * AspectScale;
     float radial = length(offset) * 2.0;
 
     // Per-axis proximity to the nearest edge: 1 at the edge, 0 at the middle of that axis.
@@ -108,7 +124,7 @@ float ShapeMask(float2 uv, float shape, float feather)
     float start = 1.0 - Reach;
     float mask = smoothstep(start, start + feather, shape);
 
-    float2 dir = normalize((uv - Center) * AspectScale + 0.00001);
+    float2 dir = normalize((uv - EffectiveCenter()) * AspectScale + 0.00001);
     float lobe = saturate(dot(dir, FocusDir) * 0.5 + 0.5);
     return mask * lerp(1.0, pow(lobe, FocusPower), FocusAmount);
 }
@@ -142,7 +158,7 @@ float2 SceneUv(float2 uv)
 // as a screen-space smear.
 float2 CentreRay(float2 uv)
 {
-    return (uv - Center) * SceneScale;
+    return (uv - EffectiveCenter()) * SceneScale;
 }
 
 // Golden-angle spiral over a disk: sqrt(t) keeps the points area-uniform rather than bunched at the
