@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
 
@@ -58,6 +59,25 @@ public static class BandageAgentTabContent
         ));
 
         root.Widgets.Add(enableRow);
+
+        // Target type to expect when auto-targeting the bandage
+        var targetTypeCombo = new ComboView { MinWidth = 150, VerticalAlignment = VerticalAlignment.Center };
+        targetTypeCombo.ListView.Widgets.Add(new Label { Text = TazLang.Get("bandageagent_targettype_neutral", "Neutral") });
+        targetTypeCombo.ListView.Widgets.Add(new Label { Text = TazLang.Get("bandageagent_targettype_harmful", "Harmful") });
+        targetTypeCombo.ListView.Widgets.Add(new Label { Text = TazLang.Get("bandageagent_targettype_beneficial", "Beneficial") });
+        targetTypeCombo.ListView.SelectedIndex = (int)Math.Min((int)profile.BandageAgentTargetType, (int)TargetType.Beneficial);
+        targetTypeCombo.ListView.SelectedIndexChanged += (_, _) =>
+        {
+            if (targetTypeCombo.ListView.SelectedIndex.HasValue)
+                profile.BandageAgentTargetType = (TargetType)targetTypeCombo.ListView.SelectedIndex.Value;
+        };
+        var targetTypeRow = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
+        targetTypeRow.Widgets.Add(new MyraLabel(
+            TazLang.Get("bandageagent_targettype_label", "Auto-target type"),
+            MyraLabel.TextStyle.P
+        ));
+        targetTypeRow.Widgets.Add(targetTypeCombo);
+        root.Widgets.Add(targetTypeRow);
 
         // Delay + HP threshold on the same row
         var delayBox = new MyraInputBox
