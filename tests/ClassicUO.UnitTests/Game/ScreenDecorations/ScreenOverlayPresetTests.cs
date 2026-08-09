@@ -123,15 +123,33 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         /// stack. An inversion puts a layer's boundary inside one it is meant to sit behind, which is
         /// the one arrangement that looks broken rather than merely mistuned - and for the sampling
         /// presets it also means the distortion stops short of the colour it exists to soften.
+        /// <para>
+        /// Bleed and Fog are deliberate exceptions, covered by their own tests below instead: Bleed's
+        /// sputter is a sparse accent allowed to outreach the streaks it rides on top of, and Fog's
+        /// blur is asked to stop short of the tint so the out-of-focus band stays a rim rather than
+        /// covering the whole view.
+        /// </para>
         /// </summary>
         [Theory]
-        [MemberData(nameof(ShippedPresets))]
+        [MemberData(nameof(NestedDepthPresets))]
         public void EveryPresetOrdersItsLayersFromDeepestToShallowest(ScreenOverlayPreset preset)
         {
             List<float> reaches = Bake(preset).Select(l => l.Params.Shape.Reach).ToList();
 
             reaches.Should().BeInDescendingOrder();
         }
+
+        /// <summary>Every shipped preset whose layers nest strictly deepest-first. Excludes Bleed and
+        /// Fog - see <see cref="EveryPresetOrdersItsLayersFromDeepestToShallowest"/>.</summary>
+        public static IEnumerable<object[]> NestedDepthPresets() =>
+            new[]
+            {
+                new object[] { new PoisonOverlay() },
+                new object[] { new DrunkOverlay() },
+                new object[] { new ConcussionOverlay() },
+                new object[] { new TunnelVisionOverlay() },
+                new object[] { new FractureOverlay() }
+            };
 
         /// <summary>
         /// The stagger has to survive the whole range of the knob, not merely its default. Deriving
@@ -147,8 +165,47 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         public void StackedPresetsStayStaggeredAtEveryReach(float reach)
         {
             AssertStaggered(Bake(new PoisonOverlay { Reach = reach }));
-            AssertStaggered(Bake(new BleedOverlay { Reach = reach }));
-            AssertStaggered(Bake(new FogOverlay { Reach = reach }));
+        }
+
+        /// <summary>
+        /// The sputter is meant to carry reach past both streak passes, not nest behind them - it is
+        /// sparse enough that it never fully occludes what is under it, so this is not the boundary
+        /// inversion the other presets have to avoid.
+        /// </summary>
+        [Theory]
+        [InlineData(0.02f)]
+        [InlineData(0.2f)]
+        [InlineData(0.5f)]
+        [InlineData(1f)]
+        public void BleedSputterOutreachesBothStreaksAtEveryReach(float reach)
+        {
+            List<OverlayLayer> layers = Bake(new BleedOverlay { Reach = reach });
+
+            float thinStreak = layers[0].Params.Shape.Reach;
+            float wideStreak = layers[1].Params.Shape.Reach;
+            float sputter = layers[2].Params.Shape.Reach;
+
+            wideStreak.Should().BeGreaterThan(0f).And.BeLessThanOrEqualTo(thinStreak);
+            sputter.Should().BeGreaterThanOrEqualTo(thinStreak);
+        }
+
+        /// <summary>
+        /// The inverse of the other sampling presets: the blur is asked to stop short of the tint so
+        /// the colour reaches the centre while the out-of-focus band stays a rim around it.
+        /// </summary>
+        [Theory]
+        [InlineData(0.02f)]
+        [InlineData(0.2f)]
+        [InlineData(0.5f)]
+        [InlineData(1f)]
+        public void FogBlurStopsShortOfTheTintAtEveryReach(float reach)
+        {
+            List<OverlayLayer> layers = Bake(new FogOverlay { Reach = reach });
+
+            float blur = layers[0].Params.Shape.Reach;
+            float wash = layers[1].Params.Shape.Reach;
+
+            blur.Should().BeGreaterThan(0f).And.BeLessThanOrEqualTo(wash);
         }
 
         /// <summary>
@@ -206,44 +263,28 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         }
 
         [Fact]
-        public void BleedBakesDarkBasalLayersUnderASingleAdditiveHighlight()
+        public void BleedBakesThreeAlphaLayers()
         {
             List<OverlayLayer> layers = Bake(new BleedOverlay());
 
             layers.Should().HaveCount(3);
 
-            // Exactly one additive pass, and it must be last: an additive layer is the only thing
-            // that lightens the composite, so anything drawn after it would be washed out by it.
-            layers.Select(l => l.Blend)
-                  .Should()
-                  .Equal(OverlayBlend.Alpha, OverlayBlend.Alpha, OverlayBlend.Additive);
+            // No additive specular any more - every pass is the same dark fluid.
+            layers.Select(l => l.Blend).Should().OnlyContain(b => b == OverlayBlend.Alpha);
         }
 
         [Fact]
-        public void BleedIsWeightedTowardItsBasalLayers()
+        public void BleedWeightsTheFineStreakMost()
         {
             List<OverlayLayer> layers = Bake(new BleedOverlay());
 
-            float highlight = layers[2].Params.Appearance.Opacity;
+            float fineStreak = layers[0].Params.Appearance.Opacity;
 
-            // The specular exists to define a surface, not to be seen. Every dark pass under it has
-            // to carry more weight, or the effect reads as mostly bright.
-            for (int i = 0; i < 2; i++)
-                layers[i].Params.Appearance.Opacity.Should().BeGreaterThan(highlight * 2f);
-        }
-
-        [Fact]
-        public void BleedHighlightIsTheBrightestAndSparsestPass()
-        {
-            List<OverlayLayer> layers = Bake(new BleedOverlay());
-
-            OverlayLayer highlight = layers[2];
-
-            foreach (OverlayLayer basal in layers.Take(2))
-            {
-                Brightness(highlight).Should().BeGreaterThan(Brightness(basal));
-                highlight.Params.Noise.Threshold.Should().BeGreaterThan(basal.Params.Noise.Threshold);
-            }
+            // The fine streak carries the caller's Opacity outright; the wide streak and the
+            // sputter are both accents riding on top of it and are scaled down, or the pair would
+            // read as twice the blood the caller asked for.
+            layers[1].Params.Appearance.Opacity.Should().BeLessThan(fineStreak);
+            layers[2].Params.Appearance.Opacity.Should().BeLessThan(fineStreak);
         }
 
         /// <summary>
@@ -289,41 +330,34 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         }
 
         /// <summary>
-        /// Screen speed is scroll/scale, not scroll. Two dark layers travelling at different speeds
-        /// stop reading as one substance and start reading as cloud shadow drifting over terrain.
+        /// Screen speed is scroll/scale, not scroll. The two streak passes are asked to stay close -
+        /// travelling at wildly different speeds would stop them reading as one substance - but no
+        /// longer identical: matching exactly is what made the pair look like one texture gliding in
+        /// rigid lockstep.
         /// </summary>
         [Fact]
-        public void BleedBasalLayersTravelAtOneSpeed()
+        public void BleedStreaksStayCloseInSpeedButNotIdentical()
         {
             List<OverlayLayer> layers = Bake(new BleedOverlay());
 
-            float reference = ScreenSpeed(layers[0].Params.Noise.BaseScroll, layers[0].Params.Noise.BaseScale);
+            float thin = ScreenSpeed(layers[0].Params.Noise.BaseScroll, layers[0].Params.Noise.BaseScale);
+            float wide = ScreenSpeed(layers[1].Params.Noise.BaseScroll, layers[1].Params.Noise.BaseScale);
 
-            foreach (OverlayLayer basal in layers.Take(2))
-            {
-                ScreenSpeed(basal.Params.Noise.BaseScroll, basal.Params.Noise.BaseScale).Should().BeApproximately(reference, 1e-5f);
-                ScreenSpeed(basal.Params.Noise.DetailScroll, basal.Params.Noise.DetailScale).Should().BeApproximately(reference, 1e-5f);
-            }
+            (wide / thin).Should().BeInRange(0.8f, 0.98f);
         }
 
+        /// <summary>
+        /// Verifies the fixed per-layer shift added so layers sharing a scale and scroll do not read
+        /// as the same texture traced twice.
+        /// </summary>
         [Fact]
-        public void BleedHighlightDriftsOverTheRunsItRidesOn()
+        public void BleedLayersHaveDistinctNoiseOffsets()
         {
             List<OverlayLayer> layers = Bake(new BleedOverlay());
-            OverlayNoise runs = layers[1].Params.Noise;
-            OverlayNoise highlight = layers[2].Params.Noise;
 
-            // Same scale and channel, so it sits on the same rivulets...
-            highlight.BaseScale.Should().Be(runs.BaseScale);
-            highlight.BaseChannel.Should().Be(runs.BaseChannel);
+            List<Microsoft.Xna.Framework.Vector2> offsets = layers.Select(l => l.Params.Noise.Offset).ToList();
 
-            // ...but faster, so it slides along them instead of being locked to them, which would
-            // look like one texture drawn twice. Only slightly faster: at a large ratio it stops
-            // being a specular and becomes a second thing moving over the fluid.
-            float ratio = ScreenSpeed(highlight.BaseScroll, highlight.BaseScale)
-                        / ScreenSpeed(runs.BaseScroll, runs.BaseScale);
-
-            ratio.Should().BeInRange(1.05f, 1.5f);
+            offsets.Distinct().Should().HaveCount(offsets.Count);
         }
 
         [Fact]
@@ -341,13 +375,13 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
         }
 
         [Fact]
-        public void BleedHueDrivesTheDerivedFilmTint()
+        public void BleedHueFlowsUnscaledIntoEveryLayer()
         {
             List<OverlayLayer> layers = Bake(new BleedOverlay { Hue = new Microsoft.Xna.Framework.Color(200, 40, 40) });
 
-            // The film tint is scaled from Hue rather than exposed separately, so changing the blood
-            // colour has to move it too or the layers stop being one substance.
-            Brightness(layers[0]).Should().BeLessThan(Brightness(layers[1]));
+            // No separate highlight hue any more - every pass reads as the same fluid, so all three
+            // must carry the caller's Hue at the same brightness.
+            layers.Select(l => Brightness(l)).Should().OnlyContain(b => b == Brightness(layers[0]));
         }
 
         /// <summary>

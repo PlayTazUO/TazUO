@@ -288,6 +288,22 @@ namespace ClassicUO.Renderer.Effects
         public NoiseChannel DetailChannel;
 
         /// <summary>
+        /// Static texture-space shift applied to both fields' lookups. Unlike <see cref="BaseScroll"/>
+        /// and <see cref="DetailScroll"/> this never varies with time - its only job is to desync one
+        /// layer from another that otherwise shares its scale and scroll, so two such layers do not
+        /// read as the same texture traced twice.
+        /// </summary>
+        [LocalizedDisplayName("visualeffects_noise_offset", "Static offset")]
+        [LocalizedDescription(
+            "visualeffects_noise_offset_tooltip",
+            "Static texture-space shift of both fields, unaffected by\n"
+            + "time. Used to desync a layer from another one sharing its\n"
+            + "scale and scroll, so they don't read as the same texture\n"
+            + "traced twice."
+        )]
+        public Vector2 Offset;
+
+        /// <summary>
         /// How far the primary field displaces the secondary field's lookup. The single strongest
         /// control over character: high values churn and billow (gas), near-zero values let the
         /// pattern translate coherently (fluid, or anything solid).
@@ -464,6 +480,7 @@ namespace ClassicUO.Renderer.Effects
                 DetailScale = new Vector2(6f, 6f),
                 DetailScroll = Vector2.Zero,
                 DetailChannel = NoiseChannel.Green,
+                Offset = Vector2.Zero,
                 WarpStrength = 0.2f,
                 RidgeAmount = 0f,
                 Threshold = 0.5f,

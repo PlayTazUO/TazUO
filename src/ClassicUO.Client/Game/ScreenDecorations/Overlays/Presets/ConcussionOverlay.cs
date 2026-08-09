@@ -32,6 +32,16 @@ public sealed class ConcussionOverlay : ScreenOverlayPreset
     /// before the frame starts darkening.</summary>
     private const float VIGNETTE_REACH_MARGIN = 0.43f;
 
+    #region Ctor
+
+    public ConcussionOverlay()
+    {
+        // Shorter than the base default - a struck head clears faster than it hits.
+        FadeOutSeconds = 1.6f;
+    }
+
+    #endregion
+
     public float Intensity { get; set; } = 1.0f;
 
     public Color Hue { get; set; } = new(28, 20, 24);
@@ -40,7 +50,7 @@ public sealed class ConcussionOverlay : ScreenOverlayPreset
 
     /// <summary>Channel separation at the screen edge, as a fraction of the distance from the
     /// centre. Small: past a few thousandths the three channels stop reading as one image.</summary>
-    public float Aberration { get; set; } = 0.006f;
+    public float Aberration { get; set; } = 0.017f;
 
     /// <summary>Strength of the split where the mask is full.</summary>
     public float Split { get; set; } = 0.90f;
@@ -51,7 +61,13 @@ public sealed class ConcussionOverlay : ScreenOverlayPreset
         // rather than fringed.
         layers.Add(
             SamplingLayers.Chromatic(
-                SamplingShape.Vignette(SPLIT_REACH, SPLIT_FEATHER, Split, SPLIT_SWIM),
+                SamplingShape.Vignette(SPLIT_REACH, SPLIT_FEATHER, Split, SPLIT_SWIM)
+                with
+                {
+                    // Slow enough to read as the split swimming in and out rather than flickering.
+                    PulseFreq = 0.3f,
+                    PulseAmp = 0.3f
+                },
                 Aberration
             )
         );

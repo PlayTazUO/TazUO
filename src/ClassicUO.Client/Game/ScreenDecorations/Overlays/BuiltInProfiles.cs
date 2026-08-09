@@ -59,6 +59,12 @@ public static class BuiltInProfiles
     /// </summary>
     private const float POISON_TRAUMA = 0.3f;
 
+    /// <summary>Trauma the struck-head look hits with on arrival.</summary>
+    private const float CONCUSSION_TRAUMA = 0.8f;
+
+    /// <summary>Longer than the default onset hit - a blow to the head rings for a moment.</summary>
+    private const float CONCUSSION_SHAKE_SECONDS = 0.8f;
+
     /// <summary>Hardest a quake underfoot hits. Occurrence intensity scales it down with distance.</summary>
     private const float EARTHQUAKE_TRAUMA = 1f;
 
@@ -106,7 +112,20 @@ public static class BuiltInProfiles
         FromPreset(Ids.Fog, BuiltInName(TazLang.Get("visualeffects_fog", "Fog")), new FogOverlay()),
         FromPreset(Ids.Overcast, BuiltInName(TazLang.Get("visualeffects_overcast", "Overcast")), new OvercastOverlay()),
         FromPreset(Ids.Drunk, BuiltInName(TazLang.Get("visualeffects_drunk", "Drunk")), new DrunkOverlay()),
-        FromPreset(Ids.Concussion, BuiltInName(TazLang.Get("visualeffects_concussion", "Concussion")), new ConcussionOverlay()),
+        FromPreset(
+            Ids.Concussion,
+            BuiltInName(TazLang.Get("visualeffects_concussion", "Concussion")),
+            new ConcussionOverlay(),
+            // An impact that rings rather than one that only jolts: falls away instead of cutting
+            // off, so the hit is still felt after the screen has stopped visibly reacting.
+            new ShakeSpec
+            {
+                Trauma = CONCUSSION_TRAUMA,
+                DurationSeconds = CONCUSSION_SHAKE_SECONDS,
+                Gradient = ShakeGradient.Decay,
+                Curve = ShakeCurve.EaseOut
+            }
+        ),
         FromPreset(Ids.TunnelVision, BuiltInName(TazLang.Get("visualeffects_tunnelvision", "Tunnel vision")), new TunnelVisionOverlay()),
         FromPreset(Ids.Fracture, BuiltInName(TazLang.Get("visualeffects_fracture", "Fracture")), new FractureOverlay()),
         EarthquakeRumble()

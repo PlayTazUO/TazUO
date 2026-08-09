@@ -36,6 +36,7 @@ namespace ClassicUO.Renderer.Effects
             DetailScroll = Parameters["DetailScroll"];
             BaseChannel = Parameters["BaseChannel"];
             DetailChannel = Parameters["DetailChannel"];
+            NoiseOffset = Parameters["NoiseOffset"];
             WarpStrength = Parameters["WarpStrength"];
             RidgeAmount = Parameters["RidgeAmount"];
             Threshold = Parameters["Threshold"];
@@ -102,6 +103,7 @@ namespace ClassicUO.Renderer.Effects
         public EffectParameter DetailScroll { get; }
         public EffectParameter BaseChannel { get; }
         public EffectParameter DetailChannel { get; }
+        public EffectParameter NoiseOffset { get; }
         public EffectParameter WarpStrength { get; }
         public EffectParameter RidgeAmount { get; }
         public EffectParameter Threshold { get; }
@@ -195,6 +197,7 @@ namespace ClassicUO.Renderer.Effects
             DetailScroll.SetValue(p.Noise.DetailScroll);
             BaseChannel.SetValue(p.Noise.BaseChannel.ToSelector());
             DetailChannel.SetValue(p.Noise.DetailChannel.ToSelector());
+            NoiseOffset.SetValue(p.Noise.Offset);
             WarpStrength.SetValue(p.Noise.WarpStrength);
             RidgeAmount.SetValue(p.Noise.RidgeAmount);
             Threshold.SetValue(p.Noise.Threshold);

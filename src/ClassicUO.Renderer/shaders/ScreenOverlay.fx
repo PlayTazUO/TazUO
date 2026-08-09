@@ -31,6 +31,7 @@ float4 BaseChannel;   // selects which packed noise channel the primary field re
 float2 DetailScale;   // frequency of the secondary field, warped by the primary
 float2 DetailScroll;
 float4 DetailChannel;
+float2 NoiseOffset;   // static texture-space shift of both fields; desyncs layers sharing a scroll
 float  WarpStrength;  // domain warp; the gas-vs-fluid dial
 float  RidgeAmount;   // 0 = billowy fbm, 1 = sharp ridges/cracks
 float  Threshold;     // how much of the field survives; higher = sparser
@@ -118,9 +119,9 @@ float ShapeMask(float2 uv, float shape, float feather)
 // alpha wants the hard-edged one.
 float NoiseField(float2 uv)
 {
-    float b = dot(tex2D(NoiseSampler, uv * BaseScale + Time * BaseScroll), BaseChannel);
+    float b = dot(tex2D(NoiseSampler, uv * BaseScale + Time * BaseScroll + NoiseOffset), BaseChannel);
 
-    float2 warped = uv * DetailScale + Time * DetailScroll + (b - 0.5) * WarpStrength;
+    float2 warped = uv * DetailScale + Time * DetailScroll + NoiseOffset + (b - 0.5) * WarpStrength;
     float d = dot(tex2D(NoiseSampler, warped), DetailChannel);
 
     float n = b * 0.55 + d * 0.45;

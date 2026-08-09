@@ -22,8 +22,10 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 ///     mask render its own geometry, which is a soft-edged rectangle.</item>
 ///     <item>Weight comes from opacity and threshold, never from coverage alone. Lowering
 ///     thresholds to add body just fills the trim in solid.</item>
-///     <item>All layers derive their scroll from the same screen speed - only the sputter is
-///     allowed to drift off it, or every pass reads as one texture copy-pasted.</item>
+///     <item>All layers derive their scroll from the same base screen speed, each with its own
+///     fixed <see cref="OverlayNoise.Offset"/>. The two streak passes stay within about 10% of each
+///     other's speed - matching exactly reads as one texture copy-pasted at a different scale - and
+///     only the sputter is allowed to drift much further, being the coarser, more independent mass.</item>
 ///     <item>Vertical anisotropy for streaks rather than blobs - but only moderate. Past about 5:1
 ///     the streaks get thin enough to read as wisps. The sputter inverts this: near-1:1 so its
 ///     features read as spatter, not as a second streak field.</item>
@@ -55,6 +57,10 @@ public sealed class BleedOverlay : ScreenOverlayPreset
     // was asked to carry the fluid the rest of the way there.
     private const float SPUTTER_REACH_MARGIN = 0.30f;
 
+    // Small: the wide pass is meant to sit almost on top of the thin one, just enough off it that
+    // the two boundaries never land exactly together, which reads as a single hard-edged ring.
+    private const float WIDE_STREAK_REACH_MARGIN = 0.06f;
+
     public float Intensity { get; set; } = 1.0f;
 
     /// <summary>Blood colour of the rivulet pass.</summary>
@@ -70,8 +76,11 @@ public sealed class BleedOverlay : ScreenOverlayPreset
     /// </summary>
     public float Reach { get; set; } = 0.8f;
 
-    /// <summary>Deeper of the two, measured off <see cref="Reach" />.</summary>
+    /// <summary>Deepest of the three, measured off <see cref="Reach" />.</summary>
     private float SputterReach => LayerReach.Deeper(Reach, SPUTTER_REACH_MARGIN);
+
+    /// <summary>Just inside <see cref="Reach" />, so it never boundary-ties with the thin pass.</summary>
+    private float WideStreakReach => LayerReach.Shallower(Reach, WIDE_STREAK_REACH_MARGIN);
 
     protected override void Bake(List<OverlayLayer> layers)
     {
@@ -120,6 +129,8 @@ public sealed class BleedOverlay : ScreenOverlayPreset
                     DetailScale = new Vector2(5.8f, 1.5f),
                     DetailScroll = Flow(1.5f, 1f),
                     DetailChannel = NoiseChannel.Green,
+                    // The anchor layer - everything else is offset and re-timed relative to this one.
+                    Offset = Vector2.Zero,
                     // Raised off near-zero - a little churn breaks the runs into uneven trails
                     // instead of straight painted bands, without enough warp to read as billowing gas.
                     WarpStrength = 0.12f,
@@ -160,11 +171,15 @@ public sealed class BleedOverlay : ScreenOverlayPreset
                 Shape = new OverlayShape
                 {
                     Center = new Vector2(0.5f, 0.5f),
-                    Reach = Reach,
+                    Reach = WideStreakReach,
                     Feather = 0.20f,
                     EdgeBlend = 1.00f,
                     CornerBias = 1.00f,
-                    Jitter = Jitter(0.60f, 0.70f, new Vector2(2.4f, 0.55f), NoiseChannel.Green),
+                    // Speed here must match the Noise block's below, or the ragged edge crawls
+                    // across the fill instead of travelling with it.
+                    // X kept below the fill's own BaseScale.X (2.2) - coarser than the detail it
+                    // displaces, or the boundary just buzzes at the fill's own rate.
+                    Jitter = Jitter(0.60f, 0.70f, new Vector2(1.6f, 0.40f), NoiseChannel.Green, 0.90f),
                     FocusDir = new Vector2(0f, -1f),
                     FocusPower = 1f,
                     FocusAmount = 0f
@@ -173,13 +188,18 @@ public sealed class BleedOverlay : ScreenOverlayPreset
                 {
                     // ~2.9:1 - still reads as streaks rather than blobs, just chunkier ones.
                     BaseScale = new Vector2(2.2f, 0.75f),
-                    BaseScroll = Flow(0.75f, 1f),
+                    // 10% off the thin pass's screen speed - matching it exactly made the two read
+                    // as one rigid mass gliding in lockstep, which is what looked "scripted".
+                    BaseScroll = Flow(0.75f, 0.90f),
                     // Swapped from the thin pass's Red/Green pairing so the two fields decorrelate
                     // instead of tracing the same runs at a different scale.
                     BaseChannel = NoiseChannel.Green,
                     DetailScale = new Vector2(3.7f, 1.3f),
-                    DetailScroll = Flow(1.3f, 1f),
+                    DetailScroll = Flow(1.3f, 0.90f),
                     DetailChannel = NoiseChannel.Red,
+                    // Fixed, time-independent shift so this pass starts from a different point in
+                    // the noise field than the thin pass instead of a scaled copy of the same runs.
+                    Offset = new Vector2(0.37f, 0.61f),
                     WarpStrength = 0.12f,
                     RidgeAmount = 0.00f,
                     // Looser than the thin pass - at low frequency a matching threshold would cover
@@ -234,6 +254,8 @@ public sealed class BleedOverlay : ScreenOverlayPreset
                     DetailScale = new Vector2(7.5f, 6.5f),
                     DetailScroll = Flow(6.5f, SPUTTER_FLOW_SCALE),
                     DetailChannel = NoiseChannel.Green,
+                    // A third fixed shift, distinct from both streak passes.
+                    Offset = new Vector2(0.71f, 0.14f),
                     // Raised alongside the streak pass - enough churn to round the droplet edges
                     // unevenly instead of stamping the same fleck shape everywhere.
                     WarpStrength = 0.14f,
