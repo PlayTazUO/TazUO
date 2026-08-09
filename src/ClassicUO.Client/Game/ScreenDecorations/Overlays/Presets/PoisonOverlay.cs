@@ -88,10 +88,10 @@ public sealed class PoisonOverlay : ScreenOverlayPreset
     ///     Deliberately not a multiple of the gas rate: the two drift in and out of phase over about
     ///     half a minute, so no single beat is ever there to be counted.
     /// </summary>
-    private const float BLUR_PULSE_FREQ = 0.07f;
+    private const float BLUR_PULSE_FREQ = 0.19f;
 
     /// <summary>Deep enough to feel like waves of it arriving rather than a constant haze.</summary>
-    private const float BLUR_PULSE_AMP = 0.35f;
+    private const float BLUR_PULSE_AMP = 0.4f;
 
     public float Intensity { get; set; } = 1.0f;
 
