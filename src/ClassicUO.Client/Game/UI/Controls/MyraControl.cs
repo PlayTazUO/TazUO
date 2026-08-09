@@ -111,7 +111,16 @@ public class MyraControl : IGui
 
     private void DesktopOnWidgetGotKeyboardFocus(object sender, GenericEventArgs<Widget> e)
     {
-        if (e.Data.AcceptsKeyboardFocus && e.Data is Myra.Graphics2D.UI.TextBox)
+        // Deliberately narrower than AcceptsKeyboardFocus (see a55398a44): a focused ListBox,
+        // ComboBox, Tree or Window isn't something the player types into, so keys focused on one of
+        // those are meant to keep reaching the game world (WASD still moves the character). Only
+        // widgets that actually consume typed characters should claim focus here - TextBox, and
+        // SpinButton, which wraps one internally for numeric entry (PropertyGrid's int/float rows).
+        // Missing a case here leaves UIManager.KeyboardFocusControl null, which
+        // UIManager.HandleKeyboardInput then silently re-adopts as the system chat box - the state
+        // every gate in the input pipeline reads as "the world owns the keyboard" - so keys typed
+        // into the field also drive movement and hotkeys.
+        if (e.Data.AcceptsKeyboardFocus && e.Data is Myra.Graphics2D.UI.TextBox or SpinButton)
             SetKeyboardFocus();
         else
             UIManager.KeyboardFocusControl = null;

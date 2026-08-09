@@ -88,6 +88,10 @@ internal static class OverlayProfilesTab
     /// <param name="profile">The profile being deleted.</param>
     private static void Delete(OverlaySystemSettings overlays, EffectProfile profile)
     {
+        // A deleted profile that's still previewing would otherwise keep drawing: the toggle that
+        // would normally turn it off no longer has a widget to live on.
+        ScreenOverlayManager.Instance.SetPreview(profile.Id, false);
+
         overlays.Profiles.Remove(profile);
         ScreenOverlayManager.Instance.RulesChanged();
         Commit();

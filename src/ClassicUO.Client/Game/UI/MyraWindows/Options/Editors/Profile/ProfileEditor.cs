@@ -93,6 +93,12 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private bool _isRenaming;
 
     /// <summary>
+    ///     Validation message shown under the rename input, or <see langword="null" /> when the
+    ///     current input is valid.
+    /// </summary>
+    private string _renameError;
+
+    /// <summary>
     ///     Whether a newly created profile goes to the top of the list rather than the bottom. Opt-in:
     ///     it suits a library the user adds to often, and reads as arbitrary reordering everywhere
     ///     else.
@@ -197,6 +203,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private void OnRename()
     {
         _isRenaming = true;
+        _renameError = null;
         RebuildUi();
 
         // Only after the rebuild: SetKeyboardFocus goes through the Desktop, which the input box
@@ -266,12 +273,31 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
 
         string newName = _renameInputBox.Text;
         if (string.IsNullOrWhiteSpace(newName))
+        {
+            _renameError = TazLang.Get("profileeditor_emptyname", "Name cannot be empty.");
+            RebuildUi();
             return;
+        }
+
+        newName = newName.Trim();
+
+        bool collides = Profiles.Any(profile =>
+            !ReferenceEquals(profile, _selectedProfile)
+            && string.Equals(profile.Name, newName, StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (collides)
+        {
+            _renameError = TazLang.Get("profileeditor_duplicatename", "A profile with this name already exists.");
+            RebuildUi();
+            return;
+        }
 
         _selectedProfile.Name = newName;
         _onRenameProfile?.Invoke(_selectedProfile);
 
         _isRenaming = false;
+        _renameError = null;
         RebuildUi();
     }
 
@@ -281,6 +307,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private void OnRenameCancel()
     {
         _isRenaming = false;
+        _renameError = null;
         RebuildUi();
     }
 
@@ -375,11 +402,14 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
 
         panel.Margin = new Thickness(0, 0, 0, 10);
 
-        return OptionTabCommons.StyledStackPanel(
-            Orientation.Vertical,
-            panel,
-            OptionTabCommons.StyledHorizontalSeparator()
-        );
+        var children = new List<Widget> { panel };
+
+        if (_renameError != null)
+            children.Add(new MyraLabel(_renameError, MyraLabel.TextStyle.P) { TextColor = Color.OrangeRed });
+
+        children.Add(OptionTabCommons.StyledHorizontalSeparator());
+
+        return OptionTabCommons.StyledStackPanel(Orientation.Vertical, [.. children]);
     }
 
     /// <summary>
