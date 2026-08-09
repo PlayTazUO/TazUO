@@ -343,7 +343,13 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 _textboxAccount.ContextMenu = new ContextMenuControl(this);
                 foreach (string acct in accts)
                 {
-                    _textboxAccount.ContextMenu.Add(new ContextMenuItemEntry(acct, () => { _textboxAccount.SetText(acct); }));
+                    _textboxAccount.ContextMenu.Add(new ContextMenuItemEntry(acct, () =>
+                    {
+                        _textboxAccount.SetText(acct);
+                        string accountPassword = SimpleAccountManager.GetAccountPassword(acct);
+                        if (accountPassword != null)
+                            _passwordFake.RealText = Crypter.Decrypt(accountPassword);
+                    }));
                 }
                 _textboxAccount.SetTooltip(TazLang.Get("accountcontextmenutooltip"));
                 _textboxAccount.MouseUp += (s, e) =>

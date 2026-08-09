@@ -389,6 +389,7 @@ namespace ClassicUO.Game.Scenes
             {
                 Settings.GlobalSettings.Username = account;
                 Settings.GlobalSettings.Password = Crypter.Encrypt(password);
+                SimpleAccountManager.SetAccountPassword(account, Settings.GlobalSettings.Password);
                 try
                 {
                     Settings.GlobalSettings.Save();
