@@ -2,7 +2,7 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## 5.24.6
+## In Development
 
 ### Features
 * Added a configurable auto-target type option to the Bandage Agent (Neutral/Harmful/Beneficial), replacing the previously hardcoded beneficial target type ([bittiez](https://github.com/bittiez))
