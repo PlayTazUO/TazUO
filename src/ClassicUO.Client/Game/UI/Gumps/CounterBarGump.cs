@@ -1143,6 +1143,9 @@ namespace ClassicUO.Game.UI.Gumps
                         if (_isGumpGraphic)
                             artInfo = ref Client.Game.UO.Gumps.GetGump(_graphic);
 
+                        if (artInfo.Texture == null)
+                            return base.Draw(batcher, x, y);
+
                         Rectangle rect = _isGumpGraphic ? artInfo.UV : Client.Game.UO.Arts.GetRealArtBounds(_graphic);
 
                         Vector3 hueVector = ShaderHueTranslator.GetHueVector(_hue, _partial, 1f, _isGumpGraphic);
