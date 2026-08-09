@@ -68,7 +68,7 @@ public sealed class BleedOverlay : ScreenOverlayPreset
     /// trim, with visible mass creeping toward the centre of the screen. The sputter layer reaches
     /// much further still; see <see cref="SputterReach" />.
     /// </summary>
-    public float Reach { get; set; } = 0.46f;
+    public float Reach { get; set; } = 0.8f;
 
     /// <summary>Deeper of the two, measured off <see cref="Reach" />.</summary>
     private float SputterReach => LayerReach.Deeper(Reach, SPUTTER_REACH_MARGIN);
@@ -185,7 +185,7 @@ public sealed class BleedOverlay : ScreenOverlayPreset
                     // Looser than the thin pass - at low frequency a matching threshold would cover
                     // too much of the screen, so this keeps only the more prominent wide runs.
                     Threshold = 0.56f,
-                    Softness = 0.07f,
+                    Softness = 0.03f,
                     FlatFloor = 0.00f
                 },
                 Appearance = new OverlayAppearance
