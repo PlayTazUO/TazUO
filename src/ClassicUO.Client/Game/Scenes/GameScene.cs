@@ -869,6 +869,7 @@ namespace ClassicUO.Game.Scenes
 
             base.Update();
             SelfHealManager.Update();
+            ScreenOverlayManager.Instance.Tick();
 
             if (_waitingForWindowResize)
             {

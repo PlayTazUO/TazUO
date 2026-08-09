@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Renderer;
 using ClassicUO.Renderer.Effects;
@@ -42,6 +44,11 @@ internal enum OverlayScope
 /// <para>
 /// Composition only: it draws what it is told to and knows nothing about why. What the player's
 /// state means for which overlay runs is <see cref="ScreenOverlayManager"/>'s business.
+/// </para>
+/// <para>
+/// Threading: <see cref="Show"/> and <see cref="Hide"/> marshal themselves to the main thread and so
+/// may be called from anywhere. <see cref="Draw"/> may not - it needs a live batcher and a bound
+/// graphics device, and deferring it past the frame it belongs to would mean nothing.
 /// </para>
 /// </summary>
 internal sealed class ScreenOverlayCompositor
@@ -111,6 +118,15 @@ internal sealed class ScreenOverlayCompositor
     {
         ArgumentNullException.ThrowIfNull(profile);
 
+        // Dispatched out of line rather than through a lambda here: capturing these parameters would
+        // put the closure allocation at method entry, ahead of the branch, so the main-thread path
+        // would pay for it on every overlay raised.
+        if (!MainThreadQueue.IsMainThread)
+        {
+            DispatchShow(id, profile, intensity, priority);
+            return;
+        }
+
         OverlayScope scope = profile.FullScreen ? OverlayScope.FullScreen : OverlayScope.Viewport;
 
         if (_active.TryGetValue(id, out ActiveOverlay? existing))
@@ -148,6 +164,12 @@ internal sealed class ScreenOverlayCompositor
     /// <param name="id">The slot to release. Unknown ids are ignored.</param>
     public void Hide(Guid id)
     {
+        if (!MainThreadQueue.IsMainThread)
+        {
+            DispatchHide(id);
+            return;
+        }
+
         if (_active.TryGetValue(id, out ActiveOverlay? overlay))
             overlay.Hiding = true;
     }
@@ -215,7 +237,7 @@ internal sealed class ScreenOverlayCompositor
                     continue;
                 }
 
-                BlendState wanted = layer.Blend.ToBlendState();
+                var wanted = layer.Blend.ToBlendState();
 
                 if (!ReferenceEquals(wanted, activeBlend))
                 {
@@ -304,6 +326,20 @@ internal sealed class ScreenOverlayCompositor
     #endregion
 
     #region Private methods
+
+    /// <summary>Off-thread half of <see cref="Show" />, kept out of line for its closure.</summary>
+    /// <param name="id">The slot to occupy.</param>
+    /// <param name="profile">What to draw.</param>
+    /// <param name="intensity">Strength of the occurrence behind it.</param>
+    /// <param name="priority">Higher composites on top.</param>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void DispatchShow(Guid id, EffectProfile profile, float intensity, int priority) =>
+        MainThreadQueue.InvokeOnMainThread(() => Show(id, profile, intensity, priority));
+
+    /// <summary>Off-thread half of <see cref="Hide" />, kept out of line for its closure.</summary>
+    /// <param name="id">The slot to release.</param>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void DispatchHide(Guid id) => MainThreadQueue.InvokeOnMainThread(() => Hide(id));
 
     /// <summary>
     /// Makes room for one more overlay by dropping the least important active one, if the cap is

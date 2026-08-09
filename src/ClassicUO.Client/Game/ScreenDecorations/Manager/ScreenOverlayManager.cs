@@ -31,9 +31,9 @@ namespace ClassicUO.Game.ScreenDecorations.Manager;
 /// pass.
 /// </para>
 /// <para>
-/// Threading: every entry point except the shake accessors is main thread only, asserted in debug
-/// builds. <see cref="OverlayPassScheduler"/> owns the whole of the concurrency, and passes are the
-/// only way into this class's state, so none of it needs guarding.
+/// Threading: callable from anywhere. Every mutator marshals itself to the main thread, so the state
+/// behind them is single-threaded without a lock in sight. <see cref="IsPreviewing"/> is the one
+/// exception - it returns a value, so it cannot be fire-and-forget - and stays main thread only.
 /// </para>
 /// </summary>
 internal sealed class ScreenOverlayManager
@@ -118,6 +118,14 @@ internal sealed class ScreenOverlayManager
     /// </summary>
     private Guid? _previewProfileId;
 
+    /// <summary>
+    /// Makes the next pass re-state every live occurrence rather than skipping the unchanged ones,
+    /// which is what re-bakes an edited look. A flag rather than forgetting <see cref="_showing"/>:
+    /// that dictionary is the only record of what the compositor holds, and a pass that cannot see a
+    /// slot cannot retire it either.
+    /// </summary>
+    private bool _restateAll;
+
     #endregion
 
     #region Ctor
@@ -130,6 +138,12 @@ internal sealed class ScreenOverlayManager
     #endregion
 
     #region Public methods
+
+    /// <summary>
+    /// Drives the reconcile passes. Called once per frame from the scene update; with the system off
+    /// it is a field read and a branch.
+    /// </summary>
+    public void Tick() => _scheduler.Tick();
 
     /// <summary>
     /// Offsets the window blit by this frame's shake, when shake is window-scoped. Applied to the
@@ -188,7 +202,15 @@ internal sealed class ScreenOverlayManager
     /// </summary>
     public void Start()
     {
-        AssertMainThread();
+        // The marshalling idiom used by every mutator here: a method group capturing only `this`
+        // compiles to an instance method, so the delegate is built inside the branch and the
+        // main-thread path allocates nothing. Methods taking parameters cannot do this - see
+        // SetPreview.
+        if (!MainThreadQueue.IsMainThread)
+        {
+            MainThreadQueue.InvokeOnMainThread(Start);
+            return;
+        }
 
         if (_inWorld)
             return;
@@ -206,7 +228,11 @@ internal sealed class ScreenOverlayManager
     /// </summary>
     public void RulesChanged()
     {
-        AssertMainThread();
+        if (!MainThreadQueue.IsMainThread)
+        {
+            MainThreadQueue.InvokeOnMainThread(RulesChanged);
+            return;
+        }
 
         SyncRules();
     }
@@ -219,13 +245,17 @@ internal sealed class ScreenOverlayManager
     /// </summary>
     public void ProfilesChanged()
     {
-        AssertMainThread();
+        if (!MainThreadQueue.IsMainThread)
+        {
+            MainThreadQueue.InvokeOnMainThread(ProfilesChanged);
+            return;
+        }
 
-        // Forgetting the terms rather than hiding anything: the next pass re-states every live
-        // occurrence, which is what re-bakes it, and does so without restarting a single fade.
-        _showing.Clear();
+        // Re-stating rather than hiding anything: the next pass re-asserts every live occurrence,
+        // which is what re-bakes it, and does so without restarting a single fade.
+        _restateAll = true;
 
-        _scheduler.Queue();
+        _scheduler.RequestPass();
     }
 
     /// <summary>
@@ -258,27 +288,38 @@ internal sealed class ScreenOverlayManager
     /// <param name="previewing">True to show it, false to stop.</param>
     public void SetPreview(Guid profileId, bool previewing)
     {
-        AssertMainThread();
+        // Dispatched through a separate method rather than a lambda here: a lambda capturing these
+        // parameters would have its closure allocated on method entry, before the branch, so the
+        // main-thread path would pay for it too.
+        if (!MainThreadQueue.IsMainThread)
+        {
+            DispatchSetPreview(profileId, previewing);
+            return;
+        }
 
         if (!previewing && _previewProfileId != profileId)
             return;
 
         _previewProfileId = previewing ? profileId : null;
 
-        _scheduler.Queue();
+        _scheduler.RequestPass();
     }
 
     /// <summary>Stops any preview. For closing the options, where nothing is left to drive it.</summary>
     public void ClearPreview()
     {
-        AssertMainThread();
+        if (!MainThreadQueue.IsMainThread)
+        {
+            MainThreadQueue.InvokeOnMainThread(ClearPreview);
+            return;
+        }
 
         if (_previewProfileId == null)
             return;
 
         _previewProfileId = null;
 
-        _scheduler.Queue();
+        _scheduler.RequestPass();
     }
 
     /// <summary>
@@ -287,7 +328,11 @@ internal sealed class ScreenOverlayManager
     /// </summary>
     public void Reset()
     {
-        AssertMainThread();
+        if (!MainThreadQueue.IsMainThread)
+        {
+            MainThreadQueue.InvokeOnMainThread(Reset);
+            return;
+        }
 
         _inWorld = false;
         Unwatch();
@@ -298,6 +343,16 @@ internal sealed class ScreenOverlayManager
     #endregion
 
     #region Private methods
+
+    /// <summary>
+    /// Off-thread half of <see cref="SetPreview" />. Kept out of line so the closure its lambda needs
+    /// is never allocated on the main-thread path.
+    /// </summary>
+    /// <param name="profileId">The profile to preview.</param>
+    /// <param name="previewing">True to show it, false to stop.</param>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void DispatchSetPreview(Guid profileId, bool previewing) =>
+        MainThreadQueue.InvokeOnMainThread(() => SetPreview(profileId, previewing));
 
     /// <summary>
     /// One scope's shake displacement for this frame, computed once however many passes ask for it.
@@ -427,7 +482,7 @@ internal sealed class ScreenOverlayManager
                     return;
 
                 watched.Raise(signal);
-                _scheduler.Queue();
+                _scheduler.RequestPass();
             }
         );
 
@@ -441,7 +496,7 @@ internal sealed class ScreenOverlayManager
                     return;
 
                 watched.ClearSignal();
-                _scheduler.Queue();
+                _scheduler.RequestPass();
             }
         );
 
@@ -503,7 +558,7 @@ internal sealed class ScreenOverlayManager
 
         bool wanted = _inWorld && DecorationSettings.Current.OverlaysActive;
 
-        _scheduler.SetRunning(wanted);
+        _scheduler.SetEnabled(wanted);
 
         if (!wanted)
         {
@@ -520,7 +575,7 @@ internal sealed class ScreenOverlayManager
         }
 
         _scheduler.SetPollingNeeded(NeedsPolling());
-        _scheduler.Queue();
+        _scheduler.RequestPass();
     }
 
     private bool NeedsPolling()
@@ -539,24 +594,31 @@ internal sealed class ScreenOverlayManager
     /// </summary>
     private void RunPass()
     {
-        ExpireLapsedSignals();
+        // Read once and handed to both halves: DateTime.UtcNow is around 50x the cost of reading the
+        // frame clock, so a pass takes it exactly once and works in frame ticks from there.
+        DateTime now = DateTime.UtcNow;
+
+        ExpireLapsedSignals(now);
         Resolve();
         Reconcile();
 
-        _scheduler.ScheduleExpiry(NextExpiry());
+        _scheduler.ScheduleExpiry(NextExpiry(now));
     }
 
     /// <summary>Retires occurrences whose declared span has run out.</summary>
-    private void ExpireLapsedSignals()
+    /// <param name="now">The instant to judge against.</param>
+    private void ExpireLapsedSignals(DateTime now)
     {
-        DateTime now = DateTime.UtcNow;
-
         foreach (WatchedRule watched in _ordered)
             watched.ExpireIfLapsed(now);
     }
 
-    /// <summary>When the soonest live occurrence lapses, or null if none will.</summary>
-    private DateTime? NextExpiry()
+    /// <summary>
+    /// When the soonest live occurrence lapses, as a frame-clock deadline, or null if none will.
+    /// </summary>
+    /// <param name="now">The instant to measure the deadline from.</param>
+    /// <returns>The frame clock reading to wake at.</returns>
+    private uint? NextExpiry(DateTime now)
     {
         DateTime? earliest = null;
 
@@ -569,7 +631,7 @@ internal sealed class ScreenOverlayManager
                 earliest = at;
         }
 
-        return earliest;
+        return earliest is { } soonest ? OverlayPassScheduler.ToDeadline(soonest, now) : null;
     }
 
     /// <summary>
@@ -673,7 +735,7 @@ internal sealed class ScreenOverlayManager
 
             // Already running on the same terms. A restated occurrence still has work to do, since
             // the one behind it may have grown.
-            if (shown && current == state)
+            if (shown && !_restateAll && current == state)
                 continue;
 
             ScreenOverlayCompositor.Instance.Show(demand.RuleId, demand.Profile, demand.Signal.Intensity, demand.Priority);
@@ -682,6 +744,8 @@ internal sealed class ScreenOverlayManager
             if (!shown)
                 FireOnsetShake(demand);
         }
+
+        _restateAll = false;
     }
 
     /// <summary>

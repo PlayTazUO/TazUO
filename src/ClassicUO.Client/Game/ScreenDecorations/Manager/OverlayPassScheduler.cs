@@ -1,28 +1,22 @@
 #nullable enable
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
-using ClassicUO.Game.Managers;
-using ClassicUO.Utility.Logging;
-using Lock = System.Threading.Lock;
 
 namespace ClassicUO.Game.ScreenDecorations.Manager;
 
 /// <summary>
-/// Decides when the overlay manager gets to run a reconcile pass, and marshals every one of them
-/// onto the main thread.
+/// Decides when the overlay manager gets to run a reconcile pass. Driven by the frame loop:
+/// <see cref="Tick" /> is called once per frame from the scene update, and everything else here only
+/// sets a flag that it reads.
 /// <para>
-/// Three things ask for a pass and nothing else: something calling <see cref="Queue" /> directly (an
-/// event trigger firing, a settings change), a one-shot wake-up for the instant the next occurrence
-/// lapses, and - only while some rule needs polling - a timer. A client whose enabled rules are all
-/// event-driven therefore wakes the main thread not at all until one of them fires.
+/// Three things ask for a pass and nothing else: <see cref="RequestPass" /> (an event trigger firing,
+/// a settings change), the polling interval elapsing - only while some rule needs polling - and the
+/// next occurrence lapsing.
 /// </para>
 /// <para>
-/// This class is the whole threading surface of the overlay system: everything it owns is under
-/// <see cref="_sync" />, and the manager's own state is main-thread only because passes are the only
-/// way in. The lock is never held across a pass - that runs on the main thread, and blocking a timer
-/// thread on it would let passes queue up behind a stalled frame.
+/// Main thread only, deliberately. Callers arriving from elsewhere marshal before they reach the
+/// manager, which leaves this class with no locks, timers or background tasks: a request is a bool
+/// write, and a pass runs inline on the frame that notices it.
 /// </para>
 /// </summary>
 internal sealed class OverlayPassScheduler
@@ -33,28 +27,33 @@ internal sealed class OverlayPassScheduler
     /// Gap between polling passes. The floor on how long an overlay can lag the state that justifies
     /// it, and half the average lag.
     /// </summary>
-    private static readonly TimeSpan _pollInterval = TimeSpan.FromMilliseconds(350);
+    private const uint POLL_INTERVAL_MS = 350;
+
+    /// <summary>
+    /// Ceiling on how far ahead a deadline may be set. Keeps every deadline difference inside the
+    /// signed range the wrap-safe comparison in <see cref="Tick" /> relies on.
+    /// </summary>
+    private const uint MAX_DEADLINE_MS = uint.MaxValue / 4;
 
     private readonly Action _runPass;
 
-    private readonly Lock _sync = new();
+    /// <summary>Whether passes may run at all.</summary>
+    private bool _enabled;
 
-    /// <summary>Whether passes may be queued at all.</summary>
-    private bool _running;
+    /// <summary>Whether any enabled rule has to be sampled rather than waited on.</summary>
+    private bool _polling;
 
-    /// <summary>Set while a pass is queued or running, so a slow frame cannot leave several passes
-    /// stacked up waiting on the main thread.</summary>
-    private bool _passPending;
+    /// <summary>A pass is wanted on the next frame.</summary>
+    private bool _requested;
 
-    /// <summary>Cancels the polling loop. Null exactly when no rule needs polling.</summary>
-    private CancellationTokenSource? _pollCancellation;
+    /// <summary>Frame clock reading the next polling pass is due at.</summary>
+    private uint _nextPoll;
 
-    /// <summary>Cancels the pending wake-up for the next occurrence to lapse.</summary>
-    private CancellationTokenSource? _expiryCancellation;
+    /// <summary>Frame clock reading the soonest live occurrence lapses at.</summary>
+    private uint _expiryAt;
 
-    /// <summary>What that wake-up is set for, so an unchanged deadline is not rescheduled on every
-    /// pass.</summary>
-    private DateTime? _expiryDeadline;
+    /// <summary>Whether <see cref="_expiryAt" /> means anything.</summary>
+    private bool _hasExpiry;
 
     #endregion
 
@@ -71,193 +70,109 @@ internal sealed class OverlayPassScheduler
     #region Public methods
 
     /// <summary>
-    /// Starts or stops scheduling. Stopping cancels both timers and drops any pending request, so a
-    /// pass queued moments earlier cannot re-show what a teardown just took down.
+    /// Runs a pass if one is due. Called once per frame; costs a field read and a branch when the
+    /// system is off, which is the whole reason the timers this replaced are gone.
     /// </summary>
-    /// <param name="running">Whether anything could need a pass.</param>
-    public void SetRunning(bool running)
+    public void Tick()
     {
-        if (running)
-        {
-            lock (_sync)
-                _running = true;
-
+        if (!_enabled)
             return;
-        }
 
-        CancellationTokenSource? poll;
-        CancellationTokenSource? expiry;
+        uint now = Time.Ticks;
 
-        lock (_sync)
+        // Subtraction rather than `now >= deadline`: Time.Ticks is a uint that wraps about every 49
+        // days, and only the difference stays meaningful across that wrap. Deadlines are capped at
+        // MAX_DEADLINE_MS so the difference always fits the signed cast.
+        if (_polling && (int)(now - _nextPoll) >= 0)
         {
-            _running = false;
-            _passPending = false;
-            poll = _pollCancellation;
-            expiry = _expiryCancellation;
-            _pollCancellation = null;
-            _expiryCancellation = null;
-            _expiryDeadline = null;
+            _nextPoll = now + POLL_INTERVAL_MS;
+            _requested = true;
         }
 
-        Stop(poll);
-        Stop(expiry);
+        if (_hasExpiry && (int)(now - _expiryAt) >= 0)
+        {
+            _hasExpiry = false;
+            _requested = true;
+        }
+
+        if (!_requested)
+            return;
+
+        _requested = false;
+        _runPass();
     }
 
     /// <summary>
-    /// Runs the polling loop only while some rule needs polling. A client whose rules are all
-    /// event-driven should not be waking the main thread twice a second to re-read nothing.
+    /// Starts or stops scheduling. Stopping drops any pending request and the expiry, so a pass
+    /// asked for moments earlier cannot re-show what a teardown just took down.
+    /// </summary>
+    /// <param name="enabled">Whether anything could need a pass.</param>
+    public void SetEnabled(bool enabled)
+    {
+        _enabled = enabled;
+
+        if (enabled)
+            return;
+
+        _requested = false;
+        _hasExpiry = false;
+    }
+
+    /// <summary>
+    /// Polls only while some rule needs it. A client whose rules are all event-driven should not be
+    /// re-reading nothing twice a second.
     /// </summary>
     /// <param name="needed">Whether any enabled rule is a polling one.</param>
     public void SetPollingNeeded(bool needed)
     {
-        CancellationTokenSource? started = null;
-        CancellationTokenSource? stopped = null;
-
-        lock (_sync)
-        {
-            if (!_running)
-                needed = false;
-
-            if (needed == (_pollCancellation != null))
-                return;
-
-            if (needed)
-            {
-                started = _pollCancellation = new CancellationTokenSource();
-            }
-            else
-            {
-                stopped = _pollCancellation;
-                _pollCancellation = null;
-            }
-        }
-
-        if (started != null)
-        {
-            CancellationToken token = started.Token;
-            _ = Task.Run(() => PollLoop(token), token);
-
+        if (needed == _polling)
             return;
-        }
 
-        Stop(stopped);
+        _polling = needed;
+
+        // Due at once, so a rule that the player already qualifies for does not wait out an interval
+        // before it can be noticed.
+        if (needed)
+            _nextPoll = Time.Ticks;
     }
 
     /// <summary>
-    /// Wakes the manager at the instant the next occurrence lapses, so a declared duration is
-    /// honoured exactly instead of being rounded up to the next polling pass.
+    /// Wakes the manager on the frame the next occurrence lapses, so a declared duration is honoured
+    /// to within a frame instead of being rounded up to the next polling pass.
     /// </summary>
-    /// <param name="deadline">When to wake, or null if nothing is pending.</param>
-    public void ScheduleExpiry(DateTime? deadline)
+    /// <param name="deadline">Frame clock reading to wake at, or null if nothing is pending.</param>
+    public void ScheduleExpiry(uint? deadline)
     {
-        CancellationTokenSource? stopped;
-        CancellationTokenSource? started = null;
-
-        lock (_sync)
-        {
-            if (deadline == _expiryDeadline)
-                return;
-
-            stopped = _expiryCancellation;
-            _expiryCancellation = null;
-            _expiryDeadline = null;
-
-            if (deadline != null && _running)
-            {
-                started = _expiryCancellation = new CancellationTokenSource();
-                _expiryDeadline = deadline;
-            }
-        }
-
-        Stop(stopped);
-
-        if (started == null)
-            return;
-
-        TimeSpan delay = deadline!.Value - DateTime.UtcNow;
-
-        _ = ExpireAfter(delay < TimeSpan.Zero ? TimeSpan.Zero : delay, started.Token);
+        _hasExpiry = deadline.HasValue;
+        _expiryAt = deadline ?? 0;
     }
 
     /// <summary>
-    /// Asks for a pass on the main thread. Drops the request while nothing is running, so callers
-    /// that fire on demand cost nothing with the system off. Safe from any thread.
+    /// Converts an absolute instant into the frame-clock deadline <see cref="ScheduleExpiry" /> wants.
+    /// Called once per pass rather than per frame: reading DateTime.UtcNow costs around 50x what
+    /// reading Time.Ticks does, so the conversion happens where passes are, not where frames are.
     /// </summary>
-    public void Queue()
+    /// <param name="at">When the occurrence lapses.</param>
+    /// <param name="now">The instant to measure from.</param>
+    /// <returns>The frame clock reading to wake at.</returns>
+    public static uint ToDeadline(DateTime at, DateTime now)
     {
-        lock (_sync)
-        {
-            if (_passPending || !_running)
-                return;
+        double ms = (at - now).TotalMilliseconds;
 
-            _passPending = true;
-        }
+        if (ms <= 0)
+            return Time.Ticks;
 
-        MainThreadQueue.EnqueueAction(RunQueuedPass);
+        return Time.Ticks + (uint)Math.Min(ms, MAX_DEADLINE_MS);
     }
 
-    #endregion
-
-    #region Private methods
-
-    private void RunQueuedPass()
+    /// <summary>
+    /// Asks for a pass on the next frame. Drops the request while nothing is running, so callers that
+    /// fire on demand cost nothing with the system off.
+    /// </summary>
+    public void RequestPass()
     {
-        try
-        {
-            bool running;
-
-            lock (_sync)
-                running = _running;
-
-            if (running)
-                _runPass();
-        }
-        finally
-        {
-            lock (_sync)
-                _passPending = false;
-        }
-    }
-
-    private async Task PollLoop(CancellationToken token)
-    {
-        try
-        {
-            using var timer = new PeriodicTimer(_pollInterval);
-
-            while (await timer.WaitForNextTickAsync(token))
-                Queue();
-        }
-        catch (OperationCanceledException)
-        {
-            // Torn down during the wait. Nothing to unwind: whoever cancelled has already cleared
-            // the overlays or will on the next pass.
-        }
-        catch (Exception e)
-        {
-            // This loop is the only thing driving polling rules; dying silently would leave them
-            // frozen on whatever was last shown, with no clue as to why.
-            Log.Error($"Screen overlay polling loop stopped: {e}");
-        }
-    }
-
-    private async Task ExpireAfter(TimeSpan delay, CancellationToken token)
-    {
-        try
-        {
-            await Task.Delay(delay, token);
-            Queue();
-        }
-        catch (OperationCanceledException)
-        {
-            // A later occurrence moved the deadline, or the system was torn down.
-        }
-    }
-
-    private static void Stop(CancellationTokenSource? cancellation)
-    {
-        cancellation?.Cancel();
-        cancellation?.Dispose();
+        if (_enabled)
+            _requested = true;
     }
 
     #endregion
