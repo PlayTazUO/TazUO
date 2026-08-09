@@ -61,7 +61,10 @@ internal sealed class OverlayPassScheduler
     #region Ctor
 
     /// <param name="runPass">The pass to run. Always invoked on the main thread, never re-entrantly.</param>
-    public OverlayPassScheduler(Action runPass) => _runPass = runPass;
+    public OverlayPassScheduler(Action runPass)
+    {
+        _runPass = runPass;
+    }
 
     #endregion
 

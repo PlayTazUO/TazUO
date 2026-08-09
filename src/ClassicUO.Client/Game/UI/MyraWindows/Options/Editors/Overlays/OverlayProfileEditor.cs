@@ -173,7 +173,7 @@ internal sealed class OverlayProfileEditor : Widget
     /// </summary>
     private WrapPanel BuildPreviewRow()
     {
-        MyraCheckButton preview = MyraCheckButton.CreateWithCallback(
+        var preview = MyraCheckButton.CreateWithCallback(
             ScreenOverlayManager.Instance.IsPreviewing(_profile.Id),
             on => ScreenOverlayManager.Instance.SetPreview(_profile.Id, on)
         );
@@ -191,7 +191,7 @@ internal sealed class OverlayProfileEditor : Widget
     /// <summary>What the look covers. Stored on the profile, so read-only on a shipped one.</summary>
     private WrapPanel BuildScopeRow()
     {
-        MyraCheckButton fullScreen = MyraCheckButton.CreateWithCallback(
+        var fullScreen = MyraCheckButton.CreateWithCallback(
             _profile.FullScreen,
             on =>
             {
@@ -208,7 +208,13 @@ internal sealed class OverlayProfileEditor : Widget
 
         // The label goes with it. Disabling the box alone leaves its caption at full strength, which
         // is what made these read as editable.
-        return Row(Editable(Labelled(TazLang.Get("visualeffects_fullscreen", "Draw over the whole window"), fullScreen)));
+        return Row(
+            Editable(
+                Labelled(TazLang.Get("visualeffects_fullscreen", "Draw over the whole window"),
+                    fullScreen
+                )
+            )
+        );
     }
 
     private WrapPanel BuildFadeRow() =>
@@ -240,7 +246,7 @@ internal sealed class OverlayProfileEditor : Widget
     {
         ShakeSpec? shake = _profile.Shake;
 
-        MyraCheckButton enabled = MyraCheckButton.CreateWithCallback(
+        var enabled = MyraCheckButton.CreateWithCallback(
             shake != null,
             on =>
             {
@@ -261,10 +267,8 @@ internal sealed class OverlayProfileEditor : Widget
         // the row having to special-case a null. Disabled, so those edits go nowhere.
         var grid = new StyledPropertyGrid(static () => new ShakeSpec())
         {
-            Object = shake ?? new ShakeSpec()
+            Object = shake ?? new ShakeSpec(), Enabled = shake != null && !_readOnly
         };
-
-        grid.Enabled = shake != null && !_readOnly;
 
         var stack = new VerticalStackPanel
         {
@@ -272,7 +276,13 @@ internal sealed class OverlayProfileEditor : Widget
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
 
-        stack.Widgets.Add(Row(Editable(Labelled(TazLang.Get("visualeffects_shake", "Shakes the screen"), enabled))));
+        stack.Widgets.Add(
+            Row(
+                Editable(
+                    Labelled(TazLang.Get("visualeffects_shake", "Shakes the screen"), enabled)
+                )
+            )
+        );
         stack.Widgets.Add(grid);
 
         grid.PropertyChanged += (_, _) =>
@@ -513,15 +523,12 @@ internal sealed class OverlayProfileEditor : Widget
         if (SelectedLayer()?.Effect is not { } effect)
             return new MyraLabel(TazLang.Get("visualeffects_nolayers", "This profile has no layers."), MyraLabel.TextStyle.P);
 
-        var grid = new StyledPropertyGrid(() => DefaultFor(effect.GetType()));
-
-        // Assigning it builds the rows, and the sub-grids copy the settings above from their parent
-        // as they are created.
-        grid.Object = effect;
-
-        // After the rows exist: Enabled is pushed to the children present at the time it is set, so
-        // disabling an empty grid would leave everything built afterwards editable.
-        grid.Enabled = !_readOnly;
+        var grid = new StyledPropertyGrid(() => DefaultFor(effect.GetType())) {
+            // Assigning it builds the rows, and the sub-grids copy the settings above from their parent
+            // as they are created.
+            Object = effect, // After the rows exist: Enabled is pushed to the children present at the time it is set, so
+            // disabling an empty grid would leave everything built afterwards editable.
+            Enabled = !_readOnly };
 
         grid.PropertyChanged += (_, _) =>
         {
