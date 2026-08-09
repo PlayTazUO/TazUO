@@ -1,7 +1,6 @@
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Effects;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -259,7 +258,7 @@ namespace ClassicUO.Game
                         GameActions.Print
                         (
                             _world,
-                            ResGeneral.ItBeginsToRain,
+                            TazLang.Get("it_begins_to_rain"),
                             1154,
                             MessageType.System,
                             3,
@@ -278,7 +277,7 @@ namespace ClassicUO.Game
                         GameActions.Print
                         (
                             _world,
-                            ResGeneral.AFierceStormApproaches,
+                            TazLang.Get("afierce_storm_approaches"),
                             1154,
                             MessageType.System,
                             3,
@@ -298,7 +297,7 @@ namespace ClassicUO.Game
                         GameActions.Print
                         (
                             _world,
-                            ResGeneral.ItBeginsToSnow,
+                            TazLang.Get("it_begins_to_snow"),
                             1154,
                             MessageType.System,
                             3,
@@ -318,7 +317,7 @@ namespace ClassicUO.Game
                         GameActions.Print
                         (
                             _world,
-                            ResGeneral.AStormIsBrewing,
+                            TazLang.Get("astorm_is_brewing"),
                             1154,
                             MessageType.System,
                             3,
@@ -573,16 +572,16 @@ namespace ClassicUO.Game
                 return;
             }
 
-            Profile currentProfile = ProfileManager.CurrentProfile;
-            if (currentProfile == null || !currentProfile.EnableSound || !currentProfile.EnableRainSound)
+            GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+            if (globalSettings == null || !globalSettings.EnableSound || !globalSettings.EnableRainSound)
             {
                 return;
             }
 
             const float SOUND_DELTA = 250.0f;
-            float volume = currentProfile.SoundVolume / SOUND_DELTA;
+            float volume = globalSettings.SoundVolume / SOUND_DELTA;
 
-            if (!Client.Game.IsActive && !currentProfile.ReproduceSoundsInBackground)
+            if (!Client.Game.IsActive && !globalSettings.ReproduceSoundsInBackground)
             {
                 volume = 0;
             }
@@ -662,17 +661,17 @@ namespace ClassicUO.Game
                 return;
             }
 
-            Profile currentProfile = ProfileManager.CurrentProfile;
-            if (currentProfile == null || !currentProfile.EnableSound || !currentProfile.EnableRainSound)
+            GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+            if (globalSettings == null || !globalSettings.EnableSound || !globalSettings.EnableRainSound)
             {
                 Client.Game.Audio.SetAmbientVolume(0);
                 return;
             }
 
             const float SOUND_DELTA = 250.0f;
-            float volume = currentProfile.SoundVolume / SOUND_DELTA;
+            float volume = globalSettings.SoundVolume / SOUND_DELTA;
 
-            if (!Client.Game.IsActive && !currentProfile.ReproduceSoundsInBackground)
+            if (!Client.Game.IsActive && !globalSettings.ReproduceSoundsInBackground)
             {
                 volume = 0;
             }

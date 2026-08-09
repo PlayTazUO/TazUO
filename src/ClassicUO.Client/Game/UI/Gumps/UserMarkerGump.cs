@@ -7,7 +7,6 @@ using ClassicUO.Utility;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using ClassicUO.Resources;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using static ClassicUO.Game.UI.Gumps.WorldMapGump;
@@ -52,7 +51,7 @@ namespace ClassicUO.Game.UI.Gumps
         public event EventHandler EditEnd;
 
         internal UserMarkersGump(World world, int x, int y, List<WMapMarker> markers, string color = "none", string icon = "exit", bool isEdit = false, int markerIdx = -1, int? mapIndex = null)
-            : base(isEdit ? ResGumps.EditMarker : ResGumps.AddMarker)
+            : base(isEdit ? TazLang.Get("edit_marker") : TazLang.Get("add_marker"))
         {
             _markers = markers;
             _markerIdx = markerIdx;
@@ -65,7 +64,7 @@ namespace ClassicUO.Game.UI.Gumps
             _colors = new[] { "none", "red", "green", "blue", "purple", "black", "yellow", "white" };
             _icons = _markerIcons.Keys.ToArray();
 
-            string markerName = _markerIdx < 0 ? ResGumps.MarkerDefName : _markers[_markerIdx].Name;
+            string markerName = _markerIdx < 0 ? TazLang.Get("marker_def_name") : _markers[_markerIdx].Name;
 
             int selectedIcon = Array.IndexOf(_icons, icon);
             if (selectedIcon < 0)
@@ -82,7 +81,7 @@ namespace ClassicUO.Game.UI.Gumps
             var layout = new VerticalStackPanel { Spacing = 6, Padding = new Thickness(8) };
 
             // X Field
-            layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerX, _textBoxX = new MyraInputBox
+            layout.Widgets.Add(BuildLabeledRow(TazLang.Get("marker_x"), _textBoxX = new MyraInputBox
             {
                 Text = x.ToString(),
                 Width = 200,
@@ -90,7 +89,7 @@ namespace ClassicUO.Game.UI.Gumps
             }));
 
             // Y Field
-            layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerY, _textBoxY = new MyraInputBox
+            layout.Widgets.Add(BuildLabeledRow(TazLang.Get("marker_y"), _textBoxY = new MyraInputBox
             {
                 Text = y.ToString(),
                 Width = 200,
@@ -107,20 +106,20 @@ namespace ClassicUO.Game.UI.Gumps
             }));
 
             // Marker Name field
-            layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerName, _markerName = new MyraInputBox
+            layout.Widgets.Add(BuildLabeledRow(TazLang.Get("marker_name"), _markerName = new MyraInputBox
             {
                 Text = markerName,
                 Width = 200
             }));
 
             // Color Combobox
-            layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerColor,
+            layout.Widgets.Add(BuildLabeledRow(TazLang.Get("marker_color"),
                 BuildCombo(_colors, selectedColor, idx => _selectedColorIndex = idx)));
 
             // Icon combobox
             if (_hasIcons)
             {
-                layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerIcon,
+                layout.Widgets.Add(BuildLabeledRow(TazLang.Get("marker_icon"),
                     BuildCombo(_icons, selectedIcon, idx => _selectedIconIndex = idx)));
             }
 
@@ -136,8 +135,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             // Buttons Add/Edit and Cancel depend on state
             var btnRow = new HorizontalStackPanel { Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
-            btnRow.Widgets.Add(new MyraButton(isEdit ? ResGumps.Edit : ResGumps.CreateMarker, isEdit ? EditMarker : (Action)AddNewMarker));
-            btnRow.Widgets.Add(new MyraButton(ResGumps.Cancel, Dispose));
+            btnRow.Widgets.Add(new MyraButton(isEdit ? TazLang.Get("edit") : TazLang.Get("create_marker"), isEdit ? EditMarker : (Action)AddNewMarker));
+            btnRow.Widgets.Add(new MyraButton(TazLang.Get("cancel"), Dispose));
             layout.Widgets.Add(btnRow);
 
             SetRootContent(layout);

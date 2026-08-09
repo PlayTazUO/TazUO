@@ -16,7 +16,6 @@ using ClassicUO.LegionScripting;
 using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
@@ -418,7 +417,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                     else
                     {
-                        Log.Error(ResGumps.IndexOutOfbounds);
+                        Log.Error(TazLang.Get("index_out_ofbounds"));
                     }
                 }
             }
@@ -572,8 +571,8 @@ namespace ClassicUO.Game.UI.Gumps
                 });
 
                 ContextMenu = new ContextMenuControl(_gump);
-                ContextMenu.Add(ResGumps.UseObject, Use);
-                ContextMenu.Add(ResGumps.Remove, RemoveItem);
+                ContextMenu.Add(TazLang.Get("use_object"), Use);
+                ContextMenu.Add(TazLang.Get("remove"), RemoveItem);
                 ContextMenu.Add(TazLang.Get("spellbar_setspell"), GenSpellList());
                 ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_quicksetspell"), QuickSetSpell));
 
@@ -788,7 +787,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     var entry = new ContextMenuItemEntry(label);
                     foreach (SpellDefinition spell in spells)
-                        entry.Add(new ContextMenuItemEntry(spell.Name, () => SetSlot(CounterBarSlot.FromSpell(spell))));
+                        entry.Add(new ContextMenuItemEntry(spell.GetLocalizedName(), () => SetSlot(CounterBarSlot.FromSpell(spell))));
                     list.Add(entry);
                 }
 

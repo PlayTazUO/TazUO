@@ -6,7 +6,6 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Collections;
 using Microsoft.Xna.Framework;
@@ -156,7 +155,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 Item it = Mount;
 
-                if (it != null && !IsDrivingBoat && it.GetGraphicForAnimation() != 0xFFFF)
+                if (it != null && !IsDead && !IsDrivingBoat && it.GetGraphicForAnimation() != 0xFFFF)
                 {
                     return true;
                 }
@@ -261,7 +260,7 @@ namespace ClassicUO.Game.GameObjects
                 World.MessageManager.HandleMessage
                 (
                     World.Player,
-                    ResGeneral.NowFollowing,
+                    TazLang.Get("now_following"),
                     string.Empty,
                     0,
                     MessageType.Regular,
@@ -567,7 +566,7 @@ namespace ClassicUO.Game.GameObjects
         private void ProcessFootstepsSound()
         {
             if (
-                (ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.EnableFootstepsSound)
+                (ProfileManager.GlobalSettings == null || ProfileManager.GlobalSettings.EnableFootstepsSound)
                 && IsHuman
                 && !IsHidden
                 && !IsDead
@@ -832,7 +831,7 @@ namespace ClassicUO.Game.GameObjects
                             if (Z - step.Z >= 22)
                             {
                                 // oUCH!!!!
-                                AddMessage(MessageType.Label, ResGeneral.Ouch, TextType.CLIENT);
+                                AddMessage(MessageType.Label, TazLang.Get("ouch"), TextType.CLIENT);
                             }
 
                             if (
@@ -879,7 +878,11 @@ namespace ClassicUO.Game.GameObjects
                         Offset.X = 0;
                         Offset.Y = 0;
                         Offset.Z = 0;
-                        Steps.RemoveFromFront();
+
+                        if (Steps.Count != 0)
+                        {
+                            Steps.RemoveFromFront();
+                        }
 
                         if (Steps.Count == 0)
                         {

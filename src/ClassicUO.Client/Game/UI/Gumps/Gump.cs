@@ -48,7 +48,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             base.OnMouseWheel(delta);
 
-            if (HotKeys.IsPressed(HotKeyRegistrar.GumpOpacityId) && ProfileManager.CurrentProfile.EnableAlphaScrollingOnGumps)
+            if (HotKeys.IsPressed(HotKeyRegistrar.GumpOpacityId) && ProfileManager.CurrentProfile?.EnableAlphaScrollingOnGumps == true)
             {
                 if (delta == MouseEventType.WheelScrollUp && Alpha < 0.99)
                 {

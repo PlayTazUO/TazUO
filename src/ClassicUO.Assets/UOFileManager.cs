@@ -51,6 +51,7 @@ namespace ClassicUO.Assets
         public ClientVersion Version { get; }
         public string BasePath { get; }
         public bool IsUOPInstallation { get; private set; }
+        public TimeSpan LoadTime { get; private set; }
 
         public AnimationsLoader Animations { get; }
         public AnimDataLoader AnimData { get; }
@@ -146,19 +147,25 @@ namespace ClassicUO.Assets
 
             Maps.MapsLayouts = mapsLayouts;
 
-            Task[] asyncedLoading = [Task.Factory.StartNew(TrueTypeLoader.Instance.Load)];
+            Task clilocsLoadingTask = Task.Factory.StartNew(() => Clilocs.Load(lang));
+
+            Task[] asyncedLoading =
+            [
+                Task.Factory.StartNew(TrueTypeLoader.Instance.Load),
+                clilocsLoadingTask
+            ];
 
             Animations.Load();
             AnimData.Load();
             Arts.Load();
             Maps.Load();
-            Clilocs.Load(lang);
             Gumps.Load();
             Fonts.Load();
             Hues.Load();
             TileData.Load();
             Multis.Load();
             Skills.Load();
+            Task.WaitAll(clilocsLoadingTask); // Professions.Load() needs clilocs to be loaded
             Professions.Load();
             Texmaps.Load();
             Speeches.Load();
@@ -362,7 +369,8 @@ namespace ClassicUO.Assets
             TrueTypeLoader.Instance.SetImageResolver(Arts, graphicsDevice);
 
             stopwatch.Stop();
-            Log.Trace($"Files loaded in: {stopwatch.ElapsedMilliseconds} ms!");
+            LoadTime = stopwatch.Elapsed;
+            Log.Trace($"Files loaded in: {LoadTime.TotalMilliseconds:F0} ms!");
         }
 
         private void ReadArtDefFile()

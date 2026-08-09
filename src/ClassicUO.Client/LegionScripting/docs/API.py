@@ -59,6 +59,19 @@ class ApiGameObject:
         """
         pass
 
+    def Highlight(self, hue: "int | None" = None) -> None:
+        """
+         Highlight this object by setting its hue. The original hue is remembered so it can be restored.
+         Call with `None` to restore the original hue.
+         Example:
+         ```py
+         obj.Highlight(0x0021)
+         obj.Highlight(None)
+         ```
+        
+        """
+        pass
+
     def HasLineOfSightFrom(self, observer: "ApiGameObject" = None) -> "bool":
         """
          Determines if there is line of sight from the specified observer to this object.
@@ -199,6 +212,20 @@ class ApiMobile(ApiEntity):
     Backpack: ApiItem = None
     Mount: ApiItem = None
     __class__: str = None
+
+    def Highlight(self, hue: "int | None" = None) -> None:
+        """
+         Highlight this mobile and all of its equipped items with the given hue.
+         The original hues are remembered so they can be restored.
+         Call with `None` to restore the mobile and its equipped items to their original hues.
+         Example:
+         ```py
+         mob.Highlight(0x0021)
+         mob.Highlight(None)
+         ```
+        
+        """
+        pass
 
     def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10) -> "str":
         """
@@ -749,7 +776,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpTextBox(self, text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False) -> "ApiUiTtfTextInputField":
+    def CreateGumpTextBox(self, text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False, fontSize: "float" = 20) -> "ApiUiTtfTextInputField":
         """
          Create a text area control.
          Example:
@@ -1116,6 +1143,7 @@ class ApiUiTiledGumpPic(ApiUiBaseControl):
 class ApiUiTtfTextInputField(ApiUiBaseControl):
     ""
     Text: str = None
+    FontSize: float = None
     CaretIndex: int = None
     NumbersOnly: bool = None
     AcceptKeyboardInput: bool = None
@@ -1945,6 +1973,50 @@ def CreateCooldownBar(seconds: "float", text: "str", hue: "int") -> None:
      Example:
      ```py
      API.CreateCooldownBar(5, "Healing", 21)
+     ```
+    
+    """
+    pass
+
+def UpdateCooldown(name: "str", maxValue: "float" = -1, currentValue: "float" = -1) -> None:
+    """
+     Updates an existing cooldown bar. Only the provided values are applied.
+     Example:
+     ```py
+     API.UpdateCooldown("Healing", maxValue=10, currentValue=5)
+     ```
+    
+    """
+    pass
+
+def RestartCooldown(name: "str") -> None:
+    """
+     Restarts the countdown of an existing cooldown bar to its full duration.
+     Example:
+     ```py
+     API.RestartCooldown("Healing")
+     ```
+    
+    """
+    pass
+
+def DeleteCooldown(name: "str") -> None:
+    """
+     Deletes an existing cooldown bar.
+     Example:
+     ```py
+     API.DeleteCooldown("Healing")
+     ```
+    
+    """
+    pass
+
+def CooldownExists(name: "str") -> "bool":
+    """
+     Checks whether a cooldown bar with the given name exists.
+     Example:
+     ```py
+     if API.CooldownExists("Healing"):
      ```
     
     """
@@ -3061,7 +3133,7 @@ def CreateGumpRadioButton(text: "str" = "", group: "int" = 0, inactive: "int" = 
     """
     pass
 
-def CreateGumpTextBox(text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False) -> "ApiUiTtfTextInputField":
+def CreateGumpTextBox(text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False, fontSize: "float" = 20) -> "ApiUiTtfTextInputField":
     """
      Use API.Gumps.CreateGumpTextBox instead.
     

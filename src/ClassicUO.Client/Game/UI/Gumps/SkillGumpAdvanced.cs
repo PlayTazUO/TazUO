@@ -8,7 +8,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -118,7 +117,7 @@ namespace ClassicUO.Game.UI.Gumps
                     180,
                     25,
                     ButtonAction.Activate,
-                    ResGumps.Name
+                    TazLang.Get("name")
                 )
                 {
                     ButtonParameter = (int)Buttons.SortName,
@@ -135,7 +134,7 @@ namespace ClassicUO.Game.UI.Gumps
                     50,
                     25,
                     ButtonAction.Activate,
-                    ResGumps.Real
+                    TazLang.Get("real")
                 )
                 {
                     ButtonParameter = (int)Buttons.SortReal,
@@ -152,7 +151,7 @@ namespace ClassicUO.Game.UI.Gumps
                     50,
                     25,
                     ButtonAction.Activate,
-                    ResGumps.Base
+                    TazLang.Get("base")
                 )
                 {
                     ButtonParameter = (int)Buttons.SortBase,
@@ -169,7 +168,7 @@ namespace ClassicUO.Game.UI.Gumps
                     50,
                     25,
                     ButtonAction.Activate,
-                    ResGumps.Cap
+                    TazLang.Get("cap")
                 )
                 {
                     ButtonParameter = (int)Buttons.SortCap,

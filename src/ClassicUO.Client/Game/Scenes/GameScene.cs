@@ -12,7 +12,6 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
@@ -289,7 +288,7 @@ namespace ClassicUO.Game.Scenes
                 case MessageType.Limit3Spell:
 
                     if (e.Parent == null || !SerialHelper.IsValid(e.Parent.Serial))
-                        name = ProfileManager.CurrentProfile?.HideJournalSystemPrefix == true ? null : ResGeneral.System;
+                        name = ProfileManager.CurrentProfile?.HideJournalSystemPrefix == true ? null : TazLang.Get("system");
                     else
                         name = e.Name;
 
@@ -298,7 +297,7 @@ namespace ClassicUO.Game.Scenes
 
                 case MessageType.System:
                     if (string.IsNullOrEmpty(e.Name) || string.Equals(e.Name, "system", StringComparison.InvariantCultureIgnoreCase))
-                        name = ProfileManager.CurrentProfile?.HideJournalSystemPrefix == true ? null : ResGeneral.System;
+                        name = ProfileManager.CurrentProfile?.HideJournalSystemPrefix == true ? null : TazLang.Get("system");
                     else
                         name = e.Name;
 
@@ -325,7 +324,7 @@ namespace ClassicUO.Game.Scenes
                     }
                     else if (string.IsNullOrEmpty(e.Name))
                     {
-                        name = ResGeneral.YouSee;
+                        name = TazLang.Get("you_see");
                     }
                     else
                     {
@@ -344,21 +343,21 @@ namespace ClassicUO.Game.Scenes
 
                 case MessageType.Party:
                     text = e.Text;
-                    name = string.Format(ResGeneral.Party0, e.Name);
+                    name = string.Format(TazLang.Get("party0"), e.Name);
                     hue = ProfileManager.CurrentProfile.PartyMessageHue;
 
                     break;
 
                 case MessageType.Alliance:
                     text = e.Text;
-                    name = string.Format(ResGeneral.Alliance0, e.Name);
+                    name = string.Format(TazLang.Get("alliance0"), e.Name);
                     hue = ProfileManager.CurrentProfile.AllyMessageHue;
 
                     break;
 
                 case MessageType.Guild:
                     text = e.Text;
-                    name = string.Format(ResGeneral.Guild0, e.Name);
+                    name = string.Format(TazLang.Get("guild0"), e.Name);
                     hue = ProfileManager.CurrentProfile.GuildMessageHue;
 
                     break;
@@ -391,6 +390,9 @@ namespace ClassicUO.Game.Scenes
 
             Instance = null;
 
+            GridHighlightsConfig.Unload();
+            CooldownBarsConfig.Unload();
+            TooltipOverridesConfig.Unload();
             GridContainerSaveData.Instance.Save();
             GridContainerSaveData.Reset();
             JournalFilterManager.Instance.Save();
@@ -495,38 +497,51 @@ namespace ClassicUO.Game.Scenes
 
         private void SocketOnDisconnected(object sender, SocketError e)
         {
-            if (DisconnectionRequested)
+            // Disconnected is raised from the background network/receive tasks (see AsyncNetClient),
+            // but this handler tears down the scene and adds gumps, which mutates UIManager state
+            // (_gumpTypeList, the Gumps list, etc.). Touching that off the main thread races the
+            // game loop and corrupts those collections. Marshal onto the main thread so all the UI
+            // work runs there; InvokeOnMainThread runs inline when already on the main thread.
+            MainThreadQueue.InvokeOnMainThread(() =>
             {
-                Client.Game.SetScene(new LoginScene(_world));
+                // The callback can be drained a frame later, by which point this scene may already
+                // have been unloaded/replaced; skip the stale teardown then.
+                if (IsDestroyed || Instance != this)
+                    return;
 
-                return;
-            }
-            if (Settings.GlobalSettings.Reconnect)
-            {
-                LoginHandshake.Reconnect = true;
-                _forceStopScene = true;
-            }
-            else
-            {
-                UIManager.Add(
-                    new MessageBoxGump(
-                        _world,
-                        200,
-                        200,
-                        string.Format(
-                            ResGeneral.ConnectionLost0,
-                            StringHelper.AddSpaceBeforeCapital(e.ToString())
-                        ),
-                        s =>
-                        {
-                            if (s)
+                if (DisconnectionRequested)
+                {
+                    Client.Game.SetScene(new LoginScene(_world));
+
+                    return;
+                }
+                if (Settings.GlobalSettings.Reconnect)
+                {
+                    LoginHandshake.Reconnect = true;
+                    _forceStopScene = true;
+                }
+                else
+                {
+                    UIManager.Add(
+                        new MessageBoxGump(
+                            _world,
+                            200,
+                            200,
+                            string.Format(
+                                TazLang.Get("connection_lost0"),
+                                StringHelper.AddSpaceBeforeCapital(e.ToString())
+                            ),
+                            s =>
                             {
-                                Client.Game.SetScene(new LoginScene(_world));
+                                if (s)
+                                {
+                                    Client.Game.SetScene(new LoginScene(_world));
+                                }
                             }
-                        }
-                    )
-                );
-            }
+                        )
+                    );
+                }
+            });
         }
 
         public void RequestQuitGame() => UIManager.Add(
@@ -1754,7 +1769,7 @@ namespace ClassicUO.Game.Scenes
         }
 
         private static readonly RenderedText _youAreDeadText = RenderedText.Create(
-            ResGeneral.YouAreDead,
+            TazLang.Get("you_are_dead"),
             0xFFFF,
             3,
             false,
@@ -1799,7 +1814,7 @@ namespace ClassicUO.Game.Scenes
 
                 _world.MessageManager.HandleMessage(
                     _world.Player,
-                    ResGeneral.StoppedFollowing,
+                    TazLang.Get("stopped_following"),
                     string.Empty,
                     0,
                     MessageType.Regular,

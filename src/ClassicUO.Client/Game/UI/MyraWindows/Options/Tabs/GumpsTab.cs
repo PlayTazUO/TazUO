@@ -71,6 +71,12 @@ internal static class GumpsTab
                 new SearchMetadata(TazLang.Get("mog_gumpstab_enableadvancedshopgump"), Keywords: [TazLang.Get("mog_kw_modern"), TazLang.Get("mog_kw_advanced"), TazLang.Get("mog_kw_shop"), TazLang.Get("mog_kw_vendor")])
             ),
             Option.Checkbox(
+                TazLang.Get("mog_gumpstab_usemoderncolorpicker"),
+                new Accessor<bool>(() => ProfileManager.GlobalSettings.UseModernColorPicker),
+                null,
+                new SearchMetadata(TazLang.Get("mog_gumpstab_usemoderncolorpicker"), Keywords: [TazLang.Get("mog_kw_modern"), TazLang.Get("mog_kw_color"), TazLang.Get("mog_kw_colour"), TazLang.Get("mog_kw_picker")])
+            ),
+            Option.Checkbox(
                 TazLang.Get("mog_gumpstab_enablegumpopacityadjustviaaltscroll"),
                 new Accessor<bool>(() => profile.EnableAlphaScrollingOnGumps),
                 null,

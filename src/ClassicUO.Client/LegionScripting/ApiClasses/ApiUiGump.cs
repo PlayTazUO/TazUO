@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using ClassicUO.Assets;
 using ClassicUO.Game;
 using ClassicUO.Game.Managers;
@@ -14,8 +15,10 @@ namespace ClassicUO.LegionScripting.ApiClasses;
 
 public class ApiUiGump(LegionAPI api)
 {
-        private T OnMain<T>(Func<T> func) => MainThreadQueue.InvokeOnMainThread(func, api.CancellationToken.Token);
-        private void OnMain(Action action) => MainThreadQueue.InvokeOnMainThread(action, api.CancellationToken.Token);
+        private readonly CancellationToken _cachedToken = api.CancellationToken.Token;
+
+        private T OnMain<T>(Func<T> func) => MainThreadQueue.InvokeOnMainThread(func, _cachedToken);
+        private void OnMain(Action action) => MainThreadQueue.InvokeOnMainThread(action, _cachedToken);
 
     /// <summary>
     /// Get a blank gump.
@@ -309,10 +312,11 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="width"></param>
     /// <param name="height"></param>
     /// <param name="multiline"></param>
+    /// <param name="fontSize">TTF font size, default is 20</param>
     /// <returns></returns>
-    public ApiUiTtfTextInputField CreateGumpTextBox(string text = "", int width = 200, int height = 30, bool multiline = false) =>
+    public ApiUiTtfTextInputField CreateGumpTextBox(string text = "", int width = 200, int height = 30, bool multiline = false, float fontSize = 20) =>
         OnMain(() =>
-            new ApiUiTtfTextInputField(new TTFTextInputField(width, height, text: text, multiline: multiline, convertHtmlColors: false) { CanMove = true }));
+            new ApiUiTtfTextInputField(new TTFTextInputField(width, height, text: text, multiline: multiline, convertHtmlColors: false, fontSize: fontSize) { CanMove = true }));
 
     /// <summary>
     /// Create a TTF label with advanced options.

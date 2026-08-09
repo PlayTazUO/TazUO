@@ -14,8 +14,8 @@ using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.LegionScripting;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using static ClassicUO.Network.AsyncNetClient;
 
@@ -35,7 +35,7 @@ internal static class GameActions
     {
         if (!player.IsDead)
         {
-            if (war && ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableMusic)
+            if (war && ProfileManager.GlobalSettings != null && ProfileManager.GlobalSettings.EnableMusic)
             {
                 Client.Game.Audio.PlayMusic((RandomHelper.GetValue(0, 3) % 3) + 38, true);
             }
@@ -580,6 +580,7 @@ internal static class GameActions
         return true;
     }
 
+    private static uint _lastAttackQuery;
     internal static void Attack(World world, uint serial)
     {
         if (ProfileManager.CurrentProfile is { EnabledCriminalActionQuery:true })
@@ -588,10 +589,28 @@ internal static class GameActions
 
             if (m != null && (world.Player.NotorietyFlag == NotorietyFlag.Innocent || world.Player.NotorietyFlag == NotorietyFlag.Ally) && m.NotorietyFlag == NotorietyFlag.Innocent && m != world.Player)
             {
+                bool shouldAdd = true;
+
+                UIManager.ForEach<QuestionGump>(g =>
+                {
+                    if (g.Type == QuestionGump.QuestionType.Attack && _lastAttackQuery == serial){
+                        shouldAdd = false;
+                        return;
+                    }
+
+                    if (g.Type == QuestionGump.QuestionType.Attack && _lastAttackQuery != serial)
+                        g.Dispose();    
+                });
+                
+                if (!shouldAdd)
+                    return;
+
+                _lastAttackQuery = serial;
+
                 var messageBox = new QuestionGump
                 (
                     world,
-                    ResGeneral.ThisMayFlagYouCriminal,
+                    TazLang.Get("this_may_flag_you_criminal"),
                     s =>
                     {
                         if (s)
@@ -599,7 +618,7 @@ internal static class GameActions
                             Socket.Send_AttackRequest(serial);
                         }
                     }
-                );
+                ){ Type = QuestionGump.QuestionType.Attack };
 
                 UIManager.Add(messageBox);
                 return;
@@ -779,6 +798,13 @@ internal static class GameActions
 
     internal static void Print(World world, string message, ushort hue = 946, MessageType type = MessageType.Regular, byte font = 3, bool unicode = true)
     {
+        // World may be null if called before the world is initialized
+        if (world == null)
+        {
+            Log.Warn($"GameActions.Print called with null world: {message}");
+            return;
+        }
+
         if (type == MessageType.ChatSystem)
         {
             world.MessageManager.HandleMessage
@@ -817,7 +843,16 @@ internal static class GameActions
         MessageType type = MessageType.Regular,
         byte font = 3,
         bool unicode = true
-    ) => world.MessageManager.HandleMessage
+    )
+    {
+        // World may be null if called before the world is initialized
+        if (world == null)
+        {
+            Log.Warn($"GameActions.Print called with null world: {message}");
+            return;
+        }
+
+        world.MessageManager.HandleMessage
         (
             entity,
             message,
@@ -829,6 +864,7 @@ internal static class GameActions
             unicode,
             Settings.GlobalSettings.Language
         );
+    }
 
     internal static void SayParty(string message, uint serial = 0)
     {
@@ -1353,7 +1389,7 @@ internal static class GameActions
 
         if (!world.Items.Contains(bag))
         {
-            Print(world, ResGeneral.GrabBagNotFound);
+            Print(world, TazLang.Get("grab_bag_not_found"));
             ProfileManager.CurrentProfile.GrabBagSerial = 0;
             bag = backpack.Serial;
         }

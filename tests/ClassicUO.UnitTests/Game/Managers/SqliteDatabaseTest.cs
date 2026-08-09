@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using ClassicUO.Game.Managers;
-using Dapper;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Xunit;
@@ -25,7 +26,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             public Task EnsureSchemaAsync(SqliteTableSchema schema) => EnsureTableAsync(schema);
 
             public Task<List<string>> GetColumnsAsync(string table) => WithConnectionAsync(async c =>
-                (await c.QueryAsync<string>($"SELECT name FROM pragma_table_info('{table}')")).ToList());
+                await QueryStringsAsync(c, $"SELECT name FROM pragma_table_info('{table}')"));
         }
 
         // Concrete subclass built on the schema-aware constructor + generic row helpers, so tests can
@@ -52,10 +53,10 @@ namespace ClassicUO.UnitTests.Game.Managers
             public Task<SqliteRow?> ByIdAsync(long id) => GetFirstAsync(new SqliteRow { ["id"] = id });
 
             public Task<List<string>> ColumnsAsync() => WithConnectionAsync(async c =>
-                (await c.QueryAsync<string>("SELECT name FROM pragma_table_info('things')")).ToList());
+                await QueryStringsAsync(c, "SELECT name FROM pragma_table_info('things')"));
 
             public Task<T> PragmaAsync<T>(string pragma) =>
-                WithConnectionAsync(c => c.ExecuteScalarAsync<T>($"PRAGMA {pragma}"));
+                WithConnectionAsync(c => ExecuteScalarAsync<T>(c, $"PRAGMA {pragma}"));
         }
 
         private readonly string _tempDir;
@@ -76,27 +77,27 @@ namespace ClassicUO.UnitTests.Game.Managers
         [Fact]
         public async Task WithConnectionAsync_CreatesDatabaseFile_AndRunsSql()
         {
-            await _db.RunAsync(c => c.ExecuteAsync(
+            await _db.RunAsync(c => ExecuteAsync(c,
                 "CREATE TABLE IF NOT EXISTS things (id INTEGER PRIMARY KEY, name TEXT NOT NULL)"));
 
             File.Exists(Path.Combine(_tempDir, "test.db")).Should().BeTrue();
 
-            await _db.RunAsync(c => c.ExecuteAsync(
+            await _db.RunAsync(c => ExecuteAsync(c,
                 "INSERT OR REPLACE INTO things (id, name) VALUES (@Id, @Name)", new { Id = 1, Name = "original" }));
 
-            string name = await _db.RunAsync(c => c.ExecuteScalarAsync<string>(
+            string name = await _db.RunAsync(c => ExecuteScalarAsync<string>(c,
                 "SELECT name FROM things WHERE id = @Id", new { Id = 1 }));
             name.Should().Be("original");
 
             // Upsert by primary key should update, not duplicate.
-            await _db.RunAsync(c => c.ExecuteAsync(
+            await _db.RunAsync(c => ExecuteAsync(c,
                 "INSERT OR REPLACE INTO things (id, name) VALUES (@Id, @Name)", new { Id = 1, Name = "updated" }));
 
-            name = await _db.RunAsync(c => c.ExecuteScalarAsync<string>(
+            name = await _db.RunAsync(c => ExecuteScalarAsync<string>(c,
                 "SELECT name FROM things WHERE id = @Id", new { Id = 1 }));
             name.Should().Be("updated");
 
-            long count = await _db.RunAsync(c => c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM things"));
+            long count = await _db.RunAsync(c => ExecuteScalarAsync<long>(c, "SELECT COUNT(*) FROM things"));
             count.Should().Be(1);
         }
 
@@ -127,7 +128,7 @@ namespace ClassicUO.UnitTests.Game.Managers
                 SqliteColumn.Int("id", primaryKey: true),
                 SqliteColumn.Str("name", notNull: true, def: "''")));
 
-            await _db.RunAsync(c => c.ExecuteAsync(
+            await _db.RunAsync(c => ExecuteAsync(c,
                 "INSERT INTO things (id, name) VALUES (@Id, @Name)", new { Id = 1, Name = "original" }));
 
             // Re-declare the schema with an extra column - the migration should add it without
@@ -140,11 +141,11 @@ namespace ClassicUO.UnitTests.Game.Managers
             List<string> columns = await _db.GetColumnsAsync("things");
             columns.Should().BeEquivalentTo(new[] { "id", "name", "count" });
 
-            string name = await _db.RunAsync(c => c.ExecuteScalarAsync<string>(
+            string name = await _db.RunAsync(c => ExecuteScalarAsync<string>(c,
                 "SELECT name FROM things WHERE id = @Id", new { Id = 1 }));
             name.Should().Be("original");
 
-            long count = await _db.RunAsync(c => c.ExecuteScalarAsync<long>(
+            long count = await _db.RunAsync(c => ExecuteScalarAsync<long>(c,
                 "SELECT count FROM things WHERE id = @Id", new { Id = 1 }));
             count.Should().Be(0);
         }
@@ -157,7 +158,7 @@ namespace ClassicUO.UnitTests.Game.Managers
                 SqliteColumn.Str("name", notNull: true, def: "''"),
                 SqliteColumn.Int("count", def: "0")));
 
-            await _db.RunAsync(c => c.ExecuteAsync(
+            await _db.RunAsync(c => ExecuteAsync(c,
                 "INSERT INTO things (id, name, count) VALUES (@Id, @Name, @Count)",
                 new { Id = 1, Name = "original", Count = 5 }));
 
@@ -169,7 +170,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             List<string> columns = await _db.GetColumnsAsync("things");
             columns.Should().BeEquivalentTo(new[] { "id", "name" });
 
-            string name = await _db.RunAsync(c => c.ExecuteScalarAsync<string>(
+            string name = await _db.RunAsync(c => ExecuteScalarAsync<string>(c,
                 "SELECT name FROM things WHERE id = @Id", new { Id = 1 }));
             name.Should().Be("original");
         }
@@ -188,21 +189,21 @@ namespace ClassicUO.UnitTests.Game.Managers
 
             // The first operation should detect the corruption, move the bad file aside, and succeed
             // against a freshly created database rather than throwing.
-            Func<Task> act = () => db.RunAsync(c => c.ExecuteAsync(
+            Func<Task> act = () => db.RunAsync(c => ExecuteAsync(c,
                 "CREATE TABLE IF NOT EXISTS things (id INTEGER PRIMARY KEY, name TEXT NOT NULL)"));
             await act.Should().NotThrowAsync();
 
             // The corrupt copy is preserved for inspection and the new database is usable.
             File.Exists(dbPath + ".corrupt").Should().BeTrue();
 
-            long count = await db.RunAsync(c => c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM things"));
+            long count = await db.RunAsync(c => ExecuteScalarAsync<long>(c, "SELECT COUNT(*) FROM things"));
             count.Should().Be(0);
         }
 
         [Fact]
         public async Task Constructor_ClearsReadOnlyAttribute_AndAllowsWrites()
         {
-            await _db.RunAsync(c => c.ExecuteAsync(
+            await _db.RunAsync(c => ExecuteAsync(c,
                 "CREATE TABLE IF NOT EXISTS things (id INTEGER PRIMARY KEY, name TEXT NOT NULL)"));
             _db.Dispose();
 
@@ -215,7 +216,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             using var db = new TestDatabase(_tempDir);
             (File.GetAttributes(dbPath) & FileAttributes.ReadOnly).Should().Be(0);
 
-            Func<Task> act = () => db.RunAsync(c => c.ExecuteAsync(
+            Func<Task> act = () => db.RunAsync(c => ExecuteAsync(c,
                 "INSERT OR REPLACE INTO things (id, name) VALUES (@Id, @Name)", new { Id = 1, Name = "written" }));
             await act.Should().NotThrowAsync();
         }
@@ -226,7 +227,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             var db = new TestDatabase(_tempDir);
             db.Dispose();
 
-            Func<Task> act = () => db.RunAsync(c => c.ExecuteAsync("SELECT 1"));
+            Func<Task> act = () => db.RunAsync(c => ExecuteAsync(c, "SELECT 1"));
             await act.Should().ThrowAsync<ObjectDisposedException>();
         }
 
@@ -324,6 +325,77 @@ namespace ClassicUO.UnitTests.Game.Managers
             act.Should().NotThrow();
         }
 
+        // Simulates the persistent_vars table on an install that predates the "id" column: the schema
+        // constructor adds id via ALTER TABLE, which cannot declare a PRIMARY KEY, so the declared-PK
+        // upsert only resolves its ON CONFLICT("id") target once a unique index exists.
+        private sealed class MigratedTableDatabase : SqliteDatabase
+        {
+            public static readonly SqliteTableSchema MigratedSchema = new("persistent_vars",
+                SqliteColumn.Str("id", primaryKey: true, notNull: true, def: "''"),
+                SqliteColumn.Str("scope", notNull: true),
+                SqliteColumn.Str("scope_key", notNull: true),
+                SqliteColumn.Str("key", notNull: true),
+                SqliteColumn.Str("value", notNull: true));
+
+            public MigratedTableDatabase(string directory) : base(MigratedSchema, "test.db", directory) { }
+
+            public Task<int> UpsertAsync(SqliteRow row) => AddOrUpdateAsync(row);
+
+            public Task<SqliteRow?> FirstAsync(SqliteRow filter) => GetFirstAsync(filter);
+
+            public Task RunAsync(Func<SqliteConnection, Task> operation) => WithConnectionAsync(operation);
+        }
+
+        [Fact]
+        public async Task AddOrUpdateAsync_OnMigratedTable_NeedsUniqueIndex_ForConflictTarget()
+        {
+            // Pre-id table shape: composite PK, no id column.
+            await _db.RunAsync(c => ExecuteAsync(c,
+                "CREATE TABLE persistent_vars (scope TEXT NOT NULL, scope_key TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (scope, scope_key, key))"));
+            _db.Dispose();
+
+            using var db = new MigratedTableDatabase(_tempDir);
+
+            // Populate ids exactly like the persistent-vars backfill does; on a migrated table the id
+            // column has no uniqueness of its own yet.
+            await db.RunAsync(c => ExecuteAsync(c,
+                "UPDATE persistent_vars SET id = scope || char(31) || scope_key || char(31) || key WHERE id IS NULL OR id = ''"));
+
+            SqliteRow row = new()
+            {
+                ["id"] = "a\x1fb\x1fc",
+                ["scope"] = "a",
+                ["scope_key"] = "b",
+                ["key"] = "c",
+                ["value"] = "v"
+            };
+
+            // Without a unique constraint the upsert's ON CONFLICT("id") has no target to resolve.
+            Func<Task> beforeIndex = () => db.UpsertAsync(row);
+            await beforeIndex.Should().ThrowAsync<SqliteException>();
+
+            // The persistent-vars migration creates a unique index; the upsert then works and, on a
+            // second call, updates the existing row instead of failing or duplicating it.
+            await db.RunAsync(c => ExecuteAsync(c,
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_persistent_vars_id ON persistent_vars(id)"));
+
+            Func<Task> afterIndex = () => db.UpsertAsync(row);
+            await afterIndex.Should().NotThrowAsync();
+
+            await db.UpsertAsync(new SqliteRow
+            {
+                ["id"] = "a\x1fb\x1fc",
+                ["scope"] = "a",
+                ["scope_key"] = "b",
+                ["key"] = "c",
+                ["value"] = "updated"
+            });
+
+            SqliteRow? stored = await db.FirstAsync(new SqliteRow { ["id"] = "a\x1fb\x1fc" });
+            stored.Should().NotBeNull();
+            stored.Value.Get<string>("value").Should().Be("updated");
+        }
+
         public void Dispose()
         {
             _db.Dispose();
@@ -337,6 +409,53 @@ namespace ClassicUO.UnitTests.Game.Managers
             {
                 // Best-effort cleanup.
             }
+        }
+
+        // Native-command replacements for running SQL against a connection in the tests.
+
+        private static async Task<int> ExecuteAsync(SqliteConnection connection, string sql, object parameters = null)
+        {
+            await using SqliteCommand command = connection.CreateCommand();
+            command.CommandText = sql;
+            AddParameters(command, parameters);
+            return await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+        }
+
+        private static async Task<T> ExecuteScalarAsync<T>(SqliteConnection connection, string sql, object parameters = null)
+        {
+            await using SqliteCommand command = connection.CreateCommand();
+            command.CommandText = sql;
+            AddParameters(command, parameters);
+
+            object result = await command.ExecuteScalarAsync().ConfigureAwait(false);
+            if (result is null or DBNull)
+                return default;
+
+            return (T)Convert.ChangeType(result, typeof(T), CultureInfo.InvariantCulture);
+        }
+
+        private static async Task<List<string>> QueryStringsAsync(SqliteConnection connection, string sql)
+        {
+            List<string> results = new();
+
+            await using SqliteCommand command = connection.CreateCommand();
+            command.CommandText = sql;
+
+            await using SqliteDataReader reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+            while (await reader.ReadAsync().ConfigureAwait(false))
+                results.Add(reader.GetString(0));
+
+            return results;
+        }
+
+        // Binds the public properties of an anonymous object (e.g. new { Id = 1 }) as named parameters.
+        private static void AddParameters(SqliteCommand command, object parameters)
+        {
+            if (parameters == null)
+                return;
+
+            foreach (PropertyInfo property in parameters.GetType().GetProperties())
+                command.Parameters.AddWithValue("@" + property.Name, property.GetValue(parameters) ?? DBNull.Value);
         }
     }
 }

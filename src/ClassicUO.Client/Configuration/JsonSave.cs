@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using ClassicUO.Game;
@@ -28,8 +32,10 @@ namespace ClassicUO.Configuration
     /// <see cref="System.Text.Json.Serialization.Metadata.JsonTypeInfo{T}"/> via <see cref="TypeInfo"/>.
     /// </summary>
     /// <typeparam name="T">The concrete derived save type.</typeparam>
-    public abstract class JsonSave<T> where T : JsonSave<T>, new()
+    public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged, new()
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         private const int MAX_BACKUPS = 3;
 
         /// <summary>The scope that determines which folder this file is saved in.</summary>
@@ -42,40 +48,49 @@ namespace ClassicUO.Configuration
         protected abstract JsonTypeInfo<T> TypeInfo { get; }
 
         /// <summary>The directory this file is saved in, resolved from <see cref="Scope"/>.</summary>
-        public string SaveDirectory => JsonSaveLocationHelper.GetScopeDirectory(Scope);
+        [JsonIgnore] public string SaveDirectory => JsonSaveLocationHelper.GetScopeDirectory(Scope);
 
         /// <summary>The full path to the save file.</summary>
-        public string FilePath => Path.Combine(SaveDirectory, FileName);
+        [JsonIgnore] public string FilePath => Path.Combine(SaveDirectory, FileName);
 
         /// <summary>The directory that holds the rotating backups for this file.</summary>
-        public string BackupDirectory => Path.Combine(SaveDirectory, Constants.BACKUP_FOLDER);
+        [JsonIgnore] public string BackupDirectory => Path.Combine(SaveDirectory, Constants.BACKUP_FOLDER);
 
         /// <summary>
-        /// Loads the save for type <typeparamref name="T"/>. If the main file is missing or unreadable the
-        /// backups are tried in order; if they all fail a fresh instance is created and written to disk so a
-        /// valid file always exists afterwards.
+        /// Loads the save for type <typeparamref name="T"/> from <see cref="FilePath"/>. If the main file is
+        /// missing or unreadable the backups are tried in order; if they all fail a fresh instance is created
+        /// and written to disk so a valid file always exists afterwards.
         /// </summary>
-        public static T Load()
-        {
-            T instance = new T();
+        public static T Load() => LoadFrom(new T().FilePath);
 
-            using (instance.AcquireLock())
-                return instance.LoadCore();
+        /// <summary>
+        /// Like <see cref="Load"/>, but reads from an explicit path rather than <see cref="FilePath"/>.
+        /// </summary>
+        protected static T LoadFrom(string filePath)
+        {
+            var instance = new T();
+
+            using (instance.AcquireLock(filePath))
+                return instance.LoadCore(filePath);
         }
 
         /// <summary>
-        /// Saves this instance to disk atomically, rotating the previous version into the backups folder.
+        /// Saves this instance to <see cref="FilePath"/> atomically, rotating the previous version into the
+        /// backups folder.
         /// </summary>
-        public void Save()
+        public void Save() => SaveTo(FilePath);
+
+        /// <summary>
+        /// Like <see cref="Save"/>, but writes to an explicit path rather than <see cref="FilePath"/>.
+        /// </summary>
+        protected void SaveTo(string filePath)
         {
-            using (AcquireLock())
-                SaveCore();
+            using (AcquireLock(filePath))
+                SaveCore(filePath);
         }
 
-        private T LoadCore()
+        private T LoadCore(string filePath)
         {
-            string filePath = FilePath;
-
             // Try the main file first.
             if (TryDeserialize(filePath, out T loaded))
                 return loaded;
@@ -87,7 +102,7 @@ namespace ClassicUO.Configuration
             // Fall back through the rotating backups, newest first.
             for (int i = 1; i <= MAX_BACKUPS; i++)
             {
-                if (TryDeserialize(GetBackupPath(i), out loaded))
+                if (TryDeserialize(GetBackupPath(filePath, i), out loaded))
                 {
                     Log.Warn($"Recovered JSON save '{filePath}' from backup {i}.");
                     return loaded;
@@ -98,24 +113,25 @@ namespace ClassicUO.Configuration
             if (File.Exists(filePath))
                 Log.Error($"Failed to load JSON save '{filePath}' and all backups; creating a fresh copy.");
 
-            T fresh = new T();
-            fresh.SaveCore();
+            var fresh = new T();
+            fresh.SaveCore(filePath);
             return fresh;
         }
 
-        private void SaveCore()
+        private void SaveCore(string filePath)
         {
-            string filePath = FilePath;
-            string tempPath = Path.Combine(SaveDirectory, FileName + ".tmp");
+            string tempPath = filePath + ".tmp";
+            string directory = Path.GetDirectoryName(filePath);
 
             try
             {
-                Directory.CreateDirectory(SaveDirectory);
+                if (!string.IsNullOrEmpty(directory))
+                    Directory.CreateDirectory(directory);
 
                 string json = JsonSerializer.Serialize((T)this, TypeInfo);
                 File.WriteAllText(tempPath, json);
 
-                RotateBackups();
+                RotateBackups(filePath);
 
                 // RotateBackups moved the old main file into backup 1, so the destination is free.
                 File.Move(tempPath, filePath);
@@ -157,15 +173,15 @@ namespace ClassicUO.Configuration
             }
         }
 
-        private void RotateBackups()
+        private void RotateBackups(string filePath)
         {
-            string backupDir = BackupDirectory;
+            string backupDir = GetBackupDirectory(filePath);
             Directory.CreateDirectory(backupDir);
 
             // Rotate existing backups: oldest deleted, each other shifted up one (2 -> 3, 1 -> 2).
             for (int i = MAX_BACKUPS; i > 0; i--)
             {
-                string current = GetBackupPath(i);
+                string current = GetBackupPath(filePath, i);
 
                 if (i == MAX_BACKUPS)
                 {
@@ -174,7 +190,7 @@ namespace ClassicUO.Configuration
                 }
                 else
                 {
-                    string next = GetBackupPath(i + 1);
+                    string next = GetBackupPath(filePath, i + 1);
 
                     if (File.Exists(current))
                     {
@@ -187,8 +203,7 @@ namespace ClassicUO.Configuration
             }
 
             // Move the current main file into backup slot 1.
-            string firstBackup = GetBackupPath(1);
-            string filePath = FilePath;
+            string firstBackup = GetBackupPath(filePath, 1);
 
             if (File.Exists(filePath))
             {
@@ -218,7 +233,34 @@ namespace ClassicUO.Configuration
             }
         }
 
-        private string GetBackupPath(int index) => Path.Combine(BackupDirectory, $"{FileName}.{index}");
+        private static string GetBackupDirectory(string filePath) => Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, Constants.BACKUP_FOLDER);
+
+        private static string GetBackupPath(string filePath, int index) => Path.Combine(GetBackupDirectory(filePath), $"{Path.GetFileName(filePath)}.{index}");
+
+        /// <summary>
+        /// Updates the given property with the given value if it is different from the current one.
+        /// Raises the <see cref="PropertyChanged" /> event, if a change has occurred
+        /// </summary>
+        /// <param name="storage">The field to update</param>
+        /// <param name="value">The value to set</param>
+        /// <param name="propertyName">The name of the property being updated</param>
+        /// <typeparam name="T">The type of property being updated</typeparam>
+        /// <returns><c>true</c> if a change has occurred, <c>false</c> otherwise</returns>
+        protected bool SetProperty<TT>(ref TT storage, TT value, [CallerMemberName] string propertyName = null)
+        {
+            if (EqualityComparer<TT>.Default.Equals(storage, value))
+                return false;
+
+            storage = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="PropertyChanged"/> event with the specified property name
+        /// </summary>
+        /// <param name="propertyName">The property that was updated. Passed by the compiler.</param>
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         /// <summary>
         /// Acquires a cross-process lock guarding this file. A save can be touched by multiple client
@@ -226,7 +268,7 @@ namespace ClassicUO.Configuration
         /// Account/Char files can also collide when the same server/account/character is logged in from more
         /// than one client - so every scope is protected with a named mutex keyed on the file path.
         /// </summary>
-        private IDisposable AcquireLock() => new CrossProcessLock(FilePath);
+        private IDisposable AcquireLock(string filePath = null) => new CrossProcessLock(filePath ?? FilePath);
 
         private sealed class CrossProcessLock : IDisposable
         {

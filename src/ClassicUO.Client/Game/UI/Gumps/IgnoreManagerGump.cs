@@ -5,7 +5,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 
@@ -103,9 +102,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             #region Legend
 
-            Add(new Label(ResGumps.IgnoreListName, true, HUE_FONT, 185, 255, FontStyle.BlackBorder) { X = _gumpPosX + 10, Y = initY });
+            Add(new Label(TazLang.Get("ignore_list_name"), true, HUE_FONT, 185, 255, FontStyle.BlackBorder) { X = _gumpPosX + 10, Y = initY });
 
-            Add(new Label(ResGumps.Remove, true, HUE_FONT, 185, 255, FontStyle.BlackBorder) { X = _gumpPosX + 210, Y = initY });
+            Add(new Label(TazLang.Get("remove"), true, HUE_FONT, 185, 255, FontStyle.BlackBorder) { X = _gumpPosX + 210, Y = initY });
 
             Add
             (
@@ -126,7 +125,7 @@ namespace ClassicUO.Game.UI.Gumps
                 new NiceButton
                 (
                     _gumpPosX + 20, _gumpPosY + GUMP_HEIGHT - 30, GUMP_WIDTH - 40, 25,
-                    ButtonAction.Activate, ResGumps.IgnoreListAddButton
+                    ButtonAction.Activate, TazLang.Get("ignore_list_add_button")
                 )
             );
 

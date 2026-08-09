@@ -333,7 +333,16 @@ namespace ClassicUO.Game.UI.Gumps
             else if (World.TargetManager.IsTargeting)
             {
                 if (SelectedObject.Object is Item item)
+                {
                     World.TargetManager.Target(item.Serial);
+                    Mouse.CancelDoubleClick = true;
+                    Mouse.LastLeftButtonClickTime = 0;
+
+                    if (World.TargetManager.TargetingState == CursorTarget.SetTargetClientSide)
+                    {
+                        UIManager.Add(new InspectorGump(World, item));
+                    }
+                }
             }
         }
 
@@ -427,9 +436,14 @@ namespace ClassicUO.Game.UI.Gumps
                 Item = null;
             }
 
-            public override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseDown(int x, int y, MouseButtonType button)
             {
                 ConditionalRequestContextMenuForSlot(x, y, button);
+                base.OnMouseDown(x, y, button);
+            }
+
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
+            {
                 base.OnMouseUp(x, y, button);
                 Parent?.InvokeMouseUp(new Point(x, y), button);
             }
@@ -443,6 +457,11 @@ namespace ClassicUO.Game.UI.Gumps
             private void ConditionalRequestContextMenuForSlot(int x, int y, MouseButtonType button)
             {
                 if (!_world.InGame || Item == null || button != MouseButtonType.Left)
+                    return;
+
+                // A press used to drop a held item or to satisfy a targeting cursor must not be
+                // treated as a single-click on the slotted item.
+                if (Client.Game.UO.GameCursor.ItemHold.Enabled || _world.TargetManager.IsTargeting)
                     return;
 
                 if (_world.DelayedObjectClickManager.IsEnabled)

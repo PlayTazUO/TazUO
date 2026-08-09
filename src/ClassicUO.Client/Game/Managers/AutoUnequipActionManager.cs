@@ -8,7 +8,6 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers.Structs;
-using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
 using Lock = System.Threading.Lock;
 
@@ -73,7 +72,7 @@ public sealed partial class AutoUnequipActionManager : IDisposable
                     return;
                 try
                 {
-                    GameActions.Print(_world, ResErrorMessages.AutoUnequipFailedStopped, Constants.HUE_ERROR);
+                    GameActions.Print(_world, TazLang.Get("auto_unequip_failed_stopped"), Constants.HUE_ERROR);
                 }
                 catch (Exception e)
                 {

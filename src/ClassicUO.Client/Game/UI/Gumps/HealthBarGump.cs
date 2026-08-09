@@ -9,7 +9,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SDL3;
@@ -1724,7 +1723,7 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                     );
 
-                    _name = ResGumps.Self;
+                    _name = TazLang.Get("self");
                 }
                 else
                 {

@@ -12,7 +12,6 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Utility.Platforms;
 using SDL3;
@@ -158,50 +157,50 @@ namespace ClassicUO.Game.UI.Gumps
                             break;
 
                         case ChatMode.Whisper:
-                            AppendChatModePrefix(ResGumps.Whisper, ProfileManager.CurrentProfile.WhisperHue, TextBoxControl.Text);
+                            AppendChatModePrefix(TazLang.Get("whisper"), ProfileManager.CurrentProfile.WhisperHue, TextBoxControl.Text);
 
                             break;
 
                         case ChatMode.Emote:
-                            AppendChatModePrefix(ResGumps.Emote, ProfileManager.CurrentProfile.EmoteHue, TextBoxControl.Text);
+                            AppendChatModePrefix(TazLang.Get("emote"), ProfileManager.CurrentProfile.EmoteHue, TextBoxControl.Text);
 
                             break;
 
                         case ChatMode.Yell:
-                            AppendChatModePrefix(ResGumps.Yell, ProfileManager.CurrentProfile.YellHue, TextBoxControl.Text);
+                            AppendChatModePrefix(TazLang.Get("yell"), ProfileManager.CurrentProfile.YellHue, TextBoxControl.Text);
 
                             break;
 
                         case ChatMode.Party:
-                            AppendChatModePrefix(ResGumps.Party, ProfileManager.CurrentProfile.PartyMessageHue, TextBoxControl.Text);
+                            AppendChatModePrefix(TazLang.Get("party"), ProfileManager.CurrentProfile.PartyMessageHue, TextBoxControl.Text);
 
                             break;
 
                         case ChatMode.Guild:
-                            AppendChatModePrefix(ResGumps.Guild, ProfileManager.CurrentProfile.GuildMessageHue, TextBoxControl.Text);
+                            AppendChatModePrefix(TazLang.Get("guild"), ProfileManager.CurrentProfile.GuildMessageHue, TextBoxControl.Text);
 
                             break;
 
                         case ChatMode.Alliance:
-                            AppendChatModePrefix(ResGumps.Alliance, ProfileManager.CurrentProfile.AllyMessageHue, TextBoxControl.Text);
+                            AppendChatModePrefix(TazLang.Get("alliance"), ProfileManager.CurrentProfile.AllyMessageHue, TextBoxControl.Text);
 
                             break;
 
                         case ChatMode.ClientCommand:
-                            AppendChatModePrefix(ResGumps.Command, 1161, TextBoxControl.Text);
+                            AppendChatModePrefix(TazLang.Get("command"), 1161, TextBoxControl.Text);
 
                             break;
 
                         case ChatMode.UOAMChat:
                             DisposeChatModePrefix();
-                            AppendChatModePrefix(ResGumps.UOAM, 83, TextBoxControl.Text);
+                            AppendChatModePrefix(TazLang.Get("uoam"), 83, TextBoxControl.Text);
 
                             break;
 
                         case ChatMode.UOChat:
                             DisposeChatModePrefix();
 
-                            AppendChatModePrefix(ResGumps.Chat, ProfileManager.CurrentProfile.ChatMessageHue, TextBoxControl.Text);
+                            AppendChatModePrefix(TazLang.Get("chat"), ProfileManager.CurrentProfile.ChatMessageHue, TextBoxControl.Text);
 
                             break;
                     }
@@ -260,17 +259,17 @@ namespace ClassicUO.Game.UI.Gumps
                     break;
 
                 case MessageType.Party:
-                    AddLine(string.Format(ResGumps.PartyName0Text1, e.Name, e.Text), e.Font, ProfileManager.CurrentProfile.PartyMessageHue, e.IsUnicode);
+                    AddLine(string.Format(TazLang.Get("party_name0_text1"), e.Name, e.Text), e.Font, ProfileManager.CurrentProfile.PartyMessageHue, e.IsUnicode);
 
                     break;
 
                 case MessageType.Guild:
-                    AddLine(string.Format(ResGumps.GuildName0Text1, e.Name, e.Text), e.Font, ProfileManager.CurrentProfile.GuildMessageHue, e.IsUnicode);
+                    AddLine(string.Format(TazLang.Get("guild_name0_text1"), e.Name, e.Text), e.Font, ProfileManager.CurrentProfile.GuildMessageHue, e.IsUnicode);
 
                     break;
 
                 case MessageType.Alliance:
-                    AddLine(string.Format(ResGumps.AllianceName0Text1, e.Name, e.Text), e.Font, ProfileManager.CurrentProfile.AllyMessageHue, e.IsUnicode);
+                    AddLine(string.Format(TazLang.Get("alliance_name0_text1"), e.Name, e.Text), e.Font, ProfileManager.CurrentProfile.AllyMessageHue, e.IsUnicode);
 
                     break;
                 case MessageType.ChatSystem:
@@ -403,11 +402,11 @@ namespace ClassicUO.Game.UI.Gumps
                             {
                                 if (_gump.World.Party.Members[index - 1] != null && _gump.World.Party.Members[index - 1].Serial != 0)
                                 {
-                                    AppendChatModePrefix(string.Format(ResGumps.Tell0, _gump.World.Party.Members[index - 1].Name), ProfileManager.CurrentProfile.PartyMessageHue, string.Empty);
+                                    AppendChatModePrefix(string.Format(TazLang.Get("tell0"), _gump.World.Party.Members[index - 1].Name), ProfileManager.CurrentProfile.PartyMessageHue, string.Empty);
                                 }
                                 else
                                 {
-                                    AppendChatModePrefix(ResGumps.TellEmpty, ProfileManager.CurrentProfile.PartyMessageHue, string.Empty);
+                                    AppendChatModePrefix(TazLang.Get("tell_empty"), ProfileManager.CurrentProfile.PartyMessageHue, string.Empty);
                                 }
 
                                 Mode = ChatMode.Party;
@@ -618,7 +617,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             string fullText = text;
             ChatMode modMode = sentMode;
-            if(_messageHistory.Count < 1 || (_messageHistory[_messageHistory.Count - 1].Item1 != sentMode || _messageHistory[_messageHistory.Count - 1].Item2 != fullText))
+            if(!string.IsNullOrEmpty(fullText) && (_messageHistory.Count < 1 || (_messageHistory[_messageHistory.Count - 1].Item1 != sentMode || _messageHistory[_messageHistory.Count - 1].Item2 != fullText)))
             {
                 //Add to history if last message was not the same
                 _messageHistory.Add(new Tuple<ChatMode, string>(modMode, fullText));
@@ -673,7 +672,7 @@ namespace ClassicUO.Game.UI.Gumps
                         break;
 
                     case ChatMode.Emote:
-                        text = ResGeneral.EmoteChar + text + ResGeneral.EmoteChar;
+                        text = TazLang.Get("emote_char") + text + TazLang.Get("emote_char");
                         GameActions.Say(text, ProfileManager.CurrentProfile.EmoteHue, MessageType.Emote);
 
                         break;
@@ -697,7 +696,7 @@ namespace ClassicUO.Game.UI.Gumps
                                     _gump.World.MessageManager.HandleMessage
                                     (
                                         null,
-                                        ResGumps.YouAreNotPartyLeader,
+                                        TazLang.Get("you_are_not_party_leader"),
                                         "System",
                                         0xFFFF,
                                         MessageType.Regular,
@@ -719,7 +718,7 @@ namespace ClassicUO.Game.UI.Gumps
                                     _gump.World.MessageManager.HandleMessage
                                     (
                                         null,
-                                        ResGumps.YouAreNotInAParty,
+                                        TazLang.Get("you_are_not_in_aparty"),
                                         "System",
                                         0xFFFF,
                                         MessageType.Regular,
@@ -738,7 +737,7 @@ namespace ClassicUO.Game.UI.Gumps
                                     _gump.World.MessageManager.HandleMessage
                                     (
                                         null,
-                                        ResGumps.YouAreNotInAParty,
+                                        TazLang.Get("you_are_not_in_aparty"),
                                         "System",
                                         0xFFFF,
                                         MessageType.Regular,
@@ -772,7 +771,7 @@ namespace ClassicUO.Game.UI.Gumps
                                     _gump.World.MessageManager.HandleMessage
                                     (
                                         null,
-                                        ResGumps.NoOneHasInvitedYouToBeInAParty,
+                                        TazLang.Get("no_one_has_invited_you_to_be_in_aparty"),
                                         "System",
                                         0xFFFF,
                                         MessageType.Regular,
@@ -796,7 +795,7 @@ namespace ClassicUO.Game.UI.Gumps
                                     _gump.World.MessageManager.HandleMessage
                                     (
                                         null,
-                                        ResGumps.NoOneHasInvitedYouToBeInAParty,
+                                        TazLang.Get("no_one_has_invited_you_to_be_in_aparty"),
                                         "System",
                                         0xFFFF,
                                         MessageType.Regular,
@@ -819,7 +818,7 @@ namespace ClassicUO.Game.UI.Gumps
                                     _gump.World.MessageManager.HandleMessage
                                     (
                                         null,
-                                        ResGumps.YouAreNotPartyLeader,
+                                        TazLang.Get("you_are_not_party_leader"),
                                         "System",
                                         0xFFFF,
                                         MessageType.Regular,
@@ -859,7 +858,7 @@ namespace ClassicUO.Game.UI.Gumps
                                     GameActions.Print
                                     (
                                         _gump.World,
-                                        string.Format(ResGumps.NoteToSelf0, text),
+                                        string.Format(TazLang.Get("note_to_self0"), text),
                                         0,
                                         MessageType.System,
                                         3,

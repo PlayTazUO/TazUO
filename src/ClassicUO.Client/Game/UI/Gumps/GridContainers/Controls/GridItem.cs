@@ -70,7 +70,7 @@ public class GridItem : Control
 
         StaticGridContainerSettingUpdated();
 
-        _background = new AlphaBlendControl(0.25f)
+        _background = new AlphaBlendControl(DEFAULT_BG_ALPHA)
         {
             Width = size,
             Height = size
@@ -501,9 +501,13 @@ public class GridItem : Control
     private const ushort SPECTRAL_HUE_FLAG = 0x4000;
     private const int LOW_CONTRAST_OUTLINE_PADDING = 1;
     private const int LOW_CONTRAST_CACHE_MAX_ENTRIES = 8192;
-    private const double LOW_CONTRAST_AVERAGE_RATIO_THRESHOLD = 1.45d;
-    private const double LOW_CONTRAST_PIXEL_RATIO_THRESHOLD = 1.35d;
-    private const double LOW_CONTRAST_PIXEL_FRACTION_THRESHOLD = 0.75d;
+    private const byte LOW_CONTRAST_MINIMUM_LEVEL = 1;
+    private const byte LOW_CONTRAST_MAXIMUM_LEVEL = 10;
+    // A quadratic curve keeps level 1 near 1.1:1 while level 10 reaches 3:1.
+    private const double LOW_CONTRAST_BASE_RATIO = 1.1d;
+    private const double LOW_CONTRAST_LEVEL_RATIO_SCALE = 0.019d;
+    private const double LOW_CONTRAST_PIXEL_FRACTION_THRESHOLD = 0.5d;
+    private const double REPRESENTATIVE_WORLD_BACKGROUND_CHANNEL = 127.5d;
     private static readonly double[] _srgbToLinearLut = CreateSrgbToLinearLut();
 
     private readonly record struct LowContrastCacheKey(
@@ -512,12 +516,10 @@ public class GridItem : Control
         bool PartialHue,
         bool SpectralHue,
         ushort BackgroundHue,
-        byte BackgroundAlpha
-    );
-
-    private readonly record struct LowContrastSample(
-        double AverageLuminance,
-        double LowContrastPixelFraction
+        byte BackgroundAlpha,
+        uint CellBackgroundColor,
+        float CellBackgroundAlpha,
+        byte MinimumContrastLevel
     );
 
     /// <summary>
@@ -605,7 +607,10 @@ public class GridItem : Control
             partialHue,
             spectralHue,
             backgroundHue,
-            _profile.ContainerOpacity
+            _profile.ContainerOpacity,
+            _background.BaseColor.PackedValue,
+            _background.Alpha,
+            Math.Clamp(_profile.GridHighlightLowContrastMinimum, LOW_CONTRAST_MINIMUM_LEVEL, LOW_CONTRAST_MAXIMUM_LEVEL)
         );
     }
 
@@ -640,9 +645,16 @@ public class GridItem : Control
 
         if (!_lowContrastCache.TryGetValue(key, out bool result))
         {
-            double backgroundLuminance = GetBackgroundLuminance(key.BackgroundHue, key.BackgroundAlpha);
+            double backgroundLuminance = GetBackgroundLuminance(
+                key.BackgroundHue,
+                key.BackgroundAlpha,
+                key.CellBackgroundColor,
+                key.CellBackgroundAlpha
+            );
+            double minimumContrastRatio = LOW_CONTRAST_BASE_RATIO
+                + key.MinimumContrastLevel * key.MinimumContrastLevel * LOW_CONTRAST_LEVEL_RATIO_SCALE;
             ArtInfo artInfo = Client.Game.UO.Arts.GetArtPixels(key.Graphic);
-            LowContrastSample sample = GetItemContrastSample(
+            result = HasLowContrastSample(
                 artInfo.Pixels,
                 artInfo.Width,
                 artInfo.Height,
@@ -650,13 +662,9 @@ public class GridItem : Control
                 key.Hue,
                 key.PartialHue,
                 key.SpectralHue,
-                backgroundLuminance
+                backgroundLuminance,
+                minimumContrastRatio
             );
-
-            double contrastRatio = GetContrastRatio(sample.AverageLuminance, backgroundLuminance);
-
-            result = contrastRatio < LOW_CONTRAST_AVERAGE_RATIO_THRESHOLD
-                && sample.LowContrastPixelFraction >= LOW_CONTRAST_PIXEL_FRACTION_THRESHOLD;
             AddLowContrastCacheResult(key, result);
         }
 
@@ -685,7 +693,7 @@ public class GridItem : Control
         _lowContrastCacheOrder.Enqueue(key);
     }
 
-    private static LowContrastSample GetItemContrastSample(
+    private static bool HasLowContrastSample(
         ReadOnlySpan<uint> pixels,
         int pixelWidth,
         int pixelHeight,
@@ -693,22 +701,23 @@ public class GridItem : Control
         ushort hue,
         bool partialHue,
         bool spectralHue,
-        double backgroundLuminance
+        double backgroundLuminance,
+        double minimumContrastRatio
     )
     {
         if (pixels.IsEmpty || pixelWidth <= 0 || pixelHeight <= 0 || pixels.Length < pixelWidth * pixelHeight)
-            return new LowContrastSample(1d, 0d);
+            return false;
 
         sourceRectangle = ClampRectangleToPixelBounds(sourceRectangle, pixelWidth, pixelHeight);
 
         if (sourceRectangle.Width <= 0 || sourceRectangle.Height <= 0)
-            return new LowContrastSample(1d, 0d);
+            return false;
 
         Span<uint> hueColors = stackalloc uint[32];
         bool hasHueColors = TryFillHueColors(hue, hueColors);
-        double total = 0d;
-        int count = 0;
-        int lowContrastPixels = 0;
+        double contrastTotal = 0d;
+        double lowContrastWeight = 0d;
+        double totalWeight = 0d;
 
         for (int y = sourceRectangle.Top; y < sourceRectangle.Bottom; y++)
         {
@@ -722,19 +731,27 @@ public class GridItem : Control
                     continue;
 
                 uint rendered = ApplyItemHue(pixel, hue, partialHue, spectralHue, hasHueColors, hueColors);
-                double luminance = GetRelativeLuminance(rendered);
+                double itemAlpha = ((rendered >> 24) & 0xFF) / 255d;
+                if (itemAlpha <= 0d)
+                    continue;
 
-                total += luminance;
-                if (GetContrastRatio(luminance, backgroundLuminance) < LOW_CONTRAST_PIXEL_RATIO_THRESHOLD)
-                    lowContrastPixels++;
+                double itemLuminance = GetRelativeLuminance(rendered);
+                double renderedItemLuminance = itemLuminance * itemAlpha
+                    + backgroundLuminance * (1d - itemAlpha);
+                double contrast = GetContrastRatio(renderedItemLuminance, backgroundLuminance);
 
-                count++;
+                contrastTotal += contrast * itemAlpha;
+
+                if (contrast < minimumContrastRatio)
+                    lowContrastWeight += itemAlpha;
+
+                totalWeight += itemAlpha;
             }
         }
 
-        return count == 0
-            ? new LowContrastSample(1d, 0d)
-            : new LowContrastSample(total / count, lowContrastPixels / (double)count);
+        return totalWeight > 0d
+            && contrastTotal / totalWeight < minimumContrastRatio
+            && lowContrastWeight / totalWeight >= LOW_CONTRAST_PIXEL_FRACTION_THRESHOLD;
     }
 
     private static Rectangle ClampRectangleToPixelBounds(Rectangle rectangle, int width, int height)
@@ -765,47 +782,59 @@ public class GridItem : Control
     private static uint ApplyItemHue(uint color, ushort hue, bool partialHue, bool spectralHue, bool hasHueColors, ReadOnlySpan<uint> hueColors)
     {
         if (spectralHue)
-            return color & 0xFF000000u;
+        {
+            double spectralRed = (color & 0xFF) / 255d;
+            double sourceAlpha = ((color >> 24) & 0xFF) / 255d;
+            byte alpha = (byte)(sourceAlpha * Math.Clamp(1d - spectralRed * 1.5d, 0d, 1d) * 255d);
+            return (uint)alpha << 24;
+        }
 
         if (hue == 0)
             return color;
 
         if (!hasHueColors)
-        {
-            ushort color16 = HuesHelper.Color32To16(color);
-            return partialHue
-                ? HuesHelper.Color16To32(color16)
-                : HuesHelper.Color16To32(hue);
-        }
+            return color;
 
-        int red5 = (int)(color & 0xFF) >> 3;
-        int green5 = (int)((color >> 8) & 0xFF) >> 3;
-        int blue5 = (int)((color >> 16) & 0xFF) >> 3;
+        byte red = (byte)(color & 0xFF);
+        byte green = (byte)((color >> 8) & 0xFF);
+        byte blue = (byte)((color >> 16) & 0xFF);
+        int red5 = red >> 3;
 
-        if (partialHue && (red5 != green5 || red5 != blue5))
-            return HuesHelper.Color16To32(HuesHelper.Color32To16(color));
+        if (partialHue && (red != green || red != blue))
+            return (HuesHelper.Color16To32(HuesHelper.Color32To16(color)) & 0x00FFFFFFu) |
+                   (color & 0xFF000000u);
 
-        return hueColors[blue5];
+        return (hueColors[red5] & 0x00FFFFFFu) | (color & 0xFF000000u);
     }
 
-    private static double GetBackgroundLuminance(ushort backgroundHue, byte backgroundAlpha)
+    private static double GetBackgroundLuminance(
+        ushort backgroundHue,
+        byte backgroundAlpha,
+        uint cellBackgroundColor,
+        float cellBackgroundAlpha
+    )
     {
-        Color background = Color.Black;
-
-        if (backgroundHue != 0)
-            background = ColorFromUOPacked(Client.Game.UO.FileManager.Hues.GetHueColorRgba8888(0, backgroundHue));
-
+        uint color = backgroundHue == 0
+            ? Color.Black.PackedValue
+            : Client.Game.UO.FileManager.Hues.GetHueColorRgba8888(0, backgroundHue);
         double alpha = Math.Clamp(backgroundAlpha / 100d, 0d, 1d);
-        return GetRelativeLuminance(background.R, background.G, background.B) * alpha;
-    }
+        double sourceAlpha = ((color >> 24) & 0xFF) / 255d;
+        double effectiveAlpha = alpha * sourceAlpha;
+        double underlyingAlpha = 1d - effectiveAlpha;
+        double underlyingContribution = REPRESENTATIVE_WORLD_BACKGROUND_CHANNEL * underlyingAlpha;
+        double backgroundRed = (color & 0xFF) * effectiveAlpha + underlyingContribution;
+        double backgroundGreen = ((color >> 8) & 0xFF) * effectiveAlpha + underlyingContribution;
+        double backgroundBlue = ((color >> 16) & 0xFF) * effectiveAlpha + underlyingContribution;
+        double cellAlpha = Math.Clamp(cellBackgroundAlpha, 0f, 1f)
+            * ((cellBackgroundColor >> 24) & 0xFF) / 255d;
+        double backgroundVisibility = 1d - cellAlpha;
 
-    private static Color ColorFromUOPacked(uint packed) =>
-        new(
-            (byte)(packed & 0xFF),
-            (byte)((packed >> 8) & 0xFF),
-            (byte)((packed >> 16) & 0xFF),
-            (byte)((packed >> 24) & 0xFF)
+        return GetRelativeLuminance(
+            (byte)((cellBackgroundColor & 0xFF) * cellAlpha + backgroundRed * backgroundVisibility),
+            (byte)(((cellBackgroundColor >> 8) & 0xFF) * cellAlpha + backgroundGreen * backgroundVisibility),
+            (byte)(((cellBackgroundColor >> 16) & 0xFF) * cellAlpha + backgroundBlue * backgroundVisibility)
         );
+    }
 
     private static double GetRelativeLuminance(uint packed) =>
         GetRelativeLuminance(
@@ -884,6 +913,9 @@ public class GridItem : Control
         DrawSpotlightRectangle(batcher, InflateRectangle(destination, 4), cellBounds, _lowContrastSpotlightOuterHue);
         DrawSpotlightRectangle(batcher, InflateRectangle(destination, 2), cellBounds, _lowContrastSpotlightInnerHue);
     }
+
+    private void DrawLowContrastFull(UltimaBatcher2D batcher, Rectangle cellBounds) =>
+        batcher.Draw(_whiteTexture, cellBounds, _lowContrastSpotlightInnerHue);
 
     private void DrawSpotlightRectangle(UltimaBatcher2D batcher, Rectangle rectangle, Rectangle cellBounds, Vector3 hueVector)
     {
@@ -1074,10 +1106,18 @@ public class GridItem : Control
 
         if (_profile.GridHighlightLowContrastItems && IsLowContrastItem())
         {
-            if ((LowContrastHighlightStyle)_profile.GridHighlightLowContrastItemsStyle == LowContrastHighlightStyle.Spotlight)
-                DrawLowContrastSpotlight(batcher, destination, itemCellBounds);
-            else
-                DrawLowContrastSpriteBorder(batcher, destination, source);
+            switch ((LowContrastHighlightStyle)_profile.GridHighlightLowContrastItemsStyle)
+            {
+                case LowContrastHighlightStyle.Spotlight:
+                    DrawLowContrastSpotlight(batcher, destination, itemCellBounds);
+                    break;
+                case LowContrastHighlightStyle.Full:
+                    DrawLowContrastFull(batcher, itemCellBounds);
+                    break;
+                default:
+                    DrawLowContrastSpriteBorder(batcher, destination, source);
+                    break;
+            }
         }
 
         batcher.Draw(_texture, destination, source, hueVector);

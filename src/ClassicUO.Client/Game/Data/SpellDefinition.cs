@@ -1,8 +1,8 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using System;
 using System.Collections.Generic;
@@ -20,9 +20,12 @@ namespace ClassicUO.Game.Data
             "",
             0,
             0,
+            0,
             "",
             0,
             0,
+            0,
+            TargetType.Neutral,
             0
         );
 
@@ -40,6 +43,7 @@ namespace ClassicUO.Game.Data
             int minskill,
             int tithingcost,
             TargetType target,
+            int clilocNumber = 0,
             params Reagents[] regs
         )
         {
@@ -53,6 +57,7 @@ namespace ClassicUO.Game.Data
             PowerWords = powerwords;
             TithingCost = tithingcost;
             TargetType = target;
+            ClilocNumber = clilocNumber;
             AddToWatchedSpell();
         }
 
@@ -65,6 +70,7 @@ namespace ClassicUO.Game.Data
             int manacost,
             int minskill,
             TargetType target,
+            int clilocNumber = 0,
             params Reagents[] regs
         )
         {
@@ -78,6 +84,7 @@ namespace ClassicUO.Game.Data
             PowerWords = powerwords;
             TithingCost = 0;
             TargetType = target;
+            ClilocNumber = clilocNumber;
             AddToWatchedSpell();
         }
 
@@ -88,6 +95,7 @@ namespace ClassicUO.Game.Data
             int gumpIconID,
             string powerwords,
             TargetType target,
+            int clilocNumber = 0,
             params Reagents[] regs
         )
         {
@@ -101,6 +109,7 @@ namespace ClassicUO.Game.Data
             TithingCost = 0;
             PowerWords = powerwords;
             TargetType = target;
+            ClilocNumber = clilocNumber;
             AddToWatchedSpell();
         }
 
@@ -117,6 +126,18 @@ namespace ClassicUO.Game.Data
         public readonly Reagents[] Regs;
         public readonly TargetType TargetType;
         public readonly int TithingCost;
+        public readonly int ClilocNumber;
+
+        public string GetLocalizedName()
+        {
+            if (ClilocNumber > 0)
+            {
+                string cliloc = Client.Game.UO.FileManager.Clilocs?.GetString(ClilocNumber);
+                if (!string.IsNullOrEmpty(cliloc))
+                    return cliloc;
+            }
+            return Name;
+        }
 
         public static void LoadCustomSpells(World world)
         {
@@ -147,7 +168,7 @@ namespace ClassicUO.Game.Data
                 {
                     foreach (SpellJson spell in spells)
                     {
-                        var spellDef = new SpellDefinition(spell.SpellName, spell.SpellIndex, spell.GumpIcon, spell.SmallGumpIcon, spell.PowerWords, spell.ManaCost, spell.MinSkill, spell.TithingCost, spell.TargetType, spell.AllReagents);
+                        var spellDef = new SpellDefinition(spell.SpellName, spell.SpellIndex, spell.GumpIcon, spell.SmallGumpIcon, spell.PowerWords, spell.ManaCost, spell.MinSkill, spell.TithingCost, spell.TargetType, 0, spell.AllReagents);
 
                         switch (spell.School)
                         {
@@ -202,139 +223,30 @@ namespace ClassicUO.Game.Data
 
         public static bool TryGetSpellFromName(string spellName, out SpellDefinition spell, bool partialMatch = true)
         {
-            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMagery.GetAllSpells)
+            var allSpells = GetAllSpells();
+
+            if (partialMatch)
             {
-                if (partialMatch)
+                string lower = spellName.ToLower();
+                foreach (SpellDefinition def in allSpells)
                 {
-                    if (entry.Value.Name.ToLower().Contains(spellName.ToLower()))
+                    if (def.Name.ToLower().Contains(lower) || def.GetLocalizedName().ToLower().Contains(lower))
                     {
-                        spell = entry.Value;
+                        spell = def;
                         return true;
                     }
-                }
-                else if (entry.Value.Name.Equals(spellName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    spell = entry.Value;
-                    return true;
                 }
             }
-
-            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsNecromancy.GetAllSpells)
+            else
             {
-                if (partialMatch)
+                foreach (SpellDefinition def in allSpells)
                 {
-                    if (entry.Value.Name.ToLower().Contains(spellName.ToLower()))
+                    if (def.Name.Equals(spellName, StringComparison.InvariantCultureIgnoreCase) ||
+                        def.GetLocalizedName().Equals(spellName, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        spell = entry.Value;
+                        spell = def;
                         return true;
                     }
-                }
-                else if (entry.Value.Name.Equals(spellName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    spell = entry.Value;
-                    return true;
-                }
-            }
-
-            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsChivalry.GetAllSpells)
-            {
-                if (partialMatch)
-                {
-                    if (entry.Value.Name.ToLower().Contains(spellName.ToLower()))
-                    {
-                        spell = entry.Value;
-                        return true;
-                    }
-                }
-                else if (entry.Value.Name.Equals(spellName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    spell = entry.Value;
-                    return true;
-                }
-            }
-
-            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsBushido.GetAllSpells)
-            {
-                if (partialMatch)
-                {
-                    if (entry.Value.Name.ToLower().Contains(spellName.ToLower()))
-                    {
-                        spell = entry.Value;
-                        return true;
-                    }
-                }
-                else if (entry.Value.Name.Equals(spellName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    spell = entry.Value;
-                    return true;
-                }
-            }
-
-            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsNinjitsu.GetAllSpells)
-            {
-                if (partialMatch)
-                {
-                    if (entry.Value.Name.ToLower().Contains(spellName.ToLower()))
-                    {
-                        spell = entry.Value;
-                        return true;
-                    }
-                }
-                else if (entry.Value.Name.Equals(spellName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    spell = entry.Value;
-                    return true;
-                }
-            }
-
-            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsSpellweaving.GetAllSpells)
-            {
-                if (partialMatch)
-                {
-                    if (entry.Value.Name.ToLower().Contains(spellName.ToLower()))
-                    {
-                        spell = entry.Value;
-                        return true;
-                    }
-                }
-                else if (entry.Value.Name.Equals(spellName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    spell = entry.Value;
-                    return true;
-                }
-            }
-
-            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMysticism.GetAllSpells)
-            {
-                if (partialMatch)
-                {
-                    if (entry.Value.Name.ToLower().Contains(spellName.ToLower()))
-                    {
-                        spell = entry.Value;
-                        return true;
-                    }
-                }
-                else if (entry.Value.Name.Equals(spellName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    spell = entry.Value;
-                    return true;
-                }
-            }
-
-            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMastery.GetAllSpells)
-            {
-                if (partialMatch)
-                {
-                    if (entry.Value.Name.ToLower().Contains(spellName.ToLower()))
-                    {
-                        spell = entry.Value;
-                        return true;
-                    }
-                }
-                else if (entry.Value.Name.Equals(spellName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    spell = entry.Value;
-                    return true;
                 }
             }
 
@@ -350,70 +262,88 @@ namespace ClassicUO.Game.Data
                 {
                     switch (Regs[i])
                     {
-                        // britanian reagents
                         case Reagents.BlackPearl:
-                            sb.Append(ResGeneral.BlackPearl);
+                            AppendReagentName(ref sb, 1044353, TazLang.Get("black_pearl"));
 
                             break;
 
                         case Reagents.Bloodmoss:
-                            sb.Append(ResGeneral.Bloodmoss);
+                            AppendReagentName(ref sb, 1044354, TazLang.Get("bloodmoss"));
 
                             break;
 
                         case Reagents.Garlic:
-                            sb.Append(ResGeneral.Garlic);
+                            AppendReagentName(ref sb, 1044355, TazLang.Get("garlic"));
 
                             break;
 
                         case Reagents.Ginseng:
-                            sb.Append(ResGeneral.Ginseng);
+                            AppendReagentName(ref sb, 1044356, TazLang.Get("ginseng"));
 
                             break;
 
                         case Reagents.MandrakeRoot:
-                            sb.Append(ResGeneral.MandrakeRoot);
+                            AppendReagentName(ref sb, 1044357, TazLang.Get("mandrake_root"));
 
                             break;
 
                         case Reagents.Nightshade:
-                            sb.Append(ResGeneral.Nightshade);
+                            AppendReagentName(ref sb, 1044358, TazLang.Get("nightshade"));
 
                             break;
 
                         case Reagents.SulfurousAsh:
-                            sb.Append(ResGeneral.SulfurousAsh);
+                            AppendReagentName(ref sb, 1044359, TazLang.Get("sulfurous_ash"));
 
                             break;
 
                         case Reagents.SpidersSilk:
-                            sb.Append(ResGeneral.SpidersSilk);
+                            AppendReagentName(ref sb, 1044360, TazLang.Get("spiders_silk"));
 
                             break;
 
-                        // pagan reagents
                         case Reagents.BatWing:
-                            sb.Append(ResGeneral.BatWing);
+                            AppendReagentName(ref sb, 1023960, TazLang.Get("bat_wing"));
 
                             break;
 
                         case Reagents.GraveDust:
-                            sb.Append(ResGeneral.GraveDust);
+                            AppendReagentName(ref sb, 1023983, TazLang.Get("grave_dust"));
 
                             break;
 
                         case Reagents.DaemonBlood:
-                            sb.Append(ResGeneral.DaemonBlood);
+                            AppendReagentName(ref sb, 1023965, TazLang.Get("daemon_blood"));
 
                             break;
 
                         case Reagents.NoxCrystal:
-                            sb.Append(ResGeneral.NoxCrystal);
+                            AppendReagentName(ref sb, 1023982, TazLang.Get("nox_crystal"));
 
                             break;
 
                         case Reagents.PigIron:
-                            sb.Append(ResGeneral.PigIron);
+                            AppendReagentName(ref sb, 1023978, TazLang.Get("pig_iron"));
+
+                            break;
+
+                        case Reagents.Bone:
+                            AppendReagentName(ref sb, 1023966, StringHelper.AddSpaceBeforeCapital(Regs[i].ToString()));
+
+                            break;
+
+                        case Reagents.DemonBone:
+                            AppendReagentName(ref sb, 1023968, StringHelper.AddSpaceBeforeCapital(Regs[i].ToString()));
+
+                            break;
+
+                        case Reagents.FertileDirt:
+                            AppendReagentName(ref sb, 1023969, StringHelper.AddSpaceBeforeCapital(Regs[i].ToString()));
+
+                            break;
+
+                        case Reagents.DragonsBlood:
+                            AppendReagentName(ref sb, 1023970, StringHelper.AddSpaceBeforeCapital(Regs[i].ToString()));
 
                             break;
 
@@ -436,6 +366,19 @@ namespace ClassicUO.Game.Data
                 string ss = sb.ToString();
                 sb.Dispose();
                 return ss;
+            }
+        }
+
+        private static void AppendReagentName(ref ValueStringBuilder sb, int clilocNumber, string fallback)
+        {
+            string cliloc = Client.Game.UO.FileManager.Clilocs?.GetString(clilocNumber);
+            if (!string.IsNullOrEmpty(cliloc))
+            {
+                sb.Append(cliloc);
+            }
+            else
+            {
+                sb.Append(fallback);
             }
         }
 
@@ -609,6 +552,7 @@ namespace ClassicUO.Game.Data
                 minskill,
                 tithing,
                 target,
+                0,
                 regs
             );
 

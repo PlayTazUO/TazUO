@@ -6,7 +6,6 @@ description: ApiUiGump class documentation
 ## Properties
 *No properties found.*
 
-*No fields found.*
 
 ## Enums
 *No enums found.*
@@ -294,7 +293,7 @@ description: ApiUiGump class documentation
 ---
 
 ### CreateGumpTextBox
-`(text, width, height, multiline)`
+`(text, width, height, multiline, fontSize)`
  Create a text area control.
  Example:
  ```py
@@ -329,6 +328,7 @@ description: ApiUiGump class documentation
 | `width` | `int` | ✅ Yes |  |
 | `height` | `int` | ✅ Yes |  |
 | `multiline` | `bool` | ✅ Yes |  |
+| `fontSize` | `float` | ✅ Yes | TTF font size, default is 20 |
 
 **Return Type:** `ApiUiTtfTextInputField`
 

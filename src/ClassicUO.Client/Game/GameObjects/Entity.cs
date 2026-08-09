@@ -110,6 +110,13 @@ namespace ClassicUO.Game.GameObjects
                 fixedColor = (ushort) (hue & 0x8000);
             }
 
+            // Don't clobber an active script highlight; refresh its restore baseline instead.
+            if (OriginalHue.HasValue)
+            {
+                OriginalHue = fixedColor;
+                return;
+            }
+
             Hue = fixedColor;
         }
 

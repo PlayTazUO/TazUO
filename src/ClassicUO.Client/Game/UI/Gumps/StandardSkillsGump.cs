@@ -12,7 +12,6 @@ using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
-using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 using SDL3;
 using System.Diagnostics;
@@ -135,7 +134,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (
                     0x938,
                     0x939,
-                    ResGumps.ShowReal,
+                    TazLang.Get("show_real"),
                     1,
                     0x0386,
                     false
@@ -149,7 +148,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (
                     0x938,
                     0x939,
-                    ResGumps.ShowCaps,
+                    TazLang.Get("show_caps"),
                     1,
                     0x0386,
                     false
@@ -164,7 +163,7 @@ namespace ClassicUO.Game.UI.Gumps
             LoadSkills();
 
             Add(_resetGroups = new NiceButton(_scrollArea.X + S(25), _scrollArea.Y + S(7), S(100), S(18),
-                                              ButtonAction.Activate, ResGumps.ResetGroups,
+                                              ButtonAction.Activate, TazLang.Get("reset_groups"),
                                               unicode: false,
                                               font: 6)
             {
@@ -257,7 +256,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 var g = new SkillsGroup
                 {
-                    Name = ResGumps.NewGroup
+                    Name = TazLang.Get("new_group")
                 };
 
                 World.SkillsGroupManager.Add(g);
@@ -678,7 +677,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (string.IsNullOrWhiteSpace(text))
                 {
-                    text = ResGumps.NoName;
+                    text = TazLang.Get("no_name");
                     _textbox.SetText(text);
                 }
 

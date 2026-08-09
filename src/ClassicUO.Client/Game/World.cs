@@ -867,6 +867,16 @@ namespace ClassicUO.Game
                             {
                                 continue;
                             }
+                            if (FriendsListManager.Instance.IsFriend(mobile.Serial))
+                            {
+                                continue;
+                            }
+                            break;
+                        case ScanTypeObject.Friend:
+                            if (!FriendsListManager.Instance.IsFriend(mobile.Serial))
+                            {
+                                continue;
+                            }
                             break;
                         case ScanTypeObject.Objects:
                             /* This was handled separately above */
@@ -938,6 +948,16 @@ namespace ClassicUO.Game
                             break;
                         case ScanTypeObject.Hostile:
                             if (mobile.NotorietyFlag == NotorietyFlag.Ally || mobile.NotorietyFlag == NotorietyFlag.Innocent || mobile.NotorietyFlag == NotorietyFlag.Invulnerable)
+                            {
+                                continue;
+                            }
+                            if (FriendsListManager.Instance.IsFriend(mobile.Serial))
+                            {
+                                continue;
+                            }
+                            break;
+                        case ScanTypeObject.Friend:
+                            if (!FriendsListManager.Instance.IsFriend(mobile.Serial))
                             {
                                 continue;
                             }

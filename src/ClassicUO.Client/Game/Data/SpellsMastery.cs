@@ -122,6 +122,7 @@ namespace ClassicUO.Game.Data
                         90,
                         4,
                         TargetType.Beneficial,
+                        0,
                         Reagents.None
                     )
                 },
@@ -138,6 +139,7 @@ namespace ClassicUO.Game.Data
                         90,
                         5,
                         TargetType.Beneficial,
+                        0,
                         Reagents.None
                     )
                 },
@@ -154,6 +156,7 @@ namespace ClassicUO.Game.Data
                         90,
                         4,
                         TargetType.Beneficial,
+                        0,
                         Reagents.None
                     )
                 },
@@ -170,6 +173,7 @@ namespace ClassicUO.Game.Data
                         90,
                         5,
                         TargetType.Beneficial,
+                        0,
                         Reagents.None
                     )
                 },
@@ -186,6 +190,7 @@ namespace ClassicUO.Game.Data
                         90,
                         10,
                         TargetType.Harmful,
+                        0,
                         Reagents.None
                     )
                 },
@@ -202,6 +207,7 @@ namespace ClassicUO.Game.Data
                         90,
                         12,
                         TargetType.Harmful,
+                        0,
                         Reagents.None
                     )
                 },
@@ -218,6 +224,7 @@ namespace ClassicUO.Game.Data
                         90,
                         35,
                         TargetType.Harmful,
+                        0,
                         Reagents.BlackPearl,
                         Reagents.Bloodmoss,
                         Reagents.SpidersSilk
@@ -236,6 +243,7 @@ namespace ClassicUO.Game.Data
                         90,
                         0,
                         TargetType.Beneficial,
+                        0,
                         Reagents.Bloodmoss,
                         Reagents.Ginseng,
                         Reagents.MandrakeRoot
@@ -254,6 +262,7 @@ namespace ClassicUO.Game.Data
                         90,
                         0,
                         TargetType.Harmful,
+                        0,
                         Reagents.DragonsBlood,
                         Reagents.DemonBone
                     )
@@ -271,6 +280,7 @@ namespace ClassicUO.Game.Data
                         90,
                         0,
                         TargetType.Neutral,
+                        0,
                         Reagents.FertileDirt,
                         Reagents.Bone
                     )
@@ -288,6 +298,7 @@ namespace ClassicUO.Game.Data
                         90,
                         0,
                         TargetType.Neutral,
+                        0,
                         Reagents.DaemonBlood,
                         Reagents.PigIron,
                         Reagents.BatWing
@@ -306,6 +317,7 @@ namespace ClassicUO.Game.Data
                         90,
                         0,
                         TargetType.Harmful,
+                        0,
                         Reagents.NoxCrystal,
                         Reagents.BatWing,
                         Reagents.GraveDust

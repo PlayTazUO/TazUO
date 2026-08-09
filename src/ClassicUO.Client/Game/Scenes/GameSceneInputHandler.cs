@@ -10,7 +10,6 @@ using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using SDL3;
@@ -1044,7 +1043,7 @@ namespace ClassicUO.Game.Scenes
                             _world.Player.AddMessage
                             (
                                 MessageType.Label,
-                                ResGeneral.Pathfinding,
+                                TazLang.Get("pathfinding"),
                                 3,
                                 0,
                                 false,
@@ -1059,7 +1058,7 @@ namespace ClassicUO.Game.Scenes
                         _world.Player.AddMessage
                         (
                             MessageType.Label,
-                            ResGeneral.Pathfinding,
+                            TazLang.Get("pathfinding"),
                             3,
                             0,
                             false,
@@ -1100,7 +1099,7 @@ namespace ClassicUO.Game.Scenes
                         {
                             _world.Player.AddMessage(
                                 MessageType.Label,
-                                ResGeneral.Pathfinding,
+                                TazLang.Get("pathfinding"),
                                 3,
                                 0,
                                 false,
@@ -1114,7 +1113,7 @@ namespace ClassicUO.Game.Scenes
                     {
                         _world.Player.AddMessage(
                             MessageType.Label,
-                            ResGeneral.Pathfinding,
+                            TazLang.Get("pathfinding"),
                             3,
                             0,
                             false,

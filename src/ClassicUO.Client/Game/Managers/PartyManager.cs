@@ -6,7 +6,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
-using ClassicUO.Resources;
 
 namespace ClassicUO.Game.Managers
 {
@@ -252,7 +251,7 @@ namespace ClassicUO.Game.Managers
 
                     if (string.IsNullOrEmpty(_name))
                     {
-                        _name = ResGeneral.NotSeeing;
+                        _name = TazLang.Get("not_seeing");
                     }
                 }
 

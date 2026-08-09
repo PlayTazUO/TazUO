@@ -5,8 +5,8 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Assets;
 using ClassicUO.Network;
-using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -97,7 +97,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (isLeader)
             {
-                var kickLabel = TextBox.GetOne(ResGumps.Kick, TrueTypeLoader.EMBEDDED_FONT, 14, Color.Orange, TextBox.RTLOptions.Default());
+                var kickLabel = TextBox.GetOne(TazLang.Get("kick"), TrueTypeLoader.EMBEDDED_FONT, 14, Color.Orange, TextBox.RTLOptions.Default());
                 kickLabel.X = entryStartX + 30; // Same spacing as buttons
                 kickLabel.Y = BorderSize + 17;
                 kickLabel.AcceptMouseInput = false;
@@ -105,7 +105,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             // Center Party Manifest label with larger font
-            var partyManifestLabel = TextBox.GetOne(ResGumps.PartyManifest, TrueTypeLoader.EMBEDDED_FONT, 18, Color.Orange, TextBox.RTLOptions.Default());
+            var partyManifestLabel = TextBox.GetOne(TazLang.Get("party_manifest"), TrueTypeLoader.EMBEDDED_FONT, 18, Color.Orange, TextBox.RTLOptions.Default());
             partyManifestLabel.AcceptMouseInput = false;
             Add(partyManifestLabel);
             // Center the label horizontally in the gump
@@ -203,14 +203,14 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add
             (
-                new NiceButton(buttonX, BorderSize + 294, buttonWidth, 25, ButtonAction.Activate, ResGumps.SendThePartyAMessage)
+                new NiceButton(buttonX, BorderSize + 294, buttonWidth, 25, ButtonAction.Activate, TazLang.Get("send_the_party_amessage"))
                 {
                     ButtonParameter = (int)Buttons.SendMessage,
                     IsSelectable = false
                 }
             );
 
-            string lootText = CanLoot ? ResGumps.PartyCanLootMe : ResGumps.PartyCannotLootMe;
+            string lootText = CanLoot ? TazLang.Get("party_can_loot_me") : TazLang.Get("party_cannot_loot_me");
             Add
             (
                 new NiceButton(buttonX, BorderSize + 321, buttonWidth, 25, ButtonAction.Activate, lootText)
@@ -220,7 +220,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             );
 
-            string leaveText = isMemeber ? ResGumps.LeaveTheParty : ResGumps.DisbandTheParty;
+            string leaveText = isMemeber ? TazLang.Get("leave_the_party") : TazLang.Get("disband_the_party");
             Add
             (
                 new NiceButton(buttonX, BorderSize + 347, buttonWidth, 25, ButtonAction.Activate, leaveText, hue: 32)
@@ -234,7 +234,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 Add
                 (
-                    new NiceButton(buttonX, BorderSize + 372, buttonWidth, 25, ButtonAction.Activate, ResGumps.AddNewMember, hue: 66)
+                    new NiceButton(buttonX, BorderSize + 372, buttonWidth, 25, ButtonAction.Activate, TazLang.Get("add_new_member"), hue: 66)
                     {
                         ButtonParameter = (int)Buttons.Add,
                         IsSelectable = false
@@ -256,7 +256,7 @@ namespace ClassicUO.Game.UI.Gumps
                         GameActions.Print
                         (
                             World,
-                            ResGumps.YouAreNotInAParty,
+                            TazLang.Get("you_are_not_in_aparty"),
                             0,
                             MessageType.System,
                             3,
@@ -291,7 +291,7 @@ namespace ClassicUO.Game.UI.Gumps
                         GameActions.Print
                         (
                             World,
-                            ResGumps.YouAreNotInAParty,
+                            TazLang.Get("you_are_not_in_aparty"),
                             0,
                             MessageType.System,
                             3,
@@ -331,7 +331,7 @@ namespace ClassicUO.Game.UI.Gumps
                             GameActions.Print
                             (
                                 World,
-                                ResGumps.ThereIsNoOneInThatPartySlot,
+                                TazLang.Get("there_is_no_one_in_that_party_slot"),
                                 0,
                                 MessageType.System,
                                 3,
@@ -356,7 +356,7 @@ namespace ClassicUO.Game.UI.Gumps
                             GameActions.Print
                             (
                                 World,
-                                ResGumps.ThereIsNoOneInThatPartySlot,
+                                TazLang.Get("there_is_no_one_in_that_party_slot"),
                                 0,
                                 MessageType.System,
                                 3,

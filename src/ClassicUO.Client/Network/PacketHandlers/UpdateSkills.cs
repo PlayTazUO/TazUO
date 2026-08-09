@@ -6,7 +6,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
-using ClassicUO.Resources;
 
 namespace ClassicUO.Network.PacketHandlers;
 
@@ -116,11 +115,11 @@ internal static class UpdateSkills
                                 GameActions.Print(
                                     world,
                                     string.Format(
-                                        ResGeneral.YourSkillIn0Has1By2ItIsNow3,
+                                        TazLang.Get("your_skill_in0_has1_by2_it_is_now3"),
                                         skill.Name,
                                         change < 0
-                                            ? ResGeneral.Decreased
-                                            : ResGeneral.Increased,
+                                            ? TazLang.Get("decreased")
+                                            : TazLang.Get("increased"),
                                         Math.Abs(change),
                                         skill.Value + change
                                     ),

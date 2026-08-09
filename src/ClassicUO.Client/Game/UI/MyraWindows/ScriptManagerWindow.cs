@@ -51,7 +51,18 @@ public class ScriptManagerWindow : MyraControl
     // Resizing fires this on every mouse-move tick; debounce so we're not hitting the settings DB
     // on every pixel, only once the drag settles.
     private readonly Debounce<Point?> _windowSizeDebounce = new(
-        size => MainThreadQueue.EnqueueAction(() => ProfileManager.CurrentProfile?.ScriptManagerWindowSize = size),
+        size => MainThreadQueue.EnqueueAction(() =>
+        {
+            if (size.HasValue)
+            {
+                if (size.Value.X <= 0)
+                    size = new Point(100, size.Value.Y);
+                
+                if (size.Value.Y <= 0)
+                    size = new Point(size.Value.X, 100);
+                ProfileManager.CurrentProfile?.ScriptManagerWindowSize = size.Value;
+            }
+        }),
         350
     );
 
@@ -115,13 +126,13 @@ public class ScriptManagerWindow : MyraControl
     {
         // Persist user-set size. Note we have to debounce here since the resize even can be raised on every game tick.
         _rootWindow.Props.InitialSizeStore = new Accessor<Point?>(
-            () => ProfileManager.CurrentProfile?.ScriptManagerWindowSize,
+            () => ProfileManager.CurrentProfile?.ScriptManagerWindowSize == Point.Zero ? null : ProfileManager.CurrentProfile?.ScriptManagerWindowSize,
             size => _windowSizeDebounce.Invoke(size)
         );
 
         // Restore position or center when it has never been saved. Persist future moves.
         Point? position = ProfileManager.CurrentProfile?.ScriptManagerWindowPosition;
-        if (position.HasValue)
+        if (position.HasValue && position.Value != Point.Zero)
         {
             SetPosition(position.Value.X, position.Value.Y);
             SetInScreen();

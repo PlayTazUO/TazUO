@@ -4,7 +4,6 @@
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
 using System;
 using System.Collections.Generic;
@@ -30,7 +29,7 @@ namespace ClassicUO.Game.Managers
         public SkillsGroup Right { get; set; }
         public int Count;
         public bool IsMaximized;
-        public string Name = ResGeneral.NoName;
+        public string Name = TazLang.Get("no_name");
 
         public byte GetSkill(int index)
         {
@@ -185,7 +184,7 @@ namespace ClassicUO.Game.Managers
             {
                 Renderer.Camera camera = Client.Game.Scene.Camera;
 
-                var messageBox = new MessageBoxGump(_world, 200, 125, ResGeneral.CannotDeleteThisGroup, null)
+                var messageBox = new MessageBoxGump(_world, 200, 125, TazLang.Get("cannot_delete_this_group"), null)
                 {
                     X = camera.Bounds.X + camera.Bounds.Width / 2 - 100,
                     Y = camera.Bounds.Y + camera.Bounds.Height / 2 - 62
@@ -314,7 +313,7 @@ namespace ClassicUO.Game.Managers
         private void MakeDefaultMiscellaneous()
         {
             var g = new SkillsGroup();
-            g.Name = ResGeneral.Miscellaneous;
+            g.Name = TazLang.Get("miscellaneous");
             g.Add(4);
             g.Add(6);
             g.Add(10);
@@ -331,7 +330,7 @@ namespace ClassicUO.Game.Managers
             int count = Client.Game.UO.FileManager.Skills.SkillsCount;
 
             var g = new SkillsGroup();
-            g.Name = ResGeneral.Combat;
+            g.Name = TazLang.Get("combat");
             g.Add(1);
             g.Add(31);
             g.Add(42);
@@ -374,7 +373,7 @@ namespace ClassicUO.Game.Managers
         private void MakeDefaultTradeSkills()
         {
             var g = new SkillsGroup();
-            g.Name = ResGeneral.TradeSkills;
+            g.Name = TazLang.Get("trade_skills");
             g.Add(0);
             g.Add(7);
             g.Add(8);
@@ -394,7 +393,7 @@ namespace ClassicUO.Game.Managers
             int count = Client.Game.UO.FileManager.Skills.SkillsCount;
 
             var g = new SkillsGroup();
-            g.Name = ResGeneral.Magic;
+            g.Name = TazLang.Get("magic");
             g.Add(16);
 
             if (count > 56)
@@ -430,7 +429,7 @@ namespace ClassicUO.Game.Managers
         private void MakeDefaultWilderness()
         {
             var g = new SkillsGroup();
-            g.Name = ResGeneral.Wilderness;
+            g.Name = TazLang.Get("wilderness");
             g.Add(2);
             g.Add(35);
             g.Add(18);
@@ -444,7 +443,7 @@ namespace ClassicUO.Game.Managers
         private void MakeDefaultThieving()
         {
             var g = new SkillsGroup();
-            g.Name = ResGeneral.Thieving;
+            g.Name = TazLang.Get("thieving");
             g.Add(14);
             g.Add(21);
             g.Add(24);
@@ -460,7 +459,7 @@ namespace ClassicUO.Game.Managers
         private void MakeDefaultBard()
         {
             var g = new SkillsGroup();
-            g.Name = ResGeneral.Bard;
+            g.Name = TazLang.Get("bard");
             g.Add(15);
             g.Add(29);
             g.Add(9);
@@ -501,7 +500,7 @@ namespace ClassicUO.Game.Managers
                     var sb = new StringBuilder(17);
 
                     var g = new SkillsGroup();
-                    g.Name = ResGeneral.Miscellaneous;
+                    g.Name = TazLang.Get("miscellaneous");
 
                     var groups = new SkillsGroup[count];
                     groups[0] = g;
