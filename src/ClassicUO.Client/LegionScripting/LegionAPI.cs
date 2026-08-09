@@ -572,7 +572,13 @@ namespace ClassicUO.LegionScripting
                     if (callbackData.TimesToRepeat < 0 || callbackData.TimesInvoked <= (ulong)callbackData.TimesToRepeat)
                         timer.Start();
                     else
-                        RemoveTimedCallback(id);
+                    {
+                        // Final invocation: the callback was just dispatched to the queue, so don't mark
+                        // it for cancellation (that would prevent the pending wrapped action from running).
+                        _timedCallbacks.TryRemove(id, out _);
+                        timer.Stop();
+                        timer.Dispose();
+                    }
                 }
             };
 
