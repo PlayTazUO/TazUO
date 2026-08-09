@@ -59,6 +59,7 @@ namespace ClassicUO.Game.Managers
         private bool HasBandagingBuff { get; set; } = false;
         private bool UseDexFormula => ProfileManager.CurrentProfile?.BandageAgentUseDexFormula ?? false;
         private bool DisableSelfHeal => ProfileManager.CurrentProfile?.BandageAgentDisableSelfHeal ?? false;
+        private TargetType BandageTargetType => ProfileManager.CurrentProfile?.BandageAgentTargetType ?? TargetType.Beneficial;
         private bool UseJournalTrigger => ProfileManager.CurrentProfile?.BandageAgentUseJournalTrigger ?? false;
         private string JournalMessages => ProfileManager.CurrentProfile?.BandageAgentJournalMessages ?? "";
 
@@ -426,7 +427,7 @@ namespace ClassicUO.Game.Managers
             else
             {
                 // Set up auto-target before double-clicking
-                TargetManager.SetAutoTarget(mobile.Serial, TargetType.Beneficial);
+                TargetManager.SetAutoTarget(mobile.Serial, BandageTargetType);
 
                 GameActions.DoubleClick(World.Instance, bandage.Serial);
             }
