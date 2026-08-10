@@ -14,6 +14,12 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets
         public float Opacity { get; set; } = 0.88f;
         public float Reach { get; set; } = 0.70f;
 
+        public TunnelVisionOverlay()
+        {
+            FadeInSeconds = 2f;
+            FadeOutSeconds = 3.5f;
+        }
+
         protected override void Bake(List<OverlayLayer> layers) =>
             layers.Add(new OverlayLayer
             {
@@ -22,10 +28,21 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets
                     Shape = new OverlayShape
                     {
                         Center = new Vector2(0.5f, 0.5f),
+                        WobbleFreq = new Vector2(0.02f, 0.02f),
+                        WobbleAmp = 0.007f,
                         Reach = Reach,
-                        Feather = 0.18f,
+                        Feather = 0.12f,
                         EdgeBlend = 0.00f,
-                        FocusDir = new Vector2(0f, -1f),
+                        CornerBias = 0f,
+                        Jitter = new OverlayJitter
+                        {
+                            ReachAmount = 0.1f,
+                            FeatherAmount = 0.22f,
+                            Scale = new Vector2(2f, 2f),
+                            Scroll = Vector2.Zero,
+                            Channel = NoiseChannel.Red
+                        },
+                        FocusDir = Vector2.Zero,
                         FocusPower = 1f,
                         FocusAmount = 0f
                     },
@@ -34,22 +51,23 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets
                         BaseScale = new Vector2(3f, 3f),
                         DetailScale = new Vector2(6f, 6f),
                         BaseScroll = Vector2.Zero,
-                        DetailScroll = Vector2.Zero,
+                        DetailScroll = new Vector2(0.07f, 0.03f),
                         BaseChannel = NoiseChannel.Red,
                         DetailChannel = NoiseChannel.Green,
-                        WarpStrength = 0.00f,
+                        Offset = Vector2.Zero,
+                        WarpStrength = 0.2f,
                         RidgeAmount = 0.00f,
                         Threshold = 0.5f,
                         Softness = 0.2f,
-                        FlatFloor = 1.00f
+                        FlatFloor = 0.97f
                     },
                     Appearance = new OverlayAppearance
                     {
-                        Tint = Color.Black,
+                        Tint = new Color(0x0D, 0x0D, 0x0D),
                         Opacity = Opacity,
                         Intensity = Intensity,
-                        PulseFreq = 0.05f,
-                        PulseAmp = 0.02f
+                        PulseFreq = 0.06f,
+                        PulseAmp = 0.03f
                     }
                 }
             });
