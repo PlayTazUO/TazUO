@@ -1,9 +1,16 @@
 #nullable enable
 
+using System;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI.MyraWindows.Theme;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using Microsoft.Xna.Framework;
+using Myra.Graphics2D;
+using Myra.Graphics2D.Brushes;
+using Myra.Graphics2D.UI;
 using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs.VisualEffects;
@@ -21,6 +28,11 @@ public static class VisualEffectsTab
     /// ends.
     /// </summary>
     private const int INTENSITY_DECIMAL_PLACES = 2;
+
+    /// <summary>High voltage sign, U+26A1. Present in Noto Sans Symbols 2, absent from the body font.</summary>
+    private const string PSE_WARNING_GLYPH = "⚡";
+
+    private const int PSE_BANNER_GLYPH_SIZE = 34;
 
     private static string OverlayKeyword => TazLang.Get("visualeffects_kw_overlay", "overlay");
     private static string ShakeKeyword => TazLang.Get("visualeffects_kw_shake", "shake");
@@ -59,38 +71,125 @@ public static class VisualEffectsTab
 
         // Nested groups: the master switch greys out both systems, and each system greys out its own
         // settings, so what a toggle governs is visible rather than merely documented.
-        return OptionsUi.CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => settings.Enabled), master),
+        return OptionsUi.Vertical(
+            Option.Custom(BuildPseWarningBanner),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => settings.Overlays.Enabled), overlays),
-                IntensitySlider(
-                    TazLang.Get("visualeffects_overlayintensity", "Master overlay intensity"),
-                    new Accessor<float>(() => settings.Overlays.Intensity),
-                    OverlayKeyword,
-                    TazLang.Get(
-                        "visualeffects_overlayintensity_tooltip",
-                        "Scales every effect on top of whatever its profile\n"
-                        + "already says, like a master volume. 1.00 draws each\n"
-                        + "look exactly as authored; lower can only weaken it."
+                new PropertyBinder(new Accessor<bool>(() => settings.Enabled), master) { Gate = PseWarningGate },
+                OptionsUi.CheckBoxGroup(
+                    new PropertyBinder(new Accessor<bool>(() => settings.Overlays.Enabled), overlays),
+                    IntensitySlider(
+                        TazLang.Get("visualeffects_overlayintensity", "Master overlay intensity"),
+                        new Accessor<float>(() => settings.Overlays.Intensity),
+                        OverlayKeyword,
+                        TazLang.Get(
+                            "visualeffects_overlayintensity_tooltip",
+                            "Scales every effect on top of whatever its profile\n"
+                            + "already says, like a master volume. 1.00 draws each\n"
+                            + "look exactly as authored; lower can only weaken it."
+                        )
+                    ),
+                    MaxConcurrentInput(settings)
+                ).WithSearch(new SearchMetadata(overlays, Keywords: [OverlayKeyword, EffectsKeyword])),
+                OptionsUi.CheckBoxGroup(
+                    new PropertyBinder(new Accessor<bool>(() => settings.Shake.Enabled), shake),
+                    IntensitySlider(
+                        TazLang.Get("visualeffects_shakeintensity", "Master shake intensity"),
+                        new Accessor<float>(() => settings.Shake.Intensity),
+                        ShakeKeyword,
+                        TazLang.Get(
+                            "visualeffects_shakeintensity_tooltip",
+                            "Scales every shake on top of whatever its profile\n"
+                            + "already says. 1.00 hits exactly as authored; lower\n"
+                            + "can only soften it."
+                        )
                     )
+                ).WithSearch(new SearchMetadata(shake, Keywords: [ShakeKeyword, EffectsKeyword]))
+            ).WithSearch(new SearchMetadata(master, Keywords: [OverlayKeyword, ShakeKeyword, EffectsKeyword]))
+        );
+    }
+
+    /// <summary>
+    /// Short standing reminder that these effects flash, shake and tint the whole screen. Shown
+    /// regardless of the master switch's state, unlike <see cref="ConfirmEnableScreenDecorations"/>'s
+    /// one-time dialog, which only fires the first time the switch is turned on.
+    /// </summary>
+    /// <returns>The banner widget.</returns>
+    private static Widget BuildPseWarningBanner()
+    {
+        MyraPalette palette = MyraTheme.Current;
+
+        var banner = new HorizontalStackPanel
+        {
+            Spacing = MyraStyle.STANDARD_SPACING,
+            Padding = new Thickness(8, 6),
+            Background = new SolidBrush(palette.PanelFill),
+            Border = new SolidBrush(palette.Notice * palette.NoticeBorderAlpha),
+            BorderThickness = new Thickness(1),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        banner.Widgets.Add(MyraLabel.Symbol(PSE_WARNING_GLYPH, PSE_BANNER_GLYPH_SIZE, palette.Notice));
+
+        banner.Widgets.Add(
+            new MyraLabel(
+                TazLang.Get(
+                    "visualeffects_pse_banner",
+                    "PHOTOSENSITIVE SEIZURE WARNING\n"
+                    + "The following visual effects may contain flashing lights or rapid color changes.\n"
+                    + "Viewer discretion is advised."
                 ),
-                MaxConcurrentInput(settings)
-            ).WithSearch(new SearchMetadata(overlays, Keywords: [OverlayKeyword, EffectsKeyword])),
-            OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => settings.Shake.Enabled), shake),
-                IntensitySlider(
-                    TazLang.Get("visualeffects_shakeintensity", "Master shake intensity"),
-                    new Accessor<float>(() => settings.Shake.Intensity),
-                    ShakeKeyword,
-                    TazLang.Get(
-                        "visualeffects_shakeintensity_tooltip",
-                        "Scales every shake on top of whatever its profile\n"
-                        + "already says. 1.00 hits exactly as authored; lower\n"
-                        + "can only soften it."
-                    )
-                )
-            ).WithSearch(new SearchMetadata(shake, Keywords: [ShakeKeyword, EffectsKeyword]))
-        ).WithSearch(new SearchMetadata(master, Keywords: [OverlayKeyword, ShakeKeyword, EffectsKeyword]));
+                MyraLabel.TextStyle.P
+            )
+            {
+                TextColor = palette.Notice,
+                VerticalAlignment = VerticalAlignment.Center
+            }
+        );
+
+        return banner;
+    }
+
+    /// <summary>
+    /// Gate for the master switch: lets a disable through unconditionally, but an enable only once
+    /// the photosensitivity warning has been acknowledged, prompting for it first if not.
+    /// </summary>
+    /// <param name="newRequestedValue">The value the user tried to set the switch to.</param>
+    /// <param name="commit">Callback that actually applies the value once the gate is satisfied.</param>
+    private static void PseWarningGate(bool newRequestedValue, Action<bool> commit)
+    {
+        if (!newRequestedValue)
+        {
+            commit(false);
+            return;
+        }
+
+        Profile profile = ProfileManager.CurrentProfile;
+
+        if (profile.ScreenDecorationsPseAcknowledged)
+        {
+            commit(true);
+            return;
+        }
+
+        MainThreadQueue.InvokeOnMainThread(() => UIManager.Add(new ConfirmationModal(
+                TazLang.Get("visualeffects_pse_warningtitle", "PHOTOSENSITIVE SEIZURE WARNING"),
+                TazLang.Get(
+                    "visualeffects_pse_warning",
+                    "Some visual effects may flash, shake, tint, distort, or otherwise affect large portions of the screen.\n" +
+                    "If you have an epileptic condition or have had seizures of any kind,\n" +
+                    "consult your physician before enabling this feature.\n" +
+                    "Do you with to enable visual effects?"
+                ),
+                confirmed =>
+                {
+                    if (confirmed)
+                        profile.ScreenDecorationsPseAcknowledged = true;
+
+                    commit(confirmed);
+                }
+            ))
+        );
     }
 
     /// <summary>

@@ -64,6 +64,11 @@ public sealed class DrunkOverlay : ScreenOverlayPreset
     /// as too deep, more like heavy fog than a light-headed blur.</summary>
     public float Blur { get; set; } = 0.62f;
 
+    public DrunkOverlay()
+    {
+        FadeInSeconds = 4.5f;
+        FadeOutSeconds = 7f;
+    }
     protected override void Bake(List<OverlayLayer> layers)
     {
         SamplingShape blurShape = SamplingShape.Vignette(BLUR_REACH, BLUR_FEATHER, Blur, BLUR_SWIM) with

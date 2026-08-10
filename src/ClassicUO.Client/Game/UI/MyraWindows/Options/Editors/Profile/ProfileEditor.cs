@@ -100,7 +100,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
 
     /// <summary>
     ///     Whether a newly created profile goes to the top of the list rather than the bottom. Opt-in:
-    ///     it suits a library the user adds to often, and reads as arbitrary reordering everywhere
+    ///     it suits a library the user often adds to, and reads as arbitrary reordering everywhere
     ///     else.
     /// </summary>
     private readonly bool _newestFirst;
@@ -236,7 +236,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
         _confirmationModal?.Dispose();
         _confirmationModal = new ConfirmationModal(
             TazLang.Get("profileeditor_deleteprofile"),
-            TazLang.Get("profileeditor_deleteprofilex", new[] { _selectedProfile.Name }),
+            TazLang.Get("profileeditor_deleteprofilex", [_selectedProfile.Name]),
             confirmed =>
             {
                 if (!confirmed)
@@ -360,21 +360,17 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
         var buttons = new List<Widget>
         {
             GetProfilesCombo(),
-            new MyraButton(TazLang.Get("profileeditor_add"), OnAdd)
-        };
-
-        // Offered for a read-only profile too - that is precisely when it is wanted, since copying
-        // is the only way to get an editable version of one.
-        buttons.Add(
+            new MyraButton(TazLang.Get("profileeditor_add"), OnAdd),
+            // Offered for a read-only profile too - that is precisely when it is wanted, since copying
+            // is the only way to get an editable version of one.
             new MyraButton(TazLang.Get("profileeditor_copy", "Copy"), OnCopy)
             {
                 Enabled = _selectedProfile != null,
                 Tooltip = TazLang.Get("profileeditor_copy_tooltip", "Duplicate this profile, and edit the copy.")
-            }
-        );
-
-        buttons.Add(new MyraButton(TazLang.Get("profileeditor_rename"), OnRename) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotrenamebuiltinprofile") });
-        buttons.Add(new MyraButton(TazLang.Get("profileeditor_delete"), OnDelete) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotdeletebuiltinprofile") });
+            },
+            new MyraButton(TazLang.Get("profileeditor_rename"), OnRename) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotrenamebuiltinprofile") },
+            new MyraButton(TazLang.Get("profileeditor_delete"), OnDelete) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotdeletebuiltinprofile") }
+        };
 
         StackPanel panel = OptionTabCommons.StyledStackPanel(Orientation.Horizontal, [.. buttons]);
 
@@ -521,7 +517,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     }
 
     /// <summary>
-    ///     Handles the property changed event of a profile.
+    ///     Handles the property-changed event of a profile.
     /// </summary>
     /// <param name="sender">The sender of the event.</param>
     /// <param name="e">The property changed event arguments.</param>
