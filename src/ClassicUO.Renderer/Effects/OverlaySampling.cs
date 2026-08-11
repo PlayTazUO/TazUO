@@ -86,12 +86,13 @@ namespace ClassicUO.Renderer.Effects
         /// <summary>
         /// Samples taken per pixel, and the entire cost of the layer. Too few for the radius in use
         /// resolves into distinct ghost copies rather than a blur; the honest fix is fewer pixels (a
-        /// tighter mask) rather than more taps.
+        /// tighter mask) rather than more taps. Blur and Radial only - Chromatic is a fixed three-tap
+        /// split with no technique variant to select.
         /// </summary>
         [Description(
             "Samples taken per pixel, and the whole cost of the layer. Too\n"
             + "few for the radius shows as distinct ghost copies instead of a\n"
-            + "blur."
+            + "blur. Blur and Radial mode only."
         )]
         public OverlaySampleTaps Taps;
 

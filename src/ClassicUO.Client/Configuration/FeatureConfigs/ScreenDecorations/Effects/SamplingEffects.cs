@@ -151,14 +151,6 @@ public sealed class ChromaticEffect : LayerEffect
     )]
     public float Aberration { get; set; } = OverlayParams.Default.Sampling.Aberration;
 
-    /// <summary>Samples taken per pixel. The split itself is three taps; this bounds the rest.</summary>
-    [LocalizedDisplayName("visualeffects_layer_taps", "Samples")]
-    [LocalizedDescription(
-        "visualeffects_layer_taps_chromatic_tooltip",
-        "Samples taken per pixel, and the whole cost of the layer."
-    )]
-    public OverlaySampleTaps Taps { get; set; } = OverlaySampleTaps.Twelve;
-
     /// <inheritdoc />
     [JsonIgnore]
     [Browsable(false)]
@@ -167,7 +159,7 @@ public sealed class ChromaticEffect : LayerEffect
     /// <inheritdoc />
     public override LayerEffect Clone()
     {
-        var copy = new ChromaticEffect { Aberration = Aberration, Taps = Taps };
+        var copy = new ChromaticEffect { Aberration = Aberration };
         CopyCommonTo(copy);
 
         return copy;
@@ -178,7 +170,6 @@ public sealed class ChromaticEffect : LayerEffect
         parameters.Sampling = new OverlaySampling
         {
             Mode = OverlaySampleMode.Chromatic,
-            Aberration = Aberration,
-            Taps = Taps
+            Aberration = Aberration
         };
 }

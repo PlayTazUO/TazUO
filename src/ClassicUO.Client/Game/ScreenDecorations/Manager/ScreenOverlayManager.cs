@@ -788,7 +788,7 @@ internal sealed class ScreenOverlayManager
 
         foreach (RuleDemand demand in _desired.Values)
         {
-            var state = new ShownState(demand.Priority, demand.Signal.Intensity);
+            var state = new ShownState(demand.Profile.Id, demand.Priority, demand.Signal.Intensity);
             bool shown = _showing.TryGetValue(demand.RuleId, out ShownState current);
 
             // Already running on the same terms. A restated occurrence still has work to do, since
@@ -847,8 +847,16 @@ internal sealed class ScreenOverlayManager
     /// The terms one slot is currently running on. Compared by value between passes, which is what
     /// tells a restated occurrence from an unchanged one: a trigger asking for more than it was is a
     /// re-apply, everything else is a no-op.
+    /// <para>
+    /// <see cref="ProfileId"/> has to be part of that comparison, not just <see cref="Priority"/> and
+    /// <see cref="Intensity"/>: a slot id is stable across a profile swap (a rule re-pointed at a
+    /// different look, or preview switched from one look to another), so without it those two would
+    /// be indistinguishable from an unchanged occurrence and the old look's layers would keep
+    /// compositing until something else forced a restate.
+    /// </para>
     /// </summary>
+    /// <param name="ProfileId">The look currently occupying the slot.</param>
     /// <param name="Priority">Higher composites on top and survives the concurrency cap.</param>
     /// <param name="Intensity">How strongly the occurrence behind it asked to be drawn.</param>
-    private readonly record struct ShownState(int Priority, float Intensity);
+    private readonly record struct ShownState(Guid ProfileId, int Priority, float Intensity);
 }

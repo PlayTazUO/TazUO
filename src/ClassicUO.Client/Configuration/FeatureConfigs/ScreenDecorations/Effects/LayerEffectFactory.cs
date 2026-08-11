@@ -69,8 +69,7 @@ public static class LayerEffectFactory
             },
             OverlaySampleMode.Chromatic => new ChromaticEffect
             {
-                Aberration = parameters.Sampling.Aberration,
-                Taps = parameters.Sampling.Taps
+                Aberration = parameters.Sampling.Aberration
             },
             _ => throw new ArgumentOutOfRangeException(
                 nameof(parameters),
