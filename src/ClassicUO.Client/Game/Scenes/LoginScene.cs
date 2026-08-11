@@ -384,12 +384,16 @@ namespace ClassicUO.Game.Scenes
             Password = password;
             LoginHandshake.Instance.Connect(account, password, Settings.GlobalSettings.IP, Settings.GlobalSettings.Port);
 
-            // Save credentials to config file
+            // Save credentials to config file. When launched by the launcher, keep the profile's login.
             if (Settings.GlobalSettings.SaveAccount)
             {
-                Settings.GlobalSettings.Username = account;
-                Settings.GlobalSettings.Password = Crypter.Encrypt(password);
-                SimpleAccountManager.SetAccountPassword(account, Settings.GlobalSettings.Password);
+                if (Settings.CustomSettingsFilepath == null)
+                {
+                    Settings.GlobalSettings.Username = account;
+                    Settings.GlobalSettings.Password = Crypter.Encrypt(password);
+                }
+
+                SimpleAccountManager.SetAccountPassword(account, Crypter.Encrypt(password));
                 try
                 {
                     Settings.GlobalSettings.Save();
