@@ -6,6 +6,7 @@ All notable changes to TazUO will be recorded here.
 
 ### Features
 * Added a configurable auto-target type option to the Bandage Agent (Neutral/Harmful/Beneficial), replacing the previously hardcoded beneficial target type ([bittiez](https://github.com/bittiez))
+* When a pin is placed on a server-sent map gump, the client now prints a message with the deciphered coordinates ("I can't be certain but I believe this is somewhere near {x} and {y}.")
 
 ### Fixes
 * Fixed a NullReferenceException in the counter bar when an item or spell graphic could not be loaded; the icon is now skipped instead of crashing the client ([bittiez](https://github.com/bittiez))

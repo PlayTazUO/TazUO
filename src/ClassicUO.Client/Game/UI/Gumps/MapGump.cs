@@ -197,6 +197,7 @@ namespace ClassicUO.Game.UI.Gumps
                 //mapY = mapY + y;
                 foundMapLoc = true;
 
+                GameActions.Print(World, $"I can't be certain but I believe this is somewhere near {mapX} and {mapY}.");
                 _hit?.SetTooltip($"Estimated loc: {mapX}, {mapY}");
             }
         }
