@@ -62,6 +62,7 @@ namespace ClassicUO.Game.Managers
         private TargetType BandageTargetType => ProfileManager.CurrentProfile?.BandageAgentTargetType ?? TargetType.Beneficial;
         private bool UseJournalTrigger => ProfileManager.CurrentProfile?.BandageAgentUseJournalTrigger ?? false;
         private string JournalMessages => ProfileManager.CurrentProfile?.BandageAgentJournalMessages ?? "";
+        private int BandageDistance => ProfileManager.AccountSettings?.BandageAgentDistance ?? 3;
 
         private BandageManager()
         {
@@ -319,8 +320,8 @@ namespace ClassicUO.Game.Managers
             if (isPlayer && DisableSelfHeal)
                 return false;
 
-            // Check distance for friends/allies (within 3 tiles)
-            if ((isFriend || isAlly) && mobile.Distance > 3)
+            // Check distance for friends/allies
+            if ((isFriend || isAlly) && mobile.Distance > BandageDistance)
                 return false;
 
             // Guard against divide-by-zero and invul
