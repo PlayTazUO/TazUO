@@ -148,7 +148,7 @@ internal sealed class OverlayProfileEditor : Widget
             new MyraLabel(
                 TazLang.Get(
                     "visualeffects_builtinreadonly",
-                    "Built-in effect - read only. Use Add to copy it, then edit the copy."
+                    "Built-in effect - read only. Copy the profile to edit"
                 ),
                 MyraLabel.TextStyle.P
             )
