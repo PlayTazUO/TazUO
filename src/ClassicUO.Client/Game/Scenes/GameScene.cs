@@ -256,7 +256,7 @@ namespace ClassicUO.Game.Scenes
             GraphicsReplacement.Load();
             HotKeys.Load();
             HotKeyRegistrar.RegisterAll();
-            LegionScripting.ScriptHotkeysManager.RegisterAll();
+            ScriptHotkeysManager.RegisterAll();
             SpellBarManager.Load();
             SelfHealManager.Load();
             if(ProfileManager.CurrentProfile.EnableCaveBorder)
@@ -495,8 +495,7 @@ namespace ClassicUO.Game.Scenes
             base.Unload();
         }
 
-        private void SocketOnDisconnected(object sender, SocketError e)
-        {
+        private void SocketOnDisconnected(object sender, SocketError e) =>
             // Disconnected is raised from the background network/receive tasks (see AsyncNetClient),
             // but this handler tears down the scene and adds gumps, which mutates UIManager state
             // (_gumpTypeList, the Gumps list, etc.). Touching that off the main thread races the
@@ -542,7 +541,6 @@ namespace ClassicUO.Game.Scenes
                     );
                 }
             });
-        }
 
         public void RequestQuitGame() => UIManager.Add(
                 new QuestionGump(
@@ -1308,8 +1306,16 @@ namespace ClassicUO.Game.Scenes
             Profiler.EnterContext("PostProcess");
             int srcW = (int)Math.Floor(vpW * scale);
             int srcH = (int)Math.Floor(vpH * scale);
-            int srcX = (rtW - srcW) / 2;
-            int srcY = (rtH - srcH) / 2;
+
+            // Viewport-scoped shake moves the crop taken from the render target rather than where
+            // that crop is drawn: destRect stays pinned to the viewport, so the shake reveals real
+            // pixels EnsureRenderTargets padded the target with instead of exposing empty texture at
+            // the edge. Clamped to the crop's own margin - zero when the target isn't padded (shake
+            // off), and never past it even at full shake intensity.
+            Point shake = ScreenOverlayManager.Instance.ViewportShakeOffset();
+            int srcX = Math.Clamp((rtW - srcW) / 2 + shake.X, 0, rtW - srcW);
+            int srcY = Math.Clamp((rtH - srcH) / 2 + shake.Y, 0, rtH - srcH);
+
             var srcRect = new Rectangle(srcX, srcY, srcW, srcH);
             var destRect = new Rectangle(0, 0, vpW, vpH);
 
@@ -1327,9 +1333,6 @@ namespace ClassicUO.Game.Scenes
             {
                 BindFsrParams(gd);
             }
-            // Viewport-scoped shake rides this blit rather than the window one, so the world moves
-            // under the gumps instead of taking them with it.
-            destRect = ScreenOverlayManager.Instance.ApplyViewportShake(destRect);
 
             batcher.Begin(_postFx, Matrix.Identity);
             try { batcher.SetSampler(_postSampler ?? SamplerState.PointClamp); } catch { batcher.SetSampler(SamplerState.PointClamp); }
@@ -1612,8 +1615,14 @@ namespace ClassicUO.Game.Scenes
             PresentationParameters pp = gd.PresentationParameters;
             float scale = GetActiveScale();
 
-            int rtWidth = Math.Min((int)Math.Floor(vw * scale), MAX_TEXTURE_SIZE);
-            int rtHeight = Math.Min((int)Math.Floor(vh * scale), MAX_TEXTURE_SIZE);
+            // Extra canvas viewport-scope shake can crop into instead of exposing the target's
+            // unrendered edge. Cached on ScreenOverlayManager, refreshed only when the shake settings
+            // change - this runs every frame, and re-deriving it from settings here would mean a
+            // dereference chain per frame for a value that almost never moves.
+            int shakeMargin = ScreenOverlayManager.Instance.ViewportShakeMarginPixels;
+
+            int rtWidth = Math.Min((int)Math.Floor(vw * scale) + shakeMargin, MAX_TEXTURE_SIZE);
+            int rtHeight = Math.Min((int)Math.Floor(vh * scale) + shakeMargin, MAX_TEXTURE_SIZE);
 
             // Create/recreate world render target if needed
             if (_worldRenderTarget == null

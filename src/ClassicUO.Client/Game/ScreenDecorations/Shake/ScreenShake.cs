@@ -59,10 +59,27 @@ namespace ClassicUO.Game.ScreenDecorations.Shake
 
         #endregion
 
+        #region Internal members
+
+        /// <summary>Hard per-axis ceiling on shake displacement, regardless of intensity - the final
+        /// clamp in <see cref="GetOffset"/> enforces it. Internal so render-target margins sized to
+        /// absorb the shake can read the same constant instead of duplicating it.</summary>
+        internal const float MaxOffsetPixels = 24f;
+
+        /// <summary>
+        /// Whether the shake system is on in settings. Written by
+        /// <see cref="ClassicUO.Game.ScreenDecorations.Manager.ScreenOverlayManager"/> on settings
+        /// change, not read from settings here - every entry point below checks it so trauma raised
+        /// while off is discarded rather than banked for an instant jolt on re-enable.
+        /// </summary>
+        internal static bool Enabled = true;
+
+        #endregion
+
         #region Private members
 
         private const float DECAY_PER_SECOND = 1.2f;
-        private const float MAX_OFFSET_PIXELS = 24f;
+
         private const float FREQUENCY = 20f;
         private const int NOISE_SAMPLES = 256;
 
@@ -109,12 +126,18 @@ namespace ClassicUO.Game.ScreenDecorations.Shake
 
         public void SetTrauma(float amount)
         {
+            if (!Enabled)
+                return;
+
             lock (_sync)
                 _trauma = MathHelper.Clamp(amount, 0f, 1f);
         }
 
         public void AddTrauma(float amount)
         {
+            if (!Enabled)
+                return;
+
             lock (_sync)
                 _trauma = MathHelper.Clamp(_trauma + amount, 0f, 1f);
         }
@@ -140,7 +163,7 @@ namespace ClassicUO.Game.ScreenDecorations.Shake
         /// </summary>
         public void Trauma(in ShakeRequest request)
         {
-            if (request.Duration <= TimeSpan.Zero || request.Intensity <= 0f)
+            if (!Enabled || request.Duration <= TimeSpan.Zero || request.Intensity <= 0f)
                 return;
 
             lock (_sync)
@@ -187,8 +210,8 @@ namespace ClassicUO.Game.ScreenDecorations.Shake
 
                 if (_trauma > 0f)
                 {
-                    Accumulate(_trauma, FREQUENCY, MAX_OFFSET_PIXELS, 0f, ref x, ref y);
-                    limit = MAX_OFFSET_PIXELS;
+                    Accumulate(_trauma, FREQUENCY, MaxOffsetPixels, 0f, ref x, ref y);
+                    limit = MaxOffsetPixels;
                 }
 
                 foreach (ActiveShake shake in _active)
@@ -198,7 +221,7 @@ namespace ClassicUO.Game.ScreenDecorations.Shake
                     if (amplitude <= 0f)
                         continue;
 
-                    float maxPixels = shake.Request.MaxOffsetPixels > 0f ? shake.Request.MaxOffsetPixels : MAX_OFFSET_PIXELS;
+                    float maxPixels = shake.Request.MaxOffsetPixels > 0f ? shake.Request.MaxOffsetPixels : MaxOffsetPixels;
                     float frequency = shake.Request.Frequency > 0f ? shake.Request.Frequency : FREQUENCY;
 
                     Accumulate(amplitude, frequency, maxPixels, shake.Phase, ref x, ref y);

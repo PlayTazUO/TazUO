@@ -49,6 +49,15 @@ internal sealed class ScreenOverlayManager
         }
     }
 
+    /// <summary>
+    /// Extra canvas, in pixels, a viewport-scope shake needs to crop into instead of exposing a
+    /// render target's unrendered edge. Zero while shake is off. Recomputed on the settings events
+    /// <see cref="Watch"/> attaches to rather than every frame - the render targets that size
+    /// against this are rebuilt on every frame's draw call, so re-deriving it there would mean a
+    /// settings dereference per frame for a value that only ever changes on an options edit.
+    /// </summary>
+    public int ViewportShakeMarginPixels { get; private set; }
+
     #endregion
 
     #region Private members
@@ -102,6 +111,11 @@ internal sealed class ScreenOverlayManager
     /// wholesale when a profile is loaded.
     /// </summary>
     private DecorationSettings? _watched;
+
+    /// <summary>Shake's on/off state as of the last recompute, so turning it back on can be told
+    /// apart from any other settings edit - that edge is what triggers the reset in
+    /// <see cref="RecomputeShakeState"/>.</summary>
+    private bool _shakeWasActive;
 
     /// <summary>
     /// This frame's shake displacement per scope, and the frame each was sampled on. Indexed by
@@ -160,17 +174,13 @@ internal sealed class ScreenOverlayManager
     }
 
     /// <summary>
-    /// Offsets the world composite by this frame's shake, when shake is viewport-scoped. Applied
-    /// inside the scene so the gumps and cursor stay put while the world moves under them.
+    /// This frame's shake displacement for the viewport scope, in pixels. Meant to move the crop
+    /// taken from the (margin-padded) world render target rather than where that crop is drawn - a
+    /// shifted source reveals real rendered pixels at the edge, where a shifted destination would
+    /// expose the target's empty margin instead.
     /// </summary>
-    /// <param name="destRect">The rectangle the world render target is about to be drawn into.</param>
-    /// <returns>The same rectangle, displaced if the shake is confined to the viewport.</returns>
-    public Rectangle ApplyViewportShake(Rectangle destRect)
-    {
-        destRect.Offset(FrameShakeOffset(fullScreen: false));
-
-        return destRect;
-    }
+    /// <returns>The offset, zero if shake is off or window-scoped only.</returns>
+    public Point ViewportShakeOffset() => FrameShakeOffset(fullScreen: false);
 
     /// <summary>
     /// Draws the viewport-scoped overlays. Called by the scene once the world is composited but
@@ -358,15 +368,28 @@ internal sealed class ScreenOverlayManager
     /// One scope's shake displacement for this frame, computed once however many passes ask for it.
     /// <para>
     /// Sampling is what decays the trauma, so each accumulator must be sampled exactly once per
-    /// frame: twice and the shake dies at double speed, never and it accumulates. Both are also
-    /// sampled while shake is switched off - at zero intensity - so pending trauma drains away
-    /// rather than being banked until someone turns it back on.
+    /// frame: twice and the shake dies at double speed, never and it accumulates.
+    /// </para>
+    /// <para>
+    /// The early-out below is an efficiency choice, not a correctness one: <see cref="ScreenShake"/>
+    /// would already answer zero on its own while off, since <see cref="RecomputeShakeState"/> clears
+    /// both accumulators on every on/off transition and <see cref="ScreenShake.Enabled"/> stops
+    /// anything from being raised in between. Skipping the call avoids paying for a lock and a
+    /// decay step to hear an answer already known - the point of this system being off is that it
+    /// costs as close to nothing as possible.
     /// </para>
     /// </summary>
     /// <param name="fullScreen">Which accumulator to read.</param>
     /// <returns>The displacement, zero while shake is off.</returns>
     private Point FrameShakeOffset(bool fullScreen)
     {
+        // ScreenShake.Enabled is RecomputeShakeState's cached mirror of DecorationSettings.Current
+        // .ShakeActive - one static field read here instead of the settings dereference chain.
+        //
+        // Micro-optimization, since this runs on every tick.
+        if (!ScreenShake.Enabled)
+            return Point.Zero;
+
         int scope = fullScreen ? 1 : 0;
 
         if (_shakeTick[scope] == Time.Ticks)
@@ -374,9 +397,7 @@ internal sealed class ScreenOverlayManager
 
         _shakeTick[scope] = Time.Ticks;
 
-        DecorationSettings settings = DecorationSettings.Current;
-        float intensity = settings.ShakeActive ? MathHelper.Clamp(settings.Shake.Intensity, 0f, 1f) : 0f;
-
+        float intensity = MathHelper.Clamp(DecorationSettings.Current.Shake.Intensity, 0f, 1f);
         _shakeOffset[scope] = ScreenShake.For(fullScreen).GetOffset(Time.Delta, intensity);
 
         return _shakeOffset[scope];
@@ -515,6 +536,9 @@ internal sealed class ScreenOverlayManager
         _watched = settings;
         _watched.PropertyChanged += OnSettingsChanged;
         _watched.Overlays.PropertyChanged += OnSettingsChanged;
+        _watched.Shake.PropertyChanged += OnSettingsChanged;
+
+        RecomputeShakeState();
     }
 
     /// <summary>Detaches from whatever <see cref="Watch"/> attached to.</summary>
@@ -525,16 +549,50 @@ internal sealed class ScreenOverlayManager
 
         _watched.PropertyChanged -= OnSettingsChanged;
         _watched.Overlays.PropertyChanged -= OnSettingsChanged;
+        _watched.Shake.PropertyChanged -= OnSettingsChanged;
         _watched = null;
+
+        ViewportShakeMarginPixels = 0;
+        ScreenShake.Enabled = false;
+
+        // So the next Watch() (a fresh world session) resets both accumulators if shake happens to
+        // already be on, rather than carrying over whatever a previous session left mid-decay.
+        _shakeWasActive = false;
+    }
+
+    /// <summary>
+    /// Refreshes everything that depends on whether shake is on: the render-target margin viewport
+    /// shake crops into, and the low-level gate that keeps <see cref="ScreenShake"/> from
+    /// accumulating trauma while off. Either transition edge also resets both accumulators - off, so
+    /// <see cref="ScreenShake.HasWork"/> is already false the instant <see cref="FrameShakeOffset"/>
+    /// starts skipping it, rather than waiting out however much trauma was left to decay; on, so
+    /// nothing raised (and discarded) while off replays as a jolt now that it's heard again.
+    /// </summary>
+    private void RecomputeShakeState()
+    {
+        bool active = DecorationSettings.Current.ShakeActive;
+
+        ScreenShake.Enabled = active;
+        ViewportShakeMarginPixels = active ? (int)(ScreenShake.MaxOffsetPixels * 2f) : 0;
+
+        if (active != _shakeWasActive)
+        {
+            ScreenShake.Viewport.Clear();
+            ScreenShake.Window.Clear();
+        }
+
+        _shakeWasActive = active;
     }
 
     /// <summary>
     /// A changed pool means the wiring is stale; anything else only decides whether the work runs at
     /// all. Not filtered more finely than that: the cost of reconciling when nothing relevant moved
-    /// is a bool comparison under a lock, at the rate a person can move an options widget.
+    /// is a bool comparison under a lock, at the rate a person can move an options' widget.
     /// </summary>
     private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
+        RecomputeShakeState();
+
         if (e.PropertyName is nameof(OverlaySystemSettings.Rules)
             or nameof(OverlaySystemSettings.Profiles)
             or nameof(OverlaySystemSettings.BuiltInRuleStates))
