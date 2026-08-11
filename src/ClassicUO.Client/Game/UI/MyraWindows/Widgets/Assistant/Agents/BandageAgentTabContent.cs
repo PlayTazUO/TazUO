@@ -108,6 +108,16 @@ public static class BandageAgentTabContent
         root.Widgets.Add(new MyraSpacer(15, 1));
         root.Widgets.Add(delayRow);
 
+        // Bandage distance for friends/allies
+        root.Widgets.Add(new MyraSpacer(15, 1));
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
+            TazLang.Get("bandageagent_distance"),
+            out _,
+            v => { if (ProfileManager.AccountSettings != null) ProfileManager.AccountSettings.BandageAgentDistance = (int)v; },
+            1, 15,
+            ProfileManager.AccountSettings?.BandageAgentDistance ?? 3
+        ));
+
         // Journal messages below delay/HP
         root.Widgets.Add(new MyraLabel(TazLang.Get("bandageagent_journalmessages_label"), MyraLabel.TextStyle.P));
         var journalMessageBox = new MyraInputBox
