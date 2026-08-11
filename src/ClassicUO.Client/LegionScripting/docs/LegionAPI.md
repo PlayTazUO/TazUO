@@ -2793,7 +2793,33 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `virtue` | `string` | ❌ No | honor/sacrifice/valor |
+| `virtue` | `string` | ❌ No | honor/sacrifice/valor/justice |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### OpenQuestLog
+
+ Open the quest log gump.
+ Example:
+ ```py
+ API.OpenQuestLog()
+ ```
+
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### OpenHelp
+
+ Open the help menu.
+ Example:
+ ```py
+ API.OpenHelp()
+ ```
+
 
 **Return Type:** `void` *(Does not return anything)*
 

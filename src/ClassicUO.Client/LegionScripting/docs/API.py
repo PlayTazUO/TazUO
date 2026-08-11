@@ -2838,6 +2838,28 @@ def Virtue(virtue: "str") -> None:
     """
     pass
 
+def OpenQuestLog() -> None:
+    """
+     Open the quest log gump.
+     Example:
+     ```py
+     API.OpenQuestLog()
+     ```
+    
+    """
+    pass
+
+def OpenHelp() -> None:
+    """
+     Open the help menu.
+     Example:
+     ```py
+     API.OpenHelp()
+     ```
+    
+    """
+    pass
+
 def NearestEntity(scanType: "ScanType", maxDistance: "int" = 10) -> "ApiEntity":
     """
      Find the nearest item/mobile based on scan type.
