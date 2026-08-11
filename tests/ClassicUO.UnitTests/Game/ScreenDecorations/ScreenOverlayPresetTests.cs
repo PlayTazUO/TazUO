@@ -91,7 +91,7 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
             new[]
             {
                 new object[] { new TunnelVisionOverlay() },
-                new object[] { new FractureOverlay() }
+                new object[] { new DeathOverlay() }
             };
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
                 new object[] { new DrunkOverlay() },
                 new object[] { new ConcussionOverlay() },
                 new object[] { new TunnelVisionOverlay() },
-                new object[] { new FractureOverlay() }
+                new object[] { new DeathOverlay() }
             };
 
         /// <summary>
@@ -240,7 +240,7 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
                 new object[] { new DrunkOverlay() },
                 new object[] { new ConcussionOverlay() },
                 new object[] { new TunnelVisionOverlay() },
-                new object[] { new FractureOverlay() }
+                new object[] { new DeathOverlay() }
             };
 
         /// <summary>

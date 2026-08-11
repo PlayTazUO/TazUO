@@ -288,25 +288,7 @@ namespace ClassicUO.Game.Managers
             Register("myra-draw-widget-frames", args => MyraEnvironment.DrawWidgetsFrames = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-frames", args => MyraEnvironment.DrawMouseHoveredWidgetFrame = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-info", args => MyraEnvironment.DrawMouseHoveredWidgetInfo = ParseBooleanCommandArgs(args));
-            Register("display-overlay-poison", args => HandleOverlayCommand(args, BuiltInProfiles.Ids.Poison));
-            Register("display-overlay-bleed", args => HandleOverlayCommand(args, BuiltInProfiles.Ids.Bleed));
-            Register("display-overlay-fracture", args => HandleOverlayCommand(args, BuiltInProfiles.Ids.Fracture));
-            Register("display-overlay-tunnel", args => HandleOverlayCommand(args, BuiltInProfiles.Ids.TunnelVision));
-            Register("display-overlay-trauma", args =>
-            {
-                int durationSec = 3;
-                float intensity = 1;
-
-                if (args.Length >= 3)
-                    _ = float.TryParse(args[2], out intensity);
-                if (args.Length >= 2)
-                    _ = int.TryParse(args[1], out durationSec);
-
-                ScreenShake.Viewport.Trauma(TimeSpan.FromSeconds(durationSec), intensity);
-            });
-
-            // Reload the language strings, loading any changes that have been made without having to restart the game
-            Register("language-regenerate", _ => TazLang.Load(Settings.GlobalSettings.UILanguage));
+            Register("deadman-mode", args => World.Instance?.Player?.IsDead = ParseBooleanCommandArgs(args));
         }
 
         /// <summary>
