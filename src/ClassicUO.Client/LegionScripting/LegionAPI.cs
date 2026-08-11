@@ -3590,7 +3590,7 @@ namespace ClassicUO.LegionScripting
         /// API.Virtue("honor")
         /// ```
         /// </summary>
-        /// <param name="virtue">honor/sacrifice/valor</param>
+        /// <param name="virtue">honor/sacrifice/valor/justice</param>
         public void Virtue(string virtue)
         {
             switch (virtue.ToLower())
@@ -3598,8 +3598,27 @@ namespace ClassicUO.LegionScripting
                 case "honor": OnMain(() => { AsyncNetClient.Socket.Send_InvokeVirtueRequest(0x01); }); break;
                 case "sacrifice": OnMain(() => { AsyncNetClient.Socket.Send_InvokeVirtueRequest(0x02); }); break;
                 case "valor": OnMain(() => { AsyncNetClient.Socket.Send_InvokeVirtueRequest(0x03); }); break;
+                case "justice": OnMain(() => { AsyncNetClient.Socket.Send_InvokeVirtueRequest(0x04); }); break;
             }
         }
+
+        /// <summary>
+        /// Open the quest log gump.
+        /// Example:
+        /// ```py
+        /// API.OpenQuestLog()
+        /// ```
+        /// </summary>
+        public void OpenQuestLog() => OnMain(() => GameActions.RequestQuestMenu(World));
+
+        /// <summary>
+        /// Open the help menu.
+        /// Example:
+        /// ```py
+        /// API.OpenHelp()
+        /// ```
+        /// </summary>
+        public void OpenHelp() => OnMain(() => GameActions.RequestHelp());
 
         /// <summary>
         /// Find the nearest item/mobile based on scan type.

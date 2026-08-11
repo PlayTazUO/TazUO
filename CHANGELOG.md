@@ -2,6 +2,13 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 5.24.9
+
+### Legion
+* Added `justice` support to `API.Virtue()` - [P.R 938](https://github.com/PlayTazUO/TazUO/pull/938) ([bittiez](https://github.com/bittiez))
+* Added `API.OpenQuestLog()` to open the quest log gump - [P.R 938](https://github.com/PlayTazUO/TazUO/pull/938) ([bittiez](https://github.com/bittiez))
+* Added `API.OpenHelp()` to open the help menu - [P.R 938](https://github.com/PlayTazUO/TazUO/pull/938) ([bittiez](https://github.com/bittiez))
+
 ## In Development
 
 ### Features
