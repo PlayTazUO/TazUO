@@ -890,6 +890,7 @@ namespace ClassicUO.Configuration
         public int MinGumpMoveDistance { get; set; } = 5;
         public int QuickHealSpell { get; set; } = 29;
         public int QuickCureSpell { get; set; } = 11;
+        [JsonConverter(typeof(Point2Converter))] public Point CoprseContainerPosition { get; set => SetProperty(ref field, value); } = new Point(100, 100);
 
 
         private long lastSave;
