@@ -21,6 +21,11 @@ namespace ClassicUO.IO
 
         public abstract BinaryReader Reader { get; }
 
+        // Stream-backed readers (e.g. UltimaLive's growable files) are expensive to
+        // read repeatedly, so Map.GetTileZ caches their blocks. Memory-mapped readers
+        // are cheap enough that the cache would only add overhead.
+        public virtual bool IsStreamBased => false;
+
         public virtual void Dispose()
         {
             Reader?.Dispose();

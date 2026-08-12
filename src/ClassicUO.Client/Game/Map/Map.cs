@@ -31,6 +31,13 @@ namespace ClassicUO.Game.Map
         private static readonly ConcurrentQueue<(int block, Chunk chunk)> _loadedChunksQueue = new();
         internal static readonly object MapFileIOLock = new object();
 
+        // Block cache for stream-based map files (UltimaLive). Reading a MapBlock from
+        // a FileStream is a locked seek+read syscall, and ApplyStretch re-reads the same
+        // few blocks dozens of times per chunk load, so cache them. Memory-mapped files
+        // are read in a single deref and skip the cache entirely.
+        private readonly Dictionary<int, MapBlock> _streamBlockCache = new Dictionary<int, MapBlock>();
+        private readonly object _streamBlockCacheLock = new object();
+
         // Map PNG generation for web map and caching
         private static readonly object _mapPngLock = new object();
         private static readonly Dictionary<string, string> _mapPngCache = new Dictionary<string, string>();
@@ -249,8 +256,48 @@ namespace ClassicUO.Game.Map
 
             int mx = x % 8;
             int my = y % 8;
+            int cell = (my << 3) + mx;
 
-            return blockIndex.MapFile.ReadAt<MapBlock>((long)blockIndex.MapAddress).Cells[(my << 3) + mx].Z;
+            if (blockIndex.MapFile.IsStreamBased)
+            {
+                int block = GetBlock(x >> 3, y >> 3);
+
+                return GetCachedBlock(block, ref blockIndex).Cells[cell].Z;
+            }
+
+            return blockIndex.MapFile.ReadAt<MapBlock>((long)blockIndex.MapAddress).Cells[cell].Z;
+        }
+
+        private MapBlock GetCachedBlock(int block, ref IndexMap blockIndex)
+        {
+            lock (_streamBlockCacheLock)
+            {
+                if (_streamBlockCache.TryGetValue(block, out MapBlock cached))
+                {
+                    return cached;
+                }
+
+                MapBlock b = blockIndex.MapFile.ReadAt<MapBlock>((long)blockIndex.MapAddress);
+                _streamBlockCache[block] = b;
+
+                return b;
+            }
+        }
+
+        public void InvalidateStreamBlockCache(int block)
+        {
+            lock (_streamBlockCacheLock)
+            {
+                _streamBlockCache.Remove(block);
+            }
+        }
+
+        public void ClearStreamBlockCache()
+        {
+            lock (_streamBlockCacheLock)
+            {
+                _streamBlockCache.Clear();
+            }
         }
 
         public void GetMapZ(int x, int y, out sbyte groundZ, out sbyte staticZ)

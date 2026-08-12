@@ -258,6 +258,8 @@ namespace ClassicUO.Game
                                 //update lookup AND index length on disk
                                 _UL._filesIdxStatics[mapId].WriteArray(block * 12, idxData);
 
+                            world.Map.InvalidateStreamBlockCache(block);
+
                             Chunk mapChunk = world.Map.GetChunk(block);
 
                             if (mapChunk == null)
@@ -444,6 +446,8 @@ namespace ClassicUO.Game
                             _UL._filesIdxStatics[validMaps[i]] = refs.Item2[validMaps[i]] as ULFileMul;
                             _UL._filesStatics[validMaps[i]] = refs.Item3[validMaps[i]] as ULFileMul;
                         }
+
+                        world.Map?.ClearStreamBlockCache();
                     }
 
                     break;
@@ -515,6 +519,8 @@ namespace ClassicUO.Game
             if (block >= 0 && block < mapWidthInBlocks * mapHeightInBlocks)
             {
                 _UL._filesMap[mapId].WriteArray(block * 196 + 4, landData);
+
+                world.Map.InvalidateStreamBlockCache(block);
 
                 //instead of recalculating the CRC block 2 times, in case of terrain + statics update, we only set the actual block to ushort maxvalue, so it will be recalculated on next hash query
                 _UL.MapCRCs[mapId][block] = ushort.MaxValue;
@@ -686,6 +692,8 @@ namespace ClassicUO.Game
             }
 
             public override BinaryReader Reader => _reader;
+
+            public override bool IsStreamBased => true;
 
             // ULFileMul files can grow dynamically (statics appended), so MMFileReader's
             // fixed-size memory-mapped view is unsafe. Use a lock to serialize all
