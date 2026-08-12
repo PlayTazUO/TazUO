@@ -408,6 +408,15 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 Settings.GlobalSettings.LoginMusic = loginmusic_checkbox.IsChecked;
                 Client.Game.Audio.UpdateCurrentMusicVolume(true);
 
+                if (loginmusic_checkbox.IsChecked)
+                {
+                    Client.Game.Audio.PlayMusic(Client.Game.Audio.LoginMusicIndex, false, true);
+                }
+                else
+                {
+                    Client.Game.Audio.StopMusic();
+                }
+
                 login_music.IsVisible = Settings.GlobalSettings.LoginMusic;
             };
 
