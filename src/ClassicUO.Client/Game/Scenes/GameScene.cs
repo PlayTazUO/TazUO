@@ -689,6 +689,9 @@ namespace ClassicUO.Game.Scenes
 
                 light.DrawX = x;
                 light.DrawY = y;
+                light.WorldX = obj.X;
+                light.WorldY = obj.Y;
+                light.WorldZ = obj.Z;
                 _lightCount++;
             }
         }
@@ -1467,7 +1470,9 @@ namespace ClassicUO.Game.Scenes
                 // pulse. The amplitude is intentionally small for a subtle effect.
                 if (candleFlicker)
                 {
-                    float seed = l.DrawX * 0.73f + l.DrawY * 1.31f;
+                    // Seed the phase from the light's world position so it stays constant
+                    // while the camera scrolls, keeping the flicker at a steady speed.
+                    float seed = l.WorldX * 0.73f + l.WorldY * 1.31f + l.WorldZ * 0.57f;
 
                     hue.Z = 1f
                         + 0.06f * (float)Math.Sin(flickerTime * 3.1f + seed)
@@ -1800,6 +1805,9 @@ namespace ClassicUO.Game.Scenes
             public bool IsHue;
             public int DrawX,
                 DrawY;
+            public ushort WorldX,
+                WorldY;
+            public sbyte WorldZ;
         }
 
         private struct LightOccluder
