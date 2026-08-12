@@ -391,6 +391,8 @@ namespace ClassicUO.Network
 
         public bool TryDequeuePacket(out byte[] packet) => _incomingMessages.TryDequeue(out packet);
 
+        public bool HasPendingPackets => !_incomingMessages.IsEmpty;
+
         public void ClearIncomingMessages()
         {
             while (_incomingMessages.TryDequeue(out _))
