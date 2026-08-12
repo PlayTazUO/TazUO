@@ -2055,8 +2055,9 @@ namespace ClassicUO.LegionScripting
         /// <param name="distance">Distance away from goal to stop.</param>
         /// <param name="wait">True/False if you want to wait for pathfinding to complete or time out</param>
         /// <param name="timeout">Seconds to wait before cancelling waiting</param>
+        /// <param name="run">True/False should we run?</param>
         /// <returns>true/false if a path was generated</returns>
-        public bool Pathfind(int x, int y, int z = int.MinValue, int distance = 1, bool wait = false, int timeout = 10)
+        public bool Pathfind(int x, int y, int z = int.MinValue, int distance = 1, bool wait = false, int timeout = 10, bool run = true)
         {
             bool pathFindStatus = OnMain
             (() =>
@@ -2064,7 +2065,7 @@ namespace ClassicUO.LegionScripting
                     if (z == int.MinValue)
                         z = World.Map.GetTileZ(x, y);
 
-                    return World.Player.Pathfinder.WalkTo(x, y, z, distance);
+                    return World.Player.Pathfinder.WalkTo(x, y, z, distance, run);
                 }
             );
 
@@ -2105,8 +2106,9 @@ namespace ClassicUO.LegionScripting
         /// <param name="distance">Distance to stop from goal</param>
         /// <param name="wait">True/False if you want to wait for pathfinding to complete or time out</param>
         /// <param name="timeout">Seconds to wait before cancelling waiting</param>
+        /// <param name="run">True/False should we run?</param>
         /// <returns>true/false if a path was generated</returns>
-        public bool PathfindEntity(uint entity, int distance = 1, bool wait = false, int timeout = 10)
+        public bool PathfindEntity(uint entity, int distance = 1, bool wait = false, int timeout = 10, bool run = true)
         {
             int x = 0, y = 0, z = 0;
             bool pathFindStatus = OnMain
@@ -2118,7 +2120,7 @@ namespace ClassicUO.LegionScripting
                         x = mob.X;
                         y = mob.Y;
                         z = mob.Z;
-                        return World.Player.Pathfinder.WalkTo(x, y, z, distance);
+                        return World.Player.Pathfinder.WalkTo(x, y, z, distance, run);
                     }
 
                     return false;

@@ -951,7 +951,7 @@ namespace ClassicUO.Game
             return null;
         }
 
-        private bool FindPath(int maxNodes, bool ignoreAutowalkState)
+        private bool FindPath(int maxNodes, bool ignoreAutowalkState, bool run = true)
         {
             var startNode = PathNode.Get();
 
@@ -969,10 +969,7 @@ namespace ClassicUO.Game
 
             int closedNodesCount = 0;
 
-            if (startNode.DistFromGoalCost > 14)
-            {
-                _run = true;
-            }
+            _run = run;
 
             while (ignoreAutowalkState || AutoWalking)
             {
@@ -1156,7 +1153,7 @@ namespace ClassicUO.Game
             return result;
         }
 
-        public bool WalkTo(int x, int y, int z, int distance)
+        public bool WalkTo(int x, int y, int z, int distance, bool run = true)
         {
             if (_world.Player == null /*|| World.Player.Stamina == 0*/ || _world.Player.IsParalyzed)
             {
@@ -1171,7 +1168,7 @@ namespace ClassicUO.Game
             CleanupPathfinding();
             _pointIndex = 0;
             _goalNode = null;
-            _run = false;
+            _run = run;
             _startPoint.X = _world.Player.X;
             _startPoint.Y = _world.Player.Y;
             _endPoint.X = x;
@@ -1180,7 +1177,7 @@ namespace ClassicUO.Game
             _pathfindDistance = distance;
             AutoWalking = true;
 
-            if (FindPath(MaxNodes, ignoreAutowalkState: false))
+            if (FindPath(MaxNodes, false, run))
             {
                 _pointIndex = 1;
                 ProcessAutoWalk();
