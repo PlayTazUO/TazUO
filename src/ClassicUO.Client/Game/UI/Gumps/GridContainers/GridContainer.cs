@@ -262,7 +262,7 @@ public partial class GridContainer : ResizableGump
             // Load minimized state from save data
             bool loadMinimized = _gridContainerEntry.IsMinimized;
 
-            Point lastPos = IsPlayerBackpack ? ProfileManager.CurrentProfile.BackpackGridPosition : _gridContainerEntry.GetPositionForState(loadMinimized);
+            Point lastPos = IsPlayerBackpack ? ProfileManager.CurrentProfile.BackpackGridPosition : _isCorpse ? ProfileManager.CurrentProfile.CoprseContainerPosition : _gridContainerEntry.GetPositionForState(loadMinimized);
             if (lastPos == Point.Zero || (lastPos.X == 100 && lastPos.Y == 100)) //Default positions, use last static position
             {
                 lastPos.X = _lastX;
@@ -977,6 +977,11 @@ public partial class GridContainer : ResizableGump
             if (IsPlayerBackpack)
             {
                 ProfileManager.CurrentProfile.BackpackGridPosition = new Point(X, Y);
+            }
+
+            if (_isCorpse)
+            {
+                ProfileManager.CurrentProfile.CoprseContainerPosition = new Point(X, Y);
             }
         }
 
