@@ -17,6 +17,7 @@ All notable changes to TazUO will be recorded here.
 
 ### Misc
 * Migrated WASD Movement and Single click to cast spell settings to Global settings, migrated turn delay to server settings ([bittiez](https://github.com/bittiez))
+* Add some missing weapon abilities
 
 ### Fixes
 * Fixed a NullReferenceException in the counter bar when an item or spell graphic could not be loaded; the icon is now skipped instead of crashing the client ([bittiez](https://github.com/bittiez))

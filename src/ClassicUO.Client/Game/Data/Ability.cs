@@ -323,6 +323,12 @@ namespace ClassicUO.Game.Data
             { 0xAEC2, new (0xAEC2, Ability.DoubleStrike, Ability.WhirlwindAttack) },
             { 0xAED1, new (0xAED1, Ability.DoubleStrike, Ability.WhirlwindAttack) }, // Publish 119 Paladin War Hammers
             { 0x4071, new (0x4071, Ability.ArmorIgnore, Ability.ParalyzingBlow) },
+            { 0xB4D4, new (0xB4D4 , Ability.ArmorIgnore, Ability.MortalStrike) }, // New Skeletal Blade
+            { 0xB4D5, new (0xB4D5 , Ability.ArmorIgnore, Ability.MortalStrike) }, // New Skeletal Blade (Flipped ID)
+            { 0xB4DC, new (0xB4DC, Ability.ArmorIgnore, Ability.MovingShot) }, // New Skeletal Crossbow
+            { 0xB4DD, new (0xB4DD, Ability.ArmorIgnore, Ability.MovingShot) }, // New Skeletal Crossbow (Flipped ID)
+            { 0xB4E0, new (0xB4E0, Ability.ArmorIgnore, Ability.MovingShot) }, // New Skeletal Glaive
+            { 0xB4E1, new (0xB4E1, Ability.ArmorIgnore, Ability.MovingShot) }, // New Skeletal Glaive (Flipped ID)
         };
     }
 
