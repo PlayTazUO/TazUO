@@ -297,6 +297,7 @@ namespace ClassicUO.Configuration
         public bool OpenModernPaperdollAtMinimizeLoc { get; set => SetProperty(ref field, value); } = false;
 
         // Experimental
+        [Obsolete("Remove after 10/12/26")]
         public bool CastSpellsByOneClick { get; set => SetProperty(ref field, value); }
         public bool BuffBarTime { get; set => SetProperty(ref field, value); }
         public bool FastSpellsAssign { get; set => SetProperty(ref field, value); }
@@ -835,11 +836,13 @@ namespace ClassicUO.Configuration
         public bool ModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }
         public bool JournalAnchorEnabled { get; set => SetProperty(ref field, value); } = false;
         public bool EnableAutoLootProgressBar { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete("Remove after 10/12/26")]
         public bool UseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
         public int NearbyLootGumpHeight { get; set => SetProperty(ref field, value); } = 550;
         public bool ForceTooltipsOnOldClients { get; set => SetProperty(ref field, value); } = true;
         public bool NearbyLootOpensHumanCorpses { get; set => SetProperty(ref field, value); }
-        public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 100;
+        [Obsolete("Remove after 10/12/26")]
+        public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 80;
         public bool SellAgentEnabled { get; set => SetProperty(ref field, value); }
         public int SellAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
         public int SellAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
@@ -934,7 +937,7 @@ namespace ClassicUO.Configuration
 
             if (ProfileMigrationVersion < 5) //4
             {
-                ProfileMigrationVersion++;
+                ProfileMigrationVersion = 5;
             }
 
             if (ProfileMigrationVersion < 6)
@@ -981,7 +984,7 @@ namespace ClassicUO.Configuration
                 WebMapServerPort = OldWebMapServerPort;
                 WebMapAutoStart = OldWebMapAutoStart;
 
-                ProfileMigrationVersion++;
+                ProfileMigrationVersion = 6;
             }
 
             if (ProfileMigrationVersion < 7)
@@ -990,7 +993,7 @@ namespace ClassicUO.Configuration
                 ProfileManager.GlobalSettings.CircleOfTransparencyRadius = CircleOfTransparencyRadius;
                 ProfileManager.GlobalSettings.CircleOfTransparencyType = CircleOfTransparencyType;
                 
-                ProfileMigrationVersion++;
+                ProfileMigrationVersion = 7;
             }
 
             if (ProfileMigrationVersion < 8)
@@ -1004,7 +1007,30 @@ namespace ClassicUO.Configuration
                 ProfileManager.GlobalSettings.EnableCombatMusic = EnableCombatMusic;
                 ProfileManager.GlobalSettings.ReproduceSoundsInBackground = ReproduceSoundsInBackground;
 
-                ProfileMigrationVersion++;
+                ProfileMigrationVersion = 8;
+            }
+
+            if (ProfileMigrationVersion < 9)
+            {
+                ProfileManager.GlobalSettings.EnableSound = EnableSound;
+                ProfileManager.GlobalSettings.SoundVolume = SoundVolume;
+                ProfileManager.GlobalSettings.EnableMusic = EnableMusic;
+                ProfileManager.GlobalSettings.MusicVolume = MusicVolume;
+                ProfileManager.GlobalSettings.EnableFootstepsSound = EnableFootstepsSound;
+                ProfileManager.GlobalSettings.EnableRainSound = EnableRainSound;
+                ProfileManager.GlobalSettings.EnableCombatMusic = EnableCombatMusic;
+                ProfileManager.GlobalSettings.ReproduceSoundsInBackground = ReproduceSoundsInBackground;
+
+                ProfileMigrationVersion = 9;
+            }
+
+            if (ProfileMigrationVersion < 10)
+            {
+                ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys = UseWASDInsteadArrowKeys;
+                ProfileManager.GlobalSettings.SingleClickIconUse = CastSpellsByOneClick;
+                ProfileManager.ServerSettings.TurnDelay = TurnDelay;
+
+                ProfileMigrationVersion = 9;
             }
 
             try //Cleanup old backups from previous save system

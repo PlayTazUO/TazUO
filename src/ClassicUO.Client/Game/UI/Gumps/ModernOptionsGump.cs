@@ -2211,7 +2211,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
             scroll.Add(c = new CheckboxWithLabel(TazLang.Get("mog_combatspells_singleclickforspellicons"), 0,
-                profile.CastSpellsByOneClick, (b) => { profile.CastSpellsByOneClick = b; }));
+                ProfileManager.GlobalSettings.SingleClickIconUse, (b) => { ProfileManager.GlobalSettings.SingleClickIconUse = b; }));
             PositionHelper.PositionControl(c);
 
             PositionHelper.BlankLine();
@@ -3899,7 +3899,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
-            (c = new SliderWithLabel(TazLang.Get("mog_tazuo_turndelay"), 0, ThemeSettings.SLIDER_WIDTH, 45, 120, profile.TurnDelay, i => profile.TurnDelay = (ushort)i),
+            (c = new SliderWithLabel(TazLang.Get("mog_tazuo_turndelay"), 0, ThemeSettings.SLIDER_WIDTH, 45, 120, ProfileManager.ServerSettings.TurnDelay, i => ProfileManager.ServerSettings.TurnDelay = (ushort)i),
                 true, page);
 
             c.SetTooltip("This settting may cause throttling, Use with caution.");
@@ -4172,8 +4172,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_usewasdmovement"), isChecked: profile.UseWASDInsteadArrowKeys,
-                    valueChanged: (e) => { profile.UseWASDInsteadArrowKeys = e; }),
+                c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_usewasdmovement"), isChecked: ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys,
+                    valueChanged: (e) => { ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys = e; }),
                 true, page
             );
             c.SetTooltip(

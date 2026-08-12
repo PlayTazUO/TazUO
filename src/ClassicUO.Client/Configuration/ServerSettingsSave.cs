@@ -14,5 +14,7 @@ namespace ClassicUO.Configuration
         protected override string FileName => "server_settings.json";
 
         protected override JsonTypeInfo<ServerSettingsSave> TypeInfo => ScopedSettingsJsonContext.DefaultToUse.ServerSettingsSave;
+
+        public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 80;
     }
 }
