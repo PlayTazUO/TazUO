@@ -9,7 +9,6 @@ using ClassicUO.Assets;
 using ClassicUO.Network;
 using ClassicUO.Utility.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -601,31 +600,25 @@ namespace ClassicUO.Game
             ULFileMul mapReader = _UL._filesMap[mapId];
             long mapBase = block * 196 + 4;
 
-            ULFileMul staticsReader = _UL._filesStatics[mapId];
+            //preserve the original bounds check (mapBase + x + 1 >= Length) which stops before the file's final byte
+            int mapBytes = (int)Math.Min(LAND_BLOCK_LENGTH, Math.Max(0, mapReader.Length - mapBase - 1));
 
-            for (int x = 0; x < 192; x++)
+            if (mapBytes > 0)
             {
-                if (mapBase + x + 1 >= mapReader.Length)
-                {
-                    break;
-                }
-
-                blockData[x] = mapReader.ReadAt<byte>(mapBase + x);
+                mapReader.ReadAt(mapBase, blockData.AsSpan(0, mapBytes));
             }
 
             if (lookup != 0xFFFFFFFF && byteCount > 0)
             {
+                ULFileMul staticsReader = _UL._filesStatics[mapId];
+
                 if (lookup < staticsReader.Length)
                 {
-                    for (int x = LAND_BLOCK_LENGTH; x < blockData.Length; x++)
-                    {
-                        long pos = lookup + (x - LAND_BLOCK_LENGTH);
-                        if (pos + 1 >= staticsReader.Length)
-                        {
-                            break;
-                        }
+                    int staticsBytes = (int)Math.Min(byteCount, staticsReader.Length - lookup - 1);
 
-                        blockData[x] = staticsReader.ReadAt<byte>(pos);
+                    if (staticsBytes > 0)
+                    {
+                        staticsReader.ReadAt(lookup, blockData.AsSpan(LAND_BLOCK_LENGTH, staticsBytes));
                     }
                 }
             }
@@ -637,14 +630,18 @@ namespace ClassicUO.Game
 
         private static ushort Fletcher16(byte[] data)
         {
-            ushort sum1 = 0;
-            ushort sum2 = 0;
-            int index;
+            uint sum1 = 0;
+            uint sum2 = 0;
 
-            for (index = 0; index < data.Length; index++)
+            for (int i = 0; i < data.Length; i++)
             {
-                sum1 = (ushort) ((sum1 + data[index]) % 255);
-                sum2 = (ushort) ((sum2 + sum1) % 255);
+                sum1 += data[i];
+                if (sum1 >= 255)
+                    sum1 -= 255;
+
+                sum2 += sum1;
+                if (sum2 >= 255)
+                    sum2 -= 255;
             }
 
             return (ushort) ((sum2 << 8) | sum1);
@@ -731,6 +728,13 @@ namespace ClassicUO.Game
                 {
                     _writer.Seek((int)position, SeekOrigin.Begin);
                     _writer.Write(array);
+                }
+            }
+
+            public void Flush()
+            {
+                lock (_ioLock)
+                {
                     _writer.Flush();
                 }
             }
@@ -771,7 +775,6 @@ namespace ClassicUO.Game
         public class ULMapLoader : MapLoader
         {
             private readonly CancellationTokenSource _feedCancel;
-            private FileStream[] _filesStaticsStream;
             private readonly Task _writerTask;
 
             public ULMapLoader(UOFileManager fileManager, uint maps) : base(fileManager)
@@ -846,16 +849,6 @@ namespace ClassicUO.Game
                 catch
                 {
                 }
-
-                if (_filesStaticsStream != null)
-                {
-                    for (int i = _filesStaticsStream.Length - 1; i >= 0; --i)
-                    {
-                        _filesStaticsStream[i]?.Dispose();
-                    }
-
-                    _filesStaticsStream = null;
-                }
             }
 
             public override void Load()
@@ -869,7 +862,6 @@ namespace ClassicUO.Game
                 Client.Game.UO.FileManager.Maps = this;
 
                 _UL._EOF = new uint[NumMaps];
-                _filesStaticsStream = new FileStream[NumMaps];
                 bool foundOneMap = false;
 
                 for (int x = 0; x < _UL._ValidMaps.Count; x++)
@@ -893,8 +885,6 @@ namespace ClassicUO.Game
                     }
 
                     _filesStatics[i] = new ULFileMul(File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
-
-                    _filesStaticsStream[i] = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
 
                     _UL._EOF[i] = (uint)new FileInfo(path).Length;
 
@@ -1250,28 +1240,26 @@ namespace ClassicUO.Game
                     _token = token;
                 }
 
-                public readonly ConcurrentQueue<(int, long, byte[])> _toWrite = new ConcurrentQueue<(int, long, byte[])>();
-
                 public void Loop()
                 {
                     while (_UL != null && !_Map.IsDisposed && !_token.IsCancellationRequested)
                     {
-                        while (_toWrite.TryDequeue(out (int, long, byte[]) deq))
-                        {
-                            WriteArray(deq.Item1, deq.Item2, deq.Item3);
-                        }
+                        FlushFiles();
 
                         m_Signal.WaitOne(10, false);
                     }
                 }
 
-                public void WriteArray(int map, long position, byte[] array)
+                private void FlushFiles()
                 {
-                    _Map._filesStaticsStream[map].Seek(position, SeekOrigin.Begin);
+                    int maps = _Map._currentMapFiles.Length;
 
-                    _Map._filesStaticsStream[map].Write(array, 0, array.Length);
-
-                    _Map._filesStaticsStream[map].Flush();
+                    for (int i = 0; i < maps; i++)
+                    {
+                        (_Map._currentMapFiles[i] as ULFileMul)?.Flush();
+                        (_Map._currentIdxStaticsFiles[i] as ULFileMul)?.Flush();
+                        (_Map._currentStaticsFiles[i] as ULFileMul)?.Flush();
+                    }
                 }
             }
         }
