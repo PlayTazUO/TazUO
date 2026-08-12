@@ -322,7 +322,7 @@ namespace ClassicUO.Game.Managers
             {
                 IGui mouseDownControl = _mouseDownControls[index];
                 // only attempt to close the gump if the mouse is still on the gump when right click mouse up occurs
-                if (mouseDownControl != null && MouseOverControl == mouseDownControl)
+                if (mouseDownControl != null && (MouseOverControl == mouseDownControl || MouseOverControl?.RootParent == mouseDownControl.RootParent))
                 {
                     mouseDownControl.InvokeMouseCloseGumpWithRClick();
                 }

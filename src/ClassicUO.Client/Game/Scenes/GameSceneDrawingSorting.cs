@@ -1172,7 +1172,8 @@ namespace ClassicUO.Game.Scenes
                 winGameScaledHeight = 0;
             }
 
-            int size = (int)(Math.Max(winGameWidth / 44f + 1, winGameHeight / 44f + 1) * zoom);
+            // +1 extra tile in all directions to keep edge objects from popping out
+            int size = (int)(Math.Max(winGameWidth / 44f + 1, winGameHeight / 44f + 1) * zoom) + 1;
 
             if (Camera.Offset.X != 0 || Camera.Offset.Y != 0)
             {
