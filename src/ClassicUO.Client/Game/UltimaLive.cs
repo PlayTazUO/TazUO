@@ -27,6 +27,7 @@ namespace ClassicUO.Game
         private static UltimaLive _UL;
 
         private static readonly char[] _pathSeparatorChars = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+        private static readonly HashSet<int> _pendingChunkReloads = new HashSet<int>();
         private uint[] _EOF;
         private ULFileMul[] _filesIdxStatics;
         private ULFileMul[] _filesMap;
@@ -260,52 +261,12 @@ namespace ClassicUO.Game
 
                             world.Map.InvalidateStreamBlockCache(block);
 
-                            Chunk mapChunk = world.Map.GetChunk(block);
-
-                            if (mapChunk == null)
-                            {
-                                return;
-                            }
-
-                            LinkedList<int> linkedList = mapChunk.Node?.List;
-                            var gameObjects = new List<GameObject>();
-
-                            for (int x = 0; x < 8; x++)
-                            {
-                                for (int y = 0; y < 8; y++)
-                                {
-                                    GameObject gameObject = mapChunk.GetHeadObject(x, y);
-
-                                    while (gameObject != null)
-                                    {
-                                        GameObject currentGameObject = gameObject;
-                                        gameObject = gameObject.TNext;
-
-                                        if (!(currentGameObject is Land) && !(currentGameObject is Static))
-                                        {
-                                            gameObjects.Add(currentGameObject);
-                                            currentGameObject.RemoveFromTile();
-                                        }
-                                    }
-                                }
-                            }
-
-                            mapChunk.ClearForReload();
                             _UL._ULMap.ReloadBlock(mapId, block);
-                            mapChunk.Load(mapId, true);
 
-                            //linkedList?.AddLast(c.Node);
-
-                            foreach (GameObject gameObject in gameObjects)
-                            {
-                                mapChunk.AddGameObject(gameObject, gameObject.X % 8, gameObject.Y % 8);
-                            }
+                            _pendingChunkReloads.Add(block);
                         }
 
 
-                        UIManager.GetGump<MiniMapGump>()?.RequestUpdateContents();
-
-                        //UIManager.GetGump<WorldMapGump>()?.UpdateMap();
                         //instead of recalculating the CRC block 2 times, in case of terrain + statics update, we only set the actual block to ushort maxvalue, so it will be recalculated on next hash query
                         //also the server should always send FIRST the landdata packet, and only AFTER land the statics packet
                         _UL.MapCRCs[mapId][block] = ushort.MaxValue;
@@ -448,6 +409,7 @@ namespace ClassicUO.Game
                         }
 
                         world.Map?.ClearStreamBlockCache();
+                        _pendingChunkReloads.Clear();
                     }
 
                     break;
@@ -529,66 +491,81 @@ namespace ClassicUO.Game
                 blockX = Math.Min(mapWidthInBlocks, blockX + 1);
                 blockY = Math.Min(mapHeightInBlocks, blockY + 1);
 
-                var gameObjects = new List<GameObject>();
-
+                //schedule the 3x3 area for a coalesced reload at the end of the packet batch,
+                //so streaming a new area doesn't rebuild the same chunk multiple times per frame
                 for (; blockX >= minx; --blockX)
                 {
                     for (int by = blockY; by >= miny; --by)
                     {
-                        Chunk mapChunk = world.Map.GetChunk(blockX * mapHeightInBlocks + by);
+                        _pendingChunkReloads.Add(blockX * mapHeightInBlocks + by);
+                    }
+                }
+            }
+        }
 
-                        if (mapChunk == null)
+        public static void FlushPendingChunkReloads(World world)
+        {
+            if (_pendingChunkReloads.Count == 0 || world?.Map == null)
+            {
+                return;
+            }
+
+            int mapId = world.Map.Index;
+
+            foreach (int block in _pendingChunkReloads)
+            {
+                Chunk mapChunk = world.Map.GetChunk(block);
+
+                if (mapChunk == null)
+                {
+                    continue;
+                }
+
+                var gameObjects = new List<GameObject>();
+
+                for (int x = 0; x < 8; x++)
+                {
+                    for (int y = 0; y < 8; y++)
+                    {
+                        GameObject gameObject = mapChunk.GetHeadObject(x, y);
+
+                        while (gameObject != null)
                         {
-                            continue;
-                        }
+                            GameObject currentGameObject = gameObject;
+                            gameObject = gameObject.TNext;
 
-                        gameObjects.Clear();
-
-                        for (int x = 0; x < 8; x++)
-                        {
-                            for (int y = 0; y < 8; y++)
+                            if (!(currentGameObject is Land) && !(currentGameObject is Static))
                             {
-                                GameObject gameObject = mapChunk.GetHeadObject(x, y);
-
-                                while (gameObject != null)
-                                {
-                                    GameObject currentGameObject = gameObject;
-                                    gameObject = gameObject.TNext;
-
-                                    if (!(currentGameObject is Land) && !(currentGameObject is Static))
-                                    {
-                                        gameObjects.Add(currentGameObject);
-                                        currentGameObject.RemoveFromTile();
-                                    }
-                                }
+                                gameObjects.Add(currentGameObject);
+                                currentGameObject.RemoveFromTile();
                             }
-                        }
-
-                        mapChunk.ClearForReload();
-                        mapChunk.Load(mapId, true);
-
-                        foreach (GameObject obj in gameObjects)
-                        {
-                            mapChunk.AddGameObject(obj, obj.X % 8, obj.Y % 8);
-                        }
-
-                        foreach (GameObject headObj in mapChunk.Tiles)
-                        {
-                            GameObject next = headObj.TNext;
-                            while (next != null)
-                            {
-                                next.AlphaHue = byte.MaxValue;
-                                next = next.TNext;
-                            }
-                            headObj.AlphaHue = byte.MaxValue;
                         }
                     }
                 }
 
-                UIManager.GetGump<MiniMapGump>()?.RequestUpdateContents();
+                mapChunk.ClearForReload();
+                mapChunk.Load(mapId, true);
 
-                //UIManager.GetGump<WorldMapGump>()?.UpdateMap();
+                foreach (GameObject obj in gameObjects)
+                {
+                    mapChunk.AddGameObject(obj, obj.X % 8, obj.Y % 8);
+                }
+
+                foreach (GameObject headObj in mapChunk.Tiles)
+                {
+                    GameObject next = headObj.TNext;
+                    while (next != null)
+                    {
+                        next.AlphaHue = byte.MaxValue;
+                        next = next.TNext;
+                    }
+                    headObj.AlphaHue = byte.MaxValue;
+                }
             }
+
+            _pendingChunkReloads.Clear();
+
+            UIManager.GetGump<MiniMapGump>()?.RequestUpdateContents();
         }
 
         private static ushort GetBlockCrc(World world, uint block)
