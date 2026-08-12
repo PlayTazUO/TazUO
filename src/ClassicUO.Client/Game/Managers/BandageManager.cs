@@ -320,8 +320,8 @@ namespace ClassicUO.Game.Managers
             if (isPlayer && DisableSelfHeal)
                 return false;
 
-            // Check distance for friends/allies
-            if ((isFriend || isAlly) && mobile.Distance > BandageDistance)
+            // No healing beyond the configured bandage distance
+            if (mobile.Distance > BandageDistance)
                 return false;
 
             // Guard against divide-by-zero and invul
