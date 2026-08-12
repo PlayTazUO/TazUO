@@ -690,6 +690,30 @@ namespace ClassicUO.Game
             // ULFileMul files can grow dynamically (statics appended), so MMFileReader's
             // fixed-size memory-mapped view is unsafe. Use a lock to serialize all
             // Seek+Read pairs and Seek+Write pairs on the shared FileStream.
+            public override void Seek(long index, SeekOrigin origin)
+            {
+                lock (_ioLock)
+                {
+                    base.Seek(index, origin);
+                }
+            }
+
+            public override int Read(Span<byte> buffer)
+            {
+                lock (_ioLock)
+                {
+                    return base.Read(buffer);
+                }
+            }
+
+            public override T Read<T>()
+            {
+                lock (_ioLock)
+                {
+                    return base.Read<T>();
+                }
+            }
+
             public override T ReadAt<T>(long offset)
             {
                 AssetValidDereference(offset);
@@ -697,7 +721,7 @@ namespace ClassicUO.Game
                 lock (_ioLock)
                 {
                     Seek(offset, SeekOrigin.Begin);
-                    return Read<T>();
+                    return base.Read<T>();
                 }
             }
 
@@ -708,7 +732,7 @@ namespace ClassicUO.Game
                 lock (_ioLock)
                 {
                     Seek(offset, SeekOrigin.Begin);
-                    Read(buffer);
+                    base.Read(buffer);
                 }
             }
 

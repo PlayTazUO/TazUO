@@ -27,7 +27,7 @@ namespace ClassicUO.IO
             _stream?.Dispose();
         }
 
-        public void Seek(long index, SeekOrigin origin) => _position = Reader.BaseStream.Seek(index, origin);
+        public virtual void Seek(long index, SeekOrigin origin) => _position = Reader.BaseStream.Seek(index, origin);
 
         public virtual T ReadAt<T>(long offset) where T : unmanaged
         {
@@ -48,8 +48,8 @@ namespace ClassicUO.IO
         public uint ReadUInt32() { _position += sizeof(uint); return Reader.ReadUInt32(); }
         public long ReadInt64() { _position += sizeof(long); return Reader.ReadInt64(); }
         public ulong ReadUInt64() { _position += sizeof(ulong); return Reader.ReadUInt64(); }
-        public int Read(Span<byte> buffer) { _position += buffer.Length; return Reader.Read(buffer); }
-        public unsafe T Read<T>() where T : unmanaged
+        public virtual int Read(Span<byte> buffer) { _position += buffer.Length; return Reader.Read(buffer); }
+        public virtual unsafe T Read<T>() where T : unmanaged
         {
             Unsafe.SkipInit<T>(out T v);
             var p = new Span<byte>(&v, sizeof(T));
