@@ -403,7 +403,7 @@ namespace ClassicUO.Game.GameObjects
                         }
 
                         AutoOpenedCorpses.Add(item.Serial);
-                        GameActions.QueueOpenCorpse(item.Serial);
+                        GameActions.QueueOpenCorpse(item.Serial, isOwnCorpse);
                     }
                 }
             }

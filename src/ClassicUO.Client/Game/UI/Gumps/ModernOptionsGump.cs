@@ -228,10 +228,6 @@ namespace ClassicUO.Game.UI.Gumps
             );
 
             content.AddToRight
-            (new CheckboxWithLabel(TazLang.Get("mog_general_corpseskipempty"), isChecked: profile.SkipEmptyCorpse, valueChanged: (b) => { profile.SkipEmptyCorpse = b; }),
-                true, page);
-
-            content.AddToRight
             (
                 new ComboBoxWithLabel
                 (
