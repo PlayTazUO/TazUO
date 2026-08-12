@@ -28,6 +28,9 @@ namespace ClassicUO.Game
 
         private static readonly char[] _pathSeparatorChars = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
         private static readonly HashSet<int> _pendingChunkReloads = new HashSet<int>();
+        private static readonly List<int> _flushBatch = new List<int>();
+        private static readonly System.Diagnostics.Stopwatch _flushTimer = new System.Diagnostics.Stopwatch();
+        private const double MAX_CHUNK_RELOAD_MS_PER_FLUSH = 3.0;
         private static long _pendingChunkReloadStartTicks;
         private uint[] _EOF;
         private ULFileMul[] _filesIdxStatics;
@@ -525,8 +528,32 @@ namespace ClassicUO.Game
 
             int mapId = world.Map.Index;
 
+            //throttle chunk rebuilds across frames: streaming a new area can schedule
+            //hundreds of chunks, and rebuilding them all in one frame causes a spike.
+            //Reload a time-bounded batch each frame, carry the rest over to the next.
+            _flushBatch.Clear();
+
             foreach (int block in _pendingChunkReloads)
             {
+                if (_flushBatch.Count >= 4)
+                {
+                    break;
+                }
+
+                _flushBatch.Add(block);
+            }
+
+            _flushTimer.Restart();
+
+            foreach (int block in _flushBatch)
+            {
+                if (_flushTimer.Elapsed.TotalMilliseconds >= MAX_CHUNK_RELOAD_MS_PER_FLUSH)
+                {
+                    break;
+                }
+
+                _pendingChunkReloads.Remove(block);
+
                 Chunk mapChunk = world.Map.GetChunk(block);
 
                 if (mapChunk == null)
@@ -575,8 +602,6 @@ namespace ClassicUO.Game
                     headObj.AlphaHue = byte.MaxValue;
                 }
             }
-
-            _pendingChunkReloads.Clear();
 
             UIManager.GetGump<MiniMapGump>()?.RequestUpdateContents();
         }
