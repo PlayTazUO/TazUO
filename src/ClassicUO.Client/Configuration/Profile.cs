@@ -305,6 +305,7 @@ namespace ClassicUO.Configuration
         public bool BuffBarTime { get; set => SetProperty(ref field, value); }
         public bool FastSpellsAssign { get; set => SetProperty(ref field, value); }
         public bool AutoOpenDoors { get; set => SetProperty(ref field, value); } = true;
+        public bool BlockDoorMovement { get; set => SetProperty(ref field, value); } = true;
         public bool SmoothDoors { get; set => SetProperty(ref field, value); } = true;
         public bool AutoOpenCorpses { get; set => SetProperty(ref field, value); } = true;
         public int AutoOpenCorpseRange { get; set => SetProperty(ref field, value); } = 2;
@@ -339,6 +340,7 @@ namespace ClassicUO.Configuration
         public bool UsePartyHealthBars { get; set => SetProperty(ref field, value); } = true;
         public bool ShowHealCureButtonsAllHealthbars { get; set => SetProperty(ref field, value); }
         public bool ShowHealCureButtonsFriends { get; set => SetProperty(ref field, value); }
+        public bool ShowHealCureButtonsPets { get; set => SetProperty(ref field, value); } = true;
 
         public bool ShowInfoBar { get; set => SetProperty(ref field, value); }
         public int InfoBarHighlightType { get; set => SetProperty(ref field, value); } // 0 = text colour changes, 1 = underline

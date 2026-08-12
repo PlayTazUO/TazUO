@@ -428,12 +428,54 @@ namespace ClassicUO.Game.GameObjects
                 // auto-close setting is enabled, which uses the door regardless of its state.
                 bool closeOpenDoors = ProfileManager.GlobalSettings.AutoCloseDoors;
 
-                foreach (Item door in World.Items.Values.Where(s => s.ItemData.IsDoor && s.X == x && s.Y == y && s.Z - 15 <= z && s.Z + 15 >= z
-                    && (closeOpenDoors || !DoorData.IsOpenDoor(s.Graphic))))
+                // Walk the tile's linked list instead of scanning every item in the world.
+                GameObject obj = World.Map.GetTile(x, y, false);
+
+                while (obj?.TPrevious != null)
                 {
-                    GameActions.OpenDoor();
+                    obj = obj.TPrevious;
+                }
+
+                for (; obj != null; obj = obj.TNext)
+                {
+                    if (obj is Item door && door.ItemData.IsDoor && door.Z - 15 <= z && door.Z + 15 >= z
+                        && (closeOpenDoors || !DoorData.IsOpenDoor(door.Graphic)))
+                    {
+                        GameActions.OpenDoor();
+                    }
                 }
             }
+        }
+
+        // Block walking into a closed door when auto open is off to avoid spamming the
+        // server with walk requests that get denied and cause the client to bounce back.
+        private bool IsBlockedByDoor(int x, int y, sbyte z)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+
+            if (!profile.BlockDoorMovement || profile.AutoOpenDoors || IsDead)
+            {
+                return false;
+            }
+
+            // Walk the tile's linked list instead of scanning every item in the world.
+            GameObject obj = World.Map.GetTile(x, y, false);
+
+            while (obj?.TPrevious != null)
+            {
+                obj = obj.TPrevious;
+            }
+
+            for (; obj != null; obj = obj.TNext)
+            {
+                if (obj is Item door && door.ItemData.IsDoor && door.Z - 15 <= z && door.Z + 15 >= z
+                    && !DoorData.IsOpenDoor(door.Graphic))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public override void Destroy()
@@ -744,6 +786,11 @@ namespace ClassicUO.Game.GameObjects
                     direction = newDir;
                 }
 
+                if (IsBlockedByDoor(x, y, z))
+                {
+                    return false;
+                }
+
                 CloseBank();
 
                 if (emptyStack)
@@ -926,6 +973,11 @@ namespace ClassicUO.Game.GameObjects
                 }
 
                 direction = newDir;
+            }
+
+            if (IsBlockedByDoor(x, y, z))
+            {
+                return false;
             }
 
             CloseBank();
