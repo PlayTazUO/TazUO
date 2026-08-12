@@ -193,8 +193,14 @@ namespace ClassicUO
             PacketParser.Instance.ParsePluginsPackets(Client.Game.UO.World);
 
             // UltimaLive defers chunk reloads during packet processing so a streamed
-            // area doesn't rebuild the same chunk multiple times; reload each once here.
-            UltimaLive.FlushPendingChunkReloads(Client.Game.UO.World);
+            // area doesn't rebuild the same chunk multiple times. A new-area download
+            // spans many frames (MAX_PACKETS_PER_FRAME), so flush once the socket queue
+            // is drained to coalesce the whole burst; fall back to a time cap in case
+            // steady traffic keeps the queue from ever emptying.
+            if (!AsyncNetClient.Socket.HasPendingPackets || UltimaLive.ShouldFlushPendingChunkReloads)
+            {
+                UltimaLive.FlushPendingChunkReloads(Client.Game.UO.World);
+            }
         }
 
         protected override void LoadContent()

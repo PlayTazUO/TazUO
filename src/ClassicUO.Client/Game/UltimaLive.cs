@@ -28,6 +28,7 @@ namespace ClassicUO.Game
 
         private static readonly char[] _pathSeparatorChars = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
         private static readonly HashSet<int> _pendingChunkReloads = new HashSet<int>();
+        private static long _pendingChunkReloadStartTicks;
         private uint[] _EOF;
         private ULFileMul[] _filesIdxStatics;
         private ULFileMul[] _filesMap;
@@ -264,6 +265,10 @@ namespace ClassicUO.Game
                             _UL._ULMap.ReloadBlock(mapId, block);
 
                             _pendingChunkReloads.Add(block);
+                            if (_pendingChunkReloads.Count == 1)
+                            {
+                                _pendingChunkReloadStartTicks = Time.Ticks;
+                            }
                         }
 
 
@@ -498,10 +503,18 @@ namespace ClassicUO.Game
                     for (int by = blockY; by >= miny; --by)
                     {
                         _pendingChunkReloads.Add(blockX * mapHeightInBlocks + by);
+                        if (_pendingChunkReloads.Count == 1)
+                        {
+                            _pendingChunkReloadStartTicks = Time.Ticks;
+                        }
                     }
                 }
             }
         }
+
+        public static bool ShouldFlushPendingChunkReloads =>
+            _pendingChunkReloads.Count > 0 &&
+            (Time.Ticks - _pendingChunkReloadStartTicks) > 100;
 
         public static void FlushPendingChunkReloads(World world)
         {
