@@ -61,7 +61,7 @@ public static class MovementTab
             ),
             Option.Checkbox(
                 TazLang.Get("mog_movementtab_usewasdmovement"),
-                new Accessor<bool>(() => profile.UseWASDInsteadArrowKeys),
+                new Accessor<bool>(() => ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys),
                 search: new SearchMetadata(TazLang.Get("mog_movementtab_usewasdmovement"), Keywords: [TazLang.Get("mog_kw_wasd"), TazLang.Get("mog_kw_keyboard")])
             ),
             OptionsUi.VisualContainer(
@@ -84,7 +84,7 @@ public static class MovementTab
                 TazLang.Get("mog_tazuo_turndelay"),
                 45,
                 120,
-                new Accessor<ushort>(() => profile.TurnDelay),
+                new Accessor<ushort>(() => ProfileManager.ServerSettings.TurnDelay),
                 search: new SearchMetadata(TazLang.Get("mog_tazuo_turndelay"), Keywords: [TazLang.Get("mog_kw_turn"), TazLang.Get("mog_kw_delay")])
             ),
             OptionsUi.VisualContainer(

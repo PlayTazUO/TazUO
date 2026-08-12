@@ -908,7 +908,7 @@ namespace ClassicUO.Game.UI.Gumps
                             Client.Game.UO.GameCursor.ItemHold.Container
                         );
                     }
-                    else if (ProfileManager.CurrentProfile.CastSpellsByOneClick)
+                    else if (ProfileManager.GlobalSettings.SingleClickIconUse)
                     {
                         Use();
                         return;
@@ -928,7 +928,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (
                     button == MouseButtonType.Left
-                    && !ProfileManager.CurrentProfile.CastSpellsByOneClick
+                    && !ProfileManager.GlobalSettings.SingleClickIconUse
                 )
                 {
                     Use();

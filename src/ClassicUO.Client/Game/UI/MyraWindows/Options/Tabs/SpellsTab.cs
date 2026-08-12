@@ -35,7 +35,7 @@ public static class SpellsTab
             ),
             Option.Checkbox(
                 TazLang.Get("mog_combattab_spells_singleclickforspellicons"),
-                new Accessor<bool>(() => profile.CastSpellsByOneClick),
+                new Accessor<bool>(() => ProfileManager.GlobalSettings.SingleClickIconUse),
                 search: new SearchMetadata(TazLang.Get("mog_combattab_spells_singleclickforspellicons"), Keywords: [TazLang.Get("mog_kw_click"), TazLang.Get("mog_kw_cast")])
             ),
             Option.Checkbox(

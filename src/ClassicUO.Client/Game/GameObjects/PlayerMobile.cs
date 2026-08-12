@@ -666,7 +666,7 @@ namespace ClassicUO.Game.GameObjects
                 }
 
                 sbyte oldZ = z;
-                ushort walkTime = ProfileManager.CurrentProfile.TurnDelay;
+                ushort walkTime = ProfileManager.ServerSettings.TurnDelay;
 
 
                 if (IsCardinalDirection(direction))
@@ -873,7 +873,7 @@ namespace ClassicUO.Game.GameObjects
             }
 
             sbyte oldZ = z;
-            ushort walkTime = ProfileManager.CurrentProfile.TurnDelay;
+            ushort walkTime = ProfileManager.ServerSettings.TurnDelay;
 
             if ((oldDirection & Direction.Mask) == (direction & Direction.Mask))
             {

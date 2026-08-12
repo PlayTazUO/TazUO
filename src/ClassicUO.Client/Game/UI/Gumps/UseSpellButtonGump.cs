@@ -206,7 +206,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             if (
-                ProfileManager.CurrentProfile.CastSpellsByOneClick
+                ProfileManager.GlobalSettings.SingleClickIconUse
                 && button == MouseButtonType.Left
                 && Math.Abs(offset.X) < 5
                 && Math.Abs(offset.Y) < 5
@@ -219,7 +219,7 @@ namespace ClassicUO.Game.UI.Gumps
         public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (
-                !ProfileManager.CurrentProfile.CastSpellsByOneClick
+                !ProfileManager.GlobalSettings.SingleClickIconUse
                 && button == MouseButtonType.Left
             )
             {
