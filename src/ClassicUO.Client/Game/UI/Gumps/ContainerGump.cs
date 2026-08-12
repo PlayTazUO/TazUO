@@ -98,15 +98,6 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     world.Player.ManualOpenedCorpses.Remove(LocalSerial);
                 }
-                else if (
-                    world.Player.AutoOpenedCorpses.Contains(LocalSerial)
-                    && ProfileManager.CurrentProfile != null
-                    && ProfileManager.CurrentProfile.SkipEmptyCorpse
-                )
-                {
-                    IsVisible = false;
-                    _hideIfEmpty = true;
-                }
             }
 
             if (_data.OpenSound != 0 && playsound)

@@ -310,7 +310,6 @@ namespace ClassicUO.Configuration
         public bool AutoOpenCorpses { get; set => SetProperty(ref field, value); } = true;
         public int AutoOpenCorpseRange { get; set => SetProperty(ref field, value); } = 2;
         public int CorpseOpenOptions { get; set => SetProperty(ref field, value); } = 3;
-        public bool SkipEmptyCorpse { get; set => SetProperty(ref field, value); }
         public bool AutoOpenOwnCorpse { get; set => SetProperty(ref field, value); } = true;
         public bool DisableDefaultHotkeys { get; set => SetProperty(ref field, value); }
         public bool DisableArrowBtn { get; set => SetProperty(ref field, value); }

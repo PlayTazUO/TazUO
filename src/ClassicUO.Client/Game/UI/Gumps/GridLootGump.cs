@@ -49,15 +49,6 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 World.Player.ManualOpenedCorpses.Remove(LocalSerial);
             }
-            else if (
-                World.Player.AutoOpenedCorpses.Contains(LocalSerial)
-                && ProfileManager.CurrentProfile != null
-                && ProfileManager.CurrentProfile.SkipEmptyCorpse
-            )
-            {
-                IsVisible = false;
-                _hideIfEmpty = true;
-            }
 
             X = _lastX;
             Y = _lastY;

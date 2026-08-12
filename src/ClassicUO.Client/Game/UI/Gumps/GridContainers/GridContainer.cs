@@ -287,13 +287,6 @@ public partial class GridContainer : ResizableGump
             if (_isCorpse)
             {
                 World.Player.ManualOpenedCorpses.Remove(LocalSerial);
-
-                if (World.Player.AutoOpenedCorpses.Contains(LocalSerial) && ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.SkipEmptyCorpse && Container.IsEmpty)
-                {
-                    IsVisible = false;
-                    Dispose();
-            return;
-                }
             }
 
             AnchorType = ProfileManager.CurrentProfile.EnableGridContainerAnchor ? ANCHOR_TYPE.NONE : ANCHOR_TYPE.DISABLED;

@@ -107,16 +107,19 @@ public class ObjectActionQueueItem(Action action, Action<ObjectActionQueueItem> 
     }
 }
 
+/// <summary>
+/// Warning: Values may be rearranged, don't use int values for saving as they may loose their values
+/// </summary>
 public enum ActionPriority
 {
     Immediate,
     ManualUseItem, //Higher priority than regular useitem which may occur in scripts
     UseItem,
-    OpenCorpse,
     UnequipItem, //Unequip item to make room for equipping - must run before EquipItem
     EquipItem,
     MoveItem,
     LootItemHigh,   //Auto-loot: High priority items (still lower than manual moves)
     LootItemMedium, //Auto-loot: Normal priority items
     LootItem,       //Auto-loot: Low priority items - lowest overall priority
+    OpenCorpse,
 }
