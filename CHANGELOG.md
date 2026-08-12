@@ -9,6 +9,7 @@ All notable changes to TazUO will be recorded here.
 * Added `API.OpenQuestLog()` to open the quest log gump - [P.R 938](https://github.com/PlayTazUO/TazUO/pull/938) ([bittiez](https://github.com/bittiez))
 * Added `API.OpenHelp()` to open the help menu - [P.R 938](https://github.com/PlayTazUO/TazUO/pull/938) ([bittiez](https://github.com/bittiez))
 * Added run parameter to pathfinding methods
+* Added `.IsParalyzed` to mobile objects
 
 ### Features
 * Redesign bandage agent tab UI, and add option to use a server command for self heal ([bittiez](https://github.com/bittiez))

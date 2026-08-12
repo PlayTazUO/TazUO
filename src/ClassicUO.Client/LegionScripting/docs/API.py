@@ -206,6 +206,7 @@ class ApiMobile(ApiEntity):
     IsMounted: bool = None
     IsDrivingBoat: bool = None
     IsRunning: bool = None
+    IsParalyzed: bool = None
     Direction: str = None
     Notoriety: Notoriety = None
     InWarMode: bool = None
