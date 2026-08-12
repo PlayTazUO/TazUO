@@ -16,6 +16,8 @@ public static class MainThreadQueue
 
     private static ConcurrentQueue<(Action Action, CancellationToken? Token)> QueuedActions { get; } = new();
 
+    public static int Count => QueuedActions.Count;
+
     /// <summary>
     ///     Must be called from main thread
     /// </summary>

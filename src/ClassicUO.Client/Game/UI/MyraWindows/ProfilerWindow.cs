@@ -16,11 +16,12 @@ namespace ClassicUO.Game.UI.MyraWindows
 {
     public class ProfilerWindow : MyraControl
     {
-        private const uint UPDATE_INTERVAL = 500;
+        private const uint UPDATE_INTERVAL = 250;
 
         private readonly VerticalStackPanel _dataPanel;
         private readonly MyraButton _toggleButton;
         private readonly MyraLabel _statsLabel;
+        private readonly MyraLabel _queueLabel;
         private uint _lastUpdate;
 
         private readonly CancellationTokenSource _cpuCts = new();
@@ -48,9 +49,11 @@ namespace ClassicUO.Game.UI.MyraWindows
             var buttons = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
             buttons.Widgets.Add(_toggleButton);
             buttons.Widgets.Add(new MyraButton("Reset", () => Profiler.Reset()));
+            buttons.Widgets.Add(new MyraButton("Clear Action Queue", () => ObjectActionQueue.Instance.Clear()));
             buttons.Widgets.Add(new MyraButton("Copy Output", CopyToClipboard));
 
             _statsLabel = new MyraLabel(GetStatsLabel(), MyraLabel.TextStyle.P);
+            _queueLabel = new MyraLabel(GetQueueLabel(), MyraLabel.TextStyle.P);
 
             var scrollViewer = new ScrollViewer
             {
@@ -68,6 +71,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             };
             root.Widgets.Add(buttons);
             root.Widgets.Add(_statsLabel);
+            root.Widgets.Add(_queueLabel);
             root.Widgets.Add(scrollViewer);
 
             SetRootContent(root);
@@ -120,6 +124,9 @@ namespace ClassicUO.Game.UI.MyraWindows
             double memoryMb = Environment.WorkingSet / (1024.0 * 1024.0);
             return $"Memory: {memoryMb:F1} MB    CPU: {_cpuPercent:F2}%";
         }
+
+        private static string GetQueueLabel() =>
+            $"Global Action Queue: {ObjectActionQueue.Instance.GetCurrentQueuedCount}    Main Thread Queue: {MainThreadQueue.Count}";
 
         private void OnToggle()
         {
@@ -181,6 +188,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             {
                 _lastUpdate = Time.Ticks;
                 _statsLabel.Text = GetStatsLabel();
+                _queueLabel.Text = GetQueueLabel();
                 UpdateDisplay();
             }
         }
