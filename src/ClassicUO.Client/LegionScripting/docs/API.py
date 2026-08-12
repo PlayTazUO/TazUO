@@ -2070,7 +2070,7 @@ def OnIgnoreList(serial: "int") -> "bool":
     """
     pass
 
-def Pathfind(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10) -> "bool":
+def Pathfind(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10, run: "bool" = True) -> "bool":
     """
      Attempt to pathfind to a location.  This will fail with large distances.
      Example:
@@ -2081,7 +2081,7 @@ def Pathfind(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1, wait: "bo
     """
     pass
 
-def PathfindEntity(entity: "int", distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10) -> "bool":
+def PathfindEntity(entity: "int", distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10, run: "bool" = True) -> "bool":
     """
      Attempt to pathfind to a mobile or item.
      Example:
