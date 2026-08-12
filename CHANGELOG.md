@@ -11,6 +11,7 @@ All notable changes to TazUO will be recorded here.
 * Added run parameter to pathfinding methods
 
 ### Features
+* Redesign bandage agent tab UI, and add option to use a server command for self heal ([bittiez](https://github.com/bittiez))
 * Added a configurable bandage distance to the Bandage Agent (1-15 tiles, default 3) that controls how far friends and allies must be to be bandaged, replacing the previously hardcoded 3-tile range ([bittiez](https://github.com/bittiez))
 * Added a configurable auto-target type option to the Bandage Agent (Neutral/Harmful/Beneficial), replacing the previously hardcoded beneficial target type ([bittiez](https://github.com/bittiez))
 * When a pin is placed on a server-sent map gump, the client now prints a message with the deciphered coordinates ("I can't be certain but I believe this is somewhere near {x} and {y}.")
