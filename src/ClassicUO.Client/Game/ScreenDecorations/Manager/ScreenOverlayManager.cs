@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Game.Managers;
@@ -100,6 +101,10 @@ internal sealed class ScreenOverlayManager
 
     /// <summary>Slots being taken down this pass. Reused for the same reason.</summary>
     private readonly List<Guid> _retiring = [];
+
+    /// <summary>This pass's demands ranked by priority, for applying the concurrency cap. Reused for
+    /// the same reason.</summary>
+    private readonly List<RuleDemand> _ranked = [];
 
     /// <summary>Whether the world is loaded. One half of what decides passes run; the settings are
     /// the other half.</summary>
@@ -585,15 +590,42 @@ internal sealed class ScreenOverlayManager
     }
 
     /// <summary>
-    /// A changed pool means the wiring is stale; anything else only decides whether the work runs at
-    /// all. Not filtered more finely than that: the cost of reconciling when nothing relevant moved
-    /// is a bool comparison under a lock, at the rate a person can move an options' widget.
+    /// Marshals like every other entry point: the settings are statically reachable, so this is
+    /// raised by whichever thread wrote the property, and everything below mutates wiring unguarded.
     /// </summary>
     private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (!MainThreadQueue.IsMainThread)
+        {
+            DispatchSettingsChanged(e.PropertyName);
+            return;
+        }
+
+        ApplySettingsChange(e.PropertyName);
+    }
+
+    /// <summary>
+    /// Off-thread half of <see cref="OnSettingsChanged" />. Out of line so its closure never lands on
+    /// the main-thread path.
+    /// </summary>
+    /// <param name="propertyName">The property that changed.</param>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void DispatchSettingsChanged(string? propertyName) =>
+        MainThreadQueue.InvokeOnMainThread(() => ApplySettingsChange(propertyName));
+
+    /// <summary>
+    /// A changed pool means the wiring is stale; anything else only decides whether the work runs at
+    /// all. Not filtered more finely than that: the cost of reconciling when nothing relevant moved
+    /// is a dictionary rebuild, at the rate a person can move an options' widget.
+    /// </summary>
+    /// <param name="propertyName">The property that changed.</param>
+    private void ApplySettingsChange(string? propertyName)
+    {
+        AssertMainThread();
+
         RecomputeShakeState();
 
-        if (e.PropertyName is nameof(OverlaySystemSettings.Rules)
+        if (propertyName is nameof(OverlaySystemSettings.Rules)
             or nameof(OverlaySystemSettings.Profiles)
             or nameof(OverlaySystemSettings.BuiltInRuleStates))
         {
@@ -636,16 +668,7 @@ internal sealed class ScreenOverlayManager
         _scheduler.RequestPass();
     }
 
-    private bool NeedsPolling()
-    {
-        foreach (WatchedRule watched in _ordered)
-        {
-            if (watched.Kind == TriggerKind.Poll)
-                return true;
-        }
-
-        return false;
-    }
+    private bool NeedsPolling() => _ordered.Any(watched => watched.Kind == TriggerKind.Poll);
 
     /// <summary>
     /// Main thread. Reads what every rule is asserting and brings the compositor in line with it.
@@ -658,6 +681,7 @@ internal sealed class ScreenOverlayManager
 
         ExpireLapsedSignals(now);
         Resolve();
+        ApplyConcurrencyCap(_desired, _ranked, ScreenOverlayCompositor.ConcurrencyCap());
         Reconcile();
 
         _scheduler.ScheduleExpiry(NextExpiry(now));
@@ -719,15 +743,60 @@ internal sealed class ScreenOverlayManager
         if (!settings.OverlaysActive)
             return;
 
-        SelectFirstMatches(_ordered, _claimed, _desired);
+        // Before the rules, and claiming its look like one: previewing what a rule already shows
+        // would otherwise draw the stack twice at doubled alpha. Claiming first also lets it win.
+        AddPreview(settings);
 
+        SelectFirstMatches(_ordered, _claimed, _desired);
+    }
+
+    /// <summary>
+    /// Adds the previewed look, if there is one, and claims it against the rules.
+    /// </summary>
+    /// <param name="settings">The settings supplying the profile pool.</param>
+    private void AddPreview(DecorationSettings settings)
+    {
         if (_previewProfileId is not { } previewId)
             return;
 
         EffectProfile? preview = settings.Overlays.FindProfile(previewId);
 
-        if (preview != null)
-            _desired[_previewSlot] = new RuleDemand(_previewSlot, preview, PREVIEW_PRIORITY, TriggerSignal.Default);
+        if (preview == null)
+            return;
+
+        _claimed.Add(preview.Id);
+        _desired[_previewSlot] = new RuleDemand(_previewSlot, preview, PREVIEW_PRIORITY, TriggerSignal.Default);
+    }
+
+    /// <summary>
+    /// Drops the weakest demands until no more than the user's cap remain. Applied here, not in the
+    /// compositor: only this class records what it asked for, and a drop it cannot see is never
+    /// re-asserted. Dropping here retires through the normal path, so it fades and returns when there
+    /// is room. Internal and static so the policy can be tested, like <see cref="SelectFirstMatches"/>.
+    /// </summary>
+    /// <param name="desired">This pass's demands; trimmed in place.</param>
+    /// <param name="ranked">Scratch list, cleared by this method.</param>
+    /// <param name="cap">Most overlays that may composite at once.</param>
+    internal static void ApplyConcurrencyCap(Dictionary<Guid, RuleDemand> desired, List<RuleDemand> ranked, int cap)
+    {
+        if (desired.Count <= cap)
+            return;
+
+        ranked.Clear();
+
+        foreach (RuleDemand demand in desired.Values)
+            ranked.Add(demand);
+
+        // ID breaks ties so survivors don't depend on hash order - equal-priority rules swapping
+        // between passes would cross-fade every poll.
+        ranked.Sort(
+            static (left, right) => left.Priority != right.Priority
+                ? right.Priority.CompareTo(left.Priority)
+                : left.RuleId.CompareTo(right.RuleId)
+        );
+
+        for (int i = cap; i < ranked.Count; i++)
+            desired.Remove(ranked[i].RuleId);
     }
 
     /// <summary>

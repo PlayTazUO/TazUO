@@ -147,5 +147,55 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
                 .Should()
                 .BeEmpty();
         }
+
+        private static Dictionary<Guid, RuleDemand> Capped(int cap, params (Guid Id, int Priority)[] demands)
+        {
+            var desired = demands.ToDictionary(
+                demand => demand.Id,
+                demand => new RuleDemand(demand.Id, Profile("look"), demand.Priority, TriggerSignal.Default)
+            );
+
+            ScreenOverlayManager.ApplyConcurrencyCap(desired, [], cap);
+
+            return desired;
+        }
+
+        [Fact]
+        public void TheCapKeepsTheStrongestDemands()
+        {
+            (Guid Id, int Priority) weak = (Guid.NewGuid(), 0);
+            (Guid Id, int Priority) middle = (Guid.NewGuid(), 5);
+            (Guid Id, int Priority) strong = (Guid.NewGuid(), 10);
+
+            Dictionary<Guid, RuleDemand> kept = Capped(2, weak, strong, middle);
+
+            kept.Keys.Should().BeEquivalentTo([strong.Id, middle.Id]);
+        }
+
+        [Fact]
+        public void NothingIsDroppedWhileTheDemandsFitTheCap()
+        {
+            (Guid Id, int Priority) first = (Guid.NewGuid(), 0);
+            (Guid Id, int Priority) second = (Guid.NewGuid(), 1);
+
+            Capped(4, first, second).Should().HaveCount(2);
+        }
+
+        /// <summary>
+        /// Survivors must not depend on hash order - equal-priority demands swapping between passes
+        /// would cross-fade every poll.
+        /// </summary>
+        [Fact]
+        public void TiesAreBrokenTheSameWayEveryPass()
+        {
+            (Guid Id, int Priority) first = (Guid.NewGuid(), 3);
+            (Guid Id, int Priority) second = (Guid.NewGuid(), 3);
+            (Guid Id, int Priority) third = (Guid.NewGuid(), 3);
+
+            Dictionary<Guid, RuleDemand> kept = Capped(2, first, second, third);
+            Dictionary<Guid, RuleDemand> again = Capped(2, third, first, second);
+
+            kept.Keys.Should().BeEquivalentTo(again.Keys);
+        }
     }
 }

@@ -44,9 +44,8 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
 - DRY. Single responsibility.
 - Funcs ~40 lines ideal; exceed only if split costs more than saves.
 - Params max 4-6; else bundle into struct/class.
-- Files ~500 lines as a guideline, not a cap - 700 is fine. Just keep them small.
-- One public class per file, loosely: 1-2 extra small ones is fine. Several, or largeish → split.
-  Multiple small related classes may share one file; unrelated or large ones get their own.
+- Files ~500 lines guideline, not a cap; 700 is fine.
+- One public class per file, loosely - 1-2 extra small related ones fine; unrelated or large → split.
 - OOP where it genuinely fits.
 
 ### Naming
@@ -85,12 +84,19 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
   ```
 
 ### Comments/Docs
-- XMLDocs: public/internal always, `<param>`/`<returns>`/`<exception>` included.
-  Private/protected when non-trivial.
-- Inline comments welcome on non-trivial code.
-- Content: terse; the why, the pitfall, the constraint. Restating the name is noise. No fluff,
-  no meta-references ("per discussion", chat deltas). Must stand alone.
-  Keep comments to 1-liners where possible.
+- XMLDocs: public/internal always, with `<param>`/`<returns>`/`<exception>`. Private/protected when
+  non-trivial. Inline comments welcome on non-trivial code.
+- Content: the why, the pitfall, the constraint. Restating the name is noise. Must stand alone.
+- **No meta-references, ever** — "per discussion", review rounds, chat deltas, "as requested".
+- History back-references ("used to be", "ported from") age into noise. Avoid as a rule; keep only
+  where the history explains a still-live constraint.
+- Length scales with the code. Inline 1-2 lines, XMLDoc `<summary>` 1-2; a 10-liner is occasionally
+  warranted, ~95% of the time not. Boilerplate → one-liner, no rationale essay. Say it once.
+- A genuinely tangled mechanism (re-entrancy, ordering, multi-hop flow) earns extra elaboration —
+  code block, remarks, diagram, whatever actually clarifies.
+- Acronyms use standard casing in prose — `ID`, `UO`, `JSON`. Code identifiers keep theirs.
+- Docs for LLM consumption (design refs, system overviews): as terse as possible, never at the cost
+  of correctness or load-bearing context.
 
 ### Readability
 - Brevity yes, not at cost of clarity — dense one-liners that hurt reading → normal loop/block.

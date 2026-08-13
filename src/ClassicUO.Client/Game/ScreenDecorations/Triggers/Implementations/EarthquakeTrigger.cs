@@ -101,26 +101,15 @@ public sealed class EarthquakeTrigger : IEventTrigger
         if (e.Index != EARTHQUAKE_SOUND_INDEX)
             return;
 
-        // Runs inline today - the packet handler that raises this is already on the main thread - so
-        // the marshalling costs a branch. Kept for when that stops being true: a mobile's position
-        // and the view range are main-thread state, and reading them from under the movement code
-        // gives a distance that was never real.
-        (bool inWorld, int playerX, int playerY, int viewRange) = MainThreadQueue.BubblingInvokeOnMainThread(
-            () =>
-            {
-                World? world = World.Instance;
-                PlayerMobile? player = world?.Player;
+        // Skipping MT dispatch: only atomics read here. If non-atomics are added, MT dispatch
+        // (with a cancellation token!) becomes necessary - the bubbling variant blocks otherwise.
+        World? world = World.Instance;
+        PlayerMobile? player = world?.Player;
 
-                return player == null
-                    ? (false, 0, 0, 0)
-                    : (true, player.X, player.Y, world!.ClientViewRange);
-            }
-        );
-
-        if (!inWorld)
+        if (player == null)
             return;
 
-        float nearness = Nearness(e.X, e.Y, playerX, playerY, viewRange);
+        float nearness = Nearness(e.X, e.Y, player.X, player.Y, world!.ClientViewRange);
 
         if (nearness <= 0f)
             return;

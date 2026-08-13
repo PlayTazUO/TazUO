@@ -101,8 +101,9 @@ internal sealed class ScreenOverlayCompositor
 
     /// <summary>
     /// Activates, or re-configures if already active, the overlay occupying <paramref name="id"/>.
-    /// Fades in from its current envelope value, never popping. Over the concurrency cap, the
-    /// lowest-priority active overlay is evicted to make room.
+    /// Fades in from its current envelope value, never popping. Accepts whatever it is given - the
+    /// concurrency cap is <see cref="ScreenOverlayManager"/>'s call, since a silent drop here would
+    /// leave that class believing the overlay was still on screen.
     /// <para>
     /// Restating an already-active overlay adjusts it in place: the envelope is untouched, so a
     /// nearer second earthquake strengthens the one on screen rather than restarting its fade.
@@ -140,8 +141,6 @@ internal sealed class ScreenOverlayCompositor
 
             return;
         }
-
-        EvictForNewcomer();
 
         var added = new ActiveOverlay
         {
@@ -342,36 +341,10 @@ internal sealed class ScreenOverlayCompositor
     private void DispatchHide(Guid id) => MainThreadQueue.InvokeOnMainThread(() => Hide(id));
 
     /// <summary>
-    /// Makes room for one more overlay by dropping the least important active one, if the cap is
-    /// already met. Read from the settings rather than fixed: the user chooses the cap, and a
-    /// mid-session change should apply to the next overlay raised rather than to the next session.
+    /// The user's cap on simultaneous overlays, read live so a mid-session change applies at once.
+    /// Used here only for the layer budget; the cap itself is applied before reaching this class.
     /// </summary>
-    private void EvictForNewcomer()
-    {
-        int cap = ConcurrencyCap();
-
-        while (_active.Count >= cap)
-        {
-            Guid lowest = default;
-            int lowestPriority = int.MaxValue;
-
-            foreach (KeyValuePair<Guid, ActiveOverlay> entry in _active)
-            {
-                if (entry.Value.Priority >= lowestPriority)
-                    continue;
-
-                lowestPriority = entry.Value.Priority;
-                lowest = entry.Key;
-            }
-
-            // Defensive: with a positive cap there is always something to evict, and looping on an
-            // empty set would hang the frame.
-            if (!_active.Remove(lowest))
-                break;
-        }
-    }
-
-    private static int ConcurrencyCap() =>
+    internal static int ConcurrencyCap() =>
         Math.Clamp(
             DecorationSettings.Current.Overlays.MaxConcurrent,
             OverlaySystemSettings.MinConcurrent,

@@ -1315,9 +1315,13 @@ namespace ClassicUO.Game.Scenes
             // pixels EnsureRenderTargets padded the target with instead of exposing empty texture at
             // the edge. Clamped to the crop's own margin - zero when the target isn't padded (shake
             // off), and never past it even at full shake intensity.
+            // Margin floored at 0: the target is capped at MAX_TEXTURE_SIZE, the crop isn't, and
+            // Math.Clamp throws when its bounds cross.
             Point shake = ScreenOverlayManager.Instance.ViewportShakeOffset();
-            int srcX = Math.Clamp((rtW - srcW) / 2 + shake.X, 0, rtW - srcW);
-            int srcY = Math.Clamp((rtH - srcH) / 2 + shake.Y, 0, rtH - srcH);
+            int marginX = Math.Max(0, rtW - srcW);
+            int marginY = Math.Max(0, rtH - srcH);
+            int srcX = Math.Clamp(marginX / 2 + shake.X, 0, marginX);
+            int srcY = Math.Clamp(marginY / 2 + shake.Y, 0, marginY);
 
             var srcRect = new Rectangle(srcX, srcY, srcW, srcH);
             var destRect = new Rectangle(0, 0, vpW, vpH);

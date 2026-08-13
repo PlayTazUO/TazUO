@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Input;
 using ClassicUO.Utility.Logging;
@@ -10,9 +11,6 @@ using System.Threading.Tasks;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Configuration;
-using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
-using ClassicUO.Game.ScreenDecorations.Overlays;
-using ClassicUO.Game.ScreenDecorations.Shake;
 using ClassicUO.Game.UI;
 using ClassicUO.LegionScripting;
 using Myra;
@@ -285,32 +283,22 @@ namespace ClassicUO.Game.Managers
             Register("organizer", s => OrganizerAgent.Instance?.OrganizerCommand(s));
             Register("organizerlist", s => OrganizerAgent.Instance?.ListOrganizers());
             Register("old-options-window", s => GameActions.ShowLegacyOptionsGump(_world));
+            Register("language-regenerate", _ => TazLang.Load(Settings.GlobalSettings.UILanguage));
+
+            RegisterDebugCommands();
+        }
+
+        /// <summary>Registers debug-only commands. Compiled out of Release.</summary>
+        [Conditional("DEBUG")]
+        private void RegisterDebugCommands()
+        {
             Register("myra-draw-widget-frames", args => MyraEnvironment.DrawWidgetsFrames = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-frames", args => MyraEnvironment.DrawMouseHoveredWidgetFrame = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-info", args => MyraEnvironment.DrawMouseHoveredWidgetInfo = ParseBooleanCommandArgs(args));
+
+            // Desyncs death state from the server; only a real death/resurrect packet restores it.
             Register("deadman-mode", args => World.Instance?.Player?.IsDead = ParseBooleanCommandArgs(args));
         }
-
-        /// <summary>
-        /// Shows or hides a shipped look directly, bypassing the rulebase. The profile's own id
-        /// doubles as the compositor slot, which no rule can collide with.
-        /// </summary>
-        /// <param name="args">Command arguments; the first is parsed as a boolean.</param>
-        /// <param name="profileId">The built-in profile to draw.</param>
-        private static void HandleOverlayCommand(string[] args, Guid profileId)
-        {
-            EffectProfile profile = BuiltInProfiles.Find(profileId);
-
-            if (profile == null)
-                return;
-
-            if (ParseBooleanCommandArgs(args))
-                ScreenOverlayCompositor.Instance.Show(profileId, profile);
-            else
-                ScreenOverlayCompositor.Instance.Hide(profileId);
-        }
-
-        private static float ParseFloatCommandArgs(string[] args) => args?.Length > 1 && float.TryParse(args[1], out float value) ? value : 0;
 
         /// <summary>
         ///     Parses a command and returns a boolean indicating whether the first argument is 'truthy'

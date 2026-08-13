@@ -162,20 +162,24 @@ public class OverlaySystemSettings : ObservableSettings
     #region Private methods
 
     /// <summary>
-    /// Drops any rule sharing an id with an earlier one, keeping the first.
+    /// Drops any rule sharing an ID with an earlier one, keeping the first. An ID is the rule's
+    /// identity, so two entries carrying one are a rule stored twice.
     /// <para>
-    /// An id is the rule's identity - it is what an override and the manager's own bookkeeping key
-    /// off - so two entries carrying the same one are one rule stored twice, never two rules. Only
-    /// a hand-edited file should be able to produce that; configs written before the rulebase
-    /// stopped announcing a creation twice also carry them, and this is what clears them out.
+    /// Silent by design: the manager rebuilds its wiring from inside <see cref="ResolveRules"/>, so
+    /// announcing a change here re-enters that rebuild part-way through.
     /// </para>
+    /// <code>
+    /// SyncRules ─┬─ TearDownWatching
+    ///            ├─ ResolveRules ── Prune ── PropertyChanged(Rules)
+    ///            │                                  └─ SyncRules (nested: builds + attaches)
+    ///            └─ resumes: overwrites _watching without detaching → leaked subscriptions
+    /// </code>
     /// </summary>
     private void PruneDuplicateRules()
     {
         var seen = new HashSet<Guid>(Rules.Count);
 
-        if (Rules.RemoveAll(rule => !seen.Add(rule.Id)) > 0)
-            OnPropertyChanged(nameof(Rules));
+        Rules.RemoveAll(rule => !seen.Add(rule.Id));
     }
 
     private static bool NameMatches(EffectProfile profile, string name) =>
