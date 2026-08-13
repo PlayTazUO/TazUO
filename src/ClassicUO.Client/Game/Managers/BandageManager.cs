@@ -59,8 +59,13 @@ namespace ClassicUO.Game.Managers
         private bool HasBandagingBuff { get; set; } = false;
         private bool UseDexFormula => ProfileManager.CurrentProfile?.BandageAgentUseDexFormula ?? false;
         private bool DisableSelfHeal => ProfileManager.CurrentProfile?.BandageAgentDisableSelfHeal ?? false;
+        private TargetType BandageTargetType => ProfileManager.CurrentProfile?.BandageAgentTargetType ?? TargetType.Beneficial;
         private bool UseJournalTrigger => ProfileManager.CurrentProfile?.BandageAgentUseJournalTrigger ?? false;
         private string JournalMessages => ProfileManager.CurrentProfile?.BandageAgentJournalMessages ?? "";
+        private bool UseSelfCommand => ProfileManager.CurrentProfile?.BandageAgentUseSelfCommand ?? false;
+        private string SelfCommand => ProfileManager.CurrentProfile?.BandageAgentSelfCommand ?? "";
+        private bool SelfCommandExpectTarget => ProfileManager.CurrentProfile?.BandageAgentSelfCommandExpectTarget ?? false;
+        private int BandageDistance => ProfileManager.AccountSettings?.BandageAgentDistance ?? 3;
 
         private BandageManager()
         {
@@ -205,12 +210,10 @@ namespace ClassicUO.Game.Managers
                 // or a stuck target) so the queue doesn't keep re-checking it forever.
                 PruneExpiredRetries();
 
-                if (FindBandage() == null)
-                    return; // Return early if we don't have bandages..
-
                 if (_pendingHeals.Count == 0) return;
 
                 uint serial = _pendingHeals.First.Value;
+
                 _pendingHeals.RemoveFirst();
 
                 Mobile mobile = World.Instance?.Mobiles?.Get(serial);
@@ -239,10 +242,7 @@ namespace ClassicUO.Game.Managers
         /// <summary>
         /// Whether the retry window for a mobile has elapsed without a successful heal attempt.
         /// </summary>
-        private bool IsRetryExpired(uint serial)
-        {
-            return _retryDeadlines.TryGetValue(serial, out long deadline) && Time.Ticks >= deadline;
-        }
+        private bool IsRetryExpired(uint serial) => _retryDeadlines.TryGetValue(serial, out long deadline) && Time.Ticks >= deadline;
 
         /// <summary>
         /// Removes queued heals whose retry window has elapsed so we don't keep
@@ -318,8 +318,8 @@ namespace ClassicUO.Game.Managers
             if (isPlayer && DisableSelfHeal)
                 return false;
 
-            // Check distance for friends/allies (within 3 tiles)
-            if ((isFriend || isAlly) && mobile.Distance > 3)
+            // No healing beyond the configured bandage distance
+            if (mobile.Distance > BandageDistance)
                 return false;
 
             // Guard against divide-by-zero and invul
@@ -412,27 +412,41 @@ namespace ClassicUO.Game.Managers
                 return false;
             }
 
-            Item bandage = FindBandage();
-            if (bandage == null)
-            {
-                // No bandage found, schedule retry to check again later
-                ScheduleRetry(mobile.Serial);
-                return false;
-            }
+            bool isPlayer = mobile == World.Instance.Player;
 
-            if (UseNewBandagePacket)
-                // Use the same pattern as BandageSelf but target the mobile
-                AsyncNetClient.Socket.Send_TargetSelectedObject(bandage.Serial, mobile.Serial);
+            // Some servers support commands (e.g. .bandage / .bandageself) that heal you directly.
+            if (isPlayer && UseSelfCommand && !string.IsNullOrWhiteSpace(SelfCommand))
+            {
+                // If the command opens a target cursor, auto-target self before it arrives
+                if (SelfCommandExpectTarget)
+                    TargetManager.SetAutoTarget(mobile.Serial, TargetType.Beneficial);
+
+                GameActions.Say(SelfCommand);
+            }
             else
             {
-                // Set up auto-target before double-clicking
-                TargetManager.SetAutoTarget(mobile.Serial, TargetType.Beneficial);
+                Item bandage = FindBandage();
+                if (bandage == null)
+                {
+                    // No bandage found, schedule retry to check again later
+                    ScheduleRetry(mobile.Serial);
+                    return false;
+                }
 
-                GameActions.DoubleClick(World.Instance, bandage.Serial);
+                if (UseNewBandagePacket)
+                    // Use the same pattern as BandageSelf but target the mobile
+                    AsyncNetClient.Socket.Send_TargetSelectedObject(bandage.Serial, mobile.Serial);
+                else
+                {
+                    // Set up auto-target before double-clicking
+                    TargetManager.SetAutoTarget(mobile.Serial, BandageTargetType);
+
+                    GameActions.DoubleClick(World.Instance, bandage.Serial);
+                }
             }
 
             if (UseDexFormula)
-                _nextBandageTime = Time.Ticks + GetDexHealingTime(mobile.Serial == World.Instance.Player);
+                _nextBandageTime = Time.Ticks + GetDexHealingTime(isPlayer);
             else
                 _nextBandageTime = Time.Ticks + (CheckForBuff ? AsyncNetClient.Socket.Statistics.Ping + 10 : HealDelayMs);
 

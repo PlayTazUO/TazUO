@@ -1569,7 +1569,7 @@ namespace ClassicUO.Game.Scenes
                 {
                     if (string.IsNullOrEmpty(UIManager.SystemChat.TextBoxControl.Text))
                     {
-                        bool wasd = ProfileManager.CurrentProfile.UseWASDInsteadArrowKeys && !UIManager.SystemChat.IsActive;
+                        bool wasd = ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys && !UIManager.SystemChat.IsActive;
 
                         SDL.SDL_Keycode[] wasdKeys = { SDL.SDL_Keycode.SDLK_W, SDL.SDL_Keycode.SDLK_A, SDL.SDL_Keycode.SDLK_S, SDL.SDL_Keycode.SDLK_D };
                         SDL.SDL_Keycode[] arrowKeys = { SDL.SDL_Keycode.SDLK_UP, SDL.SDL_Keycode.SDLK_LEFT, SDL.SDL_Keycode.SDLK_DOWN, SDL.SDL_Keycode.SDLK_RIGHT };
@@ -1702,7 +1702,7 @@ namespace ClassicUO.Game.Scenes
                 }
             }
 
-            bool wasd = ProfileManager.CurrentProfile.UseWASDInsteadArrowKeys && !UIManager.SystemChat.IsActive;
+            bool wasd = ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys && !UIManager.SystemChat.IsActive;
 
             SDL.SDL_Keycode[] wasdKeys = { SDL.SDL_Keycode.SDLK_W, SDL.SDL_Keycode.SDLK_A, SDL.SDL_Keycode.SDLK_S, SDL.SDL_Keycode.SDLK_D };
             SDL.SDL_Keycode[] arrowKeys = { SDL.SDL_Keycode.SDLK_UP, SDL.SDL_Keycode.SDLK_LEFT, SDL.SDL_Keycode.SDLK_DOWN, SDL.SDL_Keycode.SDLK_RIGHT };

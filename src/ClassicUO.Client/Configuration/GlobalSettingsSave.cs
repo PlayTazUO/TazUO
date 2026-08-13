@@ -29,8 +29,6 @@ namespace ClassicUO.Configuration
         public bool UseCircleOfTransparency { get; set => SetProperty(ref field, value); }
         public int CircleOfTransparencyRadius { get; set => SetProperty(ref field, value); } = Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS / 2;
         public int CircleOfTransparencyType { get; set => SetProperty(ref field, value); } // 0 = normal, 1 = like original client
-
-        // sounds and music
         public bool EnableSound { get; set => SetProperty(ref field, value); } = true;
         public int SoundVolume { get; set => SetProperty(ref field, value); } = 50;
         public bool EnableMusic { get; set => SetProperty(ref field, value); } = true;
@@ -39,5 +37,7 @@ namespace ClassicUO.Configuration
         public bool EnableRainSound { get; set => SetProperty(ref field, value); } = true;
         public bool EnableCombatMusic { get; set => SetProperty(ref field, value); } = true;
         public bool ReproduceSoundsInBackground { get; set => SetProperty(ref field, value); }
+        public bool UseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
+        public bool SingleClickIconUse { get; set => SetProperty(ref field, value); }
     }
 }

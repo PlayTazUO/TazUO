@@ -634,7 +634,7 @@ internal static class GameActions
         Socket.Send_AttackRequest(serial);
     }
 
-    internal static void QueueOpenCorpse(uint serial) =>
+    internal static void QueueOpenCorpse(uint serial, bool ownCorpse = false) =>
         ObjectActionQueue.Instance.Enqueue(
             new ObjectActionQueueItem(() =>
             {
@@ -649,7 +649,8 @@ internal static class GameActions
                    )
                     ObjectActionQueueItem.DoubleClick(serial).Action(); // Using the 'Action' here to remain DRY.
             }),
-            ActionPriority.OpenCorpse
+            ownCorpse ? ActionPriority.Immediate :
+                World.Instance.Player.ManualOpenedCorpses.Contains(serial) ? ActionPriority.ManualUseItem : ActionPriority.OpenCorpse
         );
 
     internal static void DoubleClickQueued(uint serial) => ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.DoubleClick(serial), ActionPriority.UseItem);

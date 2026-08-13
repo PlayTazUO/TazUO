@@ -34,6 +34,7 @@ public class ApiMobile : ApiEntity
     public bool IsMounted => Read(static m => m.IsMounted);
     public bool IsDrivingBoat => Read(static m => m.IsDrivingBoat);
     public bool IsRunning => Read(static m => m.IsRunning);
+    public bool IsParalyzed => Read(static m => m.IsParalyzed);
     /// <summary>
     /// Get this mobiles direction as a string, for example: "west", "east", etc
     /// </summary>
@@ -104,24 +105,21 @@ public class ApiMobile : ApiEntity
     /// ```
     /// </summary>
     /// <param name="hue">The hue to apply, or <c>null</c> to restore the original hues.</param>
-    public override void Highlight(ushort? hue = null)
-    {
-        MainThreadQueue.EnqueueAction(() =>
-        {
-            Mobile m = GetMobileUnsafe();
+    public override void Highlight(ushort? hue = null) => MainThreadQueue.EnqueueAction(() =>
+                                                               {
+                                                                   Mobile m = GetMobileUnsafe();
 
-            if (m == null || m.IsDestroyed)
-                return;
+                                                                   if (m == null || m.IsDestroyed)
+                                                                       return;
 
-            ApplyHighlight(m, hue);
+                                                                   ApplyHighlight(m, hue);
 
-            for (LinkedObject i = m.Items; i != null; i = i.Next)
-            {
-                if (i is Item it)
-                    ApplyHighlight(it, hue);
-            }
-        });
-    }
+                                                                   for (LinkedObject i = m.Items; i != null; i = i.Next)
+                                                                   {
+                                                                       if (i is Item it)
+                                                                           ApplyHighlight(it, hue);
+                                                                   }
+                                                               });
 
     /// <summary>
     /// Gets the mobile name and properties (tooltip text).
