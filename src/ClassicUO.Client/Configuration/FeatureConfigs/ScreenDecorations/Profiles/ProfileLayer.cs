@@ -1,9 +1,10 @@
 #nullable enable
 
 using System.ComponentModel;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 using ClassicUO.Renderer.Effects;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 
 /// <summary>
 /// One effect's participation in a composition: the effect, and how it combines with what is already

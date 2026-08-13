@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Renderer.Effects;
 using FluentAssertions;

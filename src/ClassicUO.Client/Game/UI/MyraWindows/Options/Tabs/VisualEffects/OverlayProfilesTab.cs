@@ -3,6 +3,8 @@
 using System.Collections.Generic;
 using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;

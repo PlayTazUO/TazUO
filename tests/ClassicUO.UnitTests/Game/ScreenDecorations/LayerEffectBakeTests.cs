@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 using ClassicUO.Renderer.Effects;

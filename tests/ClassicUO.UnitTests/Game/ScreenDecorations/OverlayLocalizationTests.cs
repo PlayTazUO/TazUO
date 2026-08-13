@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 using ClassicUO.Renderer.Effects;
 using FluentAssertions;
@@ -31,9 +33,9 @@ namespace ClassicUO.UnitTests.Game.ScreenDecorations
             typeof(RadialBlurEffect),
             typeof(ChromaticEffect),
             typeof(PulseSpec),
-            typeof(OverlayShape),
-            typeof(OverlayNoise),
-            typeof(OverlayJitter)
+            typeof(NoiseSpec),
+            typeof(ShapeSpec),
+            typeof(JitterSpec)
         ];
 
         private static IEnumerable<MemberInfo> EditedMembers() =>

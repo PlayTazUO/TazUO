@@ -3,10 +3,10 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ClassicUO.Renderer.Effects;
-using Myra.Graphics2D.UI.Properties;
 using Microsoft.Xna.Framework;
+using Myra.Graphics2D.UI.Properties;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 
 /// <summary>
 /// Colour painted over the scene. The only technique that reads a tint, and the only one that never

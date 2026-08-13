@@ -3,10 +3,10 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ClassicUO.Renderer.Effects;
-using Myra.Graphics2D.UI.Properties;
 using Microsoft.Xna.Framework;
+using Myra.Graphics2D.UI.Properties;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 
 /// <summary>
 /// Time-varying swell of a layer's strength. Distinct from a noise field, which varies strength
@@ -69,7 +69,7 @@ public abstract class LayerEffect
         "Where on screen the effect lives: vignette or border shape,\n"
         + "how far it extends, and how its boundary breaks up."
     )]
-    public OverlayShape Shape { get; set; } = OverlayParams.Default.Shape;
+    public ShapeSpec Shape { get; set; } = ShapeSpec.Default;
 
     /// <summary>How it moves and what texture it has.</summary>
     [LocalizedDisplayName("visualeffects_layer_noise", "Texture")]
@@ -77,7 +77,7 @@ public abstract class LayerEffect
         "visualeffects_layer_noise_tooltip",
         "How the effect moves and what texture it has."
     )]
-    public OverlayNoise Noise { get; set; } = OverlayParams.Default.Noise;
+    public NoiseSpec Noise { get; set; } = NoiseSpec.Default;
 
     /// <summary>
     /// Peak strength where the mask is full: the alpha a tint is painted at, or the degree to which
@@ -127,8 +127,8 @@ public abstract class LayerEffect
     {
         var parameters = new OverlayParams
         {
-            Shape = Shape,
-            Noise = Noise,
+            Shape = Shape.ToParams(),
+            Noise = Noise.ToParams(),
             Appearance = new OverlayAppearance
             {
                 // Overwritten by a tint layer. Sampling techniques return scene colour in its place,

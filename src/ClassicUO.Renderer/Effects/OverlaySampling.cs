@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -64,11 +63,6 @@ namespace ClassicUO.Renderer.Effects
     /// </summary>
     public struct OverlaySampling
     {
-        [Description(
-            "What the layer does with the frame behind it. None paints tint\n"
-            + "and never reads the scene; the rest distort it and must sit\n"
-            + "below any layer they are meant to affect."
-        )]
         public OverlaySampleMode Mode;
 
         /// <summary>
@@ -76,11 +70,6 @@ namespace ClassicUO.Renderer.Effects
         /// circular. Small values read as soft focus; past a couple of percent it stops being vision
         /// and becomes frosted glass.
         /// </summary>
-        [Description(
-            "Blur disk radius as a fraction of screen width. Small values\n"
-            + "read as soft focus; past a couple of percent it becomes\n"
-            + "frosted glass. Blur mode only."
-        )]
         public float Radius;
 
         /// <summary>
@@ -89,11 +78,6 @@ namespace ClassicUO.Renderer.Effects
         /// tighter mask) rather than more taps. Blur and Radial only - Chromatic is a fixed three-tap
         /// split with no technique variant to select.
         /// </summary>
-        [Description(
-            "Samples taken per pixel, and the whole cost of the layer. Too\n"
-            + "few for the radius shows as distinct ghost copies instead of a\n"
-            + "blur. Blur and Radial mode only."
-        )]
         public OverlaySampleTaps Taps;
 
         /// <summary>
@@ -101,11 +85,6 @@ namespace ClassicUO.Renderer.Effects
         /// <see cref="OverlayShape.Center"/>. Scales with that distance, so the centre stays sharp
         /// however high this goes.
         /// </summary>
-        [Description(
-            "How far along the centre ray the radial taps march, as a\n"
-            + "fraction of the distance from Center. The centre stays sharp\n"
-            + "however high this goes. Radial mode only."
-        )]
         public float Zoom;
 
         /// <summary>
@@ -113,11 +92,6 @@ namespace ClassicUO.Renderer.Effects
         /// <see cref="OverlayShape.Center"/>. Nothing separates at the centre; the fringing grows
         /// toward the corners, which is what makes it read as a lens rather than as a broken image.
         /// </summary>
-        [Description(
-            "Red/blue separation, as a fraction of the distance from\n"
-            + "Center. Nothing separates at the centre and fringing grows\n"
-            + "toward the corners. Chromatic mode only."
-        )]
         public float Aberration;
 
         /// <summary>Whether this layer needs the scene bound to sample from.</summary>

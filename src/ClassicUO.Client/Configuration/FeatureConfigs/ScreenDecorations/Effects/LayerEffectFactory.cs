@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using ClassicUO.Renderer.Effects;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 
 /// <summary>
 /// Builds <see cref="LayerEffect" />s: fresh ones for the composer's "add layer" list, and narrow
@@ -78,8 +78,8 @@ public static class LayerEffectFactory
             )
         };
 
-        effect.Shape = parameters.Shape;
-        effect.Noise = parameters.Noise;
+        effect.Shape = ShapeSpec.From(parameters.Shape);
+        effect.Noise = NoiseSpec.From(parameters.Noise);
         effect.Strength = parameters.Appearance.Opacity;
         effect.Pulse = new PulseSpec
         {

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.ScreenDecorations.Rules;

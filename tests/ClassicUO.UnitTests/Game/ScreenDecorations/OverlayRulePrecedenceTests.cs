@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Game.ScreenDecorations.Rules;
 using ClassicUO.Game.ScreenDecorations.Triggers;

@@ -1,5 +1,6 @@
 using System;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.ScreenDecorations.Shake;
 using FluentAssertions;
 using Xunit;

@@ -7,7 +7,7 @@ using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
 using ClassicUO.Renderer.Effects;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 
 /// <summary>
 /// A named, reusable look: which effects, in what order, blended how, plus how it arrives and leaves

@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 using ClassicUO.Game.ScreenDecorations.Shake;
 using Myra.Graphics2D.UI.Properties;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 
 /// <summary>
 /// How a look arrives and leaves.

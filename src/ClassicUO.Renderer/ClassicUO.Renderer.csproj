@@ -9,9 +9,6 @@
     <ProjectReference Include="..\ClassicUO.Utility\ClassicUO.Utility.csproj" />
     <ProjectReference Include="..\ClassicUO.Assets\ClassicUO.Assets.csproj" />
     <ProjectReference Include="..\..\external\FNA\FNA.Core.csproj" />
-    <!-- For the display metadata on the overlay parameter structs: they are authored through a
-         Myra PropertyGrid, and applying an attribute needs the assembly that declares it. -->
-    <ProjectReference Include="..\..\external\Myra\src\Myra\Myra.FNA.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

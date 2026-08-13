@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 using ClassicUO.Configuration.Json;
 using ClassicUO.Game.Logic;

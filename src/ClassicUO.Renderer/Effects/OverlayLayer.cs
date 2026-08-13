@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace ClassicUO.Renderer.Effects
@@ -41,21 +40,12 @@ namespace ClassicUO.Renderer.Effects
     /// </summary>
     public struct OverlayLayer
     {
-        [Description(
-            "The shader uniforms for this layer: where it sits on screen,\n"
-            + "how it moves and what it looks like."
-        )]
         public OverlayParams Params;
 
         /// <summary>
         /// Defaults to <see cref="OverlayBlend.Alpha"/> so a single-layer preset that never mentions
         /// blending keeps its original behaviour.
         /// </summary>
-        [Description(
-            "How the layer composites: Alpha covers what is behind it,\n"
-            + "Additive brightens it. A highlight pass wants Additive - a\n"
-            + "covering highlight reads as a second flat colour."
-        )]
         public OverlayBlend Blend;
     }
 }

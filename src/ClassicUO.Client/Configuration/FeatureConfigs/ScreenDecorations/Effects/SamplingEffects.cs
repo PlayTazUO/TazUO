@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using ClassicUO.Renderer.Effects;
 using Myra.Graphics2D.UI.Properties;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 
 /// <summary>
 /// Disk blur. Out-of-focus vision.
