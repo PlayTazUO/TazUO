@@ -22,6 +22,12 @@ public sealed class LogicField
 
     /// <summary>Optional explanation shown on hover in the editor.</summary>
     public string? Description { get; init; }
+
+    /// <summary>The enum a <see cref="LogicValueKind.Enum" /> field's operand is chosen from. Required
+    /// when <see cref="Kind" /> is <see cref="LogicValueKind.Enum" />, ignored otherwise. The stored
+    /// operand is the member's declared name - what <see cref="object.ToString" /> reports on the
+    /// resolved value - so the evaluator needs no knowledge of this type at all.</summary>
+    public Type? EnumType { get; init; }
 }
 
 /// <summary>
@@ -33,6 +39,25 @@ public interface ILogicSchema
 {
     /// <summary>The fields, in the order the editor should offer them.</summary>
     IReadOnlyList<LogicField> Fields { get; }
+}
+
+/// <summary>
+/// One field paired with the accessor that reads it off a subject - what a
+/// <see cref="LogicSchema{TSubject}" /> is built from. Named rather than left as a bare tuple because
+/// <c>(LogicField Field, Func&lt;TSubject, object?&gt; Resolve)</c> shows up at every call site that
+/// builds or forwards a field list, and a schema with dozens of fields has a lot of them.
+/// <para>
+/// Converts implicitly from the equivalent tuple, so a literal schema definition - the common case -
+/// reads exactly as it did before this existed.
+/// </para>
+/// </summary>
+/// <typeparam name="TSubject">What the accessor reads from.</typeparam>
+public readonly record struct LogicFieldEntry<TSubject>(LogicField Field, Func<TSubject, object?> Resolve)
+{
+    /// <param name="tuple">A field paired with its accessor, written as a literal.</param>
+    /// <returns>The equivalent entry.</returns>
+    public static implicit operator LogicFieldEntry<TSubject>((LogicField Field, Func<TSubject, object?> Resolve) tuple) =>
+        new(tuple.Field, tuple.Resolve);
 }
 
 /// <summary>
@@ -63,11 +88,11 @@ public sealed class LogicSchema<TSubject> : ILogicSchema
     /// <param name="fields">Each field and the accessor that reads it off a subject.</param>
     /// <exception cref="ArgumentNullException"><paramref name="fields" /> is null.</exception>
     /// <exception cref="ArgumentException">Two fields share a key.</exception>
-    public LogicSchema(IEnumerable<(LogicField Field, Func<TSubject, object?> Resolve)> fields)
+    public LogicSchema(IEnumerable<LogicFieldEntry<TSubject>> fields)
     {
         ArgumentNullException.ThrowIfNull(fields);
 
-        (LogicField Field, Func<TSubject, object?> Resolve)[] entries = [.. fields];
+        LogicFieldEntry<TSubject>[] entries = [.. fields];
 
         Fields = [.. entries.Select(entry => entry.Field)];
 

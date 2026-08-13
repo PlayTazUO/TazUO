@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Logic;
 
@@ -70,6 +71,16 @@ internal static class LogicText
     };
 
     /// <summary>
+    /// Splits a declared name at each word boundary: before a capital that follows a lowercase
+    /// letter or digit, and before the last capital of a run of them (so an acronym stays together -
+    /// "HPRegen" reads as "HP Regen", not "H P Regen").
+    /// </summary>
+    private static readonly Regex _enumWordBoundary = new(
+        @"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])",
+        RegexOptions.Compiled
+    );
+
+    /// <summary>
     /// What one join does. Worded as a join of two sides rather than as a statement about the whole
     /// bracket, which is what these are: everything above the join, combined with the line below it.
     /// </summary>
@@ -103,6 +114,16 @@ internal static class LogicText
     internal static string Name(LogicConnective connective) => Resolve(_connectives, connective, connective.ToString());
 
     internal static string Name(LogicConditionFlags flag) => Resolve(_flags, flag, flag.ToString());
+
+    /// <summary>
+    /// How one member of an enum field's backing type reads in the editor. Mechanical, not localized
+    /// - the member names are declared by whatever game type the field wraps, not by this project's
+    /// language file, so there is nothing to look up.
+    /// </summary>
+    /// <param name="memberName">The member's declared name, as <see cref="Enum.GetNames" /> reports
+    /// it.</param>
+    /// <returns>The name split into words.</returns>
+    internal static string EnumMemberName(string memberName) => _enumWordBoundary.Replace(memberName, " ");
 
     internal static string Tooltip(LogicConnective connective) => Resolve(_connectiveTooltips, connective, string.Empty);
 

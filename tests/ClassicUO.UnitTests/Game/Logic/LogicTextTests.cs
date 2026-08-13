@@ -44,6 +44,7 @@ namespace ClassicUO.UnitTests.Game.Logic
         [InlineData(LogicValueKind.Integer)]
         [InlineData(LogicValueKind.Decimal)]
         [InlineData(LogicValueKind.Boolean)]
+        [InlineData(LogicValueKind.Enum)]
         public void OperatorsOfferedTogetherAreNamedUniquely(LogicValueKind kind)
         {
             string[] names = [.. LogicOperators.For(kind).Select(op => LogicText.Name(op, kind))];
@@ -77,6 +78,7 @@ namespace ClassicUO.UnitTests.Game.Logic
         [InlineData(LogicValueKind.Integer)]
         [InlineData(LogicValueKind.Decimal)]
         [InlineData(LogicValueKind.Boolean)]
+        [InlineData(LogicValueKind.Enum)]
         public void ANameResolvesBackToTheOperatorItCameFrom(LogicValueKind kind)
         {
             IReadOnlyList<LogicOperator> operators = LogicOperators.For(kind);
@@ -100,6 +102,18 @@ namespace ClassicUO.UnitTests.Game.Logic
                         LogicText.Name(flag).Should().NotBeNullOrWhiteSpace();
                 }
             }
+        }
+
+        /// <summary>Words split before a capital that follows a lowercase letter or digit, and an
+        /// acronym's last capital stays attached to the word after it rather than splitting alone.</summary>
+        [Theory]
+        [InlineData("VeryAngry", "Very Angry")]
+        [InlineData("Murderer", "Murderer")]
+        [InlineData("HPRegen", "HP Regen")]
+        [InlineData("FastUnmountAndCantRun", "Fast Unmount And Cant Run")]
+        public void EnumMemberNamesSplitAtWordBoundaries(string memberName, string expected)
+        {
+            LogicText.EnumMemberName(memberName).Should().Be(expected);
         }
 
         /// <summary>Anything the table reports as applicable has to be a flag the operator actually

@@ -50,6 +50,16 @@ public static class LogicOperators
         LogicOperator.IsNot
     ];
 
+    /// <summary>A closed set of named values, so only equality makes sense - substring and ordering
+    /// operators have nothing to compare.</summary>
+    private static readonly LogicOperator[] _enumOperators =
+    [
+        LogicOperator.Is,
+        LogicOperator.IsNot,
+        LogicOperator.IsAnyOf,
+        LogicOperator.IsNoneOf
+    ];
+
     /// <summary>
     /// Operators whose comparison is textual, and so the only ones the flags have anything to say
     /// about. Case and whitespace are properties of comparing strings; a number parses the same
@@ -72,6 +82,7 @@ public static class LogicOperators
         {
             LogicValueKind.Integer or LogicValueKind.Decimal => _numberOperators,
             LogicValueKind.Boolean => _booleanOperators,
+            LogicValueKind.Enum => _enumOperators,
             _ => _textOperators
         };
 

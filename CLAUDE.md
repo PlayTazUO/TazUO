@@ -90,6 +90,7 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
 - Inline comments welcome on non-trivial code.
 - Content: terse; the why, the pitfall, the constraint. Restating the name is noise. No fluff,
   no meta-references ("per discussion", chat deltas). Must stand alone.
+  Keep comments to 1-liners where possible.
 
 ### Readability
 - Brevity yes, not at cost of clarity — dense one-liners that hurt reading → normal loop/block.
@@ -112,11 +113,17 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
 - All JSON serialize/deserialize needs a generated `JsonSerializerContext`.
 - Regexes invoked more than once → compiled/source-generated, not built per call.
 
+### Performance
+- Rendering / per-tick / per-frame code → perf imperative. Watch allocs (GC pressure), avoid
+  LINQ/boxing/closures in hot loops, hoist cacheable work out of the loop.
+- Profile or reason through cost before committing to an approach.
+
 ### UI
 - Keep layout responsive: `WrapPanel`, no fixed `Width`/`Height` boxes. Resizable windows already
   provide scrollers. A vertical `WrapPanel` answers an over-tall child by starting a second column,
   so a fixed vertical sequence wants a `StackPanel`.
 - User-facing strings live in `Configuration/language.ini`, read via `TazLang.Get(key, fallback)`.
+  Keys should have a meaningful prefix (e.g. `options_video_tab_`).
 
 #### Options tabs
 - Build from `Option.*` / `OptionsUi.*` fragments in `Options/Tabs`; don't hand-build widgets.
@@ -313,4 +320,3 @@ The scripting API documentation is automatically generated during build via the 
 
 - All json serialize and deserialize need to have context generated for them.
 - Don't put a licsense at the top of files you create.
-- Keep code comments to 1 liners as much as possible.

@@ -1,5 +1,4 @@
 using ClassicUO.Common;
-using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Hotkeys;

@@ -40,7 +40,8 @@ public sealed class TriggerCatalog
             new PlayerPoisonedTriggerDefinition(),
             new EarthquakeTriggerDefinition(),
             new ChatMessageTriggerDefinition(),
-            new ObjectPropertiesTriggerDefinition()
+            new ObjectPropertiesTriggerDefinition(),
+            new PlayerAttributeTriggerDefinition()
         ];
 
         _byId = All.ToFrozenDictionary(definition => definition.Id, StringComparer.OrdinalIgnoreCase);

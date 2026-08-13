@@ -14,7 +14,13 @@ namespace ClassicUO.UnitTests.Game.Logic
     /// </summary>
     public class LogicEvaluatorTests
     {
-        private sealed record Subject(string Name, string Data, uint Serial, bool Cursed = false);
+        private enum Mood
+        {
+            Calm,
+            VeryAngry
+        }
+
+        private sealed record Subject(string Name, string Data, uint Serial, bool Cursed = false, Mood Mood = Mood.Calm);
 
         private static readonly LogicSchema<Subject> _schema = new(
             [
@@ -27,6 +33,10 @@ namespace ClassicUO.UnitTests.Game.Logic
                 (
                     new LogicField { Key = "cursed", DisplayName = "Cursed", Kind = LogicValueKind.Boolean },
                     static (Subject subject) => (object)subject.Cursed
+                ),
+                (
+                    new LogicField { Key = "mood", DisplayName = "Mood", Kind = LogicValueKind.Enum, EnumType = typeof(Mood) },
+                    static (Subject subject) => (object)subject.Mood
                 )
             ]
         );
@@ -203,6 +213,36 @@ namespace ClassicUO.UnitTests.Game.Logic
         {
             Match(Condition("cursed", LogicOperator.Is, "yes")).Should().BeFalse();
             Match(Condition("cursed", LogicOperator.IsNot, "yes")).Should().BeFalse();
+        }
+
+        #endregion
+
+        #region Enums
+
+        /// <summary>
+        /// Stored and compared as the member's declared name - what the editor's dropdown reports
+        /// back, and what <see cref="object.ToString" /> gives the resolved field value.
+        /// </summary>
+        [Fact]
+        public void EnumFieldsCompareAgainstTheDeclaredMemberName()
+        {
+            var angry = _sample with { Mood = Mood.VeryAngry };
+
+            Match(Condition("mood", LogicOperator.Is, "VeryAngry"), angry).Should().BeTrue();
+            Match(Condition("mood", LogicOperator.Is, "VeryAngry")).Should().BeFalse();
+            Match(Condition("mood", LogicOperator.IsNot, "VeryAngry")).Should().BeTrue();
+
+            // Not case sensitive by default, same as any other text-shaped comparison.
+            Match(Condition("mood", LogicOperator.Is, "veryangry"), angry).Should().BeTrue();
+        }
+
+        [Fact]
+        public void EnumFieldsSupportTheListOperators()
+        {
+            var angry = _sample with { Mood = Mood.VeryAngry };
+
+            Match(ListCondition("mood", LogicOperator.IsAnyOf, "Calm", "VeryAngry"), angry).Should().BeTrue();
+            Match(ListCondition("mood", LogicOperator.IsNoneOf, "Calm", "VeryAngry"), angry).Should().BeFalse();
         }
 
         #endregion
@@ -431,6 +471,16 @@ namespace ClassicUO.UnitTests.Game.Logic
         public void FlagFieldsAreOfferedOnlyEqualityAndItsNegation()
         {
             LogicOperators.For(LogicValueKind.Boolean).Should().BeEquivalentTo([LogicOperator.Is, LogicOperator.IsNot]);
+        }
+
+        /// <summary>A closed set of named values has nothing for the substring operators to search,
+        /// and no ordering for the comparison ones - only equality and the list forms of it.</summary>
+        [Fact]
+        public void EnumFieldsAreOfferedOnlyEqualityAndListMembership()
+        {
+            LogicOperators.For(LogicValueKind.Enum).Should().BeEquivalentTo(
+                [LogicOperator.Is, LogicOperator.IsNot, LogicOperator.IsAnyOf, LogicOperator.IsNoneOf]
+            );
         }
 
         /// <summary>Changing a row's field must leave it with an operator that field accepts.</summary>

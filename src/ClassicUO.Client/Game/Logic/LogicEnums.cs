@@ -20,7 +20,11 @@ public enum LogicValueKind
     Decimal,
 
     /// <summary>True or false.</summary>
-    Boolean
+    Boolean,
+
+    /// <summary>One of a fixed set of named values. Offered as a dropdown rather than typed, since a
+    /// hand-typed value could never match a real member.</summary>
+    Enum
 }
 
 /// <summary>

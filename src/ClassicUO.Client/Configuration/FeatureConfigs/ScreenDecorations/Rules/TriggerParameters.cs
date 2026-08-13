@@ -19,6 +19,7 @@ namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
 [JsonDerivedType(typeof(ChatMessageParameters), ChatMessageParameters.Discriminator)]
 [JsonDerivedType(typeof(ObjectPropertiesParameters), ObjectPropertiesParameters.Discriminator)]
+[JsonDerivedType(typeof(PlayerAttributeParameters), PlayerAttributeParameters.Discriminator)]
 public abstract class TriggerParameters
 {
     /// <summary>Copy, so editing a rule's parameters cannot write into another rule's.</summary>

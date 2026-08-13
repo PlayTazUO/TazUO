@@ -33,8 +33,10 @@ internal static class LogicConditionRow
 {
     #region Private members
 
-    private const int FIELD_WIDTH = 150;
-    private const int OPERATOR_WIDTH = 150;
+    private const int FIELD_MIN_WIDTH = 150;
+    private const int FIELD_MAX_WIDTH = 340;
+    private const int OPERATOR_MIN_WIDTH = 150;
+    private const int OPERATOR_MAX_WIDTH = 220;
 
     /// <summary>Multiplication sign, U+1F5D9. Present in Noto Sans Symbols 2.</summary>
     private const string REMOVE_GLYPH = "🗙";
@@ -79,8 +81,8 @@ internal static class LogicConditionRow
         stack.Widgets.Add(
             Row(
                 FieldCombo(condition, context),
-                OperatorCombo(condition, context, kind),
-                LogicValueEditor.Build(condition, context, kind),
+                OperatorCombo(condition, context, kind, field != null),
+                LogicValueEditor.Build(condition, context, kind, field?.EnumType),
                 RemoveButton(context, remove)
             )
         );
@@ -104,10 +106,17 @@ internal static class LogicConditionRow
     #region Private methods
 
     /// <summary>
-    /// One line of controls, centred on the line's own axis. <see cref="WrapPanel.Aligned"/> is what
-    /// makes the centring take effect: unaligned, the panel arranges each child into a rectangle of
-    /// exactly its own height, leaving vertical alignment nothing to resolve against.
+    /// One line of controls, top-aligned to the line's own axis. <see cref="WrapPanel.Aligned"/> is
+    /// what makes any alignment take effect: unaligned, the panel arranges each child into a
+    /// rectangle of exactly its own height, leaving vertical alignment nothing to resolve against.
+    /// <para>
+    /// Top rather than centred: the value cell can be a whole stack of list-entry rows once the
+    /// operator takes a list, and centring a short combo against that tall stack floats it away from
+    /// the field/operator combos beside it instead of sitting level with the first entry.
+    /// </para>
     /// </summary>
+    /// <param name="content">The row's controls, left to right.</param>
+    /// <returns>The row.</returns>
     private static WrapPanel Row(params Widget[] content)
     {
         WrapPanel row = OptionTabCommons.StyledHorizontalWrapPanel(content);
@@ -115,7 +124,7 @@ internal static class LogicConditionRow
         row.HorizontalSpacing = CONTROL_SPACING;
 
         foreach (Widget widget in row.Widgets)
-            widget.VerticalAlignment = VerticalAlignment.Center;
+            widget.VerticalAlignment = VerticalAlignment.Top;
 
         return row;
     }
@@ -128,6 +137,10 @@ internal static class LogicConditionRow
     private static LogicField? Resolve(LogicCondition condition, ILogicSchema schema) =>
         schema.Fields.FirstOrDefault(entry => string.Equals(entry.Key, condition.Field, StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>The field-name dropdown, offering every field the schema declares.</summary>
+    /// <param name="condition">The condition being edited, written to in place.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <returns>The combo.</returns>
     private static Widget FieldCombo(LogicCondition condition, LogicEditorContext context)
     {
         IReadOnlyList<LogicField> fields = context.Schema.Fields;
@@ -136,7 +149,8 @@ internal static class LogicConditionRow
         ContainsLevenshteinComboBox combo = Combo(
             selected?.DisplayName,
             fields.Select(field => field.DisplayName),
-            FIELD_WIDTH,
+            FIELD_MIN_WIDTH,
+            FIELD_MAX_WIDTH,
             TazLang.Get("logic_hint_field", "Field name"),
             context,
             chosen =>
@@ -153,23 +167,44 @@ internal static class LogicConditionRow
                 // rather than patched.
                 condition.Operator = LogicOperators.Coerce(condition.Operator, picked.Kind);
 
+                // The operand was typed against the old field's kind - a boolean's "true", an
+                // enum's member name, a number - and means nothing against the new one. Carrying it
+                // over reads as leftover garbage in the new widget rather than an unset value.
+                condition.Value = string.Empty;
+                condition.Values = [];
+
                 context.Rebuild();
             }
         );
 
         combo.TooltipSelector = name => fields.FirstOrDefault(field => field.DisplayName == name)?.Description ?? name;
 
+        // The closed combo shows only the selected name, which the row-tooltip above never covers -
+        // this is the backstop for a name still clipped at FIELD_MAX_WIDTH.
+        combo.Tooltip = selected?.Description ?? selected?.DisplayName ?? string.Empty;
+
         return combo;
     }
 
-    private static Widget OperatorCombo(LogicCondition condition, LogicEditorContext context, LogicValueKind kind)
+    /// <summary>The comparison dropdown, offering only what <see cref="LogicOperators.For" /> allows
+    /// for the current kind.</summary>
+    /// <param name="condition">The condition being edited, written to in place.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <param name="kind">The row's current field kind, or Text before one is chosen.</param>
+    /// <param name="hasField">Whether the row already names a field. Before one is chosen, what
+    /// <see cref="LogicOperators.For" /> offers is only the default kind's operators, not this
+    /// row's - so the combo is disabled rather than left open on an offer that does not mean
+    /// anything yet.</param>
+    /// <returns>The combo.</returns>
+    private static Widget OperatorCombo(LogicCondition condition, LogicEditorContext context, LogicValueKind kind, bool hasField)
     {
         IReadOnlyList<LogicOperator> operators = LogicOperators.For(kind);
 
-        return Combo(
+        ContainsLevenshteinComboBox combo = Combo(
             LogicText.Name(condition.Operator, kind),
             operators.Select(op => LogicText.Name(op, kind)),
-            OPERATOR_WIDTH,
+            OPERATOR_MIN_WIDTH,
+            OPERATOR_MAX_WIDTH,
             TazLang.Get("logic_hint_operator", "Comparison"),
             context,
             chosen =>
@@ -186,15 +221,25 @@ internal static class LogicConditionRow
                 context.Rebuild();
             }
         );
+
+        combo.Enabled = !context.ReadOnly && hasField;
+
+        return combo;
     }
 
+    /// <summary>One checkbox-and-caption per switch <see cref="LogicText.ApplicableFlags" /> says
+    /// applies to the current operator/kind pairing.</summary>
+    /// <param name="condition">The condition being edited, written to in place.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <param name="kind">The row's current field kind.</param>
+    /// <returns>The switches, in declaration order.</returns>
     private static IEnumerable<Widget> FlagChecks(LogicCondition condition, LogicEditorContext context, LogicValueKind kind)
     {
         foreach (LogicConditionFlags flag in LogicText.ApplicableFlags(condition.Operator, kind))
         {
             LogicConditionFlags captured = flag;
 
-            MyraCheckButton check = MyraCheckButton.CreateWithCallback(
+            var check = MyraCheckButton.CreateWithCallback(
                 condition.Flags.HasFlag(captured),
                 on =>
                 {
@@ -217,6 +262,10 @@ internal static class LogicConditionRow
         }
     }
 
+    /// <summary>Detaches this condition from its parent group.</summary>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <param name="remove">Detaches this condition from its group.</param>
+    /// <returns>The button.</returns>
     private static Widget RemoveButton(LogicEditorContext context, Action remove) =>
         new IconButton(
             REMOVE_GLYPH,
@@ -228,10 +277,24 @@ internal static class LogicConditionRow
             Enabled = !context.ReadOnly
         };
 
+    /// <summary>A type-to-filter dropdown shared by the field and operator combos.</summary>
+    /// <param name="selected">The item to preselect, or null for none.</param>
+    /// <param name="items">The offered items, in display order.</param>
+    /// <param name="minWidth">Floor on the combo's width, so a short selection does not shrink the
+    /// row.</param>
+    /// <param name="maxWidth">Ceiling on the combo's width. Below it the combo auto-sizes to its
+    /// content - Myra already measures the popup against every item - so this is what keeps a
+    /// schema with a long display name from stretching the row rather than what sizes the common
+    /// case.</param>
+    /// <param name="hint">Placeholder shown while nothing is selected.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <param name="onChosen">Called with the newly selected item's text.</param>
+    /// <returns>The combo.</returns>
     private static ContainsLevenshteinComboBox Combo(
         string? selected,
         IEnumerable<string> items,
-        int width,
+        int minWidth,
+        int maxWidth,
         string hint,
         LogicEditorContext context,
         Action<string> onChosen
@@ -250,10 +313,10 @@ internal static class LogicConditionRow
             addSelectedItemIfMissing: false
         )
         {
-            Width = width,
+            MinWidth = minWidth,
+            MaxWidth = maxWidth,
             PlaceholderText = hint,
-            Enabled = !context.ReadOnly,
-            VerticalAlignment = VerticalAlignment.Center
+            Enabled = !context.ReadOnly
         };
 
         MyraStyle.ApplySearchComboBoxPopupBorder(combo);

@@ -1,9 +1,15 @@
 #nullable enable
 
 using System;
+using System.Linq;
+using System.Text.RegularExpressions;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Logic;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
+using Microsoft.Xna.Framework;
+using Myra.Graphics2D;
+using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Logic;
@@ -22,6 +28,15 @@ internal static class LogicValueEditor
 
     private const int VALUE_WIDTH = 190;
     private const int LIST_ENTRY_WIDTH = 150;
+    private const int BOOLEAN_WIDTH = 110;
+
+    /// <summary>Ceiling for a value-editor combo (enum scalar/list-entry dropdowns). Below it the
+    /// combo auto-sizes to its content, same as the field/operator combos - this is only what stops
+    /// a schema with a long enum member name from stretching the row.</summary>
+    private const int VALUE_MAX_WIDTH = 320;
+
+    /// <inheritdoc cref="VALUE_MAX_WIDTH" />
+    private const int LIST_ENTRY_MAX_WIDTH = 260;
 
     /// <summary>Multiplication sign, U+1F5D9. Present in Noto Sans Symbols 2.</summary>
     private const string REMOVE_GLYPH = "🗙";
@@ -33,6 +48,10 @@ internal static class LogicValueEditor
     /// list operators regardless of locale.</summary>
     private const char DECIMAL_SEPARATOR = '.';
 
+    /// <summary>Border for a regex box whose pattern will not compile. One shared brush, not one per
+    /// box, since it never changes.</summary>
+    private static readonly IBrush _invalidRegexBorder = new SolidBrush(Color.Red);
+
     #endregion
 
     #region Internal methods
@@ -43,15 +62,18 @@ internal static class LogicValueEditor
     /// <param name="condition">The condition being edited, written to in place.</param>
     /// <param name="context">The builder's shared state and change callbacks.</param>
     /// <param name="kind">The chosen field's value kind.</param>
+    /// <param name="enumType">The backing enum, for <see cref="LogicValueKind.Enum" />; ignored
+    /// otherwise.</param>
     /// <returns>The editor.</returns>
-    internal static Widget Build(LogicCondition condition, LogicEditorContext context, LogicValueKind kind)
+    internal static Widget Build(LogicCondition condition, LogicEditorContext context, LogicValueKind kind, Type? enumType = null)
     {
         if (LogicOperators.TakesList(condition.Operator))
-            return BuildList(condition, context, kind);
+            return BuildList(condition, context, kind, enumType);
 
         return kind switch
         {
             LogicValueKind.Boolean => BuildBoolean(condition, context),
+            LogicValueKind.Enum when enumType != null => BuildEnumScalar(condition, context, enumType),
             _ => BuildScalar(condition, context, kind)
         };
     }
@@ -82,6 +104,7 @@ internal static class LogicValueEditor
             LogicValueKind.Integer =>
                 TazLang.Get("logic_value_integer_tooltip", "A whole number. Hexadecimal is accepted with an 0x prefix."),
             LogicValueKind.Decimal => TazLang.Get("logic_value_decimal_tooltip", "A number."),
+            LogicValueKind.Enum => TazLang.Get("logic_value_enum_tooltip", "One of this field's fixed values."),
             _ => TazLang.Get("logic_value_text_tooltip", "The text to compare against.")
         };
     }
@@ -90,9 +113,14 @@ internal static class LogicValueEditor
 
     #region Private methods
 
-    private static Widget BuildScalar(LogicCondition condition, LogicEditorContext context, LogicValueKind kind)
-    {
-        return TextEntry(
+    /// <summary>A single typed or dropdown box, for every kind that is not a flag or a closed set of
+    /// named values.</summary>
+    /// <param name="condition">The condition being edited, written to in place.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <param name="kind">The field's value kind.</param>
+    /// <returns>The editor.</returns>
+    private static Widget BuildScalar(LogicCondition condition, LogicEditorContext context, LogicValueKind kind) =>
+        TextEntry(
             condition.Value,
             VALUE_WIDTH,
             kind,
@@ -102,84 +130,202 @@ internal static class LogicValueEditor
             {
                 condition.Value = text;
                 context.Changed();
-            }
+            },
+            validateRegex: condition.Operator == LogicOperator.MatchesRegex
         );
+
+    /// <summary>
+    /// A flag's operand is one of two values, so it is a small closed dropdown rather than a box to
+    /// type <c>true</c> into. Stored as the invariant lowercase words the model parses back.
+    /// </summary>
+    /// <param name="condition">The condition being edited, written to in place.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <returns>The editor.</returns>
+    private static Widget BuildBoolean(LogicCondition condition, LogicEditorContext context)
+    {
+        string trueLabel = TazLang.Get("logic_boolean_true", "True");
+        string falseLabel = TazLang.Get("logic_boolean_false", "False");
+
+        bool current = bool.TryParse(condition.Value, out bool parsed) && parsed;
+
+        // A brand new boolean condition has an empty operand, which would evaluate as unconfigured
+        // while the dropdown plainly shows a choice already made. Writing it out makes the two agree.
+        if (string.IsNullOrEmpty(condition.Value))
+            condition.Value = bool.FalseString.ToLowerInvariant();
+
+        var combo = new ContainsLevenshteinComboBox(
+            current ? trueLabel : falseLabel,
+            [falseLabel, trueLabel],
+            chosen =>
+            {
+                if (chosen == null)
+                    return;
+
+                condition.Value = chosen == trueLabel ? bool.TrueString.ToLowerInvariant() : bool.FalseString.ToLowerInvariant();
+                context.Changed();
+            },
+            addSelectedItemIfMissing: false
+        )
+        {
+            MinWidth = BOOLEAN_WIDTH,
+            Enabled = !context.ReadOnly
+        };
+
+        MyraStyle.ApplySearchComboBoxPopupBorder(combo);
+
+        return combo;
     }
 
     /// <summary>
-    /// A flag's operand is one of two values, so it is a check box rather than a box to type
-    /// <c>true</c> into. Stored as the invariant lowercase words the model parses back.
+    /// A closed set of named values is a dropdown rather than a box to type into - free text could
+    /// never match a real member, and typos would fail silently rather than refuse to be entered.
     /// </summary>
-    private static Widget BuildBoolean(LogicCondition condition, LogicEditorContext context)
-    {
-        bool current = bool.TryParse(condition.Value, out bool parsed) && parsed;
-
-        MyraCheckButton check = MyraCheckButton.CreateWithCallback(
-            current,
-            on =>
+    /// <param name="condition">The condition being edited, written to in place.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <param name="enumType">The field's backing enum.</param>
+    /// <returns>The editor.</returns>
+    private static Widget BuildEnumScalar(LogicCondition condition, LogicEditorContext context, Type enumType) =>
+        EnumCombo(
+            condition.Value,
+            VALUE_WIDTH,
+            VALUE_MAX_WIDTH,
+            enumType,
+            context,
+            picked =>
             {
-                condition.Value = on ? bool.TrueString.ToLowerInvariant() : bool.FalseString.ToLowerInvariant();
+                condition.Value = picked;
                 context.Changed();
             }
         );
 
-        check.Enabled = !context.ReadOnly;
+    /// <summary>
+    /// A dropdown of an enum's members, shown humanized but reporting back the member's declared
+    /// name - what <see cref="LogicEvaluator{TSubject}" /> compares against, since the resolved field
+    /// value is read through <see cref="object.ToString" /> too.
+    /// </summary>
+    /// <param name="current">The condition's stored operand - a member's declared name, or empty for
+    /// none chosen yet.</param>
+    /// <param name="minWidth">Floor on the combo's width.</param>
+    /// <param name="maxWidth">Ceiling on the combo's width; below it the combo auto-sizes to its
+    /// content.</param>
+    /// <param name="enumType">The enum <paramref name="current" /> is a member name of.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <param name="onPicked">Called with the newly chosen member's declared name.</param>
+    /// <returns>The combo.</returns>
+    private static ContainsLevenshteinComboBox EnumCombo(
+        string current,
+        int minWidth,
+        int maxWidth,
+        Type enumType,
+        LogicEditorContext context,
+        Action<string> onPicked
+    )
+    {
+        string[] names = Enum.GetNames(enumType);
+        string? selected = names.FirstOrDefault(name => string.Equals(name, current, StringComparison.OrdinalIgnoreCase));
+        string selectedDisplay = selected == null ? string.Empty : LogicText.EnumMemberName(selected);
 
-        // A brand new boolean condition has an empty operand, which would evaluate as unconfigured
-        // while the box plainly shows "unchecked". Writing it out makes the two agree from the start.
-        if (string.IsNullOrEmpty(condition.Value))
-            condition.Value = bool.FalseString.ToLowerInvariant();
-
-        return OptionTabCommons.StyledStackPanel(
-            Orientation.Horizontal,
-            check,
-            new MyraLabel(TazLang.Get("logic_boolean_true", "True"), MyraLabel.TextStyle.P)
+        var combo = new ContainsLevenshteinComboBox(
+            selectedDisplay,
+            names.Select(LogicText.EnumMemberName),
+            chosen =>
             {
-                VerticalAlignment = VerticalAlignment.Center
-            }
-        );
+                string? picked = chosen == null
+                    ? null
+                    : names.FirstOrDefault(name => LogicText.EnumMemberName(name) == chosen);
+
+                if (picked != null)
+                    onPicked(picked);
+            },
+            addSelectedItemIfMissing: false
+        )
+        {
+            MinWidth = minWidth,
+            MaxWidth = maxWidth,
+            PlaceholderText = Hint(),
+            Enabled = !context.ReadOnly,
+            // The closed combo shows only the selected name, clipped at maxWidth for a long one -
+            // this is the hover backstop, same as the field combo's.
+            Tooltip = selectedDisplay
+        };
+
+        MyraStyle.ApplySearchComboBoxPopupBorder(combo);
+
+        return combo;
     }
 
     /// <summary>
-    /// One row per value, with its own remove button, and an add button under them. The alternative
+    /// One row per value, with its own remove button, and an add button above them. The alternative
     /// - one box holding a comma-separated list - makes the separator part of the syntax, which then
     /// has to be escaped in any value that contains one.
     /// </summary>
-    private static Widget BuildList(LogicCondition condition, LogicEditorContext context, LogicValueKind kind)
+    /// <param name="condition">The condition being edited, written to in place.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <param name="kind">The field's value kind - decides each row's editor.</param>
+    /// <param name="enumType">The field's backing enum, for <see cref="LogicValueKind.Enum" />;
+    /// ignored otherwise.</param>
+    /// <returns>The editor.</returns>
+    private static Widget BuildList(LogicCondition condition, LogicEditorContext context, LogicValueKind kind, Type? enumType)
     {
         var panel = new VerticalStackPanel
         {
             Spacing = MyraStyle.STANDARD_SPACING,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Top
         };
 
-        for (int i = 0; i < condition.Values.Count; i++)
-            panel.Widgets.Add(ListEntryRow(condition, context, kind, i));
-
+        // First, not last: pinned here it stays level with the field/operator combos beside it -
+        // added last, it would jump down the moment the first row pushed in above it.
         panel.Widgets.Add(AddEntryButton(condition, context));
+
+        for (int i = 0; i < condition.Values.Count; i++)
+            panel.Widgets.Add(ListEntryRow(condition, context, kind, enumType, i));
 
         return panel;
     }
 
-    private static Widget ListEntryRow(LogicCondition condition, LogicEditorContext context, LogicValueKind kind, int index)
+    /// <summary>One value's editor and its own remove button, side by side.</summary>
+    /// <param name="condition">The condition being edited, written to in place.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <param name="kind">The field's value kind - decides the entry's editor.</param>
+    /// <param name="enumType">The field's backing enum, for <see cref="LogicValueKind.Enum" />;
+    /// ignored otherwise.</param>
+    /// <param name="index">This row's position in <see cref="LogicCondition.Values" />.</param>
+    /// <returns>The row.</returns>
+    private static Widget ListEntryRow(LogicCondition condition, LogicEditorContext context, LogicValueKind kind, Type? enumType, int index)
     {
-        Widget entry = TextEntry(
-            condition.Values[index],
-            LIST_ENTRY_WIDTH,
-            kind,
-            Tooltip(condition.Operator, kind),
-            context,
-            text =>
-            {
-                // Re-checked rather than captured: a removal above this row shifts it down, and the
-                // handler outlives the rebuild that would have replaced it.
-                if (index < condition.Values.Count)
+        // Re-checked rather than captured in the callback: a removal above this row shifts it down,
+        // and the handler outlives the rebuild that would have replaced it.
+        Widget entry = kind == LogicValueKind.Enum && enumType != null
+            ? EnumCombo(
+                condition.Values[index],
+                LIST_ENTRY_WIDTH,
+                LIST_ENTRY_MAX_WIDTH,
+                enumType,
+                context,
+                picked =>
                 {
-                    condition.Values[index] = text;
-                    context.Changed();
+                    if (index < condition.Values.Count)
+                    {
+                        condition.Values[index] = picked;
+                        context.Changed();
+                    }
                 }
-            }
-        );
+            )
+            : TextEntry(
+                condition.Values[index],
+                LIST_ENTRY_WIDTH,
+                kind,
+                Tooltip(condition.Operator, kind),
+                context,
+                text =>
+                {
+                    if (index < condition.Values.Count)
+                    {
+                        condition.Values[index] = text;
+                        context.Changed();
+                    }
+                }
+            );
 
         var remove = new IconButton(
             REMOVE_GLYPH,
@@ -202,6 +348,10 @@ internal static class LogicValueEditor
         return OptionTabCommons.StyledStackPanel(Orientation.Horizontal, entry, remove);
     }
 
+    /// <summary>Appends a blank entry to the list.</summary>
+    /// <param name="condition">The condition being edited, written to in place.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <returns>The button.</returns>
     private static Widget AddEntryButton(LogicCondition condition, LogicEditorContext context) =>
         new MyraButton(
             TazLang.Get("logic_addvalue", "Add value"),
@@ -223,13 +373,25 @@ internal static class LogicValueEditor
     /// A box for one operand. Numeric kinds get an input filter rather than validation after the
     /// fact, so a field that cannot hold letters never shows any.
     /// </summary>
+    /// <param name="value">The operand's current text.</param>
+    /// <param name="width">Fixed width for the box - unlike the combos, there is no auto-measured
+    /// content to size it against.</param>
+    /// <param name="kind">The field's value kind, for its input filter and tooltip.</param>
+    /// <param name="tooltip">What the box will accept, shown while the pattern is valid or the kind
+    /// is not regex-checked.</param>
+    /// <param name="context">The builder's shared state and change callbacks.</param>
+    /// <param name="onChanged">Called with the box's text on every keystroke.</param>
+    /// <param name="validateRegex">Whether the operand is a regular expression the evaluator will
+    /// compile, and so should be flagged live if it will not.</param>
+    /// <returns>The box.</returns>
     private static Widget TextEntry(
         string value,
         int width,
         LogicValueKind kind,
         string tooltip,
         LogicEditorContext context,
-        Action<string> onChanged
+        Action<string> onChanged,
+        bool validateRegex = false
     )
     {
         var input = new MyraInputBox
@@ -248,7 +410,72 @@ internal static class LogicValueEditor
         // before a Save button was clicked.
         input.TextChanged += (_, _) => onChanged(input.Text ?? string.Empty);
 
+        if (validateRegex)
+            ApplyRegexValidation(input, tooltip);
+
         return input;
+    }
+
+    /// <summary>
+    /// Flags a pattern the evaluator will refuse. Without this a bad regex is silent until the rule
+    /// stops matching - <see cref="LogicEvaluator{TSubject}" /> logs a warning and treats it as never
+    /// matching rather than throwing, which is right for a filter already saved, but gives an editor
+    /// nothing to show while it is still being typed.
+    /// </summary>
+    /// <param name="input">The regex operand's box, subscribed to for the rest of its life.</param>
+    /// <param name="validTooltip">What the box's tooltip reads while the pattern compiles - restored
+    /// once a pattern that did not compile is fixed.</param>
+    private static void ApplyRegexValidation(MyraInputBox input, string validTooltip)
+    {
+        // Captured once, before anything here can have touched it, so an invalid pattern can be
+        // undone exactly - not guessed back to whatever "normal" looks like.
+        IBrush defaultBorder = input.Border;
+        string invalidTooltip = TazLang.Get("logic_value_regex_invalid", "Not a valid regular expression.");
+        bool invalid = !IsValidRegex(input.Text);
+
+        // Guarded on an actual state change, not run unconditionally on every keystroke: reassigning
+        // Border while the box holds keyboard focus and mid-edit text is what left it rendering
+        // nothing at all until the row was rebuilt from scratch.
+        void Revalidate()
+        {
+            bool nowInvalid = !IsValidRegex(input.Text);
+
+            if (nowInvalid == invalid)
+                return;
+
+            invalid = nowInvalid;
+            input.Border = invalid ? _invalidRegexBorder : defaultBorder;
+            input.Tooltip = invalid ? invalidTooltip : validTooltip;
+        }
+
+        if (invalid)
+        {
+            input.Border = _invalidRegexBorder;
+            input.Tooltip = invalidTooltip;
+        }
+
+        input.TextChanged += (_, _) => Revalidate();
+    }
+
+    /// <summary>An empty pattern is an unfinished condition, not an invalid one - the evaluator's own
+    /// <c>HasOperand</c> check is what refuses to match on it, so this only judges what could compile.</summary>
+    /// <param name="pattern">The typed operand.</param>
+    /// <returns>Whether it is empty or compiles as a <see cref="Regex" />.</returns>
+    private static bool IsValidRegex(string? pattern)
+    {
+        if (string.IsNullOrEmpty(pattern))
+            return true;
+
+        try
+        {
+            _ = new Regex(pattern);
+
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
