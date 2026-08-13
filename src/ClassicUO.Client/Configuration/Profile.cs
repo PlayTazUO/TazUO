@@ -1035,7 +1035,7 @@ namespace ClassicUO.Configuration
                 ProfileManager.GlobalSettings.SingleClickIconUse = CastSpellsByOneClick;
                 ProfileManager.ServerSettings.TurnDelay = TurnDelay;
 
-                ProfileMigrationVersion = 9;
+                ProfileMigrationVersion = 10;
             }
 
             try //Cleanup old backups from previous save system
