@@ -503,9 +503,7 @@ internal sealed class ScreenOverlayManager
         MainThreadQueue.InvokeOnMainThread(
             () =>
             {
-                AssertMainThread();
-
-                // Re-synced away between the raise and this running, if it was marshalled.
+                // Re-synced away between the raise and this running if it was marshaled.
                 if (!IsCurrent(watched))
                     return;
 

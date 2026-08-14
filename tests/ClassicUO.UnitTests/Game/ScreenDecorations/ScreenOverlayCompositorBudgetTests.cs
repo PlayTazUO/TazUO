@@ -4,92 +4,93 @@ using ClassicUO.Game.ScreenDecorations.Overlays;
 using FluentAssertions;
 using Xunit;
 
-namespace ClassicUO.UnitTests.Game.ScreenDecorations
+namespace ClassicUO.UnitTests.Game.ScreenDecorations;
+
+public class ScreenOverlayCompositorBudgetTests
 {
-    public class ScreenOverlayCompositorBudgetTests
+    private static List<ScreenOverlayCompositor.ActiveOverlay> Overlays(params int[] layerCounts)
     {
-        private static List<ScreenOverlayCompositor.ActiveOverlay> Overlays(params int[] layerCounts)
+        var list = new List<ScreenOverlayCompositor.ActiveOverlay>();
+
+        foreach (int count in layerCounts)
         {
-            var list = new List<ScreenOverlayCompositor.ActiveOverlay>();
+            var overlay = new ScreenOverlayCompositor.ActiveOverlay();
 
-            foreach (int count in layerCounts)
-            {
-                var overlay = new ScreenOverlayCompositor.ActiveOverlay();
+            for (int i = 0; i < count; i++)
+                overlay.Layers.Add(default);
 
-                for (int i = 0; i < count; i++)
-                    overlay.Layers.Add(default);
-
-                list.Add(overlay);
-            }
-
-            return list;
+            list.Add(overlay);
         }
 
-        private static int[] LayerCountsOf(List<ScreenOverlayCompositor.ActiveOverlay> overlays) =>
-            overlays.Select(o => o.Layers.Count).ToArray();
+        return list;
+    }
 
-        [Fact]
-        public void KeepsEverythingWhenUnderBudget()
-        {
-            List<ScreenOverlayCompositor.ActiveOverlay> overlays = Overlays(2, 1, 3);
+    private static int[] LayerCountsOf(List<ScreenOverlayCompositor.ActiveOverlay> overlays)
+    {
+        return overlays.Select(o => o.Layers.Count).ToArray();
+    }
 
-            ScreenOverlayCompositor.ApplyBudget(overlays, 12);
+    [Fact]
+    public void KeepsEverythingWhenUnderBudget()
+    {
+        List<ScreenOverlayCompositor.ActiveOverlay> overlays = Overlays(2, 1, 3);
 
-            LayerCountsOf(overlays).Should().Equal(2, 1, 3);
-        }
+        ScreenOverlayCompositor.ApplyBudget(overlays, 12);
 
-        [Fact]
-        public void KeepsExactlyBudgetWhenItFitsPrecisely()
-        {
-            List<ScreenOverlayCompositor.ActiveOverlay> overlays = Overlays(2, 2, 2);
+        LayerCountsOf(overlays).Should().Equal(2, 1, 3);
+    }
 
-            ScreenOverlayCompositor.ApplyBudget(overlays, 6);
+    [Fact]
+    public void KeepsExactlyBudgetWhenItFitsPrecisely()
+    {
+        List<ScreenOverlayCompositor.ActiveOverlay> overlays = Overlays(2, 2, 2);
 
-            LayerCountsOf(overlays).Should().Equal(2, 2, 2);
-        }
+        ScreenOverlayCompositor.ApplyBudget(overlays, 6);
 
-        [Fact]
-        public void DropsOverflowingOverlaysWholeNotPartially()
-        {
-            List<ScreenOverlayCompositor.ActiveOverlay> overlays = Overlays(3, 3, 3);
+        LayerCountsOf(overlays).Should().Equal(2, 2, 2);
+    }
 
-            ScreenOverlayCompositor.ApplyBudget(overlays, 7);
+    [Fact]
+    public void DropsOverflowingOverlaysWholeNotPartially()
+    {
+        List<ScreenOverlayCompositor.ActiveOverlay> overlays = Overlays(3, 3, 3);
 
-            // Two overlays fit in seven layers; the third is dropped entirely rather than drawn
-            // with one of its three layers missing.
-            LayerCountsOf(overlays).Should().Equal(3, 3);
-        }
+        ScreenOverlayCompositor.ApplyBudget(overlays, 7);
 
-        [Fact]
-        public void StopsAtFirstOverlayThatDoesNotFit()
-        {
-            // The trailing single-layer overlay would fit in the leftover budget, but taking it
-            // would let a lower-priority overlay displace the higher-priority one ahead of it.
-            List<ScreenOverlayCompositor.ActiveOverlay> overlays = Overlays(2, 4, 1);
+        // Two overlays fit in seven layers; the third is dropped entirely rather than drawn
+        // with one of its three layers missing.
+        LayerCountsOf(overlays).Should().Equal(3, 3);
+    }
 
-            ScreenOverlayCompositor.ApplyBudget(overlays, 3);
+    [Fact]
+    public void StopsAtFirstOverlayThatDoesNotFit()
+    {
+        // The trailing single-layer overlay would fit in the leftover budget, but taking it
+        // would let a lower-priority overlay displace the higher-priority one ahead of it.
+        List<ScreenOverlayCompositor.ActiveOverlay> overlays = Overlays(2, 4, 1);
 
-            LayerCountsOf(overlays).Should().Equal(2);
-        }
+        ScreenOverlayCompositor.ApplyBudget(overlays, 3);
 
-        [Fact]
-        public void DropsEverythingWhenTheFirstOverlayAlreadyExceedsBudget()
-        {
-            List<ScreenOverlayCompositor.ActiveOverlay> overlays = Overlays(4, 1);
+        LayerCountsOf(overlays).Should().Equal(2);
+    }
 
-            ScreenOverlayCompositor.ApplyBudget(overlays, 3);
+    [Fact]
+    public void DropsEverythingWhenTheFirstOverlayAlreadyExceedsBudget()
+    {
+        List<ScreenOverlayCompositor.ActiveOverlay> overlays = Overlays(4, 1);
 
-            overlays.Should().BeEmpty();
-        }
+        ScreenOverlayCompositor.ApplyBudget(overlays, 3);
 
-        [Fact]
-        public void HandlesEmptyInput()
-        {
-            var overlays = new List<ScreenOverlayCompositor.ActiveOverlay>();
+        overlays.Should().BeEmpty();
+    }
 
-            ScreenOverlayCompositor.ApplyBudget(overlays, 12);
+    [Fact]
+    public void HandlesEmptyInput()
+    {
+        var overlays = new List<ScreenOverlayCompositor.ActiveOverlay>();
 
-            overlays.Should().BeEmpty();
-        }
+        ScreenOverlayCompositor.ApplyBudget(overlays, 12);
+
+        overlays.Should().BeEmpty();
     }
 }
