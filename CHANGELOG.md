@@ -35,6 +35,7 @@ All notable changes to TazUO will be recorded here.
 * Fixed a NullReferenceException in the counter bar when an item or spell graphic could not be loaded; the icon is now skipped instead of crashing the client ([bittiez](https://github.com/bittiez))
 * Fixed stuttering on UltimaLive servers: `GetBlockCrc` now reads the map/statics block with bulk reads instead of one locked seek+read syscall per byte, terrain updates no longer re-read the same map blocks from disk dozens of times per chunk (cached on stream-based files), chunk reloads triggered by streamed terrain/statics updates are now coalesced and time-throttled (rebuilt at most once per frame, spread across frames instead of all at once), and packet file writes are no longer flushed synchronously on the render thread (flushing moved to a background thread) ([bittiez](https://github.com/bittiez))
 * Fixed an `ArgumentOutOfRangeException` on UltimaLive servers when the client connected: all reads on UltimaLive's dynamically-growing map/statics files are now serialized under a single lock (previously some read paths bypassed it and could race with the background flush thread) ([bittiez](https://github.com/bittiez))
+* Fixed a 1-2 second freeze when taking a screenshot: PNG encoding and file writing now run on a background thread so the frame is no longer stalled
 
 ## 5.24.5
 
