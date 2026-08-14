@@ -1,8 +1,6 @@
 #nullable enable
 
-using ClassicUO.Game.Logic;
-
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
+namespace ClassicUO.Game.Logic;
 
 /// <summary>
 /// Implemented by trigger parameters whose matching is an expression rather than a fixed set of

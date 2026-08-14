@@ -2,6 +2,7 @@ using System.Linq;
 using System.Text.Json;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
 using ClassicUO.Game.Logic;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.ScreenDecorations.Overlays;

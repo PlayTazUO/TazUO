@@ -3,6 +3,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
 using ClassicUO.Game.Logic;
 
 namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;

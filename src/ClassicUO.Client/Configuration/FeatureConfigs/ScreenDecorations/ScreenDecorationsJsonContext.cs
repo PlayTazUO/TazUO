@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
 using ClassicUO.Configuration.Json;
 using ClassicUO.Game.Logic;
 using ClassicUO.Renderer.Effects;

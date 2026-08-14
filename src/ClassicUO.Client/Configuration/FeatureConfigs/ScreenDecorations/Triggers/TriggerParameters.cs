@@ -3,7 +3,7 @@
 using System.Text.Json.Serialization;
 using ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 
-namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
+namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
 
 /// <summary>
 /// Values for one parameterizable trigger. One subtype per definition that needs them, so a

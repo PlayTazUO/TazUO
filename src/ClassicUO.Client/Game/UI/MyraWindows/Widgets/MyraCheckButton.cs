@@ -27,15 +27,9 @@ public class MyraCheckButton : CheckButton
         Build();
     }
 
-    /// <summary>
-    ///     Gap between the box and whatever it is labelled with. Flush against its own caption
-    ///     the two read as one glyph.
-    /// </summary>
-    private const int CHECK_CONTENT_SPACING = 5;
-
     private void Build()
     {
-        CheckContentSpacing = CHECK_CONTENT_SPACING;
+        CheckContentSpacing = 0;
         Padding = new Thickness(2);
         VerticalAlignment = VerticalAlignment.Center;
     }

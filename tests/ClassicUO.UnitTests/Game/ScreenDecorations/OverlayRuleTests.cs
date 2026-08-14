@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.ScreenDecorations.Rules;
 using ClassicUO.Game.ScreenDecorations.Triggers;

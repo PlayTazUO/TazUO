@@ -92,18 +92,18 @@ public class ResizableWindow : Window, IDisposable
     ///     glyphs and one of them is a bare dash, which needs the extra size to read as a control
     ///     rather than as a hairline.
     /// </summary>
-    private int MinMaxGlyphSize => IsMinimized ? MINIMIZED_GLYPH_SIZE : RESTORED_GLYPH_SIZE;
+    private int MinMaxGlyphSize => IsMinimized ? MINIMIZE_BTN_GLYPH_SIZE : RESTORE_BTN_GLYPH_SIZE;
 
     #endregion
 
     #region Members
 
     /// <summary>Point size for the restore glyph, a hollow square.</summary>
-    private const int MINIMIZED_GLYPH_SIZE = 24;
+    private const int MINIMIZE_BTN_GLYPH_SIZE = 24;
 
     /// <summary>Point size for the minimize glyph. Larger, because it is a bare dash and reads as a
     /// hairline at the square's size.</summary>
-    private const int RESTORED_GLYPH_SIZE = 32;
+    private const int RESTORE_BTN_GLYPH_SIZE = 32;
 
     private ResizeEdges? _activeResizeEdge;
     private DragDirection _allowedDragDirections;
