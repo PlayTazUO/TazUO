@@ -25,7 +25,11 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using ClassicUO.Network.PacketHandlers;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
+using ImageSharpImage = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
 using Myra;
 using SDL3;
 using static SDL3.SDL;
@@ -1225,7 +1229,7 @@ namespace ClassicUO
             Color[] colors;
             int width, height;
 
-            // Use render target if available and in use, otherwise use back buffer
+            // GPU readback must run on the main thread; the encode is offloaded below.
             if (_useScreenRenderTarget && _screenRenderTarget != null && !_screenRenderTarget.IsDisposed)
             {
                 width = _screenRenderTarget.Width;
@@ -1246,40 +1250,14 @@ namespace ClassicUO
             for (int i = 0; i < colors.Length; i++)
                 colors[i].A = 255;
 
-            using (
-                var texture = new Texture2D(
-                    GraphicsDevice,
-                    width,
-                    height,
-                    false,
-                    SurfaceFormat.Color
-                )
-            )
-            using (FileStream fileStream = File.Create(path))
-            {
-                texture.SetData(colors);
-                texture.SaveAsPng(fileStream, texture.Width, texture.Height);
-                string message = string.Format(TazLang.Get("screenshot_stored_in0"), path);
-
-                if (
-                    ProfileManager.CurrentProfile == null
-                    || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage
-                )
-                {
-                    Log.Info(message);
-                }
-                else
-                {
-                    GameActions.Print(UO.World, message, 0x44, MessageType.System);
-                }
-            }
+            SaveScreenshotAsync(colors, width, height, path);
         }
 
         public void ClipboardScreenshot(Rectangle position, GraphicsDevice graphicDevice)
         {
             var colors = new Color[position.Width * position.Height];
 
-            // Use render target if available and in use, otherwise use back buffer
+            // GPU readback must run on the main thread; the encode is offloaded below.
             if (_useScreenRenderTarget && _screenRenderTarget != null && !_screenRenderTarget.IsDisposed)
             {
                 _screenRenderTarget.GetData(0, position, colors, 0, colors.Length);
@@ -1294,43 +1272,80 @@ namespace ClassicUO
             for (int i = 0; i < colors.Length; i++)
                 colors[i].A = 255;
 
-            using (
-                var texture = new Texture2D(
-                    GraphicsDevice,
-                    position.Width,
-                    position.Height,
-                    false,
-                    SurfaceFormat.Color
-                )
-            )
+            string screenshotsFolder = FileSystemHelper.CreateFolderIfNotExists(
+                CUOEnviroment.ExecutablePath,
+                "Data",
+                "Client",
+                "Screenshots"
+            );
+
+            string path = Path.Combine(
+                screenshotsFolder,
+                $"screenshot_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
+            );
+
+            SaveScreenshotAsync(colors, position.Width, position.Height, path);
+        }
+
+        // PNG encoding and disk I/O run on a background thread so the frame isn't stalled.
+        private void SaveScreenshotAsync(Color[] colors, int width, int height, string path)
+        {
+            _ = Task.Run(() =>
             {
-                texture.SetData(colors);
-
-                string screenshotsFolder = FileSystemHelper.CreateFolderIfNotExists(
-                    CUOEnviroment.ExecutablePath,
-                    "Data",
-                    "Client",
-                    "Screenshots"
-                );
-
-                string path = Path.Combine(
-                    screenshotsFolder,
-                    $"screenshot_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
-                );
-
-                using FileStream fileStream = File.Create(path);
-                texture.SaveAsPng(fileStream, texture.Width, texture.Height);
-                string message = string.Format(TazLang.Get("screenshot_stored_in0"), path);
-
-                if (ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage)
+                try
                 {
-                    Log.Info(message);
+                    using var img = new ImageSharpImage(width, height);
+                    if (img.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> memory))
+                    {
+                        MemoryMarshal.AsBytes(colors).CopyTo(MemoryMarshal.AsBytes(memory.Span));
+                    }
+                    else
+                    {
+                        img.ProcessPixelRows(accessor =>
+                        {
+                            for (int y = 0; y < height; y++)
+                            {
+                                Span<Rgba32> row = accessor.GetRowSpan(y);
+                                for (int x = 0; x < width; x++)
+                                {
+                                    ref Color c = ref colors[y * width + x];
+                                    row[x] = new Rgba32(c.R, c.G, c.B, c.A);
+                                }
+                            }
+                        });
+                    }
+
+                    var encoder = new PngEncoder
+                    {
+                        ColorType = PngColorType.RgbWithAlpha,
+                        CompressionLevel = PngCompressionLevel.DefaultCompression,
+                        SkipMetadata = true,
+                        FilterMethod = PngFilterMethod.None,
+                        ChunkFilter = PngChunkFilter.ExcludeAll,
+                        TransparentColorMode = PngTransparentColorMode.Clear,
+                    };
+
+                    using FileStream fileStream = File.Create(path);
+                    img.Save(fileStream, encoder);
+
+                    string message = string.Format(TazLang.Get("screenshot_stored_in0"), path);
+                    MainThreadQueue.InvokeOnMainThread(() =>
+                    {
+                        if (ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage)
+                        {
+                            Log.Info(message);
+                        }
+                        else
+                        {
+                            GameActions.Print(UO.World, message, 0x44, MessageType.System);
+                        }
+                    });
                 }
-                else
+                catch (Exception ex)
                 {
-                    GameActions.Print(UO.World, message, 0x44, MessageType.System);
+                    Log.Error($"error saving screenshot: {ex}");
                 }
-            }
+            });
         }
 
         private static void FnaLogInfo(string message)=> Log.Info(message);
