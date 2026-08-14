@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 
 namespace ClassicUO.Game.ScreenDecorations.Rules;

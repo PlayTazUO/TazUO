@@ -3,6 +3,7 @@
 using System;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 using ClassicUO.Game.ScreenDecorations.Triggers;
 using ClassicUO.Utility.Logging;
 

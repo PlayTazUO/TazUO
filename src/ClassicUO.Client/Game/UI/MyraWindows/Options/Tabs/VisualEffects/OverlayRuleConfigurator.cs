@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.Configuration;
-using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 using ClassicUO.Game.ScreenDecorations.Triggers;
@@ -22,7 +21,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs.VisualEffects;
 /// raises.
 /// <para>
 /// Works on a draft rather than on the rule itself, which is what lets cancelling leave no trace.
-/// The parameters are shown through a <see cref="PropertyGrid"/> over whatever concrete type the
+/// The parameters are shown through a <see cref="Myra.Graphics2D.UI.Properties.PropertyGrid"/> over whatever concrete type the
 /// chosen trigger declares, so a definition's knobs need no UI of their own.
 /// </para>
 /// </summary>

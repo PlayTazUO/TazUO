@@ -22,7 +22,9 @@ Runtime strength is a fixed stack of multipliers in [0,1]; every stage can only 
 final = profile (authored) × trigger.Intensity × fade envelope × global setting
 ```
 
-A trigger's own floor (e.g. `EarthquakeTrigger.MIN_INTENSITY`) is what stops the chain collapsing.
+A trigger's own floor (e.g. `EarthquakeTrigger.MIN_INTENSITY`, 0.25) is what stops the chain
+collapsing. Pulse sits outside this chain and is the one thing that can swell above the authored
+value: the shader applies `1 + PulseAmp * sin(…)`, bounded only by the final `saturate`.
 
 ### Layer effects
 
@@ -34,7 +36,7 @@ abstract LayerEffect        // Shape, Noise, Strength, Pulse — every technique
 ├── TintEffect        { Tint }
 ├── BlurEffect        { Radius, Taps }
 ├── RadialBlurEffect  { Zoom, Taps }
-└── ChromaticEffect   { Aberration, Taps }
+└── ChromaticEffect   { Aberration }        // fixed 3 taps, one per channel
 ```
 
 Fixed set of four: the shader has four techniques and config cannot describe a fifth.
@@ -85,8 +87,9 @@ ordinary user profile.
 returns one; an event carries the identical struct; the manager never branches on kind.
 
 `ITriggerDefinition` is code, fixed at startup: stable string `Id` (rules persist this, not the
-display name), `Kind` (Poll/Event), `ParameterType`, `Create(TriggerParameters?)`. Shipped
-definitions live in `Triggers/Definitions/` and are listed by `TriggerCatalog`.
+`DisplayName`), `Kind` (Poll/Event), `IsStateful`, `ParameterType`, `Create(TriggerParameters?)`,
+`CreateDefaultParameters()`. Shipped definitions live in `Triggers/Definitions/` and are listed by
+`TriggerCatalog`.
 
 Duration comes from the trigger either way: inherent (a quake sound's length), parameterized, or
 absent — a stateful trigger raises `Ended` instead.
@@ -288,54 +291,106 @@ stacking layers cannot fix anything the shape mask does wrong.
 
 Renders on GitHub and in most Markdown previews.
 
+Grouping is by fill colour, not by box: **grey** callers · **violet** `ScreenOverlayManager` ·
+**green** the rest of `Game/ScreenDecorations` · **blue** `Configuration` · **orange**
+`ClassicUO.Renderer`. Containers were dropped deliberately — nesting made every arrow stop at a
+cluster border instead of at the thing it actually calls.
+
 ```mermaid
-flowchart TB
-    subgraph CFG["Configuration — persisted"]
-        RULE["OverlayRule<br/>id · profileId · trigger · order"]
-        PROF["EffectProfile<br/>layers · fade · shake · scope"]
-        LE["LayerEffect<br/>Tint / Blur / Radial / Chromatic"]
-        SPEC["ShapeSpec · JitterSpec · NoiseSpec<br/><i>authoring mirrors</i>"]
-    end
+%%{init: {"flowchart": {"nodeSpacing": 55, "rankSpacing": 110, "curve": "basis"}}}%%
+flowchart LR
+    GS["GameScene"]
+    GC["GameController"]
+    OPTS["Options UI<br/>rules · profiles · editor"]
 
-    subgraph GAME["Game/ScreenDecorations — runtime"]
-        TRG["Trigger<br/>poll or event"]
-        SIG(["TriggerSignal<br/>intensity · duration"])
-        MGR["ScreenOverlayManager<br/><i>reconciler</i>"]
-        SCH["OverlayPassScheduler"]
-        COMP["ScreenOverlayCompositor<br/><i>slots · fades · budget</i>"]
-        SHK["ScreenShake<br/>Viewport | Window"]
-    end
+    API["ScreenOverlayManager<br/><i>public surface</i>"]
+    SCH["OverlayPassScheduler<br/><i>when a pass runs</i>"]
+    WATCH["WatchedRule set<br/><i>live wiring per rule</i>"]
+    RECON["<i>reconciler</i><br/>Resolve · cap · diff"]
 
-    subgraph RND["ClassicUO.Renderer — no UI toolkit"]
-        OP["OverlayParams<br/><i>GPU wire format</i>"]
-        FX["ScreenOverlay.fx"]
-    end
+    RULE["OverlayRule<br/>id · profileId · trigger · order"]
+    PROF["EffectProfile<br/>layers · fade · shake · scope"]
+    LE["LayerEffect<br/>Tint / Blur / Radial / Chromatic"]
+    SPEC["ShapeSpec · JitterSpec · NoiseSpec<br/><i>authoring mirrors</i>"]
+
+    TRG["Trigger<br/>poll or event"]
+    SIG(["TriggerSignal<br/>intensity · duration"])
+    SHK["ScreenShake<br/>Viewport | Window"]
+    COMP["ScreenOverlayCompositor<br/><i>slots · fades · budget</i>"]
+
+    OL["OverlayLayer<br/><i>OverlayParams + Blend</i>"]
+    EFF["ScreenOverlayEffect<br/><i>EffectParameter wrappers</i>"]
+    FX["ScreenOverlay.fx"]
+
+    GS -->|"Start · Reset · Tick<br/>DrawViewportOverlays<br/>ViewportShakeOffset"| API
+    GC -->|"ApplyWindowShake<br/>DrawFullScreenOverlays"| API
+    OPTS -->|"RulesChanged · ProfilesChanged<br/>SetPreview · ClearPreview"| API
+    OPTS -->|edits| RULE
+    OPTS -->|edits| PROF
+
+    API -->|"Tick()"| SCH
+    API -->|"SyncRules()"| WATCH
+    SCH -->|"RunPass()"| RECON
+    RULE -->|"Build()"| WATCH
+    WATCH -->|owns| TRG
+    TRG -->|"Sample / Fired"| SIG
+    SIG -->|"Raise()"| WATCH
+    WATCH -->|signals| RECON
+
+    RECON -->|"Show / Hide"| COMP
+    RECON -->|"Trauma()"| SHK
+    SHK -->|"GetOffset()"| API
+    API -->|"Draw(scope)"| COMP
 
     RULE -->|names| PROF
-    RULE -->|binds| TRG
-    PROF --> LE
-    LE --> SPEC
-    TRG -->|"Sample() / Fired"| SIG
-    SIG --> MGR
-    SCH -->|"drives passes"| MGR
-    MGR -->|"Show / Hide<br/>(capped, first-match)"| COMP
-    MGR -->|"onset only"| SHK
-    SPEC -->|"ToParams()"| OP
-    LE -->|"Bake() + Clamp()"| OP
-    COMP -->|"per layer, per frame"| FX
-    SHK -.->|"offsets blit"| FX
+    PROF -->|layers| LE
+    LE -->|owns| SPEC
+
+    COMP -.->|"BakeClamped()"| PROF
+    LE ==>|"Bake + Clamp"| OL
+    OL ==>|cached| COMP
+
+    COMP -->|"SetTechnique · Apply"| EFF
+    EFF -->|uniforms| FX
+    COMP -.->|"SceneSampler bind"| FX
 
     classDef cfg fill:#e8eef7,stroke:#5b7fa6,color:#12283d
     classDef game fill:#eaf3ea,stroke:#5f9160,color:#16301a
+    classDef mgr fill:#ece7f5,stroke:#7a5ba6,stroke-width:2px,color:#2b1c40
     classDef rnd fill:#f7eee8,stroke:#a6785b,color:#3d2612
+    classDef host fill:#f2f2f2,stroke:#888,color:#222
     class RULE,PROF,LE,SPEC cfg
-    class TRG,SIG,MGR,SCH,COMP,SHK game
-    class OP,FX rnd
+    class TRG,SIG,COMP,SHK game
+    class API,SCH,WATCH,RECON mgr
+    class OL,EFF,FX rnd
+    class GS,GC,OPTS host
 ```
 
-**Reading it:** config on top is what the user edits and what persists. The middle decides *whether*
-an effect should be running and *on what terms*. The renderer at the bottom knows nothing about
-either — it receives a flat struct of numbers and draws.
+**Reading it:** the green and violet nodes decide *whether* an effect should be running and *on what
+terms*; blue is what the user edits and what persists; orange knows nothing about either — it
+receives a flat struct of numbers and draws. Grey only drives the frame.
 
-The one arrow worth remembering is `Bake()`: everything above it is authoring, everything below is
-drawing, and clamping happens exactly at that crossing.
+Of the four violet nodes, `OverlayPassScheduler` and `WatchedRule` are their own types; the public
+surface and the reconciler are roles within `ScreenOverlayManager` itself, not separate classes. The
+split is drawn because the four have genuinely different jobs: what the host may call, when a pass
+fires, what each rule is currently saying, and what that should mean for the compositor.
+
+**Thick arrows are the bake; the dotted one into `EffectProfile` is what triggers it, and it is a
+pull.** Nothing in config pushes into the renderer. The compositor calls `BakeClamped()` when an
+overlay is *shown*, gets a list of `OverlayLayer` back, and caches it in the slot; per frame it only
+re-reads that cache. So the bake runs once per `Show`, and clamping happens at that one crossing —
+everything before it is authoring, everything after is drawing.
+
+**Baked layers reach the shader through `ScreenOverlayEffect`,** which wraps the compiled `.fx` and
+exposes each shader constant as an `EffectParameter`. Per layer, per frame, the compositor picks the
+technique from `Sampling`, pushes the layer's `OverlayParams` through those parameters, and issues
+one `Begin/Draw/End`. Layers that distort the frame need a second path: the scene render target is
+bound straight to the shader's `SceneSampler` slot, since a texture cannot travel as a uniform.
+
+`ScreenOverlayManager` is the system's only public surface. The client host never names the
+compositor or `ScreenShake` — it asks the manager to tick, for a shake-displaced rectangle, and to
+draw a scope, and the manager forwards. Nothing outside `Game/ScreenDecorations` references anything
+behind it.
+
+Shake never reaches the shader either. It displaces the blit the host performs, and the compositor
+learns of it only as the already-shaken rectangle it is handed to fill.

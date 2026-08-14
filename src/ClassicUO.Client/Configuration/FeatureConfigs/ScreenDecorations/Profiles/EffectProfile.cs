@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
@@ -113,10 +114,7 @@ public sealed class EffectProfile : ObservableSettings, IProfile
     internal void BakeClamped(List<OverlayLayer> layers)
     {
         layers.Clear();
-
-        foreach (ProfileLayer layer in Layers)
-            layers.Add(layer.Bake());
-
+        layers.AddRange(Layers.Select(layer => layer.Bake()));
         OverlayLayerStack.Finish(layers, string.IsNullOrEmpty(Name) ? nameof(EffectProfile) : Name);
     }
 

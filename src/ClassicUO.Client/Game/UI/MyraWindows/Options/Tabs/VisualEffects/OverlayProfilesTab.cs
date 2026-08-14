@@ -1,7 +1,6 @@
 #nullable enable
 
 using System.Collections.Generic;
-using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;

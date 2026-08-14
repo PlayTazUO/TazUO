@@ -7,7 +7,6 @@ using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.MyraWindows.Theme;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;

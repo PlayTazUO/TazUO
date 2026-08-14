@@ -5,6 +5,7 @@ using System.Linq;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Game.ScreenDecorations.Triggers;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
