@@ -1584,6 +1584,8 @@ namespace ClassicUO.Game.Scenes
                                 break;
                             }
                         }
+
+                        SetNumpadMovementFlags(key, true);
                     }
                 }
             }
@@ -1718,6 +1720,8 @@ namespace ClassicUO.Game.Scenes
                 }
             }
 
+            SetNumpadMovementFlags(key, false);
+
             if (
                 key == SDL.SDL_Keycode.SDLK_TAB
                 && !ProfileManager.CurrentProfile.DisableTabBtn
@@ -1763,6 +1767,41 @@ namespace ClassicUO.Game.Scenes
                         ExecuteMacro(mac);
                     }
                 }
+            }
+        }
+
+        private void SetNumpadMovementFlags(SDL.SDL_Keycode key, bool pressed)
+        {
+            switch (key)
+            {
+                case SDL.SDL_Keycode.SDLK_KP_8:
+                    _flags[0] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_2:
+                    _flags[2] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_4:
+                    _flags[1] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_6:
+                    _flags[3] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_7:
+                    _flags[0] = pressed;
+                    _flags[1] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_9:
+                    _flags[0] = pressed;
+                    _flags[3] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_1:
+                    _flags[2] = pressed;
+                    _flags[1] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_3:
+                    _flags[2] = pressed;
+                    _flags[3] = pressed;
+                    break;
             }
         }
 
