@@ -43,14 +43,13 @@ internal sealed class ScreenOverlayManager
 {
     #region Public accessors
 
-    public static ScreenOverlayManager Instance
-    {
-        get
-        {
-            field ??= new ScreenOverlayManager();
-            return field;
-        }
-    }
+    /// <summary>
+    /// The type initializer builds this, so the CLR guarantees it happens once however many threads
+    /// reach <see cref="Instance"/> first. Still deferred until something touches the class, and it
+    /// allocates nothing beyond empty collections - the noise texture and the shader are the
+    /// compositor's, and are built on the frame they are first drawn with.
+    /// </summary>
+    public static ScreenOverlayManager Instance { get; } = new();
 
     /// <summary>
     /// Extra canvas, in pixels, a viewport-scope shake needs to crop into instead of exposing a
@@ -656,9 +655,10 @@ internal sealed class ScreenOverlayManager
             // back from it.
             _previewProfileId = null;
 
-            foreach (Guid id in _showing.Keys)
-                ScreenOverlayCompositor.Instance.Hide(id);
-
+            // Dropped rather than hidden. Hiding only starts a fade, and fades advance inside the
+            // compositor's draw, which stops with the system - so the stack would sit frozen at its
+            // last envelope and reappear at that strength the moment the system came back on.
+            ScreenOverlayCompositor.Instance.Clear();
             _showing.Clear();
 
             return;

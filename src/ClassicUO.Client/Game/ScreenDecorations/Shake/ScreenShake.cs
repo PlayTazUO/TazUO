@@ -71,8 +71,19 @@ internal sealed class ScreenShake
     /// <see cref="ClassicUO.Game.ScreenDecorations.Manager.ScreenOverlayManager"/> on settings
     /// change, not read from settings here - every entry point below checks it so trauma raised
     /// while off is discarded rather than banked for an instant jolt on re-enable.
+    /// <para>
+    /// Volatile rather than lock-guarded: it gates nothing compound, so the only guarantees needed
+    /// are that a reader cannot hoist it out of a loop and that the write lands before the
+    /// accumulator clears that follow it. Taking <see cref="_sync"/> for it would put a lock on
+    /// every raise from every thread to read one bool.
+    /// </para>
+    /// <para>
+    /// Leaves one window open: a raise can pass the check here, stall, and take the lock after a
+    /// concurrent disable has already cleared, banking one shake across the toggle. Costs a single
+    /// stray jolt, and only a lock-held read would close it.
+    /// </para>
     /// </summary>
-    internal static bool Enabled = true;
+    internal static volatile bool Enabled = true;
 
     #endregion
 

@@ -56,14 +56,12 @@ internal sealed class ScreenOverlayCompositor
 {
     #region Public accessors
 
-    public static ScreenOverlayCompositor Instance
-    {
-        get
-        {
-            field ??= new ScreenOverlayCompositor();
-            return field;
-        }
-    }
+    /// <summary>
+    /// Built by the type initializer, so it is created once no matter which thread reaches
+    /// <see cref="Instance"/> first. The GPU resources are not part of it - <see cref="_noiseTexture"/>
+    /// and <see cref="_effect"/> need a device and are built on the first frame that draws.
+    /// </summary>
+    public static ScreenOverlayCompositor Instance { get; } = new();
 
     #endregion
 
@@ -172,6 +170,24 @@ internal sealed class ScreenOverlayCompositor
 
         if (_active.TryGetValue(id, out ActiveOverlay? overlay))
             overlay.Hiding = true;
+    }
+
+    /// <summary>
+    /// Drops everything on screen at once, fade skipped. For the system being switched off, where
+    /// <see cref="Draw"/> stops running: fades only advance from there, so a <see cref="Hide"/> at
+    /// that point would freeze each overlay at its current envelope instead of retiring it, and
+    /// switching back on would show that stack again before a reconcile pass could take it down.
+    /// </summary>
+    public void Clear()
+    {
+        if (!MainThreadQueue.IsMainThread)
+        {
+            DispatchClear();
+            return;
+        }
+
+        _active.Clear();
+        _drawOrder.Clear();
     }
 
     /// <summary>
@@ -341,6 +357,9 @@ internal sealed class ScreenOverlayCompositor
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void DispatchHide(Guid id) => MainThreadQueue.InvokeOnMainThread(() => Hide(id));
 
+    /// <summary>Off-thread half of <see cref="Clear" />.</summary>
+    private void DispatchClear() => MainThreadQueue.InvokeOnMainThread(Clear);
+
     /// <summary>
     /// The user's cap on simultaneous overlays, read live so a mid-session change applies at once.
     /// Used here only for the layer budget; the cap itself is applied before reaching this class.
@@ -486,6 +505,8 @@ internal sealed class ScreenOverlayCompositor
 
     private void EnsureResources(GraphicsDevice gd)
     {
+        // The noise texture and effect are built once for the entire app lifecycle.
+        // Perlin-noise generation specifically is relatively time-consuming (~20ms) so important to do only once.
         _noiseTexture ??= NoiseTextureFactory.Create(gd);
         _effect ??= new ScreenOverlayEffect(gd);
     }

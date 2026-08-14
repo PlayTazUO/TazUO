@@ -182,7 +182,10 @@ public class ScreenOverlayEffect : Effect
         Center.SetValue(p.Shape.Center);
         WobbleFreq.SetValue(p.Shape.WobbleFreq);
         WobbleAmp.SetValue(p.Shape.WobbleAmp);
-        AspectScale.SetValue(new Vector2(1f, screenSize.Y / screenSize.X));
+        // Guarded because the full-screen pass is handed the raw viewport, which is 0x0 while the
+        // window is minimized. Square is the neutral answer: nothing is visible at that size anyway,
+        // and an Inf uploaded here would still be resident on the frame the window comes back.
+        AspectScale.SetValue(new Vector2(1f, screenSize.X > 0f ? screenSize.Y / screenSize.X : 1f));
         Reach.SetValue(p.Shape.Reach);
         Feather.SetValue(p.Shape.Feather);
         EdgeBlend.SetValue(p.Shape.EdgeBlend);

@@ -94,6 +94,11 @@ internal sealed class WatchedRule : IDisposable
         if (_attached)
             return;
 
+        // Set before anything is hooked, not after: Detach() is a no-op while this is false, so a
+        // throw part-way through would leave the subscriptions below in place with nothing able to
+        // remove them again.
+        _attached = true;
+
         try
         {
             if (_trigger is IEventTrigger events)
@@ -106,7 +111,6 @@ internal sealed class WatchedRule : IDisposable
             }
 
             _trigger.Attach();
-            _attached = true;
         }
         catch (Exception e)
         {
