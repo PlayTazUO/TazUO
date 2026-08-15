@@ -56,8 +56,10 @@ public readonly record struct LogicFieldEntry<TSubject>(LogicField Field, Func<T
 {
     /// <param name="tuple">A field paired with its accessor, written as a literal.</param>
     /// <returns>The equivalent entry.</returns>
-    public static implicit operator LogicFieldEntry<TSubject>((LogicField Field, Func<TSubject, object?> Resolve) tuple) =>
-        new(tuple.Field, tuple.Resolve);
+    public static implicit operator LogicFieldEntry<TSubject>((LogicField Field, Func<TSubject, object?> Resolve) tuple)
+    {
+        return new LogicFieldEntry<TSubject>(tuple.Field, tuple.Resolve);
+    }
 }
 
 /// <summary>
@@ -77,6 +79,7 @@ public sealed class LogicSchema<TSubject> : ILogicSchema
     #region Private members
 
     private readonly Dictionary<string, Func<TSubject, object?>> _resolvers;
+    private readonly Dictionary<string, LogicField> _fieldsByKey;
 
     #endregion
 
@@ -97,11 +100,14 @@ public sealed class LogicSchema<TSubject> : ILogicSchema
         Fields = [.. entries.Select(entry => entry.Field)];
 
         _resolvers = new Dictionary<string, Func<TSubject, object?>>(entries.Length, StringComparer.OrdinalIgnoreCase);
+        _fieldsByKey = new Dictionary<string, LogicField>(entries.Length, StringComparer.OrdinalIgnoreCase);
 
         foreach ((LogicField field, Func<TSubject, object?> resolve) in entries)
         {
             if (!_resolvers.TryAdd(field.Key, resolve))
                 throw new ArgumentException($"Duplicate logic field key '{field.Key}'", nameof(fields));
+
+            _fieldsByKey.Add(field.Key, field);
         }
     }
 
@@ -115,7 +121,7 @@ public sealed class LogicSchema<TSubject> : ILogicSchema
     /// <param name="key">The persisted field key.</param>
     /// <returns>The field, or null.</returns>
     public LogicField? Find(string? key) =>
-        key == null ? null : Fields.FirstOrDefault(field => string.Equals(field.Key, key, StringComparison.OrdinalIgnoreCase));
+        key != null && _fieldsByKey.TryGetValue(key, out LogicField? field) ? field : null;
 
     /// <summary>
     /// Reads a field off a subject.

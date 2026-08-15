@@ -43,7 +43,7 @@ namespace ClassicUO.Game.Managers
             {
                 new DynamicSoundEffectInstance(1000, AudioChannels.Mono).Dispose();
             }
-            catch (Exception ex)
+            catch (NoAudioHardwareException ex)
             {
                 Log.Warn(ex.ToString());
                 _canReproduceAudio = false;
