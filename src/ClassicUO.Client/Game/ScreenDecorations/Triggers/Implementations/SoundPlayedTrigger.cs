@@ -9,7 +9,7 @@ namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 /// <summary>
 /// Listens for one sound and raises an occurrence scaled by how near it was played.
 /// <para>
-/// Headless, like <see cref="EarthquakeTrigger" />: a sound is announced when it starts and nothing
+/// Headless: a sound is announced when it starts and nothing
 /// says when it stopped, so one occurrence runs for the span its parameters declare. Re-raised rather
 /// than stacked if the sound plays again inside that span, so a repeating source holds the effect up
 /// throughout.

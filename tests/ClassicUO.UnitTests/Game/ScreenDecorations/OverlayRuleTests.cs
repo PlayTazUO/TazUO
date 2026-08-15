@@ -37,7 +37,7 @@ public class OverlayRuleTests
             Name = name,
             Order = order,
             ProfileId = BuiltInProfiles.Ids.Fog,
-            Trigger = new TriggerBinding { DefinitionId = "player_poisoned" }
+            Trigger = new TriggerBinding { DefinitionId = "player_attribute" }
         };
     }
 
@@ -110,7 +110,7 @@ public class OverlayRuleTests
         loaded.Name.Should().Be("Mine");
         loaded.Order.Should().Be(5);
         loaded.ProfileId.Should().Be(BuiltInProfiles.Ids.Fog);
-        loaded.Trigger.DefinitionId.Should().Be("player_poisoned");
+        loaded.Trigger.DefinitionId.Should().Be("player_attribute");
         loaded.IsBuiltIn.Should().BeFalse();
     }
 

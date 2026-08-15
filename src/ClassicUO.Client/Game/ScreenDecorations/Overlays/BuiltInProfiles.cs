@@ -79,8 +79,9 @@ public static class BuiltInProfiles
     /// <summary>Longer than the build. A quake subsides rather than stopping.</summary>
     private const float EARTHQUAKE_RAMP_DOWN_SECONDS = 1.1f;
 
-    /// <summary>Well under the 20 Hz default: a quake is a heavy rumble, not a rattle.</summary>
-    private const float EARTHQUAKE_FREQUENCY_HZ = 11f;
+    /// <summary>Above the 20 Hz default: a tight tremor. Slower rates read as the screen swaying
+    /// rather than as ground breaking up.</summary>
+    private const float EARTHQUAKE_FREQUENCY_HZ = 25f;
 
     private static IReadOnlyList<EffectProfile>? _all;
 

@@ -10,9 +10,8 @@ using Myra.Graphics2D.UI.Properties;
 namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 
 /// <summary>
-/// Fires on one sound being played near the player. The generic form of
-/// <see cref="EarthquakeTrigger" />: which sound, how near it has to be, and how its nearness turns
-/// into strength are all decisions for whoever wires the rule.
+/// Fires on one sound being played near the player: which sound, how near it has to be, and how its
+/// nearness turns into strength are all decisions for whoever wires the rule.
 /// <para>
 /// Lives beside the trigger that reads it rather than with the config types, because nothing else can
 /// interpret it: the fields mean whatever <see cref="SoundPlayedTrigger" /> does with them.

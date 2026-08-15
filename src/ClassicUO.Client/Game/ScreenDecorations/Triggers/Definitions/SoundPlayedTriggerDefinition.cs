@@ -8,9 +8,9 @@ using ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 namespace ClassicUO.Game.ScreenDecorations.Triggers.Definitions;
 
 /// <summary>
-/// Any sound the client plays, scaled by how near it was. The generic form of
-/// <see cref="EarthquakeTriggerDefinition" />, which stays as its own entry because a quake is what
-/// most people are looking for and finding it should not mean knowing an index.
+/// Any sound the client plays, scaled by how near it was. The shipped earthquake rule is one
+/// instance of this with the quake's index filled in, which is all a sound-specific trigger ever
+/// was.
 /// </summary>
 public sealed class SoundPlayedTriggerDefinition : ITriggerDefinition
 {

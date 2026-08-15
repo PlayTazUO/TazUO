@@ -57,22 +57,18 @@ public class SoundPlayedTriggerTests
     }
 
     /// <summary>
-    /// The defaults reproduce the earthquake trigger exactly, which is what makes this the generic
-    /// form of it rather than a second thing that behaves differently for no stated reason.
+    /// The falloff the dedicated earthquake trigger had, pinned to the numbers it produced rather
+    /// than to a second implementation of the same formula: quadratic across the client's audible
+    /// range, from a quarter strength at the far edge to full underfoot.
     /// </summary>
     [Theory]
-    [InlineData(0)]
-    [InlineData(3)]
-    [InlineData(9)]
-    [InlineData(VIEW_RANGE)]
-    public void TheDefaultsMatchTheEarthquakeTrigger(int tilesAway)
+    [InlineData(0, 1f)]
+    [InlineData(3, 0.781856f)]
+    [InlineData(9, 0.457756f)]
+    [InlineData(VIEW_RANGE, 0.252078f)]
+    public void TheDefaultsKeepTheOriginalEarthquakeFalloff(int tilesAway, float expected)
     {
-        EvaluateAt(Parameters(), tilesAway)!.Value.Intensity
-            .Should()
-            .BeApproximately(
-                EarthquakeTrigger.IntensityFor(PLAYER_X + tilesAway, PLAYER_Y, PLAYER_X, PLAYER_Y, VIEW_RANGE),
-                1e-6f
-            );
+        EvaluateAt(Parameters(), tilesAway)!.Value.Intensity.Should().BeApproximately(expected, 1e-5f);
     }
 
     [Fact]

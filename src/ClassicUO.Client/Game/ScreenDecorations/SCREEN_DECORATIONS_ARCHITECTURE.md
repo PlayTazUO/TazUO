@@ -22,7 +22,7 @@ Runtime strength is a fixed stack of multipliers in [0,1]; every stage can only 
 final = profile (authored) × trigger.Intensity × fade envelope × global setting
 ```
 
-A trigger's own floor (e.g. `EarthquakeTrigger.MIN_INTENSITY`, 0.25) is what stops the chain
+A trigger's own floor (e.g. `SoundPlayedParameters.MinIntensity`, 0.25) is what stops the chain
 collapsing. Pulse sits outside this chain and is the one thing that can swell above the authored
 value: the shader applies `1 + PulseAmp * sin(…)`, bounded only by the final `saturate`.
 
@@ -274,7 +274,7 @@ stacking layers cannot fix anything the shape mask does wrong.
 ## Deferred — noted, not built
 
 - Multiple triggers per rule (`OverlayRule.Trigger` is singular).
-- Shared trigger instances when parameters compare equal (two rules on `EarthquakeTrigger` each hook
+- Shared trigger instances when parameters compare equal (two rules on `SoundPlayedTrigger` each hook
   `EventSink.SoundPlayed`; harmless, mildly wasteful).
 - User-authored trigger *logic*. Python scripts registering triggers is the eventual cheap path.
 - CRUD on layer techniques — fixed set of four; the shader has four.

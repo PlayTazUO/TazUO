@@ -6,9 +6,8 @@ using ClassicUO.Game.Logic;
 namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 
 /// <summary>
-/// Polls one mobile's state against a rule's expression, the same way
-/// <see cref="PlayerPoisonedTrigger" /> polls one fixed flag - there is no event for "a mobile's
-/// state changed", so this is read where it lives, every reconcile pass.
+/// Polls one mobile's state against a rule's expression. There is no event for "a mobile's state
+/// changed", so this is read where it lives, every reconcile pass.
 /// <para>
 /// What the tree runs against is left to <see cref="SelectSubject" /> rather than fixed here: a
 /// concrete trigger is nothing more than a choice of subject over a shared schema and evaluator.

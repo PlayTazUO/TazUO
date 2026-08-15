@@ -961,21 +961,14 @@ public partial class GridContainer : ResizableGump
         {
             base.OnMove(x, y);
 
-            if (_gridContainerEntry != null)
-            {
-                _gridContainerEntry.SetPositionForState(X, Y, IsMinimized);
-            }
+            _gridContainerEntry?.SetPositionForState(X, Y, IsMinimized);
 
             // Backpack special handling
             if (IsPlayerBackpack)
-            {
-                ProfileManager.CurrentProfile.BackpackGridPosition = new Point(X, Y);
-            }
+                ProfileManager.CurrentProfile?.BackpackGridPosition = new Point(X, Y);
 
             if (_isCorpse)
-            {
-                ProfileManager.CurrentProfile.CoprseContainerPosition = new Point(X, Y);
-            }
+                ProfileManager.CurrentProfile?.CoprseContainerPosition = new Point(X, Y);
         }
 
         public override void Dispose()

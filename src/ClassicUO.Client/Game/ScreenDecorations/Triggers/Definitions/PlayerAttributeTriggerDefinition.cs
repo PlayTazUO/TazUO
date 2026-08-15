@@ -11,7 +11,7 @@ namespace ClassicUO.Game.ScreenDecorations.Triggers.Definitions;
 /// <summary>
 /// A rule built from an expression over the player's own state - hit points, buffs and flags,
 /// resistances, whatever <see cref="PlayerAttributeLogic.Schema" /> exposes - rather than one fixed
-/// condition. What <see cref="PlayerPoisonedTriggerDefinition" /> covers is one field of this one.
+/// condition. The shipped poison rule is one instance of this, testing a single flag.
 /// </summary>
 public sealed class PlayerAttributeTriggerDefinition : ITriggerDefinition
 {

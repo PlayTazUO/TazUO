@@ -37,8 +37,6 @@ public sealed class TriggerCatalog
         // Find, by the id it persisted.
         All =
         [
-            new PlayerPoisonedTriggerDefinition(),
-            new EarthquakeTriggerDefinition(),
             new SoundPlayedTriggerDefinition(),
             new ChatMessageTriggerDefinition(),
             new ObjectPropertiesTriggerDefinition(),
