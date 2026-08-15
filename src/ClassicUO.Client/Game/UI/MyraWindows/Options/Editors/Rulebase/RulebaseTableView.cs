@@ -97,11 +97,19 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
     ///     Rebuilds the underlying grid's structure and cell contents to match the current rules,
     ///     columns, and style options. Reuses cached cell widgets where possible.
     /// </summary>
-    /// <param name="force">When true, skips change-detection and rebuilds the grid structure unconditionally.</param>
+    /// <param name="force">
+    ///     When true, rebuilds the grid structure unconditionally <em>and</em> discards the cached
+    ///     cell widgets, so every column re-reads the rule it belongs to. Needed after a rule is
+    ///     edited in place: a cell factory captures the values it was built with, so a cached cell
+    ///     goes on showing what the rule was called when the row first rendered.
+    /// </param>
     public void Refresh(bool force = false)
     {
         _grid.Border = StyleOptions.OuterBorder.Brush;
         _grid.BorderThickness = StyleOptions.OuterBorder.Thickness;
+
+        if (force)
+            ClearCellCache();
 
         RulebaseColumn<TRule>[] visibleColumns = GetVisibleColumns().ToArray();
 
@@ -114,6 +122,21 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         int currentRow = RenderHeader(visibleColumns, activeWidgets);
         RenderRows(visibleColumns, currentRow, activeWidgets);
         RemoveInactiveWidgets(activeWidgets);
+    }
+
+    /// <summary>
+    ///     Drops every cached cell widget, so the next render rebuilds them from their factories.
+    ///     The wrapper lookup is pruned alongside it, since its keys are the cells being discarded.
+    /// </summary>
+    private void ClearCellCache()
+    {
+        foreach (Dictionary<RulebaseColumn<TRule>, Widget> cells in _cellCache.Values)
+        {
+            foreach (Widget cell in cells.Values)
+                _cellWrappers.Remove(cell);
+        }
+
+        _cellCache.Clear();
     }
 
     /// <summary>Clears and re-seeds the grid's column/row proportions when columns or header visibility change</summary>

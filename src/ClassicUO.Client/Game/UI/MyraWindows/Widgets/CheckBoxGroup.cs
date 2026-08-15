@@ -12,12 +12,20 @@ public class PropertyBinder
     public string Label { get; init; }
     public string LabelTooltip { get; init; }
 
-    public PropertyBinder(Accessor<bool> backingProperty, string label, string labelTooltip = null)
+    /// <summary>
+    /// Invoked instead of applying the change immediately whenever the user tries to flip this
+    /// checkbox, with the requested value and a commit callback. Null means the checkbox flips
+    /// unconditionally. See <see cref="GatedCheckBox"/>, which this plugs into.
+    /// </summary>
+    public Action<bool, Action<bool>> Gate { get; init; }
+
+    public PropertyBinder(Accessor<bool> backingProperty, string label, string labelTooltip = null, Action<bool, Action<bool>> gate = null)
     {
         ArgumentNullException.ThrowIfNull(backingProperty);
         BackingProperty = backingProperty;
         Label = label;
         LabelTooltip = labelTooltip;
+        Gate = gate;
     }
 }
 
@@ -36,12 +44,16 @@ public class CheckBoxGroup : Panel
         ArgumentNullException.ThrowIfNull(controlProp);
         _primaryControlProp = controlProp;
 
-        var primaryCheckBox = MyraCheckButton.CreateWithCallback(
-            _primaryControlProp.BackingProperty.Get(),
-            OnPrimaryCheckBoxChanged,
-            _primaryControlProp.Label,
-            _primaryControlProp.LabelTooltip
-        );
+        bool isChecked = _primaryControlProp.BackingProperty.Get();
+
+        MyraCheckButton primaryCheckBox = _primaryControlProp.Gate != null
+            ? new GatedCheckBox(_primaryControlProp.Label, isChecked, _primaryControlProp.Gate)
+            : new MyraCheckButton(_primaryControlProp.Label, isChecked);
+
+        if (_primaryControlProp.LabelTooltip != null)
+            primaryCheckBox.Tooltip = _primaryControlProp.LabelTooltip;
+
+        primaryCheckBox.IsCheckedChanged += (_, _) => OnPrimaryCheckBoxChanged(primaryCheckBox.IsChecked);
         primaryCheckBox.Margin = new Thickness(0, 0, 0, 8);
 
         _primaryPanel.Widgets.Add(primaryCheckBox);

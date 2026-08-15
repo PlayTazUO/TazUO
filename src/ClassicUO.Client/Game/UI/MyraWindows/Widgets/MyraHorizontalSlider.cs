@@ -1,4 +1,5 @@
 #nullable enable
+using Myra.Events;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -26,10 +27,10 @@ public class MyraHorizontalSlider : HorizontalSlider
         base.OnMouseWheel(delta);
     }
 
-    public override void OnTouchDown()
+    public override void OnTouchDown(TouchEventArgs args)
     {
         if (!Enabled)
             return;
-        base.OnTouchDown();
+        base.OnTouchDown(args);
     }
 }

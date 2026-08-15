@@ -26,6 +26,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using ClassicUO.Game.ScreenDecorations.Manager;
+using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Network.PacketHandlers;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -712,6 +714,8 @@ namespace ClassicUO
 
             Profiler.ExitContext("SceneRender");
 
+            Rectangle destRect;
+
             Profiler.EnterContext("PluginRender");
             if (useRenderTarget)
             {
@@ -722,7 +726,7 @@ namespace ClassicUO
                 GraphicsDevice.Clear(Color.Black);
 
                 var srcRect = new Rectangle(0, 0, _screenRenderTarget.Width, _screenRenderTarget.Height);
-                Rectangle destRect = srcRect;
+                destRect = srcRect;
 
                 _uoSpriteBatch.Begin();
                 if(RenderScale != 1.0f)
@@ -730,6 +734,8 @@ namespace ClassicUO
                     destRect = new Rectangle(0, 0, (int)(_screenRenderTarget.Width * RenderScale), (int)(_screenRenderTarget.Height * RenderScale));
                     _uoSpriteBatch.SetSampler(SamplerState.AnisotropicClamp);
                 }
+
+                destRect = ScreenOverlayManager.Instance.ApplyWindowShake(destRect);
                 _uoSpriteBatch.Draw(_screenRenderTarget, destRect, srcRect, new Vector3(0, 0, 1f));
                 _uoSpriteBatch.End();
             }
@@ -737,8 +743,23 @@ namespace ClassicUO
             {
                 if(_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
+
+                destRect = GraphicsDevice.Viewport.Bounds;
             }
+
             Profiler.ExitContext("PluginRender");
+
+            Profiler.EnterContext("ScreenOverlays");
+
+            // The offscreen target still holds what was just blitted to the window, so overlays that
+            // distort the frame have a readable copy of it without anything being copied. Without
+            // the target there is no second surface and those layers sit out the frame.
+            ScreenOverlaySource scene = useRenderTarget
+                ? new ScreenOverlaySource(_screenRenderTarget, _screenRenderTarget.Bounds)
+                : ScreenOverlaySource.None;
+
+            ScreenOverlayManager.DrawFullScreenOverlays(_uoSpriteBatch, destRect, scene);
+            Profiler.ExitContext("ScreenOverlays");
 
             base.Draw(gameTime);
 
@@ -1288,8 +1309,7 @@ namespace ClassicUO
         }
 
         // PNG encoding and disk I/O run on a background thread so the frame isn't stalled.
-        private void SaveScreenshotAsync(Color[] colors, int width, int height, string path)
-        {
+        private void SaveScreenshotAsync(Color[] colors, int width, int height, string path) =>
             _ = Task.Run(() =>
             {
                 try
@@ -1346,7 +1366,6 @@ namespace ClassicUO
                     Log.Error($"error saving screenshot: {ex}");
                 }
             });
-        }
 
         private static void FnaLogInfo(string message)=> Log.Info(message);
 

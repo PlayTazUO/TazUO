@@ -347,7 +347,7 @@ namespace ClassicUO.LegionScripting
             get
             {
                 if (_backpack == null)
-                    _backpack = OnMain(() => World.Player.Backpack);
+                    _backpack = BubblingOnMain(() => World?.Player?.Backpack); // Implicit operator on ApiEntity => uint - also coalesces to 0 if null
 
                 return _backpack;
             }
@@ -889,7 +889,7 @@ namespace ClassicUO.LegionScripting
 
                 if (result.HasValue)
                     return result.Value;
-                
+
                 Thread.Sleep(1);
             }
 
@@ -1475,7 +1475,7 @@ namespace ClassicUO.LegionScripting
 
             foreach (ushort id in active)
             {
-                SpellDefinition spell = SpellDefinition.FullIndexGetSpell(id);
+                var spell = SpellDefinition.FullIndexGetSpell(id);
 
                 if (spell != null && !string.IsNullOrEmpty(spell.Name) && spell != SpellDefinition.EmptySpell)
                     result.Add(spell.Name);
@@ -3174,7 +3174,7 @@ namespace ClassicUO.LegionScripting
             {
                 if (DateTime.UtcNow > expire)
                     return false;
-                
+
                 Thread.Sleep(1);
             }
 
@@ -3319,10 +3319,7 @@ namespace ClassicUO.LegionScripting
         /// API.ClearSoundLog()
         /// ```
         /// </summary>
-        public void ClearSoundLog()
-        {   
-            SoundEntries.Clear();
-        }
+        public void ClearSoundLog() => SoundEntries.Clear();
 
 
         /// <summary>
@@ -4337,7 +4334,7 @@ namespace ClassicUO.LegionScripting
         public IList<string> ListRunningScripts() => OnMain
         (() =>
             {
-                List<string> running = new List<string>();
+                var running = new List<string>();
 
                 foreach (ScriptFile script in LegionScripting.RunningScripts)
                     running.Add(script.RelativePath);
