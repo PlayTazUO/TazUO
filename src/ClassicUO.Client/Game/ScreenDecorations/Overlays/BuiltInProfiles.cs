@@ -55,13 +55,13 @@ public static class BuiltInProfiles
     #region Private members
 
     /// <summary>
-    /// Trauma the poison look asks for when it arrives. Ported from the polling trigger that used to
-    /// carry it; onset shake now belongs to the look rather than to the reason for it.
+    /// Trauma the poison look asks for when it arrives. Onset shake belongs to the look rather than
+    /// to the reason for it - a faint nudge, since poison is a state to notice rather than a hit.
     /// </summary>
-    private const float POISON_TRAUMA = 0.3f;
+    private const float POISON_TRAUMA = 0.1f;
 
     /// <summary>Trauma the struck-head look hits with on arrival.</summary>
-    private const float CONCUSSION_TRAUMA = 0.8f;
+    private const float CONCUSSION_TRAUMA = 0.65f;
 
     /// <summary>Longer than the default onset hit - a blow to the head rings for a moment.</summary>
     private const float CONCUSSION_SHAKE_SECONDS = 0.8f;
@@ -116,14 +116,15 @@ public static class BuiltInProfiles
             Ids.Concussion,
             BuiltInName(TazLang.Get("visualeffects_concussion", "Concussion")),
             new ConcussionOverlay(),
-            // An impact that rings rather than one that only jolts: falls away instead of cutting
-            // off, so the hit is still felt after the screen has stopped visibly reacting.
+            // An impact that rings rather than one that only jolts: the ramp down spans the whole
+            // duration, so it falls away instead of cutting off and the hit is still felt after the
+            // screen has stopped visibly reacting.
             new ShakeSpec
             {
                 Trauma = CONCUSSION_TRAUMA,
                 DurationSeconds = CONCUSSION_SHAKE_SECONDS,
-                Gradient = ShakeGradient.Decay,
-                Curve = ShakeCurve.EaseOut
+                RampDownSeconds = CONCUSSION_SHAKE_SECONDS,
+                Curve = ShakeCurve.EaseIn
             }
         ),
         FromPreset(Ids.TunnelVision, BuiltInName(TazLang.Get("visualeffects_tunnelvision", "Tunnel vision")), new TunnelVisionOverlay()),
@@ -179,16 +180,15 @@ public static class BuiltInProfiles
             Id = Ids.EarthquakeRumble,
             Name = BuiltInName(TazLang.Get("visualeffects_earthquakerumble", "Earthquake rumble")),
             IsBuiltIn = true,
-            // Builds, holds at strength, then subsides - which is what ground moving feels like. An
-            // impact envelope, peaking on the first frame and falling from there, reads as being hit
-            // rather than as the world shifting under you.
+            // Builds, holds at strength, then subsides - which is what ground moving feels like. The
+            // hold between the two ramps is the point: an envelope that peaks on the first frame and
+            // falls from there reads as being hit rather than as the world shifting under you.
             Shake = new ShakeSpec
             {
                 Trauma = EARTHQUAKE_TRAUMA,
                 DurationSeconds = EARTHQUAKE_SECONDS,
                 RampUpSeconds = EARTHQUAKE_RAMP_UP_SECONDS,
                 RampDownSeconds = EARTHQUAKE_RAMP_DOWN_SECONDS,
-                Gradient = ShakeGradient.Constant,
                 Curve = ShakeCurve.Smooth,
                 Frequency = EARTHQUAKE_FREQUENCY_HZ
             }

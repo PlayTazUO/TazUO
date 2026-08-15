@@ -23,9 +23,9 @@ public struct NoiseSpec
     [LocalizedDisplayName("visualeffects_noise_basescale", "Primary frequency")]
     [LocalizedDescription(
         "visualeffects_noise_basescale_tooltip",
-        "Frequency of the primary noise field. The X:Y ratio is the\n"
-        + "anisotropy - near 1:1 reads as blobs, 4:1 and beyond as\n"
-        + "streaks."
+        "Frequency of the primary noise field.\n"
+        + "The X:Y ratio is the anisotropy - near 1:1 reads as blobs,\n"
+        + "4:1 and beyond as streaks."
     )]
     public Vector2 BaseScale;
 
@@ -37,8 +37,8 @@ public struct NoiseSpec
     [LocalizedDisplayName("visualeffects_noise_basescroll", "Primary drift")]
     [LocalizedDescription(
         "visualeffects_noise_basescroll_tooltip",
-        "Texture-space velocity. On-screen speed is Scroll / Scale, so\n"
-        + "two layers with matching scroll but different scales visibly\n"
+        "Texture-space velocity. On-screen speed is Scroll / Scale,\n"
+        + "so two layers with matching scroll but different scales visibly\n"
         + "slide against each other."
     )]
     public Vector2 BaseScroll;
@@ -46,9 +46,9 @@ public struct NoiseSpec
     [LocalizedDisplayName("visualeffects_noise_basechannel", "Primary source")]
     [LocalizedDescription(
         "visualeffects_noise_basechannel_tooltip",
-        "Which packed noise channel the primary field reads. R and G\n"
-        + "are fBm (organic); B is ridged and A is Worley - both draw\n"
-        + "cell outlines and suit only cracks and shattering."
+        "Which packed noise channel the primary field reads.\n"
+        + "R and G are fBm (organic); B is ridged and A is Worley -\n"
+        + "both draw cell outlines and suit only cracks and shattering."
     )]
     public NoiseChannel BaseChannel;
 
@@ -56,8 +56,8 @@ public struct NoiseSpec
     [LocalizedDisplayName("visualeffects_noise_detailscale", "Detail frequency")]
     [LocalizedDescription(
         "visualeffects_noise_detailscale_tooltip",
-        "Frequency of the secondary field, whose lookup is warped by\n"
-        + "the primary."
+        "Frequency of the secondary field, whose lookup is warped\n"
+        + "by the primary."
     )]
     public Vector2 DetailScale;
 
@@ -80,10 +80,9 @@ public struct NoiseSpec
     [LocalizedDisplayName("visualeffects_noise_offset", "Static offset")]
     [LocalizedDescription(
         "visualeffects_noise_offset_tooltip",
-        "Static texture-space shift of both fields, unaffected by\n"
-        + "time. Used to desync a layer from another one sharing its\n"
-        + "scale and scroll, so they don't read as the same texture\n"
-        + "traced twice."
+        "Static texture-space shift of both fields, unaffected by time.\n"
+        + "Used to desync a layer from another one sharing its scale\n"
+        + "and scroll, so they don't read as the same texture traced twice."
     )]
     public Vector2 Offset;
 
@@ -94,9 +93,9 @@ public struct NoiseSpec
     [LocalizedDisplayName("visualeffects_noise_warpstrength", "Churn")]
     [LocalizedDescription(
         "visualeffects_noise_warpstrength_tooltip",
-        "How far the primary field displaces the secondary field's\n"
-        + "lookup. The gas-versus-fluid dial: high values churn and\n"
-        + "billow, near-zero lets the pattern translate coherently."
+        "How far the primary field displaces the secondary field's lookup.\n"
+        + "The gas-versus-fluid dial: high values churn and billow,\n"
+        + "near-zero lets the pattern translate coherently."
     )]
     public float WarpStrength;
 
@@ -108,9 +107,9 @@ public struct NoiseSpec
     [LocalizedDisplayName("visualeffects_noise_ridgeamount", "Ridging")]
     [LocalizedDescription(
         "visualeffects_noise_ridgeamount_tooltip",
-        "Outlines the field's median. Counterintuitive twice over:\n"
-        + "raising it makes the layer cover more, and what it draws are\n"
-        + "outlines, so on a soft field it produces bordered cells."
+        "Outlines the field's median. Counterintuitive twice over: raising\n"
+        + "it makes the layer cover more, and what it draws are outlines,\n"
+        + "so on a soft field it produces bordered cells."
     )]
     public float RidgeAmount;
 
@@ -118,8 +117,8 @@ public struct NoiseSpec
     [LocalizedDisplayName("visualeffects_noise_threshold", "Coverage cut-off")]
     [LocalizedDescription(
         "visualeffects_noise_threshold_tooltip",
-        "Cut-off applied to the field. Higher keeps less, so the layer\n"
-        + "gets sparser and its features narrower."
+        "Cut-off applied to the field. Higher keeps less, so the layer gets\n"
+        + "sparser and its features narrower."
     )]
     public float Threshold;
 
@@ -141,9 +140,10 @@ public struct NoiseSpec
     [LocalizedDisplayName("visualeffects_noise_flatfloor", "Solid fill")]
     [LocalizedDescription(
         "visualeffects_noise_flatfloor_tooltip",
-        "Solid fill blended under the noise. Anything above 0 makes the\n"
-        + "shape mask itself visible as a geometric form, so discrete\n"
-        + "streaks or wisps need exactly 0. Not a way to add weight."
+        "Solid fill blended under the noise. Anything above 0\n"
+        + "makes the shape mask itself visible as a geometric form,\n"
+        + "so discrete streaks or wisps need exactly 0.\n"
+        + "Not a way to add weight."
     )]
     public float FlatFloor;
 

@@ -26,6 +26,7 @@ public class OverlayLocalizationTests
     [
         typeof(ChatMessageParameters),
         typeof(ObjectPropertiesParameters),
+        typeof(SoundPlayedParameters),
         typeof(ShakeSpec),
         typeof(LayerEffect),
         typeof(TintEffect),
@@ -83,13 +84,20 @@ public class OverlayLocalizationTests
     /// <summary>
     /// Keys are namespaced, because the file is flat and shared by the whole client - an
     /// unqualified "duration" or "strength" is a collision waiting to happen.
+    /// <para>
+    /// The namespace names whatever owns the wording, which is not always the feature the property
+    /// lives in: a field a reusable widget labels and explains belongs to that widget, and filing it
+    /// under the first feature to use one would misdescribe it for the second.
+    /// </para>
     /// </summary>
     [Theory]
     [MemberData(nameof(DeclaredKeys))]
     public void EveryLocalizedKeyIsNamespaced(string key, string owner)
     {
         key.Should().Match(
-            candidate => candidate.StartsWith("visualeffects_") || candidate.StartsWith("overlaytrigger_"),
+            candidate => candidate.StartsWith("visualeffects_")
+                || candidate.StartsWith("overlaytrigger_")
+                || candidate.StartsWith("falloff_"),
             "{0} declares it and the language file is shared by the whole client",
             owner
         );

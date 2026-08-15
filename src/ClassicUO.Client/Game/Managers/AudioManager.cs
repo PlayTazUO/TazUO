@@ -41,12 +41,9 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                if(!System.Diagnostics.Debugger.IsAttached)
-                    new DynamicSoundEffectInstance(1000, AudioChannels.Mono).Dispose();
-                else //Fix for rider debugging not having audio apparently
-                    _canReproduceAudio = false;
+                new DynamicSoundEffectInstance(1000, AudioChannels.Mono).Dispose();
             }
-            catch (NoAudioHardwareException ex)
+            catch (Exception ex)
             {
                 Log.Warn(ex.ToString());
                 _canReproduceAudio = false;

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
@@ -14,6 +15,8 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Logic;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Myra.Graphics2D.UI;
+using Myra.Graphics2D.UI.Properties;
+using Myra.Graphics2D.UI.WrapPanel;
 using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs.VisualEffects;
@@ -42,6 +45,15 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     #region Private members
 
     private const int INPUT_WIDTH = 220;
+
+    /// <summary>Width for a numeric field standing beside a wider input, rather than filling a row
+    /// on its own. A sound index is four digits and a curve power is one; sized for either.</summary>
+    private const int NUMBER_INPUT_WIDTH = 64;
+
+    /// <summary>Fallback for a curve power that cannot be read off its parameters - the same value
+    /// <see cref="FalloffCurve.Quadratic" /> is, so an unreadable one behaves like the default curve
+    /// rather than like something arbitrary.</summary>
+    private const float DEFAULT_FALLOFF_POWER = 2f;
 
     /// <summary>Reset targets, one per definition. See <see cref="DefaultParametersFor" />.</summary>
     private static readonly Dictionary<string, TriggerParameters> _defaultParameters = [];
@@ -121,6 +133,14 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
             Buttons()
         );
 
+        MyraGrid? rich = RichParameterRows();
+
+        if (rich != null)
+        {
+            panel.Widgets.Add(OptionTabCommons.StyledHorizontalSeparator());
+            panel.Widgets.Add(rich);
+        }
+
         Widget? parameters = ParameterGrid(definition);
 
         if (parameters != null)
@@ -163,7 +183,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
         );
     }
 
-    private Widget NameInput()
+    private StackPanel NameInput()
     {
         var input = new MyraInputBox { Text = _draft.Name, Width = INPUT_WIDTH };
 
@@ -172,7 +192,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
         return Labelled(TazLang.Get("visualeffects_rulename", "Rule"), input);
     }
 
-    private Widget TriggerCombo(List<ITriggerDefinition> definitions, ITriggerDefinition? selected)
+    private StackPanel TriggerCombo(List<ITriggerDefinition> definitions, ITriggerDefinition? selected)
     {
         ContainsLevenshteinComboBox combo = SearchableCombo(
             selected?.DisplayName,
@@ -194,7 +214,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
         return Labelled(TazLang.Get("visualeffects_ruletrigger", "Trigger"), combo);
     }
 
-    private Widget ProfileCombo(List<EffectProfile> profiles)
+    private StackPanel ProfileCombo(List<EffectProfile> profiles)
     {
         EffectProfile? selected = profiles.FirstOrDefault(profile => profile.Id == _draft.ProfileId);
 
@@ -264,7 +284,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     /// </summary>
     /// <param name="definition">The chosen definition.</param>
     /// <returns>The grid, or null.</returns>
-    private Widget? ParameterGrid(ITriggerDefinition? definition)
+    private StyledPropertyGrid? ParameterGrid(ITriggerDefinition? definition)
     {
         if (definition?.ParameterType == null || _draft.Trigger.Parameters == null)
             return null;
@@ -275,6 +295,125 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
         };
 
         return grid;
+    }
+
+    /// <summary>
+    /// The parameters that need more than a grid row: a sound to browse and hear, and a curve that
+    /// has to explain itself and reveal a second field for one of its choices.
+    /// <para>
+    /// Built above the property grid rather than as editors inside it. A grid cell is one widget
+    /// beside one label in a column sized for a number, so a composite editor put in one is clipped;
+    /// and the grid discards and rebuilds every cell whenever a reset is pressed, taking whatever
+    /// state such an editor held with it.
+    /// </para>
+    /// <para>
+    /// One two-column grid rather than a row each, so every editor starts at the same x however wide
+    /// its label is - a label column that shifts per row reads as a misalignment, not a layout.
+    /// </para>
+    /// </summary>
+    /// <returns>The block, or null where the chosen trigger has no such parameter.</returns>
+    private MyraGrid? RichParameterRows()
+    {
+        TriggerParameters? parameters = _draft.Trigger.Parameters;
+
+        if (parameters == null)
+            return null;
+
+        var grid = new MyraGrid();
+
+        grid.AddColumn();
+        grid.AddColumn(new Proportion(ProportionType.Fill));
+
+        foreach (PropertyInfo property in parameters.GetType().GetProperties())
+        {
+            if (property.PropertyType == typeof(int)
+                && property.GetCustomAttribute<SoundIndexEditorAttribute>() != null)
+            {
+                // Centred: the editor is a single row of fields, so its label belongs beside them.
+                AddRichRow(grid, property, SoundEditor(parameters, property), VerticalAlignment.Center);
+                continue;
+            }
+
+            if (property.PropertyType == typeof(FalloffCurve)
+                && property.GetCustomAttribute<FalloffEditorAttribute>() is { } falloff)
+            {
+                // Top: the editor is several stacked rows, and a label centred against all of them
+                // would sit beside the explanation rather than beside the list it names.
+                AddRichRow(grid, property, FalloffEditor(parameters, property, falloff), VerticalAlignment.Top);
+            }
+        }
+
+        return grid.Widgets.Count == 0 ? null : grid;
+    }
+
+    /// <summary>
+    /// Adds one label-and-editor row, the label carrying the parameter's own tooltip so it explains
+    /// itself as the grid rows below it do.
+    /// </summary>
+    /// <param name="grid">The block being filled.</param>
+    /// <param name="property">The parameter being edited.</param>
+    /// <param name="editor">Its editor.</param>
+    /// <param name="labelAlignment">Where the label sits against a multi-row editor.</param>
+    private static void AddRichRow(
+        MyraGrid grid,
+        PropertyInfo property,
+        Widget editor,
+        VerticalAlignment labelAlignment
+    )
+    {
+        int row = grid.RowsProportions.Count;
+
+        grid.AddRow();
+
+        var label = new MyraLabel(ParameterMetadata.LabelFor(property), MyraLabel.TextStyle.P)
+        {
+            VerticalAlignment = labelAlignment,
+            Tooltip = ParameterMetadata.TooltipFor(property)
+        };
+
+        grid.AddWidget(label, row, 0);
+        grid.AddWidget(editor, row, 1);
+    }
+
+    private static SoundIndexPicker SoundEditor(TriggerParameters parameters, PropertyInfo property)
+    {
+        var picker = new SoundIndexPicker(
+            property.GetValue(parameters) is int stored ? stored : 0,
+            NUMBER_INPUT_WIDTH,
+            INPUT_WIDTH
+        );
+
+        picker.IndexChanged += (_, index) => property.SetValue(parameters, index);
+
+        return picker;
+    }
+
+    /// <summary>
+    /// The distance-response editor, which owns four properties rather than one: the curve, the
+    /// power its custom form uses, and the strengths at either end of the range. The last three are
+    /// kept out of the property grid precisely so this can drop the ones the chosen curve gives no
+    /// meaning to.
+    /// </summary>
+    /// <param name="parameters">The parameters being edited.</param>
+    /// <param name="property">The curve property.</param>
+    /// <param name="falloff">Names the siblings that go with it.</param>
+    /// <returns>The editor.</returns>
+    private static FalloffPicker FalloffEditor(
+        TriggerParameters parameters,
+        PropertyInfo property,
+        FalloffEditorAttribute falloff
+    )
+    {
+        Type owner = parameters.GetType();
+
+        var properties = new FalloffProperties(
+            property,
+            owner.GetProperty(falloff.PowerProperty),
+            owner.GetProperty(falloff.NearStrengthProperty),
+            owner.GetProperty(falloff.FarStrengthProperty)
+        );
+
+        return new FalloffPicker(parameters, properties, INPUT_WIDTH, NUMBER_INPUT_WIDTH);
     }
 
     /// <summary>
@@ -297,7 +436,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
         return pristine;
     }
 
-    private Widget Buttons() =>
+    private WrapPanel Buttons() =>
         OptionTabCommons.StyledHorizontalWrapPanel(
             new MyraButton(TazLang.Get("profileeditor_save", "Save"), Save),
             new MyraButton(TazLang.Get("profileeditor_cancel", "Cancel"), Cancel)
@@ -317,7 +456,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
 
     private void Cancel() => EditorClosed?.Invoke(this, EventArgs.Empty);
 
-    private static Widget Labelled(string label, Widget content) =>
+    private static StackPanel Labelled(string label, Widget content) =>
         OptionTabCommons.StyledStackPanel(
             Orientation.Horizontal,
             new MyraLabel(label, MyraLabel.TextStyle.P) { VerticalAlignment = VerticalAlignment.Center },

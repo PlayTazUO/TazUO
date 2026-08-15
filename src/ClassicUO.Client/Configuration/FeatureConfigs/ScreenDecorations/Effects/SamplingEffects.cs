@@ -28,9 +28,9 @@ public sealed class BlurEffect : LayerEffect
     [LocalizedDisplayName("visualeffects_layer_radius", "Radius")]
     [LocalizedDescription(
         "visualeffects_layer_radius_tooltip",
-        "Blur disk radius as a fraction of screen width. Small values\n"
-        + "read as soft focus; past a couple of percent it becomes\n"
-        + "frosted glass."
+        "Blur disk radius as a fraction of screen width.\n"
+        + "Small values read as soft focus; past a couple of percent\n"
+        + "it becomes frosted glass."
     )]
     public float Radius { get; set; } = OverlayParams.Default.Sampling.Radius;
 
@@ -38,9 +38,9 @@ public sealed class BlurEffect : LayerEffect
     [LocalizedDisplayName("visualeffects_layer_taps", "Samples")]
     [LocalizedDescription(
         "visualeffects_layer_taps_tooltip",
-        "Samples taken per pixel, and the whole cost of the layer. Too\n"
-        + "few for the radius shows as distinct ghost copies instead of a\n"
-        + "blur."
+        "Samples taken per pixel, and the whole cost of the layer.\n"
+        + "Too few for the radius shows as distinct ghost copies\n"
+        + "instead of a blur."
     )]
     public OverlaySampleTaps Taps { get; set; } = OverlaySampleTaps.Twelve;
 
@@ -84,9 +84,9 @@ public sealed class RadialBlurEffect : LayerEffect
     [LocalizedDisplayName("visualeffects_layer_zoom", "Zoom")]
     [LocalizedDescription(
         "visualeffects_layer_zoom_tooltip",
-        "How far along the centre ray the taps march, as a fraction of\n"
-        + "the distance from Shape.Center. The centre stays sharp however\n"
-        + "high this goes."
+        "How far along the centre ray the taps march,\n"
+        + "as a fraction of the distance from Shape.Center.\n"
+        + "The centre stays sharp however high this goes."
     )]
     public float Zoom { get; set; } = OverlayParams.Default.Sampling.Zoom;
 
@@ -145,8 +145,8 @@ public sealed class ChromaticEffect : LayerEffect
     [LocalizedDisplayName("visualeffects_layer_aberration", "Separation")]
     [LocalizedDescription(
         "visualeffects_layer_aberration_tooltip",
-        "Red/blue separation, as a fraction of the distance from\n"
-        + "Shape.Center. Nothing separates at the centre and fringing\n"
+        "Red/blue separation, as a fraction of the distance\n"
+        + "from Shape.Center. Nothing separates at the centre and fringing\n"
         + "grows toward the corners."
     )]
     public float Aberration { get; set; } = OverlayParams.Default.Sampling.Aberration;

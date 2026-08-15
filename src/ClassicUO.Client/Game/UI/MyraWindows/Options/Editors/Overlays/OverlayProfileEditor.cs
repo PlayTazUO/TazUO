@@ -45,6 +45,10 @@ internal sealed class OverlayProfileEditor : Widget
 
     private const int BANNER_GLYPH_SIZE = 26;
 
+    /// <summary>Gap under the shake group's caption, so it sits with the group rather than reading
+    /// as the first of the fields it qualifies.</summary>
+    private const int NOTE_GAP = 8;
+
     /// <summary>
     /// Reset targets, one per technique. Built on demand and kept, because every lookup reads one
     /// through reflection and a technique's defaults never change within a session.
@@ -106,14 +110,12 @@ internal sealed class OverlayProfileEditor : Widget
         if (_readOnly)
             Children.Add(BuildReadOnlyBanner());
 
-        Children.Add(BuildPreviewRow());
+        // The switches and timings that describe the whole look, on one wrapping line. Three
+        // one-control rows stacked read as a list of unrelated settings; together they read as the
+        // header they are, and the block below is what the eye drops to.
+        Children.Add(BuildHeaderRow());
 
-        // Everything from here down belongs to the profile rather than to the session, so on a
-        // shipped look it is all read-only. Kept together and separated from the preview switch
-        // above, which is the one thing on this panel that can always be changed.
         Children.Add(OptionTabCommons.StyledHorizontalSeparator());
-        Children.Add(BuildScopeRow());
-        Children.Add(BuildFadeRow());
         Children.Add(BuildShakeRow());
         Children.Add(OptionTabCommons.StyledHorizontalSeparator());
         Children.Add(BuildLayerToolbar());
@@ -150,7 +152,7 @@ internal sealed class OverlayProfileEditor : Widget
             new MyraLabel(
                 TazLang.Get(
                     "visualeffects_builtinreadonly",
-                    "Built-in effect - read only. Copy the profile to edit"
+                    "Built-in effect - read only. Copy the profile to edit."
                 ),
                 MyraLabel.TextStyle.P
             )
@@ -164,16 +166,41 @@ internal sealed class OverlayProfileEditor : Widget
     }
 
     /// <summary>
-    /// The switch that shows the look on demand. Alone on its row, and above the separator, because
-    /// it is a session setting rather than part of the profile - on a shipped look it is the only
-    /// thing here that can be changed at all, and sat beside the profile's own settings it reads as
-    /// though those were editable too.
+    /// What the look is, before what it draws: whether it can be seen right now, what it covers, and
+    /// how it arrives and leaves.
     /// <para>
-    /// Preview ignores every rule and the player's state: the usual reason to look at an effect is
-    /// to decide whether to wire one up at all.
+    /// Preview is a session setting and the rest belong to the profile, so on a shipped look the
+    /// preview switch is the only one of them that still works. <see cref="Editable"/> carries that
+    /// per control, alongside the banner at the top of the panel - the row does not have to.
     /// </para>
     /// </summary>
-    private WrapPanel BuildPreviewRow()
+    private WrapPanel BuildHeaderRow() =>
+        Row(
+            PreviewToggle(),
+            ScopeToggle(),
+            Editable(
+                LabelledFloat(
+                    TazLang.Get("visualeffects_fadein", "Fade in (s)"),
+                    _profile.Fade.InSeconds,
+                    MAX_FADE_SECONDS,
+                    value => _profile.Fade.InSeconds = value
+                )
+            ),
+            Editable(
+                LabelledFloat(
+                    TazLang.Get("visualeffects_fadeout", "Fade out (s)"),
+                    _profile.Fade.OutSeconds,
+                    MAX_FADE_SECONDS,
+                    value => _profile.Fade.OutSeconds = value
+                )
+            )
+        );
+
+    /// <summary>
+    /// The switch that shows the look on demand. Preview ignores every rule and the player's state:
+    /// the usual reason to look at an effect is to decide whether to wire one up at all.
+    /// </summary>
+    private Widget PreviewToggle()
     {
         var preview = MyraCheckButton.CreateWithCallback(
             ScreenOverlayManager.Instance.IsPreviewing(_profile.Id),
@@ -182,16 +209,16 @@ internal sealed class OverlayProfileEditor : Widget
 
         preview.Tooltip = TazLang.Get(
             "visualeffects_preview_tooltip",
-            "Shows this effect regardless of your character's state, shake\n"
-            + "included. Still subject to the switches on the General tab,\n"
+            "Shows this effect regardless of your character's state,\n"
+            + "shake included. Still subject to the switches on the General tab,\n"
             + "and ends when the options are closed."
         );
 
-        return Row(Labelled(TazLang.Get("visualeffects_preview", "Preview this effect"), preview));
+        return Labelled(TazLang.Get("visualeffects_preview", "Preview this effect"), preview);
     }
 
     /// <summary>What the look covers. Stored on the profile, so read-only on a shipped one.</summary>
-    private WrapPanel BuildScopeRow()
+    private Widget ScopeToggle()
     {
         var fullScreen = MyraCheckButton.CreateWithCallback(
             _profile.FullScreen,
@@ -204,36 +231,16 @@ internal sealed class OverlayProfileEditor : Widget
 
         fullScreen.Tooltip = TazLang.Get(
             "visualeffects_fullscreen_tooltip",
-            "Covers the gumps and cursor as well as the world, and shakes\n"
-            + "the whole window rather than only the viewport."
+            "Covers the gumps and cursor as well as the world,\n"
+            + "and shakes the whole window rather than only the viewport."
         );
 
         // The label goes with it. Disabling the box alone leaves its caption at full strength, which
         // is what made these read as editable.
-        return Row(
-            Editable(
-                Labelled(TazLang.Get("visualeffects_fullscreen", "Draw over the whole window"),
-                    fullScreen
-                )
-            )
+        return Editable(
+            Labelled(TazLang.Get("visualeffects_fullscreen", "Draw over the whole window"), fullScreen)
         );
     }
-
-    private WrapPanel BuildFadeRow() =>
-        Row(
-            LabelledFloat(
-                TazLang.Get("visualeffects_fadein", "Fade in (s)"),
-                _profile.Fade.InSeconds,
-                MAX_FADE_SECONDS,
-                value => _profile.Fade.InSeconds = value
-            ),
-            LabelledFloat(
-                TazLang.Get("visualeffects_fadeout", "Fade out (s)"),
-                _profile.Fade.OutSeconds,
-                MAX_FADE_SECONDS,
-                value => _profile.Fade.OutSeconds = value
-            )
-        );
 
     /// <summary>
     /// Shake belongs to the look rather than to the trigger: how hard a thing hits is part of what
@@ -242,6 +249,12 @@ internal sealed class OverlayProfileEditor : Widget
     /// The fields are always present and merely disabled while the switch is off. Hiding them would
     /// reflow every row beneath on each click, and a control that vanishes teaches nothing about
     /// what turning it on would offer.
+    /// </para>
+    /// <para>
+    /// Framed off from the rows above it, and captioned as running on its own clock. Shake timing
+    /// and fade timing are independent - a shake starts when the effect is raised and ends after its
+    /// own duration, whatever the fade is doing - and sat in the same flat column as the fade fields
+    /// the two read as one set of timings that ought to agree.
     /// </para>
     /// </summary>
     private Widget BuildShakeRow()
@@ -260,9 +273,9 @@ internal sealed class OverlayProfileEditor : Widget
 
         enabled.Tooltip = TazLang.Get(
             "visualeffects_shake_tooltip",
-            "Fired once as the effect arrives, scaled by how strong the\n"
-            + "occurrence is. Which rectangle it displaces follows the\n"
-            + "scope switch above."
+            "Fired once as the effect arrives, scaled by how strong\n"
+            + "the occurrence is. Which rectangle it displaces follows\n"
+            + "the scope switch above."
         );
 
         // Bound to a throwaway spec while shake is off, so the grid can render its defaults without
@@ -272,10 +285,16 @@ internal sealed class OverlayProfileEditor : Widget
             Object = shake ?? new ShakeSpec(), Enabled = shake != null && !_readOnly
         };
 
+        MyraPalette palette = MyraTheme.Current;
+
         var stack = new VerticalStackPanel
         {
             Spacing = MyraStyle.STANDARD_SPACING,
-            HorizontalAlignment = HorizontalAlignment.Stretch
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Padding = new Thickness(8, 6),
+            Background = new SolidBrush(palette.PanelFill),
+            Border = new SolidBrush(palette.PanelBorder),
+            BorderThickness = new Thickness(1)
         };
 
         stack.Widgets.Add(
@@ -285,6 +304,24 @@ internal sealed class OverlayProfileEditor : Widget
                 )
             )
         );
+
+        // A notch smaller than the controls it qualifies, so it explains the group rather than
+        // competing with the switch above it. The gap beneath separates it from the fields it
+        // qualifies; on the row spacing alone it reads as another of them.
+        stack.Widgets.Add(
+            new MyraLabel(
+                TazLang.Get(
+                    "visualeffects_shake_independent",
+                    "Shake is unaffected by the fade in/out settings"
+                ),
+                MyraLabel.TextStyle.H6
+            )
+            {
+                Wrap = true,
+                Margin = new Thickness(0, 0, 0, NOTE_GAP)
+            }
+        );
+
         stack.Widgets.Add(grid);
 
         grid.PropertyChanged += (_, _) =>
@@ -469,9 +506,9 @@ internal sealed class OverlayProfileEditor : Widget
             },
             TazLang.Get(
                 "visualeffects_technique_tooltip",
-                "What the layer draws: a colour painted over the scene, or one\n"
-                + "of the three ways of distorting it. A distortion must sit below\n"
-                + "anything it is meant to affect."
+                "What the layer draws: a colour painted over the scene,\n"
+                + "or one of the three ways of distorting it. A distortion must sit\n"
+                + "below anything it is meant to affect."
             )
         );
 

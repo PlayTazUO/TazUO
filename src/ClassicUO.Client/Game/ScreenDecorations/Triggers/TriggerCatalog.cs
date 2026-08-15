@@ -39,6 +39,7 @@ public sealed class TriggerCatalog
         [
             new PlayerPoisonedTriggerDefinition(),
             new EarthquakeTriggerDefinition(),
+            new SoundPlayedTriggerDefinition(),
             new ChatMessageTriggerDefinition(),
             new ObjectPropertiesTriggerDefinition(),
             new PlayerAttributeTriggerDefinition()

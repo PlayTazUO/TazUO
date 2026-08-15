@@ -51,9 +51,9 @@ public sealed class ObjectPropertiesParameters : TriggerParameters, ILogicFilter
     [LocalizedDisplayName("overlaytrigger_opl_duration", "Duration (s)")]
     [LocalizedDescription(
         "overlaytrigger_opl_duration_tooltip",
-        "How long the effect runs for after a match, in seconds. A\n"
-        + "property list has no length of its own, so this is the only\n"
-        + "thing that decides when the effect ends."
+        "How long the effect runs for after a match,\n"
+        + "in seconds. A property list has no length of its own,\n"
+        + "so this is the only thing that decides when the effect ends."
     )]
     public float DurationSeconds { get; set; } = DEFAULT_DURATION_SECONDS;
 

@@ -87,8 +87,8 @@ public abstract class LayerEffect
     [LocalizedDisplayName("visualeffects_layer_strength", "Strength")]
     [LocalizedDescription(
         "visualeffects_layer_strength_tooltip",
-        "Peak strength where the mask is full: a tint's alpha, or how\n"
-        + "far a distortion replaces the sharp frame."
+        "Peak strength where the mask is full: a tint's alpha,\n"
+        + "or how far a distortion replaces the sharp frame."
     )]
     public float Strength { get; set; } = OverlayParams.Default.Appearance.Opacity;
 

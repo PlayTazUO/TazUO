@@ -68,28 +68,29 @@ public sealed class EarthquakeTrigger : IEventTrigger
     #region Internal methods
 
     /// <summary>
-    /// How close the quake is: 1 underfoot, falling to 0 past the range the client would still play
-    /// the sound at. Squared, so most of the scale is spent on the few tiles around the player -
-    /// spreading it evenly makes everything within sight feel much the same.
+    /// How strongly a quake at a given tile should show: full underfoot, falling away to
+    /// <see cref="MIN_INTENSITY" /> at the edge of the range the client would still play the sound
+    /// at, and nothing beyond it.
     /// </summary>
     /// <param name="soundX">Tile the sound came from.</param>
     /// <param name="soundY">Tile the sound came from.</param>
     /// <param name="playerX">The player's tile.</param>
     /// <param name="playerY">The player's tile.</param>
     /// <param name="viewRange">Tiles the client can see, which is also its audible cutoff.</param>
-    /// <returns>Nearness in 0-1; zero for a quake too far off to register.</returns>
-    internal static float Nearness(int soundX, int soundY, int playerX, int playerY, int viewRange)
+    /// <returns>Intensity in 0-1; zero for a quake too far off to register.</returns>
+    internal static float IntensityFor(int soundX, int soundY, int playerX, int playerY, int viewRange)
     {
-        int distance = Math.Max(Math.Abs(soundX - playerX), Math.Abs(soundY - playerY));
-
-        if (viewRange <= 0 || distance > viewRange)
+        if (viewRange <= 0)
             return 0f;
 
-        // Matches the audio manager's own falloff denominator, so the visual fades out exactly as
-        // the sound that justifies it does.
-        float nearness = 1f - (float)distance / (viewRange + 1);
+        int distance = ProximityMath.Distance(soundX, soundY, playerX, playerY);
+        float nearness = ProximityMath.Nearness(distance, 0, viewRange);
 
-        return nearness * nearness;
+        // Quadratic, so most of the scale is spent on the few tiles around the player - spreading it
+        // evenly makes everything within sight feel much the same.
+        float shaped = ProximityMath.Shape(nearness, FalloffCurve.Quadratic);
+
+        return shaped <= 0f ? 0f : ProximityMath.Lerp(MIN_INTENSITY, 1f, shaped);
     }
 
     #endregion
@@ -109,21 +110,19 @@ public sealed class EarthquakeTrigger : IEventTrigger
         if (player == null)
             return;
 
-        float nearness = Nearness(e.X, e.Y, player.X, player.Y, world!.ClientViewRange);
+        float intensity = IntensityFor(e.X, e.Y, player.X, player.Y, world!.ClientViewRange);
 
-        if (nearness <= 0f)
+        if (intensity <= 0f)
             return;
 
         var signal = new TriggerSignal
         {
-            Intensity = Lerp(MIN_INTENSITY, 1f, nearness),
+            Intensity = intensity,
             Duration = TimeSpan.FromSeconds(OCCURRENCE_SECONDS)
         };
 
         Fired?.Invoke(this, new TriggerFiredArgs { Signal = signal });
     }
-
-    private static float Lerp(float from, float to, float amount) => from + (to - from) * amount;
 
     #endregion
 }

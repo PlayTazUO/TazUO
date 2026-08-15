@@ -57,8 +57,8 @@ internal static class ObjectPropertiesLogic
                         Kind = LogicValueKind.Integer,
                         Description = TazLang.Get(
                             "overlaytrigger_opl_field_serial_tooltip",
-                            "The item or mobile the properties belong to. Write it in\n"
-                            + "decimal, or in hex with an 0x prefix."
+                            "The item or mobile the properties belong to. Write it in decimal,\n"
+                            + "or in hex with an 0x prefix."
                         )
                     },
                     static opl => opl.Serial
@@ -71,8 +71,8 @@ internal static class ObjectPropertiesLogic
                         Kind = LogicValueKind.Text,
                         Description = TazLang.Get(
                             "overlaytrigger_opl_field_name_tooltip",
-                            "The first line of the tooltip - the item's name, with any\n"
-                            + "quantity and hue markup the server sent with it."
+                            "The first line of the tooltip - the item's name,\n"
+                            + "with any quantity and hue markup the server sent with it."
                         )
                     },
                     static opl => opl.Name
@@ -85,8 +85,8 @@ internal static class ObjectPropertiesLogic
                         Kind = LogicValueKind.Text,
                         Description = TazLang.Get(
                             "overlaytrigger_opl_field_data_tooltip",
-                            "Every remaining line of the tooltip, run together. This is\n"
-                            + "where durability, resistances and item properties are."
+                            "Every remaining line of the tooltip, run together.\n"
+                            + "This is where durability, resistances and item properties are."
                         )
                     },
                     static opl => opl.Data

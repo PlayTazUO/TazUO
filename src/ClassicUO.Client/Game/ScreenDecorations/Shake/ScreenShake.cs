@@ -221,7 +221,11 @@ internal sealed class ScreenShake
 
             if (_trauma > 0f)
             {
-                Accumulate(_trauma, FREQUENCY, MaxOffsetPixels, 0f, ref x, ref y);
+                // Squared here rather than inside Accumulate. This accumulator is the classic
+                // trauma model, where the square is what makes a hit fall away sharply as it
+                // decays; a shaped request already carries an authored envelope, and squaring that
+                // too would bend every curve a profile asks for into its own square.
+                Accumulate(_trauma * _trauma, FREQUENCY, MaxOffsetPixels, 0f, ref x, ref y);
                 limit = MaxOffsetPixels;
             }
 
@@ -270,12 +274,20 @@ internal sealed class ScreenShake
         }
     }
 
-    private void Accumulate(float trauma, float frequency, float maxPixels, float phase, ref float x, ref float y)
+    /// <summary>
+    /// Adds one contribution's displacement to the running total.
+    /// </summary>
+    /// <param name="amplitude">Final amplitude, 0-1, as a fraction of <paramref name="maxPixels"/>.
+    /// Taken as authored - any shaping the caller wants has already been applied.</param>
+    /// <param name="frequency">Rate to walk the noise table at, in Hz.</param>
+    /// <param name="maxPixels">Displacement at an amplitude of 1.</param>
+    /// <param name="phase">Where in the noise table this contribution starts.</param>
+    /// <param name="x">Running total, added to.</param>
+    /// <param name="y">Running total, added to.</param>
+    private void Accumulate(float amplitude, float frequency, float maxPixels, float phase, ref float x, ref float y)
     {
-        float shake = trauma * trauma;
-
-        x += maxPixels * shake * Sample(_noiseX, _time * frequency + phase);
-        y += maxPixels * shake * Sample(_noiseY, _time * frequency + phase + AXIS_PHASE);
+        x += maxPixels * amplitude * Sample(_noiseX, _time * frequency + phase);
+        y += maxPixels * amplitude * Sample(_noiseY, _time * frequency + phase + AXIS_PHASE);
     }
 
     private float NextPhase()

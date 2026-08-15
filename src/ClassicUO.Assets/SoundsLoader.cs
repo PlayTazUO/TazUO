@@ -255,19 +255,36 @@ namespace ClassicUO.Assets
                 return false;
             }
 
-            ref UOFileIndex entry = ref _file.GetValidRefEntry(index);
+            name = GetSoundName(ref _file.GetValidRefEntry(index));
+            return true;
+        }
 
-            if (entry.Length <= 0)
+        public IEnumerable<(int Index, string Name)> EnumerateSounds()
+        {
+            for (int i = 0; i < _file.Entries.Length; i++)
             {
-                return false;
+                ref UOFileIndex entry = ref _file.GetValidRefEntry(i);
+
+                if (entry.Length <= 0)
+                    continue;
+
+                yield return (i, GetSoundName(ref entry));
             }
+        }
+
+        private string GetSoundName(ref UOFileIndex entry)
+        {
+            if (entry.Length <= 0)
+                return null;
 
             Span<byte> buf = stackalloc byte[40];
             _file.ReadAt(entry.Offset, buf);
 
-            name = Encoding.UTF8.GetString(buf).TrimEnd('\0').Trim();
-
-            return true;
+            // Since this is a UTF-8, we can just read up-to the first null
+            int nullIdx = buf.IndexOf((byte)0);
+            return nullIdx >= 0
+                ? Encoding.UTF8.GetString(buf[..nullIdx]).Trim()
+                : Encoding.UTF8.GetString(buf).TrimEnd('\0').Trim();
         }
 
         /// <summary>

@@ -82,9 +82,9 @@ public static class VisualEffectsTab
                         OverlayKeyword,
                         TazLang.Get(
                             "visualeffects_overlayintensity_tooltip",
-                            "Scales every effect on top of whatever its profile\n"
-                            + "already says, like a master volume. 1.00 draws each\n"
-                            + "look exactly as authored; lower can only weaken it."
+                            "Scales every effect on top of whatever its profile already says,\n"
+                            + "like a master volume. 1.00 draws each look exactly as authored;\n"
+                            + "lower can only weaken it."
                         )
                     ),
                     MaxConcurrentInput(settings)
@@ -97,9 +97,8 @@ public static class VisualEffectsTab
                         ShakeKeyword,
                         TazLang.Get(
                             "visualeffects_shakeintensity_tooltip",
-                            "Scales every shake on top of whatever its profile\n"
-                            + "already says. 1.00 hits exactly as authored; lower\n"
-                            + "can only soften it."
+                            "Scales every shake on top of whatever its profile already says.\n"
+                            + "1.00 hits exactly as authored; lower can only soften it."
                         )
                     )
                 ).WithSearch(new SearchMetadata(shake, Keywords: [ShakeKeyword, EffectsKeyword]))
@@ -209,10 +208,9 @@ public static class VisualEffectsTab
             OverlaySystemSettings.MaxAllowedConcurrent,
             TazLang.Get(
                 "visualeffects_maxconcurrent_tooltip",
-                "How many effects may be drawn together before the least\n"
-                + "important is dropped. Raising this costs a draw call per\n"
-                + "layer per frame, and more than a few tinted fields at once\n"
-                + "is hard to see through."
+                "How many effects may be drawn together before the least important\n"
+                + "is dropped. Raising this costs a draw call per layer per frame,\n"
+                + "and more than a few tinted fields at once is hard to see through."
             ),
             new SearchMetadata(label, Keywords: [OverlayKeyword, EffectsKeyword])
         );

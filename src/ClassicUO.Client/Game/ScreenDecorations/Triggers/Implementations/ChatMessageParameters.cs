@@ -55,8 +55,9 @@ public sealed class ChatMessageParameters : TriggerParameters
     [LocalizedDisplayName("overlaytrigger_chat_mode", "Match")]
     [LocalizedDescription(
         "overlaytrigger_chat_mode_tooltip",
-        "How the pattern is compared against the line. Regex takes a\n"
-        + ".NET regular expression; the rest are plain text."
+        "How the pattern is compared against the line.\n"
+        + "Regex takes a .NET regular expression;\n"
+        + "the rest are plain text."
     )]
     public ChatMatchMode Mode { get; set; } = ChatMatchMode.Contains;
 
@@ -76,8 +77,9 @@ public sealed class ChatMessageParameters : TriggerParameters
     [LocalizedDescription(
         "overlaytrigger_chat_casesensitive_tooltip",
         "Match capitalisation exactly. Applies to every match mode,\n"
-        + "regular expressions included. Off by default: what the server\n"
-        + "sends is rarely capitalised the way you would type it."
+        + "regular expressions included. Off by default:\n"
+        + "what the server sends is rarely capitalised the way\n"
+        + "you would type it."
     )]
     public bool CaseSensitive { get; set; }
 
@@ -89,9 +91,9 @@ public sealed class ChatMessageParameters : TriggerParameters
     [LocalizedDisplayName("overlaytrigger_chat_duration", "Duration (s)")]
     [LocalizedDescription(
         "overlaytrigger_chat_duration_tooltip",
-        "How long the effect runs for after a match, in seconds. A\n"
-        + "message has no length of its own, so this is the only thing\n"
-        + "that decides when the effect ends."
+        "How long the effect runs for after a match,\n"
+        + "in seconds. A message has no length of its own,\n"
+        + "so this is the only thing that decides when the effect ends."
     )]
     public float DurationSeconds { get; set; } = DEFAULT_DURATION_SECONDS;
 
@@ -99,8 +101,8 @@ public sealed class ChatMessageParameters : TriggerParameters
     [LocalizedDisplayName("overlaytrigger_chat_fromplayeronly", "From the player only")]
     [LocalizedDescription(
         "overlaytrigger_chat_fromplayeronly_tooltip",
-        "Match only lines the player character spoke, not every line on\n"
-        + "screen."
+        "Match only lines the player character spoke,\n"
+        + "not every line on screen."
     )]
     public bool FromPlayerOnly { get; set; }
 

@@ -24,10 +24,11 @@ public struct JitterSpec
     [LocalizedDisplayName("visualeffects_jitter_reachamount", "Boundary flux")]
     [LocalizedDescription(
         "visualeffects_jitter_reachamount_tooltip",
-        "How far the boundary can move, as a fraction of the shape\n"
-        + "distance. Only extends inward, so raising it raises average\n"
-        + "reach too - compensate with Shape.Reach. Anything organic\n"
-        + "wants this well above 0."
+        "How far the boundary can move,\n"
+        + "as a fraction of the shape distance. Only extends inward,\n"
+        + "so raising it raises average reach too -\n"
+        + "compensate with Shape.Reach. Anything organic wants\n"
+        + "this well above 0."
     )]
     public float ReachAmount;
 
@@ -52,10 +53,10 @@ public struct JitterSpec
     [LocalizedDisplayName("visualeffects_jitter_scale", "Flux frequency")]
     [LocalizedDescription(
         "visualeffects_jitter_scale_tooltip",
-        "Frequency of the boundary displacement. Must be coarser than\n"
-        + "Noise.BaseScale or the edge just buzzes, but X still has to\n"
-        + "cycle several times across the screen or each edge gets one\n"
-        + "gentle bulge and stays rectangular."
+        "Frequency of the boundary displacement.\n"
+        + "Must be coarser than Noise.BaseScale or the edge just buzzes,\n"
+        + "but X still has to cycle several times across the screen\n"
+        + "or each edge gets one gentle bulge and stays rectangular."
     )]
     public Vector2 Scale;
 
@@ -66,9 +67,9 @@ public struct JitterSpec
     [LocalizedDisplayName("visualeffects_jitter_scroll", "Flux drift")]
     [LocalizedDescription(
         "visualeffects_jitter_scroll_tooltip",
-        "Texture-space velocity of the displacement field. Usually\n"
-        + "matched to the layer's own scroll so the ragged edge travels\n"
-        + "with the effect."
+        "Texture-space velocity of the displacement field.\n"
+        + "Usually matched to the layer's own scroll so the ragged edge\n"
+        + "travels with the effect."
     )]
     public Vector2 Scroll;
 
@@ -115,8 +116,8 @@ public struct ShapeSpec
     [LocalizedDisplayName("visualeffects_shape_center", "Centre")]
     [LocalizedDescription(
         "visualeffects_shape_center_tooltip",
-        "Centre of the radial falloff in screen uv. (0.5, 0.5) is the\n"
-        + "middle."
+        "Centre of the radial falloff in screen uv. (0.5,\n"
+        + "0.5) is the middle."
     )]
     public Vector2 Center;
 
@@ -127,9 +128,9 @@ public struct ShapeSpec
     [LocalizedDisplayName("visualeffects_shape_wobblefreq", "Drift rate")]
     [LocalizedDescription(
         "visualeffects_shape_wobblefreq_tooltip",
-        "Rate the centre drifts at, in Hz per axis. Different X and Y\n"
-        + "values give a wander instead of a pendulum; zero on an axis\n"
-        + "holds it still."
+        "Rate the centre drifts at, in Hz per axis.\n"
+        + "Different X and Y values give a wander instead of a pendulum;\n"
+        + "zero on an axis holds it still."
     )]
     public Vector2 WobbleFreq;
 
@@ -138,9 +139,9 @@ public struct ShapeSpec
     [LocalizedDisplayName("visualeffects_shape_wobbleamp", "Drift range")]
     [LocalizedDescription(
         "visualeffects_shape_wobbleamp_tooltip",
-        "Peak drift of the centre, in screen uv. Kept small - this\n"
-        + "unsteadies the pivot rather than sending it touring the\n"
-        + "screen."
+        "Peak drift of the centre, in screen uv. Kept small -\n"
+        + "this unsteadies the pivot rather than sending it touring\n"
+        + "the screen."
     )]
     public float WobbleAmp;
 
@@ -152,8 +153,8 @@ public struct ShapeSpec
     [LocalizedDisplayName("visualeffects_shape_reach", "Reach")]
     [LocalizedDescription(
         "visualeffects_shape_reach_tooltip",
-        "How far in from the screen edge the effect extends. Larger is\n"
-        + "thicker."
+        "How far in from the screen edge the effect extends.\n"
+        + "Larger is thicker."
     )]
     public float Reach;
 
@@ -175,10 +176,10 @@ public struct ShapeSpec
     [LocalizedDisplayName("visualeffects_shape_edgeblend", "Vignette / border")]
     [LocalizedDescription(
         "visualeffects_shape_edgeblend_tooltip",
-        "0 = radial vignette, 1 = border trim. Avoid values in between:\n"
-        + "the radial term is width-normalised, so any blend lands mostly\n"
-        + "on the left and right edges. Use CornerBias for corner\n"
-        + "weighting."
+        "0 = radial vignette, 1 = border trim.\n"
+        + "Avoid values in between: the radial term is width-normalised,\n"
+        + "so any blend lands mostly on the left and right edges.\n"
+        + "Use CornerBias for corner weighting."
     )]
     public float EdgeBlend;
 
@@ -190,18 +191,18 @@ public struct ShapeSpec
     [LocalizedDisplayName("visualeffects_shape_cornerbias", "Corner weighting")]
     [LocalizedDescription(
         "visualeffects_shape_cornerbias_tooltip",
-        "Corner weighting of the border trim, ignored when EdgeBlend is\n"
-        + "0. At 0 the trim is a sharp-cornered rectangle; raising it\n"
-        + "thickens and rounds the corners."
+        "Corner weighting of the border trim, ignored when EdgeBlend is 0.\n"
+        + "At 0 the trim is a sharp-cornered rectangle;\n"
+        + "raising it thickens and rounds the corners."
     )]
     public float CornerBias;
 
     [LocalizedDisplayName("visualeffects_shape_jitter", "Boundary break-up")]
     [LocalizedDescription(
         "visualeffects_shape_jitter_tooltip",
-        "Breaks up the shape boundary with its own noise field. Without\n"
-        + "it the effect ends along a straight iso-line and reads as a\n"
-        + "rectangle."
+        "Breaks up the shape boundary with its own noise field.\n"
+        + "Without it the effect ends along a straight iso-line and reads\n"
+        + "as a rectangle."
     )]
     public JitterSpec Jitter;
 
@@ -223,8 +224,7 @@ public struct ShapeSpec
     [LocalizedDisplayName("visualeffects_shape_focusamount", "Bias strength")]
     [LocalizedDescription(
         "visualeffects_shape_focusamount_tooltip",
-        "0 = uniform all the way round, 1 = fully biased toward\n"
-        + "FocusDir."
+        "0 = uniform all the way round, 1 = fully biased toward FocusDir."
     )]
     public float FocusAmount;
 
