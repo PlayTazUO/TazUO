@@ -1123,7 +1123,12 @@ namespace ClassicUO.Configuration
             // Grid highlights live in a separate grid_highlights.json (see GridHighlightsConfig); persist
             // them alongside the profile so in-place rule edits are saved on the same cadence as before.
             if (ReferenceEquals(this, ProfileManager.CurrentProfile))
+            {
                 GridHighlightsConfig.Current.Save();
+
+                // Same arrangement for the screen decoration settings and their overlay profiles.
+                FeatureConfigs.ScreenDecorations.ScreenDecorations.Current.Save();
+            }
 
             // Save opened gumps
             if (saveGumps)

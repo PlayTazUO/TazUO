@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Input;
 using ClassicUO.Utility.Logging;
@@ -11,7 +12,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI;
-using ClassicUO.Game.UI.MyraWindows.Options;
 using ClassicUO.LegionScripting;
 using Myra;
 
@@ -283,12 +283,21 @@ namespace ClassicUO.Game.Managers
             Register("organizer", s => OrganizerAgent.Instance?.OrganizerCommand(s));
             Register("organizerlist", s => OrganizerAgent.Instance?.ListOrganizers());
             Register("old-options-window", s => GameActions.ShowLegacyOptionsGump(_world));
+            Register("language-regenerate", _ => TazLang.Load(Settings.GlobalSettings.UILanguage));
+
+            RegisterDebugCommands();
+        }
+
+        /// <summary>Registers debug-only commands. Compiled out of Release.</summary>
+        [Conditional("DEBUG")]
+        private void RegisterDebugCommands()
+        {
             Register("myra-draw-widget-frames", args => MyraEnvironment.DrawWidgetsFrames = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-frames", args => MyraEnvironment.DrawMouseHoveredWidgetFrame = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-info", args => MyraEnvironment.DrawMouseHoveredWidgetInfo = ParseBooleanCommandArgs(args));
 
-            // Reload the language strings, loading any changes that have been made without having to restart the game
-            Register("language-regenerate", _ => TazLang.Load(Settings.GlobalSettings.UILanguage));
+            // Desyncs death state from the server; only a real death/resurrect packet restores it.
+            Register("deadman-mode", args => World.Instance?.Player?.IsDead = ParseBooleanCommandArgs(args));
         }
 
         /// <summary>

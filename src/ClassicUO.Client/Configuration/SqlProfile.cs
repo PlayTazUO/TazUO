@@ -178,4 +178,10 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, "script_manager_window_position")]
         public partial Point? OldScriptManagerWindowPosition { get; set; }
+
+        // Whether the player has already acknowledged the photosensitivity warning shown the first
+        // time screen decorations are enabled. Global: the warning is about the person, not the character.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "screen_decorations_pse_acknowledged", false)]
+        public partial bool ScreenDecorationsPseAcknowledged { get; set; }
 }

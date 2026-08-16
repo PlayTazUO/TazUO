@@ -12,6 +12,7 @@ All notable changes to TazUO will be recorded here.
 * Added `.IsParalyzed` to mobile objects
 
 ### Features
+* Added a visual effects composition and management system to allow for custom UI effects such as fog and blur. - [P.R 958](https://github.com/PlayTazUO/TazUO/pull/958) ([yuval-po](https://github.com/yuval-po))
 * Added a setting to show heal/cure buttons on pet health bars, separate from the existing all-health-bar and friends-list toggles ([bittiez](https://github.com/bittiez))
 * Added current global action queue and main thread queue counts to the Profiler window, along with a button to clear the action queue, all refreshed at 250ms
 * Added an option to block walking into closed doors, preventing walk requests that the server rejects and the client bounces back from ([bittiez](https://github.com/bittiez))
@@ -31,6 +32,7 @@ All notable changes to TazUO will be recorded here.
 * Add some missing weapon abilities
 
 ### Fixes
+* Fixed a rare crash that could occur when a grid container is moved - [P.R 958](https://github.com/PlayTazUO/TazUO/pull/958) ([yuval-po](https://github.com/yuval-po))
 * Fixed the candle flicker effect speeding up while moving: the flicker phase is now seeded from each light's world position instead of its screen position, so it oscillates at a constant speed
 * Fixed a NullReferenceException in the counter bar when an item or spell graphic could not be loaded; the icon is now skipped instead of crashing the client ([bittiez](https://github.com/bittiez))
 * Fixed stuttering on UltimaLive servers: `GetBlockCrc` now reads the map/statics block with bulk reads instead of one locked seek+read syscall per byte, terrain updates no longer re-read the same map blocks from disk dozens of times per chunk (cached on stream-based files), chunk reloads triggered by streamed terrain/statics updates are now coalesced and time-throttled (rebuilt at most once per frame, spread across frames instead of all at once), and packet file writes are no longer flushed synchronously on the render thread (flushing moved to a background thread) ([bittiez](https://github.com/bittiez))

@@ -8,10 +8,12 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
+using Myra.Events;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
@@ -52,6 +54,17 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     /// <summary>Visual styling applied to the underlying table view</summary>
     public RulebaseStyleOptions TableStyleOptions { get; } = new();
 
+    /// <summary>
+    /// Whether a newly created rule is inserted at the top of the table rather than appended.
+    /// <para>
+    /// Opt-in, because position is precedence in some rulebases and merely order in others: putting
+    /// a new rule first suits one where the user is expected to keep refining what wins, and reads
+    /// as arbitrary reordering in one where it is a plain list. Either way the whole table is
+    /// re-stamped afterwards, so <see cref="IRule.Order"/> stays in step with what is on screen.
+    /// </para>
+    /// </summary>
+    public bool AddNewRulesFirst { get; init; }
+
     /// <summary>The label displayed above the toolbar; set its <c>Text</c> to title the rulebase</summary>
     public Label TitleLabel => _titleLabel;
 
@@ -84,19 +97,25 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
 
     #region Members
 
+    /// <summary>
+    /// Point size for the arrows and the plus. They are drawn from a lighter part of the symbol font
+    /// and read small beside the pencil and the cross at a matched size.
+    /// </summary>
+    private const int LARGE_GLYPH = 34;
+
     private readonly IRuleConfigurator<TRule>? _ruleConfigurator;
     private readonly Panel _contentPanel;
     private readonly RulebaseTableView<TRule> _tableView;
 
     // These are initialized in the InitializeToolbar method
     private WrapPanel _toolbar = null!;
-    private BasicButton _addButton = null!;
-    private Widget _editButton = null!;
-    private Widget _deleteButton = null!;
-    private Widget _moveTopButton = null!;
-    private Widget _moveUpButton = null!;
-    private Widget _moveDownButton = null!;
-    private Widget _moveBottomButton = null!;
+    private IconButton _addButton = null!;
+    private IconButton _editButton = null!;
+    private IconButton _deleteButton = null!;
+    private IconButton _moveTopButton = null!;
+    private IconButton _moveUpButton = null!;
+    private IconButton _moveDownButton = null!;
+    private IconButton _moveBottomButton = null!;
 
     private readonly MyraLabel _titleLabel = new(null, MyraLabel.TextStyle.H5) { HorizontalAlignment = HorizontalAlignment.Center };
     private Desktop? _subscribedDesktop;
@@ -175,16 +194,16 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     /// <summary>Creates the toolbar buttons (add/edit/delete/reorder) and sets their initial enabled state</summary>
     private void InitializeToolbar()
     {
-        SpriteFontBase smallNoto = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 28);
-        SpriteFontBase largeNoto = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 42);
-
-        _addButton = OptionTabCommons.StyledTextIconButton("+", largeNoto, () => OpenRuleEditor(false), topOffset: -4);
-        _editButton = OptionTabCommons.StyledTextIconButton("🖉", smallNoto, () => OpenRuleEditor(true), topOffset: 1);
-        _deleteButton = OptionTabCommons.StyledTextIconButton("🗙", smallNoto, DeleteRule, topOffset: -1);
-        _moveTopButton = OptionTabCommons.StyledTextIconButton("⭱", largeNoto, MoveSelectedToTop, topOffset: -4);
-        _moveUpButton = OptionTabCommons.StyledTextIconButton("⭡", largeNoto, () => MoveSelectedBy(-1), topOffset: -4);
-        _moveDownButton = OptionTabCommons.StyledTextIconButton("⭣", largeNoto, () => MoveSelectedBy(1), topOffset: -4);
-        _moveBottomButton = OptionTabCommons.StyledTextIconButton("⭳", largeNoto, MoveSelectedToBottom, topOffset: -4);
+        // Every button here is a bare glyph, so the tooltip is the only thing that names it. Sizes
+        // differ because the glyphs do: the arrows and the plus are drawn from a lighter part of the
+        // symbol font and read small beside the pencil and the cross at a matched point size.
+        _addButton = new IconButton("+", () => OpenRuleEditor(false), TazLang.Get("rulebase_add", "Add a rule"), glyphSize: LARGE_GLYPH);
+        _editButton = new IconButton("\U0001F589", () => OpenRuleEditor(true), TazLang.Get("rulebase_edit", "Edit the selected rule"));
+        _deleteButton = new IconButton("\U0001F5D9", DeleteRule, TazLang.Get("rulebase_delete", "Delete the selected rule"));
+        _moveTopButton = new IconButton("\u2B71", MoveSelectedToTop, TazLang.Get("rulebase_movetop", "Move to the top"), glyphSize: LARGE_GLYPH);
+        _moveUpButton = new IconButton("\u2B61", () => MoveSelectedBy(-1), TazLang.Get("rulebase_moveup", "Move up one"), glyphSize: LARGE_GLYPH);
+        _moveDownButton = new IconButton("\u2B63", () => MoveSelectedBy(1), TazLang.Get("rulebase_movedown", "Move down one"), glyphSize: LARGE_GLYPH);
+        _moveBottomButton = new IconButton("\u2B73", MoveSelectedToBottom, TazLang.Get("rulebase_movebottom", "Move to the bottom"), glyphSize: LARGE_GLYPH);
 
         _toolbar = OptionTabCommons.StyledHorizontalWrapPanel(
             _addButton,
@@ -279,9 +298,9 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     {
         Margin = new Thickness(4);
         Padding = new Thickness(4, 6, 4, 12);
-        Background = new SolidBrush(new Color(0, 0, 0, 25));
-        Border = new SolidBrush(new Color(0, 0, 0, 75));
-        BorderThickness = new Thickness(2);
+        Background = StyleConstantsDefaults.BorderBackgroundBrush;
+        Border = StyleConstantsDefaults.BorderLineBrush;
+        BorderThickness = StyleConstantsDefaults.BorderThickness;
         HorizontalAlignment = HorizontalAlignment.Stretch;
         VerticalAlignment = VerticalAlignment.Stretch;
     }
@@ -317,13 +336,30 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         return panel;
     }
 
-    /// <summary>Appends a rule, assigns it the next order value, selects it, and raises <see cref="RuleCrud"/></summary>
+    /// <summary>
+    /// Places a rule per <see cref="AddNewRulesFirst"/>, gives it an order value, selects it, and
+    /// raises <see cref="RuleCrud"/>. The event is raised last, so a handler that persists the rule
+    /// sees the position it ended up in.
+    /// </summary>
     /// <param name="rule">The rule to add</param>
     private void AddRule(TRule rule)
     {
-        rule.Order = GetNextOrder();
-        Rules.Add(rule);
-        SelectedIndex = Rules.Count - 1;
+        if (AddNewRulesFirst)
+        {
+            Rules.Insert(0, rule);
+            SelectedIndex = 0;
+
+            // Everything below it moved down, so the whole table is re-stamped rather than only the
+            // newcomer given a number.
+            RecalculateOrder();
+        }
+        else
+        {
+            rule.Order = GetNextOrder();
+            Rules.Add(rule);
+            SelectedIndex = Rules.Count - 1;
+        }
+
         RuleCrud?.Invoke(this, new RuleCrudEventArgs<TRule>(rule, RuleCrudEventType.Create));
     }
 
@@ -423,9 +459,15 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     private void UpdateToolbarState()
     {
         TRule? selectedRule = GetSelectedRule();
-        bool hasSelection = selectedRule != null;
 
-        _addButton.Enabled = !IsInEditor;
+        // Every button here acts on the table's selection, and while a configurator is open the table
+        // is not on screen to have one. Editing, deleting or reordering a row from under an open
+        // editor is at best confusing and at worst destroys the rule being edited - so the whole
+        // toolbar goes dead until the editor is done, not just Add.
+        bool canActOnTable = !IsInEditor;
+        bool hasSelection = canActOnTable && selectedRule != null;
+
+        _addButton.Enabled = canActOnTable;
 
         // If we've no configurator, the 'Add' button simply adds a 'default' rule instance.
         _addButton.OnClick = _ruleConfigurator != null
@@ -472,11 +514,16 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     {
         IsInEditor = false;
 
+        // AddRule raises RuleCrud itself, once the rule has its final position. Forwarding as well
+        // would hand every consumer the same creation twice - which a consumer that appends the rule
+        // to a stored list has no way to tell from two separate ones.
         if (args.Event == RuleCrudEventType.Create)
+        {
             AddRule(args.Rule);
-        else
-            RefreshTable();
+            return;
+        }
 
+        RefreshTable();
         RuleCrud?.Invoke(this, args);
     }
 
@@ -490,7 +537,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     private void OnEditorClosed(object? sender, EventArgs e) => IsInEditor = false;
 
     /// <summary>Updates selection based on where the desktop was touched, ignoring touches on the toolbar or an open context menu</summary>
-    private void OnDesktopTouchDown(object? sender, EventArgs e)
+    private void OnDesktopTouchDown(object? sender, TouchEventArgs e)
     {
         if (Desktop?.TouchPosition == null || IsInEditor)
             return;

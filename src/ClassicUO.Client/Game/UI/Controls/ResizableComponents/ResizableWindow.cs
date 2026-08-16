@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Input;
-using FontStashSharp;
-using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
+using Myra.Events;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 
@@ -90,15 +88,22 @@ public class ResizableWindow : Window, IDisposable
     private string MinMaxButtonText => IsMinimized ? "□" : "−";
 
     /// <summary>
-    ///     Gets the font used to render the minimize/maximize button glyph for the current <see cref="IsMinimized" /> state.
+    ///     Gets the point size the minimize/maximize glyph is drawn at. The two states use different
+    ///     glyphs and one of them is a bare dash, which needs the extra size to read as a control
+    ///     rather than as a hairline.
     /// </summary>
-    private SpriteFontBase MinMaxButtonFont => IsMinimized
-        ? TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 24)
-        : TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 32);
+    private int MinMaxGlyphSize => IsMinimized ? MINIMIZE_BTN_GLYPH_SIZE : RESTORE_BTN_GLYPH_SIZE;
 
     #endregion
 
     #region Members
+
+    /// <summary>Point size for the restore glyph, a hollow square.</summary>
+    private const int MINIMIZE_BTN_GLYPH_SIZE = 24;
+
+    /// <summary>Point size for the minimize glyph. Larger, because it is a bare dash and reads as a
+    /// hairline at the square's size.</summary>
+    private const int RESTORE_BTN_GLYPH_SIZE = 32;
 
     private ResizeEdges? _activeResizeEdge;
     private DragDirection _allowedDragDirections;
@@ -122,10 +127,9 @@ public class ResizableWindow : Window, IDisposable
 
     #region Components
 
-    private Widget _minMaxButton;
-    private MyraLabel _minMaxButtonLabel;
+    private IconButton _minMaxButton;
 
-    private Widget _resetSizeButton;
+    private IconButton _resetSizeButton;
 
     private Widget _content;
 
@@ -229,8 +233,6 @@ public class ResizableWindow : Window, IDisposable
         Mouse.LeftButtonClickStateChanged -= LeftClickChangedHandler;
         Mouse.Moved -= OnMouseMovedWhileResizing;
         TitlePanel?.TouchDoubleClick -= OnMinMaxButtonClick;
-        _minMaxButton?.TouchDown -= OnMinMaxButtonClick;
-        _resetSizeButton?.TouchDown -= OnResetSizeButtonClick;
         StopOverridingCursorStyle();
 
         IsDisposed = true;
@@ -286,7 +288,7 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Initiates a resize operation if the user clicks on a resize handle.
     /// </summary>
-    public override void OnTouchDown()
+    public override void OnTouchDown(TouchEventArgs args)
     {
         // To preserve normal Myra window behavior, we have to consider whether the window is in front.
         // If not, the click is 'directed' to bringing-to-front rather than dragging
@@ -294,7 +296,7 @@ public class ResizableWindow : Window, IDisposable
         if (widgets[^1] != this)
         {
             // The base cals BringToFront so we just let it take control here.
-            base.OnTouchDown();
+            base.OnTouchDown(args);
             // If we ever want the visual cursor style changed right after focusing, we can add it here.
             // Just a nitpick.
             return;
@@ -389,11 +391,7 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Updates the text and font of the minimize/maximize button based on the current state.
     /// </summary>
-    private void UpdateMinMaxButtonLabel()
-    {
-        _minMaxButtonLabel?.Text = MinMaxButtonText;
-        _minMaxButtonLabel?.Font = MinMaxButtonFont;
-    }
+    private void UpdateMinMaxButtonLabel() => _minMaxButton?.SetIcon(MinMaxButtonText, MinMaxGlyphSize);
 
     /// <summary>
     ///     Event handler for the minimize/maximize button click.
@@ -433,28 +431,14 @@ public class ResizableWindow : Window, IDisposable
         if (_minMaxButton != null)
             return;
 
-        _minMaxButtonLabel = new MyraLabel(MinMaxButtonText, 6)
-        {
-            Font = MinMaxButtonFont,
-            Wrap = false,
-            SingleLine = true,
-            TextAlign = TextHorizontalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE
-        };
-
-        _minMaxButton = new Myra.Graphics2D.UI.Button
-        {
-            Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Tooltip = TazLang.Get("uicommons_minmaxwindow_tooltip"),
-            Content = _minMaxButtonLabel,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
-        _minMaxButton.TouchDown += OnMinMaxButtonClick;
+        // Through the shared icon button, which seats the glyph from the font's own metrics. Both
+        // states use the same button, so the toggle cannot shift the icon by a pixel on click.
+        _minMaxButton = new IconButton(
+            MinMaxButtonText,
+            () => OnMinMaxButtonClick(this, EventArgs.Empty),
+            TazLang.Get("uicommons_minmaxwindow_tooltip"),
+            glyphSize: MinMaxGlyphSize
+        );
 
         TitlePanel.Widgets.Insert(index, _minMaxButton);
         TitlePanel.TouchDoubleClick += OnMinMaxButtonClick;
@@ -468,11 +452,9 @@ public class ResizableWindow : Window, IDisposable
         if (_minMaxButton == null)
             return;
 
-        _minMaxButton.TouchDown -= OnMinMaxButtonClick;
         TitlePanel.TouchDoubleClick -= OnMinMaxButtonClick;
         TitlePanel.Widgets.Remove(_minMaxButton);
         _minMaxButton = null;
-        _minMaxButtonLabel = null;
     }
 
     /// <summary>
@@ -484,28 +466,13 @@ public class ResizableWindow : Window, IDisposable
         if (_resetSizeButton != null)
             return;
 
-        var label = new MyraLabel(StyleConstantsDefaults.RESET_LABEL_ICON_TEXT, 24)
-        {
-            Font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 24),
-            Wrap = false,
-            SingleLine = true,
-            TextAlign = TextHorizontalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE
-        };
+        _resetSizeButton = new IconButton(
+            StyleConstantsDefaults.RESET_LABEL_ICON_TEXT,
+            () => OnResetSizeButtonClick(this, EventArgs.Empty),
+            TazLang.Get("uicommons_resetwindowsize_tooltip"),
+            glyphSize: StyleConstantsDefaults.RESET_ICON_FONT_SIZE
+        );
 
-        _resetSizeButton = new Myra.Graphics2D.UI.Button
-        {
-            Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Tooltip = TazLang.Get("uicommons_resetwindowsize_tooltip"),
-            Content = label,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
-        _resetSizeButton.TouchDown += OnResetSizeButtonClick;
         TitlePanel.Widgets.Insert(index, _resetSizeButton);
     }
 
@@ -517,7 +484,6 @@ public class ResizableWindow : Window, IDisposable
         if (_resetSizeButton == null)
             return;
 
-        _resetSizeButton.TouchDown -= OnResetSizeButtonClick;
         TitlePanel.Widgets.Remove(_resetSizeButton);
         _resetSizeButton = null;
     }
