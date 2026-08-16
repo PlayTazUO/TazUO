@@ -14,6 +14,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.UI;
 using ClassicUO.LegionScripting;
 using Myra;
+using ClassicUO.Network.PacketHandlers.Helpers;
 
 namespace ClassicUO.Game.Managers
 {
@@ -298,6 +299,28 @@ namespace ClassicUO.Game.Managers
 
             // Desyncs death state from the server; only a real death/resurrect packet restores it.
             Register("deadman-mode", args => World.Instance?.Player?.IsDead = ParseBooleanCommandArgs(args));
+            
+            Register("test", args =>
+            {
+                int count = 30000;
+
+                if (args != null && args.Length > 1) int.TryParse(args[1], out count);
+
+                const int subcount = 2;
+                Stopwatch timer = new();
+                timer.Start();
+                GameActions.Print($"Generating {count} fake items with {subcount} additional updates per fake item, resulting in a total of {count * (1 + subcount)} method calls.");
+
+                for (uint i = 0; i < count; i++)
+                {
+                    ObjectHelpers.UpdateGameObject(_world, 0x40000000 + i, 100, 0, 1, 1, 1, 1, Direction.North, 0, Flags.None, 0, 0, 0);
+                    for (int sc = 0; sc < subcount; sc++)
+                        ObjectHelpers.UpdateGameObject(_world, 0x40000000 + i, 100, 0, 1, 1, 1, 1, Direction.North, 0, Flags.None, 0, 0, 0);
+                }
+                timer.Stop();
+
+                GameActions.Print($"Done, time: {timer.Elapsed}");
+            });
         }
 
         /// <summary>
