@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using ClassicUO.Configuration;
@@ -23,6 +24,7 @@ namespace ClassicUO.Game.Managers
         private const int PENDING_CUSTOM_NAME_REQUESTS_DELAY_MS = 1000;
         private const int MAX_BATCH_SIZE = 500;
         private const int MAX_SEARCH_LIMIT = 10000;
+        private const int MAX_PENDING_ITEMS = 10000;
 
         private static readonly Lazy<ItemDatabaseManager> _instance = new(() => new ItemDatabaseManager());
 
@@ -33,10 +35,45 @@ namespace ClassicUO.Game.Managers
         private string _connectionString;
         private bool _initialized;
         private bool _disposed;
-        private readonly ConcurrentQueue<ItemInfo> _pendingItems = new();
+        private ConcurrentDictionary<uint, PendingItem> _pendingItems = new();
         private readonly ConcurrentDictionary<uint, TaskCompletionSource<string>> _pendingCustomNameRequests = new();
         private Timer _pendingItemsTimer;
         private Timer _customNameRequestsTimer;
+
+        // Lean snapshot taken on the main thread; the expensive name/properties computation is deferred to the flush thread.
+        private readonly struct PendingItem
+        {
+            public readonly Item Item;
+            public readonly uint Serial;
+            public readonly ushort Graphic;
+            public readonly ushort Hue;
+            public readonly uint Container;
+            public readonly Layer Layer;
+            public readonly int X;
+            public readonly int Y;
+            public readonly bool OnGround;
+            public readonly uint Character;
+            public readonly string CharacterName;
+            public readonly string ServerName;
+            public readonly DateTime UpdatedTime;
+
+            public PendingItem(Item item, uint character, string characterName, string serverName, Layer layer)
+            {
+                Item = item;
+                Serial = item.Serial;
+                Graphic = item.Graphic;
+                Hue = item.Hue;
+                Container = item.Container;
+                Layer = layer;
+                X = item.X;
+                Y = item.Y;
+                OnGround = item.OnGround;
+                Character = character;
+                CharacterName = characterName;
+                ServerName = serverName;
+                UpdatedTime = DateTime.Now;
+            }
+        }
 
         public static ItemDatabaseManager Instance => _instance.Value;
 
@@ -364,7 +401,6 @@ namespace ClassicUO.Game.Managers
             if (item.ItemData.IsDoor || item.ItemData.IsLight || item.ItemData.IsInternal || item.ItemData.IsRoof || item.ItemData.IsWall  || item.IsMulti || item.IsCorpse || StaticFilters.IsRock(item.Graphic) || StaticFilters.IsTree(item.Graphic, out _))
                 return;
 
-            // Check if ItemData is accessible (TileData might not be loaded yet)
             Layer layer = Layer.Invalid;
             try
             {
@@ -375,26 +411,20 @@ namespace ClassicUO.Game.Managers
                 Log.Warn($"Failed to get layer for item {item.Serial}: {ex.Message}");
             }
 
-            var itemInfo = new ItemInfo
-            {
-                Serial = item.Serial,
-                Graphic = item.Graphic,
-                Hue = item.Hue,
-                Name = item.GetNormalizedName(false),
-                Properties = item.OPLData, // Will be filled by tooltip if available
-                Container = item.Container,
-                Layer = layer,
-                UpdatedTime = DateTime.Now,
-                Character = world.Player.Serial,
-                CharacterName = world.Player.Name ?? string.Empty,
-                ServerName = ProfileManager.CurrentProfile?.ServerName ?? "unknown",
-                X = item.X,
-                Y = item.Y,
-                OnGround = item.OnGround,
-                CustomName = item.CustomName ?? string.Empty,
-            };
+            Profile profile = ProfileManager.CurrentProfile;
 
-            _pendingItems.Enqueue(itemInfo);
+            // Burst cap: coalesce by serial and stop growing once the cap is hit so a 10k item
+            // flood doesn't queue a pending record for every serial or retain destroyed items.
+            if (_pendingItems.Count >= MAX_PENDING_ITEMS && !_pendingItems.ContainsKey(item.Serial))
+                return;
+
+            _pendingItems[item.Serial] = new PendingItem(
+                item,
+                world.Player.Serial,
+                world.Player.Name ?? string.Empty,
+                profile?.ServerName ?? "unknown",
+                layer
+            );
 
             lock (_timerLock)
             {
@@ -405,7 +435,7 @@ namespace ClassicUO.Game.Managers
                 {
                     AutoReset = false
                 };
-                
+
                 _pendingItemsTimer.Elapsed += PendingItemsTimerOnElapsed;
                 _pendingItemsTimer.Start();
             }
@@ -644,15 +674,11 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                List<ItemInfo> items = new();
-                int c = 0;
-                while (_pendingItems.TryDequeue(out ItemInfo itemInfo) && c < MAX_BATCH_SIZE)
-                {
-                    items.Add(itemInfo);
-                    c++;
-                }
-
-                Log.TraceDebug($"Bulking {c} items.");
+                // Take everything queued so far in one atomic swap; new arrivals land in a fresh dictionary.
+                ConcurrentDictionary<uint, PendingItem> pending = Interlocked.Exchange(
+                    ref _pendingItems,
+                    new ConcurrentDictionary<uint, PendingItem>()
+                );
 
                 lock (_timerLock)
                 {
@@ -668,6 +694,15 @@ namespace ClassicUO.Game.Managers
                     }
                 }
 
+                if (pending.Count == 0)
+                    return;
+
+                var items = new List<ItemInfo>(pending.Count);
+                foreach (PendingItem pendingItem in pending.Values)
+                    items.Add(MaterializeItemInfo(pendingItem));
+
+                Log.TraceDebug($"Bulking {items.Count} items.");
+
                 if (items.Count > 0)
                 {
                     await AddOrUpdateItemsAsync(items);
@@ -676,6 +711,31 @@ namespace ClassicUO.Game.Managers
             catch
             {
             }
+        }
+
+        // Builds the full ItemInfo on the background flush thread, deferring the string work from the main thread.
+        private static ItemInfo MaterializeItemInfo(PendingItem pending)
+        {
+            Item item = pending.Item;
+
+            return new ItemInfo
+            {
+                Serial = pending.Serial,
+                Graphic = pending.Graphic,
+                Hue = pending.Hue,
+                Name = item?.GetNormalizedName(false) ?? string.Empty,
+                Properties = item?.OPLData ?? string.Empty,
+                Container = pending.Container,
+                Layer = pending.Layer,
+                UpdatedTime = pending.UpdatedTime,
+                Character = pending.Character,
+                CharacterName = pending.CharacterName,
+                ServerName = pending.ServerName,
+                X = pending.X,
+                Y = pending.Y,
+                OnGround = pending.OnGround,
+                CustomName = item?.CustomName ?? string.Empty,
+            };
         }
 
         public void Dispose()
@@ -714,11 +774,14 @@ namespace ClassicUO.Game.Managers
             // Flush remaining items synchronously
             if (!_pendingItems.IsEmpty)
             {
-                var remainingItems = new List<ItemInfo>();
-                while (_pendingItems.TryDequeue(out ItemInfo item))
-                {
-                    remainingItems.Add(item);
-                }
+                ConcurrentDictionary<uint, PendingItem> remaining = Interlocked.Exchange(
+                    ref _pendingItems,
+                    new ConcurrentDictionary<uint, PendingItem>()
+                );
+
+                var remainingItems = new List<ItemInfo>(remaining.Count);
+                foreach (PendingItem pendingItem in remaining.Values)
+                    remainingItems.Add(MaterializeItemInfo(pendingItem));
 
                 if (remainingItems.Count > 0)
                 {

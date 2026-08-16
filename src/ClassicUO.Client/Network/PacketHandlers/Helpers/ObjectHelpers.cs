@@ -28,7 +28,7 @@ public static class ObjectHelpers
     {
         Mobile mobile = null;
         Item item = null;
-        Entity obj = world.Get(serial);
+        Entity obj;
 
         if (
             Client.Game.UO.GameCursor.ItemHold.Enabled
@@ -55,18 +55,19 @@ public static class ObjectHelpers
 
         bool created = false;
 
-        if (obj == null || obj.IsDestroyed)
+        // Single dictionary lookup (GetOrCreate* does the lookup and the create), avoiding the
+        // old world.Get() followed by a second GetOrCreate* lookup on the same serial.
+        if (SerialHelper.IsMobile(serial) && type != 3)
         {
-            created = true;
+            mobile = world.GetOrCreateMobile(serial, out created);
 
-            if (SerialHelper.IsMobile(serial) && type != 3)
+            if (mobile == null)
+                return;
+
+            obj = mobile;
+
+            if (created)
             {
-                mobile = world.GetOrCreateMobile(serial);
-
-                if (mobile == null)
-                    return;
-
-                obj = mobile;
                 mobile.Graphic = (ushort)(graphic + graphic_inc);
                 mobile.CheckGraphicChange();
                 mobile.Direction = direction & Direction.Up;
@@ -76,27 +77,18 @@ public static class ObjectHelpers
                 mobile.Z = z;
                 mobile.Flags = flagss;
             }
-            else
-            {
-                item = world.GetOrCreateItem(serial);
-
-                if (item == null)
-                    return;
-
-                obj = item;
-            }
         }
         else
         {
-            if (obj is Item item1)
-            {
-                item = item1;
+            item = world.GetOrCreateItem(serial, out created);
 
-                if (SerialHelper.IsValid(item.Container))
-                    world.RemoveItemFromContainer(item);
-            }
-            else
-                mobile = (Mobile)obj;
+            if (item == null)
+                return;
+
+            obj = item;
+
+            if (!created && SerialHelper.IsValid(item.Container))
+                world.RemoveItemFromContainer(item);
         }
 
         if (obj == null)

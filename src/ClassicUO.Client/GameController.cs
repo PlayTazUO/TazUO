@@ -174,23 +174,37 @@ namespace ClassicUO
             });
         }
 
-        private const int MAX_PACKETS_PER_FRAME = 25;
+        private const int MAX_PACKETS_PER_FRAME = 1000;
+        private const long MAX_PACKET_PROCESSING_TIME_MS = 5;
 
         private void ProcessNetworkPackets()
         {
+            World world = Client.Game.UO.World;
+
+            // Spread a large burst across frames instead of hitching one frame on a 64KB message.
+            long deadline =
+                Stopwatch.GetTimestamp() + MAX_PACKET_PROCESSING_TIME_MS * Stopwatch.Frequency / 1000;
             int packetsProcessed = 0;
-            while (packetsProcessed < MAX_PACKETS_PER_FRAME)
+
+            // Drain leftover bytes of a huge message that exceeded the budget last frame first.
+            packetsProcessed += PacketParser.Instance.ParseAvailablePackets(world, MAX_PACKETS_PER_FRAME, deadline);
+
+            while (packetsProcessed < MAX_PACKETS_PER_FRAME && Stopwatch.GetTimestamp() < deadline)
             {
                 bool hasPacket = AsyncNetClient.Socket.TryDequeuePacket(out byte[] message);
 
                 if (!hasPacket)
                     break;
 
-                int c = PacketParser.Instance.ParsePackets(Client.Game.UO.World, message);
-
-                AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)c;
-                packetsProcessed++;
+                PacketParser.Instance.AppendToMainBuffer(message);
+                packetsProcessed += PacketParser.Instance.ParseAvailablePackets(
+                    world,
+                    MAX_PACKETS_PER_FRAME - packetsProcessed,
+                    deadline
+                );
             }
+
+            AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)packetsProcessed;
 
             // Plugin packets are buffered separately and would sit unprocessed
             // if no network packets arrived this frame, so always drain them.
@@ -198,10 +212,13 @@ namespace ClassicUO
 
             // UltimaLive defers chunk reloads during packet processing so a streamed
             // area doesn't rebuild the same chunk multiple times. A new-area download
-            // spans many frames (MAX_PACKETS_PER_FRAME), so flush once the socket queue
-            // is drained to coalesce the whole burst; fall back to a time cap in case
-            // steady traffic keeps the queue from ever emptying.
-            if (!AsyncNetClient.Socket.HasPendingPackets || UltimaLive.ShouldFlushPendingChunkReloads)
+            // spans many frames (packet budget), so flush once the socket queue and the
+            // parser buffer are drained to coalesce the whole burst; fall back to a time
+            // cap in case steady traffic keeps the queue from ever emptying.
+            if (
+                (!AsyncNetClient.Socket.HasPendingPackets && !PacketParser.Instance.HasBufferedData)
+                || UltimaLive.ShouldFlushPendingChunkReloads
+            )
             {
                 UltimaLive.FlushPendingChunkReloads(Client.Game.UO.World);
             }
