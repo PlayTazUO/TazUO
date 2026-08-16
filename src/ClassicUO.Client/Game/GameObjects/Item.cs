@@ -217,49 +217,35 @@ namespace ClassicUO.Game.GameObjects
         /// greater than one. When false, any leading stack size is stripped so only the name remains.
         /// </param>
         /// <returns>The normalized item name, or an empty string if no name is available.</returns>
-        public string GetNormalizedName(bool showAmount) =>
-            BuildNormalizedName(OPLName, Name, ItemData.Name, Amount, IsCorpse, showAmount);
-
-        /// <summary>
-        /// Assembles a display name from pre-read inputs so background threads can build
-        /// names without touching live Item state.
-        /// </summary>
-        internal static string BuildNormalizedName(
-            string oplName,
-            string name,
-            string itemDataName,
-            ushort amount,
-            bool isCorpse,
-            bool showAmount
-        )
+        public string GetNormalizedName(bool showAmount)
         {
             // Prefer the OPL name cached when OPL data was received (easier/faster lookup).
-            string result = oplName;
+            string name = OPLName;
 
-            if (string.IsNullOrEmpty(result))
+            if (string.IsNullOrEmpty(name))
             {
                 // Fall back to the server-assigned entity name, then the item data name
                 // (adjusted for plurality).
-                result = !string.IsNullOrEmpty(name)
-                    ? name
-                    : StringHelper.CapitalizeAllWords(StringHelper.GetPluralAdjustedString(itemDataName, amount > 1));
+                name = !string.IsNullOrEmpty(Name)
+                    ? Name
+                    : StringHelper.CapitalizeAllWords(StringHelper.GetPluralAdjustedString(ItemData.Name, Amount > 1));
             }
 
-            if (string.IsNullOrEmpty(result))
+            if (string.IsNullOrEmpty(name))
                 return string.Empty;
 
-            result = result.Trim();
+            name = name.Trim();
 
             // OPL names (and some fallbacks) may already include a leading stack size,
             // e.g. "5 Gold Coins". Strip it so amount display is controlled consistently.
-            string amountStr = $"{amount.ToString(CultureInfo.InvariantCulture)} ";
-            if (result.StartsWith(amountStr, StringComparison.Ordinal))
-                result = result[amountStr.Length..];
+            string amountStr = $"{Amount.ToString(CultureInfo.InvariantCulture)} ";
+            if (name.StartsWith(amountStr, StringComparison.Ordinal))
+                name = name[amountStr.Length..];
 
-            if (showAmount && !isCorpse && amount > 1)
-                result = amountStr + result;
+            if (showAmount && !IsCorpse && Amount > 1)
+                name = amountStr + name;
 
-            return result;
+            return name;
         }
 
         public override void OnGraphicSet(ushort newGraphic)
