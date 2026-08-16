@@ -26,6 +26,7 @@ All notable changes to TazUO will be recorded here.
 * Right click to close should be more accurate now
 * Drawing one more tile outside the viewport for smooth static loading
 * Clicking login music toggle on login screen should stop music now
+* Improved client performance when entering heavily populated areas: network packets are now processed under a per-frame time budget instead of a fixed message cap, unchanged item/mobile updates are skipped, and world object lookups/insertions use single-hash dictionary operations
 * Moved the corpse opening settings (auto open corpses, corpse open distance, corpse open options) from the Misc options tab into a "Corpse Opening" container under Gameplay -> Mobiles -> Misc ([bittiez](https://github.com/bittiez))
 * Made looting take higher priority over opening corpses *except your own corpse and manually opened corpses*
 * Migrated WASD Movement and Single click to cast spell settings to Global settings, migrated turn delay to server settings ([bittiez](https://github.com/bittiez))

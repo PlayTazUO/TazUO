@@ -31,7 +31,8 @@ public class EventSink
     internal static void InvokeOnItemCreated(Item sender)
     {
         OnItemCreatedInternal?.Invoke(sender, EventArgs.Empty);
-        OnItemCreated?.Invoke(sender, new ApiItem(sender));
+        if (OnItemCreated != null)
+            OnItemCreated(sender, new ApiItem(sender));
     }
 
     /// <summary>
@@ -50,7 +51,8 @@ public class EventSink
     internal static void InvokeOnItemUpdated(Item sender)
     {
         OnItemUpdatedInternal?.Invoke(sender, EventArgs.Empty);
-        OnItemUpdated?.Invoke(sender, new ApiItem(sender));
+        if (OnItemUpdated != null)
+            OnItemUpdated(sender, new ApiItem(sender));
     }
 
     /// <summary>
@@ -139,7 +141,8 @@ public class EventSink
     internal static void InvokeOnBuffAdded(object sender, BuffEventArgs e)
     {
         OnBuffAddedInternal?.Invoke(sender, e);
-        OnBuffAdded?.Invoke(sender, new ApiBuff(e.Buff));
+        if (OnBuffAdded != null)
+            OnBuffAdded(sender, new ApiBuff(e.Buff));
     }
 
     /// <summary>
@@ -157,7 +160,8 @@ public class EventSink
     internal static void InvokeOnBuffRemoved(object sender, BuffEventArgs e)
     {
         OnBuffRemovedInternal?.Invoke(sender, e);
-        OnBuffRemoved?.Invoke(sender, new ApiBuff(e.Buff));
+        if (OnBuffRemoved != null)
+            OnBuffRemoved(sender, new ApiBuff(e.Buff));
     }
 
     /// <summary>
@@ -260,7 +264,8 @@ public class EventSink
     public static void InvokeMobileCreated(Mobile m)
     {
         MobileCreated?.Invoke(m, m);
-        ApiMobileCreated?.Invoke(null, new ApiMobile(m));
+        if (ApiMobileCreated != null)
+            ApiMobileCreated(null, new ApiMobile(m));
     }
 
     public static event EventHandler<SkillChangeArgs> SkillValueChangedEvent;
