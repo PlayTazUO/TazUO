@@ -40,10 +40,10 @@ namespace ClassicUO.Game.Managers
         private Timer _pendingItemsTimer;
         private Timer _customNameRequestsTimer;
 
-        // Lean snapshot taken on the main thread; the expensive name/properties computation is deferred to the flush thread.
+        // Snapshot taken on the main thread so the flush thread never reads live Item state.
+        // Only the string assembly (pluralization/capitalization) is deferred to the flush thread.
         private readonly struct PendingItem
         {
-            public readonly Item Item;
             public readonly uint Serial;
             public readonly ushort Graphic;
             public readonly ushort Hue;
@@ -56,10 +56,16 @@ namespace ClassicUO.Game.Managers
             public readonly string CharacterName;
             public readonly string ServerName;
             public readonly DateTime UpdatedTime;
+            public readonly string OPLName;
+            public readonly string Name;
+            public readonly string ItemDataName;
+            public readonly string OPLData;
+            public readonly string CustomName;
+            public readonly ushort Amount;
+            public readonly bool IsCorpse;
 
             public PendingItem(Item item, uint character, string characterName, string serverName, Layer layer)
             {
-                Item = item;
                 Serial = item.Serial;
                 Graphic = item.Graphic;
                 Hue = item.Hue;
@@ -72,6 +78,13 @@ namespace ClassicUO.Game.Managers
                 CharacterName = characterName;
                 ServerName = serverName;
                 UpdatedTime = DateTime.Now;
+                OPLName = item.OPLName;
+                Name = item.Name;
+                ItemDataName = item.ItemData.Name;
+                OPLData = item.OPLData;
+                CustomName = item.CustomName;
+                Amount = item.Amount;
+                IsCorpse = item.IsCorpse;
             }
         }
 
@@ -713,18 +726,16 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        // Builds the full ItemInfo on the background flush thread, deferring the string work from the main thread.
+        // Builds the full ItemInfo on the background flush thread from a main-thread snapshot.
         private static ItemInfo MaterializeItemInfo(PendingItem pending)
         {
-            Item item = pending.Item;
-
             return new ItemInfo
             {
                 Serial = pending.Serial,
                 Graphic = pending.Graphic,
                 Hue = pending.Hue,
-                Name = item?.GetNormalizedName(false) ?? string.Empty,
-                Properties = item?.OPLData ?? string.Empty,
+                Name = Item.BuildNormalizedName(pending.OPLName, pending.Name, pending.ItemDataName, pending.Amount, pending.IsCorpse, false),
+                Properties = pending.OPLData ?? string.Empty,
                 Container = pending.Container,
                 Layer = pending.Layer,
                 UpdatedTime = pending.UpdatedTime,
@@ -734,7 +745,7 @@ namespace ClassicUO.Game.Managers
                 X = pending.X,
                 Y = pending.Y,
                 OnGround = pending.OnGround,
-                CustomName = item?.CustomName ?? string.Empty,
+                CustomName = pending.CustomName ?? string.Empty,
             };
         }
 
