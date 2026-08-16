@@ -30,10 +30,11 @@ public static class ObjectHelpers
         Item item = null;
         Entity obj;
 
-        if (
+        bool itemHeld =
             Client.Game.UO.GameCursor.ItemHold.Enabled
-            && Client.Game.UO.GameCursor.ItemHold.Serial == serial
-        )
+            && Client.Game.UO.GameCursor.ItemHold.Serial == serial;
+
+        if (itemHeld)
         {
             if (SerialHelper.IsValid(Client.Game.UO.GameCursor.ItemHold.Container))
             {
@@ -77,6 +78,26 @@ public static class ObjectHelpers
                 mobile.Z = z;
                 mobile.Flags = flagss;
             }
+
+            // Servers re-send object updates (0x78/0x25) for in-range objects even when nothing
+            // changed. Skip the step enqueue, tile re-insert and events below when the update is
+            // identical to current state. Restricted to settled mobiles (no pending steps) that
+            // are already placed in the world.
+            if (
+                !created
+                && mobile.Steps.Count == 0
+                && mobile.X != 0xFFFF
+                && mobile.Y != 0xFFFF
+                && mobile.X == x
+                && mobile.Y == y
+                && mobile.Z == z
+                && (direction & Direction.Up) == mobile.Direction
+                && ((direction & Direction.Running) != 0) == mobile.IsRunning
+                && mobile.Graphic == ((graphic + graphic_inc) & 0x3FFF)
+                && mobile.Hue == GetFixedHue(hue)
+                && mobile.Flags == flagss
+            )
+                return;
         }
         else
         {
@@ -87,8 +108,40 @@ public static class ObjectHelpers
 
             obj = item;
 
-            if (!created && SerialHelper.IsValid(item.Container))
-                world.RemoveItemFromContainer(item);
+            if (!created)
+            {
+                ushort gfx = graphic;
+
+                if (gfx != 0x2006)
+                    gfx += graphic_inc;
+
+                if (type == 2)
+                    gfx &= 0x3FFF;
+
+                // Same dedup as the mobile branch above: unchanged ground items are re-sent
+                // periodically, and re-processing them is pure overhead. Held items and items
+                // still inside a container must keep taking the full path (cursor/container UI).
+                if (
+                    item.OnGround
+                    && !itemHeld
+                    && item.X == x
+                    && item.Y == y
+                    && item.Z == z
+                    && item.Graphic == gfx
+                    && item.IsMulti == (type == 2)
+                    && item.IsDamageable == (type == 3)
+                    && item.LightID == (byte)direction
+                    && (graphic != 0x2006 || item.Layer == (Layer)direction)
+                    && item.Hue == GetFixedHue(hue)
+                    && item.Amount == (count == 0 ? 1 : count)
+                    && item.Flags == flagss
+                    && item.Direction == direction
+                )
+                    return;
+
+                if (SerialHelper.IsValid(item.Container))
+                    world.RemoveItemFromContainer(item);
+            }
         }
 
         if (obj == null)
@@ -241,5 +294,31 @@ public static class ObjectHelpers
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Mirrors <see cref="Entity.FixHue"/> so the dedup checks can predict the post-processing hue
+    /// without mutating state. Conservative for script-highlighted entities: an active highlight
+    /// keeps its own hue, which never matches here, so those skip dedup.
+    /// </summary>
+    private static ushort GetFixedHue(ushort hue)
+    {
+        ushort fixedColor = (ushort)(hue & 0x3FFF);
+
+        if (fixedColor != 0)
+        {
+            if (fixedColor >= 0x0BB8)
+            {
+                fixedColor = 1;
+            }
+
+            fixedColor |= (ushort)(hue & 0xC000);
+        }
+        else
+        {
+            fixedColor = (ushort)(hue & 0x8000);
+        }
+
+        return fixedColor;
     }
 }
