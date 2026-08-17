@@ -95,7 +95,7 @@ public static class ChatTab
             ),
             Option.Checkbox(
                 TazLang.Get("mog_chattab_journal_hidetimestamp"),
-                new Accessor<bool>(() => profile.HideJournalTimestamp),
+                new Accessor<bool>(() => ProfileManager.GlobalSettings.HideJournalTimestamp),
                 search: new SearchMetadata(TazLang.Get("mog_chattab_journal_hidetimestamp"))
             ),
             Option.Checkbox(
