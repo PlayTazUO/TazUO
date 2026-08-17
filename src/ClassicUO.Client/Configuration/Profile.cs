@@ -1399,6 +1399,11 @@ namespace ClassicUO.Configuration
 
                                     break;
 
+                                case GumpType.OldJournal:
+                                    gump = new JournalGump(world);
+
+                                    break;
+
                                 case GumpType.MacroButton:
                                     gump = new MacroButtonGump(world);
 
