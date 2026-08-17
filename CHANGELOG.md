@@ -35,6 +35,7 @@ All notable changes to TazUO will be recorded here.
 * Add some missing weapon abilities
 
 ### Fixes
+* Fixed a `NoAudioHardwareException` crash on machines without an audio device: the audio availability probe no longer creates a `DynamicSoundEffectInstance` (which left a partially-built object for the GC finalizer to crash on) and instead reads `SoundEffect.MasterVolume` ([bittiez](https://github.com/bittiez))
 * Remove presets for auto skinnig knife id's to prevent trying to use the incorrect item on servers ([bittiez](https://github.com/bittiez))
 * Fixed a rare crash that could occur when a grid container is moved - [P.R 958](https://github.com/PlayTazUO/TazUO/pull/958) ([yuval-po](https://github.com/yuval-po))
 * Fixed the candle flicker effect speeding up while moving: the flicker phase is now seeded from each light's world position instead of its screen position, so it oscillates at a constant speed
