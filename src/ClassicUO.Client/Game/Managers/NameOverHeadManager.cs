@@ -556,6 +556,21 @@ namespace ClassicUO.Game.Managers
             set => SetField(ref field, value);
         }
 
+        /// <summary>
+        /// A duplicate under a new name, deletable regardless of what it was copied from - a copy is
+        /// the user's own, and the hotkey is deliberately not carried across since two options
+        /// answering to the same key would leave which one fires down to their order.
+        /// </summary>
+        /// <param name="name">Name for the copy.</param>
+        /// <returns>The copy, unattached to any manager.</returns>
+        public NameOverheadOption Clone(string name) =>
+            new(name, NameOverheadOptionFlags)
+            {
+                Search = Search,
+                NegativeSearch = NegativeSearch,
+                Deletable = true
+            };
+
         public bool Equals(NameOverheadOption other)
         {
             if (other == null)

@@ -10,6 +10,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.LegionScripting;
 using ClassicUO.Utility;
@@ -311,31 +312,15 @@ public class ScriptManagerWindow : MyraControl
         string normalizedGroupName
     )
     {
-        string text = isCollapsed ? "⮞" : "⮟";
-
-        var label = new MyraLabel(text, 6)
-        {
-            Font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 24),
-            Wrap = false,
-            SingleLine = true,
-            TextAlign = TextHorizontalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE
-        };
-
-        return new BasicButton(() =>
-        {
-            ToggleGroupState(isCollapsed, fullGroupPath, normalizedParentGroup, normalizedGroupName);
-            RebuildScriptList();
-        })
-        {
-            Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Content = label,
-            VerticalAlignment = VerticalAlignment.Center
-        };
+        return new IconButton(
+            isCollapsed ? "⮞" : "⮟",
+            () =>
+            {
+                ToggleGroupState(isCollapsed, fullGroupPath, normalizedParentGroup, normalizedGroupName);
+                RebuildScriptList();
+            },
+            glyphSize: StyleConstantsDefaults.RESET_ICON_FONT_SIZE
+        );
     }
 
     private void BuildScriptWidget(ScriptFile script, string indent)

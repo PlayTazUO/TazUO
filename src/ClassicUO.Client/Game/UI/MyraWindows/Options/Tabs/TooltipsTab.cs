@@ -72,7 +72,7 @@ public static class TooltipsTab
                 ),
                 Option.Button(
                     TazLang.Get("mog_tooltips_labelopenoverridesconfig"),
-                    () => TooltipOverrideWindow.Show(World.Instance),
+                    () => TooltipOverrideConfigWindow.Show(World.Instance),
                     search: new SearchMetadata(TazLang.Get("mog_tooltips_labelopenoverridesconfig"), Keywords: [TazLang.Get("mog_kw_override"), TazLang.Get("mog_kw_config")])
                 )
             )

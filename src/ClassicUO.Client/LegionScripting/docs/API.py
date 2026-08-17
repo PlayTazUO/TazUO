@@ -206,6 +206,7 @@ class ApiMobile(ApiEntity):
     IsMounted: bool = None
     IsDrivingBoat: bool = None
     IsRunning: bool = None
+    IsParalyzed: bool = None
     Direction: str = None
     Notoriety: Notoriety = None
     InWarMode: bool = None
@@ -2070,7 +2071,7 @@ def OnIgnoreList(serial: "int") -> "bool":
     """
     pass
 
-def Pathfind(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10) -> "bool":
+def Pathfind(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10, run: "bool" = True) -> "bool":
     """
      Attempt to pathfind to a location.  This will fail with large distances.
      Example:
@@ -2081,7 +2082,7 @@ def Pathfind(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1, wait: "bo
     """
     pass
 
-def PathfindEntity(entity: "int", distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10) -> "bool":
+def PathfindEntity(entity: "int", distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10, run: "bool" = True) -> "bool":
     """
      Attempt to pathfind to a mobile or item.
      Example:
@@ -2833,6 +2834,28 @@ def Virtue(virtue: "str") -> None:
      Example:
      ```py
      API.Virtue("honor")
+     ```
+    
+    """
+    pass
+
+def OpenQuestLog() -> None:
+    """
+     Open the quest log gump.
+     Example:
+     ```py
+     API.OpenQuestLog()
+     ```
+    
+    """
+    pass
+
+def OpenHelp() -> None:
+    """
+     Open the help menu.
+     Example:
+     ```py
+     API.OpenHelp()
      ```
     
     """

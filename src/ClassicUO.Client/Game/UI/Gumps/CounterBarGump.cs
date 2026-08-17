@@ -908,7 +908,7 @@ namespace ClassicUO.Game.UI.Gumps
                             Client.Game.UO.GameCursor.ItemHold.Container
                         );
                     }
-                    else if (ProfileManager.CurrentProfile.CastSpellsByOneClick)
+                    else if (ProfileManager.GlobalSettings.SingleClickIconUse)
                     {
                         Use();
                         return;
@@ -928,7 +928,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (
                     button == MouseButtonType.Left
-                    && !ProfileManager.CurrentProfile.CastSpellsByOneClick
+                    && !ProfileManager.GlobalSettings.SingleClickIconUse
                 )
                 {
                     Use();
@@ -1142,6 +1142,9 @@ namespace ClassicUO.Game.UI.Gumps
                         ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
                         if (_isGumpGraphic)
                             artInfo = ref Client.Game.UO.Gumps.GetGump(_graphic);
+
+                        if (artInfo.Texture == null)
+                            return base.Draw(batcher, x, y);
 
                         Rectangle rect = _isGumpGraphic ? artInfo.UV : Client.Game.UO.Arts.GetRealArtBounds(_graphic);
 

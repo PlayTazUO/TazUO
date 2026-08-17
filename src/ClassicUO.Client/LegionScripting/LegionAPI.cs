@@ -347,7 +347,7 @@ namespace ClassicUO.LegionScripting
             get
             {
                 if (_backpack == null)
-                    _backpack = OnMain(() => World.Player.Backpack);
+                    _backpack = BubblingOnMain(() => World?.Player?.Backpack); // Implicit operator on ApiEntity => uint - also coalesces to 0 if null
 
                 return _backpack;
             }
@@ -572,7 +572,13 @@ namespace ClassicUO.LegionScripting
                     if (callbackData.TimesToRepeat < 0 || callbackData.TimesInvoked <= (ulong)callbackData.TimesToRepeat)
                         timer.Start();
                     else
-                        RemoveTimedCallback(id);
+                    {
+                        // Final invocation: the callback was just dispatched to the queue, so don't mark
+                        // it for cancellation (that would prevent the pending wrapped action from running).
+                        _timedCallbacks.TryRemove(id, out _);
+                        timer.Stop();
+                        timer.Dispose();
+                    }
                 }
             };
 
@@ -883,7 +889,7 @@ namespace ClassicUO.LegionScripting
 
                 if (result.HasValue)
                     return result.Value;
-                
+
                 Thread.Sleep(1);
             }
 
@@ -1469,7 +1475,7 @@ namespace ClassicUO.LegionScripting
 
             foreach (ushort id in active)
             {
-                SpellDefinition spell = SpellDefinition.FullIndexGetSpell(id);
+                var spell = SpellDefinition.FullIndexGetSpell(id);
 
                 if (spell != null && !string.IsNullOrEmpty(spell.Name) && spell != SpellDefinition.EmptySpell)
                     result.Add(spell.Name);
@@ -2049,8 +2055,9 @@ namespace ClassicUO.LegionScripting
         /// <param name="distance">Distance away from goal to stop.</param>
         /// <param name="wait">True/False if you want to wait for pathfinding to complete or time out</param>
         /// <param name="timeout">Seconds to wait before cancelling waiting</param>
+        /// <param name="run">True/False should we run?</param>
         /// <returns>true/false if a path was generated</returns>
-        public bool Pathfind(int x, int y, int z = int.MinValue, int distance = 1, bool wait = false, int timeout = 10)
+        public bool Pathfind(int x, int y, int z = int.MinValue, int distance = 1, bool wait = false, int timeout = 10, bool run = true)
         {
             bool pathFindStatus = OnMain
             (() =>
@@ -2058,7 +2065,7 @@ namespace ClassicUO.LegionScripting
                     if (z == int.MinValue)
                         z = World.Map.GetTileZ(x, y);
 
-                    return World.Player.Pathfinder.WalkTo(x, y, z, distance);
+                    return World.Player.Pathfinder.WalkTo(x, y, z, distance, run);
                 }
             );
 
@@ -2099,8 +2106,9 @@ namespace ClassicUO.LegionScripting
         /// <param name="distance">Distance to stop from goal</param>
         /// <param name="wait">True/False if you want to wait for pathfinding to complete or time out</param>
         /// <param name="timeout">Seconds to wait before cancelling waiting</param>
+        /// <param name="run">True/False should we run?</param>
         /// <returns>true/false if a path was generated</returns>
-        public bool PathfindEntity(uint entity, int distance = 1, bool wait = false, int timeout = 10)
+        public bool PathfindEntity(uint entity, int distance = 1, bool wait = false, int timeout = 10, bool run = true)
         {
             int x = 0, y = 0, z = 0;
             bool pathFindStatus = OnMain
@@ -2112,7 +2120,7 @@ namespace ClassicUO.LegionScripting
                         x = mob.X;
                         y = mob.Y;
                         z = mob.Z;
-                        return World.Player.Pathfinder.WalkTo(x, y, z, distance);
+                        return World.Player.Pathfinder.WalkTo(x, y, z, distance, run);
                     }
 
                     return false;
@@ -3166,7 +3174,7 @@ namespace ClassicUO.LegionScripting
             {
                 if (DateTime.UtcNow > expire)
                     return false;
-                
+
                 Thread.Sleep(1);
             }
 
@@ -3311,10 +3319,7 @@ namespace ClassicUO.LegionScripting
         /// API.ClearSoundLog()
         /// ```
         /// </summary>
-        public void ClearSoundLog()
-        {   
-            SoundEntries.Clear();
-        }
+        public void ClearSoundLog() => SoundEntries.Clear();
 
 
         /// <summary>
@@ -3584,7 +3589,7 @@ namespace ClassicUO.LegionScripting
         /// API.Virtue("honor")
         /// ```
         /// </summary>
-        /// <param name="virtue">honor/sacrifice/valor</param>
+        /// <param name="virtue">honor/sacrifice/valor/justice</param>
         public void Virtue(string virtue)
         {
             switch (virtue.ToLower())
@@ -3592,8 +3597,27 @@ namespace ClassicUO.LegionScripting
                 case "honor": OnMain(() => { AsyncNetClient.Socket.Send_InvokeVirtueRequest(0x01); }); break;
                 case "sacrifice": OnMain(() => { AsyncNetClient.Socket.Send_InvokeVirtueRequest(0x02); }); break;
                 case "valor": OnMain(() => { AsyncNetClient.Socket.Send_InvokeVirtueRequest(0x03); }); break;
+                case "justice": OnMain(() => { AsyncNetClient.Socket.Send_InvokeVirtueRequest(0x04); }); break;
             }
         }
+
+        /// <summary>
+        /// Open the quest log gump.
+        /// Example:
+        /// ```py
+        /// API.OpenQuestLog()
+        /// ```
+        /// </summary>
+        public void OpenQuestLog() => OnMain(() => GameActions.RequestQuestMenu(World));
+
+        /// <summary>
+        /// Open the help menu.
+        /// Example:
+        /// ```py
+        /// API.OpenHelp()
+        /// ```
+        /// </summary>
+        public void OpenHelp() => OnMain(() => GameActions.RequestHelp());
 
         /// <summary>
         /// Find the nearest item/mobile based on scan type.
@@ -4310,7 +4334,7 @@ namespace ClassicUO.LegionScripting
         public IList<string> ListRunningScripts() => OnMain
         (() =>
             {
-                List<string> running = new List<string>();
+                var running = new List<string>();
 
                 foreach (ScriptFile script in LegionScripting.RunningScripts)
                     running.Add(script.RelativePath);

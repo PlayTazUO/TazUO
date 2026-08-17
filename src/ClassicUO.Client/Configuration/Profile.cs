@@ -222,6 +222,10 @@ namespace ClassicUO.Configuration
         public bool BandageAgentBandagePets { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentUseDexFormula { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentDisableSelfHeal { get; set => SetProperty(ref field, value); } = false;
+        public TargetType BandageAgentTargetType { get; set => SetProperty(ref field, value); } = TargetType.Beneficial;
+        public bool BandageAgentUseSelfCommand { get; set => SetProperty(ref field, value); } = false;
+        public string BandageAgentSelfCommand { get; set => SetProperty(ref field, value); } = ".bandage";
+        public bool BandageAgentSelfCommandExpectTarget { get; set => SetProperty(ref field, value); } = false;
         public bool SelfHeal_Enabled { get; set => SetProperty(ref field, value); } = false;
         public bool SelfHeal_UseChivalry { get; set => SetProperty(ref field, value); } = false; // false = Magery (Heal/Cure), true = Chivalry (Close Wounds/Cleanse by Fire)
         public int SelfHeal_FC { get; set => SetProperty(ref field, value); } = 2;   // Faster Casting (used to auto-compute timings)
@@ -296,15 +300,16 @@ namespace ClassicUO.Configuration
         public bool OpenModernPaperdollAtMinimizeLoc { get; set => SetProperty(ref field, value); } = false;
 
         // Experimental
+        [Obsolete("Remove after 10/12/26")]
         public bool CastSpellsByOneClick { get; set => SetProperty(ref field, value); }
         public bool BuffBarTime { get; set => SetProperty(ref field, value); }
         public bool FastSpellsAssign { get; set => SetProperty(ref field, value); }
         public bool AutoOpenDoors { get; set => SetProperty(ref field, value); } = true;
+        public bool BlockDoorMovement { get; set => SetProperty(ref field, value); } = true;
         public bool SmoothDoors { get; set => SetProperty(ref field, value); } = true;
         public bool AutoOpenCorpses { get; set => SetProperty(ref field, value); } = true;
         public int AutoOpenCorpseRange { get; set => SetProperty(ref field, value); } = 2;
         public int CorpseOpenOptions { get; set => SetProperty(ref field, value); } = 3;
-        public bool SkipEmptyCorpse { get; set => SetProperty(ref field, value); }
         public bool AutoOpenOwnCorpse { get; set => SetProperty(ref field, value); } = true;
         public bool DisableDefaultHotkeys { get; set => SetProperty(ref field, value); }
         public bool DisableArrowBtn { get; set => SetProperty(ref field, value); }
@@ -334,6 +339,7 @@ namespace ClassicUO.Configuration
         public bool UsePartyHealthBars { get; set => SetProperty(ref field, value); } = true;
         public bool ShowHealCureButtonsAllHealthbars { get; set => SetProperty(ref field, value); }
         public bool ShowHealCureButtonsFriends { get; set => SetProperty(ref field, value); }
+        public bool ShowHealCureButtonsPets { get; set => SetProperty(ref field, value); } = true;
 
         public bool ShowInfoBar { get; set => SetProperty(ref field, value); }
         public int InfoBarHighlightType { get; set => SetProperty(ref field, value); } // 0 = text colour changes, 1 = underline
@@ -732,7 +738,7 @@ namespace ClassicUO.Configuration
         public bool AutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
         public bool EnableAutoSkinning { get; set => SetProperty(ref field, value); } = false;
         public bool AutoSkinningHumanCorpses { get; set => SetProperty(ref field, value); } = false;
-        public string AutoSkinningKnifeGraphics { get; set => SetProperty(ref field, value); } = "0x2D2C;0x0F52;0x0EC4;0x0EC3;0x13F6;0x13B6";
+        public string AutoSkinningKnifeGraphics { get; set => SetProperty(ref field, value); }
         public bool ItemDatabaseEnabled { get; set => SetProperty(ref field, value); } = true;
         public static uint GumpsVersion { get; private set; }
 
@@ -834,11 +840,13 @@ namespace ClassicUO.Configuration
         public bool ModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }
         public bool JournalAnchorEnabled { get; set => SetProperty(ref field, value); } = false;
         public bool EnableAutoLootProgressBar { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete("Remove after 10/12/26")]
         public bool UseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
         public int NearbyLootGumpHeight { get; set => SetProperty(ref field, value); } = 550;
         public bool ForceTooltipsOnOldClients { get; set => SetProperty(ref field, value); } = true;
         public bool NearbyLootOpensHumanCorpses { get; set => SetProperty(ref field, value); }
-        public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 100;
+        [Obsolete("Remove after 10/12/26")]
+        public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 80;
         public bool SellAgentEnabled { get; set => SetProperty(ref field, value); }
         public int SellAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
         public int SellAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
@@ -886,6 +894,7 @@ namespace ClassicUO.Configuration
         public int MinGumpMoveDistance { get; set; } = 5;
         public int QuickHealSpell { get; set; } = 29;
         public int QuickCureSpell { get; set; } = 11;
+        [JsonConverter(typeof(Point2Converter))] public Point CoprseContainerPosition { get; set => SetProperty(ref field, value); } = new Point(100, 100);
 
 
         private long lastSave;
@@ -933,7 +942,7 @@ namespace ClassicUO.Configuration
 
             if (ProfileMigrationVersion < 5) //4
             {
-                ProfileMigrationVersion++;
+                ProfileMigrationVersion = 5;
             }
 
             if (ProfileMigrationVersion < 6)
@@ -980,7 +989,7 @@ namespace ClassicUO.Configuration
                 WebMapServerPort = OldWebMapServerPort;
                 WebMapAutoStart = OldWebMapAutoStart;
 
-                ProfileMigrationVersion++;
+                ProfileMigrationVersion = 6;
             }
 
             if (ProfileMigrationVersion < 7)
@@ -989,7 +998,7 @@ namespace ClassicUO.Configuration
                 ProfileManager.GlobalSettings.CircleOfTransparencyRadius = CircleOfTransparencyRadius;
                 ProfileManager.GlobalSettings.CircleOfTransparencyType = CircleOfTransparencyType;
                 
-                ProfileMigrationVersion++;
+                ProfileMigrationVersion = 7;
             }
 
             if (ProfileMigrationVersion < 8)
@@ -1003,7 +1012,30 @@ namespace ClassicUO.Configuration
                 ProfileManager.GlobalSettings.EnableCombatMusic = EnableCombatMusic;
                 ProfileManager.GlobalSettings.ReproduceSoundsInBackground = ReproduceSoundsInBackground;
 
-                ProfileMigrationVersion++;
+                ProfileMigrationVersion = 8;
+            }
+
+            if (ProfileMigrationVersion < 9)
+            {
+                ProfileManager.GlobalSettings.EnableSound = EnableSound;
+                ProfileManager.GlobalSettings.SoundVolume = SoundVolume;
+                ProfileManager.GlobalSettings.EnableMusic = EnableMusic;
+                ProfileManager.GlobalSettings.MusicVolume = MusicVolume;
+                ProfileManager.GlobalSettings.EnableFootstepsSound = EnableFootstepsSound;
+                ProfileManager.GlobalSettings.EnableRainSound = EnableRainSound;
+                ProfileManager.GlobalSettings.EnableCombatMusic = EnableCombatMusic;
+                ProfileManager.GlobalSettings.ReproduceSoundsInBackground = ReproduceSoundsInBackground;
+
+                ProfileMigrationVersion = 9;
+            }
+
+            if (ProfileMigrationVersion < 10)
+            {
+                ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys = UseWASDInsteadArrowKeys;
+                ProfileManager.GlobalSettings.SingleClickIconUse = CastSpellsByOneClick;
+                ProfileManager.ServerSettings.TurnDelay = TurnDelay;
+
+                ProfileMigrationVersion = 10;
             }
 
             try //Cleanup old backups from previous save system
@@ -1091,7 +1123,12 @@ namespace ClassicUO.Configuration
             // Grid highlights live in a separate grid_highlights.json (see GridHighlightsConfig); persist
             // them alongside the profile so in-place rule edits are saved on the same cadence as before.
             if (ReferenceEquals(this, ProfileManager.CurrentProfile))
+            {
                 GridHighlightsConfig.Current.Save();
+
+                // Same arrangement for the screen decoration settings and their overlay profiles.
+                FeatureConfigs.ScreenDecorations.ScreenDecorations.Current.Save();
+            }
 
             // Save opened gumps
             if (saveGumps)
@@ -1359,6 +1396,11 @@ namespace ClassicUO.Configuration
 
                                 case GumpType.Journal:
                                     gump = new ResizableJournal(world);
+
+                                    break;
+
+                                case GumpType.OldJournal:
+                                    gump = new JournalGump(world);
 
                                     break;
 

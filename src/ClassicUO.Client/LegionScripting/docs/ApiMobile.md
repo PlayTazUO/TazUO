@@ -97,6 +97,10 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 
 **Type:** `bool`
 
+### `IsParalyzed`
+
+**Type:** `bool`
+
 ### `Direction`
 
 **Type:** `string`

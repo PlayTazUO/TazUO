@@ -60,7 +60,7 @@ public static class GeneralTabContent
 
 
         //Right side
-        rightSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_turndelay"), out _, v => profile.TurnDelay = (ushort)v, 0, 150, profile.TurnDelay));
+        rightSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_turndelay"), out _, v => ProfileManager.ServerSettings.TurnDelay = (ushort)v, 0, 150, ProfileManager.ServerSettings.TurnDelay));
 
         rightSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_objectdelay"), out LabeledHorizontalSlider obDelaySlider,
             v => profile.MoveMultiObjectDelay = (int)v, 0, 3000, profile.MoveMultiObjectDelay));

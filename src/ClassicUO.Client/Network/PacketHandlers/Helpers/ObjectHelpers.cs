@@ -28,12 +28,13 @@ public static class ObjectHelpers
     {
         Mobile mobile = null;
         Item item = null;
-        Entity obj = world.Get(serial);
+        Entity obj;
 
-        if (
+        bool itemHeld =
             Client.Game.UO.GameCursor.ItemHold.Enabled
-            && Client.Game.UO.GameCursor.ItemHold.Serial == serial
-        )
+            && Client.Game.UO.GameCursor.ItemHold.Serial == serial;
+
+        if (itemHeld)
         {
             if (SerialHelper.IsValid(Client.Game.UO.GameCursor.ItemHold.Container))
             {
@@ -55,18 +56,19 @@ public static class ObjectHelpers
 
         bool created = false;
 
-        if (obj == null || obj.IsDestroyed)
+        // Single dictionary lookup (GetOrCreate* does the lookup and the create), avoiding the
+        // old world.Get() followed by a second GetOrCreate* lookup on the same serial.
+        if (SerialHelper.IsMobile(serial) && type != 3)
         {
-            created = true;
+            mobile = world.GetOrCreateMobile(serial, out created);
 
-            if (SerialHelper.IsMobile(serial) && type != 3)
+            if (mobile == null)
+                return;
+
+            obj = mobile;
+
+            if (created)
             {
-                mobile = world.GetOrCreateMobile(serial);
-
-                if (mobile == null)
-                    return;
-
-                obj = mobile;
                 mobile.Graphic = (ushort)(graphic + graphic_inc);
                 mobile.CheckGraphicChange();
                 mobile.Direction = direction & Direction.Up;
@@ -76,27 +78,70 @@ public static class ObjectHelpers
                 mobile.Z = z;
                 mobile.Flags = flagss;
             }
-            else
-            {
-                item = world.GetOrCreateItem(serial);
 
-                if (item == null)
-                    return;
-
-                obj = item;
-            }
+            // Servers re-send object updates (0x78/0x25) for in-range objects even when nothing
+            // changed. Skip the step enqueue, tile re-insert and events below when the update is
+            // identical to current state. Restricted to settled mobiles (no pending steps) that
+            // are already placed in the world.
+            if (
+                !created
+                && mobile.Steps.Count == 0
+                && mobile.X != 0xFFFF
+                && mobile.Y != 0xFFFF
+                && mobile.X == x
+                && mobile.Y == y
+                && mobile.Z == z
+                && (direction & Direction.Up) == mobile.Direction
+                && ((direction & Direction.Running) != 0) == mobile.IsRunning
+                && mobile.Graphic == ((graphic + graphic_inc) & 0x3FFF)
+                && mobile.Hue == GetFixedHue(hue)
+                && mobile.Flags == flagss
+            )
+                return;
         }
         else
         {
-            if (obj is Item item1)
+            item = world.GetOrCreateItem(serial, out created);
+
+            if (item == null)
+                return;
+
+            obj = item;
+
+            if (!created)
             {
-                item = item1;
+                ushort gfx = graphic;
+
+                if (gfx != 0x2006)
+                    gfx += graphic_inc;
+
+                if (type == 2)
+                    gfx &= 0x3FFF;
+
+                // Same dedup as the mobile branch above: unchanged ground items are re-sent
+                // periodically, and re-processing them is pure overhead. Held items and items
+                // still inside a container must keep taking the full path (cursor/container UI).
+                if (
+                    item.OnGround
+                    && !itemHeld
+                    && item.X == x
+                    && item.Y == y
+                    && item.Z == z
+                    && item.Graphic == gfx
+                    && item.IsMulti == (type == 2)
+                    && item.IsDamageable == (type == 3)
+                    && item.LightID == (byte)direction
+                    && (graphic != 0x2006 || item.Layer == (Layer)direction)
+                    && item.Hue == GetFixedHue(hue)
+                    && item.Amount == (count == 0 ? 1 : count)
+                    && item.Flags == flagss
+                    && item.Direction == direction
+                )
+                    return;
 
                 if (SerialHelper.IsValid(item.Container))
                     world.RemoveItemFromContainer(item);
             }
-            else
-                mobile = (Mobile)obj;
         }
 
         if (obj == null)
@@ -249,5 +294,31 @@ public static class ObjectHelpers
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Mirrors <see cref="Entity.FixHue"/> so the dedup checks can predict the post-processing hue
+    /// without mutating state. Conservative for script-highlighted entities: an active highlight
+    /// keeps its own hue, which never matches here, so those skip dedup.
+    /// </summary>
+    private static ushort GetFixedHue(ushort hue)
+    {
+        ushort fixedColor = (ushort)(hue & 0x3FFF);
+
+        if (fixedColor != 0)
+        {
+            if (fixedColor >= 0x0BB8)
+            {
+                fixedColor = 1;
+            }
+
+            fixedColor |= (ushort)(hue & 0xC000);
+        }
+        else
+        {
+            fixedColor = (ushort)(hue & 0x8000);
+        }
+
+        return fixedColor;
     }
 }

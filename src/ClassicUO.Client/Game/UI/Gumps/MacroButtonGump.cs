@@ -155,7 +155,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Point offset = Mouse.LDragOffset;
 
-            if (ProfileManager.CurrentProfile.CastSpellsByOneClick && button == MouseButtonType.Left && !Keyboard.Alt && Math.Abs(offset.X) < 5 && Math.Abs(offset.Y) < 5)
+            if (ProfileManager.GlobalSettings.SingleClickIconUse && button == MouseButtonType.Left && !Keyboard.Alt && Math.Abs(offset.X) < 5 && Math.Abs(offset.Y) < 5)
             {
                 RunMacro();
             }
@@ -163,7 +163,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
-            if (ProfileManager.CurrentProfile.CastSpellsByOneClick || button != MouseButtonType.Left)
+            if (ProfileManager.GlobalSettings.SingleClickIconUse || button != MouseButtonType.Left)
             {
                 return false;
             }

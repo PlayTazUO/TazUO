@@ -8,6 +8,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
@@ -40,9 +41,16 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private readonly List<TProfile> _profileRefs = [];
 
     /// <summary>
-    ///     A function that creates a new profile with a given name
+    ///     Brings a new profile into existence under a given name and stores it: from nothing, or as
+    ///     a duplicate of a source profile when one is supplied.
+    ///     <para>
+    ///         One callback rather than two, because creating and copying end the same way - the
+    ///         host adds the profile to whatever pool it owns and persists it. Split apart, every
+    ///         host writes that half twice, and a copy that stores before its contents are filled in
+    ///         persists a blank.
+    ///     </para>
     /// </summary>
-    private readonly Func<string, TProfile> _createProfile;
+    private readonly Func<string, TProfile, TProfile> _createProfile;
 
     /// <summary>
     ///     An action to be invoked when a profile is deleted via the editor's "Delete" button."
@@ -84,6 +92,19 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// </summary>
     private bool _isRenaming;
 
+    /// <summary>
+    ///     Validation message shown under the rename input, or <see langword="null" /> when the
+    ///     current input is valid.
+    /// </summary>
+    private string _renameError;
+
+    /// <summary>
+    ///     Whether a newly created profile goes to the top of the list rather than the bottom. Opt-in:
+    ///     it suits a library the user often adds to, and reads as arbitrary reordering everywhere
+    ///     else.
+    /// </summary>
+    private readonly bool _newestFirst;
+
     #endregion Members
 
     #region Accessores
@@ -101,16 +122,21 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     ///     Initializes a new instance of the <see cref="ProfileEditor{TProfile}" /> class.
     /// </summary>
     /// <param name="getConfigUiForProfile">The function to retrieve the UI for a profile.</param>
-    /// <param name="createProfile">The function to create a new profile.</param>
+    /// <param name="createProfile">
+    ///     Creates and stores a profile under the given name. The second argument is the profile to
+    ///     duplicate, or <see langword="null" /> to build a fresh one.
+    /// </param>
     /// <param name="onDeleteProfile">The action to perform when deleting a profile.</param>
     /// <param name="profiles">The initial list of profiles.</param>
     /// <param name="onRenameProfile">An optional action to perform after renaming a profile.</param>
+    /// <param name="newestFirst">When true, newly created profiles are listed first.</param>
     public ProfileEditor(
         Func<TProfile, Widget> getConfigUiForProfile,
-        Func<string, TProfile> createProfile,
+        Func<string, TProfile, TProfile> createProfile,
         Action<TProfile> onDeleteProfile,
         IEnumerable<TProfile> profiles = null,
-        Action<TProfile> onRenameProfile = null
+        Action<TProfile> onRenameProfile = null,
+        bool newestFirst = false
     )
     {
         ArgumentNullException.ThrowIfNull(getConfigUiForProfile);
@@ -121,6 +147,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
         _createProfile = createProfile;
         _onDeleteProfile = onDeleteProfile;
         _onRenameProfile = onRenameProfile;
+        _newestFirst = newestFirst;
 
         foreach (TProfile profile in profiles ?? [])
             AddProfile(profile);
@@ -144,11 +171,30 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <summary>
     ///     Handles the add profile button click.
     /// </summary>
-    private void OnAdd()
+    private void OnAdd() => Introduce(_createProfile(GetNextProfileName(), default));
+
+    /// <summary>Handles the copy button click.</summary>
+    private void OnCopy()
     {
-        TProfile newProfile = _createProfile(GetNextProfileName());
-        AddProfile(newProfile);
-        ChangeOrUpdateProfile(newProfile);
+        if (_selectedProfile == null)
+            return;
+
+        Introduce(_createProfile(GetCopyName(_selectedProfile.Name), _selectedProfile));
+    }
+
+    /// <summary>
+    ///     Lists a newly created profile and selects it. Selecting it is the point: creating or
+    ///     copying is nearly always the first step of editing, and leaving the previous one on screen
+    ///     means the change the user makes next lands on the wrong profile.
+    /// </summary>
+    /// <param name="profile">The profile the host created and stored, or null if it declined.</param>
+    private void Introduce(TProfile profile)
+    {
+        if (profile == null)
+            return;
+
+        AddProfile(profile, _newestFirst);
+        ChangeOrUpdateProfile(profile);
     }
 
     /// <summary>
@@ -157,7 +203,24 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private void OnRename()
     {
         _isRenaming = true;
+        _renameError = null;
         RebuildUi();
+
+        // Only after the rebuild: SetKeyboardFocus goes through the Desktop, which the input box
+        // doesn't have until it has been placed in the tree.
+        FocusRenameInput();
+    }
+
+    /// <summary>
+    ///     Puts the caret in the rename box so the user can type immediately.
+    /// </summary>
+    private void FocusRenameInput()
+    {
+        if (_renameInputBox.Desktop == null)
+            return;
+
+        _renameInputBox.SetKeyboardFocus();
+        _renameInputBox.CursorPosition = _renameInputBox.Text?.Length ?? 0;
     }
 
     /// <summary>
@@ -173,7 +236,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
         _confirmationModal?.Dispose();
         _confirmationModal = new ConfirmationModal(
             TazLang.Get("profileeditor_deleteprofile"),
-            TazLang.Get("profileeditor_deleteprofilex", new[] { _selectedProfile.Name }),
+            TazLang.Get("profileeditor_deleteprofilex", [_selectedProfile.Name]),
             confirmed =>
             {
                 if (!confirmed)
@@ -210,12 +273,31 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
 
         string newName = _renameInputBox.Text;
         if (string.IsNullOrWhiteSpace(newName))
+        {
+            _renameError = TazLang.Get("profileeditor_emptyname", "Name cannot be empty.");
+            RebuildUi();
             return;
+        }
+
+        newName = newName.Trim();
+
+        bool collides = Profiles.Any(profile =>
+            !ReferenceEquals(profile, _selectedProfile)
+            && string.Equals(profile.Name, newName, StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (collides)
+        {
+            _renameError = TazLang.Get("profileeditor_duplicatename", "A profile with this name already exists.");
+            RebuildUi();
+            return;
+        }
 
         _selectedProfile.Name = newName;
         _onRenameProfile?.Invoke(_selectedProfile);
 
         _isRenaming = false;
+        _renameError = null;
         RebuildUi();
     }
 
@@ -225,6 +307,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private void OnRenameCancel()
     {
         _isRenaming = false;
+        _renameError = null;
         RebuildUi();
     }
 
@@ -235,13 +318,18 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <summary>
     ///     Builds the UI for the profile editor.
     /// </summary>
-    /// <returns>The constructed wrap panel.</returns>
-    private WrapPanel Build()
+    /// <returns>The constructed panel.</returns>
+    private StackPanel Build()
     {
         Widget content = _currentConfigUi ?? new Panel();
         content.Enabled = !_isRenaming;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
+        // Stacked, not wrapped. These four are a vertical sequence, and a vertical WrapPanel
+        // answers a config UI taller than the window by starting a second column beside the
+        // toolbar rather than by overflowing into the window's own scroller. The content itself
+        // still wraps horizontally.
+        StackPanel panel = OptionTabCommons.StyledStackPanel(
+            Orientation.Vertical,
             OptionsFactory.CreateSpacer(),
             GetToolbar(),
             OptionsFactory.CreateSpacer(),
@@ -249,6 +337,10 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
                 content
             )
         );
+
+        panel.VerticalAlignment = VerticalAlignment.Top;
+
+        return panel;
     }
 
     /// <summary>
@@ -264,13 +356,23 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private StackPanel GetNormalToolbar()
     {
         bool canEdit = _selectedProfile is { Deletable: true };
-        StackPanel panel = OptionTabCommons.StyledStackPanel(
-            Orientation.Horizontal,
+
+        var buttons = new List<Widget>
+        {
             GetProfilesCombo(),
             new MyraButton(TazLang.Get("profileeditor_add"), OnAdd),
+            // Offered for a read-only profile too - that is precisely when it is wanted, since copying
+            // is the only way to get an editable version of one.
+            new MyraButton(TazLang.Get("profileeditor_copy", "Copy"), OnCopy)
+            {
+                Enabled = _selectedProfile != null,
+                Tooltip = TazLang.Get("profileeditor_copy_tooltip", "Duplicate this profile, and edit the copy.")
+            },
             new MyraButton(TazLang.Get("profileeditor_rename"), OnRename) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotrenamebuiltinprofile") },
             new MyraButton(TazLang.Get("profileeditor_delete"), OnDelete) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotdeletebuiltinprofile") }
-        );
+        };
+
+        StackPanel panel = OptionTabCommons.StyledStackPanel(Orientation.Horizontal, [.. buttons]);
 
         panel.Margin = new Thickness(0, 0, 0, 10);
 
@@ -296,31 +398,48 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
 
         panel.Margin = new Thickness(0, 0, 0, 10);
 
-        return OptionTabCommons.StyledStackPanel(
-            Orientation.Vertical,
-            panel,
-            OptionTabCommons.StyledHorizontalSeparator()
-        );
+        var children = new List<Widget> { panel };
+
+        if (_renameError != null)
+            children.Add(new MyraLabel(_renameError, MyraLabel.TextStyle.P) { TextColor = Color.OrangeRed });
+
+        children.Add(OptionTabCommons.StyledHorizontalSeparator());
+
+        return OptionTabCommons.StyledStackPanel(Orientation.Vertical, [.. children]);
     }
 
     /// <summary>
-    ///     Gets the profiles combo box stack panel.
+    ///     Gets the profiles combo box stack panel. Searchable, because a library grows and scrolling
+    ///     a long alphabetical list to find one look is the slowest way to do it.
     /// </summary>
     /// <returns>The profiles combo box stack panel.</returns>
     private Widget GetProfilesCombo()
     {
         string selectedProfileName = _selectedProfile?.Name ?? Profiles.FirstOrDefault()?.Name ?? string.Empty;
 
-        Widget combo = OptionTabCommons.CreateOptionsComboBox(TazLang.Get("profileeditor_profile"),
+        // addSelectedItemIfMissing is off: every name shown comes from Profiles, so a missing one
+        // would be a bug rather than a stale setting worth preserving.
+        var combo = new ContainsLevenshteinComboBox(
             selectedProfileName,
-            Profiles?.Select(p => p.Name) ?? [],
-            OnProfileSelected
-        );
+            Profiles.Select(profile => profile.Name),
+            name =>
+            {
+                if (name != null)
+                    OnProfileSelected(name);
+            },
+            addSelectedItemIfMissing: false
+        )
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            TooltipSelector = name => name
+        };
+
+        MyraStyle.ApplySearchComboBoxPopupBorder(combo);
 
         combo.Width = PROFILE_BOX_WIDTH;
         combo.Margin = _profileBoxMargins;
 
-        return combo;
+        return new MyraLabel(TazLang.Get("profileeditor_profile"), MyraLabel.TextStyle.P).PlaceBefore(combo);
     }
 
     /// <summary>
@@ -334,8 +453,6 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
 
         // Ultimately this should always yield 200, but we keep this for the dynamic calculation
         _renameInputBox.Width = PROFILE_BOX_WIDTH - (panelLabel.Measure(new Point(PROFILE_BOX_WIDTH, 60)).X + MyraStyle.STANDARD_SPACING);
-        _renameInputBox.OnGotKeyboardFocus();
-        _renameInputBox.CursorPosition = _renameInputBox?.Text?.Length ?? 0;
 
         StackPanel panel = OptionTabCommons.StyledStackPanel(
             Orientation.Horizontal,
@@ -366,10 +483,16 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     ///     Adds a profile to the editor.
     /// </summary>
     /// <param name="profile">The profile to add.</param>
-    private void AddProfile(TProfile profile)
+    /// <param name="atTop">When true, the profile is listed first rather than last.</param>
+    private void AddProfile(TProfile profile, bool atTop = false)
     {
         profile.PropertyChanged += OnProfilePropertyChanged;
-        Profiles.Add(profile);
+
+        if (atTop)
+            Profiles.Insert(0, profile);
+        else
+            Profiles.Add(profile);
+
         _profileRefs.Add(profile);
     }
 
@@ -394,7 +517,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     }
 
     /// <summary>
-    ///     Handles the property changed event of a profile.
+    ///     Handles the property-changed event of a profile.
     /// </summary>
     /// <param name="sender">The sender of the event.</param>
     /// <param name="e">The property changed event arguments.</param>
@@ -493,6 +616,27 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
         foreach (TProfile profile in _profileRefs)
             profile.PropertyChanged -= OnProfilePropertyChanged;
         _profileRefs.Clear();
+    }
+
+    /// <summary>
+    ///     A free name for a copy of <paramref name="original" />, numbered only as far as it has to
+    ///     be so that repeated copying does not produce "X (copy) (copy) (copy)".
+    /// </summary>
+    /// <param name="original">The name being copied from.</param>
+    /// <returns>A name no existing profile holds.</returns>
+    private string GetCopyName(string original)
+    {
+        string candidate = TazLang.Get("profileeditor_copyofx", [original]);
+
+        if (Profiles.All(profile => profile.Name != candidate))
+            return candidate;
+
+        int index = 2;
+
+        while (Profiles.Any(profile => profile.Name == $"{candidate} {index}"))
+            index++;
+
+        return $"{candidate} {index}";
     }
 
     /// <summary>

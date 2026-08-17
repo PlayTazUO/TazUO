@@ -1,4 +1,5 @@
 using System;
+using Myra.Events;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -10,13 +11,12 @@ public class BasicButton : Button
     public BasicButton(Action onClick)
     {
         OnClick = onClick;
-        DisabledBackground = Background;
         VerticalAlignment = VerticalAlignment.Center;
     }
 
-    public override void OnTouchDown()
+    public override void OnTouchDown(TouchEventArgs args)
     {
-        base.OnTouchDown();
+        base.OnTouchDown(args);
 
         if (Enabled)
             OnClick?.Invoke();

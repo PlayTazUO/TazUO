@@ -51,8 +51,40 @@ public static class MobilesTab
                 new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
                 search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_incomingcorpses"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_corpse")])
             ),
+            GetCorpseOpeningSection(),
             GetPlayerVisibilitySection()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_mobilestab_misc_label"), Tags: [TazLang.Get("mog_kw_misc")]));
+    }
+
+    private static OptionFragment GetCorpseOpeningSection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        return OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = TazLang.Get("mog_mobilestab_misc_corpseopening") },
+                OptionsUi.CheckBoxGroup(
+                    new PropertyBinder(new Accessor<bool>(() => profile.AutoOpenCorpses), TazLang.Get("mog_general_autoopencorpse")),
+                    Option.Slider(
+                        TazLang.Get("mog_general_corpseopendistance"),
+                        0,
+                        5,
+                        new Accessor<float>(() => profile.AutoOpenCorpseRange, f => profile.AutoOpenCorpseRange = (int)f),
+                        search: new SearchMetadata(TazLang.Get("mog_general_corpseopendistance"),
+                            Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_distance")])
+                    ),
+                    Option.ComboBox(
+                        TazLang.Get("mog_general_corpseopenoptions"),
+                        profile.CorpseOpenOptions,
+                        [
+                            TazLang.Get("mog_general_corpseoptnone"), TazLang.Get("mog_general_corpseoptnottarg"), TazLang.Get("mog_general_corpseoptnothiding"),
+                            TazLang.Get("mog_general_corpseoptboth")
+                        ],
+                        i => profile.CorpseOpenOptions = i,
+                        search: new SearchMetadata(TazLang.Get("mog_general_corpseopenoptions"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_type")])
+                    )
+                ).WithSearch(new SearchMetadata(TazLang.Get("mog_mobilestab_misc_corpseopening"), [TazLang.Get("mog_kw_misc")], [TazLang.Get("mog_kw_corpse")]))
+            ).AsSearchGroup()
+            .WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_open")]));
     }
 
     private static IOptionSource GetHighlightingSection()

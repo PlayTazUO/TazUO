@@ -3,6 +3,7 @@ using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.MyraWindows.Options.Tabs.VisualEffects;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
@@ -15,10 +16,8 @@ public static class VideoTab
     /// <summary>Returns the tab group containing game-window, zoom/scaling, and lighting sub-tabs</summary>
     internal static IOptionSource GetContent() => GetVideoMenuTabs();
 
-    private static OptionTabGroup GetVideoMenuTabs()
-    {
-
-        return new OptionTabGroup()
+    private static OptionTabGroup GetVideoMenuTabs() =>
+        new OptionTabGroup()
             .AddTab(
                 TazLang.Get("mog_videotab_gamewindow_label"),
                 GetGameWindowSubTabContent,
@@ -40,19 +39,21 @@ public static class VideoTab
                 new SearchMetadata(TazLang.Get("mog_videotab_shadows_label"), Keywords: [TazLang.Get("mog_kw_shadow"), TazLang.Get("mog_kw_static"), TazLang.Get("mog_kw_terrain")])
             )
             .AddTab(
+                TazLang.Get("mog_videotab_visualeffects_label", "Visual Effects"),
+                VisualEffectsTab.GetContent,
+                new SearchMetadata() // Empty metadata to disable search; profile editors don't render well in the results page.
+            )
+            .AddTab(
                 TazLang.Get("mog_videotab_misc_label"),
                 GetMiscSubTabContent,
                 new SearchMetadata(TazLang.Get("mog_videotab_misc_label"), Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous")])
             );
-    }
 
-    private static IOptionSource GetGameWindowSubTabContent()
-    {
-        return OptionsUi.Vertical(
+    private static IOptionSource GetGameWindowSubTabContent() =>
+        OptionsUi.Vertical(
             GetRendererSection(),
             GetViewportSettingsGroup()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_videotab_gamewindow_label"), Tags: [TazLang.Get("mog_kw_window"), TazLang.Get("mog_kw_viewport")]));
-    }
 
     private static OptionFragment GetRendererSection()
     {
@@ -202,13 +203,11 @@ public static class VideoTab
         );
     }
 
-    private static IOptionSource GetZoomAndScalingSubTubContent()
-    {
-        return OptionsUi.Vertical(
+    private static IOptionSource GetZoomAndScalingSubTubContent() =>
+        OptionsUi.Vertical(
             GetZoomSection(),
             GetScalingSection()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_videotab_zoom_label"), Tags: [TazLang.Get("mog_kw_zoom"), TazLang.Get("mog_kw_scale")]));
-    }
 
     private static OptionFragment GetZoomSection()
     {

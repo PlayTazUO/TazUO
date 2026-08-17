@@ -85,7 +85,7 @@ public class ConfirmationModal : MyraControl
     /// </summary>
     private void ConfigureRootWindow()
     {
-        _rootWindow.TitlePanel.HorizontalAlignment = HorizontalAlignment.Center;
+        _rootWindow.TitlePanel.HorizontalAlignment = HorizontalAlignment.Stretch;
         _rootWindow.TitlePanel.VerticalAlignment = VerticalAlignment.Center;
         _rootWindow.TitlePanel.MinWidth = 300;
         _rootWindow.TitleLabelAlignment = HorizontalAlignment.Center;

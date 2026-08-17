@@ -23,6 +23,8 @@ using System.Net.Sockets;
 using ClassicUO.Common;
 using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.Map;
+using ClassicUO.Game.ScreenDecorations.Manager;
+using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.LegionScripting;
 using ClassicUO.Network.PacketHandlers.Helpers;
@@ -196,10 +198,15 @@ namespace ClassicUO.Game.Scenes
         private uint _lastResync = Time.Ticks;
         private Matrix _worldRtMatrix;
 
+        /// <summary>The crop of <see cref="_worldRenderTarget"/> that fills the viewport this frame.
+        /// Varies with the camera zoom.</summary>
+        private Rectangle _worldSrcRect;
+
         public override void Load()
         {
             base.Load();
             GridContainerSaveData.Instance.Load();
+            ScreenOverlayManager.Instance.Start();
 
             Client.Game.UO.GameCursor.ItemHold.Clear();
 
@@ -249,7 +256,7 @@ namespace ClassicUO.Game.Scenes
             GraphicsReplacement.Load();
             HotKeys.Load();
             HotKeyRegistrar.RegisterAll();
-            LegionScripting.ScriptHotkeysManager.RegisterAll();
+            ScriptHotkeysManager.RegisterAll();
             SpellBarManager.Load();
             SelfHealManager.Load();
             if(ProfileManager.CurrentProfile.EnableCaveBorder)
@@ -390,6 +397,7 @@ namespace ClassicUO.Game.Scenes
             GridContainerSaveData.Reset();
             JournalFilterManager.Instance.Save();
 
+            ScreenOverlayManager.Instance.Reset();
             SpellBarManager.Unload();
             SelfHealManager.Unload();
             _autoUnequipActionManager?.Dispose();
@@ -487,8 +495,7 @@ namespace ClassicUO.Game.Scenes
             base.Unload();
         }
 
-        private void SocketOnDisconnected(object sender, SocketError e)
-        {
+        private void SocketOnDisconnected(object sender, SocketError e) =>
             // Disconnected is raised from the background network/receive tasks (see AsyncNetClient),
             // but this handler tears down the scene and adds gumps, which mutates UIManager state
             // (_gumpTypeList, the Gumps list, etc.). Touching that off the main thread races the
@@ -534,7 +541,6 @@ namespace ClassicUO.Game.Scenes
                     );
                 }
             });
-        }
 
         public void RequestQuitGame() => UIManager.Add(
                 new QuestionGump(
@@ -689,6 +695,9 @@ namespace ClassicUO.Game.Scenes
 
                 light.DrawX = x;
                 light.DrawY = y;
+                light.WorldX = obj.X;
+                light.WorldY = obj.Y;
+                light.WorldZ = obj.Z;
                 _lightCount++;
             }
         }
@@ -876,6 +885,7 @@ namespace ClassicUO.Game.Scenes
 
             base.Update();
             SelfHealManager.Update();
+            ScreenOverlayManager.Instance.Tick();
 
             if (_waitingForWindowResize)
             {
@@ -1249,6 +1259,20 @@ namespace ClassicUO.Game.Scenes
             gd.Clear(ClearOptions.Stencil, Color.Transparent, 0f, 0);
             Profiler.ExitContext("DrawOverlays");
 
+            // Here rather than at the end of the frame so gumps draw over them: viewport-scoped
+            // decorations are meant to colour the world, not the UI sitting on it. Drawn in screen
+            // space - the camera viewport is restored above - so Camera.Bounds is the target as-is.
+            //
+            // The world target is handed over as the scene source for layers that distort the frame.
+            // It is already a separate texture, so nothing has to be copied - at the cost of holding
+            // the world before lights and overheads were composited over it.
+            Profiler.EnterContext("ScreenDecorations");
+
+            var scene = new ScreenOverlaySource(_worldRenderTarget, _worldSrcRect);
+            ScreenOverlayManager.DrawViewportOverlays(batcher, Camera.Bounds, scene);
+
+            Profiler.ExitContext("ScreenDecorations");
+
             Profiler.ExitContext("GameSceneDraw");
 
             return base.Draw(batcher);
@@ -1285,10 +1309,26 @@ namespace ClassicUO.Game.Scenes
             Profiler.EnterContext("PostProcess");
             int srcW = (int)Math.Floor(vpW * scale);
             int srcH = (int)Math.Floor(vpH * scale);
-            int srcX = (rtW - srcW) / 2;
-            int srcY = (rtH - srcH) / 2;
+
+            // Viewport-scoped shake moves the crop taken from the render target rather than where
+            // that crop is drawn: destRect stays pinned to the viewport, so the shake reveals real
+            // pixels EnsureRenderTargets padded the target with instead of exposing empty texture at
+            // the edge. Clamped to the crop's own margin - zero when the target isn't padded (shake
+            // off), and never past it even at full shake intensity.
+            // Margin floored at 0: the target is capped at MAX_TEXTURE_SIZE, the crop isn't, and
+            // Math.Clamp throws when its bounds cross.
+            Point shake = ScreenOverlayManager.Instance.ViewportShakeOffset();
+            int marginX = Math.Max(0, rtW - srcW);
+            int marginY = Math.Max(0, rtH - srcH);
+            int srcX = Math.Clamp(marginX / 2 + shake.X, 0, marginX);
+            int srcY = Math.Clamp(marginY / 2 + shake.Y, 0, marginY);
+
             var srcRect = new Rectangle(srcX, srcY, srcW, srcH);
             var destRect = new Rectangle(0, 0, vpW, vpH);
+
+            // Kept for the overlay pass at the end of the frame: the crop is what maps the viewport
+            // back onto the world target, and the zoom that determines it is recomputed here.
+            _worldSrcRect = srcRect;
 
             UpdatePostProcessState(gd);
 
@@ -1300,6 +1340,7 @@ namespace ClassicUO.Game.Scenes
             {
                 BindFsrParams(gd);
             }
+
             batcher.Begin(_postFx, Matrix.Identity);
             try { batcher.SetSampler(_postSampler ?? SamplerState.PointClamp); } catch { batcher.SetSampler(SamplerState.PointClamp); }
             batcher.Draw(_worldRenderTarget, destRect, srcRect, new Vector3(0, 0, 1));
@@ -1467,7 +1508,9 @@ namespace ClassicUO.Game.Scenes
                 // pulse. The amplitude is intentionally small for a subtle effect.
                 if (candleFlicker)
                 {
-                    float seed = l.DrawX * 0.73f + l.DrawY * 1.31f;
+                    // Seed the phase from the light's world position so it stays constant
+                    // while the camera scrolls, keeping the flicker at a steady speed.
+                    float seed = l.WorldX * 0.73f + l.WorldY * 1.31f + l.WorldZ * 0.57f;
 
                     hue.Z = 1f
                         + 0.06f * (float)Math.Sin(flickerTime * 3.1f + seed)
@@ -1581,8 +1624,14 @@ namespace ClassicUO.Game.Scenes
             PresentationParameters pp = gd.PresentationParameters;
             float scale = GetActiveScale();
 
-            int rtWidth = Math.Min((int)Math.Floor(vw * scale), MAX_TEXTURE_SIZE);
-            int rtHeight = Math.Min((int)Math.Floor(vh * scale), MAX_TEXTURE_SIZE);
+            // Extra canvas viewport-scope shake can crop into instead of exposing the target's
+            // unrendered edge. Cached on ScreenOverlayManager, refreshed only when the shake settings
+            // change - this runs every frame, and re-deriving it from settings here would mean a
+            // dereference chain per frame for a value that almost never moves.
+            int shakeMargin = ScreenOverlayManager.Instance.ViewportShakeMarginPixels;
+
+            int rtWidth = Math.Min((int)Math.Floor(vw * scale) + shakeMargin, MAX_TEXTURE_SIZE);
+            int rtHeight = Math.Min((int)Math.Floor(vh * scale) + shakeMargin, MAX_TEXTURE_SIZE);
 
             // Create/recreate world render target if needed
             if (_worldRenderTarget == null
@@ -1800,6 +1849,9 @@ namespace ClassicUO.Game.Scenes
             public bool IsHue;
             public int DrawX,
                 DrawY;
+            public ushort WorldX,
+                WorldY;
+            public sbyte WorldZ;
         }
 
         private struct LightOccluder

@@ -466,8 +466,8 @@ namespace ClassicUO.Game.UI.Controls
 
                 if (pantsLayerIdx >= 0 && torsoLayerIdx >= 0 && pantsLayerIdx < torsoLayerIdx)
                 {
-                    Array.Copy(copy, pantsLayerIdx + 1, copy, pantsLayerIdx, torsoLayerIdx - pantsLayerIdx);
-                    copy[torsoLayerIdx] = Layer.Pants;
+                    Array.Copy(copy, pantsLayerIdx, copy, pantsLayerIdx + 1, torsoLayerIdx - pantsLayerIdx);
+                    copy[pantsLayerIdx] = Layer.Torso;
                 }
             }
 

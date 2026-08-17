@@ -403,7 +403,7 @@ namespace ClassicUO.Game.GameObjects
                         }
 
                         AutoOpenedCorpses.Add(item.Serial);
-                        GameActions.QueueOpenCorpse(item.Serial);
+                        GameActions.QueueOpenCorpse(item.Serial, isOwnCorpse);
                     }
                 }
             }
@@ -428,12 +428,54 @@ namespace ClassicUO.Game.GameObjects
                 // auto-close setting is enabled, which uses the door regardless of its state.
                 bool closeOpenDoors = ProfileManager.GlobalSettings.AutoCloseDoors;
 
-                foreach (Item door in World.Items.Values.Where(s => s.ItemData.IsDoor && s.X == x && s.Y == y && s.Z - 15 <= z && s.Z + 15 >= z
-                    && (closeOpenDoors || !DoorData.IsOpenDoor(s.Graphic))))
+                // Walk the tile's linked list instead of scanning every item in the world.
+                GameObject obj = World.Map.GetTile(x, y, false);
+
+                while (obj?.TPrevious != null)
                 {
-                    GameActions.OpenDoor();
+                    obj = obj.TPrevious;
+                }
+
+                for (; obj != null; obj = obj.TNext)
+                {
+                    if (obj is Item door && door.ItemData.IsDoor && door.Z - 15 <= z && door.Z + 15 >= z
+                        && (closeOpenDoors || !DoorData.IsOpenDoor(door.Graphic)))
+                    {
+                        GameActions.OpenDoor();
+                    }
                 }
             }
+        }
+
+        // Block walking into a door when auto open is off to avoid spamming the server with
+        // walk requests that get denied and cause the client to bounce back. Open doors are
+        // blocked too because the client's notion of a door's state may not match the server's.
+        private bool IsBlockedByDoor(int x, int y, sbyte z)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+
+            if (!profile.BlockDoorMovement || profile.AutoOpenDoors || IsDead)
+            {
+                return false;
+            }
+
+            // Walk the tile's linked list instead of scanning every item in the world.
+            GameObject obj = World.Map.GetTile(x, y, false);
+
+            while (obj?.TPrevious != null)
+            {
+                obj = obj.TPrevious;
+            }
+
+            for (; obj != null; obj = obj.TNext)
+            {
+                if (obj is Item door && door.ItemData.IsDoor && door.Z - 15 <= z && door.Z + 15 >= z)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public override void Destroy()
@@ -665,8 +707,11 @@ namespace ClassicUO.Game.GameObjects
                     oldDirection = (Direction)walkStep.Direction;
                 }
 
+                int startX = x;
+                int startY = y;
+                sbyte startZ = z;
                 sbyte oldZ = z;
-                ushort walkTime = ProfileManager.CurrentProfile.TurnDelay;
+                ushort walkTime = ProfileManager.ServerSettings.TurnDelay;
 
 
                 if (IsCardinalDirection(direction))
@@ -742,6 +787,11 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                     direction = newDir;
+                }
+
+                if (IsBlockedByDoor(x, y, z) && (x != startX || y != startY || z != startZ))
+                {
+                    return false;
                 }
 
                 CloseBank();
@@ -872,8 +922,11 @@ namespace ClassicUO.Game.GameObjects
                 oldDirection = (Direction)walkStep.Direction;
             }
 
+            int startX = x;
+            int startY = y;
+            sbyte startZ = z;
             sbyte oldZ = z;
-            ushort walkTime = ProfileManager.CurrentProfile.TurnDelay;
+            ushort walkTime = ProfileManager.ServerSettings.TurnDelay;
 
             if ((oldDirection & Direction.Mask) == (direction & Direction.Mask))
             {
@@ -926,6 +979,11 @@ namespace ClassicUO.Game.GameObjects
                 }
 
                 direction = newDir;
+            }
+
+            if (IsBlockedByDoor(x, y, z) && (x != startX || y != startY || z != startZ))
+            {
+                return false;
             }
 
             CloseBank();

@@ -99,35 +99,6 @@ public static class MiscTab
                 new Accessor<bool>(() => profile.HighlightGameObjects),
                 search: new SearchMetadata(TazLang.Get("mog_general_highlightobjects"), Keywords: [TazLang.Get("mog_kw_highlight")])
             ),
-            OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.AutoOpenCorpses), TazLang.Get("mog_general_autoopencorpse")),
-                Option.Slider(
-                    TazLang.Get("mog_general_corpseopendistance"),
-                    0,
-                    5,
-                    new Accessor<float>(() => profile.AutoOpenCorpseRange, f => profile.AutoOpenCorpseRange = (int)f),
-                    search: new SearchMetadata(TazLang.Get("mog_general_corpseopendistance"),
-                        Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_distance")])
-                ),
-                Option.CheckboxWithEnableWarning(
-                    TazLang.Get("mog_general_corpseskipempty"),
-                    new Accessor<bool>(() => profile.SkipEmptyCorpse),
-                    TazLang.Get("mog_general_corpseskipemptywarningtitle"),
-                    TazLang.Get("mog_general_corpseskipemptywarning"),
-                    TazLang.Get("mog_general_corpseskipemptytooltip"),
-                    new SearchMetadata(TazLang.Get("mog_general_corpseskipempty"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_empty")])
-                ),
-                Option.ComboBox(
-                    TazLang.Get("mog_general_corpseopenoptions"),
-                    profile.CorpseOpenOptions,
-                    [
-                        TazLang.Get("mog_general_corpseoptnone"), TazLang.Get("mog_general_corpseoptnottarg"), TazLang.Get("mog_general_corpseoptnothiding"),
-                        TazLang.Get("mog_general_corpseoptboth")
-                    ],
-                    i => profile.CorpseOpenOptions = i,
-                    search: new SearchMetadata(TazLang.Get("mog_general_corpseopenoptions"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_type")])
-                )
-            ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), [TazLang.Get("mog_kw_misc")], [TazLang.Get("mog_kw_corpse")])),
             Option.Checkbox(
                 TazLang.Get("mog_general_outrangecolor"),
                 new Accessor<bool>(() => profile.NoColorObjectsOutOfRange),

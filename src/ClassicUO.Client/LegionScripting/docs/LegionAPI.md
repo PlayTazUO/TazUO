@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `8/8/26`.*
+*This was generated on `8/16/26`.*
 
 ## Properties
 ### `Events`
@@ -1596,7 +1596,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ---
 
 ### Pathfind
-`(x, y, z, distance, wait, timeout)`
+`(x, y, z, distance, wait, timeout, run)`
  Attempt to pathfind to a location.  This will fail with large distances.
  Example:
  ```py
@@ -1614,13 +1614,14 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `distance` | `int` | ✅ Yes | Distance away from goal to stop. |
 | `wait` | `bool` | ✅ Yes | True/False if you want to wait for pathfinding to complete or time out |
 | `timeout` | `int` | ✅ Yes | Seconds to wait before cancelling waiting |
+| `run` | `bool` | ✅ Yes | True/False should we run? |
 
 **Return Type:** `bool`
 
 ---
 
 ### PathfindEntity
-`(entity, distance, wait, timeout)`
+`(entity, distance, wait, timeout, run)`
  Attempt to pathfind to a mobile or item.
  Example:
  ```py
@@ -1638,6 +1639,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `distance` | `int` | ✅ Yes | Distance to stop from goal |
 | `wait` | `bool` | ✅ Yes | True/False if you want to wait for pathfinding to complete or time out |
 | `timeout` | `int` | ✅ Yes | Seconds to wait before cancelling waiting |
+| `run` | `bool` | ✅ Yes | True/False should we run? |
 
 **Return Type:** `bool`
 
@@ -2793,7 +2795,33 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `virtue` | `string` | ❌ No | honor/sacrifice/valor |
+| `virtue` | `string` | ❌ No | honor/sacrifice/valor/justice |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### OpenQuestLog
+
+ Open the quest log gump.
+ Example:
+ ```py
+ API.OpenQuestLog()
+ ```
+
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### OpenHelp
+
+ Open the help menu.
+ Example:
+ ```py
+ API.OpenHelp()
+ ```
+
 
 **Return Type:** `void` *(Does not return anything)*
 

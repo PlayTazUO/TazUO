@@ -3057,6 +3057,9 @@ namespace ClassicUO.Network
                 case 0x03:
                     ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordVirtue("valor");
                     break;
+                case 0x04:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordVirtue("justice");
+                    break;
             }
 
             int length = AsyncNetClient.PacketsTable.GetPacketLength(ID);

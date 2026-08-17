@@ -56,7 +56,7 @@ namespace ClassicUO.Configuration
             Assembly assembly = typeof(TazLang).Assembly;
             foreach(string s in assembly.GetManifestResourceNames())
                 Console.WriteLine(s);
-                
+
             using Stream stream = assembly.GetManifestResourceStream(EMBEDDED_RESOURCE);
 
             if (stream == null)
@@ -64,7 +64,7 @@ namespace ClassicUO.Configuration
                 throw new Exception("Failed to find language file.");
             }
 
-            using FileStream dest = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+            using var dest = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
             stream.CopyTo(dest);
         }
 
@@ -90,7 +90,7 @@ namespace ClassicUO.Configuration
             foreach (KeyValuePair<string, string> kv in userDict)
                 if (!embedded.ContainsKey(kv.Key))
                     removal.Add(kv.Key);
-            
+
             foreach (string k in removal)
                 userDict.Remove(k);
 

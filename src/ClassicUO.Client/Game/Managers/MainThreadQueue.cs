@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 
 namespace ClassicUO.Game.Managers;
@@ -15,6 +16,8 @@ public static class MainThreadQueue
     public static bool IsMainThread => Environment.CurrentManagedThreadId == _threadId;
 
     private static ConcurrentQueue<(Action Action, CancellationToken? Token)> QueuedActions { get; } = new();
+
+    public static int Count => QueuedActions.Count;
 
     /// <summary>
     ///     Must be called from main thread
@@ -194,7 +197,9 @@ public static class MainThreadQueue
     /// </summary>
     public static void ProcessQueue()
     {
-        while (QueuedActions.TryDequeue(out (Action Action, CancellationToken? Token) item))
+        long deadline = Stopwatch.GetTimestamp() + 5 * Stopwatch.Frequency / 1000; //Limit mainthreadqueue to 5ms per update call
+
+        while (Stopwatch.GetTimestamp() < deadline && QueuedActions.TryDequeue(out (Action Action, CancellationToken? Token) item))
             if (item.Token?.IsCancellationRequested != true)
                 item.Action();
     }

@@ -25,7 +25,13 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
+using ClassicUO.Game.ScreenDecorations.Manager;
+using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.Network.PacketHandlers;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
+using ImageSharpImage = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
 using Myra;
 using SDL3;
 using static SDL3.SDL;
@@ -170,27 +176,54 @@ namespace ClassicUO
             });
         }
 
-        private const int MAX_PACKETS_PER_FRAME = 25;
+        private const int MAX_PACKETS_PER_FRAME = 1000;
+        private const long MAX_PACKET_PROCESSING_TIME_MS = 5;
 
         private void ProcessNetworkPackets()
         {
+            World world = Client.Game.UO.World;
+
+            // Spread a large burst across frames instead of hitching one frame on a 64KB message.
+            long deadline =
+                Stopwatch.GetTimestamp() + MAX_PACKET_PROCESSING_TIME_MS * Stopwatch.Frequency / 1000;
             int packetsProcessed = 0;
-            while (packetsProcessed < MAX_PACKETS_PER_FRAME)
+
+            // Drain leftover bytes of a huge message that exceeded the budget last frame first.
+            packetsProcessed += PacketParser.Instance.ParseAvailablePackets(world, MAX_PACKETS_PER_FRAME, deadline);
+
+            while (packetsProcessed < MAX_PACKETS_PER_FRAME && Stopwatch.GetTimestamp() < deadline)
             {
                 bool hasPacket = AsyncNetClient.Socket.TryDequeuePacket(out byte[] message);
 
                 if (!hasPacket)
                     break;
 
-                int c = PacketParser.Instance.ParsePackets(Client.Game.UO.World, message);
-
-                AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)c;
-                packetsProcessed++;
+                PacketParser.Instance.AppendToMainBuffer(message);
+                packetsProcessed += PacketParser.Instance.ParseAvailablePackets(
+                    world,
+                    MAX_PACKETS_PER_FRAME - packetsProcessed,
+                    deadline
+                );
             }
+
+            AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)packetsProcessed;
 
             // Plugin packets are buffered separately and would sit unprocessed
             // if no network packets arrived this frame, so always drain them.
             PacketParser.Instance.ParsePluginsPackets(Client.Game.UO.World);
+
+            // UltimaLive defers chunk reloads during packet processing so a streamed
+            // area doesn't rebuild the same chunk multiple times. A new-area download
+            // spans many frames (packet budget), so flush once the socket queue and the
+            // parser buffer are drained to coalesce the whole burst; fall back to a time
+            // cap in case steady traffic keeps the queue from ever emptying.
+            if (
+                (!AsyncNetClient.Socket.HasPendingPackets && !PacketParser.Instance.HasBufferedData)
+                || UltimaLive.ShouldFlushPendingChunkReloads
+            )
+            {
+                UltimaLive.FlushPendingChunkReloads(Client.Game.UO.World);
+            }
         }
 
         protected override void LoadContent()
@@ -698,6 +731,8 @@ namespace ClassicUO
 
             Profiler.ExitContext("SceneRender");
 
+            Rectangle destRect;
+
             Profiler.EnterContext("PluginRender");
             if (useRenderTarget)
             {
@@ -708,7 +743,7 @@ namespace ClassicUO
                 GraphicsDevice.Clear(Color.Black);
 
                 var srcRect = new Rectangle(0, 0, _screenRenderTarget.Width, _screenRenderTarget.Height);
-                Rectangle destRect = srcRect;
+                destRect = srcRect;
 
                 _uoSpriteBatch.Begin();
                 if(RenderScale != 1.0f)
@@ -716,6 +751,8 @@ namespace ClassicUO
                     destRect = new Rectangle(0, 0, (int)(_screenRenderTarget.Width * RenderScale), (int)(_screenRenderTarget.Height * RenderScale));
                     _uoSpriteBatch.SetSampler(SamplerState.AnisotropicClamp);
                 }
+
+                destRect = ScreenOverlayManager.Instance.ApplyWindowShake(destRect);
                 _uoSpriteBatch.Draw(_screenRenderTarget, destRect, srcRect, new Vector3(0, 0, 1f));
                 _uoSpriteBatch.End();
             }
@@ -723,8 +760,23 @@ namespace ClassicUO
             {
                 if(_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
+
+                destRect = GraphicsDevice.Viewport.Bounds;
             }
+
             Profiler.ExitContext("PluginRender");
+
+            Profiler.EnterContext("ScreenOverlays");
+
+            // The offscreen target still holds what was just blitted to the window, so overlays that
+            // distort the frame have a readable copy of it without anything being copied. Without
+            // the target there is no second surface and those layers sit out the frame.
+            ScreenOverlaySource scene = useRenderTarget
+                ? new ScreenOverlaySource(_screenRenderTarget, _screenRenderTarget.Bounds)
+                : ScreenOverlaySource.None;
+
+            ScreenOverlayManager.DrawFullScreenOverlays(_uoSpriteBatch, destRect, scene);
+            Profiler.ExitContext("ScreenOverlays");
 
             base.Draw(gameTime);
 
@@ -1215,7 +1267,7 @@ namespace ClassicUO
             Color[] colors;
             int width, height;
 
-            // Use render target if available and in use, otherwise use back buffer
+            // GPU readback must run on the main thread; the encode is offloaded below.
             if (_useScreenRenderTarget && _screenRenderTarget != null && !_screenRenderTarget.IsDisposed)
             {
                 width = _screenRenderTarget.Width;
@@ -1236,40 +1288,14 @@ namespace ClassicUO
             for (int i = 0; i < colors.Length; i++)
                 colors[i].A = 255;
 
-            using (
-                var texture = new Texture2D(
-                    GraphicsDevice,
-                    width,
-                    height,
-                    false,
-                    SurfaceFormat.Color
-                )
-            )
-            using (FileStream fileStream = File.Create(path))
-            {
-                texture.SetData(colors);
-                texture.SaveAsPng(fileStream, texture.Width, texture.Height);
-                string message = string.Format(TazLang.Get("screenshot_stored_in0"), path);
-
-                if (
-                    ProfileManager.CurrentProfile == null
-                    || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage
-                )
-                {
-                    Log.Info(message);
-                }
-                else
-                {
-                    GameActions.Print(UO.World, message, 0x44, MessageType.System);
-                }
-            }
+            SaveScreenshotAsync(colors, width, height, path);
         }
 
         public void ClipboardScreenshot(Rectangle position, GraphicsDevice graphicDevice)
         {
             var colors = new Color[position.Width * position.Height];
 
-            // Use render target if available and in use, otherwise use back buffer
+            // GPU readback must run on the main thread; the encode is offloaded below.
             if (_useScreenRenderTarget && _screenRenderTarget != null && !_screenRenderTarget.IsDisposed)
             {
                 _screenRenderTarget.GetData(0, position, colors, 0, colors.Length);
@@ -1284,44 +1310,79 @@ namespace ClassicUO
             for (int i = 0; i < colors.Length; i++)
                 colors[i].A = 255;
 
-            using (
-                var texture = new Texture2D(
-                    GraphicsDevice,
-                    position.Width,
-                    position.Height,
-                    false,
-                    SurfaceFormat.Color
-                )
-            )
-            {
-                texture.SetData(colors);
+            string screenshotsFolder = FileSystemHelper.CreateFolderIfNotExists(
+                CUOEnviroment.ExecutablePath,
+                "Data",
+                "Client",
+                "Screenshots"
+            );
 
-                string screenshotsFolder = FileSystemHelper.CreateFolderIfNotExists(
-                    CUOEnviroment.ExecutablePath,
-                    "Data",
-                    "Client",
-                    "Screenshots"
-                );
+            string path = Path.Combine(
+                screenshotsFolder,
+                $"screenshot_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
+            );
 
-                string path = Path.Combine(
-                    screenshotsFolder,
-                    $"screenshot_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
-                );
-
-                using FileStream fileStream = File.Create(path);
-                texture.SaveAsPng(fileStream, texture.Width, texture.Height);
-                string message = string.Format(TazLang.Get("screenshot_stored_in0"), path);
-
-                if (ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage)
-                {
-                    Log.Info(message);
-                }
-                else
-                {
-                    GameActions.Print(UO.World, message, 0x44, MessageType.System);
-                }
-            }
+            SaveScreenshotAsync(colors, position.Width, position.Height, path);
         }
+
+        // PNG encoding and disk I/O run on a background thread so the frame isn't stalled.
+        private void SaveScreenshotAsync(Color[] colors, int width, int height, string path) =>
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    using var img = new ImageSharpImage(width, height);
+                    if (img.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> memory))
+                    {
+                        MemoryMarshal.AsBytes(colors).CopyTo(MemoryMarshal.AsBytes(memory.Span));
+                    }
+                    else
+                    {
+                        img.ProcessPixelRows(accessor =>
+                        {
+                            for (int y = 0; y < height; y++)
+                            {
+                                Span<Rgba32> row = accessor.GetRowSpan(y);
+                                for (int x = 0; x < width; x++)
+                                {
+                                    ref Color c = ref colors[y * width + x];
+                                    row[x] = new Rgba32(c.R, c.G, c.B, c.A);
+                                }
+                            }
+                        });
+                    }
+
+                    var encoder = new PngEncoder
+                    {
+                        ColorType = PngColorType.RgbWithAlpha,
+                        CompressionLevel = PngCompressionLevel.DefaultCompression,
+                        SkipMetadata = true,
+                        FilterMethod = PngFilterMethod.None,
+                        ChunkFilter = PngChunkFilter.ExcludeAll,
+                        TransparentColorMode = PngTransparentColorMode.Clear,
+                    };
+
+                    using FileStream fileStream = File.Create(path);
+                    img.Save(fileStream, encoder);
+
+                    string message = string.Format(TazLang.Get("screenshot_stored_in0"), path);
+                    MainThreadQueue.InvokeOnMainThread(() =>
+                    {
+                        if (ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage)
+                        {
+                            Log.Info(message);
+                        }
+                        else
+                        {
+                            GameActions.Print(UO.World, message, 0x44, MessageType.System);
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"error saving screenshot: {ex}");
+                }
+            });
 
         private static void FnaLogInfo(string message)=> Log.Info(message);
 

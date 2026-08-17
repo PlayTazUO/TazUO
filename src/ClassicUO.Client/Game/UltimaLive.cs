@@ -9,7 +9,6 @@ using ClassicUO.Assets;
 using ClassicUO.Network;
 using ClassicUO.Utility.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -28,6 +27,11 @@ namespace ClassicUO.Game
         private static UltimaLive _UL;
 
         private static readonly char[] _pathSeparatorChars = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+        private static readonly HashSet<int> _pendingChunkReloads = new HashSet<int>();
+        private static readonly List<int> _flushBatch = new List<int>();
+        private static readonly System.Diagnostics.Stopwatch _flushTimer = new System.Diagnostics.Stopwatch();
+        private const double MAX_CHUNK_RELOAD_MS_PER_FLUSH = 3.0;
+        private static long _pendingChunkReloadStartTicks;
         private uint[] _EOF;
         private ULFileMul[] _filesIdxStatics;
         private ULFileMul[] _filesMap;
@@ -259,52 +263,18 @@ namespace ClassicUO.Game
                                 //update lookup AND index length on disk
                                 _UL._filesIdxStatics[mapId].WriteArray(block * 12, idxData);
 
-                            Chunk mapChunk = world.Map.GetChunk(block);
+                            world.Map.InvalidateStreamBlockCache(block);
 
-                            if (mapChunk == null)
-                            {
-                                return;
-                            }
-
-                            LinkedList<int> linkedList = mapChunk.Node?.List;
-                            var gameObjects = new List<GameObject>();
-
-                            for (int x = 0; x < 8; x++)
-                            {
-                                for (int y = 0; y < 8; y++)
-                                {
-                                    GameObject gameObject = mapChunk.GetHeadObject(x, y);
-
-                                    while (gameObject != null)
-                                    {
-                                        GameObject currentGameObject = gameObject;
-                                        gameObject = gameObject.TNext;
-
-                                        if (!(currentGameObject is Land) && !(currentGameObject is Static))
-                                        {
-                                            gameObjects.Add(currentGameObject);
-                                            currentGameObject.RemoveFromTile();
-                                        }
-                                    }
-                                }
-                            }
-
-                            mapChunk.ClearForReload();
                             _UL._ULMap.ReloadBlock(mapId, block);
-                            mapChunk.Load(mapId, true);
 
-                            //linkedList?.AddLast(c.Node);
-
-                            foreach (GameObject gameObject in gameObjects)
+                            _pendingChunkReloads.Add(block);
+                            if (_pendingChunkReloads.Count == 1)
                             {
-                                mapChunk.AddGameObject(gameObject, gameObject.X % 8, gameObject.Y % 8);
+                                _pendingChunkReloadStartTicks = Time.Ticks;
                             }
                         }
 
 
-                        UIManager.GetGump<MiniMapGump>()?.RequestUpdateContents();
-
-                        //UIManager.GetGump<WorldMapGump>()?.UpdateMap();
                         //instead of recalculating the CRC block 2 times, in case of terrain + statics update, we only set the actual block to ushort maxvalue, so it will be recalculated on next hash query
                         //also the server should always send FIRST the landdata packet, and only AFTER land the statics packet
                         _UL.MapCRCs[mapId][block] = ushort.MaxValue;
@@ -445,6 +415,9 @@ namespace ClassicUO.Game
                             _UL._filesIdxStatics[validMaps[i]] = refs.Item2[validMaps[i]] as ULFileMul;
                             _UL._filesStatics[validMaps[i]] = refs.Item3[validMaps[i]] as ULFileMul;
                         }
+
+                        world.Map?.ClearStreamBlockCache();
+                        _pendingChunkReloads.Clear();
                     }
 
                     break;
@@ -517,6 +490,8 @@ namespace ClassicUO.Game
             {
                 _UL._filesMap[mapId].WriteArray(block * 196 + 4, landData);
 
+                world.Map.InvalidateStreamBlockCache(block);
+
                 //instead of recalculating the CRC block 2 times, in case of terrain + statics update, we only set the actual block to ushort maxvalue, so it will be recalculated on next hash query
                 _UL.MapCRCs[mapId][block] = ushort.MaxValue;
                 int blockX = block / mapHeightInBlocks, blockY = block % mapHeightInBlocks;
@@ -524,66 +499,111 @@ namespace ClassicUO.Game
                 blockX = Math.Min(mapWidthInBlocks, blockX + 1);
                 blockY = Math.Min(mapHeightInBlocks, blockY + 1);
 
-                var gameObjects = new List<GameObject>();
-
+                //schedule the 3x3 area for a coalesced reload at the end of the packet batch,
+                //so streaming a new area doesn't rebuild the same chunk multiple times per frame
                 for (; blockX >= minx; --blockX)
                 {
                     for (int by = blockY; by >= miny; --by)
                     {
-                        Chunk mapChunk = world.Map.GetChunk(blockX * mapHeightInBlocks + by);
-
-                        if (mapChunk == null)
+                        _pendingChunkReloads.Add(blockX * mapHeightInBlocks + by);
+                        if (_pendingChunkReloads.Count == 1)
                         {
-                            continue;
+                            _pendingChunkReloadStartTicks = Time.Ticks;
                         }
+                    }
+                }
+            }
+        }
 
-                        gameObjects.Clear();
+        public static bool ShouldFlushPendingChunkReloads =>
+            _pendingChunkReloads.Count > 0 &&
+            (Time.Ticks - _pendingChunkReloadStartTicks) > 100;
 
-                        for (int x = 0; x < 8; x++)
+        public static void FlushPendingChunkReloads(World world)
+        {
+            if (_pendingChunkReloads.Count == 0 || world?.Map == null)
+            {
+                return;
+            }
+
+            int mapId = world.Map.Index;
+
+            //throttle chunk rebuilds across frames: streaming a new area can schedule
+            //hundreds of chunks, and rebuilding them all in one frame causes a spike.
+            //Reload a time-bounded batch each frame, carry the rest over to the next.
+            _flushBatch.Clear();
+
+            foreach (int block in _pendingChunkReloads)
+            {
+                if (_flushBatch.Count >= 4)
+                {
+                    break;
+                }
+
+                _flushBatch.Add(block);
+            }
+
+            _flushTimer.Restart();
+
+            foreach (int block in _flushBatch)
+            {
+                if (_flushTimer.Elapsed.TotalMilliseconds >= MAX_CHUNK_RELOAD_MS_PER_FLUSH)
+                {
+                    break;
+                }
+
+                _pendingChunkReloads.Remove(block);
+
+                Chunk mapChunk = world.Map.GetChunk(block);
+
+                if (mapChunk == null)
+                {
+                    continue;
+                }
+
+                var gameObjects = new List<GameObject>();
+
+                for (int x = 0; x < 8; x++)
+                {
+                    for (int y = 0; y < 8; y++)
+                    {
+                        GameObject gameObject = mapChunk.GetHeadObject(x, y);
+
+                        while (gameObject != null)
                         {
-                            for (int y = 0; y < 8; y++)
+                            GameObject currentGameObject = gameObject;
+                            gameObject = gameObject.TNext;
+
+                            if (!(currentGameObject is Land) && !(currentGameObject is Static))
                             {
-                                GameObject gameObject = mapChunk.GetHeadObject(x, y);
-
-                                while (gameObject != null)
-                                {
-                                    GameObject currentGameObject = gameObject;
-                                    gameObject = gameObject.TNext;
-
-                                    if (!(currentGameObject is Land) && !(currentGameObject is Static))
-                                    {
-                                        gameObjects.Add(currentGameObject);
-                                        currentGameObject.RemoveFromTile();
-                                    }
-                                }
+                                gameObjects.Add(currentGameObject);
+                                currentGameObject.RemoveFromTile();
                             }
-                        }
-
-                        mapChunk.ClearForReload();
-                        mapChunk.Load(mapId, true);
-
-                        foreach (GameObject obj in gameObjects)
-                        {
-                            mapChunk.AddGameObject(obj, obj.X % 8, obj.Y % 8);
-                        }
-
-                        foreach (GameObject headObj in mapChunk.Tiles)
-                        {
-                            GameObject next = headObj.TNext;
-                            while (next != null)
-                            {
-                                next.AlphaHue = byte.MaxValue;
-                                next = next.TNext;
-                            }
-                            headObj.AlphaHue = byte.MaxValue;
                         }
                     }
                 }
 
-                UIManager.GetGump<MiniMapGump>()?.RequestUpdateContents();
+                mapChunk.ClearForReload();
+                mapChunk.Load(mapId, true);
 
-                //UIManager.GetGump<WorldMapGump>()?.UpdateMap();
+                foreach (GameObject obj in gameObjects)
+                {
+                    mapChunk.AddGameObject(obj, obj.X % 8, obj.Y % 8);
+                }
+
+                foreach (GameObject headObj in mapChunk.Tiles)
+                {
+                    GameObject next = headObj.TNext;
+                    while (next != null)
+                    {
+                        next.AlphaHue = byte.MaxValue;
+                        next = next.TNext;
+                    }
+                    headObj.AlphaHue = byte.MaxValue;
+                }
             }
+
+            UIManager.GetGump<MiniMapGump>()?.RequestUpdateContents();
         }
 
         private static ushort GetBlockCrc(World world, uint block)
@@ -601,31 +621,25 @@ namespace ClassicUO.Game
             ULFileMul mapReader = _UL._filesMap[mapId];
             long mapBase = block * 196 + 4;
 
-            ULFileMul staticsReader = _UL._filesStatics[mapId];
+            //preserve the original bounds check (mapBase + x + 1 >= Length) which stops before the file's final byte
+            int mapBytes = (int)Math.Min(LAND_BLOCK_LENGTH, Math.Max(0, mapReader.Length - mapBase - 1));
 
-            for (int x = 0; x < 192; x++)
+            if (mapBytes > 0)
             {
-                if (mapBase + x + 1 >= mapReader.Length)
-                {
-                    break;
-                }
-
-                blockData[x] = mapReader.ReadAt<byte>(mapBase + x);
+                mapReader.ReadAt(mapBase, blockData.AsSpan(0, mapBytes));
             }
 
             if (lookup != 0xFFFFFFFF && byteCount > 0)
             {
+                ULFileMul staticsReader = _UL._filesStatics[mapId];
+
                 if (lookup < staticsReader.Length)
                 {
-                    for (int x = LAND_BLOCK_LENGTH; x < blockData.Length; x++)
-                    {
-                        long pos = lookup + (x - LAND_BLOCK_LENGTH);
-                        if (pos + 1 >= staticsReader.Length)
-                        {
-                            break;
-                        }
+                    int staticsBytes = (int)Math.Min(byteCount, staticsReader.Length - lookup - 1);
 
-                        blockData[x] = staticsReader.ReadAt<byte>(pos);
+                    if (staticsBytes > 0)
+                    {
+                        staticsReader.ReadAt(lookup, blockData.AsSpan(LAND_BLOCK_LENGTH, staticsBytes));
                     }
                 }
             }
@@ -637,14 +651,18 @@ namespace ClassicUO.Game
 
         private static ushort Fletcher16(byte[] data)
         {
-            ushort sum1 = 0;
-            ushort sum2 = 0;
-            int index;
+            uint sum1 = 0;
+            uint sum2 = 0;
 
-            for (index = 0; index < data.Length; index++)
+            for (int i = 0; i < data.Length; i++)
             {
-                sum1 = (ushort) ((sum1 + data[index]) % 255);
-                sum2 = (ushort) ((sum2 + sum1) % 255);
+                sum1 += data[i];
+                if (sum1 >= 255)
+                    sum1 -= 255;
+
+                sum2 += sum1;
+                if (sum2 >= 255)
+                    sum2 -= 255;
             }
 
             return (ushort) ((sum2 << 8) | sum1);
@@ -690,9 +708,35 @@ namespace ClassicUO.Game
 
             public override BinaryReader Reader => _reader;
 
+            public override bool IsStreamBased => true;
+
             // ULFileMul files can grow dynamically (statics appended), so MMFileReader's
             // fixed-size memory-mapped view is unsafe. Use a lock to serialize all
             // Seek+Read pairs and Seek+Write pairs on the shared FileStream.
+            public override void Seek(long index, SeekOrigin origin)
+            {
+                lock (_ioLock)
+                {
+                    base.Seek(index, origin);
+                }
+            }
+
+            public override int Read(Span<byte> buffer)
+            {
+                lock (_ioLock)
+                {
+                    return base.Read(buffer);
+                }
+            }
+
+            public override T Read<T>()
+            {
+                lock (_ioLock)
+                {
+                    return base.Read<T>();
+                }
+            }
+
             public override T ReadAt<T>(long offset)
             {
                 AssetValidDereference(offset);
@@ -700,7 +744,7 @@ namespace ClassicUO.Game
                 lock (_ioLock)
                 {
                     Seek(offset, SeekOrigin.Begin);
-                    return Read<T>();
+                    return base.Read<T>();
                 }
             }
 
@@ -711,7 +755,7 @@ namespace ClassicUO.Game
                 lock (_ioLock)
                 {
                     Seek(offset, SeekOrigin.Begin);
-                    Read(buffer);
+                    base.Read(buffer);
                 }
             }
 
@@ -731,6 +775,13 @@ namespace ClassicUO.Game
                 {
                     _writer.Seek((int)position, SeekOrigin.Begin);
                     _writer.Write(array);
+                }
+            }
+
+            public void Flush()
+            {
+                lock (_ioLock)
+                {
                     _writer.Flush();
                 }
             }
@@ -771,7 +822,6 @@ namespace ClassicUO.Game
         public class ULMapLoader : MapLoader
         {
             private readonly CancellationTokenSource _feedCancel;
-            private FileStream[] _filesStaticsStream;
             private readonly Task _writerTask;
 
             public ULMapLoader(UOFileManager fileManager, uint maps) : base(fileManager)
@@ -846,16 +896,6 @@ namespace ClassicUO.Game
                 catch
                 {
                 }
-
-                if (_filesStaticsStream != null)
-                {
-                    for (int i = _filesStaticsStream.Length - 1; i >= 0; --i)
-                    {
-                        _filesStaticsStream[i]?.Dispose();
-                    }
-
-                    _filesStaticsStream = null;
-                }
             }
 
             public override void Load()
@@ -869,7 +909,6 @@ namespace ClassicUO.Game
                 Client.Game.UO.FileManager.Maps = this;
 
                 _UL._EOF = new uint[NumMaps];
-                _filesStaticsStream = new FileStream[NumMaps];
                 bool foundOneMap = false;
 
                 for (int x = 0; x < _UL._ValidMaps.Count; x++)
@@ -893,8 +932,6 @@ namespace ClassicUO.Game
                     }
 
                     _filesStatics[i] = new ULFileMul(File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite));
-
-                    _filesStaticsStream[i] = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
 
                     _UL._EOF[i] = (uint)new FileInfo(path).Length;
 
@@ -1250,28 +1287,26 @@ namespace ClassicUO.Game
                     _token = token;
                 }
 
-                public readonly ConcurrentQueue<(int, long, byte[])> _toWrite = new ConcurrentQueue<(int, long, byte[])>();
-
                 public void Loop()
                 {
                     while (_UL != null && !_Map.IsDisposed && !_token.IsCancellationRequested)
                     {
-                        while (_toWrite.TryDequeue(out (int, long, byte[]) deq))
-                        {
-                            WriteArray(deq.Item1, deq.Item2, deq.Item3);
-                        }
+                        FlushFiles();
 
                         m_Signal.WaitOne(10, false);
                     }
                 }
 
-                public void WriteArray(int map, long position, byte[] array)
+                private void FlushFiles()
                 {
-                    _Map._filesStaticsStream[map].Seek(position, SeekOrigin.Begin);
+                    int maps = _Map._currentMapFiles.Length;
 
-                    _Map._filesStaticsStream[map].Write(array, 0, array.Length);
-
-                    _Map._filesStaticsStream[map].Flush();
+                    for (int i = 0; i < maps; i++)
+                    {
+                        (_Map._currentMapFiles[i] as ULFileMul)?.Flush();
+                        (_Map._currentIdxStaticsFiles[i] as ULFileMul)?.Flush();
+                        (_Map._currentStaticsFiles[i] as ULFileMul)?.Flush();
+                    }
                 }
             }
         }

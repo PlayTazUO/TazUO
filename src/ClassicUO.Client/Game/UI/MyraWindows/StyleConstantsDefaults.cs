@@ -2,6 +2,8 @@ using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 
+using ClassicUO.Game.UI.MyraWindows.Theme;
+
 namespace ClassicUO.Game.UI.MyraWindows;
 
 public static class StyleConstantsDefaults
@@ -31,6 +33,11 @@ public static class StyleConstantsDefaults
     /// </summary>
     public const string RESET_LABEL_ICON_TEXT = "⭯";
 
+    /// <summary>
+    /// Point size the reset glyph is drawn at inside a <see cref="TOOLBAR_BUTTON_SIZE"/> button.
+    /// </summary>
+    public const int RESET_ICON_FONT_SIZE = 24;
+
     public const int TOOLBAR_BUTTON_SIZE = 28;
 
     #region Inputs
@@ -41,8 +48,15 @@ public static class StyleConstantsDefaults
 
     #region Containers
 
-    public static readonly IBrush BorderBackgroundBrush = new SolidBrush(new Color(0, 0, 0, 25));
-    public static readonly IBrush BorderLineBrush = new SolidBrush(new Color(0, 0, 0, 75));
+    /// <summary>
+    /// Fill and outline of a framed area. Properties rather than fields: a field would be built once
+    /// from whichever palette happened to be current at type load, and would go on drawing that one
+    /// after a theme change.
+    /// </summary>
+    public static IBrush BorderBackgroundBrush => new SolidBrush(MyraTheme.Current.PanelFill);
+
+    /// <inheritdoc cref="BorderBackgroundBrush" />
+    public static IBrush BorderLineBrush => new SolidBrush(MyraTheme.Current.PanelBorder);
     public static readonly Thickness BorderThickness = new(2);
 
     #endregion

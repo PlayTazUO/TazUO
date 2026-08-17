@@ -1,9 +1,5 @@
 root = true
 
-# Exclude external dependencies from styling rules
-[external/**/*]
-generated_code = true
-
 # All files
 [src/**/*]
 charset = utf-8

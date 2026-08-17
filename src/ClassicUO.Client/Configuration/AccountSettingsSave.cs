@@ -15,5 +15,11 @@ namespace ClassicUO.Configuration
         protected override string FileName => "account_settings.json";
 
         protected override JsonTypeInfo<AccountSettingsSave> TypeInfo => ScopedSettingsJsonContext.DefaultToUse.AccountSettingsSave;
+
+        /// <summary>
+        /// Maximum distance in tiles for the bandage agent to heal friends/allies. Defaults
+        /// to the legacy hardcoded bandage range.
+        /// </summary>
+        public int BandageAgentDistance { get; set => SetProperty(ref field, value); } = 3;
     }
 }

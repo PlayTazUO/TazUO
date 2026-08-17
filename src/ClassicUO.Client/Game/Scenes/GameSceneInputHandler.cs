@@ -1569,7 +1569,7 @@ namespace ClassicUO.Game.Scenes
                 {
                     if (string.IsNullOrEmpty(UIManager.SystemChat.TextBoxControl.Text))
                     {
-                        bool wasd = ProfileManager.CurrentProfile.UseWASDInsteadArrowKeys && !UIManager.SystemChat.IsActive;
+                        bool wasd = ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys && !UIManager.SystemChat.IsActive;
 
                         SDL.SDL_Keycode[] wasdKeys = { SDL.SDL_Keycode.SDLK_W, SDL.SDL_Keycode.SDLK_A, SDL.SDL_Keycode.SDLK_S, SDL.SDL_Keycode.SDLK_D };
                         SDL.SDL_Keycode[] arrowKeys = { SDL.SDL_Keycode.SDLK_UP, SDL.SDL_Keycode.SDLK_LEFT, SDL.SDL_Keycode.SDLK_DOWN, SDL.SDL_Keycode.SDLK_RIGHT };
@@ -1584,6 +1584,8 @@ namespace ClassicUO.Game.Scenes
                                 break;
                             }
                         }
+
+                        SetNumpadMovementFlags(key, true);
                     }
                 }
             }
@@ -1702,7 +1704,7 @@ namespace ClassicUO.Game.Scenes
                 }
             }
 
-            bool wasd = ProfileManager.CurrentProfile.UseWASDInsteadArrowKeys && !UIManager.SystemChat.IsActive;
+            bool wasd = ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys && !UIManager.SystemChat.IsActive;
 
             SDL.SDL_Keycode[] wasdKeys = { SDL.SDL_Keycode.SDLK_W, SDL.SDL_Keycode.SDLK_A, SDL.SDL_Keycode.SDLK_S, SDL.SDL_Keycode.SDLK_D };
             SDL.SDL_Keycode[] arrowKeys = { SDL.SDL_Keycode.SDLK_UP, SDL.SDL_Keycode.SDLK_LEFT, SDL.SDL_Keycode.SDLK_DOWN, SDL.SDL_Keycode.SDLK_RIGHT };
@@ -1717,6 +1719,8 @@ namespace ClassicUO.Game.Scenes
                     break;
                 }
             }
+
+            SetNumpadMovementFlags(key, false);
 
             if (
                 key == SDL.SDL_Keycode.SDLK_TAB
@@ -1763,6 +1767,41 @@ namespace ClassicUO.Game.Scenes
                         ExecuteMacro(mac);
                     }
                 }
+            }
+        }
+
+        private void SetNumpadMovementFlags(SDL.SDL_Keycode key, bool pressed)
+        {
+            switch (key)
+            {
+                case SDL.SDL_Keycode.SDLK_KP_8:
+                    _flags[0] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_2:
+                    _flags[2] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_4:
+                    _flags[1] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_6:
+                    _flags[3] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_7:
+                    _flags[0] = pressed;
+                    _flags[1] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_9:
+                    _flags[0] = pressed;
+                    _flags[3] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_1:
+                    _flags[2] = pressed;
+                    _flags[1] = pressed;
+                    break;
+                case SDL.SDL_Keycode.SDLK_KP_3:
+                    _flags[2] = pressed;
+                    _flags[3] = pressed;
+                    break;
             }
         }
 
