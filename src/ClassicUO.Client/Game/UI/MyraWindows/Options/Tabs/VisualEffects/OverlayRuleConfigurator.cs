@@ -10,12 +10,12 @@ using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
 using ClassicUO.Game.Logic;
 using ClassicUO.Game.ScreenDecorations.Triggers;
+using ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Logic;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Myra.Graphics2D.UI;
-using Myra.Graphics2D.UI.Properties;
 using Myra.Graphics2D.UI.WrapPanel;
 using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
 
@@ -334,6 +334,13 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
                 continue;
             }
 
+            if (property.PropertyType == typeof(BuffTriggerMode)
+                && property.GetCustomAttribute<BuffTriggerEditorAttribute>() is { } buffEditor)
+            {
+                // Top: the editor stacks a mode row, a type row, and a conditional duration row.
+                AddRichRow(grid, property, BuffEditor(parameters, property, buffEditor), VerticalAlignment.Top);
+            }
+
             if (property.PropertyType == typeof(FalloffCurve)
                 && property.GetCustomAttribute<FalloffEditorAttribute>() is { } falloff)
             {
@@ -386,6 +393,23 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
         picker.IndexChanged += (_, index) => property.SetValue(parameters, index);
 
         return picker;
+    }
+
+    private static BuffTriggerPicker BuffEditor(
+        TriggerParameters parameters,
+        PropertyInfo property,
+        BuffTriggerEditorAttribute buffEditor
+    )
+    {
+        Type owner = parameters.GetType();
+
+        var properties = new BuffTriggerProperties(
+            property,
+            owner.GetProperty(buffEditor.BuffTypeProperty),
+            owner.GetProperty(buffEditor.DurationSecondsProperty)
+        );
+
+        return new BuffTriggerPicker(parameters, properties, INPUT_WIDTH, NUMBER_INPUT_WIDTH);
     }
 
     /// <summary>
