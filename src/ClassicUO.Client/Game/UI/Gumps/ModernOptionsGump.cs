@@ -3465,8 +3465,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.BlankLine();
             content.AddToRight(
-                c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_hidetimestamp"), 0, profile.HideJournalTimestamp,
-                    (b) => { profile.HideJournalTimestamp = b; }), true, page);
+                c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_hidetimestamp"), 0, ProfileManager.GlobalSettings.HideJournalTimestamp,
+                    (b) => { ProfileManager.GlobalSettings.HideJournalTimestamp = b; }), true, page);
             content.BlankLine();
             content.AddToRight(
                 c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_journalhidesystemprefix"), 0, profile.HideJournalSystemPrefix,
@@ -4372,7 +4372,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == Input.MouseButtonType.Left)
                 {
-                    MyraWindows.TooltipOverrideWindow.Show(World.Instance);
+                    MyraWindows.TooltipOverrideConfigWindow.Show(World.Instance);
                 }
             };
 

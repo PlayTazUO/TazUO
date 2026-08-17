@@ -4,6 +4,15 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Features
+* Added a translucent ground preview of the item being dragged, shown on the tile it would land on when dropped on the ground (drag distance and Z-banded), toggleable under Gameplay -> Misc, enabled by default ([bittiez](https://github.com/bittiez))
+
+### Misc
+* Changed Dress and Organizer agent tabs to have a more compact list instead of awkward buttons for configs
+* The classic journal gump (JournalGump) now respects the "Hide journal timestamps" setting, which was moved from per-profile to machine-wide (global) settings
+
+## 5.28.1
+
 ### Legion
 * Added `justice` support to `API.Virtue()` - [P.R 938](https://github.com/PlayTazUO/TazUO/pull/938) ([bittiez](https://github.com/bittiez))
 * Added `API.OpenQuestLog()` to open the quest log gump - [P.R 938](https://github.com/PlayTazUO/TazUO/pull/938) ([bittiez](https://github.com/bittiez))
@@ -13,6 +22,7 @@ All notable changes to TazUO will be recorded here.
 
 ### Features
 * Added a visual effects composition and management system to allow for custom UI effects such as fog and blur. - [P.R 958](https://github.com/PlayTazUO/TazUO/pull/958) ([yuval-po](https://github.com/yuval-po))
+* Added a right-click option to the Journal tab on the top menu bar that opens a context menu with an "Open original journal" option, opening the classic `JournalGump` instead of the resizable journal
 * Added a setting to show heal/cure buttons on pet health bars, separate from the existing all-health-bar and friends-list toggles ([bittiez](https://github.com/bittiez))
 * Added current global action queue and main thread queue counts to the Profiler window, along with a button to clear the action queue, all refreshed at 250ms
 * Added an option to block walking into closed doors, preventing walk requests that the server rejects and the client bounces back from ([bittiez](https://github.com/bittiez))
@@ -23,15 +33,19 @@ All notable changes to TazUO will be recorded here.
 * Corpse grid containers now remember their own position (separate from regular containers), saving and restoring it per profile ([bittiez](https://github.com/bittiez))
 
 ### Misc
+* Replace tooltip override window with a new, easier to view and understand window
 * Right click to close should be more accurate now
 * Drawing one more tile outside the viewport for smooth static loading
 * Clicking login music toggle on login screen should stop music now
+* Improved client performance when entering heavily populated areas: network packets are now processed under a per-frame time budget instead of a fixed message cap, unchanged item/mobile updates are skipped, and world object lookups/insertions use single-hash dictionary operations
 * Moved the corpse opening settings (auto open corpses, corpse open distance, corpse open options) from the Misc options tab into a "Corpse Opening" container under Gameplay -> Mobiles -> Misc ([bittiez](https://github.com/bittiez))
 * Made looting take higher priority over opening corpses *except your own corpse and manually opened corpses*
 * Migrated WASD Movement and Single click to cast spell settings to Global settings, migrated turn delay to server settings ([bittiez](https://github.com/bittiez))
 * Add some missing weapon abilities
 
 ### Fixes
+* Fixed a `NoAudioHardwareException` crash on machines without an audio device: the audio availability probe no longer creates a `DynamicSoundEffectInstance` (which left a partially-built object for the GC finalizer to crash on) and instead reads `SoundEffect.MasterVolume` ([bittiez](https://github.com/bittiez))
+* Remove presets for auto skinnig knife id's to prevent trying to use the incorrect item on servers ([bittiez](https://github.com/bittiez))
 * Fixed a rare crash that could occur when a grid container is moved - [P.R 958](https://github.com/PlayTazUO/TazUO/pull/958) ([yuval-po](https://github.com/yuval-po))
 * Fixed the candle flicker effect speeding up while moving: the flicker phase is now seeded from each light's world position instead of its screen position, so it oscillates at a constant speed
 * Fixed a NullReferenceException in the counter bar when an item or spell graphic could not be loaded; the icon is now skipped instead of crashing the client ([bittiez](https://github.com/bittiez))

@@ -39,15 +39,7 @@ namespace ClassicUO.Game.Managers
 
         public void Initialize()
         {
-            try
-            {
-                new DynamicSoundEffectInstance(1000, AudioChannels.Mono).Dispose();
-            }
-            catch (NoAudioHardwareException ex)
-            {
-                Log.Warn(ex.ToString());
-                _canReproduceAudio = false;
-            }
+            _canReproduceAudio = TryCreateAudioInstance();
 
             LoginMusicIndex = Client.Game.UO.Version switch
             {
@@ -683,8 +675,7 @@ namespace ClassicUO.Game.Managers
                 {
                     try
                     {
-                        var testInstance = new DynamicSoundEffectInstance(22050, AudioChannels.Mono);
-                        testInstance.Dispose();
+                        _ = SoundEffect.MasterVolume;
 
                         Log.Info($"Audio device test successful on attempt {attempt + 1}");
                         return true;

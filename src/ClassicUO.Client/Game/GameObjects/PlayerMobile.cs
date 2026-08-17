@@ -447,8 +447,9 @@ namespace ClassicUO.Game.GameObjects
             }
         }
 
-        // Block walking into a closed door when auto open is off to avoid spamming the
-        // server with walk requests that get denied and cause the client to bounce back.
+        // Block walking into a door when auto open is off to avoid spamming the server with
+        // walk requests that get denied and cause the client to bounce back. Open doors are
+        // blocked too because the client's notion of a door's state may not match the server's.
         private bool IsBlockedByDoor(int x, int y, sbyte z)
         {
             Profile profile = ProfileManager.CurrentProfile;
@@ -468,8 +469,7 @@ namespace ClassicUO.Game.GameObjects
 
             for (; obj != null; obj = obj.TNext)
             {
-                if (obj is Item door && door.ItemData.IsDoor && door.Z - 15 <= z && door.Z + 15 >= z
-                    && !DoorData.IsOpenDoor(door.Graphic))
+                if (obj is Item door && door.ItemData.IsDoor && door.Z - 15 <= z && door.Z + 15 >= z)
                 {
                     return true;
                 }
@@ -707,6 +707,9 @@ namespace ClassicUO.Game.GameObjects
                     oldDirection = (Direction)walkStep.Direction;
                 }
 
+                int startX = x;
+                int startY = y;
+                sbyte startZ = z;
                 sbyte oldZ = z;
                 ushort walkTime = ProfileManager.ServerSettings.TurnDelay;
 
@@ -786,7 +789,7 @@ namespace ClassicUO.Game.GameObjects
                     direction = newDir;
                 }
 
-                if (IsBlockedByDoor(x, y, z))
+                if (IsBlockedByDoor(x, y, z) && (x != startX || y != startY || z != startZ))
                 {
                     return false;
                 }
@@ -919,6 +922,9 @@ namespace ClassicUO.Game.GameObjects
                 oldDirection = (Direction)walkStep.Direction;
             }
 
+            int startX = x;
+            int startY = y;
+            sbyte startZ = z;
             sbyte oldZ = z;
             ushort walkTime = ProfileManager.ServerSettings.TurnDelay;
 
@@ -975,7 +981,7 @@ namespace ClassicUO.Game.GameObjects
                 direction = newDir;
             }
 
-            if (IsBlockedByDoor(x, y, z))
+            if (IsBlockedByDoor(x, y, z) && (x != startX || y != startY || z != startZ))
             {
                 return false;
             }

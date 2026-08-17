@@ -89,6 +89,22 @@ namespace ClassicUO.Configuration
             Save();
         }
 
+        /// <summary>
+        /// Swaps the entry at <paramref name="index"/> with its neighbour <paramref name="index"/> + <paramref name="delta"/>
+        /// (i.e. -1 moves it one position up, +1 one position down), reindexes and persists. A no-op when the move
+        /// would fall outside the list.
+        /// </summary>
+        public void Move(int index, int delta)
+        {
+            int target = index + delta;
+            if (index < 0 || target < 0 || target >= Overrides.Count)
+                return;
+
+            (Overrides[index], Overrides[target]) = (Overrides[target], Overrides[index]);
+            Reindex();
+            Save();
+        }
+
         /// <summary>Removes every override and persists.</summary>
         public void Clear()
         {

@@ -18,6 +18,25 @@ public static class DressAgentTabContent
         var leftPanel = new VerticalStackPanel { Spacing = 4 };
         var rightPanel = new VerticalStackPanel { Spacing = 4 };
 
+        bool suppressComboEvent = false;
+        var configCombo = new ComboView();
+        ListView configList = configCombo.ListView;
+        configList.HorizontalAlignment = HorizontalAlignment.Stretch;
+        configList.MinWidth = 50;
+        configList.MaxHeight = 500;
+        configList.SelectedIndexChanged += (_, _) =>
+        {
+            if (suppressComboEvent)
+                return;
+
+            if (configList.SelectedIndex is int idx &&
+                idx >= 0 && idx < DressAgentManager.Instance.CurrentPlayerConfigs.Count)
+            {
+                selectedConfig = DressAgentManager.Instance.CurrentPlayerConfigs[idx];
+                BuildConfigDetails();
+            }
+        };
+
         void BuildItemsGrid(VerticalStackPanel itemsPanel)
         {
             itemsPanel.Widgets.Clear();
@@ -67,18 +86,29 @@ public static class DressAgentTabContent
                 BuildConfigDetails();
             }));
 
-            foreach (DressConfig config in DressAgentManager.Instance.CurrentPlayerConfigs)
+            List<DressConfig> configs = DressAgentManager.Instance.CurrentPlayerConfigs;
+            suppressComboEvent = true;
+            configList.Widgets.Clear();
+            foreach (DressConfig config in configs)
             {
-                DressConfig captured = config;
-                var btn = new MyraButton($"{config.Name} ({config.Items.Count} items)", () =>
+                string label = $"{config.Name} ({config.Items.Count} items)";
+                configList.Widgets.Add(new Myra.Graphics2D.UI.Label
                 {
-                    selectedConfig = captured;
-                    BuildConfigDetails();
+                    Text = label,
+                    Tooltip = string.IsNullOrEmpty(config.CharacterName)
+                        ? null
+                        : $"Character: {config.CharacterName}"
                 });
-                if (!string.IsNullOrEmpty(config.CharacterName))
-                    btn.Tooltip = $"Character: {config.CharacterName}";
-                leftPanel.Widgets.Add(btn);
             }
+
+            int selIndex = selectedConfig == null ? -1 : configs.IndexOf(selectedConfig);
+            if (selIndex < 0 && configs.Count > 0)
+                selIndex = 0;
+            selectedConfig = selIndex >= 0 ? configs[selIndex] : null;
+            configList.SelectedIndex = selIndex >= 0 ? selIndex : null;
+            suppressComboEvent = false;
+
+            leftPanel.Widgets.Add(configList);
         }
 
         void BuildConfigDetails()

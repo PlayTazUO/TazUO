@@ -37,10 +37,7 @@ public sealed class AutoSkinningManager
 
     public bool IsEnabled => ProfileManager.CurrentProfile?.EnableAutoSkinning ?? false;
 
-    public void OnSceneLoad()
-    {
-        EventSink.OnOpenContainer += OnOpenContainer;
-    }
+    public void OnSceneLoad() => EventSink.OnOpenContainer += OnOpenContainer;
 
     public void OnSceneUnload()
     {
@@ -97,22 +94,19 @@ public sealed class AutoSkinningManager
         return null;
     }
 
-    private void EnqueueSkin(uint knifeSerial, uint corpseSerial)
-    {
-        ObjectActionQueue.Instance.Enqueue(new ObjectActionQueueItem(() =>
-        {
-            World world = World.Instance;
-            if (world == null)
-                return;
+    private void EnqueueSkin(uint knifeSerial, uint corpseSerial) => ObjectActionQueue.Instance.Enqueue(new ObjectActionQueueItem(() =>
+                                                                          {
+                                                                              World world = World.Instance;
+                                                                              if (world == null)
+                                                                                  return;
 
-            // Queue the corpse serial to answer the server target request produced by using the knife.
-            // Match any target cursor type since some servers send a non-neutral cursor for skinning.
-            TargetManager.SetAutoTarget(corpseSerial, TargetType.Neutral, true);
+                                                                              // Queue the corpse serial to answer the server target request produced by using the knife.
+                                                                              // Match any target cursor type since some servers send a non-neutral cursor for skinning.
+                                                                              TargetManager.SetAutoTarget(corpseSerial, TargetType.Neutral, true);
 
-            // ignoreQueue: this is already running inside the action queue, don't re-enqueue.
-            GameActions.DoubleClick(world, knifeSerial, false, true);
-        }), ActionPriority.UseItem);
-    }
+                                                                              // ignoreQueue: this is already running inside the action queue, don't re-enqueue.
+                                                                              GameActions.DoubleClick(world, knifeSerial, false, true);
+                                                                          }), ActionPriority.UseItem);
 
     private bool MarkSkinned(uint serial)
     {

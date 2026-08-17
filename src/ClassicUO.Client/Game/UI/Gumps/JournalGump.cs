@@ -199,7 +199,7 @@ namespace ClassicUO.Game.UI.Gumps
             EventSink.JournalEntryAdded += AddJournalEntry;
         }
 
-        public override GumpType GumpType => GumpType.Journal;
+        public override GumpType GumpType => GumpType.OldJournal;
 
         public ushort Hue
         {
@@ -370,12 +370,12 @@ namespace ClassicUO.Game.UI.Gumps
                     RenderedText hour = _hours[i];
                     TextType type = _text_types[i];
 
-
                     if (!CanBeDrawn(type))
                     {
                         continue;
                     }
 
+                    int hourWidth = ProfileManager.GlobalSettings.HideJournalTimestamp ? 0 : hour.Width;
 
                     if (height + t.Height <= _scrollBar.Value)
                     {
@@ -389,25 +389,28 @@ namespace ClassicUO.Game.UI.Gumps
                         if (yy < 0)
                         {
                             // this entry starts above the renderable area, but exists partially within it.
-                            hour.Draw
-                            (
-                                batcher,
-                                hour.Width,
-                                hour.Height,
-                                mx,
-                                y,
-                                t.Width,
-                                t.Height + yy,
-                                0,
-                                -yy
-                            );
+                            if (hourWidth > 0)
+                            {
+                                hour.Draw
+                                (
+                                    batcher,
+                                    hourWidth,
+                                    hour.Height,
+                                    mx,
+                                    y,
+                                    t.Width,
+                                    t.Height + yy,
+                                    0,
+                                    -yy
+                                );
+                            }
 
                             t.Draw
                             (
                                 batcher,
                                 t.Width,
                                 t.Height,
-                                mx + hour.Width,
+                                mx + hourWidth,
                                 y,
                                 t.Width,
                                 t.Height + yy,
@@ -420,8 +423,12 @@ namespace ClassicUO.Game.UI.Gumps
                         else
                         {
                             // this entry is completely within the renderable area.
-                            hour.Draw(batcher, mx, my);
-                            t.Draw(batcher, mx + hour.Width, my);
+                            if (hourWidth > 0)
+                            {
+                                hour.Draw(batcher, mx, my);
+                            }
+
+                            t.Draw(batcher, mx + hourWidth, my);
                             my += t.Height;
                         }
 
@@ -431,25 +438,28 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         int yyy = maxheight - height;
 
-                        hour.Draw
-                        (
-                            batcher,
-                            hour.Width,
-                            hour.Height,
-                            mx,
-                            y + _scrollBar.Height - yyy,
-                            t.Width,
-                            yyy,
-                            0,
-                            0
-                        );
+                        if (hourWidth > 0)
+                        {
+                            hour.Draw
+                            (
+                                batcher,
+                                hourWidth,
+                                hour.Height,
+                                mx,
+                                y + _scrollBar.Height - yyy,
+                                t.Width,
+                                yyy,
+                                0,
+                                0
+                            );
+                        }
 
                         t.Draw
                         (
                             batcher,
                             t.Width,
                             t.Height,
-                            mx + hour.Width,
+                            mx + hourWidth,
                             y + _scrollBar.Height - yyy,
                             t.Width,
                             yyy,
@@ -543,6 +553,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                 _hours.AddToBack(h);
 
+                int hourWidth = ProfileManager.GlobalSettings.HideJournalTimestamp ? 0 : h.Width;
+
                 var rtext = RenderedText.Create
                 (
                     text,
@@ -550,7 +562,7 @@ namespace ClassicUO.Game.UI.Gumps
                     (byte) font,
                     isUnicode,
                     FontStyle.Indention | FontStyle.BlackBorder,
-                    maxWidth: Width - (18 + h.Width)
+                    maxWidth: Width - (18 + hourWidth)
                 );
 
                 _entries.AddToBack(rtext);

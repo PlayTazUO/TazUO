@@ -685,6 +685,7 @@ namespace ClassicUO.Configuration
         public int MaxSoundEntries { get; set => SetProperty(ref field, value); } = 250;
         public bool HideJournalBorder { get; set => SetProperty(ref field, value); } = false;
         public bool JournalTransparencyWhenInactive { get; set => SetProperty(ref field, value); } = false;
+        [Obsolete("Remove on/after 10/17/26")]
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); } = false;
         public bool HideJournalSystemPrefix { get; set => SetProperty(ref field, value); } = false;
 
@@ -738,7 +739,7 @@ namespace ClassicUO.Configuration
         public bool AutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
         public bool EnableAutoSkinning { get; set => SetProperty(ref field, value); } = false;
         public bool AutoSkinningHumanCorpses { get; set => SetProperty(ref field, value); } = false;
-        public string AutoSkinningKnifeGraphics { get; set => SetProperty(ref field, value); } = "0x2D2C;0x0F52;0x0EC4;0x0EC3;0x13F6;0x13B6";
+        public string AutoSkinningKnifeGraphics { get; set => SetProperty(ref field, value); }
         public bool ItemDatabaseEnabled { get; set => SetProperty(ref field, value); } = true;
         public static uint GumpsVersion { get; private set; }
 
@@ -1036,6 +1037,13 @@ namespace ClassicUO.Configuration
                 ProfileManager.ServerSettings.TurnDelay = TurnDelay;
 
                 ProfileMigrationVersion = 10;
+            }
+
+            if (ProfileMigrationVersion < 11)
+            {
+                ProfileManager.GlobalSettings.HideJournalTimestamp = HideJournalTimestamp;
+
+                ProfileMigrationVersion = 11;
             }
 
             try //Cleanup old backups from previous save system
@@ -1396,6 +1404,11 @@ namespace ClassicUO.Configuration
 
                                 case GumpType.Journal:
                                     gump = new ResizableJournal(world);
+
+                                    break;
+
+                                case GumpType.OldJournal:
+                                    gump = new JournalGump(world);
 
                                     break;
 
