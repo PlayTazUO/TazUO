@@ -2,6 +2,11 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## In Development
+
+### Misc
+* Changed Dress and Organizer agent tabs to have a more compact list instead of awkward buttons for configs
+
 ## 5.28.1
 
 ### Legion
