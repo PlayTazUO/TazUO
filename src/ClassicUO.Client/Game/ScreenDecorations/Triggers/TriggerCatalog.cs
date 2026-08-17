@@ -40,7 +40,8 @@ public sealed class TriggerCatalog
             new SoundPlayedTriggerDefinition(),
             new ChatMessageTriggerDefinition(),
             new ObjectPropertiesTriggerDefinition(),
-            new PlayerAttributeTriggerDefinition()
+            new PlayerAttributeTriggerDefinition(),
+            new BuffChangedTriggerDefinition()
         ];
 
         _byId = All.ToFrozenDictionary(definition => definition.Id, StringComparer.OrdinalIgnoreCase);

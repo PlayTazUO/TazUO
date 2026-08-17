@@ -15,9 +15,13 @@ public class IntegerInputBox : NumericInputBox<int>
 
     protected override bool IsIntermediate(string text) => string.IsNullOrEmpty(text) || text == "-";
 
+    /// <summary>Which characters the box accepts while typing. Overridden by subclasses that parse a
+    /// wider format (e.g. hex) than plain decimal.</summary>
+    protected virtual bool IsCharAllowed(char c) => char.IsDigit(c) || c == '-';
+
     public override void OnChar(char c)
     {
-        if (!char.IsDigit(c) && c != '-')
+        if (!IsCharAllowed(c))
             return;
 
         base.OnChar(c);

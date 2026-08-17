@@ -17,6 +17,7 @@ namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
 /// </para>
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
+[JsonDerivedType(typeof(BuffChangedParameters), BuffChangedParameters.Discriminator)]
 [JsonDerivedType(typeof(ChatMessageParameters), ChatMessageParameters.Discriminator)]
 [JsonDerivedType(typeof(ObjectPropertiesParameters), ObjectPropertiesParameters.Discriminator)]
 [JsonDerivedType(typeof(PlayerAttributeParameters), PlayerAttributeParameters.Discriminator)]
