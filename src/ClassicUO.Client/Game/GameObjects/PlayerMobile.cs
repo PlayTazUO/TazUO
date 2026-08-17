@@ -707,6 +707,9 @@ namespace ClassicUO.Game.GameObjects
                     oldDirection = (Direction)walkStep.Direction;
                 }
 
+                int startX = x;
+                int startY = y;
+                sbyte startZ = z;
                 sbyte oldZ = z;
                 ushort walkTime = ProfileManager.ServerSettings.TurnDelay;
 
@@ -786,7 +789,7 @@ namespace ClassicUO.Game.GameObjects
                     direction = newDir;
                 }
 
-                if (IsBlockedByDoor(x, y, z))
+                if (IsBlockedByDoor(x, y, z) && (x != startX || y != startY || z != startZ))
                 {
                     return false;
                 }
@@ -919,6 +922,9 @@ namespace ClassicUO.Game.GameObjects
                 oldDirection = (Direction)walkStep.Direction;
             }
 
+            int startX = x;
+            int startY = y;
+            sbyte startZ = z;
             sbyte oldZ = z;
             ushort walkTime = ProfileManager.ServerSettings.TurnDelay;
 
@@ -975,7 +981,7 @@ namespace ClassicUO.Game.GameObjects
                 direction = newDir;
             }
 
-            if (IsBlockedByDoor(x, y, z))
+            if (IsBlockedByDoor(x, y, z) && (x != startX || y != startY || z != startZ))
             {
                 return false;
             }
