@@ -13,6 +13,7 @@ All notable changes to TazUO will be recorded here.
 
 ### Features
 * Added a visual effects composition and management system to allow for custom UI effects such as fog and blur. - [P.R 958](https://github.com/PlayTazUO/TazUO/pull/958) ([yuval-po](https://github.com/yuval-po))
+* Added a right-click option to the Journal tab on the top menu bar that opens a context menu with an "Open original journal" option, opening the classic `JournalGump` instead of the resizable journal
 * Added a setting to show heal/cure buttons on pet health bars, separate from the existing all-health-bar and friends-list toggles ([bittiez](https://github.com/bittiez))
 * Added current global action queue and main thread queue counts to the Profiler window, along with a button to clear the action queue, all refreshed at 250ms
 * Added an option to block walking into closed doors, preventing walk requests that the server rejects and the client bounces back from ([bittiez](https://github.com/bittiez))

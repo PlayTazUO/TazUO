@@ -199,7 +199,7 @@ namespace ClassicUO.Game.UI.Gumps
             EventSink.JournalEntryAdded += AddJournalEntry;
         }
 
-        public override GumpType GumpType => GumpType.Journal;
+        public override GumpType GumpType => GumpType.OldJournal;
 
         public ushort Hue
         {
