@@ -70,6 +70,11 @@ public static class ArtBrowserTabContent
         private int _zoomSize = ZOOM_DEFAULT;
         private string _filterQuery = string.Empty;
 
+        /// <summary>Cache of <see cref="FilteredIds" />'s last result. Invalidated where
+        /// <see cref="_filterQuery" /> changes, so a plain page/selection refresh does not rescan every
+        /// named entry.</summary>
+        private List<int>? _cachedFilteredIds;
+
         private MyraButton _prevBtn = null!;
         private MyraButton _nextBtn = null!;
         private MyraLabel _pageLabel = null!;
@@ -173,6 +178,7 @@ public static class ArtBrowserTabContent
             _filterBox.TextChangedByUser += (_, _) =>
             {
                 _filterQuery = _filterBox.Text?.Trim() ?? string.Empty;
+                _cachedFilteredIds = null;
                 _currentPage = 0;
                 RefreshPage();
             };
@@ -182,6 +188,13 @@ public static class ArtBrowserTabContent
             filterRow.Widgets.Add(_filterBox);
             return filterRow;
         }
+
+        /// <summary>
+        ///     <see cref="FilteredIds" /> for the current <see cref="_filterQuery" />, reusing the last
+        ///     result until the filter box invalidates it - a plain grid click re-runs RefreshPage()
+        ///     without touching the filter, and the scan is a Levenshtein pass over every named entry.
+        /// </summary>
+        private List<int> CachedFilteredIds() => _cachedFilteredIds ??= FilteredIds();
 
         /// <summary>Named graphics matching <see cref="_filterQuery" />, best match first.</summary>
         private List<int> FilteredIds()
@@ -229,7 +242,7 @@ public static class ArtBrowserTabContent
         /// </summary>
         private void RefreshPage()
         {
-            List<int>? filtered = _filterQuery.Length > 0 ? FilteredIds() : null;
+            List<int>? filtered = _filterQuery.Length > 0 ? CachedFilteredIds() : null;
             int totalItems = filtered?.Count ?? _maxGraphic;
             int totalPages = Math.Max(1, (totalItems + PAGE_SIZE - 1) / PAGE_SIZE);
 

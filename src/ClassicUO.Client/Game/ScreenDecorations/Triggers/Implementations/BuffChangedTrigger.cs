@@ -77,6 +77,10 @@ public sealed class BuffChangedTrigger : IEventTrigger
         switch (_parameters.Mode)
         {
             case BuffTriggerMode.Added:
+                // PlayerMobile.AddBuff() raises this on every packet for the buff, including a shard
+                // resending one already active (e.g. refreshing its timer), not just the true first
+                // application - accepted for now, since telling them apart needs plumbing the packet
+                // handler's own alreadyExists check through to here.
                 Fired?.Invoke(this, new TriggerFiredArgs { Signal = new TriggerSignal { Duration = _parameters.Duration } });
                 break;
 
