@@ -17,7 +17,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 ///         what a value outside that data still has to go through.
 ///     </para>
 /// </summary>
-public sealed class IndexedComboPicker : HorizontalStackPanel
+public class IndexedComboPicker : HorizontalStackPanel
 {
     #region Public events
 
@@ -60,26 +60,22 @@ public sealed class IndexedComboPicker : HorizontalStackPanel
 
     /// <param name="value">The value to start on.</param>
     /// <param name="entries">Every known (value, label) pair the name list should offer.</param>
-    /// <param name="numberWidth">Width for the raw-number field.</param>
-    /// <param name="nameWidth">Width for the name list.</param>
     /// <param name="minValue">Lower bound the number field accepts.</param>
     /// <param name="maxValue">Upper bound the number field accepts.</param>
     /// <param name="numberInput">
     ///     The number field to drive, when a caller needs one that parses more than plain decimal (e.g., a
     ///     hex-capable <see cref="IntegerInputBox" /> subclass). Defaults to a plain one.
     /// </param>
-    /// <param name="numberHint">Placeholder text for the number field when empty. Defaults to none.</param>
-    /// <param name="nameHint">Placeholder text for the name list's search box. Defaults to Myra's own "Search...".</param>
+    /// <remarks>
+    ///     Width and hint text are cosmetic, not structural - set them on <see cref="NumberInput" /> and
+    ///     <see cref="NameList" /> after construction instead of through the ctor.
+    /// </remarks>
     public IndexedComboPicker(
         int value,
         IEnumerable<(int Value, string Label)> entries,
-        int numberWidth,
-        int nameWidth,
         int minValue = int.MinValue,
         int maxValue = int.MaxValue,
-        IntegerInputBox? numberInput = null,
-        string? numberHint = null,
-        string? nameHint = null
+        IntegerInputBox? numberInput = null
     )
     {
         Spacing = SPACING;
@@ -98,10 +94,7 @@ public sealed class IndexedComboPicker : HorizontalStackPanel
         NumberInput = numberInput ?? new IntegerInputBox();
         NumberInput.MinValue = minValue;
         NumberInput.MaxValue = maxValue;
-        NumberInput.Width = numberWidth;
         NumberInput.VerticalAlignment = VerticalAlignment.Center;
-        if (numberHint != null)
-            NumberInput.HintText = numberHint;
 
         // addSelectedItemIfMissing is off: a value entries have no name for is a real choice, but
         // adding a row for it would put a made-up entry in a list that otherwise mirrors entries. The
@@ -111,17 +104,15 @@ public sealed class IndexedComboPicker : HorizontalStackPanel
             _orderedLabels,
             OnNameChosen,
             false
-        ) { VerticalAlignment = VerticalAlignment.Center, TooltipSelector = name => name, Width = nameWidth };
+        ) { VerticalAlignment = VerticalAlignment.Center, TooltipSelector = name => name };
 
         MyraStyle.ApplySearchComboBoxPopupBorder(NameList);
-        if (nameHint != null)
-            NameList.SearchHintText = nameHint;
 
         NumberInput.Value = value;
         NumberInput.ValueChanged += (_, args) => OnNumberTyped(args.NewValue);
 
-        Widgets.Add(NumberInput);
-        Widgets.Add(NameList);
+        Children.Add(NumberInput);
+        Children.Add(NameList);
     }
 
     #endregion

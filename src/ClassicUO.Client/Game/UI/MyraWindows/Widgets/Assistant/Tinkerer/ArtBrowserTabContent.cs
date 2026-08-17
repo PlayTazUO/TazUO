@@ -72,6 +72,12 @@ public static class ArtBrowserTabContent
         private MyraInputBox _filterBox = null!;
         private IndexedComboPicker _gotoPicker = null!;
 
+        /// <summary>
+        ///     Set while <see cref="SelectGraphic" /> is echoing the selection into the go-to picker, so that
+        ///     echo does not re-enter <see cref="JumpTo" /> and clear the active filter out from under a grid click.
+        /// </summary>
+        private bool _suppressGotoJump;
+
         public Builder()
         {
             // Upper bound on browsable item graphics. Static art is indexed by item
@@ -127,16 +133,25 @@ public static class ArtBrowserTabContent
             _gotoPicker = new IndexedComboPicker(
                 Math.Max(_selectedGraphic, 0),
                 _namedEntries,
-                120,
-                220,
                 0,
                 Math.Max(0, _maxGraphic - 1),
-                new HexInputBox(),
-                TazLang.Get("tinkerer_art_jumphint", "Graphic # or 0x.."),
-                TazLang.Get("tinkerer_art_searchhint", "Search for art..")
-            ) { NumberInput = { Tooltip = TazLang.Get("tinkerer_art_jumphint", "Graphic # or 0x..") }, NameList = { TooltipSelector = name => name } };
+                new HexInputBox()
+            )
+            {
+                NumberInput =
+                {
+                    Width = 120,
+                    HintText = TazLang.Get("tinkerer_art_jumphint", "Graphic # or 0x.."),
+                    Tooltip = TazLang.Get("tinkerer_art_jumphint", "Graphic # or 0x..")
+                },
+                NameList = { Width = 220, SearchHintText = TazLang.Get("tinkerer_art_searchhint", "Search for art.."), TooltipSelector = name => name }
+            };
             MyraStyle.ApplySearchComboBoxPopupBorder(_gotoPicker.NameList);
-            _gotoPicker.ValueChanged += (_, id) => JumpTo(id);
+            _gotoPicker.ValueChanged += (_, id) =>
+            {
+                if (!_suppressGotoJump)
+                    JumpTo(id);
+            };
 
             jumpRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_goto", "Go to:"), MyraLabel.TextStyle.P));
             jumpRow.Widgets.Add(_gotoPicker);
@@ -290,7 +305,17 @@ public static class ArtBrowserTabContent
         private void SelectGraphic(int id)
         {
             _selectedGraphic = id;
-            _gotoPicker.Value = id;
+
+            _suppressGotoJump = true;
+            try
+            {
+                _gotoPicker.Value = id;
+            }
+            finally
+            {
+                _suppressGotoJump = false;
+            }
+
             RefreshPage();
             RefreshDetail();
         }
