@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Features
+* Added a translucent ground preview of the item being dragged, shown on the tile it would land on when dropped on the ground (drag distance and Z-banded), toggleable under Gameplay -> Misc, enabled by default ([bittiez](https://github.com/bittiez))
+
 ### Misc
 * Changed Dress and Organizer agent tabs to have a more compact list instead of awkward buttons for configs
 

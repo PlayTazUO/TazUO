@@ -1405,6 +1405,8 @@ namespace ClassicUO.Game.Scenes
                 );
             }
 
+            DrawDragItemPreview(batcher);
+
             batcher.SetSampler(null);
             batcher.SetStencil(null);
 
