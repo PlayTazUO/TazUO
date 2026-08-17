@@ -24,6 +24,7 @@ All notable changes to TazUO will be recorded here.
 * Corpse grid containers now remember their own position (separate from regular containers), saving and restoring it per profile ([bittiez](https://github.com/bittiez))
 
 ### Misc
+* Replace tooltip override window with a new, easier to view and understand window
 * Right click to close should be more accurate now
 * Drawing one more tile outside the viewport for smooth static loading
 * Clicking login music toggle on login screen should stop music now

@@ -4372,7 +4372,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == Input.MouseButtonType.Left)
                 {
-                    MyraWindows.TooltipOverrideWindow.Show(World.Instance);
+                    MyraWindows.TooltipOverrideConfigWindow.Show(World.Instance);
                 }
             };
 
