@@ -22,6 +22,10 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Tinkerer;
 /// </summary>
 public static class ArtBrowserTabContent
 {
+    /// <summary>
+    /// Builds the tab's content widget
+    /// </summary>
+    /// <returns>A ready-to-render widget</returns>
     public static Widget Build()
     {
         if (Client.Game?.UO?.Arts == null)
