@@ -26,6 +26,12 @@ namespace ClassicUO.Configuration
         /// When true, use the modern color picker gump for selecting hues.
         /// </summary>
         public bool UseModernColorPicker { get; set; }
+
+        /// <summary>
+        /// When true, show a translucent ghost of the held item on the ground tile it would land on
+        /// while dragging it over the world.
+        /// </summary>
+        public bool ShowDragItemPreview { get; set => SetProperty(ref field, value); } = true;
         public bool UseCircleOfTransparency { get; set => SetProperty(ref field, value); }
         public int CircleOfTransparencyRadius { get; set => SetProperty(ref field, value); } = Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS / 2;
         public int CircleOfTransparencyType { get; set => SetProperty(ref field, value); } // 0 = normal, 1 = like original client
