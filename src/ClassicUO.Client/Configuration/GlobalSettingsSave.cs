@@ -45,5 +45,11 @@ namespace ClassicUO.Configuration
         public bool ReproduceSoundsInBackground { get; set => SetProperty(ref field, value); }
         public bool UseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
         public bool SingleClickIconUse { get; set => SetProperty(ref field, value); }
+
+        /// <summary>
+        /// When true, journal entries are shown without their timestamp in both the resizable
+        /// journal and the classic journal gump.
+        /// </summary>
+        public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); }
     }
 }

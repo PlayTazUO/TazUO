@@ -685,6 +685,7 @@ namespace ClassicUO.Configuration
         public int MaxSoundEntries { get; set => SetProperty(ref field, value); } = 250;
         public bool HideJournalBorder { get; set => SetProperty(ref field, value); } = false;
         public bool JournalTransparencyWhenInactive { get; set => SetProperty(ref field, value); } = false;
+        [Obsolete("Remove on/after 10/17/26")]
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); } = false;
         public bool HideJournalSystemPrefix { get; set => SetProperty(ref field, value); } = false;
 
@@ -1036,6 +1037,13 @@ namespace ClassicUO.Configuration
                 ProfileManager.ServerSettings.TurnDelay = TurnDelay;
 
                 ProfileMigrationVersion = 10;
+            }
+
+            if (ProfileMigrationVersion < 11)
+            {
+                ProfileManager.GlobalSettings.HideJournalTimestamp = HideJournalTimestamp;
+
+                ProfileMigrationVersion = 11;
             }
 
             try //Cleanup old backups from previous save system
