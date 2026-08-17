@@ -2,7 +2,7 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## In Development
+## 5.28.1
 
 ### Legion
 * Added `justice` support to `API.Virtue()` - [P.R 938](https://github.com/PlayTazUO/TazUO/pull/938) ([bittiez](https://github.com/bittiez))
