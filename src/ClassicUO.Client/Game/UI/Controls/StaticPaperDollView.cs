@@ -30,7 +30,7 @@ namespace ClassicUO.Game.UI.Controls
             Layer.Skirt,
             Layer.Robe,
             Layer.Waist,
-            Layer.Necklace,
+            Layer.Neck,
             Layer.Hair,
             Layer.Beard,
             Layer.Earrings,

@@ -813,7 +813,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 (byte)Layer.TwoHanded => EquipmentSlots.LeftHand,
                 (byte)Layer.Helmet => EquipmentSlots.Head,
                 (byte)Layer.Earrings => EquipmentSlots.Earring,
-                (byte)Layer.Necklace => EquipmentSlots.Neck,
+                (byte)Layer.Neck => EquipmentSlots.Neck,
                 (byte)Layer.Torso or (byte)Layer.Tunic => EquipmentSlots.Chest,
                 (byte)Layer.Shirt => EquipmentSlots.Shirt,
                 (byte)Layer.Cloak => EquipmentSlots.Back,

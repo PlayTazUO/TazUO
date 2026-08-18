@@ -113,8 +113,8 @@ internal static class Utility
 
         switch (name)
         {
-            case "onehanded": finalLayer = Layer.OneHanded; break;
-            case "twohanded": finalLayer = Layer.TwoHanded; break;
+            case "onehanded" or "lefthand": finalLayer = Layer.OneHanded; break;
+            case "twohanded" or "righthand": finalLayer = Layer.TwoHanded; break;
             case "shoes": finalLayer = Layer.Shoes; break;
             case "pants": finalLayer = Layer.Pants; break;
             case "shirt": finalLayer = Layer.Shirt; break;
@@ -122,7 +122,7 @@ internal static class Utility
             case "gloves": finalLayer = Layer.Gloves; break;
             case "ring": finalLayer = Layer.Ring; break;
             case "talisman": finalLayer = Layer.Talisman; break;
-            case "necklace": finalLayer = Layer.Necklace; break;
+            case "necklace" or "neck": finalLayer = Layer.Neck; break;
             case "hair": finalLayer = Layer.Hair; break;
             case "waist": finalLayer = Layer.Waist; break;
             case "torso": finalLayer = Layer.Torso; break;

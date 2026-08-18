@@ -15,6 +15,7 @@ using System.Linq;
 using System.Xml;
 using System.IO;
 using ClassicUO.Game.Managers.Structs;
+using ClassicUO.Utility;
 
 
 namespace ClassicUO.Game.UI.Gumps
@@ -91,7 +92,7 @@ namespace ClassicUO.Game.UI.Gumps
             _ = new ItemSlot(world, 50, 50, new Layer[] { Layer.Helmet }) { X = 100, Y = TOP_SPACING };
             itemLayerSlots.Add(_.Layers, _); //Head
 
-            _ = new ItemSlot(world, 35, 35, new Layer[] { Layer.Necklace }) { X = 150 + CELL_SPACING, Y = TOP_SPACING + 15 };
+            _ = new ItemSlot(world, 35, 35, new Layer[] { Layer.Neck }) { X = 150 + CELL_SPACING, Y = TOP_SPACING + 15 };
             itemLayerSlots.Add(_.Layers, _); //Amulet
 
 
@@ -367,7 +368,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Height = height;
 
                 Add(_itemArea = new Area(false) { Width = Width, Height = Height, AcceptMouseInput = true, CanMove = true });
-                _itemArea.SetTooltip(layers[0].ToString());
+                _itemArea.SetTooltip(StringHelper.AddSpaceBeforeCapital(layers[0].ToString()));
 
                 Add(_durabilityBar = new AlphaBlendControl(0.75f) { Width = 7, Height = Height, Hue = ProfileManager.CurrentProfile.ModernPaperDollDurabilityHue, IsVisible = false });
 

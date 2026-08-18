@@ -14,7 +14,7 @@ namespace ClassicUO.Game.Data
         Gloves = 0x07,
         Ring = 0x08,
         Talisman = 0x09,
-        Necklace = 0x0A,
+        Neck = 0x0A,
         Hair = 0x0B,
         Waist = 0x0C,
         Torso = 0x0D,

@@ -123,7 +123,7 @@ namespace ClassicUO.Game.Managers
                 case "HEAD": return Layer.Helmet;
                 case "FACE": return Layer.Face;
                 case "EARS": return Layer.Earrings;
-                case "NECK": return Layer.Necklace;
+                case "NECK": return Layer.Neck;
                 case "TORSO": return Layer.Torso;
                 case "UPPER_ARMS_TOP": return Layer.Invalid;
                 case "UPPER_ARMS_BOTTOM": return Layer.Invalid;

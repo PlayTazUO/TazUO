@@ -304,7 +304,7 @@ namespace ClassicUO.Game.UI.Gumps
             // Equipment slots for hat/earrings/neck/ring/bracelet
             AddEquipSlot(EquipSlotSide.Left, Layer.Helmet);
             AddEquipSlot(EquipSlotSide.Left, Layer.Earrings);
-            AddEquipSlot(EquipSlotSide.Left, Layer.Necklace);
+            AddEquipSlot(EquipSlotSide.Left, Layer.Neck);
             AddEquipSlot(EquipSlotSide.Left, Layer.Ring);
             AddEquipSlot(EquipSlotSide.Left, Layer.Bracelet);
             AddEquipSlot(EquipSlotSide.Left, Layer.Tunic);
@@ -843,7 +843,7 @@ namespace ClassicUO.Game.UI.Gumps
                 AcceptMouseInput = true;
 
                 // Show the layer name when the slot is empty (item gumps show their own tooltip on top)
-                SetTooltip(layer.ToString());
+                SetTooltip(StringHelper.AddSpaceBeforeCapital(layer.ToString()));
 
                 WantUpdateSize = false;
             }

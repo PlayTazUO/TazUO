@@ -48,7 +48,7 @@ namespace ClassicUO.Game.Managers
         private static readonly Layer[] _equipLayers =
         {
             Layer.Cloak, Layer.Shirt, Layer.Pants, Layer.Shoes, Layer.Legs, Layer.Arms, Layer.Torso, Layer.Tunic, Layer.Ring, Layer.Bracelet, Layer.Gloves, Layer.Skirt,
-            Layer.Robe, Layer.Waist, Layer.Necklace, Layer.Beard, Layer.Earrings, Layer.Helmet, Layer.OneHanded, Layer.TwoHanded, Layer.Talisman
+            Layer.Robe, Layer.Waist, Layer.Neck, Layer.Beard, Layer.Earrings, Layer.Helmet, Layer.OneHanded, Layer.TwoHanded, Layer.Talisman
         };
 
         private World World;
