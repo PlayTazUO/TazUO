@@ -1576,16 +1576,24 @@ namespace ClassicUO.Game.Scenes
 
                         SDL.SDL_Keycode[] keys = wasd ? wasdKeys : arrowKeys;
 
-                        for (int i = 0; i < keys.Length; i++)
+                        bool disableArrowKeys = ProfileManager.CurrentProfile.DisableArrowBtn && !wasd;
+
+                        if (!disableArrowKeys)
                         {
-                            if (key == keys[i])
+                            for (int i = 0; i < keys.Length; i++)
                             {
-                                _flags[i] = true;
-                                break;
+                                if (key == keys[i])
+                                {
+                                    _flags[i] = true;
+                                    break;
+                                }
                             }
                         }
 
-                        SetNumpadMovementFlags(key, true);
+                        if (!ProfileManager.CurrentProfile.DisableArrowBtn)
+                        {
+                            SetNumpadMovementFlags(key, true);
+                        }
                     }
                 }
             }
