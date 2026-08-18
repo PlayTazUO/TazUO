@@ -76,7 +76,6 @@ namespace ClassicUO.Game.Managers
             catch (Exception ex)
             {
                 Log.Error(ex.ToString());
-
                 return;
             }
 
@@ -84,12 +83,19 @@ namespace ClassicUO.Game.Managers
 
             XmlElement root = doc["infos"];
 
-            if (root != null)
+            if (root == null)
+                return;
+
+            foreach (XmlElement xml in root.GetElementsByTagName("info"))
             {
-                foreach (XmlElement xml in root.GetElementsByTagName("info"))
+                try
                 {
                     var item = new InfoBarItem(xml);
                     infoBarItems.Add(item);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Failed to construct an Info-Bar item - {ex}");
                 }
             }
         }
