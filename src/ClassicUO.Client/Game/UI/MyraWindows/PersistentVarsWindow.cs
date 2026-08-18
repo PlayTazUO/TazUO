@@ -19,7 +19,7 @@ public class PersistentVarsWindow : MyraControl
     private string? _editingKey;
     private string _editingValue = "";
 
-    private readonly VerticalStackPanel _varsPanel = new() { Spacing = 2 };
+    private readonly VerticalStackPanel _varsPanel = new() { Spacing = 2, MaxWidth = 700, MaxHeight = 600 };
     private readonly HorizontalStackPanel _scopeButtonRow = new() { Spacing = 4 };
     private readonly HorizontalStackPanel _scopeDescPanel = new() { Spacing = 4 };
 
