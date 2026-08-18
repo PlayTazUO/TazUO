@@ -14,6 +14,9 @@ All notable changes to TazUO will be recorded here.
 * Changed Dress and Organizer agent tabs to have a more compact list instead of awkward buttons for configs
 * The classic journal gump (JournalGump) now respects the "Hide journal timestamps" setting, which was moved from per-profile to machine-wide (global) settings
 
+### Fixes
+* Fixed a double max height in persistent vars window
+
 ## 5.28.1
 
 ### Legion
