@@ -19,7 +19,7 @@ public class PersistentVarsWindow : MyraControl
     private string? _editingKey;
     private string _editingValue = "";
 
-    private readonly VerticalStackPanel _varsPanel = new() { Spacing = 2, MaxWidth = 700, MaxHeight = 600 };
+    private readonly VerticalStackPanel _varsPanel = new() { Spacing = 2, MaxWidth = 700 };
     private readonly HorizontalStackPanel _scopeButtonRow = new() { Spacing = 4 };
     private readonly HorizontalStackPanel _scopeDescPanel = new() { Spacing = 4 };
 
@@ -147,7 +147,7 @@ public class PersistentVarsWindow : MyraControl
             return;
         }
 
-        var grid = new MyraGrid();
+        var grid = new MyraGrid() { MaxHeight = null };
         grid.SetupWithHeaders(
             GridColumnInfo.Auto("Key"),
             GridColumnInfo.Fill("Value"),
@@ -159,6 +159,8 @@ public class PersistentVarsWindow : MyraControl
         {
             string key   = kvp.Key;
             string value = kvp.Value;
+
+            grid.RowsProportions.Add(Proportion.Auto);
 
             grid.AddWidget(new MyraLabel(key, MyraLabel.TextStyle.P), dataRow, 0);
 
