@@ -9,7 +9,6 @@ using ClassicUO.Input;
 using ClassicUO.Network;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
-using SDL3;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,12 +20,12 @@ using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.LegionScripting;
 using static SDL3.SDL;
 using ClassicUO.Game.UI;
+using ClassicUO.Utility.Debounce;
 
 namespace ClassicUO.Game.Managers
 {
     public sealed class MacroManager : LinkedObject
     {
-        public static readonly string[] MacroNames = Enum.GetNames(typeof(MacroType));
         private readonly uint[] _itemsInHand = new uint[2];
         private MacroObject _lastMacro;
         private MacroObject _currentMacroHead; // head node of the macro currently executing (for toggle-stop)
@@ -34,15 +33,15 @@ namespace ClassicUO.Game.Managers
         private readonly World _world;
 
         private readonly byte[] _skillTable =
-        {
+        [
             1, 2, 35, 4, 6, 12,
             14, 15, 16, 19, 21, 56 /*imbuing*/,
             23, 3, 46, 9, 30, 22,
             48, 32, 33, 47, 36, 38
-        };
+        ];
 
         private readonly int[] _spellsCountTable =
-        {
+        [
             Constants.SPELLBOOK_1_SPELLS_COUNT,
             Constants.SPELLBOOK_2_SPELLS_COUNT,
             Constants.SPELLBOOK_3_SPELLS_COUNT,
@@ -50,8 +49,14 @@ namespace ClassicUO.Game.Managers
             Constants.SPELLBOOK_5_SPELLS_COUNT,
             Constants.SPELLBOOK_6_SPELLS_COUNT,
             Constants.SPELLBOOK_7_SPELLS_COUNT
-        };
+        ];
 
+        // Leading-edge only, one instance per action: first press of each action acts instantly, repeats
+        // of *that same* action within 100ms are collapsed. Separate instances (rather than one shared
+        // debouncer) so a quick Dismount-then-Mount still fires both instead of the second being swallowed.
+        private readonly Debounce _mountDebouncer = new(() => ExecuteMountAction(MountAction.Mount), 100, true, false);
+        private readonly Debounce _dismountDebouncer = new(() => ExecuteMountAction(MountAction.Dismount), 100, true, false);
+        private readonly Debounce _toggleMountDebouncer = new(() => ExecuteMountAction(MountAction.Toggle), 100, true, false);
 
         public MacroManager(World world)
         {
@@ -1349,43 +1354,19 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.Dismount:
-                    Item m = _world.Player.FindItemByLayer(Layer.Mount);
-                    if (m != null)
-                    {
-                        GameActions.DoubleClickQueued(_world.Player, true);
-                        ScriptRecorder.Instance.RecordDismount();
-                    }
+                    _dismountDebouncer.Invoke();
                     break;
 
                 case MacroType.Mount:
-                    if (!GameActions.Mount())
-                    {
-                        GameActions.Print(_world, "Saved mount not found.", Constants.HUE_ERROR);
-                        goto case MacroType.SetMount;
-                    }
+                    _mountDebouncer.Invoke();
                     break;
 
                 case MacroType.SetMount:
-                    GameActions.Print(_world, "Target a mount to save it for the Mount macro.", 48);
-                    _world.TargetManager.SetTargeting(CursorTarget.SetMount, 0, TargetType.Neutral);
+                    PromptSetMount();
                     break;
 
                 case MacroType.ToggleMount:
-                    if (_world.Player.FindItemByLayer(Layer.Mount) != null)
-                    {
-                        // Player is mounted, dismount
-                        GameActions.DoubleClickQueued(_world.Player);
-                        ScriptRecorder.Instance.RecordDismount();
-                    }
-                    else
-                    {
-                        // Player is not mounted, try to mount
-                        if (!GameActions.Mount())
-                        {
-                            GameActions.Print(_world, "Saved mount not found.", Constants.HUE_ERROR);
-                            goto case MacroType.SetMount;
-                        }
-                    }
+                    _toggleMountDebouncer.Invoke();
                     break;
 
                 case MacroType.AddFriend:
@@ -2715,8 +2696,79 @@ namespace ClassicUO.Game.Managers
             return result;
         }
 
-    }
+        /// <summary>
+        /// Prompts the player to target their designated mount
+        /// </summary>
+        private static void PromptSetMount()
+        {
+            World world = World.Instance;
+            if (world == null)
+                return;
 
+            GameActions.Print(world, "Target a mount to save it for the Mount macro.", 48);
+            world.TargetManager.SetTargeting(CursorTarget.SetMount, 0, TargetType.Neutral);
+        }
+
+        /// <summary>
+        ///     Runs a mount/dismount/toggle action, deciding <see cref="MountAction.Toggle" /> by current
+        ///     mount state. Invoked via one of the per-action debouncers (<see cref="_mountDebouncer" />,
+        ///     <see cref="_dismountDebouncer" />, <see cref="_toggleMountDebouncer" />), so this may run on a
+        ///     threadpool timer thread; the body is marshaled onto the main thread since it touches
+        ///     <see cref="World" /> and sends packets.
+        /// </summary>
+        private static void ExecuteMountAction(MountAction action) =>
+            MainThreadQueue.InvokeOnMainThread(() =>
+                {
+                    World world = World.Instance;
+                    if (world?.Player == null)
+                        return;
+
+                    if (action == MountAction.Mount)
+                    {
+                        Mount();
+                        return;
+                    }
+
+                    bool isMounted = world.Player.FindItemByLayer(Layer.Mount) != null;
+
+                    if (!isMounted)
+                    {
+                        // Toggle with nothing to dismount falls through to mounting; a plain Dismount stays a no-op.
+                        if (action == MountAction.Toggle)
+                            Mount();
+                        return;
+                    }
+
+                    GameActions.DoubleClick(world, world.Player, true, true);
+                    ScriptRecorder.Instance.RecordDismount();
+                }
+            );
+
+        /// <summary>Mounts the player's saved mount, reporting an error and prompting for a new one if unset/unreachable.</summary>
+        private static void Mount()
+        {
+            GameActions.MountResult result = GameActions.Mount(false);
+            switch (result)
+            {
+                case GameActions.MountResult.NoDesignatedMount:
+                    GameActions.Print("There is no saved mount", Constants.HUE_ERROR);
+                    PromptSetMount();
+                    break;
+                case GameActions.MountResult.MountNotFound:
+                case GameActions.MountResult.MountTooFar:
+                    GameActions.Print("Saved mount was not found or is too far", Constants.HUE_WARN);
+                    break;
+            }
+        }
+
+        /// <summary>Actions dispatchable through <see cref="ExecuteMountAction" />.</summary>
+        private enum MountAction
+        {
+            Mount,
+            Dismount,
+            Toggle
+        }
+    }
 
     public class Macro : LinkedObject, IEquatable<Macro>
     {
@@ -2945,7 +2997,7 @@ namespace ClassicUO.Game.Managers
 
             if (!Enum.TryParse(xml.GetAttribute("key"), out SDL_Keycode mainKey))
                 mainKey = (int)SDL_Keycode.SDLK_UNKNOWN;
-            
+
 
 
             Key = mainKey;
