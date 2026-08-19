@@ -450,7 +450,25 @@ namespace ClassicUO.Game.GameObjects
         // Block walking into a door when auto open is off to avoid spamming the server with
         // walk requests that get denied and cause the client to bounce back. Open doors are
         // blocked too because the client's notion of a door's state may not match the server's.
-        private bool IsBlockedByDoor(int x, int y, sbyte z)
+        private bool IsBlockedByDoor(int startX, int startY, int x, int y, sbyte z)
+        {
+            if (TileHasDoor(x, y, z))
+            {
+                return true;
+            }
+
+            // A diagonal step cuts across the corner shared by two tiles, and the server
+            // rejects it when either flanking tile blocks. Mirror that here so a door
+            // beside the path still stops the diagonal.
+            if (startX != x && startY != y)
+            {
+                return TileHasDoor(startX, y, z) || TileHasDoor(x, startY, z);
+            }
+
+            return false;
+        }
+
+        private bool TileHasDoor(int x, int y, sbyte z)
         {
             Profile profile = ProfileManager.CurrentProfile;
 
@@ -789,7 +807,7 @@ namespace ClassicUO.Game.GameObjects
                     direction = newDir;
                 }
 
-                if (IsBlockedByDoor(x, y, z) && (x != startX || y != startY || z != startZ))
+                if (IsBlockedByDoor(startX, startY, x, y, z) && (x != startX || y != startY || z != startZ))
                 {
                     return false;
                 }
@@ -981,7 +999,7 @@ namespace ClassicUO.Game.GameObjects
                 direction = newDir;
             }
 
-            if (IsBlockedByDoor(x, y, z) && (x != startX || y != startY || z != startZ))
+            if (IsBlockedByDoor(startX, startY, x, y, z) && (x != startX || y != startY || z != startZ))
             {
                 return false;
             }
