@@ -599,9 +599,9 @@ internal static class GameActions
                     }
 
                     if (g.Type == QuestionGump.QuestionType.Attack && _lastAttackQuery != serial)
-                        g.Dispose();    
+                        g.Dispose();
                 });
-                
+
                 if (!shouldAdd)
                     return;
 
@@ -1379,14 +1379,10 @@ internal static class GameActions
         Item backpack = world.Player.Backpack;
 
         if (backpack == null)
-        {
             return;
-        }
 
         if (bag == 0)
-        {
             bag = ProfileManager.CurrentProfile.GrabBagSerial == 0 ? backpack.Serial : ProfileManager.CurrentProfile.GrabBagSerial;
-        }
 
         if (!world.Items.Contains(bag))
         {
@@ -1397,25 +1393,25 @@ internal static class GameActions
 
         PickUp(world, serial, 0, 0, amount);
 
-            if (stack)
-                DropItem
-                (
-                    serial,
-                    0xFFFF,
-                    0xFFFF,
-                    0,
-                    bag
-                );
-            else
-                DropItem
-                (
-                    serial,
-                    0,
-                    0,
-                    0,
-                    bag
-                );
-        }
+        if (stack)
+            DropItem
+            (
+                serial,
+                0xFFFF,
+                0xFFFF,
+                0,
+                bag
+            );
+        else
+            DropItem
+            (
+                serial,
+                0,
+                0,
+                0,
+                bag
+            );
+    }
 
     public static void RequestEquippedOPL(World world)
     {
@@ -1428,20 +1424,47 @@ internal static class GameActions
         }
     }
 
-    internal static bool Mount()
+    /// <summary>
+    ///     Double-clicks the player's saved mount to mount up.
+    /// </summary>
+    /// <param name="useQueue">
+    ///     If <see langword="true" />, routes through <see cref="DoubleClickQueued(uint, bool)" />.
+    ///     If <see langword="false" />, sends the double-click immediately, bypassing <see cref="ObjectActionQueue" />.
+    /// </param>
+    /// <returns>The outcome of the attempt.</returns>
+    internal static MountResult Mount(bool useQueue = true)
     {
-        if (World.Instance == null) return false;
+        if (World.Instance == null)
+            return MountResult.NoWorld;
 
-        if (ProfileManager.CurrentProfile.SavedMountSerial == 0) return false;
+        Profile profile = ProfileManager.CurrentProfile;
 
-        Entity mount = World.Instance.Get(ProfileManager.CurrentProfile.SavedMountSerial);
-        if (mount != null)
-        {
-            DoubleClickQueued(ProfileManager.CurrentProfile.SavedMountSerial, true);
-            ScriptRecorder.Instance.RecordMount(mount);
-            return true;
-        }
+        if (profile.SavedMountSerial == 0)
+            return MountResult.NoDesignatedMount;
 
-        return false;
+        Entity mount = World.Instance.Get(profile.SavedMountSerial);
+        if (mount == null)
+            return MountResult.MountNotFound;
+
+        if (mount.Distance > Constants.DRAG_ITEMS_DISTANCE)
+            return MountResult.MountTooFar;
+
+        if (useQueue)
+            DoubleClickQueued(profile.SavedMountSerial, true);
+        else
+            DoubleClick(World.Instance, profile.SavedMountSerial, true, true);
+
+        ScriptRecorder.Instance.RecordMount(mount);
+        return MountResult.Success;
+    }
+
+    /// <summary>Outcome of a <see cref="Mount(bool)" /> attempt.</summary>
+    internal enum MountResult
+    {
+        NoWorld,
+        Success,
+        NoDesignatedMount,
+        MountNotFound,
+        MountTooFar
     }
 }
