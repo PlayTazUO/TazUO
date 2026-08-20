@@ -88,9 +88,48 @@ namespace ClassicUO.LegionScripting
 
         #region MainThread Helpers
 
-        private T OnMain<T>(Func<T> func) => MainThreadQueue.InvokeOnMainThread(func, _cachedToken);
-        private void OnMain(Action action) => MainThreadQueue.InvokeOnMainThread(action, _cachedToken);
+        private T OnMain<T>(Func<T> func) => MainThreadQueue.InvokeOnMainThread(GuardMainThreadErrors(func), _cachedToken);
+        private void OnMain(Action action) => MainThreadQueue.InvokeOnMainThread(GuardMainThreadErrors(action), _cachedToken);
         private T BubblingOnMain<T>(Func<T> func) => MainThreadQueue.BubblingInvokeOnMainThread(func, _cachedToken);
+
+        /// <summary>
+        /// Wraps a main-thread dispatched action so exceptions don't escape <see cref="MainThreadQueue.ProcessQueue"/>
+        /// and crash the client. Script errors surface through the same error UI as normal script errors.
+        /// </summary>
+        private Action GuardMainThreadErrors(Action action) =>
+            () =>
+            {
+                try
+                {
+                    action();
+                }
+                catch (OperationCanceledException) { }
+                catch (ThreadInterruptedException) { }
+                catch (Exception e)
+                {
+                    LegionScripting.HandleScriptRuntimeError(_scriptFile, e);
+                }
+            };
+
+        /// <summary>
+        /// Wraps a main-thread dispatched function so exceptions don't escape <see cref="MainThreadQueue.ProcessQueue"/>
+        /// and crash the client. Script errors surface through the same error UI as normal script errors.
+        /// </summary>
+        private Func<T> GuardMainThreadErrors<T>(Func<T> func) =>
+            () =>
+            {
+                try
+                {
+                    return func();
+                }
+                catch (OperationCanceledException) { return default; }
+                catch (ThreadInterruptedException) { return default; }
+                catch (Exception e)
+                {
+                    LegionScripting.HandleScriptRuntimeError(_scriptFile, e);
+                    return default;
+                }
+            };
 
         #endregion
 
