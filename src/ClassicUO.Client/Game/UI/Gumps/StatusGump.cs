@@ -575,7 +575,7 @@ namespace ClassicUO.Game.UI.Gumps
 
     public class StatusGumpModern : StatusGumpBase
     {
-        public bool useExtendedStatus;
+        public bool useExtendedStatus{ get; init; }
 
         public StatusGumpModern(World world) : base(world)
         {
