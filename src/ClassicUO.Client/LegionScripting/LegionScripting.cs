@@ -502,35 +502,6 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
-        /// Routes a runtime error raised on the main thread (from a non-bubbling <c>OnMain</c> API call) to
-        /// the same error UI used for normal script errors, then stops the script.
-        /// </summary>
-        /// <param name="script">The script that triggered the error</param>
-        /// <param name="e">The thrown error</param>
-        internal static void HandleScriptRuntimeError(ScriptFile script, Exception e)
-        {
-            if (script == null || e == null)
-                return;
-
-            try
-            {
-                if (script.Type == ScriptFile.ScriptType.CSharp)
-                    ShowCSharpRuntimeError(script, e);
-                else
-                    ShowScriptError(script, e);
-            }
-            catch (Exception ex)
-            {
-                // Error reporting itself must never crash the client, especially since this
-                // runs inside the main-thread guard that swallowed the original exception.
-                Log.Warn($"Error while reporting script error: {ex}");
-                MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, e.Message, Constants.HUE_ERROR));
-            }
-
-            MainThreadQueue.EnqueueAction(() => StopScript(script));
-        }
-
-        /// <summary>
         /// Formats a script execution exception returned by IronPython/ScriptHost
         /// </summary>
         /// <param name="script">The script that triggered the error</param>
