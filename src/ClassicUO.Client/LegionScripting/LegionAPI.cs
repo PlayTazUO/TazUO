@@ -91,6 +91,7 @@ namespace ClassicUO.LegionScripting
         private T OnMain<T>(Func<T> func) => MainThreadQueue.InvokeOnMainThread(func, _cachedToken);
         private void OnMain(Action action) => MainThreadQueue.InvokeOnMainThread(action, _cachedToken);
         private T BubblingOnMain<T>(Func<T> func) => MainThreadQueue.BubblingInvokeOnMainThread(func, _cachedToken);
+        private void BubblingOnMain(Action action) => MainThreadQueue.BubblingInvokeOnMainThread(action, _cachedToken);
 
         #endregion
 
@@ -2856,7 +2857,7 @@ namespace ClassicUO.LegionScripting
         /// OPL consists of item name and tooltip text(properties).
         /// </summary>
         /// <param name="serials">A list of object serials to request OPL data for</param>
-        public void RequestOPLData(IEnumerable serials) => OnMain(() =>
+        public void RequestOPLData(IEnumerable serials) => BubblingOnMain(() =>
         {
             if (serials == null) return;
             foreach (object o in serials)
