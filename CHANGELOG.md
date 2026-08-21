@@ -15,6 +15,7 @@ All notable changes to TazUO will be recorded here.
 * The classic journal gump (JournalGump) now respects the "Hide journal timestamps" setting, which was moved from per-profile to machine-wide (global) settings
 
 ### Fixes
+* Fixed login music being silenced when the regular music toggle was off: login music now uses its own enable/volume settings independently of the main music setting
 * Fixed an issue where corrupt Info-Bars could prevent client from loading - [P.R 980](https://github.com/PlayTazUO/TazUO/pull/980) ([yuval-po](https://github.com/yuval-po))
 * Fixed a double max height in persistent vars window
 
