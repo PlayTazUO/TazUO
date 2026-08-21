@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
+using ClassicUO.Game.UI.MyraWindows.Widgets.ArtTexture;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;

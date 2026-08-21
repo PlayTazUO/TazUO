@@ -6,9 +6,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using Microsoft.Xna.Framework;
-using Myra.Graphics2D;
-using Myra.Graphics2D.Brushes;
+using ClassicUO.Game.UI.MyraWindows.Widgets.ArtTexture;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows;
