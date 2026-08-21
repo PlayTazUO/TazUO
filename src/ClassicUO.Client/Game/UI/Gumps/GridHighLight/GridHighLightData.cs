@@ -385,7 +385,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                                  nProp.Contains(nRule, StringComparison.OrdinalIgnoreCase) ||
                                  Normalize(property.OriginalString).Contains(nRule, StringComparison.OrdinalIgnoreCase);
 
-                bool valueMatch = rule.MinValue == -1 || property.FirstValue >= rule.MinValue;
+                bool valueMatch = rule.MinValue == -1 || (property.FirstValue.HasValue && property.FirstValue.Value >= rule.MinValue);
 
                 if (nameMatch && valueMatch)
                     return true;
@@ -457,7 +457,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 .GroupBy(p => Normalize(p.Name))
                 .ToDictionary(
                     g => g.Key,
-                    g => (Original: Normalize(g.First().OriginalString), Value: g.Max(x => x.FirstValue))
+                    g => (Original: Normalize(g.First().OriginalString), Value: g.Max(x => x.FirstValue) ?? 0)
                 );
 
             // --- Combined overweight, exclusion, and rarity scan
@@ -535,7 +535,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 .GroupBy(p => Normalize(p.Name))
                 .ToDictionary(
                     g => g.Key,
-                    g => (Original: Normalize(g.First().OriginalString), Value: g.Max(x => x.FirstValue))
+                    g => (Original: Normalize(g.First().OriginalString), Value: g.Max(x => x.FirstValue) ?? 0)
                 );
 
             // Rules

@@ -406,7 +406,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             loginmusic_checkbox.ValueChanged += (sender, e) =>
             {
                 Settings.GlobalSettings.LoginMusic = loginmusic_checkbox.IsChecked;
-                Client.Game.Audio.UpdateCurrentMusicVolume(true);
+                Client.Game.Audio.UpdateCurrentMusicVolume();
 
                 if (loginmusic_checkbox.IsChecked)
                 {
@@ -423,7 +423,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             login_music.ValueChanged += (sender, e) =>
             {
                 Settings.GlobalSettings.LoginMusicVolume = login_music.Value;
-                Client.Game.Audio.UpdateCurrentMusicVolume(true);
+                Client.Game.Audio.UpdateCurrentMusicVolume();
             };
 
 
