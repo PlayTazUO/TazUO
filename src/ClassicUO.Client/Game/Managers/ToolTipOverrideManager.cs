@@ -251,8 +251,8 @@ namespace ClassicUO.Game.Managers
                         if (!MatchPropertyName(World.Instance, property.OriginalString, overrideData.SearchText))
                             continue;
 
-                        if ((property.FirstValue == double.MinValue || (property.FirstValue >= overrideData.Min1 && property.FirstValue <= overrideData.Max1)) &&
-                            (property.SecondValue == double.MinValue || (property.SecondValue >= overrideData.Min2 && property.SecondValue <= overrideData.Max2)))
+                        if ((!property.FirstValue.HasValue || (property.FirstValue.Value >= overrideData.Min1 && property.FirstValue.Value <= overrideData.Max1)) &&
+                            (!property.SecondValue.HasValue || (property.SecondValue.Value >= overrideData.Min2 && property.SecondValue.Value <= overrideData.Max2)))
                         {
                             matchedOverride = overrideData;
 
