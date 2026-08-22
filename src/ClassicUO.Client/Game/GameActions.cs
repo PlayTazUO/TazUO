@@ -1438,6 +1438,8 @@ internal static class GameActions
             return MountResult.NoWorld;
 
         Profile profile = ProfileManager.CurrentProfile;
+        if (profile == null)
+            return MountResult.NoWorld; // Honestly, should never happen.
 
         if (profile.SavedMountSerial == 0)
             return MountResult.NoDesignatedMount;
@@ -1446,7 +1448,7 @@ internal static class GameActions
         if (mount == null)
             return MountResult.MountNotFound;
 
-        if (mount.Distance > Constants.DRAG_ITEMS_DISTANCE)
+        if (mount.Distance > profile.MountDistance)
             return MountResult.MountTooFar;
 
         if (useQueue)

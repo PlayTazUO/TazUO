@@ -675,6 +675,7 @@ namespace ClassicUO.Configuration
 
         public int TextBorderSize { get; set => SetProperty(ref field, value); } = 1;
         public uint SavedMountSerial { get; set => SetProperty(ref field, value); } = 0;
+        public int MountDistance { get; set => SetProperty(ref field, value); } = 1;
 
         public uint SavedMainHandSerial { get; set => SetProperty(ref field, value); } = 0;
         public uint SavedOffHandSerial { get; set => SetProperty(ref field, value); } = 0;

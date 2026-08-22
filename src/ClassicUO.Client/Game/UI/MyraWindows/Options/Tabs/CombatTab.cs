@@ -9,10 +9,8 @@ public static class CombatTab
     /// <summary>Returns the tab group containing combat and spells sub-tabs</summary>
     internal static IOptionSource GetContent() => GetTabs();
 
-    private static OptionTabGroup GetTabs()
-    {
-
-        return new OptionTabGroup()
+    private static OptionTabGroup GetTabs() =>
+        new OptionTabGroup()
             .AddTab(
                 TazLang.Get("mog_combattab_combat_label"),
                 GetCombatSection,
@@ -23,7 +21,6 @@ public static class CombatTab
                 SpellsTab.GetContent,
                 new SearchMetadata(TazLang.Get("mog_combattab_spells_spelllabel"), Keywords: [TazLang.Get("mog_kw_spell"), TazLang.Get("mog_kw_magic"), TazLang.Get("mog_kw_cast")])
             );
-    }
 
     private static IOptionSource GetCombatSection()
     {
@@ -69,6 +66,14 @@ public static class CombatTab
                 TazLang.Get("mog_general_disabledismountwarmode"),
                 new Accessor<bool>(() => profile.DisableDismountInWarMode),
                 search: new SearchMetadata(TazLang.Get("mog_general_disabledismountwarmode"), Keywords: [TazLang.Get("mog_kw_dismount"), TazLang.Get("mog_kw_warmode")])
+            ),
+            Option.Slider(
+                TazLang.Get("mog_general_mountdistance"),
+                0,
+                10,
+                new Accessor<int>(() => profile.MountDistance),
+                labelOnLeft: true,
+                search: new SearchMetadata(TazLang.Get("mog_general_mountdistance"), Keywords: [TazLang.Get("mog_kw_mount"), TazLang.Get("mog_kw_distance")])
             )
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_combattab_combat_label"), [TazLang.Get("mog_kw_combat"), TazLang.Get("mog_kw_battle")]));
     }
