@@ -527,12 +527,43 @@ namespace ClassicUO.Game.Managers
                     AutoLootPriority.Low => ActionPriority.LootItem,
                     _ => ActionPriority.LootItemMedium,
                 };
-                ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, destinationSerial, moveItem.Amount).ToObjectActionQueueItem(), lootPriority);
+
+                ushort amount = GetAmountToMove(moveItem, entry, destinationSerial);
+                if (amount > 0)
+                    ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, destinationSerial, amount).ToObjectActionQueueItem(), lootPriority);
             }
             else
                 GameActions.Print("Could not find a container to loot into. Try setting a grab bag.");
 
             _nextLootTime = Time.Ticks + ProfileManager.CurrentProfile.MoveMultiObjectDelay;
+        }
+
+        /// <summary>
+        /// Computes how much of <paramref name="item"/> to move so the destination container ends
+        /// up with at most <see cref="AutoLootConfigEntry.MaxAmount"/> matching items. Returns the
+        /// item's full amount when no limit is configured.
+        /// </summary>
+        private ushort GetAmountToMove(Item item, AutoLootConfigEntry entry, uint destinationSerial)
+        {
+            if (entry == null || entry.MaxAmount <= 0)
+                return item.Amount;
+
+            Item destCont = _world.Items.Get(destinationSerial);
+            if (destCont == null)
+                return item.Amount;
+
+            int existing = 0;
+            for (LinkedObject i = destCont.Items; i != null; i = i.Next)
+            {
+                if (i is Item destItem && destItem.Serial != item.Serial && entry.Match(destItem))
+                    existing += destItem.Amount;
+            }
+
+            int toMove = entry.MaxAmount - existing;
+            if (toMove <= 0)
+                return 0;
+
+            return (ushort)Math.Min(toMove, item.Amount);
         }
 
         private void CreateProgressBar()
@@ -836,6 +867,11 @@ namespace ClassicUO.Game.Managers
             public string RegexSearch { get; set; } = string.Empty;
             public uint DestinationContainer { get; set; } = 0;
             public AutoLootPriority Priority { get; set; } = AutoLootPriority.Normal;
+            /// <summary>
+            /// Maximum number of matching items to keep in the destination container when looting
+            /// this entry. Counts items already in the destination. 0 = no limit (loot all).
+            /// </summary>
+            public int MaxAmount { get; set; } = 0;
             private bool RegexMatch => !string.IsNullOrEmpty(RegexSearch);
             /// <summary>
             /// Do not set this manually.
