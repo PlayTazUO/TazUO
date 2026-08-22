@@ -87,6 +87,10 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
 - XMLDocs: public/internal always, with `<param>`/`<returns>`/`<exception>`. Private/protected when
   non-trivial. Inline comments welcome on non-trivial code.
 - Content: the why, the pitfall, the constraint. Restating the name is noise. Must stand alone.
+- Class docs: purpose + what a consumer needs to use it safely (ownership, lifetime, threading).
+  Nothing else; don't restate the declaration.
+- Method docs: serve the caller. Impl rationale goes on the private member it constrains, or inline.
+- `<remarks>` holds what the summary shouldn't, within the limits above — not an escape hatch.
 - **No meta-references, ever** — "per discussion", review rounds, chat deltas, "as requested".
 - History back-references ("used to be", "ported from") age into noise. Avoid as a rule; keep only
   where the history explains a still-live constraint.
@@ -123,6 +127,8 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
 - Rendering / per-tick / per-frame code → perf imperative. Watch allocs (GC pressure), avoid
   LINQ/boxing/closures in hot loops, hoist cacheable work out of the loop.
 - Profile or reason through cost before committing to an approach.
+- No frame budget exists — never argue a cost is fine because it fits one. Assume weak hardware:
+  make per-frame work cheap, or measure it.
 
 ### UI
 - Keep layout responsive: `WrapPanel`, no fixed `Width`/`Height` boxes. Resizable windows already

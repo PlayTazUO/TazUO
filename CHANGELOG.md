@@ -16,6 +16,8 @@ All notable changes to TazUO will be recorded here.
 * The classic journal gump (JournalGump) now respects the "Hide journal timestamps" setting, which was moved from per-profile to machine-wide (global) settings
 
 ### Fixes
+* Fixed incorrect rendering of partially-hued textures in Myra components - [P.R 989](https://github.com/PlayTazUO/TazUO/pull/989) ([yuval-po](https://github.com/yuval-po))
+* Improved erratic ToggleMount/Mount/Dismount macro behavior - [P.R 982](https://github.com/PlayTazUO/TazUO/pull/982) ([yuval-po](https://github.com/yuval-po))
 * Tooltip overrides should no long show a long number like -1.797673xxxxxxxxxxxx randomly
 * Fixed login music being silenced when the regular music toggle was off: login music now uses its own enable/volume settings independently of the main music setting
 * Fixed an issue where corrupt Info-Bars could prevent client from loading - [P.R 980](https://github.com/PlayTazUO/TazUO/pull/980) ([yuval-po](https://github.com/yuval-po))

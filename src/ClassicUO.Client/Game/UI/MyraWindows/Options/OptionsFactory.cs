@@ -4,11 +4,11 @@
 using System;
 using System.Collections.Generic;
 using ClassicUO.Common;
-using ClassicUO.Common.Enums;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.ArtTexture;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
 
