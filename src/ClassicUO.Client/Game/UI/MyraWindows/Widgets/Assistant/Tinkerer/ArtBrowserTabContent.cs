@@ -432,6 +432,13 @@ public static class ArtBrowserTabContent
                 _detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_tiledata_nodata", "TileData: No data"), MyraLabel.TextStyle.P));
 
             _detailPanel.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_art_copyid", "Copy ID"), () => SDL.SDL_SetClipboardText(id.ToString())));
+
+            _detailPanel.Widgets.Add(new MyraButton(
+                TazLang.Get("tinkerer_art_viewitemdata", "View ItemData"),
+                () => new ItemDataViewMyraWindow(id))
+            {
+                Tooltip = TazLang.Get("tinkerer_art_viewitemdata_tooltip", "Open the full ItemData (TileData) for this graphic in a separate window.")
+            });
         }
 
         private static Widget Configure(Widget w)
