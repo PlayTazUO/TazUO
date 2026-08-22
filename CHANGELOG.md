@@ -11,6 +11,7 @@ All notable changes to TazUO will be recorded here.
 * Added a translucent ground preview of the item being dragged, shown on the tile it would land on when dropped on the ground (drag distance and Z-banded), toggleable under Gameplay -> Misc, enabled by default ([bittiez](https://github.com/bittiez))
 
 ### Misc
+* Added 2 new crash fix suggestions for Windows based systems- [P.R 994](https://github.com/PlayTazUO/TazUO/pull/994) ([yuval-po](https://github.com/yuval-po))
 * Added spacing before capitals on equipement layer tooltips in paperdolls
 * Changed Dress and Organizer agent tabs to have a more compact list instead of awkward buttons for configs
 * The classic journal gump (JournalGump) now respects the "Hide journal timestamps" setting, which was moved from per-profile to machine-wide (global) settings
