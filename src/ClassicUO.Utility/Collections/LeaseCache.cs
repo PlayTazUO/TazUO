@@ -16,7 +16,7 @@ namespace ClassicUO.Utility.Collections;
 ///     last one; a leaked release pins it for good. <b>Not thread safe</b> — binds to its constructing thread.
 /// </remarks>
 /// <typeparam name="TKey">Cache key. Should be a value type or otherwise cheap to hash</typeparam>
-/// <typeparam name="TValue">Cached value. Disposed with the last lease when it implements <see cref="IDisposable" /></typeparam>
+/// <typeparam name="TValue">Cached value. <see cref="IDisposable" /> ones are disposed with the last lease unless opted out</typeparam>
 public sealed class LeaseCache<TKey, TValue> where TKey : notnull
 {
     #region Private members
