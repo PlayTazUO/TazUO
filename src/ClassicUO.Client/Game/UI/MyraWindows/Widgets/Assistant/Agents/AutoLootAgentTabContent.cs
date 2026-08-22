@@ -38,9 +38,6 @@ public static class AutoLootAgentTabContent
         root.Widgets.Add(topRow);
 
         // Options
-        root.Widgets.Add(new MyraSpacer(15, 5));
-        root.Widgets.Add(new MyraLabel("Options:", MyraLabel.TextStyle.H2));
-
         var optRow1 = new HorizontalStackPanel { Spacing = 8 };
         optRow1.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.EnableScavenger,
@@ -52,7 +49,6 @@ public static class AutoLootAgentTabContent
             b => profile.EnableAutoLootProgressBar = b,
             "Enable Progress Bar",
             "Shows a progress bar gump."));
-        root.Widgets.Add(optRow1);
 
         var optRow2 = new HorizontalStackPanel { Spacing = 8 };
         optRow2.Widgets.Add(MyraCheckButton.CreateWithCallback(
@@ -65,7 +61,6 @@ public static class AutoLootAgentTabContent
             b => profile.HueCorpseAfterAutoloot = b,
             "Hue Corpse After Processing",
             "Hue corpses after processing to make it easier to see if autoloot has processed them."));
-        root.Widgets.Add(optRow2);
 
         var optRow3 = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
         optRow3.Widgets.Add(new MyraLabel("Corpse retry delay (ms):", MyraLabel.TextStyle.P)
@@ -90,12 +85,15 @@ public static class AutoLootAgentTabContent
             b => profile.DisableAutolootCorpseRetry = b,
             TazLang.Get("autoloot_disableretry"),
             TazLang.Get("autoloot_disableretry_tooltip")));
-        root.Widgets.Add(optRow3);
+
+        root.Widgets.Add(new VisualContainer(
+            new VisualContainerProps { LabelText = "Options:" },
+            optRow1,
+            optRow2,
+            optRow3
+        ));
 
         // Auto skinning section
-        root.Widgets.Add(new MyraSpacer(15, 5));
-        root.Widgets.Add(new MyraLabel(TazLang.Get("autoskinning_title", "Auto Skinning"), MyraLabel.TextStyle.H2));
-
         var skinGraphicsBox = new MyraInputBox
         {
             Text = profile.AutoSkinningKnifeGraphics,
@@ -126,7 +124,6 @@ public static class AutoLootAgentTabContent
                 }
             });
         }) { Tooltip = TazLang.Get("autoskinning_targetweapon_tooltip", "Target a weapon to add its graphic to the skinning knife list.") });
-        root.Widgets.Add(skinRow);
 
         var skinGraphicsRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
         skinGraphicsRow.Widgets.Add(new MyraLabel(TazLang.Get("autoskinning_graphics", "Knife graphic IDs:"), MyraLabel.TextStyle.P)
@@ -136,7 +133,12 @@ public static class AutoLootAgentTabContent
         });
         skinGraphicsBox.TextChangedByUser += (_, _) => profile.AutoSkinningKnifeGraphics = skinGraphicsBox.Text;
         skinGraphicsRow.Widgets.Add(skinGraphicsBox);
-        root.Widgets.Add(skinGraphicsRow);
+
+        root.Widgets.Add(new VisualContainer(
+            new VisualContainerProps { LabelText = TazLang.Get("autoskinning_title", "Auto Skinning") },
+            skinRow,
+            skinGraphicsRow
+        ));
 
         // Entries panel (declared early so the loot-list selector callbacks can rebuild it).
         var entriesPanel = new VerticalStackPanel { Spacing = 4 };

@@ -69,7 +69,11 @@ public static class ArtBrowserTabContent
         private int _currentPage;
         private int _selectedGraphic = -1;
         private int _zoomSize = ZOOM_DEFAULT;
+        private ushort _hue;
         private string _filterQuery = string.Empty;
+
+        /// <summary>Live preview widget for the current selection, hued on the fly without a full rebuild.</summary>
+        private MyraArtTexture? _preview;
 
         /// <summary>Cache of <see cref="FilteredIds" />'s last result. Invalidated where
         /// <see cref="_filterQuery" /> changes, so a plain page/selection refresh does not rescan every
@@ -342,6 +346,7 @@ public static class ArtBrowserTabContent
         private void RefreshDetail()
         {
             _detailPanel.Widgets.Clear();
+            _preview = null;
 
             if (_selectedGraphic < 0)
             {
@@ -355,6 +360,7 @@ public static class ArtBrowserTabContent
 
             _detailPanel.Widgets.Add(BuildPreview(id));
             _detailPanel.Widgets.Add(BuildZoomRow());
+            _detailPanel.Widgets.Add(BuildHueRow());
             AddInfoRows(id);
         }
 
@@ -365,7 +371,8 @@ public static class ArtBrowserTabContent
             if (art.Texture == null)
                 return new MyraLabel(TazLang.Get("tinkerer_art_noart", "(No art at this graphic)"), MyraLabel.TextStyle.P);
 
-            var preview = new MyraArtTexture(id, 0, _zoomSize);
+            var preview = new MyraArtTexture(id, _hue, _zoomSize);
+            _preview = preview;
             int natW = art.UV.Width;
             int natH = art.UV.Height;
 
@@ -395,6 +402,28 @@ public static class ArtBrowserTabContent
         {
             _zoomSize = zoomSize;
             RefreshDetail();
+        }
+
+        /// <summary>
+        ///     Hue field for the preview only - nothing here is persisted. Editing it re-hues the live
+        ///     preview in place so the field keeps keyboard focus while the user types.
+        /// </summary>
+        private HorizontalStackPanel BuildHueRow()
+        {
+            MyraInputBox hueBox = MyraInputBox.Hue(_hue, 80, TazLang.Get("tinkerer_art_huepreview_tooltip", "Preview the art in this hue. Not saved."));
+            hueBox.TextChangedByUser += (_, _) =>
+            {
+                if (MyraInputBox.TryParseHue(hueBox.Text, out ushort hue))
+                {
+                    _hue = hue;
+                    _preview?.SetColorByHue(hue);
+                }
+            };
+
+            var hueRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+            hueRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_huepreview", "Preview hue:"), MyraLabel.TextStyle.P));
+            hueRow.Widgets.Add(hueBox);
+            return hueRow;
         }
 
         /// <summary>
@@ -432,6 +461,13 @@ public static class ArtBrowserTabContent
                 _detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_tiledata_nodata", "TileData: No data"), MyraLabel.TextStyle.P));
 
             _detailPanel.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_art_copyid", "Copy ID"), () => SDL.SDL_SetClipboardText(id.ToString())));
+
+            _detailPanel.Widgets.Add(new MyraButton(
+                TazLang.Get("tinkerer_art_viewitemdata", "View ItemData"),
+                () => new ItemDataViewMyraWindow(id))
+            {
+                Tooltip = TazLang.Get("tinkerer_art_viewitemdata_tooltip", "Open the full ItemData (TileData) for this graphic in a separate window.")
+            });
         }
 
         private static Widget Configure(Widget w)
