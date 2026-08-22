@@ -163,7 +163,9 @@ namespace ClassicUO.Renderer.Arts
         /// <returns>False when the hue is 0 or out of range, meaning no recoloring should happen.</returns>
         private bool TryFillHueRamp(ushort hue, Span<uint> ramp)
         {
-            if (hue == 0 || hue >= _huesLoader.HuesCount)
+            // Inclusive upper bound, unlike HuesLoader's own accessors: those take a 0-based index, this takes
+            // the 1-based wire hue, so HuesCount is the last valid one rather than one past the end.
+            if (hue == 0 || hue > _huesLoader.HuesCount)
                 return false;
 
             // Hues are 1-based on the wire but the file stores them packed 8 per group.

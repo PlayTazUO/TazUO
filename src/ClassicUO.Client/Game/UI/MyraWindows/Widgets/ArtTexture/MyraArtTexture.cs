@@ -1,15 +1,16 @@
+using System;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.ArtTexture;
 
 /// <summary>
-///     A Myra Image widget that displays a UO art graphic by graphic ID.
-///     Uses the correct UV sub-rectangle from the texture atlas so that only
-///     the target sprite is rendered. The atlas Texture2D is NOT owned here and
-///     must never be disposed — Myra's Image widget does not implement IDisposable,
-///     so there is no disposal risk.
+///     Displays a UO art graphic by graphic ID.
+///     <para>
+///         A hued graphic holds shared GPU memory while the widget is on a desktop; leaving gives it back.
+///         <see cref="Dispose" /> only matters for retiring one that is still placed.
+///     </para>
 /// </summary>
-public class MyraArtTexture : Image
+public class MyraArtTexture : Image, IDisposable
 {
     private readonly HuedTexture _texture;
 
@@ -36,4 +37,22 @@ public class MyraArtTexture : Image
     /// <param name="hue">UO hue to apply. 0 restores the unhued sprite.</param>
     /// <param name="alpha">Opacity multiplier, 0-1.</param>
     public void SetColorByHue(ushort hue, float alpha = 1f) => _texture.SetColorByHue(hue, alpha);
+
+    /// <inheritdoc />
+    /// <remarks>Placement is the only lifetime signal Myra gives a widget, and the baked texture needs one.</remarks>
+    protected override void OnPlacedChanged()
+    {
+        base.OnPlacedChanged();
+
+        _texture.SetPlaced(IsPlaced);
+    }
+
+    /// <summary>
+    ///     Gives up the graphic's share of any baked texture. Idempotent; the widget still draws unhued after.
+    /// </summary>
+    public void Dispose()
+    {
+        _texture.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }
