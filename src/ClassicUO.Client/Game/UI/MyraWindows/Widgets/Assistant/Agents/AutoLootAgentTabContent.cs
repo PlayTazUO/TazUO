@@ -251,6 +251,7 @@ public static class AutoLootAgentTabContent
                 GridColumnInfo.Auto("Hue"),
                 GridColumnInfo.Auto("Regex"),
                 GridColumnInfo.Auto("Priority"),
+                GridColumnInfo.Auto("Max"),
                 GridColumnInfo.Fill("Destination"),
                 GridColumnInfo.Auto("Order"),
                 GridColumnInfo.Auto("Actions")
@@ -334,6 +335,20 @@ public static class AutoLootAgentTabContent
                 }));
                 grid.AddWidget(priorityRow, dataRow, 4);
 
+                // Max amount to keep in the destination (0 = no limit)
+                var maxBox = new MyraInputBox
+                {
+                    Text = entry.MaxAmount.ToString(),
+                    Tooltip = "Max matching items to keep in the destination container. Counts items already in the destination.\n(0 = no limit)",
+                    Width = 70,
+                };
+                maxBox.TextChangedByUser += (_, _) =>
+                {
+                    if (int.TryParse(maxBox.Text, out int max) && max >= 0)
+                        entry.MaxAmount = max;
+                };
+                grid.AddWidget(maxBox, dataRow, 5);
+
                 // Destination box + Target button
                 var destCell = new HorizontalStackPanel { Spacing = 4 };
                 var destBox = new MyraInputBox
@@ -363,7 +378,7 @@ public static class AutoLootAgentTabContent
                         }
                     });
                 }) { Tooltip = "Target a container to use as the destination for this entry." });
-                grid.AddWidget(destCell, dataRow, 5);
+                grid.AddWidget(destCell, dataRow, 6);
 
                 // Up / Down reorder buttons (col 6)
                 // Display is reversed: i = entries.Count-1 is top row, i=0 is bottom row.
@@ -391,7 +406,7 @@ public static class AutoLootAgentTabContent
                 if (i == 0) downBtn.Enabled = false;
                 orderRow.Widgets.Add(upBtn);
                 orderRow.Widgets.Add(downBtn);
-                grid.AddWidget(orderRow, dataRow, 6);
+                grid.AddWidget(orderRow, dataRow, 7);
 
                 var delBtn = new MyraButton("Delete", () =>
                 {
@@ -399,7 +414,7 @@ public static class AutoLootAgentTabContent
                     BuildEntriesList();
                 });
                 delBtn.VerticalAlignment = VerticalAlignment.Center;
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(delBtn), dataRow, 7);
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(delBtn), dataRow, 8);
 
                 dataRow += 1;
             }
@@ -416,6 +431,7 @@ public static class AutoLootAgentTabContent
         var newGraphicBox = new MyraInputBox { HintText = "Graphic ID", Width = 100, Tooltip = "Graphic (-1 = any)" };
         var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 100, "Hue (-1 = any)");
         var newRegexBox = new MyraInputBox { HintText = "Regex (optional)", Width = 200 };
+        var newMaxBox = new MyraInputBox { HintText = "Max (0 = no limit)", Width = 100, Tooltip = "Max matching items to keep in the destination container. 0 = no limit." };
 
         var addFieldsRow = new HorizontalStackPanel { Spacing = 4 };
         addFieldsRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
@@ -426,6 +442,8 @@ public static class AutoLootAgentTabContent
         addFieldsRow.Widgets.Add(newHueBox);
         addFieldsRow.Widgets.Add(new MyraLabel("Regex:", MyraLabel.TextStyle.P));
         addFieldsRow.Widgets.Add(newRegexBox);
+        addFieldsRow.Widgets.Add(new MyraLabel("Max:", MyraLabel.TextStyle.P));
+        addFieldsRow.Widgets.Add(newMaxBox);
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
         addConfirmRow.Widgets.Add(new MyraButton("Add", () =>
@@ -445,11 +463,14 @@ public static class AutoLootAgentTabContent
                 if (entry == null) return;
 
                 entry.RegexSearch = newRegexBox.Text;
+                if (int.TryParse(newMaxBox.Text, out int maxAmount))
+                    entry.MaxAmount = maxAmount;
 
                 newNameBox.Text = "";
                 newGraphicBox.Text = "";
                 newHueBox.Text = "";
                 newRegexBox.Text = "";
+                newMaxBox.Text = "";
                 addEntryPanel.Visible = false;
                 BuildEntriesList();
             }
