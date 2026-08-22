@@ -210,14 +210,11 @@ internal static class CrashSuggestedFix
 
         if (noSuitableGraphicsDeviceException.Message.Contains("Could not create swapchain!"))
         {
-            string dataPath = Path.Join(CUOEnviroment.ExecutablePath, "Data");
-            string scriptsPath = Path.Join(CUOEnviroment.ExecutablePath, "LegionScripts");
             var sb = new StringBuilder();
             sb.AppendLine("Issue analysis indicates a potential conflict with your TazUO installation.");
             sb.AppendLine("The client does not support side-by-side installation of both legacy and modern builds.");
-            sb.AppendLine($"Please backup your data ('{dataPath}') and script ('{scriptsPath}') folders and delete everything else.");
-            sb.AppendLine("Re-download *only* your selected channel (Legacy or Modern) from the launcher.");
-            sb.AppendLine("Copy your backed up Data and LegionScripts folders back to where they were.");
+            sb.AppendLine();
+            AppendCleanReinstallSteps(sb, redownloadInstruction: "Re-download *only* your selected channel (Legacy or Modern) from the launcher.");
             fix = sb.ToString();
             return true;
         }
@@ -398,6 +395,9 @@ internal static class CrashSuggestedFix
     ///     absent, a Windows application control policy blocked it, its zone mark makes it
     ///     untrusted, or it is present but unloadable.
     /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
     private static bool TryGetMissingAssemblyCrashFix(Exception e, out string fix)
     {
         fix = null;
@@ -419,8 +419,12 @@ internal static class CrashSuggestedFix
 
         string assemblyName = Path.GetFileName(fileName);
 
+        // Checked against Message (and InnerException.Message), never the full ToString() dump -
+        // the stack trace alone contains "ClassicUO." in nearly every frame of this codebase and
+        // would match almost any exception, not just a genuine assembly load failure.
         bool isOwnAssembly = assemblyName.StartsWith("ClassicUO.", StringComparison.OrdinalIgnoreCase) ||
-                             e.Message.Contains("ClassicUO.", StringComparison.OrdinalIgnoreCase);
+                             e.Message.Contains("ClassicUO.", StringComparison.OrdinalIgnoreCase) ||
+                             (e.InnerException?.Message.Contains("ClassicUO.", StringComparison.OrdinalIgnoreCase) ?? false);
 
         if (!isOwnAssembly)
             return false;
@@ -453,7 +457,11 @@ internal static class CrashSuggestedFix
     /// <param name="includeHeader">
     ///     False when the caller already introduced the steps with its own conditional lead-in.
     /// </param>
-    private static void AppendCleanReinstallSteps(StringBuilder sb, bool includeHeader = true)
+    /// <param name="redownloadInstruction">
+    ///     Replaces the default step 4 wording for callers with a more specific redownload
+    ///     instruction (for example: redownload one particular channel).
+    /// </param>
+    private static void AppendCleanReinstallSteps(StringBuilder sb, bool includeHeader = true, string redownloadInstruction = null)
     {
         string dataPath = Path.Join(CUOEnviroment.ExecutablePath, "Data");
         string scriptsPath = Path.Join(CUOEnviroment.ExecutablePath, "LegionScripts");
@@ -464,7 +472,7 @@ internal static class CrashSuggestedFix
         sb.AppendLine("1. Close TazUO and the launcher.");
         sb.AppendLine($"2. Back up your data folder ('{dataPath}') and your script folder ('{scriptsPath}').");
         sb.AppendLine("3. Delete everything else in the TazUO folder. Do not install a new build on top of an old one.");
-        sb.AppendLine("4. Re-download TazUO from the launcher and let it finish.");
+        sb.AppendLine($"4. {redownloadInstruction ?? "Re-download TazUO from the launcher and let it finish."}");
         sb.AppendLine("5. Copy your backed up folders back.");
     }
 
@@ -509,7 +517,12 @@ internal static class CrashSuggestedFix
         if (sMode == SModeState.Unknown)
             AppendSModeCheckSection(sb);
         else
-            AppendCleanReinstallSteps(sb);
+        {
+            // A block like this is usually all-or-nothing (see H_RESULT_BLOCKED_BY_APPLICATION_POLICY),
+            // so reinstalling the same file will not lift it - only worth ruling out a corrupted download.
+            sb.AppendLine("First, rule out a corrupted download with a clean reinstall:");
+            AppendCleanReinstallSteps(sb, false);
+        }
 
         sb.AppendLine();
         AppendAssemblyBlockedRemainingSteps(sb);
