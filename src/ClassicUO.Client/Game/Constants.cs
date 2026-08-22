@@ -117,10 +117,7 @@ namespace ClassicUO.Game
         public static class SqlSettings
         {
             public const string MANAGED_ZLIB = "USE_MANAGED_ZLIB";
-            public const string IMGUI_ALPHA = "imgui_window_alpha";
-            public const string IMGUI_THEME = "imgui_theme";
-            public const string IMGUI_CUSTOM_THEME_JSON = "imgui_custom_theme_json";
-public const string SCALE_PETS_ENABLED = "scale_pets_enabled";
+            public const string SCALE_PETS_ENABLED = "scale_pets_enabled";
             public const string WEB_MAP_PORT = "web_map_port";
             public const string WEB_MAP_AUTO_START = "web_map_auto_start";
             public const string MIN_GUMP_MOVE_DIST = "min_gump_move_dist";
@@ -130,7 +127,6 @@ public const string SCALE_PETS_ENABLED = "scale_pets_enabled";
             public const string MUSIC_FILTER_IDS = "music_filter_ids";
             public const string DISABLE_WEATHER = "disable_weather";
             public const string SEASON_FILTER = "season_filter";
-            public const string ENABLE_ENHANCED_PACKETS = "enhanced_packets_enabled";
             public const string QUICK_HEAL_SPELL = "quick_heal_spell";
             public const string QUICK_CURE_SPELL = "quick_cure_spell";
             public const string QUEUE_MANUAL_ITEM_MOVES = "queue_manual_item_moves";

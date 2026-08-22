@@ -44,5 +44,27 @@ for x int count
 ### Client -> Server
 ```cs
 HEADER
-string TazUO Version
+string TazUO Version // ASCII string
 ```
+
+## Disable Features : 3
+### Server -> Client
+```cs
+HEADER
+ushort COUNT  // Number of features to disable
+for x int count
+    ushort ID // EnhancedPacketDisabledFeaturesEnum feature id to disable
+```
+
+Servers can use this packet to disable specific client features. Disabled
+features are stored in `World.DisabledFeatures` and are cleared when the
+world is cleared (e.g. on disconnect or world change).
+
+### Feature IDs (`EnhancedPacketDisabledFeaturesEnum`)
+| ID | Feature | Description |
+|----|---------|-------------|
+| 0 | TreeToStumps | Disables rendering trees as stumps. Overrides the `TreeToStumps` profile option. |
+
+IDs are the underlying `ushort` values of the enum members. A feature must
+be defined in the enum in the client before it can be disabled. Packets
+referencing an unknown feature id are ignored.

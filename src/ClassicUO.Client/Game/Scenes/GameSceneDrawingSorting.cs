@@ -492,7 +492,7 @@ namespace ClassicUO.Game.Scenes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool HideFoliageForStumps(GameObject obj, Profile profile, ref Vector2 playerScreePos)
         {
-            if (!profile.TreeToStumps)
+            if (!profile.TreeToStumps || World.DisabledFeatures.Contains(Network.EnhancedPacketDisabledFeaturesEnum.TreeToStumps))
             {
                 return false;
             }

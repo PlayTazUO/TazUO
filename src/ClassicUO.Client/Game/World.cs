@@ -18,12 +18,14 @@ using ClassicUO.Game.Scenes;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Assets;
 using ClassicUO.Game.UI;
+using ClassicUO.Network;
 
 namespace ClassicUO.Game
 {
     public sealed class World
     {
         public static World Instance { get; private set; }
+        public static HashSet<EnhancedPacketDisabledFeaturesEnum> DisabledFeatures = new();
         private readonly EffectManager _effectManager;
         private readonly List<uint> _toRemove = new List<uint>();
         private uint _timeToDelete;
@@ -1050,6 +1052,7 @@ namespace ClassicUO.Game
             ActiveSpellIcons.Clear();
 
             SkillsRequested = false;
+            DisabledFeatures.Clear();
         }
 
         private void UnlinkEntitiesFromMap()
