@@ -38,6 +38,7 @@ using static SDL3.SDL;
 using Keyboard = ClassicUO.Input.Keyboard;
 using Mouse = ClassicUO.Input.Mouse;
 using ClassicUO.Game.UI.MyraWindows;
+using ClassicUO.Utility.Debounce;
 
 namespace ClassicUO
 {
@@ -519,6 +520,17 @@ namespace ClassicUO
             }
         }
 
+        private Debounce _pluginCrashed
+        {
+            get
+            {
+                if (field == null)
+                    field = new Debounce(() => { GameActions.Print($"It looks like your plugin had an error. Check the Log History or Console for the full error."); }, 1000);
+
+                return field;
+            }
+        }
+
         protected override void Update(GameTime gameTime)
         {
             Profiler.EnterContext("Update");
@@ -534,14 +546,22 @@ namespace ClassicUO
             ProcessNetworkPackets();
             Profiler.ExitContext("ProcessNetworkPackets");
 
-            if(_pluginsInitialized)
+            if (_pluginsInitialized)
             {
                 Profiler.EnterContext("PluginTick");
-                Plugin.Tick();
+                try
+                {
+                    Plugin.Tick();
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e.ToString());
+                    _pluginCrashed.Invoke();
+                }
                 Profiler.ExitContext("PluginTick");
             }
 
-            if(drawScene)
+            if (drawScene)
             {
                 Profiler.EnterContext("SceneUpdate");
                 Scene.Update();
@@ -736,7 +756,7 @@ namespace ClassicUO
             Profiler.EnterContext("PluginRender");
             if (useRenderTarget)
             {
-                if(_pluginsInitialized)
+                if (_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
 
                 GraphicsDevice.SetRenderTarget(null);
@@ -746,7 +766,7 @@ namespace ClassicUO
                 destRect = srcRect;
 
                 _uoSpriteBatch.Begin();
-                if(RenderScale != 1.0f)
+                if (RenderScale != 1.0f)
                 {
                     destRect = new Rectangle(0, 0, (int)(_screenRenderTarget.Width * RenderScale), (int)(_screenRenderTarget.Height * RenderScale));
                     _uoSpriteBatch.SetSampler(SamplerState.AnisotropicClamp);
@@ -758,7 +778,7 @@ namespace ClassicUO
             }
             else
             {
-                if(_pluginsInitialized)
+                if (_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
 
                 destRect = GraphicsDevice.Viewport.Bounds;
@@ -1211,7 +1231,7 @@ namespace ClassicUO
                     break;
 
                 case SDL_EventType.SDL_EVENT_GAMEPAD_AXIS_MOTION when Scene is not null: //Work around because sdl doesn't see trigger buttons as buttons, they are axis probably for pressure support
-                                                                  //GameActions.Print(typeof(SDL_GamepadButton).GetEnumName((SDL_GamepadButton)sdlEvent->gbutton.button));
+                                                                                         //GameActions.Print(typeof(SDL_GamepadButton).GetEnumName((SDL_GamepadButton)sdlEvent->gbutton.button));
                     if (!IsActive || ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.ControllerEnabled)
                     {
                         break;
@@ -1384,7 +1404,7 @@ namespace ClassicUO
                 }
             });
 
-        private static void FnaLogInfo(string message)=> Log.Info(message);
+        private static void FnaLogInfo(string message) => Log.Info(message);
 
         private static void FnaLogWarn(string message)
         {
