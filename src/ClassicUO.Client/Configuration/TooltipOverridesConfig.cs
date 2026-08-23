@@ -31,14 +31,14 @@ namespace ClassicUO.Configuration
         private static TooltipOverridesConfig _current;
 
         /// <summary>The tooltip-override config for the currently loaded profile.</summary>
-        public static TooltipOverridesConfig Current => _current ??= Load(ProfileManager.ProfilePath);
+        public static TooltipOverridesConfig Current => _current ??= Load();
 
         /// <summary>
         /// Loads the tooltip-override config for the given profile and sets it as <see cref="Current"/>.
         /// Called on every profile load so the cache tracks the active profile. The <paramref name="profilePath"/>
         /// is the current profile folder, which is also the <see cref="SettingsScope.Char"/> location.
         /// </summary>
-        public static new TooltipOverridesConfig Load(string profilePath)
+        public static new TooltipOverridesConfig Load()
         {
             _current = JsonSave<TooltipOverridesConfig>.Load();
             _current.Reindex();
