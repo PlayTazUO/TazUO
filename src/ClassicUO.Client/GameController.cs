@@ -464,7 +464,7 @@ namespace ClassicUO
 
             if (viewport != null && ProfileManager.CurrentProfile.GameWindowFullSize)
             {
-                viewport.ResizeGameWindow(new Point(width, height));
+                viewport.ResizeGameWindow(new Point(ScaleHelper.LogicalWindowWidth, ScaleHelper.LogicalWindowHeight));
                 viewport.X = -5;
                 viewport.Y = -5;
             }
@@ -658,8 +658,8 @@ namespace ClassicUO
             // the back buffer. Size the target to cover it so gumps/UI can be placed in what would
             // otherwise be dead space on the right/bottom. At scale >= 1 the logical area fits
             // inside the back buffer, so the target stays back-buffer sized (upscaling crops).
-            int width = Math.Max(GraphicManager.PreferredBackBufferWidth, (int)(Client.Game.Window.ClientBounds.Width / RenderScale));
-            int height = Math.Max(GraphicManager.PreferredBackBufferHeight, (int)(Client.Game.Window.ClientBounds.Height / RenderScale));
+            int width = Math.Max(GraphicManager.PreferredBackBufferWidth, ScaleHelper.LogicalWindowWidth);
+            int height = Math.Max(GraphicManager.PreferredBackBufferHeight, ScaleHelper.LogicalWindowHeight);
 
             // Sanity check dimensions
             if (width <= 0 || height <= 0)
@@ -850,7 +850,7 @@ namespace ClassicUO
             {
                 if (ProfileManager.CurrentProfile.GameWindowFullSize)
                 {
-                    viewport.ResizeGameWindow(new Point(width, height));
+                    viewport.ResizeGameWindow(new Point(ScaleHelper.LogicalWindowWidth, ScaleHelper.LogicalWindowHeight));
                     viewport.X = 0;
                     viewport.Y = 0;
                 }

@@ -120,7 +120,7 @@ namespace ClassicUO.Game.UI.Controls
             }
             else if (comboY + _maxHeight > ScaleHelper.LogicalWindowHeight)
             {
-                comboY = ScaleHelper.LogicalWindowHeight - _maxHeight;
+                comboY = Math.Max(0, ScaleHelper.LogicalWindowHeight - _maxHeight);
             }
 
             UIManager.Add
