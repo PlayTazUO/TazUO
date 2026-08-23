@@ -2948,7 +2948,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ---
 
 ### GetAllMobiles
-`(graphic, distance, notoriety)`
+`(graphic, distance, notoriety, sortby)`
  Return a list of all mobiles the client is aware of, optionally filtered by graphic, distance, and/or notoriety.
  Example:
  ```py
@@ -2960,6 +2960,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  nearby_humans = API.GetAllMobiles(400, 5)
  # Get all enemies (murderers and criminals) within 15 tiles
  enemies = API.GetAllMobiles(distance=15, notoriety=[API.Notoriety.Murderer, API.Notoriety.Criminal])
+ # Get all mobiles sorted by current hits, lowest first
+ sorted_by_hits = API.GetAllMobiles(sortby="hits")
  ```
 
 
@@ -2970,6 +2972,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `graphic` | `ushort?` | ✅ Yes | Optional graphic ID to filter by |
 | `distance` | `int?` | ✅ Yes | Optional maximum distance from player |
 | `notoriety` | `IList<Notoriety>` | ✅ Yes | Optional list of notoriety flags to filter by |
+| `sortby` | `string` | ✅ Yes | Sort order, case insensitive: "Distance", "Hits" or "MaxHits". Defaults to "Distance". |
 
 **Return Type:** `ApiMobile[]`
 

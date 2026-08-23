@@ -2938,7 +2938,7 @@ def FindMobile(serial: "int") -> "ApiMobile":
     """
     pass
 
-def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, notoriety: "list[Notoriety]" = None) -> "list[ApiMobile]":
+def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, notoriety: "list[Notoriety]" = None, sortby: "str" = "Distance") -> "list[ApiMobile]":
     """
      Return a list of all mobiles the client is aware of, optionally filtered by graphic, distance, and/or notoriety.
      Example:
@@ -2951,6 +2951,8 @@ def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, n
      nearby_humans = API.GetAllMobiles(400, 5)
      # Get all enemies (murderers and criminals) within 15 tiles
      enemies = API.GetAllMobiles(distance=15, notoriety=[API.Notoriety.Murderer, API.Notoriety.Criminal])
+     # Get all mobiles sorted by current hits, lowest first
+     sorted_by_hits = API.GetAllMobiles(sortby="hits")
      ```
     
     """
