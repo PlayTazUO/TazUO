@@ -1567,7 +1567,7 @@ namespace ClassicUO.Game.Scenes
                 }
                 else
                 {
-                    if (string.IsNullOrEmpty(UIManager.SystemChat.TextBoxControl.Text))
+                    if (string.IsNullOrEmpty(UIManager.SystemChat.TextBoxControl.Text) && ProfileManager.CurrentProfile != null && ProfileManager.GlobalSettings != null)
                     {
                         bool wasd = ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys && !UIManager.SystemChat.IsActive;
 
