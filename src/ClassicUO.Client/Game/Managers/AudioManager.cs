@@ -22,6 +22,7 @@ namespace ClassicUO.Game.Managers
         private readonly LinkedList<UOSound> _currentSounds = new LinkedList<UOSound>();
         private readonly UOMusic[] _currentMusic = { null, null };
         private readonly int[] _currentMusicIndices = { 0, 0 };
+        private readonly bool[] _currentMusicIsLogin = { false, false };
         private UOSound _currentAmbient;
         private int _currentAmbientIndex;
         private float _currentAmbientVolume;
@@ -288,6 +289,7 @@ namespace ClassicUO.Game.Managers
                 int idx = iswarmode ? 1 : 0;
                 _currentMusicIndices[idx] = music;
                 _currentMusic[idx] = (UOMusic) m;
+                _currentMusicIsLogin[idx] = is_login;
 
                 try
                 {
@@ -304,7 +306,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void UpdateCurrentMusicVolume(bool isLogin = false)
+        public void UpdateCurrentMusicVolume()
         {
             if (!_canReproduceAudio || _audioDeviceDisconnected)
             {
@@ -317,7 +319,7 @@ namespace ClassicUO.Game.Managers
                 {
                     float volume;
 
-                    if (isLogin)
+                    if (_currentMusicIsLogin[i])
                     {
                         volume = Settings.GlobalSettings.LoginMusic ? Settings.GlobalSettings.LoginMusicVolume / SOUND_DELTA : 0;
                     }
@@ -387,6 +389,7 @@ namespace ClassicUO.Game.Managers
                     _currentMusic[i].Stop();
                     _currentMusic[i].Dispose();
                     _currentMusic[i] = null;
+                    _currentMusicIsLogin[i] = false;
                 }
             }
         }
@@ -548,7 +551,18 @@ namespace ClassicUO.Game.Managers
                     {
                         if (!globalSettings.ReproduceSoundsInBackground)
                         {
-                            _currentMusic[i].Volume = i == 0 && runninWarMusic || !globalSettings.EnableMusic ? 0 : globalSettings.MusicVolume / SOUND_DELTA;
+                            float volume;
+
+                            if (_currentMusicIsLogin[i])
+                            {
+                                volume = Settings.GlobalSettings.LoginMusic ? Settings.GlobalSettings.LoginMusicVolume / SOUND_DELTA : 0;
+                            }
+                            else
+                            {
+                                volume = i == 0 && runninWarMusic || !globalSettings.EnableMusic ? 0 : globalSettings.MusicVolume / SOUND_DELTA;
+                            }
+
+                            _currentMusic[i].Volume = volume;
                         }
                     }
                     else if (!globalSettings.ReproduceSoundsInBackground && _currentMusic[i].Volume != 0.0f)

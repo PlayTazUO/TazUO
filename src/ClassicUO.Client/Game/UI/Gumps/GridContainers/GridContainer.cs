@@ -281,8 +281,16 @@ public partial class GridContainer : ResizableGump
             _lastWidth = Width = savedSize.X;
             _lastHeight = Height = savedSize.Y;
 
-            X = _isCorpse ? _lastCorpseX : _lastX = lastPos.X;
-            Y = _isCorpse ? _lastCorpseY : _lastY = lastPos.Y;
+            if (_isCorpse)
+            {
+                X = _lastCorpseX = lastPos.X;
+                Y = _lastCorpseY = lastPos.Y;
+            }
+            else
+            {
+                X = _lastX = lastPos.X;
+                Y = _lastY = lastPos.Y;
+            }
 
             if (_isCorpse)
             {
@@ -793,6 +801,10 @@ public partial class GridContainer : ResizableGump
             {
                 ProfileManager.CurrentProfile.BackpackGridPosition = Location;
                 ProfileManager.CurrentProfile.BackpackGridSize = new Point(Width, Height);
+            }
+            else if (_isCorpse && ProfileManager.CurrentProfile != null)
+            {
+                ProfileManager.CurrentProfile.CoprseContainerPosition = Location;
             }
 
             Item item = World.Items.Get(LocalSerial);

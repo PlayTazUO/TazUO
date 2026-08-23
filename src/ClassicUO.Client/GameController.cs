@@ -38,6 +38,7 @@ using static SDL3.SDL;
 using Keyboard = ClassicUO.Input.Keyboard;
 using Mouse = ClassicUO.Input.Mouse;
 using ClassicUO.Game.UI.MyraWindows;
+using ClassicUO.Utility.Debounce;
 
 namespace ClassicUO
 {
@@ -463,7 +464,7 @@ namespace ClassicUO
 
             if (viewport != null && ProfileManager.CurrentProfile.GameWindowFullSize)
             {
-                viewport.ResizeGameWindow(new Point(width, height));
+                viewport.ResizeGameWindow(new Point(ScaleHelper.LogicalWindowWidth, ScaleHelper.LogicalWindowHeight));
                 viewport.X = -5;
                 viewport.Y = -5;
             }
@@ -519,6 +520,17 @@ namespace ClassicUO
             }
         }
 
+        private Debounce _pluginCrashed
+        {
+            get
+            {
+                if (field == null)
+                    field = new Debounce(() => { GameActions.Print($"It looks like your plugin had an error. Check the Log History or Console for the full error."); }, 1000);
+
+                return field;
+            }
+        }
+
         protected override void Update(GameTime gameTime)
         {
             Profiler.EnterContext("Update");
@@ -534,14 +546,22 @@ namespace ClassicUO
             ProcessNetworkPackets();
             Profiler.ExitContext("ProcessNetworkPackets");
 
-            if(_pluginsInitialized)
+            if (_pluginsInitialized)
             {
                 Profiler.EnterContext("PluginTick");
-                Plugin.Tick();
+                try
+                {
+                    Plugin.Tick();
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e.ToString());
+                    _pluginCrashed.Invoke();
+                }
                 Profiler.ExitContext("PluginTick");
             }
 
-            if(drawScene)
+            if (drawScene)
             {
                 Profiler.EnterContext("SceneUpdate");
                 Scene.Update();
@@ -615,21 +635,31 @@ namespace ClassicUO
         /// <summary>
         /// Draws the tiled window background (behind the world and all gumps) using the configured
         /// <see cref="Profile.MainWindowBackgroundHue"/>. Sets a full-window viewport so it fills the
-        /// whole target regardless of any camera viewport the caller had active. Must be called while
-        /// the intended render target is bound.
+        /// whole target regardless of any camera viewport the caller had active. When the screen
+        /// target is larger than the back buffer (scale-down dead space) the background covers it
+        /// all, so the extended area isn't left as garbage/black. Must be called while the intended
+        /// render target is bound.
         /// </summary>
         public void DrawWindowBackground(UltimaBatcher2D batcher)
         {
-            GraphicsDevice.Viewport = new Viewport(bufferRect);
+            Rectangle bounds = _useScreenRenderTarget && _screenRenderTarget != null && !_screenRenderTarget.IsDisposed
+                ? _screenRenderTarget.Bounds
+                : bufferRect;
+
+            GraphicsDevice.Viewport = new Viewport(bounds);
             batcher.Begin();
-            batcher.DrawTiled(_background, bufferRect, _background.Bounds, bgHueShader);
+            batcher.DrawTiled(_background, bounds, _background.Bounds, bgHueShader);
             batcher.End();
         }
 
         private void EnsureScreenRenderTarget()
         {
-            int width = GraphicManager.PreferredBackBufferWidth;
-            int height = GraphicManager.PreferredBackBufferHeight;
+            // When scaled down, the reachable logical area (window / RenderScale) is larger than
+            // the back buffer. Size the target to cover it so gumps/UI can be placed in what would
+            // otherwise be dead space on the right/bottom. At scale >= 1 the logical area fits
+            // inside the back buffer, so the target stays back-buffer sized (upscaling crops).
+            int width = Math.Max(GraphicManager.PreferredBackBufferWidth, ScaleHelper.LogicalWindowWidth);
+            int height = Math.Max(GraphicManager.PreferredBackBufferHeight, ScaleHelper.LogicalWindowHeight);
 
             // Sanity check dimensions
             if (width <= 0 || height <= 0)
@@ -736,7 +766,7 @@ namespace ClassicUO
             Profiler.EnterContext("PluginRender");
             if (useRenderTarget)
             {
-                if(_pluginsInitialized)
+                if (_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
 
                 GraphicsDevice.SetRenderTarget(null);
@@ -746,7 +776,7 @@ namespace ClassicUO
                 destRect = srcRect;
 
                 _uoSpriteBatch.Begin();
-                if(RenderScale != 1.0f)
+                if (RenderScale != 1.0f)
                 {
                     destRect = new Rectangle(0, 0, (int)(_screenRenderTarget.Width * RenderScale), (int)(_screenRenderTarget.Height * RenderScale));
                     _uoSpriteBatch.SetSampler(SamplerState.AnisotropicClamp);
@@ -758,7 +788,7 @@ namespace ClassicUO
             }
             else
             {
-                if(_pluginsInitialized)
+                if (_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
 
                 destRect = GraphicsDevice.Viewport.Bounds;
@@ -820,7 +850,7 @@ namespace ClassicUO
             {
                 if (ProfileManager.CurrentProfile.GameWindowFullSize)
                 {
-                    viewport.ResizeGameWindow(new Point(width, height));
+                    viewport.ResizeGameWindow(new Point(ScaleHelper.LogicalWindowWidth, ScaleHelper.LogicalWindowHeight));
                     viewport.X = 0;
                     viewport.Y = 0;
                 }
@@ -1211,7 +1241,7 @@ namespace ClassicUO
                     break;
 
                 case SDL_EventType.SDL_EVENT_GAMEPAD_AXIS_MOTION when Scene is not null: //Work around because sdl doesn't see trigger buttons as buttons, they are axis probably for pressure support
-                                                                  //GameActions.Print(typeof(SDL_GamepadButton).GetEnumName((SDL_GamepadButton)sdlEvent->gbutton.button));
+                                                                                         //GameActions.Print(typeof(SDL_GamepadButton).GetEnumName((SDL_GamepadButton)sdlEvent->gbutton.button));
                     if (!IsActive || ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.ControllerEnabled)
                     {
                         break;
@@ -1384,7 +1414,7 @@ namespace ClassicUO
                 }
             });
 
-        private static void FnaLogInfo(string message)=> Log.Info(message);
+        private static void FnaLogInfo(string message) => Log.Info(message);
 
         private static void FnaLogWarn(string message)
         {

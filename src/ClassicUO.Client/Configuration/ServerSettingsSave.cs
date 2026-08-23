@@ -16,5 +16,6 @@ namespace ClassicUO.Configuration
         protected override JsonTypeInfo<ServerSettingsSave> TypeInfo => ScopedSettingsJsonContext.DefaultToUse.ServerSettingsSave;
 
         public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 80;
+        public bool EnableEnhancedPackets { get; set => SetProperty(ref field, value); } = true;
     }
 }

@@ -115,7 +115,7 @@ public static class VideoTab
                     if (b)
                     {
                         viewport.ResizeGameWindow(
-                            new Point(Client.Game.Window.ClientBounds.Width, Client.Game.Window.ClientBounds.Height)
+                            new Point(ScaleHelper.LogicalWindowWidth, ScaleHelper.LogicalWindowHeight)
                         );
                         viewport.SetGameWindowPosition(new Point(0, 0));
                         profile.GameWindowPosition = new Point(0, 0);
@@ -159,7 +159,7 @@ public static class VideoTab
             Option.Slider(
                 TazLang.Get("mog_videotab_gamewindow_viewportx"),
                 0,
-                Client.Game.Window.ClientBounds.Width,
+                ScaleHelper.LogicalWindowWidth,
                 new Accessor<float>(() => profile.GameWindowPosition.X, f =>
                 {
                     profile.GameWindowPosition = new Point((int)f, profile.GameWindowPosition.Y);
@@ -170,7 +170,7 @@ public static class VideoTab
             Option.Slider(
                 TazLang.Get("mog_videotab_gamewindow_viewporty"),
                 0,
-                Client.Game.Window.ClientBounds.Height,
+                ScaleHelper.LogicalWindowHeight,
                 new Accessor<float>(() => profile.GameWindowPosition.Y, f =>
                 {
                     profile.GameWindowPosition = new Point(profile.GameWindowPosition.X, (int)f);
@@ -181,7 +181,7 @@ public static class VideoTab
             Option.Slider(
                 TazLang.Get("mog_videotab_gamewindow_viewportw"),
                 0,
-                Client.Game.Window.ClientBounds.Width,
+                ScaleHelper.LogicalWindowWidth,
                 new Accessor<float>(() => profile.GameWindowSize.X, f =>
                 {
                     profile.GameWindowSize = new Point((int)f, profile.GameWindowSize.Y);
@@ -192,7 +192,7 @@ public static class VideoTab
             Option.Slider(
                 TazLang.Get("mog_videotab_gamewindow_viewporth"),
                 0,
-                Client.Game.Window.ClientBounds.Height,
+                ScaleHelper.LogicalWindowHeight,
                 new Accessor<float>(() => profile.GameWindowSize.Y, f =>
                 {
                     profile.GameWindowSize = new Point(profile.GameWindowSize.X, (int)f);

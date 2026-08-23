@@ -4,5 +4,6 @@ public enum EnhancedPacketType : ushort
 {
     None,
     EnableEnhancedPacket,
-    TazUO_Identifier
+    TazUO_Identifier,
+    DisableFeatures
 }

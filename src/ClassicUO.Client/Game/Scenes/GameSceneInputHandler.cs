@@ -1567,7 +1567,7 @@ namespace ClassicUO.Game.Scenes
                 }
                 else
                 {
-                    if (string.IsNullOrEmpty(UIManager.SystemChat.TextBoxControl.Text))
+                    if (string.IsNullOrEmpty(UIManager.SystemChat.TextBoxControl.Text) && ProfileManager.CurrentProfile != null && ProfileManager.GlobalSettings != null)
                     {
                         bool wasd = ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys && !UIManager.SystemChat.IsActive;
 
@@ -1576,16 +1576,24 @@ namespace ClassicUO.Game.Scenes
 
                         SDL.SDL_Keycode[] keys = wasd ? wasdKeys : arrowKeys;
 
-                        for (int i = 0; i < keys.Length; i++)
+                        bool disableArrowKeys = ProfileManager.CurrentProfile.DisableArrowBtn && !wasd;
+
+                        if (!disableArrowKeys)
                         {
-                            if (key == keys[i])
+                            for (int i = 0; i < keys.Length; i++)
                             {
-                                _flags[i] = true;
-                                break;
+                                if (key == keys[i])
+                                {
+                                    _flags[i] = true;
+                                    break;
+                                }
                             }
                         }
 
-                        SetNumpadMovementFlags(key, true);
+                        if (!ProfileManager.CurrentProfile.DisableArrowBtn)
+                        {
+                            SetNumpadMovementFlags(key, true);
+                        }
                     }
                 }
             }
@@ -1711,16 +1719,20 @@ namespace ClassicUO.Game.Scenes
 
             SDL.SDL_Keycode[] keys = wasd ? wasdKeys : arrowKeys;
 
-            for (int i = 0; i < keys.Length; i++)
-            {
-                if (key == keys[i])
-                {
-                    _flags[i] = false;
-                    break;
-                }
-            }
+            bool disableArrowKeys = ProfileManager.CurrentProfile.DisableArrowBtn && !wasd;
 
-            SetNumpadMovementFlags(key, false);
+            if (!disableArrowKeys)
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    if (key == keys[i])
+                    {
+                        _flags[i] = false;
+                        break;
+                    }
+                }
+
+            if (!ProfileManager.CurrentProfile.DisableArrowBtn)
+                SetNumpadMovementFlags(key, false);
 
             if (
                 key == SDL.SDL_Keycode.SDLK_TAB

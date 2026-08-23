@@ -51,6 +51,13 @@ public class TriggerParameterReachabilityTests
             if (property.GetCustomAttribute<SoundIndexEditorAttribute>() != null)
                 claimed.Add(property.Name);
 
+            if (property.GetCustomAttribute<BuffTriggerEditorAttribute>() is { } buffTrigger)
+            {
+                claimed.Add(property.Name);
+                claimed.Add(buffTrigger.BuffTypeProperty);
+                claimed.Add(buffTrigger.DurationSecondsProperty);
+            }
+
             if (property.GetCustomAttribute<FalloffEditorAttribute>() is not { } falloff)
                 continue;
 

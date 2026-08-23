@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.IO;
 using ClassicUO.Utility.Logging;
@@ -12,20 +13,19 @@ public class EnhancedPacketHandler
     
     public const byte EPID = 0xCE;
     
-    public static bool Enabled;
+    public static bool Enabled => ProfileManager.ServerSettings?.EnableEnhancedPackets ?? true;
 
     static EnhancedPacketHandler()
     {
-        Enabled = Client.Settings.Get(SettingsScope.Server, Constants.SqlSettings.ENABLE_ENHANCED_PACKETS, false);
-
         if (!Enabled)
             return;
         
         Handler.Add(EnhancedPacketType.EnableEnhancedPacket, EnableEnhancedPacket);
+        Handler.Add(EnhancedPacketType.DisableFeatures, DisableFeatures);
     }
 
     /// <summary>
-    /// Allow servers to enable specific enhanced packets.
+    /// Allow servers to enable specific outgoing (client -> server) enhanced packets.
     /// </summary>
     private static void EnableEnhancedPacket(ref StackDataReader p, int version)
     { 
@@ -47,6 +47,27 @@ public class EnhancedPacketHandler
         }
         
         AsyncNetClient.Socket.SendEnhancedPacket(); //Confirm we are ready to receive enhanced packets.
+    }
+
+    /// <summary>
+    /// Servers can disable specific features using this packet
+    /// </summary>
+    private static void DisableFeatures(ref StackDataReader p, int version)
+    {
+        if (version >= 0)
+        {
+            ushort count = p.ReadUInt16BE(); //Number of settings sent.
+
+            for (int i = 0; i < count; i++)
+            {
+                ushort id = p.ReadUInt16BE();
+
+                if (Enum.IsDefined(typeof(EnhancedPacketDisabledFeaturesEnum), id))
+                {
+                    World.DisabledFeatures.Add((EnhancedPacketDisabledFeaturesEnum)id);
+                }
+            }
+        }
     }
 
     private readonly Dictionary<ushort, EnhancedOnPacketBufferReader> _handlers = new();

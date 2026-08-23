@@ -675,6 +675,7 @@ namespace ClassicUO.Configuration
 
         public int TextBorderSize { get; set => SetProperty(ref field, value); } = 1;
         public uint SavedMountSerial { get; set => SetProperty(ref field, value); } = 0;
+        public int MountDistance { get; set => SetProperty(ref field, value); } = 1;
 
         public uint SavedMainHandSerial { get; set => SetProperty(ref field, value); } = 0;
         public uint SavedOffHandSerial { get; set => SetProperty(ref field, value); } = 0;
@@ -685,6 +686,7 @@ namespace ClassicUO.Configuration
         public int MaxSoundEntries { get; set => SetProperty(ref field, value); } = 250;
         public bool HideJournalBorder { get; set => SetProperty(ref field, value); } = false;
         public bool JournalTransparencyWhenInactive { get; set => SetProperty(ref field, value); } = false;
+        [Obsolete("Remove on/after 10/17/26")]
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); } = false;
         public bool HideJournalSystemPrefix { get; set => SetProperty(ref field, value); } = false;
 
@@ -700,29 +702,6 @@ namespace ClassicUO.Configuration
         public int AdvancedSkillsGumpHeight { get; set => SetProperty(ref field, value); } = 510;
 
         #region ToolTip Overrides
-        // The ToolTipOverride_* parallel lists below are the legacy tooltip-override storage. They have been
-        // superseded by tooltip_overrides.json (see TooltipOverridesConfig) and are retained only so existing
-        // profiles can be migrated on load. Do not use them in new code. The defaults are kept so a fresh
-        // profile still migrates the standard resist/damage overrides into the new file.
-        private const string TooltipOverrideMigratedMessage = "Migrated to tooltip_overrides.json (TooltipOverridesConfig); retained only for one-time migration of existing profiles.";
-
-        [Obsolete(TooltipOverrideMigratedMessage)]
-        public List<string> ToolTipOverride_SearchText { get; set => SetProperty(ref field, value); } = new List<string>() { "Physical Res", "Fire Resist", "Cold Resist", "Poison Resist", "Energy Resist", "Weapon Damage" };
-        [Obsolete(TooltipOverrideMigratedMessage)]
-        public List<string> ToolTipOverride_NewFormat { get; set => SetProperty(ref field, value); } = new List<string>() { "/c[#8c733e]Physical Resist {1}%", "/c[red]Fire Resist {1}%", "/c[teal]Cold Resist {1}%", "/c[green]Poison Resist {1}%", "/c[purple]Energy Resist {1}%", "{0} /c[orange]{1}{4} /cd- /c[red]{2}{5}" };
-        [Obsolete(TooltipOverrideMigratedMessage)]
-        public List<int> ToolTipOverride_MinVal1 { get; set => SetProperty(ref field, value); } = new List<int>() { -1, -1, -1, -1, -1, -1 };
-        [Obsolete(TooltipOverrideMigratedMessage)]
-        public List<int> ToolTipOverride_MinVal2 { get; set => SetProperty(ref field, value); } = new List<int>() { -1, -1, -1, -1, -1, -1 };
-        [Obsolete(TooltipOverrideMigratedMessage)]
-        public List<int> ToolTipOverride_MaxVal1 { get; set => SetProperty(ref field, value); } = new List<int>() { 100, 100, 100, 100, 100, 100 };
-        [Obsolete(TooltipOverrideMigratedMessage)]
-        public List<int> ToolTipOverride_MaxVal2 { get; set => SetProperty(ref field, value); } = new List<int>() { 100, 100, 100, 100, 100, 100 };
-        [Obsolete(TooltipOverrideMigratedMessage)]
-        public List<byte> ToolTipOverride_Layer { get; set => SetProperty(ref field, value); } = new List<byte>() { (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any };
-        /// <summary>Optional per-override border hue drawn around the tooltip when the rule matches; -1 means no override.</summary>
-        [Obsolete(TooltipOverrideMigratedMessage)]
-        public List<int> ToolTipOverride_BorderHue { get; set => SetProperty(ref field, value); } = new List<int>() { -1, -1, -1, -1, -1, -1 };
         /// <summary>When enabled, tooltip overrides are not applied to mobile tooltips.</summary>
         public bool ToolTipOverride_IgnoreMobiles { get; set => SetProperty(ref field, value); } = true;
         #endregion
@@ -933,13 +912,6 @@ namespace ClassicUO.Configuration
 
         private void HandleMigration()
         {
-            if (ProfileMigrationVersion < 4) //3
-            {
-                MigrateToolTipOverrides();
-
-                ProfileMigrationVersion = 4;
-            }
-
             if (ProfileMigrationVersion < 5) //4
             {
                 ProfileMigrationVersion = 5;
@@ -1038,6 +1010,13 @@ namespace ClassicUO.Configuration
                 ProfileMigrationVersion = 10;
             }
 
+            if (ProfileMigrationVersion < 11)
+            {
+                ProfileManager.GlobalSettings.HideJournalTimestamp = HideJournalTimestamp;
+
+                ProfileMigrationVersion = 11;
+            }
+
             try //Cleanup old backups from previous save system
             {
                 string dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Char);
@@ -1064,51 +1043,6 @@ namespace ClassicUO.Configuration
             catch
             {}
         }
-
-        /// <summary>
-        /// Moves the legacy parallel <c>ToolTipOverride_*</c> lists into the dedicated
-        /// tooltip_overrides.json (see <see cref="TooltipOverridesConfig"/>) and clears them. The config
-        /// list is rebuilt (not appended) so re-running the migration - e.g. if the profile isn't saved
-        /// before the next launch - stays idempotent.
-        /// </summary>
-#pragma warning disable CS0618 // Reading the obsolete legacy lists is the whole point of migration.
-        private void MigrateToolTipOverrides()
-        {
-            int count = ToolTipOverride_SearchText.Count;
-            if (count == 0)
-                return;
-
-            var overrides = new List<ToolTipOverrideData>(count);
-
-            for (int i = 0; i < count; i++)
-            {
-                overrides.Add(new ToolTipOverrideData(
-                    i,
-                    ToolTipOverride_SearchText[i],
-                    ToolTipOverride_NewFormat.ElementAtOrDefault(i) ?? string.Empty,
-                    i < ToolTipOverride_MinVal1.Count ? ToolTipOverride_MinVal1[i] : -1,
-                    i < ToolTipOverride_MaxVal1.Count ? ToolTipOverride_MaxVal1[i] : 100,
-                    i < ToolTipOverride_MinVal2.Count ? ToolTipOverride_MinVal2[i] : -1,
-                    i < ToolTipOverride_MaxVal2.Count ? ToolTipOverride_MaxVal2[i] : 100,
-                    i < ToolTipOverride_Layer.Count ? ToolTipOverride_Layer[i] : (byte)TooltipLayers.Any,
-                    i < ToolTipOverride_BorderHue.Count ? ToolTipOverride_BorderHue[i] : -1));
-            }
-
-            TooltipOverridesConfig config = TooltipOverridesConfig.Current;
-            config.Overrides = overrides;
-            config.Save();
-
-            // Clear the legacy lists so tooltip overrides live only in tooltip_overrides.json going forward.
-            ToolTipOverride_SearchText.Clear();
-            ToolTipOverride_NewFormat.Clear();
-            ToolTipOverride_MinVal1.Clear();
-            ToolTipOverride_MinVal2.Clear();
-            ToolTipOverride_MaxVal1.Clear();
-            ToolTipOverride_MaxVal2.Clear();
-            ToolTipOverride_Layer.Clear();
-            ToolTipOverride_BorderHue.Clear();
-        }
-#pragma warning restore CS0618
 
         internal void Save(World world, string path, bool saveGumps = true)
         {

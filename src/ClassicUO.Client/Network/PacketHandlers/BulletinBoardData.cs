@@ -2,6 +2,7 @@ using System;
 using ClassicUO.Game;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
 using ClassicUO.Utility;
@@ -30,8 +31,8 @@ internal static class BulletinBoardData
                     );
                     bulletinBoard?.Dispose();
 
-                    int x = (Client.Game.Window.ClientBounds.Width >> 1) - 245;
-                    int y = (Client.Game.Window.ClientBounds.Height >> 1) - 205;
+                    int x = (ScaleHelper.LogicalWindowWidth >> 1) - 245;
+                    int y = (ScaleHelper.LogicalWindowHeight >> 1) - 205;
 
                     bulletinBoard = new BulletinBoardGump(world, item, x, y, p.ReadUTF8(22, true)); //p.ReadASCII(22));
                     UIManager.Add(bulletinBoard);

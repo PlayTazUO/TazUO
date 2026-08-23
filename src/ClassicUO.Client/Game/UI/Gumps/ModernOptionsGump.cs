@@ -992,8 +992,8 @@ namespace ClassicUO.Game.UI.Gumps
                         {
                             if (b)
                             {
-                                viewport.ResizeGameWindow(new Point(Client.Game.Window.ClientBounds.Width,
-                                    Client.Game.Window.ClientBounds.Height));
+                                viewport.ResizeGameWindow(new Point(ScaleHelper.LogicalWindowWidth,
+                                    ScaleHelper.LogicalWindowHeight));
                                 viewport.SetGameWindowPosition(new Point(0, 0));
                                 profile.GameWindowPosition = new Point(0, 0);
                             }
@@ -1052,7 +1052,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (
-                    TazLang.Get("mog_video_viewportx"), 0, ThemeSettings.SLIDER_WIDTH, 0, Client.Game.Window.ClientBounds.Width,
+                    TazLang.Get("mog_video_viewportx"), 0, ThemeSettings.SLIDER_WIDTH, 0, ScaleHelper.LogicalWindowWidth,
                     profile.GameWindowPosition.X, (r) =>
                     {
                         profile.GameWindowPosition = new Point(r, profile.GameWindowPosition.Y);
@@ -1065,7 +1065,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (
-                    TazLang.Get("mog_video_viewporty"), 0, ThemeSettings.SLIDER_WIDTH, 0, Client.Game.Window.ClientBounds.Height,
+                    TazLang.Get("mog_video_viewporty"), 0, ThemeSettings.SLIDER_WIDTH, 0, ScaleHelper.LogicalWindowHeight,
                     profile.GameWindowPosition.Y, (r) =>
                     {
                         profile.GameWindowPosition = new Point(profile.GameWindowPosition.X, r);
@@ -1080,7 +1080,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (
-                    TazLang.Get("mog_video_viewportw"), 0, ThemeSettings.SLIDER_WIDTH, 0, Client.Game.Window.ClientBounds.Width,
+                    TazLang.Get("mog_video_viewportw"), 0, ThemeSettings.SLIDER_WIDTH, 0, ScaleHelper.LogicalWindowWidth,
                     profile.GameWindowSize.X, (r) =>
                     {
                         profile.GameWindowSize = new Point(r, profile.GameWindowSize.Y);
@@ -1093,7 +1093,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (
-                    TazLang.Get("mog_video_viewporth"), 0, ThemeSettings.SLIDER_WIDTH, 0, Client.Game.Window.ClientBounds.Height,
+                    TazLang.Get("mog_video_viewporth"), 0, ThemeSettings.SLIDER_WIDTH, 0, ScaleHelper.LogicalWindowHeight,
                     profile.GameWindowSize.Y, (r) =>
                     {
                         profile.GameWindowSize = new Point(profile.GameWindowSize.X, r);
@@ -3465,8 +3465,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.BlankLine();
             content.AddToRight(
-                c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_hidetimestamp"), 0, profile.HideJournalTimestamp,
-                    (b) => { profile.HideJournalTimestamp = b; }), true, page);
+                c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_hidetimestamp"), 0, ProfileManager.GlobalSettings.HideJournalTimestamp,
+                    (b) => { ProfileManager.GlobalSettings.HideJournalTimestamp = b; }), true, page);
             content.BlankLine();
             content.AddToRight(
                 c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_journalhidesystemprefix"), 0, profile.HideJournalSystemPrefix,
@@ -5730,8 +5730,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (btnEditorGump == null)
                 {
-                    int posX = (Client.Game.Window.ClientBounds.Width >> 1) - 300;
-                    int posY = (Client.Game.Window.ClientBounds.Height >> 1) - 250;
+                    int posX = (ScaleHelper.LogicalWindowWidth >> 1) - 300;
+                    int posY = (ScaleHelper.LogicalWindowHeight >> 1) - 250;
                     Gump opt = UIManager.GetGump<ModernOptionsGump>();
 
                     if (opt != null)

@@ -24,6 +24,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             entry.Hue.Should().Be(ushort.MaxValue);
             entry.RegexSearch.Should().BeEmpty();
             entry.DestinationContainer.Should().Be(0u);
+            entry.MaxAmount.Should().Be(0);
             entry.Uid.Should().NotBeEmpty();
         }
 
@@ -65,6 +66,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             entry.Hue = 1153;
             entry.RegexSearch = ".*gold.*";
             entry.DestinationContainer = 12345u;
+            entry.MaxAmount = 100;
             entry.Uid = testUid;
 
             // Assert
@@ -73,6 +75,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             entry.Hue.Should().Be(1153);
             entry.RegexSearch.Should().Be(".*gold.*");
             entry.DestinationContainer.Should().Be(12345u);
+            entry.MaxAmount.Should().Be(100);
             entry.Uid.Should().Be(testUid);
         }
 
@@ -398,6 +401,7 @@ namespace ClassicUO.UnitTests.Game.Managers
                 Hue = 5678,
                 RegexSearch = ".*test.*",
                 DestinationContainer = 99999u,
+                MaxAmount = 250,
                 Uid = "test-uid-123"
             };
 
@@ -412,6 +416,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             deserialized.Hue.Should().Be(entry.Hue);
             deserialized.RegexSearch.Should().Be(entry.RegexSearch);
             deserialized.DestinationContainer.Should().Be(entry.DestinationContainer);
+            deserialized.MaxAmount.Should().Be(entry.MaxAmount);
             deserialized.Uid.Should().Be(entry.Uid);
         }
 
@@ -484,6 +489,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             deserialized.Hue.Should().Be(ushort.MaxValue);
             deserialized.RegexSearch.Should().BeEmpty();
             deserialized.DestinationContainer.Should().Be(0);
+            deserialized.MaxAmount.Should().Be(0);
         }
 
         #endregion

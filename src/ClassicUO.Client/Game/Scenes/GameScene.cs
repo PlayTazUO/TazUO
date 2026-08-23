@@ -988,7 +988,9 @@ namespace ClassicUO.Game.Scenes
             Profiler.ExitContext("Actions");
 
             Profiler.EnterContext("Movement");
-            if (!MoveCharacterByMouseInput() && !currentProfile.DisableArrowBtn && !MoveCharByController())
+            bool useWASD = ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys;
+
+            if (!MoveCharacterByMouseInput() && (!currentProfile.DisableArrowBtn || useWASD) && !MoveCharByController())
             {
                 Direction dir = DirectionHelper.DirectionFromKeyboardArrows(
                     _flags[0],
@@ -1404,6 +1406,8 @@ namespace ClassicUO.Game.Scenes
                     _multi.CalculateDepthZ()
                 );
             }
+
+            DrawDragItemPreview(batcher);
 
             batcher.SetSampler(null);
             batcher.SetStencil(null);

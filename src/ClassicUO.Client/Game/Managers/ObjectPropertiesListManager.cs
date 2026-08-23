@@ -228,14 +228,14 @@ namespace ClassicUO.Game.Managers
                     {
                         if (String.Equals(thisItem.Name, secondItem.Name, StringComparison.InvariantCultureIgnoreCase))
                         {
-                            if (thisItem.FirstValue != double.MinValue && secondItem.FirstValue != double.MinValue)
+                            if (thisItem.FirstValue.HasValue && secondItem.FirstValue.HasValue)
                             {
-                                thisItem.FirstDiff = thisItem.FirstValue - secondItem.FirstValue;
+                                thisItem.FirstDiff = thisItem.FirstValue.Value - secondItem.FirstValue.Value;
                             }
 
-                            if (thisItem.SecondValue > double.MinValue && secondItem.SecondValue > double.MinValue)
+                            if (thisItem.SecondValue.HasValue && secondItem.SecondValue.HasValue)
                             {
-                                thisItem.SecondDiff = thisItem.SecondValue - secondItem.SecondValue;
+                                thisItem.SecondDiff = thisItem.SecondValue.Value - secondItem.SecondValue.Value;
                             }
                             break;
                         }
@@ -264,20 +264,20 @@ namespace ClassicUO.Game.Managers
                         foundMatch = true;
                         finalTooltip += thisItem.Name;
 
-                        if (thisItem.FirstValue != double.MinValue && secondItem.FirstValue != double.MinValue)
+                        if (thisItem.FirstValue.HasValue && secondItem.FirstValue.HasValue)
                         {
-                            double diff = thisItem.FirstValue - secondItem.FirstValue;
-                            finalTooltip += $" {thisItem.FirstValue}";
+                            double diff = thisItem.FirstValue.Value - secondItem.FirstValue.Value;
+                            finalTooltip += $" {thisItem.FirstValue.Value}";
                             if (diff != 0)
                             {
                                 finalTooltip += $"({(diff >= 0 ? "/c[green]+" : "/c[red]")} {diff}/cd)";
                             }
                         }
 
-                        if (thisItem.SecondValue > double.MinValue && secondItem.SecondValue > double.MinValue)
+                        if (thisItem.SecondValue.HasValue && secondItem.SecondValue.HasValue)
                         {
-                            double diff = thisItem.SecondValue - secondItem.SecondValue;
-                            finalTooltip += $" {thisItem.SecondValue}";
+                            double diff = thisItem.SecondValue.Value - secondItem.SecondValue.Value;
+                            finalTooltip += $" {thisItem.SecondValue.Value}";
                             if (diff != 0)
                             {
                                 finalTooltip += $"({(diff >= 0 ? "/c[green]+" : "/c[red]")}{diff}/cd)";
@@ -311,8 +311,8 @@ namespace ClassicUO.Game.Managers
         {
             public string OriginalString;
             public string Name = "";
-            public double FirstValue = double.MinValue;
-            public double SecondValue = double.MinValue;
+            public double? FirstValue = null;
+            public double? SecondValue = null;
             public double FirstDiff = 0;
             public double SecondDiff = 0;
 
@@ -328,9 +328,11 @@ namespace ClassicUO.Game.Managers
 
                 if (matches.Count > 0)
                 {
-                    double.TryParse(matches[0].Value, out FirstValue);
-                    if (matches.Count > 1)
-                        double.TryParse(matches[1].Value, out SecondValue);
+                    if (double.TryParse(matches[0].Value, out double firstValue))
+                        FirstValue = firstValue;
+
+                    if (matches.Count > 1 && double.TryParse(matches[1].Value, out double secondValue))
+                        SecondValue = secondValue;
                 }
 
                 // Remove all numbers and symbols from the cleaned string to isolate the name
@@ -348,11 +350,11 @@ namespace ClassicUO.Game.Managers
                 if (Name != null)
                     output += Name;
 
-                if (FirstValue != double.MinValue)
-                    output += $" {FirstValue}";
+                if (FirstValue.HasValue)
+                    output += $" {FirstValue.Value}";
 
-                if (SecondValue != double.MinValue)
-                    output += $" {SecondValue}";
+                if (SecondValue.HasValue)
+                    output += $" {SecondValue.Value}";
 
                 return output;
             }

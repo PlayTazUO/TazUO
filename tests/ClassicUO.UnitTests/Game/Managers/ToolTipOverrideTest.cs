@@ -170,12 +170,14 @@ namespace ClassicUO.UnitTests.Game.Managers
 
         /// <summary>
         /// Replaces the cached <see cref="TooltipOverridesConfig"/> with one holding exactly the given
-        /// overrides. Tooltip overrides now live in tooltip_overrides.json (via TooltipOverridesConfig)
-        /// rather than the profile, so tests seed the config directly instead of the profile's lists.
+        /// overrides (seeded into the Char scope, the aggregate's default editing scope). Tooltip overrides
+        /// now live in per-scope tooltip_overrides.json files rather than the profile, so tests seed the
+        /// config directly instead of the profile's lists.
         /// </summary>
         private static void SetTooltipOverrides(params ToolTipOverrideData[] overrides)
         {
-            var config = new TooltipOverridesConfig { Overrides = new List<ToolTipOverrideData>(overrides) };
+            var config = new TooltipOverridesConfig();
+            config.Char.Overrides = new List<ToolTipOverrideData>(overrides);
 
             FieldInfo field = typeof(TooltipOverridesConfig).GetField(
                 "_current",
