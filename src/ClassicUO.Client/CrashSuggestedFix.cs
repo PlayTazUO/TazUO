@@ -77,6 +77,9 @@ internal static class CrashSuggestedFix
 
             if (TryGetMissingAssemblyCrashFix(exception, out string assemblyFix))
                 return assemblyFix;
+
+            if (TryGetFileAccessDeniedCrashFix(exception, out string fileAccessFix))
+                return fileAccessFix;
         }
         catch
         {
@@ -703,6 +706,36 @@ internal static class CrashSuggestedFix
         sb.AppendLine("3. Make sure the plugin is pointed at the same UO data directory TazUO uses and that its files are not corrupt or out of date.");
         sb.AppendLine("4. If it keeps happening, report the crash log to the plugin's author, noting which script or feature was running when it occurred.");
 
+        fix = sb.ToString();
+        return true;
+    }
+
+    /// <summary>
+    ///     Recognizes any <see cref="UnauthorizedAccessException" /> - Windows refused
+    ///     read/write access to one of TazUO's own files (profile data, logs, cache, etc).
+    ///     Not tied to a single call site, since this can be thrown from anywhere TazUO touches
+    ///     disk.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetFileAccessDeniedCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        if (e is not UnauthorizedAccessException)
+            return false;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("TazUO could not read or write one of its files because Windows denied access to it.");
+        sb.AppendLine("This is a Windows file permission issue, not a bug in TazUO or a corrupted file.");
+        sb.AppendLine();
+        sb.AppendLine("Suggested fixes:");
+        sb.AppendLine("1. Make sure TazUO is not installed directly on the C: drive root or inside a system folder like Program Files - move it to your Documents folder instead.");
+        sb.AppendLine("2. Right-click the TazUO folder -> Properties -> Security, and make sure your Windows user account has Full control.");
+        sb.AppendLine("3. Add the TazUO folder to your antivirus exclusions - some antivirus software locks files it is scanning.");
+        sb.AppendLine("4. Make sure no other program (a backup tool, cloud sync, another copy of TazUO) has the file open at the same time.");
+        sb.AppendLine("5. Try running TazUO as Administrator once to rule out a permissions problem.");
         fix = sb.ToString();
         return true;
     }
