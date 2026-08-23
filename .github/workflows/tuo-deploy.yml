@@ -66,6 +66,23 @@ jobs:
         with:
           dotnet-version: 10
 
+      - name: Inject Crash WebHook
+        shell: bash
+        env:
+          CRASH_WEBHOOK: ${{ secrets.CRASH_WEBHOOK }}
+        run: |
+          PY="$(command -v python3 || command -v python)"
+          "$PY" - <<'PYEOF'
+          import os
+          path = "src/ClassicUO.Client/Game/Managers/CrashReporter.cs"
+          with open(path) as f:
+              content = f.read()
+          old = 'public string WebHook { get; set; } = @"";'
+          new = 'public string WebHook { get; set; } = @"' + os.environ.get("CRASH_WEBHOOK", "") + '";'
+          assert old in content, "WebHook placeholder not found"
+          open(path, "w").write(content.replace(old, new))
+          PYEOF
+
       - name: Build executable
         run: dotnet publish ${{ env.CUO_PROJECT_PATH }} -c Release -o ${{ env.CUO_OUTPUT_PATH }} -r ${{ matrix.rid }}
 
