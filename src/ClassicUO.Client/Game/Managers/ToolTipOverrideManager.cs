@@ -1,17 +1,13 @@
 ﻿using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
-using ClassicUO.Game.UI.Gumps;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using System.Threading;
 using ClassicUO.Utility.Logging;
-using Microsoft.Xna.Framework;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Utility;
 
@@ -40,8 +36,8 @@ namespace ClassicUO.Game.Managers
         }
 
         /// <summary>
-        /// Position of this override within <see cref="TooltipOverridesConfig.Overrides"/>. This is a
-        /// runtime index derived from list position, not part of the persisted file.
+        /// Position of this override within its scope's list (<see cref="TooltipOverridesConfig.GetScope"/>).
+        /// This is a runtime index derived from list position, not part of the persisted file.
         /// </summary>
         [JsonIgnore]
         public int Index { get; set; }
@@ -70,12 +66,16 @@ namespace ClassicUO.Game.Managers
         [JsonIgnore]
         public bool IsNew { get; set; } = false;
 
-        public static ToolTipOverrideData Get(int index)
+        /// <summary>
+        /// Returns the override at <paramref name="index"/> in the given <paramref name="scope"/>'s list.
+        /// An out-of-range index creates a new default override, persists it into that scope and returns it.
+        /// </summary>
+        public static ToolTipOverrideData Get(int index, SettingsScope scope = SettingsScope.Char)
         {
             if (ProfileManager.CurrentProfile == null)
                 return null;
 
-            List<ToolTipOverrideData> overrides = TooltipOverridesConfig.Current.Overrides;
+            List<ToolTipOverrideData> overrides = TooltipOverridesConfig.Current.GetScope(scope).Overrides;
 
             if (index >= 0 && index < overrides.Count)
                 return overrides[index];
@@ -85,81 +85,83 @@ namespace ClassicUO.Game.Managers
             {
                 IsNew = true
             };
-            data.Save();
+            data.Save(scope);
             return data;
         }
 
-        public void Save()
+        public void Save(SettingsScope scope = SettingsScope.Char)
         {
             if (ProfileManager.CurrentProfile == null)
                 return;
 
-            TooltipOverridesConfig.Current.Upsert(this);
+            TooltipOverridesConfig.Current.GetScope(scope).Upsert(this);
         }
 
-        public void Delete()
+        public void Delete(SettingsScope scope = SettingsScope.Char)
         {
             if (Index < 0 || ProfileManager.CurrentProfile == null)
                 return;
 
-            TooltipOverridesConfig.Current.RemoveAt(Index);
+            TooltipOverridesConfig.Current.GetScope(scope).RemoveAt(Index);
         }
 
+        /// <summary>All overrides from every scope, most-specific first, used for tooltip processing.</summary>
         public static ToolTipOverrideData[] GetAllToolTipOverrides()
         {
-            if (ProfileManager.CurrentProfile == null)
-                return null;
-
-            return TooltipOverridesConfig.Current.Overrides.ToArray();
+            return TooltipOverridesConfig.Current.GetAllOverrides();
         }
 
-        public static void ExportOverrideSettings(World world)
+        /// <summary>Copies the given scope's tooltip overrides to the clipboard as JSON.</summary>
+        public static void ExportOverrideSettings(World world, SettingsScope scope)
         {
-            ToolTipOverrideData[] allData = GetAllToolTipOverrides();
-
-            UIManager.Add(new FileSelector(World.Instance, FileSelectorType.Directory, Environment.GetFolderPath(Environment.SpecialFolder.Desktop), ["*.json"], (p) =>
+            try
             {
-                if (!Directory.Exists(p))
+                ToolTipOverrideData[] allData = TooltipOverridesConfig.Current.GetScope(scope).Overrides.ToArray();
+                string json = JsonSerializer.Serialize(allData, ToolTipOverrideContext.Default.ToolTipOverrideDataArray);
+                Clipboard.SetClipboardText(json);
+                GameActions.Print(world, TazLang.Get("tooltipconfig_export_clipboard_success", "Copied tooltip overrides to clipboard"));
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.ToString());
+                GameActions.Print(world, TazLang.Get("tooltipconfig_export_error", "Failed to export tooltip overrides"), Constants.HUE_ERROR);
+            }
+        }
+
+        /// <summary>Imports tooltip overrides from the clipboard JSON, appending them to the given scope.</summary>
+        public static void ImportOverrideSettings(SettingsScope scope)
+        {
+            try
+            {
+                string json = Clipboard.GetClipboardText();
+
+                if (string.IsNullOrWhiteSpace(json))
                 {
-                    GameActions.Print(World.Instance, "Directory doesn't exist!", Constants.HUE_ERROR);
+                    GameActions.Print(World.Instance, TazLang.Get("tooltipconfig_import_clipboard_empty", "Clipboard is empty, nothing to import"), Constants.HUE_ERROR);
                     return;
                 }
 
-                string result = JsonSerializer.Serialize(allData, ToolTipOverrideContext.Default.ToolTipOverrideDataArray);
-                string path = Path.Combine(p, "tooltip_overrides.json");
-                if (FileSystemHelper.WriteAllTextSafe(path, result))
-                    GameActions.Print(World.Instance, $"The override file has been saved to [{path}]");
-                else
-                    GameActions.Print(World.Instance, "Failed to save the override file!", Constants.HUE_ERROR);
+                ToolTipOverrideData[] imported = JsonSerializer.Deserialize(json, ToolTipOverrideContext.Default.ToolTipOverrideDataArray);
 
-            }));
+                if (imported == null)
+                {
+                    GameActions.Print(World.Instance, TazLang.Get("tooltipconfig_import_error", "Failed to import tooltip overrides"), Constants.HUE_ERROR);
+                    return;
+                }
+
+                List<ToolTipOverrideData> overrides = TooltipOverridesConfig.Current.GetScope(scope).Overrides;
+
+                foreach (ToolTipOverrideData importedData in imported)
+                    new ToolTipOverrideData(overrides.Count, importedData.SearchText, importedData.FormattedText, importedData.Min1, importedData.Max1, importedData.Min2, importedData.Max2, (byte)importedData.ItemLayer, importedData.BorderHue).Save(scope);
+
+                GameActions.Print(World.Instance, string.Format(TazLang.Get("tooltipconfig_import_clipboard_success", "Imported {0} tooltip overrides!"), imported.Length));
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.ToString());
+                GameActions.Print(World.Instance, TazLang.Get("tooltipconfig_import_error", "Failed to import tooltip overrides"), Constants.HUE_ERROR);
+            }
         }
-
-        public static void ImportOverrideSettings() => UIManager.Add(new FileSelector(World.Instance, FileSelectorType.File, Environment.GetFolderPath(Environment.SpecialFolder.Desktop), ["*.json"], (p) =>
-                                                                {
-                                                                    if (!File.Exists(p))
-                                                                    {
-                                                                        GameActions.Print(World.Instance, "File doesn't exist!", Constants.HUE_ERROR);
-                                                                        return;
-                                                                    }
-
-                                                                    try
-                                                                    {
-                                                                        string result = File.ReadAllText(p);
-
-                                                                        ToolTipOverrideData[] imported = JsonSerializer.Deserialize(result, ToolTipOverrideContext.Default.ToolTipOverrideDataArray);
-
-                                                                        foreach (ToolTipOverrideData importedData in imported)
-                                                                            new ToolTipOverrideData(TooltipOverridesConfig.Current.Overrides.Count, importedData.SearchText, importedData.FormattedText, importedData.Min1, importedData.Max1, importedData.Min2, importedData.Max2, (byte)importedData.ItemLayer, importedData.BorderHue).Save();
-
-                                                                        GameActions.Print(World.Instance, $"Imported {imported.Length} tooltip overrides!");
-                                                                    }
-                                                                    catch (System.Exception e)
-                                                                    {
-                                                                        Log.Error(e.ToString());
-                                                                        GameActions.Print(World.Instance, "It looks like there was an error trying to import your override settings.", Constants.HUE_ERROR);
-                                                                    }
-                                                                }));
 
         private static string DecodeUnicodeEscapes(string input)
         {
@@ -460,7 +462,7 @@ namespace ClassicUO.Game.Managers
             {
                 try
                 {
-                    return Regex.IsMatch(property, match.Substring(1));
+                    return RegexHelper.GetRegex(match.Substring(1)).IsMatch(property);
                 }
                 catch
                 {

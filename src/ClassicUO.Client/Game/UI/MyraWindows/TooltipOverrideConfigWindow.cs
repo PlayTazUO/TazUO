@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
@@ -21,6 +20,15 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
     private static readonly Array LayerValues = Enum.GetValues(typeof(TooltipLayers));
     private static readonly string[] LayerNames = Enum.GetNames(typeof(TooltipLayers));
 
+    // Listed most-specific first; Character is the default scope the window opens on.
+    private static readonly SettingsScope[] ScopeValues =
+    [
+        SettingsScope.Char,
+        SettingsScope.Account,
+        SettingsScope.Server,
+        SettingsScope.Global
+    ];
+
     private readonly World _world;
     private readonly VerticalStackPanel _detailPanel = new() { Spacing = MyraStyle.STANDARD_SPACING };
 
@@ -34,6 +42,7 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
     private MyraLabel _statusLabel = null!;
     private DateTime _statusUntil = DateTime.MinValue;
     private bool _suppressComboEvent;
+    private SettingsScope _selectedScope = SettingsScope.Char;
     private int _selectedIndex = -1;
 
     public TooltipOverrideConfigWindow(World world) : base(TazLang.Get("tooltipconfig_title", "Tooltip Override Configuration"))
@@ -91,10 +100,10 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
         var toolbar = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
 
         toolbar.Widgets.Add(new MyraButton(TazLang.Get("tooltipconfig_export", "Export"),
-            () => ToolTipOverrideData.ExportOverrideSettings(_world)));
+            () => ToolTipOverrideData.ExportOverrideSettings(_world, _selectedScope)));
         toolbar.Widgets.Add(new MyraButton(TazLang.Get("tooltipconfig_import", "Import"), () =>
         {
-            ToolTipOverrideData.ImportOverrideSettings();
+            ToolTipOverrideData.ImportOverrideSettings(_selectedScope);
             RefreshCombo(_selectedIndex);
         }));
         toolbar.Widgets.Add(new MyraButton(TazLang.Get("tooltipconfig_refresh", "Refresh"), () => RefreshCombo(_selectedIndex)));
@@ -116,6 +125,11 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
     private Widget BuildListPanel()
     {
         var panel = new VerticalStackPanel { Spacing = 4, MinWidth = 200 };
+
+        var scopeRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+        scopeRow.Widgets.Add(new MyraLabel(TazLang.Get("tooltipconfig_scope", "Scope:"), MyraLabel.TextStyle.P));
+        scopeRow.Widgets.Add(BuildScopeSelector());
+        panel.Widgets.Add(scopeRow);
 
         panel.Widgets.Add(new MyraLabel(TazLang.Get("tooltipconfig2_list", "Overrides"), MyraLabel.TextStyle.H3));
 
@@ -168,6 +182,39 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
     }
 
     /// <summary>
+    /// Combo choosing which scope's overrides are listed and edited. Switching scope reloads the list,
+    /// which in turn rebuilds the detail panel.
+    /// </summary>
+    private Widget BuildScopeSelector()
+    {
+        var combo = new ComboView { MinWidth = 130, VerticalAlignment = VerticalAlignment.Center };
+
+        foreach (SettingsScope scope in ScopeValues)
+            combo.ListView.Widgets.Add(new Myra.Graphics2D.UI.Label { Text = ScopeName(scope) });
+
+        combo.ListView.SelectedIndex = Array.IndexOf(ScopeValues, _selectedScope);
+        combo.ListView.SelectedIndexChanged += (_, _) =>
+        {
+            if (combo.ListView.SelectedIndex is not int idx || idx < 0 || idx >= ScopeValues.Length)
+                return;
+
+            _selectedScope = ScopeValues[idx];
+            RefreshCombo(-1);
+        };
+
+        return combo;
+    }
+
+    private static string ScopeName(SettingsScope scope) => scope switch
+    {
+        SettingsScope.Char => TazLang.Get("tooltipconfig_scope_char", "Character"),
+        SettingsScope.Account => TazLang.Get("tooltipconfig_scope_account", "Account"),
+        SettingsScope.Server => TazLang.Get("tooltipconfig_scope_server", "Server"),
+        SettingsScope.Global => TazLang.Get("tooltipconfig_scope_global", "Global"),
+        _ => scope.ToString()
+    };
+
+    /// <summary>
     /// Repopulates the override combo, restoring the selection to <paramref name="selectIndex"/>
     /// (clamped to the list, defaulting to the first entry when it is out of range) and rebuilding
     /// the detail panel for it.
@@ -177,7 +224,7 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
         _suppressComboEvent = true;
         _overrideCombo.ListView.Widgets.Clear();
 
-        int count = ProfileManager.CurrentProfile == null ? 0 : TooltipOverridesConfig.Current.Overrides.Count;
+        int count = ProfileManager.CurrentProfile == null ? 0 : TooltipOverridesConfig.Current.GetScope(_selectedScope).Overrides.Count;
 
         if (count == 0)
         {
@@ -189,7 +236,7 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
 
         for (int i = 0; i < count; i++)
         {
-            string label = ToolTipOverrideData.Get(i).SearchText;
+            string label = ToolTipOverrideData.Get(i, _selectedScope).SearchText;
             if (string.IsNullOrWhiteSpace(label))
                 label = $"Override {i + 1}";
             _overrideCombo.ListView.Widgets.Add(new Myra.Graphics2D.UI.Label { Text = label });
@@ -209,8 +256,10 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
     {
         _detailPanel.Widgets.Clear();
 
-        if (_selectedIndex < 0 || ProfileManager.CurrentProfile == null ||
-            _selectedIndex >= TooltipOverridesConfig.Current.Overrides.Count)
+        ITooltipOverridesScopedSave? scoped = ProfileManager.CurrentProfile == null ? null : TooltipOverridesConfig.Current.GetScope(_selectedScope);
+
+        if (_selectedIndex < 0 || scoped == null ||
+            _selectedIndex >= scoped.Overrides.Count)
         {
             _deleteButton.Enabled = false;
             _moveUpButton.Enabled = false;
@@ -224,8 +273,11 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
 
         _deleteButton.Enabled = true;
         _moveUpButton.Enabled = _selectedIndex > 0;
-        _moveDownButton.Enabled = _selectedIndex < TooltipOverridesConfig.Current.Overrides.Count - 1;
-        var data = ToolTipOverrideData.Get(_selectedIndex);
+        _moveDownButton.Enabled = _selectedIndex < scoped.Overrides.Count - 1;
+        var data = ToolTipOverrideData.Get(_selectedIndex, _selectedScope);
+
+        // Captured so the edit callbacks persist back to the scope being edited.
+        SettingsScope scope = _selectedScope;
 
         var searchBox = new MyraInputBox
         {
@@ -240,7 +292,7 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
                 return;
 
             data.SearchText = searchBox.Text;
-            data.Save();
+            data.Save(scope);
 
             if (_overrideCombo.ListView.SelectedItem is Myra.Graphics2D.UI.Label item)
                 item.Text = data.SearchText;
@@ -263,7 +315,7 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
         formatBox.TextChangedByUser += (_, _) =>
         {
             data.FormattedText = formatBox.Text ?? "";
-            data.Save();
+            data.Save(scope);
             ShowSaved();
         };
         var formatRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
@@ -283,8 +335,8 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
         firstValueRow.Widgets.Add(new MyraLabel(
             TazLang.Get("tooltipconfig2_firstvalue"),
             MyraLabel.TextStyle.P));
-        firstValueRow.Widgets.Add(NumericBox(data.Min1, v => { data.Min1 = v; data.Save(); ShowSaved(); }));
-        firstValueRow.Widgets.Add(NumericBox(data.Max1, v => { data.Max1 = v; data.Save(); ShowSaved(); }));
+        firstValueRow.Widgets.Add(NumericBox(data.Min1, v => { data.Min1 = v; data.Save(scope); ShowSaved(); }));
+        firstValueRow.Widgets.Add(NumericBox(data.Max1, v => { data.Max1 = v; data.Save(scope); ShowSaved(); }));
         ranges.Widgets.Add(firstValueRow);
 
         var secondValueRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
@@ -292,8 +344,8 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
         secondValueRow.Widgets.Add(new MyraLabel(
             TazLang.Get("tooltipconfig2_secondvalue"),
             MyraLabel.TextStyle.P));
-        secondValueRow.Widgets.Add(NumericBox(data.Min2, v => { data.Min2 = v; data.Save(); ShowSaved(); }));
-        secondValueRow.Widgets.Add(NumericBox(data.Max2, v => { data.Max2 = v; data.Save(); ShowSaved(); }));
+        secondValueRow.Widgets.Add(NumericBox(data.Min2, v => { data.Min2 = v; data.Save(scope); ShowSaved(); }));
+        secondValueRow.Widgets.Add(NumericBox(data.Max2, v => { data.Max2 = v; data.Save(scope); ShowSaved(); }));
         ranges.Widgets.Add(secondValueRow);
         _detailPanel.Widgets.Add(ranges);
 
@@ -301,13 +353,13 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
         layerRow.Widgets.Add(new MyraLabel(
             TazLang.Get("tooltipconfig2_matchinglayer"),
             MyraLabel.TextStyle.P));
-        layerRow.Widgets.Add(BuildLayerCombo(data));
+        layerRow.Widgets.Add(BuildLayerCombo(data, scope));
         _detailPanel.Widgets.Add(layerRow);
 
-        _detailPanel.Widgets.Add(BuildBorderColor(data));
+        _detailPanel.Widgets.Add(BuildBorderColor(data, scope));
     }
 
-    private Widget BuildBorderColor(ToolTipOverrideData data)
+    private Widget BuildBorderColor(ToolTipOverrideData data, SettingsScope scope)
     {
         var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
 
@@ -328,7 +380,7 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
             UIManager.Add(new Gumps.ModernColorPicker(World.Instance, newHue =>
             {
                 data.BorderHue = newHue;
-                data.Save();
+                data.Save(scope);
                 swatch.SetColorByHue(newHue);
                 swatch.Tooltip = BorderSwatchTooltip(data);
                 ShowSaved();
@@ -339,7 +391,7 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
         MyraButton clear = new(TazLang.Get("tooltipconfig_bordercolor_clear"), () =>
         {
             data.BorderHue = -1;
-            data.Save();
+            data.Save(scope);
             swatch.SetColorByHue(0);
             swatch.Tooltip = BorderSwatchTooltip(data);
             ShowSaved();
@@ -374,7 +426,7 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
         return box;
     }
 
-    private Widget BuildLayerCombo(ToolTipOverrideData data)
+    private Widget BuildLayerCombo(ToolTipOverrideData data, SettingsScope scope)
     {
         var combo = new ComboView { MinWidth = 130, VerticalAlignment = VerticalAlignment.Center };
 
@@ -388,7 +440,7 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
                 return;
 
             data.ItemLayer = (TooltipLayers)LayerValues.GetValue(idx)!;
-            data.Save();
+            data.Save(scope);
             ShowSaved();
         };
 
@@ -401,9 +453,10 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
             return;
 
         // Requesting the next (out-of-range) index makes ToolTipOverrideData create and persist a
-        // new default entry, which the refresh then selects for editing.
-        int next = TooltipOverridesConfig.Current.Overrides.Count;
-        ToolTipOverrideData.Get(next);
+        // new default entry in the selected scope, which the refresh then selects for editing.
+        ITooltipOverridesScopedSave scoped = TooltipOverridesConfig.Current.GetScope(_selectedScope);
+        int next = scoped.Overrides.Count;
+        ToolTipOverrideData.Get(next, _selectedScope);
         RefreshCombo(next);
     }
 
@@ -412,11 +465,11 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
         if (_selectedIndex < 0 || ProfileManager.CurrentProfile == null)
             return;
 
-        List<ToolTipOverrideData> overrides = TooltipOverridesConfig.Current.Overrides;
-        if (_selectedIndex >= overrides.Count)
+        ITooltipOverridesScopedSave scoped = TooltipOverridesConfig.Current.GetScope(_selectedScope);
+        if (_selectedIndex >= scoped.Overrides.Count)
             return;
 
-        overrides[_selectedIndex].Delete();
+        scoped.RemoveAt(_selectedIndex);
         RefreshCombo(_selectedIndex);
     }
 
@@ -425,11 +478,11 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
         if (_selectedIndex < 0 || ProfileManager.CurrentProfile == null)
             return;
 
-        List<ToolTipOverrideData> overrides = TooltipOverridesConfig.Current.Overrides;
-        if (_selectedIndex >= overrides.Count)
+        ITooltipOverridesScopedSave scoped = TooltipOverridesConfig.Current.GetScope(_selectedScope);
+        if (_selectedIndex >= scoped.Overrides.Count)
             return;
 
-        TooltipOverridesConfig.Current.Move(_selectedIndex, delta);
+        scoped.Move(_selectedIndex, delta);
         RefreshCombo(_selectedIndex + delta);
     }
 
@@ -443,16 +496,17 @@ public sealed class TooltipOverrideConfigWindow : MyraControl
                 if (!ok)
                     return;
 
-                ClearAll();
+                SettingsScope scope = _selectedScope;
+                ClearAll(scope);
                 RefreshCombo(-1);
             });
 
-    private static void ClearAll()
+    private static void ClearAll(SettingsScope scope)
     {
         if (ProfileManager.CurrentProfile == null)
             return;
 
-        TooltipOverridesConfig.Current.Clear();
+        TooltipOverridesConfig.Current.GetScope(scope).Clear();
     }
 
     private void ShowSaved()
