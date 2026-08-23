@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Legion
+* Added a `sortby` parameter to `API.GetAllMobiles()`, supporting `Distance`, `Hits`, and `MaxHits` (case insensitive, defaults to `Distance`)
+
 ### Features
 * Added max option to autoloot (autoloot up to x amt in your destination bag)
 * Added a new overlay system event trigger - Buff/Debuff - [P.R 974](https://github.com/PlayTazUO/TazUO/pull/974) ([yuval-po](https://github.com/yuval-po))

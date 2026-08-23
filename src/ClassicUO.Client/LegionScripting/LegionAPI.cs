@@ -3795,13 +3795,16 @@ namespace ClassicUO.LegionScripting
         /// nearby_humans = API.GetAllMobiles(400, 5)
         /// # Get all enemies (murderers and criminals) within 15 tiles
         /// enemies = API.GetAllMobiles(distance=15, notoriety=[API.Notoriety.Murderer, API.Notoriety.Criminal])
+        /// # Get all mobiles sorted by current hits, lowest first
+        /// sorted_by_hits = API.GetAllMobiles(sortby="hits")
         /// ```
         /// </summary>
         /// <param name="graphic">Optional graphic ID to filter by</param>
         /// <param name="distance">Optional maximum distance from player</param>
         /// <param name="notoriety">Optional list of notoriety flags to filter by</param>
+        /// <param name="sortby">Sort order, case insensitive: "Distance", "Hits" or "MaxHits". Defaults to "Distance".</param>
         /// <returns></returns>
-        public ApiMobile[] GetAllMobiles(ushort? graphic = null, int? distance = null, IList<Notoriety> notoriety = null) => BubblingOnMain(() =>
+        public ApiMobile[] GetAllMobiles(ushort? graphic = null, int? distance = null, IList<Notoriety> notoriety = null, string sortby = "Distance") => BubblingOnMain(() =>
         {
             IEnumerable<Mobile> mobiles = World.Mobiles.Values.AsEnumerable();
 
@@ -3816,6 +3819,13 @@ namespace ClassicUO.LegionScripting
                 Notoriety[] requestedNotoriety = Utility.ConvertNotorietyOrThrow(notoriety);
                 mobiles = mobiles.Where(m => requestedNotoriety.Contains((Notoriety)(byte)m.NotorietyFlag));
             }
+
+            mobiles = sortby.Trim().ToLowerInvariant() switch
+            {
+                "hits" => mobiles.OrderBy(m => m.Hits),
+                "maxhits" => mobiles.OrderBy(m => m.HitsMax),
+                _ => mobiles.OrderBy(m => m.Distance),
+            };
 
             return mobiles.Select(m => new ApiMobile(m)).ToArray();
         });
