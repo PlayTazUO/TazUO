@@ -2,7 +2,7 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## In Development
+## 5.31.2
 
 ### Legion
 * Added a `sortby` parameter to `API.GetAllMobiles()`, supporting `Distance`, `Hits`, and `MaxHits` (case insensitive, defaults to `Distance`)
