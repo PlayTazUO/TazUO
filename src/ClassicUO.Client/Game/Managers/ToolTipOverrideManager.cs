@@ -9,9 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using System.Threading;
 using ClassicUO.Utility.Logging;
-using Microsoft.Xna.Framework;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Utility;
 
@@ -460,7 +458,7 @@ namespace ClassicUO.Game.Managers
             {
                 try
                 {
-                    return Regex.IsMatch(property, match.Substring(1));
+                    return RegexHelper.GetRegex(match.Substring(1)).IsMatch(property);
                 }
                 catch
                 {
