@@ -812,8 +812,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                     if (party == null)
                     {
-                        int x = Client.Game.Window.ClientBounds.Width / 2 - 272;
-                        int y = Client.Game.Window.ClientBounds.Height / 2 - 240;
+                        int x = ScaleHelper.LogicalWindowWidth / 2 - 272;
+                        int y = ScaleHelper.LogicalWindowHeight / 2 - 240;
                         UIManager.Add(new PartyGump(world, x, y, World.Party.CanLoot));
                     }
                     else

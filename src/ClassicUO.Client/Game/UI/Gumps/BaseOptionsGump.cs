@@ -2257,9 +2257,9 @@ public class BaseOptionsGump : Gump
                 {
                     comboY = 0;
                 }
-                else if (comboY + _maxHeight > Client.Game.Window.ClientBounds.Height)
+                else if (comboY + _maxHeight > ScaleHelper.LogicalWindowHeight)
                 {
-                    comboY = Client.Game.Window.ClientBounds.Height - _maxHeight;
+                    comboY = ScaleHelper.LogicalWindowHeight - _maxHeight;
                 }
 
                 UIManager.Add(new ComboboxGump(world, ScreenCoordinateX, comboY, Width, _maxHeight, _sortedItems, _originalIndices, this));

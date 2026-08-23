@@ -753,8 +753,8 @@ public class WorldMapGump : ResizableGump
         if (_isFullscreen)
         {
             // Keep the map filling the client window if it gets resized while fullscreen.
-            int targetW = Client.Game.Window.ClientBounds.Width;
-            int targetH = Client.Game.Window.ClientBounds.Height;
+            int targetW = ScaleHelper.LogicalWindowWidth;
+            int targetH = ScaleHelper.LogicalWindowHeight;
 
             if (Width != targetW || Height != targetH || X != 0 || Y != 0)
             {
@@ -4109,7 +4109,7 @@ public class WorldMapGump : ResizableGump
 
             X = 0;
             Y = 0;
-            ApplySize(Client.Game.Window.ClientBounds.Width, Client.Game.Window.ClientBounds.Height);
+            ApplySize(ScaleHelper.LogicalWindowWidth, ScaleHelper.LogicalWindowHeight);
         }
         else
         {

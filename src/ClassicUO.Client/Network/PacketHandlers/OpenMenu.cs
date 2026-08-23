@@ -1,5 +1,6 @@
 using ClassicUO.Game;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
@@ -57,8 +58,8 @@ internal static class OpenMenu
         {
             var gump = new GrayMenuGump(world, serial, id, name)
             {
-                X = (Client.Game.Window.ClientBounds.Width >> 1) - 200,
-                Y = (Client.Game.Window.ClientBounds.Height >> 1) - ((121 + count * 21) >> 1)
+                X = (ScaleHelper.LogicalWindowWidth >> 1) - 200,
+                Y = (ScaleHelper.LogicalWindowHeight >> 1) - ((121 + count * 21) >> 1)
             };
 
             int offsetY = 35 + gump.Height;
