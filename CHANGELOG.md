@@ -21,6 +21,7 @@ All notable changes to TazUO will be recorded here.
 * The classic journal gump (JournalGump) now respects the "Hide journal timestamps" setting, which was moved from per-profile to machine-wide (global) settings
 
 ### Fixes
+* Fix a rare crash fix on periphial input before profiles have been loaded
 * Fixed incorrect rendering of partially-hued textures in Myra components - [P.R 989](https://github.com/PlayTazUO/TazUO/pull/989) ([yuval-po](https://github.com/yuval-po))
 * Improved erratic ToggleMount/Mount/Dismount macro behavior - [P.R 982](https://github.com/PlayTazUO/TazUO/pull/982) ([yuval-po](https://github.com/yuval-po))
 * Tooltip overrides should no long show a long number like -1.797673xxxxxxxxxxxx randomly
