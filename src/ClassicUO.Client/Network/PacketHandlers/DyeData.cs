@@ -1,6 +1,7 @@
 using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
 using ClassicUO.Network;
@@ -18,8 +19,8 @@ internal static class DyeData
 
         ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x0906);
 
-        int x = (Client.Game.Window.ClientBounds.Width >> 1) - (gumpInfo.UV.Width >> 1);
-        int y = (Client.Game.Window.ClientBounds.Height >> 1) - (gumpInfo.UV.Height >> 1);
+        int x = (ScaleHelper.LogicalWindowWidth >> 1) - (gumpInfo.UV.Width >> 1);
+        int y = (ScaleHelper.LogicalWindowHeight >> 1) - (gumpInfo.UV.Height >> 1);
 
         if (ProfileManager.GlobalSettings.UseModernColorPicker)
         {

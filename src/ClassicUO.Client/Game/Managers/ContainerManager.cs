@@ -8,6 +8,7 @@ using System.IO;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
@@ -93,7 +94,7 @@ namespace ClassicUO.Game.Managers
                                 break;
 
                             case 1:
-                                X = Client.Game.Window.ClientBounds.Width - width;
+                                X = ScaleHelper.LogicalWindowWidth - width;
                                 Y = 0;
 
                                 break;
@@ -114,12 +115,12 @@ namespace ClassicUO.Game.Managers
                                 break;
                         }
 
-                        if (X + width > Client.Game.Window.ClientBounds.Width)
+                        if (X + width > ScaleHelper.LogicalWindowWidth)
                         {
                             X -= width;
                         }
 
-                        if (Y + height > Client.Game.Window.ClientBounds.Height)
+                        if (Y + height > ScaleHelper.LogicalWindowHeight)
                         {
                             Y -= height;
                         }
@@ -132,14 +133,14 @@ namespace ClassicUO.Game.Managers
                         {
                             if (
                                 X + width + Constants.CONTAINER_RECT_STEP
-                                > Client.Game.Window.ClientBounds.Width
+                                > ScaleHelper.LogicalWindowWidth
                             )
                             {
                                 X = Constants.CONTAINER_RECT_DEFAULT_POSITION;
 
                                 if (
                                     Y + height + Constants.CONTAINER_RECT_LINESTEP
-                                    > Client.Game.Window.ClientBounds.Height
+                                    > ScaleHelper.LogicalWindowHeight
                                 )
                                 {
                                     Y = Constants.CONTAINER_RECT_DEFAULT_POSITION;
@@ -151,12 +152,12 @@ namespace ClassicUO.Game.Managers
                             }
                             else if (
                                 Y + height + Constants.CONTAINER_RECT_STEP
-                                > Client.Game.Window.ClientBounds.Height
+                                > ScaleHelper.LogicalWindowHeight
                             )
                             {
                                 if (
                                     X + width + Constants.CONTAINER_RECT_LINESTEP
-                                    > Client.Game.Window.ClientBounds.Width
+                                    > ScaleHelper.LogicalWindowWidth
                                 )
                                 {
                                     X = Constants.CONTAINER_RECT_DEFAULT_POSITION;

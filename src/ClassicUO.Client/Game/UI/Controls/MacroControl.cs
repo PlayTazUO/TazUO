@@ -445,8 +445,8 @@ namespace ClassicUO.Game.UI.Controls
 
             if (btnEditorGump == null)
             {
-                int posX = (Client.Game.Window.ClientBounds.Width >> 1) - 300;
-                int posY = (Client.Game.Window.ClientBounds.Height >> 1) - 250;
+                int posX = (ScaleHelper.LogicalWindowWidth >> 1) - 300;
+                int posY = (ScaleHelper.LogicalWindowHeight >> 1) - 250;
                 if (position.HasValue)
                 {
                     posX = (int)position.Value.X;

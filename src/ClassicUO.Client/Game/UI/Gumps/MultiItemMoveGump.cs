@@ -25,7 +25,7 @@ namespace ClassicUO.Game.UI.Gumps
         public static void ShowNextTo(Control anchor, int padding = -2)
         {
             int w = PreferredWidth;
-            int screenH = Client.Game.Window.ClientBounds.Height;
+            int screenH = ScaleHelper.LogicalWindowHeight;
 
             int x = anchor.X >= w + padding
                 ? anchor.X - (w + padding)           // left of anchor

@@ -225,8 +225,8 @@ namespace ClassicUO.Game.UI.Gumps
                     }
 
                     // Enforce maximum size based on current position
-                    int maxW = Client.Game.Window.ClientBounds.Width - _scene.Camera.Bounds.X - BORDER_WIDTH;
-                    int maxH = Client.Game.Window.ClientBounds.Height - _scene.Camera.Bounds.Y - BORDER_WIDTH;
+                    int maxW = ScaleHelper.LogicalWindowWidth - _scene.Camera.Bounds.X - BORDER_WIDTH;
+                    int maxH = ScaleHelper.LogicalWindowHeight - _scene.Camera.Bounds.Y - BORDER_WIDTH;
 
                     if (w > maxW)
                     {
@@ -294,8 +294,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void ClampViewportToWindowBounds()
         {
-            int windowWidth = Client.Game.Window.ClientBounds.Width;
-            int windowHeight = Client.Game.Window.ClientBounds.Height;
+            int windowWidth = ScaleHelper.LogicalWindowWidth;
+            int windowHeight = ScaleHelper.LogicalWindowHeight;
 
             // Check if we're in full-size mode
             bool isFullSize = ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.GameWindowFullSize;
@@ -392,8 +392,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         public Point ResizeGameWindow(Point newSize)
         {
-            int windowWidth = Client.Game.Window.ClientBounds.Width;
-            int windowHeight = Client.Game.Window.ClientBounds.Height;
+            int windowWidth = ScaleHelper.LogicalWindowWidth;
+            int windowHeight = ScaleHelper.LogicalWindowHeight;
 
             // Enforce minimum size
             if (newSize.X < 640)

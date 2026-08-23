@@ -176,13 +176,18 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void SetInScreen()
         {
-            Rectangle windowBounds = Client.Game.Window.ClientBounds;
+            // Gump coordinates live in logical UI space; clamp against the logical window bounds so
+            // the dead space revealed by a scale-down (scale < 1) stays usable for gump placement.
+            // The physical window bounds are RenderScale smaller than the logical ones in that case,
+            // so clamping to them would trap gumps inside the shrunken world view.
+            int windowWidth = ScaleHelper.LogicalWindowWidth;
+            int windowHeight = ScaleHelper.LogicalWindowHeight;
 
             int halfWidth = Width / 2;
             int halfHeight = Height / 2;
 
-            int newX = (int)MathHelper.Clamp(X, -halfWidth, windowBounds.Width - halfWidth);
-            int newY = (int)MathHelper.Clamp(Y, -halfHeight, windowBounds.Height - halfHeight);
+            int newX = (int)MathHelper.Clamp(X, -halfWidth, windowWidth - halfWidth);
+            int newY = (int)MathHelper.Clamp(Y, -halfHeight, windowHeight - halfHeight);
 
             X = newX;
             Y = newY;
@@ -223,14 +228,14 @@ namespace ClassicUO.Game.UI.Gumps
                 position.Y = -halfHeight;
             }
 
-            if (X > Client.Game.Window.ClientBounds.Width - (Width - halfWidth))
+            if (X > ScaleHelper.LogicalWindowWidth - (Width - halfWidth))
             {
-                position.X = Client.Game.Window.ClientBounds.Width - (Width - halfWidth);
+                position.X = ScaleHelper.LogicalWindowWidth - (Width - halfWidth);
             }
 
-            if (Y > Client.Game.Window.ClientBounds.Height - (Height - halfHeight))
+            if (Y > ScaleHelper.LogicalWindowHeight - (Height - halfHeight))
             {
-                position.Y = Client.Game.Window.ClientBounds.Height - (Height - halfHeight);
+                position.Y = ScaleHelper.LogicalWindowHeight - (Height - halfHeight);
             }
 
             Location = position;

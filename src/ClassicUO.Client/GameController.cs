@@ -464,7 +464,7 @@ namespace ClassicUO
 
             if (viewport != null && ProfileManager.CurrentProfile.GameWindowFullSize)
             {
-                viewport.ResizeGameWindow(new Point(width, height));
+                viewport.ResizeGameWindow(new Point(ScaleHelper.LogicalWindowWidth, ScaleHelper.LogicalWindowHeight));
                 viewport.X = -5;
                 viewport.Y = -5;
             }
@@ -635,21 +635,31 @@ namespace ClassicUO
         /// <summary>
         /// Draws the tiled window background (behind the world and all gumps) using the configured
         /// <see cref="Profile.MainWindowBackgroundHue"/>. Sets a full-window viewport so it fills the
-        /// whole target regardless of any camera viewport the caller had active. Must be called while
-        /// the intended render target is bound.
+        /// whole target regardless of any camera viewport the caller had active. When the screen
+        /// target is larger than the back buffer (scale-down dead space) the background covers it
+        /// all, so the extended area isn't left as garbage/black. Must be called while the intended
+        /// render target is bound.
         /// </summary>
         public void DrawWindowBackground(UltimaBatcher2D batcher)
         {
-            GraphicsDevice.Viewport = new Viewport(bufferRect);
+            Rectangle bounds = _useScreenRenderTarget && _screenRenderTarget != null && !_screenRenderTarget.IsDisposed
+                ? _screenRenderTarget.Bounds
+                : bufferRect;
+
+            GraphicsDevice.Viewport = new Viewport(bounds);
             batcher.Begin();
-            batcher.DrawTiled(_background, bufferRect, _background.Bounds, bgHueShader);
+            batcher.DrawTiled(_background, bounds, _background.Bounds, bgHueShader);
             batcher.End();
         }
 
         private void EnsureScreenRenderTarget()
         {
-            int width = GraphicManager.PreferredBackBufferWidth;
-            int height = GraphicManager.PreferredBackBufferHeight;
+            // When scaled down, the reachable logical area (window / RenderScale) is larger than
+            // the back buffer. Size the target to cover it so gumps/UI can be placed in what would
+            // otherwise be dead space on the right/bottom. At scale >= 1 the logical area fits
+            // inside the back buffer, so the target stays back-buffer sized (upscaling crops).
+            int width = Math.Max(GraphicManager.PreferredBackBufferWidth, ScaleHelper.LogicalWindowWidth);
+            int height = Math.Max(GraphicManager.PreferredBackBufferHeight, ScaleHelper.LogicalWindowHeight);
 
             // Sanity check dimensions
             if (width <= 0 || height <= 0)
@@ -840,7 +850,7 @@ namespace ClassicUO
             {
                 if (ProfileManager.CurrentProfile.GameWindowFullSize)
                 {
-                    viewport.ResizeGameWindow(new Point(width, height));
+                    viewport.ResizeGameWindow(new Point(ScaleHelper.LogicalWindowWidth, ScaleHelper.LogicalWindowHeight));
                     viewport.X = 0;
                     viewport.Y = 0;
                 }

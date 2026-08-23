@@ -1,4 +1,5 @@
-﻿using ClassicUO.Game.UI.Controls;
+﻿using System;
+using ClassicUO.Game.UI.Controls;
 using ClassicUO.Renderer;
 
 namespace ClassicUO.Game.UI.Gumps
@@ -79,18 +80,18 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 x = 0;
             }
-            else if (x > Client.Game.Window.ClientBounds.Width - z_width)
+            else if (x > ScaleHelper.LogicalWindowWidth - z_width)
             {
-                x = Client.Game.Window.ClientBounds.Width - z_width;
+                x = Math.Max(0, ScaleHelper.LogicalWindowWidth - z_width);
             }
 
             if (y < 0)
             {
                 y = 0;
             }
-            else if (y > Client.Game.Window.ClientBounds.Height - z_height)
+            else if (y > ScaleHelper.LogicalWindowHeight - z_height)
             {
-                y = Client.Game.Window.ClientBounds.Height - z_height;
+                y = Math.Max(0, ScaleHelper.LogicalWindowHeight - z_height);
             }
 
             SSX = x - 4;
