@@ -51,14 +51,31 @@ jobs:
           git config --global url."https://".insteadOf git://
           git submodule update --init --recursive
 
-      - name: Extract Version
-        if: ${{ strategy.job-index == 0 }}
+      - name: Compute Version
         shell: bash
-        id: version
         run: |
           export LC_ALL=C.UTF-8
-          VERSION=$(grep -oP '<AssemblyVersion>\K\d+\.\d+\.\d+' src/ClassicUO.Client/ClassicUO.Client.csproj)
+          VERSION="$(date -u +%y).$(date -u +%m%d).${{ github.run_number }}"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          PY="$(command -v python3 || command -v python)"
+          "$PY" - <<'PYEOF'
+          import os
+          import re
+          path = "src/ClassicUO.Client/ClassicUO.Client.csproj"
+          version = os.environ["VERSION"]
+          with open(path) as f:
+              content = f.read()
+          content = re.sub(r"<AssemblyVersion>.*?</AssemblyVersion>", f"<AssemblyVersion>{version}</AssemblyVersion>", content, count=1)
+          content = re.sub(r"<FileVersion>.*?</FileVersion>", f"<FileVersion>{version}</FileVersion>", content, count=1)
+          with open(path, "w") as f:
+              f.write(content)
+          PYEOF
+
+      - name: Set Version Output
+        if: ${{ strategy.job-index == 0 }}
+        id: version
+        shell: bash
+        run: |
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Setup .NET 10
@@ -85,6 +102,11 @@ jobs:
 
       - name: Build executable
         run: dotnet publish ${{ env.CUO_PROJECT_PATH }} -c Release -o ${{ env.CUO_OUTPUT_PATH }} -r ${{ matrix.rid }}
+
+      - name: Write version file
+        shell: bash
+        run: |
+          echo "$VERSION" > "${{ env.CUO_OUTPUT_PATH }}/v.txt"
 
       - name: Zip all builds
         shell: bash
