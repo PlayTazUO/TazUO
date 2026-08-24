@@ -176,17 +176,15 @@ namespace ClassicUO.Game.UI.Gumps
             Add(c);
             if (!foundMapLoc)
             {
-                //multiplier = float((mapinfo.MapEnd.X) - (mapinfo.MapOrigin.X)) / float(width)
-                //    multiX = mapinfo.PinPosition.X * multiplier
-                //    multiY = mapinfo.PinPosition.Y * multiplier
-                //    finalX = int(mapinfo.MapOrigin.X + multiX)
-                //    finalY = int(mapinfo.MapOrigin.Y + multiY)
 
                 float multiplier = (float)Width / 300f;
-                //if (Width == 200)
-                //    multiplier = 0.666666666f;
-                //if (Width == 600)
-                //    multiplier = 2f;
+                //multiplier = (mapEndX - mapX) / _mapTexture.Width;
+
+                if (_mapTexture.Width == 200)
+                   multiplier = 0.666666666f;
+                if (_mapTexture.Width == 600)
+                   multiplier = 2f;
+                   
                 if (CUOEnviroment.Debug)
                     GameActions.Print(World, $"Width: {Width}, Multiplier: {multiplier}, Facet: {mapFacet}, MapData: {mapX}, {mapY}, {mapEndX}, {mapEndY}");
 
