@@ -207,7 +207,7 @@ namespace ClassicUO.Game.UI.Gumps
                 true, page);
 
             content.AddToRight
-            (new CheckboxWithLabel(TazLang.Get("mog_movementtab_doors_blockdoormovement"), isChecked: profile.BlockDoorMovement, valueChanged: (b) => { profile.BlockDoorMovement = b; }),
+            (new CheckboxWithLabel(TazLang.Get("mog_movementtab_doors_blockwalkingdoors"), isChecked: profile.BlockDoorMovement, valueChanged: (b) => { profile.BlockDoorMovement = b; }),
                 true, page);
 
             content.RemoveIndent();
