@@ -2,6 +2,11 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## In Development
+
+### Fixes
+* Door movement blocking no longer stops you from walking into closed doors when the "Open doors while pathfinding" (smooth doors) setting is enabled, and the option label is now "Block walking into doors"
+
 ## 5.31.2
 
 ### Legion
@@ -22,7 +27,6 @@ All notable changes to TazUO will be recorded here.
 * The classic journal gump (JournalGump) now respects the "Hide journal timestamps" setting, which was moved from per-profile to machine-wide (global) settings
 
 ### Fixes
-* Door movement blocking no longer stops you from walking into closed doors when the "Open doors while pathfinding" (smooth doors) setting is enabled, and the option label is now "Block walking into doors"
 * The right/bottom dead space that appeared when using a global scale below 100% is now usable: gumps, windows, containers, and the world viewport can be dragged into and interacted with there, and gumps/dropdowns/tooltips now center and clamp against the full visible window instead of the shrunken world view
 * Properly restore corpse container position after new game session
 * Attempt to catch plugin crashes before the kill the client
