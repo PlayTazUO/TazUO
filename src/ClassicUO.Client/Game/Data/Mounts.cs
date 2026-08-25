@@ -91,6 +91,7 @@ internal static class Mounts
             LoadMountsDef();
     }
 
+    /// <summary>Loads custom mount animation mappings from the active client data directory.</summary>
     public static void LoadMountsDef()
     {
         string file = Client.Game.UO.FileManager.GetUOFilePath("Mounts.def");
@@ -111,6 +112,10 @@ internal static class Mounts
         }
     }
 
+    /// <summary>Gets the known mount mapping for an item graphic.</summary>
+    /// <param name="animId">The mount item graphic to look up.</param>
+    /// <param name="mountInfo">The mapped mount information when found.</param>
+    /// <returns><see langword="true"/> when a mapping exists.</returns>
     public static bool TryGet(ushort animId, out MountInfo mountInfo) => _mounts.TryGetValue(animId, out mountInfo);
 
     /// <summary>
@@ -137,6 +142,11 @@ internal readonly struct MountInfo
     public readonly sbyte OffsetY;
     public readonly bool DrawAsSingleLayer;
 
+    /// <summary>Creates a mount animation mapping.</summary>
+    /// <param name="graphic">The creature graphic to draw while mounted.</param>
+    /// <param name="animId">The mount item graphic represented by this mapping.</param>
+    /// <param name="offsetY">The vertical drawing offset for the mounted creature.</param>
+    /// <param name="drawAsSingleLayer">Whether the mount is drawn as a single animation layer.</param>
     public MountInfo(ushort graphic, ushort animId, sbyte offsetY, bool drawAsSingleLayer = false)
     {
         Graphic = graphic;

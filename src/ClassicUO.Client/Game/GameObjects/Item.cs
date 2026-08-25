@@ -471,6 +471,9 @@ namespace ClassicUO.Game.GameObjects
 
             ProcessAnimation();
         }
+
+        /// <summary>Gets the animation graphic, preferring known mount mappings over tile data fallbacks.</summary>
+        /// <returns>The graphic used to render this item's animation.</returns>
         public override ushort GetGraphicForAnimation()
         {
             ushort graphic = Graphic;

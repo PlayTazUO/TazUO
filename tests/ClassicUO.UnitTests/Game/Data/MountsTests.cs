@@ -4,6 +4,7 @@ namespace ClassicUO.UnitTests.Game.Data;
 
 public class MountsTests
 {
+    /// <summary>Verifies that stale tile data cannot override a known mount mapping.</summary>
     [Fact]
     public void ResolveAnimationGraphic_KnownMount_PrefersMountMapping()
     {
@@ -12,6 +13,7 @@ public class MountsTests
         Assert.Equal((ushort)0x007A, result);
     }
 
+    /// <summary>Verifies that unknown custom mounts retain the tile data fallback.</summary>
     [Fact]
     public void ResolveAnimationGraphic_UnknownMount_UsesTileDataAnimation()
     {
@@ -20,6 +22,7 @@ public class MountsTests
         Assert.Equal((ushort)0x0123, result);
     }
 
+    /// <summary>Verifies that an unknown mount without a fallback retains its item graphic.</summary>
     [Fact]
     public void ResolveAnimationGraphic_UnknownMountWithoutTileDataAnimation_KeepsItemGraphic()
     {
