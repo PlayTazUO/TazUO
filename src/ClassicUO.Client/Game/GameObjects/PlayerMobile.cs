@@ -450,6 +450,8 @@ namespace ClassicUO.Game.GameObjects
         // Block walking into a door when auto open is off to avoid spamming the server with
         // walk requests that get denied and cause the client to bounce back. Open doors are
         // blocked too because the client's notion of a door's state may not match the server's.
+        // While the smooth-door (pathfinding) setting is on, closed doors are exempt since they
+        // are opened as part of the approach instead.
         private bool IsBlockedByDoor(int startX, int startY, int x, int y, sbyte z)
         {
             if (TileHasDoor(x, y, z))
@@ -487,7 +489,8 @@ namespace ClassicUO.Game.GameObjects
 
             for (; obj != null; obj = obj.TNext)
             {
-                if (obj is Item door && door.ItemData.IsDoor && door.Z - 15 <= z && door.Z + 15 >= z)
+                if (obj is Item door && door.ItemData.IsDoor && door.Z - 15 <= z && door.Z + 15 >= z
+                    && (!profile.SmoothDoors || DoorData.IsOpenDoor(door.Graphic)))
                 {
                     return true;
                 }

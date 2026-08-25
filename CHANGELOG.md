@@ -2,6 +2,11 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## In Development
+
+### Fixes
+* Door movement blocking no longer stops you from walking into closed doors when the "Open doors while pathfinding" (smooth doors) setting is enabled, and the option label is now "Block walking into doors"
+
 ## 5.31.2
 
 ### Legion
