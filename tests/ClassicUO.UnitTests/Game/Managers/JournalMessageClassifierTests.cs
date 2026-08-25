@@ -7,6 +7,7 @@ namespace ClassicUO.UnitTests.Game.Managers;
 
 public class JournalMessageClassifierTests
 {
+    /// <summary>Verifies that a complete timestamped system chat line becomes Global Chat.</summary>
     [Fact]
     public void Classify_MatchingSystemMessage_ReturnsChatSystem()
     {
@@ -19,6 +20,8 @@ public class JournalMessageClassifierTests
         Assert.Equal(MessageType.ChatSystem, result);
     }
 
+    /// <summary>Verifies that ordinary or malformed system messages remain System messages.</summary>
+    /// <param name="text">The nonmatching system message to classify.</param>
     [Theory]
     [InlineData("World save complete. The entire process took 6.34 seconds.")]
     [InlineData("You have hidden yourself well.")]
@@ -32,6 +35,7 @@ public class JournalMessageClassifierTests
         Assert.Equal(MessageType.System, result);
     }
 
+    /// <summary>Verifies that matching remains disabled unless the profile option is enabled.</summary>
     [Fact]
     public void Classify_MatchingSystemMessageWhenDisabled_RemainsSystem()
     {
@@ -44,6 +48,7 @@ public class JournalMessageClassifierTests
         Assert.Equal(MessageType.System, result);
     }
 
+    /// <summary>Verifies that the classifier never changes non-System message types.</summary>
     [Fact]
     public void Classify_MatchingNonSystemMessage_PreservesOriginalType()
     {
@@ -56,6 +61,7 @@ public class JournalMessageClassifierTests
         Assert.Equal(MessageType.Guild, result);
     }
 
+    /// <summary>Verifies that classified system text appears only in the Global Chat filter.</summary>
     [Fact]
     public void MatchesMessageTypeFilter_ClassifiedSystemText_MatchesOnlyGlobalChat()
     {

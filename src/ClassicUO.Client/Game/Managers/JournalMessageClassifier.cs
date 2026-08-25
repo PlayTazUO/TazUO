@@ -23,6 +23,8 @@ internal static partial class JournalMessageClassifier
         return TimestampedSystemChatPattern().IsMatch(text) ? MessageType.ChatSystem : messageType;
     }
 
+    /// <summary>Gets the compiled pattern for complete timestamped shard chat lines.</summary>
+    /// <returns>The generated regular expression used for classification.</returns>
     [GeneratedRegex(
         @"^\[(?:[01][0-9]|2[0-3]):[0-5][0-9]\] [^:\s\r\n](?:[^:\r\n]*[^:\s\r\n])?: \S(?:[^\r\n]*\S)?$",
         RegexOptions.CultureInvariant

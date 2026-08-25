@@ -3093,6 +3093,7 @@ namespace ClassicUO.Game.UI.Gumps
             NameOverheadGump.InvalidateAllLayouts();
         }
 
+        /// <summary>Builds the legacy TazUO-specific options pages.</summary>
         private void BuildTazUO()
         {
             var content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height,

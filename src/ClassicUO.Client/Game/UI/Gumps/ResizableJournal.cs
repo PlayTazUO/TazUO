@@ -1113,6 +1113,10 @@ namespace ClassicUO.Game.UI.Gumps
                 CanMove = true;
             }
 
+            /// <summary>Determines whether an entry is visible under the journal's active filters.</summary>
+            /// <param name="type">The entry's source text category.</param>
+            /// <param name="messageType">The entry's classified message type.</param>
+            /// <returns><see langword="true"/> when the entry is visible.</returns>
             private bool CanBeDrawn(TextType type, MessageType messageType)
             {
                 if (_resizableJournal._currentFilter != null)

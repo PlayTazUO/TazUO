@@ -266,6 +266,9 @@ namespace ClassicUO.Game.Scenes
                 VoiceRecognitionManager.Instance.InitializeAsync(ProfileManager.CurrentProfile.VoiceModelPath, startListeningAfter: true);
         }
 
+        /// <summary>Adds a processed server message to the journal with its display metadata.</summary>
+        /// <param name="sender">The entity that raised the message event.</param>
+        /// <param name="e">The processed message data.</param>
         private void ChatOnMessageReceived(object sender, MessageEventArgs e)
         {
             if (e.Type == MessageType.Command)
