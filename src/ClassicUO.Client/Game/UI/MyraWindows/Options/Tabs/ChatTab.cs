@@ -104,6 +104,11 @@ public static class ChatTab
                 search: new SearchMetadata(TazLang.Get("mog_chattab_journal_journalhidesystemprefix"))
             ),
             Option.Checkbox(
+                TazLang.Get("mog_chattab_journal_classifysystemglobalchat"),
+                new Accessor<bool>(() => profile.ClassifySystemMessagesAsGlobalChat),
+                search: new SearchMetadata(TazLang.Get("mog_chattab_journal_classifysystemglobalchat"))
+            ),
+            Option.Checkbox(
                 TazLang.Get("mog_chattab_journal_makeanchorable"),
                 new Accessor<bool>(() => profile.JournalAnchorEnabled),
                 search: new SearchMetadata(TazLang.Get("mog_chattab_journal_makeanchorable"))

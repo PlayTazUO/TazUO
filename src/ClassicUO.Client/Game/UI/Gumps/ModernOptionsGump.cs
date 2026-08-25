@@ -3472,6 +3472,11 @@ namespace ClassicUO.Game.UI.Gumps
                 c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_journalhidesystemprefix"), 0, profile.HideJournalSystemPrefix,
                     (b) => { profile.HideJournalSystemPrefix = b; }), true, page);
             content.BlankLine();
+            content.AddToRight(
+                c = new CheckboxWithLabel(TazLang.Get("mog_chattab_journal_classifysystemglobalchat"), 0,
+                    profile.ClassifySystemMessagesAsGlobalChat,
+                    (b) => { profile.ClassifySystemMessagesAsGlobalChat = b; }), true, page);
+            content.BlankLine();
 
             content.AddToRight
             (

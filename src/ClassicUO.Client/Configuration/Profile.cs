@@ -690,6 +690,9 @@ namespace ClassicUO.Configuration
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); } = false;
         public bool HideJournalSystemPrefix { get; set => SetProperty(ref field, value); } = false;
 
+        /// <summary>Classifies timestamped shard chat sent as system messages as global chat journal entries.</summary>
+        public bool ClassifySystemMessagesAsGlobalChat { get; set => SetProperty(ref field, value); } = false;
+
         public int HealthLineSizeMultiplier { get; set => SetProperty(ref field, value); } = 1;
 
         public bool OpenHealthBarForLastAttack { get; set => SetProperty(ref field, value); } = true;

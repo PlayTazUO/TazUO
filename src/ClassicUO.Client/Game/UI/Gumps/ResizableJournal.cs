@@ -304,6 +304,21 @@ namespace ClassicUO.Game.UI.Gumps
 
         public static void UpdateJournalOptions() => UIManager.ForEach<ResizableJournal>(p => p.UpdateOptions());
 
+        /// <summary>Determines whether a journal entry belongs to a selected message type filter.</summary>
+        /// <param name="textType">The source text category of the journal entry.</param>
+        /// <param name="messageType">The classified message type of the journal entry.</param>
+        /// <param name="filter">The selected journal filter.</param>
+        /// <returns><see langword="true"/> when the entry belongs to the filter.</returns>
+        internal static bool MatchesMessageTypeFilter(TextType textType, MessageType messageType, MessageType filter)
+        {
+            if (messageType == MessageType.ChatSystem)
+            {
+                return filter == MessageType.ChatSystem;
+            }
+
+            return textType == TextType.SYSTEM ? filter == MessageType.System : filter == messageType;
+        }
+
         public override void Save(XmlTextWriter writer)
         {
             base.Save(writer);
@@ -1106,17 +1121,10 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         MessageType currentfilter = _resizableJournal._currentFilter[i];
 
-                        if (messageType == MessageType.ChatSystem && currentfilter == MessageType.ChatSystem)
+                        if (MatchesMessageTypeFilter(type, messageType, currentfilter))
+                        {
                             return true;
-
-                        if (type == TextType.SYSTEM && currentfilter == MessageType.System)
-                            return true;
-
-                        if (type == TextType.SYSTEM && currentfilter != MessageType.System)
-                            continue;
-
-                        if (currentfilter == messageType)
-                            return true;
+                        }
                     }
                     return false;
                 }

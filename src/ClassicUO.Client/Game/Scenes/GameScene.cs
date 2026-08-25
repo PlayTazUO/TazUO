@@ -374,7 +374,13 @@ namespace ClassicUO.Game.Scenes
 
             if (!string.IsNullOrEmpty(text))
             {
-                _world.Journal.Add(text, hue, name, e.TextType, e.IsUnicode, e.Type);
+                MessageType journalMessageType = JournalMessageClassifier.Classify(
+                    e.Type,
+                    text,
+                    ProfileManager.CurrentProfile?.ClassifySystemMessagesAsGlobalChat == true
+                );
+
+                _world.Journal.Add(text, hue, name, e.TextType, e.IsUnicode, journalMessageType);
             }
         }
 
