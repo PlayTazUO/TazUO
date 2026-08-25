@@ -112,6 +112,22 @@ internal static class Mounts
     }
 
     public static bool TryGet(ushort animId, out MountInfo mountInfo) => _mounts.TryGetValue(animId, out mountInfo);
+
+    /// <summary>
+    /// Resolves a mount item's animation graphic, preferring known mount mappings over tile data.
+    /// </summary>
+    /// <param name="itemGraphic">The mount item's graphic.</param>
+    /// <param name="tileDataAnimationId">The fallback animation ID from tile data.</param>
+    /// <returns>The animation graphic to draw for the mounted creature.</returns>
+    public static ushort ResolveAnimationGraphic(ushort itemGraphic, ushort tileDataAnimationId)
+    {
+        if (TryGet(itemGraphic, out MountInfo mountInfo))
+        {
+            return mountInfo.Graphic;
+        }
+
+        return tileDataAnimationId != 0 ? tileDataAnimationId : itemGraphic;
+    }
 }
 
 internal readonly struct MountInfo

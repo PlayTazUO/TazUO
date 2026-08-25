@@ -489,15 +489,7 @@ namespace ClassicUO.Game.GameObjects
                     return 0x00BF;
                 }
 
-                if (Mounts.TryGet(graphic, out MountInfo mountInfo))
-                {
-                    graphic = mountInfo.Graphic;
-                }
-
-                if (ItemData.AnimID != 0)
-                {
-                    graphic = ItemData.AnimID;
-                }
+                graphic = Mounts.ResolveAnimationGraphic(graphic, ItemData.AnimID);
             }
             else if (IsCorpse)
             {
