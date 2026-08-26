@@ -241,6 +241,7 @@ namespace ClassicUO.Game.Scenes
             SpellVisualRangeManager.Instance.OnSceneLoad();
             AutoLootManager.Instance.OnSceneLoad();
             AutoSkinningManager.Instance.OnSceneLoad();
+            ScavengerManager.Instance.OnSceneLoad();
             DressAgentManager.Instance.Load();
             FriendsListManager.Instance.OnSceneLoad();
 
@@ -452,6 +453,7 @@ namespace ClassicUO.Game.Scenes
             AutoLootManager.Instance.OnSceneUnload();
             GridHighlightData.Unload();
             AutoSkinningManager.Instance.OnSceneUnload();
+            ScavengerManager.Instance.OnSceneUnload();
             FriendsListManager.Instance.OnSceneUnload();
 
             NameOverHeadManager.Save();
@@ -983,6 +985,7 @@ namespace ClassicUO.Game.Scenes
 
             ObjectActionQueue.Instance.Update();
             AutoLootManager.Instance.Update();
+            ScavengerManager.Instance.Update();
             BandageManager.Instance.Update();
             GridHighlightData.ProcessQueue(_world);
             Profiler.ExitContext("Actions");

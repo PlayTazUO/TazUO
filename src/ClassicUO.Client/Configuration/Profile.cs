@@ -797,6 +797,7 @@ namespace ClassicUO.Configuration
         public bool DisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
         public bool ControllerEnabled { get; set => SetProperty(ref field, value); } = true;
         public bool EnableScavenger { get; set => SetProperty(ref field, value); } = true;
+        public string ScavengerSelectedListUid { get; set => SetProperty(ref field, value); } = "";
         public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
         public bool NearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
         public bool SpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
