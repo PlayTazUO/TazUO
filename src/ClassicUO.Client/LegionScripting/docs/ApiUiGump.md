@@ -181,6 +181,38 @@ description: ApiUiGump class documentation
 
 ---
 
+### CreateGumpRenderedMapArea
+`(mapIndex, mapX, mapY, mapWidth, mapHeight, x, y, width, height)`
+ Create a rendered map area, displaying a region of the world map as a texture.
+ Example:
+ ```py
+ gump = API.CreateGump()
+ gump.SetRect(100, 100, 200, 200)
+
+ map = API.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
+ gump.Add(map)
+ API.AddGump(gump)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `mapIndex` | `int` | ❌ No | The map/facet to render (0 = Felucca, 1 = Trammel, etc) |
+| `mapX` | `int` | ❌ No | Left map coordinate of the region to render |
+| `mapY` | `int` | ❌ No | Top map coordinate of the region to render |
+| `mapWidth` | `int` | ❌ No | Width of the map region to render in map tiles |
+| `mapHeight` | `int` | ❌ No | Height of the map region to render in map tiles |
+| `x` | `int` | ❌ No | X position of the control |
+| `y` | `int` | ❌ No | Y position of the control |
+| `width` | `int` | ❌ No | Display width in pixels |
+| `height` | `int` | ❌ No | Display height in pixels |
+
+**Return Type:** `ApiUiRenderedMapArea`
+
+---
+
 ### LegionTextureControl
 `(textureName, width, height)`
  Create an image control that displays a named PNG texture loaded from a ZIP archive.

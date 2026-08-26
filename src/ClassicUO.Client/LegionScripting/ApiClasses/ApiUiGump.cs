@@ -187,6 +187,35 @@ public class ApiUiGump(LegionAPI api)
     });
 
     /// <summary>
+    /// Create a rendered map area, displaying a region of the world map as a texture.
+    /// Example:
+    /// ```py
+    /// gump = API.CreateGump()
+    /// gump.SetRect(100, 100, 200, 200)
+    ///
+    /// map = API.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
+    /// gump.Add(map)
+    /// API.AddGump(gump)
+    /// ```
+    /// </summary>
+    /// <param name="mapIndex">The map/facet to render (0 = Felucca, 1 = Trammel, etc)</param>
+    /// <param name="mapX">Left map coordinate of the region to render</param>
+    /// <param name="mapY">Top map coordinate of the region to render</param>
+    /// <param name="mapWidth">Width of the map region to render in map tiles</param>
+    /// <param name="mapHeight">Height of the map region to render in map tiles</param>
+    /// <param name="x">X position of the control</param>
+    /// <param name="y">Y position of the control</param>
+    /// <param name="width">Display width in pixels</param>
+    /// <param name="height">Display height in pixels</param>
+    /// <returns>A rendered map area control</returns>
+    public ApiUiRenderedMapArea CreateGumpRenderedMapArea(int mapIndex, int mapX, int mapY, int mapWidth, int mapHeight, int x, int y, int width, int height) => OnMain(() =>
+    {
+        var map = new RenderedMapArea(mapIndex, new Microsoft.Xna.Framework.Rectangle(mapX, mapY, mapWidth, mapHeight), x, y, width, height);
+
+        return new ApiUiRenderedMapArea(map);
+    });
+
+    /// <summary>
     /// Create an image control that displays a named PNG texture loaded from a ZIP archive.
     /// Place the PNG anywhere inside the ZIP (outside gumps/ and art/ folders) and reference it by its path within the archive.
     /// Example:

@@ -711,6 +711,22 @@ class ApiUiGump:
         """
         pass
 
+    def CreateGumpRenderedMapArea(self, mapIndex: "int", mapX: "int", mapY: "int", mapWidth: "int", mapHeight: "int", x: "int", y: "int", width: "int", height: "int") -> "Any":
+        """
+         Create a rendered map area, displaying a region of the world map as a texture.
+         Example:
+         ```py
+         gump = API.CreateGump()
+         gump.SetRect(100, 100, 200, 200)
+        
+         map = API.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
+         gump.Add(map)
+         API.AddGump(gump)
+         ```
+        
+        """
+        pass
+
     def LegionTextureControl(self, textureName: "str", width: "int" = 0, height: "int" = 0) -> "Any":
         """
          Create an image control that displays a named PNG texture loaded from a ZIP archive.
@@ -1105,6 +1121,10 @@ class ApiUiRadioButton(ApiUiCheckbox):
         
         """
         pass
+
+class ApiUiRenderedMapArea(ApiUiBaseControl):
+    ""
+    Alpha: float = None
 
 class ApiUiResizableStaticPic(ApiUiBaseControl):
     ""

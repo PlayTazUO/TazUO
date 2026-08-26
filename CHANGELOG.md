@@ -8,6 +8,8 @@ All notable changes to TazUO will be recorded here.
 * Separated Scavenger agent from Autoloot, they now each have their own loot lists and enabled/disabled toggles
 
 ### Legion
+* Added `API.Gumps.CreateGumpRenderedMapArea` to build a rendered area of the map in a gump
+* Removed hard 30 second limit on `API.Pause()`
 * Added `GetSpellsInSpellbook(uint serial)`, listing all spell names in that spellbook
 
 ### Misc
