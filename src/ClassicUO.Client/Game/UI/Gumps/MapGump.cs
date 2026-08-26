@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
@@ -182,16 +182,14 @@ namespace ClassicUO.Game.UI.Gumps
                 //    finalX = int(mapinfo.MapOrigin.X + multiX)
                 //    finalY = int(mapinfo.MapOrigin.Y + multiY)
 
-                float multiplier = (float)Width / 300f;
-                //if (Width == 200)
-                //    multiplier = 0.666666666f;
-                //if (Width == 600)
-                //    multiplier = 2f;
-                if (CUOEnviroment.Debug)
-                    GameActions.Print(World, $"Width: {Width}, Multiplier: {multiplier}, Facet: {mapFacet}, MapData: {mapX}, {mapY}, {mapEndX}, {mapEndY}");
+                float scaleX = mapEndX > mapX ? (float)(mapEndX - mapX) / 300f : 1f;
+                float scaleY = mapEndY > mapY ? (float)(mapEndY - mapY) / 300f : 1f;
 
-                mapX = (int)(mapX + (x * multiplier));
-                mapY = (int)(mapY + (y * multiplier));
+                if (CUOEnviroment.Debug)
+                    GameActions.Print(World, $"Width: {Width}, Height: {Height}, ScaleX: {scaleX}, ScaleY: {scaleY}, Facet: {mapFacet}, MapData: {mapX}, {mapY}, {mapEndX}, {mapEndY}");
+
+                mapX = (int)(mapX + (x * scaleX));
+                mapY = (int)(mapY + (y * scaleY));
 
                 //mapX = mapX + x;
                 //mapY = mapY + y;
