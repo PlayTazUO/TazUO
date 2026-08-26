@@ -17,6 +17,7 @@ All notable changes to TazUO will be recorded here.
 * Migrated more settings to global scoped json settings
 
 ### Fixes
+* Fixed a client crash when using `API.Gumps.CreateGumpRenderedMapArea` (map offsets were being dereferenced as pointers), and made it render only the requested region with proper cleanup on close
 * Fixed a crash fix for a race condition while opening a container during shutdown
 * Myra sliders and checkboxes no longer listen to right clicks (Causing accidental changed when closing via right click over a checkbox/slider)
 * Improved treasure map location calculations - [P.R 1012](https://github.com/PlayTazUO/TazUO/pull/1012) [Erumite](https://github.com/Erumite)
