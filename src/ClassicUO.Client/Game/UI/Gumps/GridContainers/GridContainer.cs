@@ -250,7 +250,7 @@ public partial class GridContainer : ResizableGump
             if (useGridStyle != null)
                 UseOldContainerStyle = !useGridStyle;
 
-            IsPlayerBackpack = LocalSerial == World.Player.Backpack.Serial;
+            IsPlayerBackpack = LocalSerial == World.Player.Backpack?.Serial;
 
             _gridContainerEntry = GridContainerSaveData.Instance.GetContainer(local);
 
