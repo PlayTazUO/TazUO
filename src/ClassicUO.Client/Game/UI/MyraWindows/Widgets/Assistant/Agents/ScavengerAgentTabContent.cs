@@ -97,6 +97,7 @@ public static class ScavengerAgentTabContent
         listSelectRow.Widgets.Add(new MyraButton("Rename", () =>
         {
             ScavengerManager.ScavengerList current = ScavengerManager.Instance.CurrentList;
+            if (current == null) return;
             var nameBox = new MyraInputBox { Text = current.Name, HintText = "List name", Width = 220 };
             new MyraDialog("Rename Scavenger List", nameBox, ok =>
             {
@@ -115,6 +116,7 @@ public static class ScavengerAgentTabContent
             }
 
             ScavengerManager.ScavengerList current = ScavengerManager.Instance.CurrentList;
+            if (current == null) return;
             new MyraDialog("Delete Scavenger List",
                 new MyraLabel($"Delete list \"{current.Name}\" and all of its entries?", MyraLabel.TextStyle.P),
                 ok =>
@@ -162,7 +164,7 @@ public static class ScavengerAgentTabContent
                 ScavengerManager.ScavengerEntry entry = entries[i];
 
                 // Art image (col 0)
-                if (entry.Graphic is > 0 and < ushort.MaxValue)
+                if (entry.Graphic > 0)
                     grid.AddWidget(new MyraArtTexture((uint)entry.Graphic) { Tooltip = entry.Name, Margin = new Thickness(2, 0) }, dataRow, 0);
                 else
                 {
@@ -180,13 +182,13 @@ public static class ScavengerAgentTabContent
                 // Graphic
                 var graphicBox = new MyraInputBox
                 {
-                    Text = entry.Graphic == ushort.MaxValue ? "-1" : entry.Graphic.ToString(),
+                    Text = entry.Graphic == -1 ? "-1" : entry.Graphic.ToString(),
                     Tooltip = "Item graphic ID. Set to -1 to match any graphic.",
                 };
                 graphicBox.TextChangedByUser += (_, _) =>
                 {
                     if (StringHelper.TryParseInt(graphicBox.Text, out int g))
-                        entry.Graphic = g == -1 ? ushort.MaxValue : g;
+                        entry.Graphic = g;
                 };
                 grid.AddWidget(graphicBox, dataRow, 1);
 
@@ -352,17 +354,14 @@ public static class ScavengerAgentTabContent
                 if (graphic > ushort.MaxValue)
                     return;
 
-                if (graphic == -1)
-                    graphic = ushort.MaxValue;
-
                 if (!MyraInputBox.TryParseHue(newHueBox.Text, out ushort hue))
                     hue = ushort.MaxValue;
 
-                ScavengerManager.ScavengerEntry? entry = ScavengerManager.Instance.AddScavengerEntry((ushort)graphic, hue, newNameBox.Text);
+                ScavengerManager.ScavengerEntry? entry = ScavengerManager.Instance.AddScavengerEntry(graphic, hue, newNameBox.Text);
                 if (entry == null) return;
 
                 entry.RegexSearch = newRegexBox.Text;
-                if (int.TryParse(newMaxBox.Text, out int maxAmount))
+                if (int.TryParse(newMaxBox.Text, out int maxAmount) && maxAmount >= 0)
                     entry.MaxAmount = maxAmount;
 
                 newNameBox.Text = "";

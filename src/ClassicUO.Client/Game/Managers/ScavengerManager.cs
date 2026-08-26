@@ -72,7 +72,7 @@ namespace ClassicUO.Game.Managers
 
         private readonly HashSet<uint> _quickContainsLookup = new();
         private readonly HashSet<uint> _recentlyLooted = new();
-        private static readonly PriorityQueue<(uint item, ScavengerEntry entry), ScavengerPriority> _lootItems = new();
+        private readonly PriorityQueue<(uint item, ScavengerEntry entry), ScavengerPriority> _lootItems = new();
         private readonly List<ScavengerEntry> _fallbackEntries = new();
         private ScavengerData _data = new();
         private ScavengerList _currentList;
@@ -149,7 +149,7 @@ namespace ClassicUO.Game.Managers
         /// <summary>
         /// Add an entry for scavenging to match against items on the ground.
         /// </summary>
-        public ScavengerEntry AddScavengerEntry(ushort graphic = 0, ushort hue = ushort.MaxValue, string name = "")
+        public ScavengerEntry AddScavengerEntry(int graphic = 0, ushort hue = ushort.MaxValue, string name = "")
         {
             if (!_loaded) return null;
 
