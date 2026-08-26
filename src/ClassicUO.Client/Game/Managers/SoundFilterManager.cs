@@ -9,211 +9,120 @@ namespace ClassicUO.Game.Managers
 {
     public class SoundFilterManager
     {
-        private HashSet<int> _filteredSounds;
-        private HashSet<int> _filteredMusic;
-        private bool _isLoaded;
-        private bool _isMusicLoaded;
+        private static readonly HashSet<int> _emptyFilters = new();
 
-        public static SoundFilterManager Instance
+        public static SoundFilterManager Instance { get; } = new SoundFilterManager();
+
+        #warning Remove migration >= 10/26/26
+        /// <summary>
+        /// One-time migration of the pre-<see cref="GlobalSettingsSave"/> per-account sound/music filter
+        /// lists from SQL settings into the machine-wide global settings. The legacy rows are cleared so
+        /// this is idempotent per account. Requires the current profile to be loaded so the account scope
+        /// resolves to the account that actually stored the lists.
+        /// </summary>
+        public static void MigrateLegacySqlSettings()
         {
-            get
+            if (Client.Settings == null || ProfileManager.CurrentProfile == null || ProfileManager.GlobalSettings == null)
             {
-                field ??= new SoundFilterManager();
-                return field;
-            }
-        }
-
-        public HashSet<int> FilteredSounds
-        {
-            get
-            {
-                EnsureLoaded();
-                return _filteredSounds;
-            }
-        }
-
-        public HashSet<int> FilteredMusic
-        {
-            get
-            {
-                EnsureMusicLoaded();
-                return _filteredMusic;
-            }
-        }
-
-        private SoundFilterManager()
-        {
-            _filteredSounds = new HashSet<int>();
-            _filteredMusic = new HashSet<int>();
-            _isLoaded = false;
-            _isMusicLoaded = false;
-        }
-
-        private void EnsureLoaded(bool isMusic = false)
-        {
-            if (isMusic)
-                EnsureMusicLoaded();
-            else
-            {
-                if (!_isLoaded)
-                    Load();
-            }
-        }
-
-        private void EnsureMusicLoaded()
-        {
-            if (!_isMusicLoaded)
-                LoadMusic();
-        }
-
-        private void Load()
-        {
-            if (Client.Settings == null)
-            {
-                Log.Warn("SQLSettings not available for SoundFilterManager");
-                _filteredSounds = new HashSet<int>();
-                _isLoaded = true;
                 return;
             }
 
-            try
-            {
-                string json = Client.Settings.Get(SettingsScope.Account, Constants.SqlSettings.SOUND_FILTER_IDS, "[]");
+            GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
 
-                if (!string.IsNullOrWhiteSpace(json))
-                    _filteredSounds = JsonSerializer.Deserialize(json, HashSetIntContext.Default.HashSetInt32)
-                                      ?? new HashSet<int>();
-                else
-                    _filteredSounds = new HashSet<int>();
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Failed to load sound filters: {ex.Message}");
-                _filteredSounds = new HashSet<int>();
-            }
-
-            _isLoaded = true;
+            MigrateLegacySet(Constants.SqlSettings.SOUND_FILTER_IDS, globalSettings.FilteredSounds);
+            MigrateLegacySet(Constants.SqlSettings.MUSIC_FILTER_IDS, globalSettings.FilteredMusic);
         }
 
-        private void LoadMusic()
+        private static bool MigrateLegacySet(string sqlKey, HashSet<int> target)
         {
-            if (Client.Settings == null)
+            string json = Client.Settings.Get(SettingsScope.Account, sqlKey, null);
+
+            if (string.IsNullOrWhiteSpace(json) || json == "[]")
             {
-                Log.Warn("SQLSettings not available for SoundFilterManager (music)");
-                _filteredMusic = new HashSet<int>();
-                _isMusicLoaded = true;
-                return;
+                return false;
             }
 
+            HashSet<int> legacy;
             try
             {
-                string json = Client.Settings.Get(SettingsScope.Account, Constants.SqlSettings.MUSIC_FILTER_IDS, "[]");
-
-                if (!string.IsNullOrWhiteSpace(json))
-                    _filteredMusic = JsonSerializer.Deserialize(json, HashSetIntContext.Default.HashSetInt32)
-                                     ?? new HashSet<int>();
-                else
-                    _filteredMusic = new HashSet<int>();
+                legacy = JsonSerializer.Deserialize(json, HashSetIntContext.Default.HashSetInt32) ?? new HashSet<int>();
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to load music filters: {ex.Message}");
-                _filteredMusic = new HashSet<int>();
+                Log.Error($"Failed to migrate legacy SQL setting '{sqlKey}': {ex.Message}");
+                return false;
             }
 
-            _isMusicLoaded = true;
+            bool changed = false;
+
+            foreach (int id in legacy)
+            {
+                changed |= target.Add(id);
+            }
+
+            Client.Settings.Set(SettingsScope.Account, sqlKey, "[]");
+
+            return changed;
         }
 
-        public void Save(bool isMusic = false)
-        {
-            if (Client.Settings == null)
-            {
-                Log.Warn("SQLSettings not available for SoundFilterManager save");
-                return;
-            }
+        public HashSet<int> FilteredSounds => ProfileManager.GlobalSettings?.FilteredSounds ?? _emptyFilters;
 
-            try
-            {
-                if (isMusic)
-                {
-                    string json = JsonSerializer.Serialize(_filteredMusic, HashSetIntContext.Default.HashSetInt32);
-                    _ = Client.Settings.SetAsync(SettingsScope.Account, Constants.SqlSettings.MUSIC_FILTER_IDS, json);
-                }
-                else
-                {
-                    string json = JsonSerializer.Serialize(_filteredSounds, HashSetIntContext.Default.HashSetInt32);
-                    _ = Client.Settings.SetAsync(SettingsScope.Account, Constants.SqlSettings.SOUND_FILTER_IDS, json);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Failed to save {(isMusic ? "music" : "sound")} filters: {ex.Message}");
-            }
-        }
+        public HashSet<int> FilteredMusic => ProfileManager.GlobalSettings?.FilteredMusic ?? _emptyFilters;
 
         public void AddFilter(int soundId, bool isMusic = false)
         {
-            EnsureLoaded(isMusic);
-            if (isMusic)
-            {
-                if (_filteredMusic.Add(soundId))
-                    Save(isMusic: true);
-            }
-            else
-            {
-                if (_filteredSounds.Add(soundId))
-                    Save();
-            }
+            GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+            if (globalSettings == null)
+                return;
+
+            HashSet<int> filters = isMusic ? globalSettings.FilteredMusic : globalSettings.FilteredSounds;
+
+            filters.Add(soundId);
         }
 
         public void RemoveFilter(int soundId, bool isMusic = false)
         {
-            EnsureLoaded(isMusic);
-            if (isMusic)
-            {
-                if (_filteredMusic.Remove(soundId))
-                    Save(isMusic: true);
-            }
-            else
-            {
-                if (_filteredSounds.Remove(soundId))
-                    Save();
-            }
+            GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+            if (globalSettings == null)
+                return;
+
+            HashSet<int> filters = isMusic ? globalSettings.FilteredMusic : globalSettings.FilteredSounds;
+
+            filters.Remove(soundId);
         }
 
         public bool IsSoundFiltered(int soundId, bool isMusic = false)
         {
-            EnsureLoaded(isMusic);
-            return isMusic ? _filteredMusic.Contains(soundId) : _filteredSounds.Contains(soundId);
+            GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+            if (globalSettings == null)
+                return false;
+
+            return isMusic
+                ? globalSettings.FilteredMusic.Contains(soundId)
+                : globalSettings.FilteredSounds.Contains(soundId);
         }
 
         public void Clear(bool isMusic = false)
         {
-            EnsureLoaded(isMusic);
-            if (isMusic)
-            {
-                _filteredMusic.Clear();
-                Save(isMusic: true);
-            }
-            else
-            {
-                _filteredSounds.Clear();
-                Save();
-            }
+            GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+            if (globalSettings == null)
+                return;
+
+            HashSet<int> filters = isMusic ? globalSettings.FilteredMusic : globalSettings.FilteredSounds;
+
+            if (filters.Count > 0)
+                filters.Clear();
         }
 
         public void Reset(bool isMusic = false)
         {
-            if (isMusic)
+            GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+            if (globalSettings == null)
             {
-                _isMusicLoaded = false;
-                _filteredMusic.Clear();
+                return;
             }
-            else
-            {
-                _isLoaded = false;
-                _filteredSounds.Clear();
-            }
+
+            (isMusic ? globalSettings.FilteredMusic : globalSettings.FilteredSounds).Clear();
         }
     }
 

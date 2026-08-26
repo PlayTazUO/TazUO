@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Game;
@@ -44,6 +45,13 @@ namespace ClassicUO.Configuration
         public bool EnableRainSound { get; set => SetProperty(ref field, value); } = true;
         public bool EnableCombatMusic { get; set => SetProperty(ref field, value); } = true;
         public bool ReproduceSoundsInBackground { get; set => SetProperty(ref field, value); }
+
+        /// <summary>Sound IDs the player has muted via the sound filter UI. Machine-wide.</summary>
+        public HashSet<int> FilteredSounds { get; set => SetProperty(ref field, value); } = new HashSet<int>();
+
+        /// <summary>Music IDs the player has muted via the music filter UI. Machine-wide.</summary>
+        public HashSet<int> FilteredMusic { get; set => SetProperty(ref field, value); } = new HashSet<int>();
+
         public bool UseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
         public bool SingleClickIconUse { get; set => SetProperty(ref field, value); }
 
