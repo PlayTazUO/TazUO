@@ -251,6 +251,8 @@ namespace ClassicUO
                     ProfileManager.GlobalSettings.MigrationVersion = 1;
                 }
 
+                Game.SetScale(ProfileManager.GlobalSettings.GlobalScale);
+
                 Game.Run();
             }
 
