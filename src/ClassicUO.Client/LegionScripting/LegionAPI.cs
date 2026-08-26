@@ -522,6 +522,15 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
+        /// Returns true if the given key combination is currently held down.
+        /// The key format matches <c>OnHotKey</c>, e.g. "CTRL+SHIFT+F1" or "A".
+        /// Extra modifiers beyond those specified do not prevent a match.
+        /// </summary>
+        /// <param name="key">Key combination to check, e.g. "CTRL+SHIFT+F1".</param>
+        /// <returns>True if the combination is currently pressed, false otherwise.</returns>
+        public bool IsKeyPressed(string key) => OnMain(() => CUOKeyboard.IsKeyPressed(key));
+
+        /// <summary>
         /// Schedules a callback to be invoked after a specified delay.
         ///
         /// Note that as with keyboard hotkeys, you must call `ProcessCallbacks` for the callback to actually be run.

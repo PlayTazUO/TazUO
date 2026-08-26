@@ -16,6 +16,8 @@ namespace ClassicUO.Input
         public static event Action<string> KeyDownEvent;
         public static event Action<string> KeyUpEvent;
 
+        private static readonly HashSet<SDL.SDL_Keycode> _heldKeys = new();
+
         /// <summary>
         /// Fired when a lone modifier key is pressed or released, carrying the current generic
         /// CTRL/SHIFT/ALT mask. Bare modifiers are intentionally not broadcast via
@@ -58,6 +60,48 @@ namespace ClassicUO.Input
             return string.Join("+", normalized);
         }
 
+        /// <summary>
+        /// True when the key combination described by <paramref name="input"/> is currently held.
+        /// The input uses the same format as <see cref="NormalizeKeyString"/>, e.g. "CTRL+SHIFT+F1"
+        /// or "A". Extra modifiers beyond those specified do not prevent a match.
+        /// </summary>
+        /// <param name="input">Key combination to check, e.g. "CTRL+SHIFT+F1".</param>
+        public static bool IsKeyPressed(string input)
+        {
+            string normalized = NormalizeKeyString(input);
+            if (string.IsNullOrEmpty(normalized))
+                return false;
+
+            SDL.SDL_Keycode key = SDL.SDL_Keycode.SDLK_UNKNOWN;
+            bool ctrl = false, shift = false, alt = false;
+
+            foreach (string part in normalized.Split('+'))
+            {
+                switch (part)
+                {
+                    case "CTRL": ctrl = true; break;
+                    case "SHIFT": shift = true; break;
+                    case "ALT": alt = true; break;
+                    default:
+                        if (Enum.TryParse(part, true, out SDL.SDL_Keycode parsed))
+                            key = parsed;
+                        break;
+                }
+            }
+
+            if (key == SDL.SDL_Keycode.SDLK_UNKNOWN || !_heldKeys.Contains(key))
+                return false;
+
+            if (ctrl && !Ctrl) return false;
+            if (shift && !Shift) return false;
+            if (alt && !Alt) return false;
+
+            return true;
+        }
+
+        /// <summary>Clear tracked held-key state (e.g. on focus loss) so keys don't appear stuck.</summary>
+        public static void ClearHeldKeys() => _heldKeys.Clear();
+
         public static bool IgnoreBareModifierKey(SDL.SDL_KeyboardEvent e)
         {
             var keycode = (SDL.SDL_Keycode)e.key;
@@ -95,6 +139,12 @@ namespace ClassicUO.Input
                 BareModifierEvent?.Invoke(CurrentMods());
                 return;
             }
+
+            SDL.SDL_Keycode keycode = (SDL.SDL_Keycode)e.key;
+            if (e.type == SDL.SDL_EventType.SDL_EVENT_KEY_DOWN)
+                _heldKeys.Add(keycode);
+            else
+                _heldKeys.Remove(keycode);
 
             if (keyboardEvent == null)
                 return;
