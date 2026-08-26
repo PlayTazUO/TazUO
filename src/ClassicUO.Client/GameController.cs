@@ -119,14 +119,10 @@ namespace ClassicUO
 
         public void EnqueueAction(uint time, Action action) => _queuedActions.Add((Time.Ticks + time, action));
 
-        protected override void Initialize()
+        protected override void Initialize() //Called during Game.Run() in FNA
         {
             MainThreadQueue.Load();
 
-            PreloadSettings();
-
-            // Machine-wide JSON settings; loaded once at startup and persisted on exit.
-            ProfileManager.LoadGlobalSettings();
             if (GraphicManager.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
             {
                 GraphicManager.GraphicsProfile = GraphicsProfile.HiDef;
@@ -163,18 +159,6 @@ namespace ClassicUO
             }
 
             base.Initialize();
-        }
-
-        private void PreloadSettings()
-        {
-            bool platformDefault = PlatformHelper.IsLinux;
-            _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, platformDefault, (b) =>
-            {
-                if (ZLib.CommandLineOverride)
-                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, true);
-                else
-                    ZLib.SetForceManagedZlib(b);
-            });
         }
 
         private const int MAX_PACKETS_PER_FRAME = 1000;

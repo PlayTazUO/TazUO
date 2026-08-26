@@ -122,6 +122,8 @@ namespace ClassicUO
             }
 
             Settings.GlobalSettings = ConfigurationResolver.Load(globalSettingsPath, SettingsJsonContext.RealDefault.Settings);
+            ProfileManager.LoadGlobalSettings();
+            ZLib.SetForceManagedZlib(ProfileManager.GlobalSettings.ManagedZlib); //Must be after global settings are loaded
 
             ReadSettingsFromArgs(args);
 
@@ -417,7 +419,7 @@ namespace ClassicUO
                         break;
 
                     case "skipserverselect":
-                        CUOEnviroment.SkipServerSelect = true;
+                        ProfileManager.GlobalSettings.SkipServerSelection = true;
 
                         break;
 

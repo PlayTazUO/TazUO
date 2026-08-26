@@ -157,7 +157,7 @@ public static class MiscTab
                 ZLib.ManagedZlibForced,
                 newValue =>
                 {
-                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, newValue);
+                    ProfileManager.GlobalSettings.ManagedZlib = newValue;
                     ZLib.SetForceManagedZlib(newValue);
                 },
                 TazLang.Get("mog_misctab_usemanagedzlibtooltip"),

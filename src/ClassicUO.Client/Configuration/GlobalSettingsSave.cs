@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Game;
+using ClassicUO.Utility.Platforms;
 
 namespace ClassicUO.Configuration
 {
@@ -51,5 +52,16 @@ namespace ClassicUO.Configuration
         /// journal and the classic journal gump.
         /// </summary>
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); }
+
+        /// <summary>
+        /// Only applies when there is only 1 server available
+        /// </summary>
+        public bool SkipServerSelection { get; set => SetProperty(ref field, value); } = true;
+        public bool ManagedZlib { get; set => SetProperty(ref field, value); } = !PlatformHelper.IsWindows;
+        public float GlobalScale { get; set => SetProperty(ref field, value); } = 1f;
+
+
+        
+        public int MigrationVersion { get; set => SetProperty(ref field, value); } = 0;
     }
 }
