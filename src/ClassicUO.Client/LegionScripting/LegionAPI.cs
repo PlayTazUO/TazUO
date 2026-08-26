@@ -3540,11 +3540,8 @@ namespace ClassicUO.LegionScripting
         /// API.Pause(5)
         /// ```
         /// </summary>
-        /// <param name="seconds">0-30 seconds.</param>
         public void Pause(double seconds)
         {
-            seconds = Math.Clamp(seconds, 0, 30);
-
             Task.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: _cachedToken).Wait(cancellationToken: _cachedToken);
 
             if (StopRequested)

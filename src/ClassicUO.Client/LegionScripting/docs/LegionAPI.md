@@ -2716,7 +2716,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `seconds` | `double` | ❌ No | 0-30 seconds. |
+| `seconds` | `double` | ❌ No |  |
 
 **Return Type:** `void` *(Does not return anything)*
 
