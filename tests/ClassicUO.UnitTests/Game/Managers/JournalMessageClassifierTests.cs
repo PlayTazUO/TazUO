@@ -1,3 +1,4 @@
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
@@ -14,7 +15,8 @@ public class JournalMessageClassifierTests
         MessageType result = JournalMessageClassifier.Classify(
             MessageType.System,
             "[17:00] Maxwe: Hello world",
-            true
+            true,
+            Profile.DefaultSystemMessageGlobalChatRegex
         );
 
         Assert.Equal(MessageType.ChatSystem, result);
@@ -30,7 +32,12 @@ public class JournalMessageClassifierTests
     [InlineData("[17:00] Maxwe:")]
     public void Classify_NonMatchingSystemMessage_RemainsSystem(string text)
     {
-        MessageType result = JournalMessageClassifier.Classify(MessageType.System, text, true);
+        MessageType result = JournalMessageClassifier.Classify(
+            MessageType.System,
+            text,
+            true,
+            Profile.DefaultSystemMessageGlobalChatRegex
+        );
 
         Assert.Equal(MessageType.System, result);
     }
@@ -42,7 +49,8 @@ public class JournalMessageClassifierTests
         MessageType result = JournalMessageClassifier.Classify(
             MessageType.System,
             "[17:00] Maxwe: Hello world",
-            false
+            false,
+            Profile.DefaultSystemMessageGlobalChatRegex
         );
 
         Assert.Equal(MessageType.System, result);
@@ -55,10 +63,39 @@ public class JournalMessageClassifierTests
         MessageType result = JournalMessageClassifier.Classify(
             MessageType.Guild,
             "[17:00] Maxwe: Hello world",
-            true
+            true,
+            Profile.DefaultSystemMessageGlobalChatRegex
         );
 
         Assert.Equal(MessageType.Guild, result);
+    }
+
+    /// <summary>Verifies that shards can supply their own global chat format.</summary>
+    [Fact]
+    public void Classify_CustomPattern_UsesConfiguredFormat()
+    {
+        MessageType result = JournalMessageClassifier.Classify(
+            MessageType.System,
+            "[Global] Maxwe > Hello world",
+            true,
+            @"^\[Global\] [^>]+ > .+$"
+        );
+
+        Assert.Equal(MessageType.ChatSystem, result);
+    }
+
+    /// <summary>Verifies that a malformed configured pattern cannot interrupt journal processing.</summary>
+    [Fact]
+    public void Classify_InvalidPattern_RemainsSystem()
+    {
+        MessageType result = JournalMessageClassifier.Classify(
+            MessageType.System,
+            "[Global] Maxwe > Hello world",
+            true,
+            "["
+        );
+
+        Assert.Equal(MessageType.System, result);
     }
 
     /// <summary>Verifies that classified system text appears only in the Global Chat filter.</summary>

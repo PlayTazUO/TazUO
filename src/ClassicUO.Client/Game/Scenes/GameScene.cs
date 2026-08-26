@@ -380,7 +380,8 @@ namespace ClassicUO.Game.Scenes
                 MessageType journalMessageType = JournalMessageClassifier.Classify(
                     e.Type,
                     text,
-                    ProfileManager.CurrentProfile?.ClassifySystemMessagesAsGlobalChat == true
+                    ProfileManager.CurrentProfile?.ClassifySystemMessagesAsGlobalChat == true,
+                    ProfileManager.CurrentProfile?.SystemMessageGlobalChatRegex
                 );
 
                 _world.Journal.Add(text, hue, name, e.TextType, e.IsUnicode, journalMessageType);

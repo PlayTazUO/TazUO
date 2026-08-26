@@ -87,6 +87,9 @@ namespace ClassicUO.Configuration
 
     public sealed partial class Profile : JsonSave<Profile>, INotifyPropertyChanged
     {
+        internal const string DefaultSystemMessageGlobalChatRegex
+            = @"^\[(?:[01][0-9]|2[0-3]):[0-5][0-9]\] [^:\s\r\n](?:[^:\r\n]*[^:\s\r\n])?: \S(?:[^\r\n]*\S)?$";
+
         private static Profile _defaultPreview;
 
         /// <summary>Lives in the profile folder as <c>profile.json</c>.</summary>
@@ -690,8 +693,12 @@ namespace ClassicUO.Configuration
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); } = false;
         public bool HideJournalSystemPrefix { get; set => SetProperty(ref field, value); } = false;
 
-        /// <summary>Classifies timestamped shard chat sent as system messages as global chat journal entries.</summary>
+        /// <summary>Classifies matching system messages as global chat journal entries.</summary>
         public bool ClassifySystemMessagesAsGlobalChat { get; set => SetProperty(ref field, value); } = false;
+
+        /// <summary>Pattern used to identify system messages that belong to global chat.</summary>
+        public string SystemMessageGlobalChatRegex { get; set => SetProperty(ref field, value); }
+            = DefaultSystemMessageGlobalChatRegex;
 
         public int HealthLineSizeMultiplier { get; set => SetProperty(ref field, value); } = 1;
 

@@ -3479,6 +3479,14 @@ namespace ClassicUO.Game.UI.Gumps
                     (b) => { profile.ClassifySystemMessagesAsGlobalChat = b; }), true, page);
             content.BlankLine();
 
+            var systemGlobalChatRegex = new InputFieldWithLabel(
+                TazLang.Get("mog_chattab_journal_systemglobalchatregex"), ThemeSettings.INPUT_WIDTH,
+                profile.SystemMessageGlobalChatRegex, false,
+                (s, e) => { profile.SystemMessageGlobalChatRegex = ((InputField.StbTextBox)s).Text; });
+            systemGlobalChatRegex.SetTooltip(TazLang.Get("mog_chattab_journal_systemglobalchatregextooltip"));
+            content.AddToRight(systemGlobalChatRegex, true, page);
+            content.BlankLine();
+
             content.AddToRight
             (
                 c = new CheckboxWithLabel
