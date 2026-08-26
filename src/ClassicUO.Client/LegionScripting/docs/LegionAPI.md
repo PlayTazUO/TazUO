@@ -502,6 +502,28 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ---
 
+### GetSpellsInSpellbook
+`(serial)`
+ Get the names of all spells scribed into a spellbook.
+ Example:
+ ```py
+ spells = API.GetSpellsInSpellbook(book_serial)
+ if spells:
+   for spell in spells:
+     API.SysMsg(spell)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `serial` | `uint` | ❌ No | Serial of the spellbook item |
+
+**Return Type:** `string[]`
+
+---
+
 ### ContextMenu
 `(serial, entry)`
  Send a context menu(right click menu) response.
