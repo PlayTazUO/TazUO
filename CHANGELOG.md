@@ -17,6 +17,8 @@ All notable changes to TazUO will be recorded here.
 * Migrated more settings to global scoped json settings
 
 ### Fixes
+* Fixed a client crash at login when the persistent-vars database could not be created or opened (e.g. the game's Data directory is not writable) - the client now logs a clear error and keeps running, with script variables simply not persisted until the directory is writable again
+* Hardened the SQLite layer to also quarantine and rebuild database files that cannot be opened (SQLite "unable to open database file"), not just files detected as corrupt
 * Fixed a client crash when using `API.Gumps.CreateGumpRenderedMapArea` (map offsets were being dereferenced as pointers), and made it render only the requested region with proper cleanup on close
 * Fixed a crash fix for a race condition while opening a container during shutdown
 * Myra sliders and checkboxes no longer listen to right clicks (Causing accidental changed when closing via right click over a checkbox/slider)
