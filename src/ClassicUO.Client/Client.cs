@@ -12,7 +12,6 @@ using SDL3;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace ClassicUO
 {
@@ -104,8 +103,6 @@ namespace ClassicUO
 
         private void LoadUOFiles()
         {
-            Task<bool> skipServerSelectTask = Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.SKIP_SERVER_SELECTION, false);
-
             TazLang.Load(Settings.GlobalSettings.UILanguage);
 
             // This provides Myra searchable combobox localization context.
@@ -190,9 +187,6 @@ namespace ClassicUO
                 Protocol |= ClientFlags.CF_SA;
             }
 
-            skipServerSelectTask.Wait();
-            Settings.GlobalSettings.SkipServerSelect = skipServerSelectTask.Result || CUOEnviroment.SkipServerSelect;
-
             Log.Trace($"Client path: '{clientPath}'");
             Log.Trace($"Client version: {clientVersion}");
             Log.Trace($"Protocol: {Protocol}");
@@ -251,7 +245,11 @@ namespace ClassicUO
                 // https://github.com/FNA-XNA/FNA/wiki/7:-FNA-Environment-Variables#fna_graphics_enable_highdpi
                 CUOEnviroment.IsHighDPI = Environment.GetEnvironmentVariable("FNA_GRAPHICS_ENABLE_HIGHDPI") == "1";
 
-                _ = Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, 1f, f => Game.SetScale(f));
+                #warning Remove migration >= 10/26/26
+                if (ProfileManager.GlobalSettings.MigrationVersion < 1){
+                    ProfileManager.GlobalSettings.GlobalScale = Settings.Get<float>(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, 1f);
+                    ProfileManager.GlobalSettings.MigrationVersion = 1;
+                }
 
                 Game.Run();
             }

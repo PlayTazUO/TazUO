@@ -209,7 +209,7 @@ namespace ClassicUO.Network
                 // User explicitly navigated back to server selection, don't auto-skip this time.
                 BypassServerSelectSkipOnce = false;
             }
-            else if (Settings.GlobalSettings.SkipServerSelect && Servers.Length == 1 && CurrentLoginStep == LoginSteps.ServerSelection) //Double check server selection, the previous call may initiate auto login and already select one
+            else if (ProfileManager.GlobalSettings.SkipServerSelection && Servers.Length == 1 && CurrentLoginStep == LoginSteps.ServerSelection) //Double check server selection, the previous call may initiate auto login and already select one
             {
                 SelectServer((byte)Servers[0].Index, Servers[0].Name);
                 return;

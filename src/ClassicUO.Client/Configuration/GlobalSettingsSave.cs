@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Game;
+using ClassicUO.Utility.Platforms;
 
 namespace ClassicUO.Configuration
 {
@@ -43,6 +45,13 @@ namespace ClassicUO.Configuration
         public bool EnableRainSound { get; set => SetProperty(ref field, value); } = true;
         public bool EnableCombatMusic { get; set => SetProperty(ref field, value); } = true;
         public bool ReproduceSoundsInBackground { get; set => SetProperty(ref field, value); }
+
+        /// <summary>Sound IDs the player has muted via the sound filter UI. Machine-wide.</summary>
+        public HashSet<int> FilteredSounds { get; set => SetProperty(ref field, value); } = new HashSet<int>();
+
+        /// <summary>Music IDs the player has muted via the music filter UI. Machine-wide.</summary>
+        public HashSet<int> FilteredMusic { get; set => SetProperty(ref field, value); } = new HashSet<int>();
+
         public bool UseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
         public bool SingleClickIconUse { get; set => SetProperty(ref field, value); }
 
@@ -51,5 +60,16 @@ namespace ClassicUO.Configuration
         /// journal and the classic journal gump.
         /// </summary>
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); }
+
+        /// <summary>
+        /// Only applies when there is only 1 server available
+        /// </summary>
+        public bool SkipServerSelection { get; set => SetProperty(ref field, value); } = true;
+        public bool ManagedZlib { get; set => SetProperty(ref field, value); } = !PlatformHelper.IsWindows;
+        public float GlobalScale { get; set => SetProperty(ref field, value); } = 1f;
+
+
+        
+        public int MigrationVersion { get; set => SetProperty(ref field, value); } = 0;
     }
 }

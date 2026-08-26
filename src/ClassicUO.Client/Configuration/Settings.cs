@@ -101,8 +101,6 @@ namespace ClassicUO.Configuration
 
         [JsonPropertyName("plugins")] public string[] Plugins { get; set; } = { "" };
 
-        [JsonIgnore] public bool SkipServerSelect { get; set; }
-
         /// <summary>
         /// Uses the campfire/Diablo-style character selection screen instead of the classic list.
         /// SQL-backed (Global scope) rather than JSON so it can be read/written at the

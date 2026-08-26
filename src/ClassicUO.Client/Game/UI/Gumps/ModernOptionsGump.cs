@@ -4215,7 +4215,7 @@ namespace ClassicUO.Game.UI.Gumps
                 c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_forcemanagedzlib"), isChecked: ZLib.ManagedZlibForced,
                     valueChanged: (e) =>
                     {
-                        _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, e);
+                        ProfileManager.GlobalSettings.ManagedZlib = e;
                         ZLib.SetForceManagedZlib(e);
                     }),
                 true, page
@@ -4889,7 +4889,7 @@ namespace ClassicUO.Game.UI.Gumps
                     float scale = ((float)s.GetValue() / (float)100);
 
                     Client.Game.SetScale(scale);
-                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, scale);
+                    ProfileManager.GlobalSettings.GlobalScale = scale;
                 }
             };
 

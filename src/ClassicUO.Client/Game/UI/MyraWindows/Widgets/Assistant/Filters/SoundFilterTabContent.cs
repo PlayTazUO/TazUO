@@ -205,7 +205,6 @@ public static class SoundFilterTabContent
                     if (SoundFilterManager.Instance.FilteredSounds.Add(Math.Clamp(id, 0, 65535)))
                         added++;
                 }
-                SoundFilterManager.Instance.Save();
                 BuildFilterList();
                 GameActions.Print($"Added {added} sound filter(s) from clipboard", Constants.HUE_SUCCESS);
             }

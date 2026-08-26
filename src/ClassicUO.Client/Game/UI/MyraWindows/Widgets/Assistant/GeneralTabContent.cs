@@ -55,7 +55,7 @@ public static class GeneralTabContent
         leftSide.Widgets.Add(new MyraButton("Apply scale", () =>
         {
             Client.Game.SetScale(gameScale);
-            _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, gameScale);
+            ProfileManager.GlobalSettings.GlobalScale = gameScale;
         }));
 
 
