@@ -1422,6 +1422,20 @@ def Contents(serial: "int") -> "int":
     """
     pass
 
+def GetSpellsInSpellbook(serial: "int") -> "list[str]":
+    """
+     Get the names of all spells scribed into a spellbook.
+     Example:
+     ```py
+     spells = API.GetSpellsInSpellbook(book_serial)
+     if spells:
+       for spell in spells:
+         API.SysMsg(spell)
+     ```
+    
+    """
+    pass
+
 def ContextMenu(serial: "int", entry: "int") -> None:
     """
      Send a context menu(right click menu) response.

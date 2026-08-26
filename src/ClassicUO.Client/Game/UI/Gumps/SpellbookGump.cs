@@ -1,12 +1,10 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 
-using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
-using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
@@ -858,63 +856,100 @@ namespace ClassicUO.Game.UI.Gumps
             return GetSpellDefinition(idx);
         }
 
-        private SpellDefinition GetSpellDefinition(int idx)
-        {
-            SpellDefinition def = null;
+        private SpellDefinition GetSpellDefinition(int idx) => GetSpellDefinition(_spellBookType, idx);
 
-            switch (_spellBookType)
+        private static SpellDefinition GetSpellDefinition(SpellBookType type, int idx)
+        {
+            switch (type)
             {
                 case SpellBookType.Magery:
-                    def = SpellsMagery.GetSpell(idx);
-
-                    break;
+                    return SpellsMagery.GetSpell(idx);
 
                 case SpellBookType.Necromancy:
-                    def = SpellsNecromancy.GetSpell(idx);
-
-                    break;
+                    return SpellsNecromancy.GetSpell(idx);
 
                 case SpellBookType.Chivalry:
-                    def = SpellsChivalry.GetSpell(idx);
-
-                    break;
+                    return SpellsChivalry.GetSpell(idx);
 
                 case SpellBookType.Bushido:
-                    def = SpellsBushido.GetSpell(idx);
-
-                    break;
+                    return SpellsBushido.GetSpell(idx);
 
                 case SpellBookType.Ninjitsu:
-                    def = SpellsNinjitsu.GetSpell(idx);
-
-                    break;
+                    return SpellsNinjitsu.GetSpell(idx);
 
                 case SpellBookType.Spellweaving:
-                    def = SpellsSpellweaving.GetSpell(idx);
-
-                    break;
+                    return SpellsSpellweaving.GetSpell(idx);
 
                 case SpellBookType.Mysticism:
-                    def = SpellsMysticism.GetSpell(idx);
-
-                    break;
+                    return SpellsMysticism.GetSpell(idx);
 
                 case SpellBookType.Mastery:
-                    def = SpellsMastery.GetSpell(idx);
-
-                    break;
+                    return SpellsMastery.GetSpell(idx);
 
                 case SpellBookType.Druidic when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
-                    def = SpellsDruid.GetSpell(idx);
+                    return SpellsDruid.GetSpell(idx);
 
-                    break;
                 case SpellBookType.Cleric when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
-                    def = SpellsCleric.GetSpell(idx);
+                    return SpellsCleric.GetSpell(idx);
 
-                    break;
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Returns the spell definitions contained in a spellbook item, in the order
+        /// they appear in the book. Only spells actually scribed into the book are included.
+        /// </summary>
+        /// <param name="spellbook">The spellbook item to read spells from.</param>
+        /// <returns>An empty list when the item is null or not a known spellbook.</returns>
+        public static List<SpellDefinition> GetSpellDefinitions(Item spellbook)
+        {
+            var result = new List<SpellDefinition>();
+
+            if (spellbook == null)
+            {
+                return result;
             }
 
-            return def;
+            SpellBookType type = GetSpellBookType(spellbook.World, spellbook);
+
+            if (type == SpellBookType.Unknown)
+            {
+                return result;
+            }
+
+            GetBookInfo(type, out _, out _, out _, out int maxSpellsCount, out _, out _);
+
+            var contained = new bool[maxSpellsCount];
+
+            for (LinkedObject i = spellbook.Items; i != null; i = i.Next)
+            {
+                var spell = (Item)i;
+                int count = spell.Amount;
+
+                if (count > 0 && count <= maxSpellsCount)
+                {
+                    contained[count - 1] = true;
+                }
+            }
+
+            for (int i = 0; i < contained.Length; i++)
+            {
+                if (!contained[i])
+                {
+                    continue;
+                }
+
+                SpellDefinition def = GetSpellDefinition(type, i + 1);
+
+                if (def != null && def.ID != 0)
+                {
+                    result.Add(def);
+                }
+            }
+
+            return result;
         }
 
         private static void GetBookInfo(
@@ -1360,66 +1395,64 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void AssignGraphic(Item item)
         {
+            SpellBookType type = GetSpellBookType(World, item);
+
+            if (type != SpellBookType.Unknown)
+            {
+                _spellBookType = type;
+            }
+        }
+
+        private static SpellBookType GetSpellBookType(World world, Item item)
+        {
             switch (item.Graphic)
             {
                 default:
                 case 0x0EFA:
-                    _spellBookType = SpellBookType.Magery;
-
-                    break;
+                    return SpellBookType.Magery;
 
                 case 0x2253:
-                    _spellBookType = SpellBookType.Necromancy;
-
-                    break;
+                    return SpellBookType.Necromancy;
 
                 case 0x2252:
-                    _spellBookType = SpellBookType.Chivalry;
-
-                    break;
+                    return SpellBookType.Chivalry;
 
                 case 0x238C:
 
-                    if ((World.ClientFeatures.Flags & CharacterListFlags.CLF_SAMURAI_NINJA) != 0)
+                    if ((world.ClientFeatures.Flags & CharacterListFlags.CLF_SAMURAI_NINJA) != 0)
                     {
-                        _spellBookType = SpellBookType.Bushido;
+                        return SpellBookType.Bushido;
                     }
 
                     break;
 
                 case 0x23A0:
 
-                    if ((World.ClientFeatures.Flags & CharacterListFlags.CLF_SAMURAI_NINJA) != 0)
+                    if ((world.ClientFeatures.Flags & CharacterListFlags.CLF_SAMURAI_NINJA) != 0)
                     {
-                        _spellBookType = SpellBookType.Ninjitsu;
+                        return SpellBookType.Ninjitsu;
                     }
 
                     break;
 
                 case 0x2D50:
-                    _spellBookType = SpellBookType.Spellweaving;
-
-                    break;
+                    return SpellBookType.Spellweaving;
 
                 case 0x2D9D:
-                    _spellBookType = SpellBookType.Mysticism;
-
-                    break;
+                    return SpellBookType.Mysticism;
 
                 case 0x225A:
                 case 0x225B:
-                    _spellBookType = SpellBookType.Mastery;
+                    return SpellBookType.Mastery;
 
-                    break;
                 case 0xCE3A when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
-                    _spellBookType = SpellBookType.Druidic;
+                    return SpellBookType.Druidic;
 
-                    break;
                 case 0xCE3B when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
-                    _spellBookType = SpellBookType.Cleric;
-
-                    break;
+                    return SpellBookType.Cleric;
             }
+
+            return SpellBookType.Unknown;
         }
 
         private void PageCornerOnMouseClick(object sender, MouseEventArgs e)

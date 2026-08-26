@@ -821,6 +821,34 @@ namespace ClassicUO.LegionScripting
         );
 
         /// <summary>
+        /// Get the names of all spells scribed into a spellbook.
+        /// Example:
+        /// ```py
+        /// spells = API.GetSpellsInSpellbook(book_serial)
+        /// if spells:
+        ///   for spell in spells:
+        ///     API.SysMsg(spell)
+        /// ```
+        /// </summary>
+        /// <param name="serial">Serial of the spellbook item</param>
+        /// <returns>An array of spell names contained in the book. Empty if the serial is not a spellbook.</returns>
+        public string[] GetSpellsInSpellbook(uint serial) => OnMain<string[]>
+        (() =>
+            {
+                Item spellbook = World.Items.Get(serial);
+
+                if (spellbook == null)
+                {
+                    return Array.Empty<string>();
+                }
+
+                return SpellbookGump.GetSpellDefinitions(spellbook)
+                    .Select(s => s.GetLocalizedName())
+                    .ToArray();
+            }
+        );
+
+        /// <summary>
         /// Send a context menu(right click menu) response.
         /// This does not open the menu, you do not need to open the menu first. This handles both in one action.
         /// Example:

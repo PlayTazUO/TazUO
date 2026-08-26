@@ -7,6 +7,9 @@ All notable changes to TazUO will be recorded here.
 ### Features
 * Separated Scavenger agent from Autoloot, they now each have their own loot lists and enabled/disabled toggles
 
+### Legion
+* Added `GetSpellsInSpellbook(uint serial)`, listing all spell names in that spellbook
+
 ### Misc
 * Migrated more settings to global scoped json settings
 
