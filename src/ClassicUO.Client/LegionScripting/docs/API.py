@@ -1273,6 +1273,15 @@ def OnHotKey(key: "str", callback: "Any" = None) -> None:
     """
     pass
 
+def IsKeyPressed(key: "str") -> "bool":
+    """
+     Returns true if the given key combination is currently held down.
+     The key format matches `OnHotKey` , e.g. "CTRL+SHIFT+F1" or "A".
+     Extra modifiers beyond those specified do not prevent a match.
+    
+    """
+    pass
+
 def ScheduleTimedCallback(delayMs: "int", callback: "Any", timesToRepeat: "int" = -1) -> "int":
     """
      Schedules a callback to be invoked after a specified delay.

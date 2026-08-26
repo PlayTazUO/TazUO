@@ -239,6 +239,23 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ---
 
+### IsKeyPressed
+`(key)`
+ Returns true if the given key combination is currently held down.
+ The key format matches `OnHotKey` , e.g. "CTRL+SHIFT+F1" or "A".
+ Extra modifiers beyond those specified do not prevent a match.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `key` | `string` | ❌ No | Key combination to check, e.g. "CTRL+SHIFT+F1". |
+
+**Return Type:** `bool`
+
+---
+
 ### ScheduleTimedCallback
 `(delayMs, callback, timesToRepeat)`
  Schedules a callback to be invoked after a specified delay.
