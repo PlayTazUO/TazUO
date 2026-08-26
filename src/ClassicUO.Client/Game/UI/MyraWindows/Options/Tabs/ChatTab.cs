@@ -43,8 +43,6 @@ public static class ChatTab
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_chattab_journal_label"), [TazLang.Get("mog_kw_journal"), TazLang.Get("mog_kw_log")]));
     }
 
-    /// <summary>Builds the controls displayed in the Journal options tab.</summary>
-    /// <returns>The Journal options fragment.</returns>
     private static OptionFragment GetJournalSubTabContent()
     {
         Profile profile = ProfileManager.CurrentProfile;

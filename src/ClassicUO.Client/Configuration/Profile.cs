@@ -693,10 +693,8 @@ namespace ClassicUO.Configuration
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); } = false;
         public bool HideJournalSystemPrefix { get; set => SetProperty(ref field, value); } = false;
 
-        /// <summary>Classifies matching system messages as global chat journal entries.</summary>
         public bool ClassifySystemMessagesAsGlobalChat { get; set => SetProperty(ref field, value); } = false;
 
-        /// <summary>Pattern used to identify system messages that belong to global chat.</summary>
         public string SystemMessageGlobalChatRegex { get; set => SetProperty(ref field, value); }
             = DefaultSystemMessageGlobalChatRegex;
 

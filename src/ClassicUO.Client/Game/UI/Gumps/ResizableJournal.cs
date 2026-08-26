@@ -304,11 +304,10 @@ namespace ClassicUO.Game.UI.Gumps
 
         public static void UpdateJournalOptions() => UIManager.ForEach<ResizableJournal>(p => p.UpdateOptions());
 
-        /// <summary>Determines whether a journal entry belongs to a selected message type filter.</summary>
-        /// <param name="textType">The source text category of the journal entry.</param>
-        /// <param name="messageType">The classified message type of the journal entry.</param>
-        /// <param name="filter">The selected journal filter.</param>
-        /// <returns><see langword="true"/> when the entry belongs to the filter.</returns>
+        /// <summary>
+        /// Keeps reclassified Global Chat entries out of the System filter even though their
+        /// underlying text category remains <see cref="TextType.SYSTEM"/>.
+        /// </summary>
         internal static bool MatchesMessageTypeFilter(TextType textType, MessageType messageType, MessageType filter)
         {
             if (messageType == MessageType.ChatSystem)
@@ -1113,10 +1112,6 @@ namespace ClassicUO.Game.UI.Gumps
                 CanMove = true;
             }
 
-            /// <summary>Determines whether an entry is visible under the journal's active filters.</summary>
-            /// <param name="type">The entry's source text category.</param>
-            /// <param name="messageType">The entry's classified message type.</param>
-            /// <returns><see langword="true"/> when the entry is visible.</returns>
             private bool CanBeDrawn(TextType type, MessageType messageType)
             {
                 if (_resizableJournal._currentFilter != null)

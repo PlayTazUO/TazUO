@@ -1,24 +1,25 @@
-// SPDX-License-Identifier: BSD-2-Clause
-
 using System;
 using System.Text.RegularExpressions;
 using ClassicUO.Game.Data;
 
 namespace ClassicUO.Game.Managers;
 
-/// <summary>Classifies server messages for journal filtering without changing their network handling.</summary>
+/// <summary>
+/// Applies the profile's Global Chat pattern to system messages. Invalid or slow patterns fail
+/// closed so user configuration cannot interrupt journal processing.
+/// </summary>
 internal static class JournalMessageClassifier
 {
     private static readonly object _patternLock = new();
     private static string _cachedPattern;
     private static Regex _cachedRegex;
 
-    /// <summary>Maps a matching system chat line to the existing global chat message type when enabled.</summary>
-    /// <param name="messageType">The message type supplied by the server.</param>
-    /// <param name="text">The message text to inspect.</param>
-    /// <param name="classifySystemChat">Whether system chat classification is enabled.</param>
-    /// <param name="pattern">The server-specific regular expression used to identify global chat.</param>
-    /// <returns>The message type to store in the journal.</returns>
+    /// <summary>Reclassifies eligible journal text without changing non-system message types.</summary>
+    /// <param name="messageType">The server type; only <see cref="MessageType.System"/> is eligible.</param>
+    /// <param name="text">The final journal text, matched without preprocessing.</param>
+    /// <param name="classifySystemChat">The profile-level feature switch.</param>
+    /// <param name="pattern">A .NET regex; blank or malformed patterns match nothing.</param>
+    /// <returns><see cref="MessageType.ChatSystem"/> on a match; otherwise the original type.</returns>
     public static MessageType Classify(
         MessageType messageType,
         string text,
@@ -46,7 +47,6 @@ internal static class JournalMessageClassifier
         }
     }
 
-    /// <summary>Returns the compiled form of the current profile pattern, or null when invalid.</summary>
     private static Regex GetPattern(string pattern)
     {
         lock (_patternLock)
