@@ -78,6 +78,9 @@ internal static class CrashSuggestedFix
             if (TryGetMissingAssemblyCrashFix(exception, out string assemblyFix))
                 return assemblyFix;
 
+            if (TryGetPolicyBlockedFileCrashFix(exception, out string policyBlockedFix))
+                return policyBlockedFix;
+
             if (TryGetFileAccessDeniedCrashFix(exception, out string fileAccessFix))
                 return fileAccessFix;
         }
@@ -444,6 +447,30 @@ internal static class CrashSuggestedFix
     }
 
     /// <summary>
+    ///     Recognizes a <see cref="FileLoadException" /> raised by Windows' application control
+    ///     policy (0x800711C7) for a file that is not one of TazUO's own assemblies.
+    ///     <c>TryGetMissingAssemblyCrashFix</c> already covers <c>ClassicUO.*.dll</c> at startup;
+    ///     this catches runtime dependencies such as MP3Sharp.dll that surface the same block
+    ///     while the game is running.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetPolicyBlockedFileCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        if (e is not FileLoadException fileLoadException ||
+            fileLoadException.HResult != H_RESULT_BLOCKED_BY_APPLICATION_POLICY)
+            return false;
+
+        string fileName = Path.GetFileName(fileLoadException.FileName ?? string.Empty);
+
+        fix = BuildPolicyBlockedFileFix(fileName, "Windows blocked a file TazUO needed to load while the game was running.");
+        return true;
+    }
+
+    /// <summary>
     ///     Sentence subject naming the file that failed, or a neutral stand-in when the loader
     ///     reported no name. Never substitutes a likely-looking name - a wrong file name in a
     ///     crash log sends the user chasing a file that was never involved.
@@ -498,13 +525,24 @@ internal static class CrashSuggestedFix
     ///     detected S mode state since a reinstall cannot fix S mode.
     /// </summary>
     /// <param name="assemblyName">File name from the exception, or empty if unreported.</param>
-    private static string BuildAssemblyBlockedByPolicyFix(string assemblyName)
+    private static string BuildAssemblyBlockedByPolicyFix(string assemblyName) =>
+        BuildPolicyBlockedFileFix(assemblyName, "Windows prevented TazUO from starting.");
+
+    /// <summary>
+    ///     Shared advice for <see cref="H_RESULT_BLOCKED_BY_APPLICATION_POLICY" /> - a Windows
+    ///     application control policy refused a file. The same block can hit a TazUO assembly at
+    ///     startup or a runtime dependency (for example MP3Sharp.dll), so the build differs only
+    ///     in its lead-in sentence.
+    /// </summary>
+    /// <param name="fileName">File name from the exception, or empty if unreported.</param>
+    /// <param name="header">Lead-in sentence; startup and runtime failures use different wording.</param>
+    private static string BuildPolicyBlockedFileFix(string fileName, string header)
     {
         SModeState sMode = WindowsSMode.GetState();
 
         var sb = new StringBuilder();
-        sb.AppendLine("Windows prevented TazUO from starting.");
-        sb.AppendLine($"{DescribeAffectedFile(assemblyName)} is present but Windows security prevented its load. This may sometimes occur after an update.");
+        sb.AppendLine(header);
+        sb.AppendLine($"{DescribeAffectedFile(fileName)} is present but Windows security prevented its load. This may sometimes occur after an update.");
 
         // Windows S mode allows only store apps - the fix here is specific - disable it.
         if (sMode == SModeState.Enabled)

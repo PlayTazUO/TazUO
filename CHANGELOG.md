@@ -17,6 +17,7 @@ All notable changes to TazUO will be recorded here.
 * Migrated more settings to global scoped json settings
 
 ### Fixes
+* Added a crash fix suggestion for when Windows blocks one of TazUO's files (for example MP3Sharp.dll) with an application control policy while the game is running
 * Fixed a client crash at login when the persistent-vars database could not be created or opened (e.g. the game's Data directory is not writable) - the client now logs a clear error and keeps running, with script variables simply not persisted until the directory is writable again
 * Hardened the SQLite layer to also quarantine and rebuild database files that cannot be opened (SQLite "unable to open database file"), not just files detected as corrupt
 * Fixed a client crash when using `API.Gumps.CreateGumpRenderedMapArea` (map offsets were being dereferenced as pointers), and made it render only the requested region with proper cleanup on close
