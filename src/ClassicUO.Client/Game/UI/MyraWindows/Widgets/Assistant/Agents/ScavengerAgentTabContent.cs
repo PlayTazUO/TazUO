@@ -8,12 +8,12 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.MyraWindows.Widgets.ArtTexture;
 using ClassicUO.Utility;
-using Myra.Graphics2D.UI;
 using Myra.Graphics2D;
+using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 
-public static class AutoLootAgentTabContent
+public static class ScavengerAgentTabContent
 {
     private static readonly string[] PriorityLabels = { "Low", "Normal", "High" };
 
@@ -23,13 +23,13 @@ public static class AutoLootAgentTabContent
 
         var root = new VerticalStackPanel { Spacing = 6 };
 
-        // Enable Auto Loot + Set Grab Bag
+        // Enable Scavenger + Set Grab Bag
         var topRow = new HorizontalStackPanel { Spacing = 8 };
         topRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.EnableAutoLoot,
-            b => profile.EnableAutoLoot = b,
-            "Enable Auto Loot",
-            "Auto Loot allows you to automatically pick up items from corpses based on configured criteria."));
+            profile.EnableScavenger,
+            b => profile.EnableScavenger = b,
+            "Enable Scavenger",
+            "Scavenger automatically picks up items on the ground based on configured criteria."));
         topRow.Widgets.Add(new MyraButton("Set Grab Bag", () =>
         {
             GameActions.Print(Client.Game.UO.World, "Target container to grab items into");
@@ -37,110 +37,12 @@ public static class AutoLootAgentTabContent
         }) { Tooltip = "Choose a container to grab items into" });
         root.Widgets.Add(topRow);
 
-        // Options
-        var optRow1 = new HorizontalStackPanel { Spacing = 8 };
-        optRow1.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.EnableAutoLootProgressBar,
-            b => profile.EnableAutoLootProgressBar = b,
-            "Enable Progress Bar",
-            "Shows a progress bar gump."));
-
-        var optRow2 = new HorizontalStackPanel { Spacing = 8 };
-        optRow2.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.AutoLootHumanCorpses,
-            b => profile.AutoLootHumanCorpses = b,
-            "Auto Loot Human Corpses",
-            "Auto loots human corpses."));
-        optRow2.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.HueCorpseAfterAutoloot,
-            b => profile.HueCorpseAfterAutoloot = b,
-            "Hue Corpse After Processing",
-            "Hue corpses after processing to make it easier to see if autoloot has processed them."));
-
-        var optRow3 = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
-        optRow3.Widgets.Add(new MyraLabel("Corpse retry delay (ms):", MyraLabel.TextStyle.P)
-        {
-            Tooltip = "Milliseconds before a failed corpse is retried. Minimum 1000ms.",
-            VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center
-        });
-        var retrySpinner = new SpinButton
-        {
-            Integer = true,
-            Value = profile.AutoLootRetryDelay,
-            Minimum = 1000,
-            Maximum = 600000,
-            MinWidth = 100,
-            Tooltip = "Milliseconds before a failed corpse is retried. Minimum 1000ms."
-        };
-        retrySpinner.ValueChangedByUser += (_, _) =>
-            profile.AutoLootRetryDelay = (int)Math.Clamp(retrySpinner.Value ?? 5000f, 1000f, 600000f);
-        optRow3.Widgets.Add(retrySpinner);
-        optRow3.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.DisableAutolootCorpseRetry,
-            b => profile.DisableAutolootCorpseRetry = b,
-            TazLang.Get("autoloot_disableretry"),
-            TazLang.Get("autoloot_disableretry_tooltip")));
-
-        root.Widgets.Add(new VisualContainer(
-            new VisualContainerProps { LabelText = "Options:" },
-            optRow1,
-            optRow2,
-            optRow3
-        ));
-
-        // Auto skinning section
-        var skinGraphicsBox = new MyraInputBox
-        {
-            Text = profile.AutoSkinningKnifeGraphics,
-            MinWidth = 250,
-            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers used to skin corpses. The first one found in your backpack is used. Separate multiple with ';'. Accepts hex (0x0F52) or decimal.")
-        };
-
-        var skinRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
-        skinRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.EnableAutoSkinning,
-            b => profile.EnableAutoSkinning = b,
-            TazLang.Get("autoskinning_enable", "Enable Auto Skinning"),
-            TazLang.Get("autoskinning_enable_tooltip", "When a corpse is opened, automatically use a knife/dagger from the graphic list below on it (double clicks the knife and targets the corpse). Uses the action queue.")));
-        skinRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.AutoSkinningHumanCorpses,
-            b => profile.AutoSkinningHumanCorpses = b,
-            TazLang.Get("autoskinning_humancorpses", "Skin Human Corpses"),
-            TazLang.Get("autoskinning_humancorpses_tooltip", "Also auto skin human/humanoid corpses.")));
-        skinRow.Widgets.Add(new MyraButton(TazLang.Get("autoskinning_targetweapon", "Target Skinning Weapon"), () =>
-        {
-            World.Instance.TargetManager.SetTargeting(targeted =>
-            {
-                if (targeted is Entity entity && SerialHelper.IsItem(entity))
-                {
-                    string appended = AppendSkinningGraphic(profile.AutoSkinningKnifeGraphics, entity.Graphic);
-                    profile.AutoSkinningKnifeGraphics = appended;
-                    skinGraphicsBox.Text = appended;
-                }
-            });
-        }) { Tooltip = TazLang.Get("autoskinning_targetweapon_tooltip", "Target a weapon to add its graphic to the skinning knife list.") });
-
-        var skinGraphicsRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
-        skinGraphicsRow.Widgets.Add(new MyraLabel(TazLang.Get("autoskinning_graphics", "Knife graphic IDs:"), MyraLabel.TextStyle.P)
-        {
-            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers used to skin corpses. The first one found in your backpack is used. Separate multiple with ';'. Accepts hex (0x0F52) or decimal."),
-            VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center
-        });
-        skinGraphicsBox.TextChangedByUser += (_, _) => profile.AutoSkinningKnifeGraphics = skinGraphicsBox.Text;
-        skinGraphicsRow.Widgets.Add(skinGraphicsBox);
-
-        root.Widgets.Add(new VisualContainer(
-            new VisualContainerProps { LabelText = TazLang.Get("autoskinning_title", "Auto Skinning") },
-            skinRow,
-            skinGraphicsRow
-        ));
-
-        // Entries panel (declared early so the loot-list selector callbacks can rebuild it).
+        // Entries panel (declared early so the list selector callbacks can rebuild it).
         var entriesPanel = new VerticalStackPanel { Spacing = 4 };
 
-        // Loot list selection
+        // Scavenger list selection
         root.Widgets.Add(new MyraSpacer(15, 5));
-        root.Widgets.Add(new MyraLabel("Loot Lists:", MyraLabel.TextStyle.H2));
+        root.Widgets.Add(new MyraLabel("Scavenger Lists:", MyraLabel.TextStyle.H2));
 
         var listSelectRow = new HorizontalStackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
 
@@ -153,12 +55,12 @@ public static class AutoLootAgentTabContent
             suppressListEvent = true;
             listCombo.ListView.Widgets.Clear();
 
-            IReadOnlyList<AutoLootManager.AutoLootList> lists = AutoLootManager.Instance.Lists;
+            IReadOnlyList<ScavengerManager.ScavengerList> lists = ScavengerManager.Instance.Lists;
             int selectedIdx = 0;
             for (int i = 0; i < lists.Count; i++)
             {
                 listCombo.ListView.Widgets.Add(new Label { Text = lists[i].Name });
-                if (lists[i] == AutoLootManager.Instance.CurrentList) selectedIdx = i;
+                if (lists[i] == ScavengerManager.Instance.CurrentList) selectedIdx = i;
             }
 
             if (lists.Count > 0) listCombo.ListView.SelectedIndex = selectedIdx;
@@ -171,10 +73,10 @@ public static class AutoLootAgentTabContent
             if (suppressListEvent) return;
 
             int? idx = listCombo.ListView.SelectedIndex;
-            IReadOnlyList<AutoLootManager.AutoLootList> lists = AutoLootManager.Instance.Lists;
+            IReadOnlyList<ScavengerManager.ScavengerList> lists = ScavengerManager.Instance.Lists;
             if (idx.HasValue && idx.Value >= 0 && idx.Value < lists.Count)
             {
-                AutoLootManager.Instance.SelectList(lists[idx.Value]);
+                ScavengerManager.Instance.SelectList(lists[idx.Value]);
                 BuildEntriesList();
             }
         };
@@ -183,45 +85,47 @@ public static class AutoLootAgentTabContent
         listSelectRow.Widgets.Add(new MyraButton("New", () =>
         {
             var nameBox = new MyraInputBox { HintText = "List name", Width = 220 };
-            new MyraDialog("New Loot List", nameBox, ok =>
+            new MyraDialog("New Scavenger List", nameBox, ok =>
             {
                 if (!ok) return;
-                AutoLootManager.Instance.AddList(nameBox.Text);
+                ScavengerManager.Instance.AddList(nameBox.Text);
                 RefreshListCombo();
                 BuildEntriesList();
             });
-        }) { Tooltip = "Create a new loot list and switch to it." });
+        }) { Tooltip = "Create a new scavenger list and switch to it." });
 
         listSelectRow.Widgets.Add(new MyraButton("Rename", () =>
         {
-            AutoLootManager.AutoLootList current = AutoLootManager.Instance.CurrentList;
+            ScavengerManager.ScavengerList current = ScavengerManager.Instance.CurrentList;
+            if (current == null) return;
             var nameBox = new MyraInputBox { Text = current.Name, HintText = "List name", Width = 220 };
-            new MyraDialog("Rename Loot List", nameBox, ok =>
+            new MyraDialog("Rename Scavenger List", nameBox, ok =>
             {
                 if (!ok || string.IsNullOrWhiteSpace(nameBox.Text)) return;
-                AutoLootManager.Instance.RenameList(current, nameBox.Text);
+                ScavengerManager.Instance.RenameList(current, nameBox.Text);
                 RefreshListCombo();
             });
-        }) { Tooltip = "Rename the selected loot list." });
+        }) { Tooltip = "Rename the selected scavenger list." });
 
         deleteListBtn = new MyraButton("Delete List", () =>
         {
-            if (AutoLootManager.Instance.Lists.Count <= 1)
+            if (ScavengerManager.Instance.Lists.Count <= 1)
             {
-                GameActions.Print("You must have at least one loot list.", Constants.HUE_ERROR);
+                GameActions.Print("You must have at least one scavenger list.", Constants.HUE_ERROR);
                 return;
             }
 
-            AutoLootManager.AutoLootList current = AutoLootManager.Instance.CurrentList;
-            new MyraDialog("Delete Loot List",
+            ScavengerManager.ScavengerList current = ScavengerManager.Instance.CurrentList;
+            if (current == null) return;
+            new MyraDialog("Delete Scavenger List",
                 new MyraLabel($"Delete list \"{current.Name}\" and all of its entries?", MyraLabel.TextStyle.P),
                 ok =>
                 {
-                    if (!ok || !AutoLootManager.Instance.DeleteList(current)) return;
+                    if (!ok || !ScavengerManager.Instance.DeleteList(current)) return;
                     RefreshListCombo();
                     BuildEntriesList();
                 });
-        }) { Tooltip = "Delete the selected loot list. At least one list must remain." };
+        }) { Tooltip = "Delete the selected scavenger list. At least one list must remain." };
         listSelectRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(deleteListBtn));
 
         root.Widgets.Add(listSelectRow);
@@ -233,7 +137,7 @@ public static class AutoLootAgentTabContent
         void BuildEntriesList()
         {
             entriesPanel.Widgets.Clear();
-            List<AutoLootManager.AutoLootConfigEntry>? entries = AutoLootManager.Instance.AutoLootEntries;
+            List<ScavengerManager.ScavengerEntry>? entries = ScavengerManager.Instance.ScavengerEntries;
 
             if (entries.Count == 0)
             {
@@ -257,10 +161,10 @@ public static class AutoLootAgentTabContent
             int dataRow = 1;
             for (int i = entries.Count - 1; i >= 0; i--)
             {
-                AutoLootManager.AutoLootConfigEntry entry = entries[i];
+                ScavengerManager.ScavengerEntry entry = entries[i];
 
                 // Art image (col 0)
-                if (entry.Graphic is > 0 and < ushort.MaxValue)
+                if (entry.Graphic > 0)
                     grid.AddWidget(new MyraArtTexture((uint)entry.Graphic) { Tooltip = entry.Name, Margin = new Thickness(2, 0) }, dataRow, 0);
                 else
                 {
@@ -278,13 +182,13 @@ public static class AutoLootAgentTabContent
                 // Graphic
                 var graphicBox = new MyraInputBox
                 {
-                    Text = entry.Graphic == ushort.MaxValue ? "-1" : entry.Graphic.ToString(),
+                    Text = entry.Graphic == -1 ? "-1" : entry.Graphic.ToString(),
                     Tooltip = "Item graphic ID. Set to -1 to match any graphic.",
                 };
                 graphicBox.TextChangedByUser += (_, _) =>
                 {
                     if (StringHelper.TryParseInt(graphicBox.Text, out int g))
-                        entry.Graphic = g == -1 ? ushort.MaxValue : g;
+                        entry.Graphic = g;
                 };
                 grid.AddWidget(graphicBox, dataRow, 1);
 
@@ -320,14 +224,14 @@ public static class AutoLootAgentTabContent
                 priorityRow.Widgets.Add(new MyraButton("<", () =>
                 {
                     int p = ((int)entry.Priority - 1 + PriorityLabels.Length) % PriorityLabels.Length;
-                    entry.Priority = (AutoLootManager.AutoLootPriority)p;
+                    entry.Priority = (ScavengerManager.ScavengerPriority)p;
                     priorityLabel.Text = PriorityLabels[p];
                 }));
                 priorityRow.Widgets.Add(priorityLabel);
                 priorityRow.Widgets.Add(new MyraButton(">", () =>
                 {
                     int p = ((int)entry.Priority + 1) % PriorityLabels.Length;
-                    entry.Priority = (AutoLootManager.AutoLootPriority)p;
+                    entry.Priority = (ScavengerManager.ScavengerPriority)p;
                     priorityLabel.Text = PriorityLabels[p];
                 }));
                 grid.AddWidget(priorityRow, dataRow, 4);
@@ -377,7 +281,7 @@ public static class AutoLootAgentTabContent
                 }) { Tooltip = "Target a container to use as the destination for this entry." });
                 grid.AddWidget(destCell, dataRow, 6);
 
-                // Up / Down reorder buttons (col 6)
+                // Up / Down reorder buttons (col 7)
                 // Display is reversed: i = entries.Count-1 is top row, i=0 is bottom row.
                 // "Up" in display = swap with i+1 in list; "Down" = swap with i-1.
                 var orderRow = new HorizontalStackPanel { Spacing = 2 };
@@ -407,7 +311,7 @@ public static class AutoLootAgentTabContent
 
                 var delBtn = new MyraButton("Delete", () =>
                 {
-                    AutoLootManager.Instance.TryRemoveAutoLootEntry(entry.Uid);
+                    ScavengerManager.Instance.TryRemoveScavengerEntry(entry.Uid);
                     BuildEntriesList();
                 });
                 delBtn.VerticalAlignment = VerticalAlignment.Center;
@@ -450,17 +354,14 @@ public static class AutoLootAgentTabContent
                 if (graphic > ushort.MaxValue)
                     return;
 
-                if(graphic == -1)
-                    graphic = ushort.MaxValue;
-
                 if (!MyraInputBox.TryParseHue(newHueBox.Text, out ushort hue))
                     hue = ushort.MaxValue;
 
-                AutoLootManager.AutoLootConfigEntry? entry = AutoLootManager.Instance.AddAutoLootEntry((ushort)graphic, hue, newNameBox.Text);
+                ScavengerManager.ScavengerEntry? entry = ScavengerManager.Instance.AddScavengerEntry(graphic, hue, newNameBox.Text);
                 if (entry == null) return;
 
                 entry.RegexSearch = newRegexBox.Text;
-                if (int.TryParse(newMaxBox.Text, out int maxAmount))
+                if (int.TryParse(newMaxBox.Text, out int maxAmount) && maxAmount >= 0)
                     entry.MaxAmount = maxAmount;
 
                 newNameBox.Text = "";
@@ -484,45 +385,14 @@ public static class AutoLootAgentTabContent
         addEntryPanel.Widgets.Add(addFieldsRow);
         addEntryPanel.Widgets.Add(addConfirmRow);
 
-        // Import from character inline panel
-        var importCharPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-
-        void BuildImportCharPanel()
-        {
-            importCharPanel.Widgets.Clear();
-            Dictionary<string, List<AutoLootManager.AutoLootConfigEntry>>? otherConfigs = AutoLootManager.Instance.GetOtherCharacterConfigs();
-
-            if (otherConfigs.Count == 0)
-            {
-                importCharPanel.Widgets.Add(new MyraLabel("No other character configurations found.", MyraLabel.TextStyle.P));
-            }
-            else
-            {
-                importCharPanel.Widgets.Add(new MyraLabel("Select a character to import from:", MyraLabel.TextStyle.H3));
-                foreach (KeyValuePair<string, List<AutoLootManager.AutoLootConfigEntry>> kv in otherConfigs.OrderBy(c => c.Key))
-                {
-                    string charName = kv.Key;
-                    List<AutoLootManager.AutoLootConfigEntry> configs = kv.Value;
-                    importCharPanel.Widgets.Add(new MyraButton($"{charName} ({configs.Count} items)", () =>
-                    {
-                        AutoLootManager.Instance.ImportFromOtherCharacter(charName, configs);
-                        BuildEntriesList();
-                        importCharPanel.Visible = false;
-                    }));
-                }
-            }
-
-            importCharPanel.Widgets.Add(new MyraButton("Cancel", () => importCharPanel.Visible = false));
-        }
-
         // Action buttons
         var actionRow = new HorizontalStackPanel { Spacing = 6 };
         actionRow.Widgets.Add(new MyraButton("Import", () =>
         {
             string? json = Clipboard.GetClipboardText();
-            if (json.NotNullNotEmpty() && AutoLootManager.Instance.ImportFromJson(json))
+            if (json.NotNullNotEmpty() && ScavengerManager.Instance.ImportFromJson(json))
             {
-                GameActions.Print("Imported loot list!", Constants.HUE_SUCCESS);
+                GameActions.Print("Imported scavenger list!", Constants.HUE_SUCCESS);
                 BuildEntriesList();
                 return;
             }
@@ -531,15 +401,9 @@ public static class AutoLootAgentTabContent
 
         actionRow.Widgets.Add(new MyraButton("Export", () =>
         {
-            AutoLootManager.Instance.GetJsonExport()?.CopyToClipboard();
-            GameActions.Print("Exported loot list to your clipboard!", Constants.HUE_SUCCESS);
+            ScavengerManager.Instance.GetJsonExport()?.CopyToClipboard();
+            GameActions.Print("Exported scavenger list to your clipboard!", Constants.HUE_SUCCESS);
         }) { Tooltip = "Export your list to clipboard." });
-
-        actionRow.Widgets.Add(new MyraButton("Import from Character", () =>
-        {
-            BuildImportCharPanel();
-            importCharPanel.Visible = !importCharPanel.Visible;
-        }) { Tooltip = "Import autoloot configuration from another character." });
 
         var addRow = new HorizontalStackPanel { Spacing = 6 };
         addRow.Widgets.Add(new MyraButton("Add Manual Entry", () => addEntryPanel.Visible = !addEntryPanel.Visible));
@@ -549,34 +413,17 @@ public static class AutoLootAgentTabContent
             {
                 if (targeted is Entity entity && SerialHelper.IsItem(entity))
                 {
-                    AutoLootManager.Instance.AddAutoLootEntry(entity.Graphic, entity.Hue, entity.Name);
+                    ScavengerManager.Instance.AddScavengerEntry(entity.Graphic, entity.Hue, entity.Name);
                     BuildEntriesList();
                 }
             });
-        }) { Tooltip = "Target an item to add it to the loot list." });
+        }) { Tooltip = "Target an item to add it to the scavenger list." });
 
         root.Widgets.Add(actionRow);
         root.Widgets.Add(addRow);
         root.Widgets.Add(addEntryPanel);
-        root.Widgets.Add(importCharPanel);
         root.Widgets.Add(new ScrollViewer { MaxHeight = 300, Content = entriesPanel });
 
         return root;
-    }
-
-    /// <summary>
-    /// Appends <paramref name="graphic"/> (formatted as hex) to a ';'-separated skinning graphic
-    /// list, skipping it if an equal value is already present.
-    /// </summary>
-    private static string AppendSkinningGraphic(string current, ushort graphic)
-    {
-        current ??= string.Empty;
-
-        foreach (string part in current.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            if (StringHelper.TryParseInt(part, out int existing) && existing == graphic)
-                return current;
-
-        string entry = $"0x{graphic:X4}";
-        return string.IsNullOrWhiteSpace(current) ? entry : $"{current.TrimEnd(';', ' ')};{entry}";
     }
 }
