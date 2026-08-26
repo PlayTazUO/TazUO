@@ -8,6 +8,7 @@ All notable changes to TazUO will be recorded here.
 * Separated Scavenger agent from Autoloot, they now each have their own loot lists and enabled/disabled toggles
 
 ### Fixes
+* Myra sliders and checkboxes no longer listen to right clicks (Causing accidental changed when closing via right click over a checkbox/slider)
 * Improved treasure map location calculations - [P.R 1012](https://github.com/PlayTazUO/TazUO/pull/1012) [Erumite](https://github.com/Erumite)
 * Door movement blocking no longer stops you from walking into closed doors when the "Open doors while pathfinding" (smooth doors) setting is enabled, and the option label is now "Block walking into doors"
 

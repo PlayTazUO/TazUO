@@ -2,6 +2,7 @@
 
 using System;
 using ClassicUO.Common;
+using Myra.Events;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 
@@ -32,6 +33,14 @@ public class MyraCheckButton : CheckButton
         CheckContentSpacing = 0;
         Padding = new Thickness(2);
         VerticalAlignment = VerticalAlignment.Center;
+    }
+
+    public override void OnTouchDown(TouchEventArgs args)
+    {
+        if (args.Button != TouchButton.Left)
+            return;
+            
+        base.OnTouchDown(args);
     }
 
     /// <summary>
