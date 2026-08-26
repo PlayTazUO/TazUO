@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ClassicUO.Configuration;
@@ -17,13 +18,45 @@ namespace ClassicUO.LegionScripting
         private static string _accountScopeKey = "";
         private static string _serverScopeKey = "";
 
+        private static bool _dbInitAttempted;
+        private static string _dataDirectoryOverride;
+
+        private static PersistentVarsDb _db;
+
         private static PersistentVarsDb Db
         {
             get
             {
-                field ??= new PersistentVarsDb();
-                return field;
+                if (!_dbInitAttempted)
+                {
+                    _dbInitAttempted = true;
+                    try
+                    {
+                        _db = new PersistentVarsDb(_dataDirectoryOverride);
+                    }
+                    catch (Exception ex)
+                    {
+                        // The database cannot be opened (e.g. the Data directory is not writable, or a
+                        // broken file could not be replaced). Scripting still works - variables are just
+                        // not persisted, and every accessor below degrades to its default.
+                        Log.Error($"Persistent vars database could not be opened at '{Path.Combine(_dataDirectoryOverride ?? SqliteDatabase.DefaultDataDirectory, DB_FILE)}': {ex.Message}");
+                    }
+                }
+
+                return _db;
             }
+        }
+
+        /// <summary>
+        /// Resets the singleton database for tests. Optionally redirects it to <paramref name="dataDirectory"/>
+        /// so tests never touch the real Data directory; pass <c>null</c> to restore the production default.
+        /// </summary>
+        internal static void ResetForTesting(string dataDirectory = null)
+        {
+            _db?.Dispose();
+            _db = null;
+            _dbInitAttempted = false;
+            _dataDirectoryOverride = dataDirectory;
         }
 
         public static void Load()
@@ -63,9 +96,13 @@ namespace ClassicUO.LegionScripting
         {
             (string scopeStr, string scopeKey) = GetScopeKeyPair(scope);
 
+            PersistentVarsDb db = Db;
+            if (db == null)
+                return defaultValue;
+
             try
             {
-                string value = await Db.GetValueAsync(scopeStr, scopeKey, key).ConfigureAwait(false);
+                string value = await db.GetValueAsync(scopeStr, scopeKey, key).ConfigureAwait(false);
                 return value ?? defaultValue;
             }
             catch (Exception ex)
@@ -83,9 +120,16 @@ namespace ClassicUO.LegionScripting
         {
             (string scopeStr, string scopeKey) = GetScopeKeyPair(scope);
 
+            PersistentVarsDb db = Db;
+            if (db == null)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
             try
             {
-                await Db.SaveValueAsync(scopeStr, scopeKey, key, value).ConfigureAwait(false);
+                await db.SaveValueAsync(scopeStr, scopeKey, key, value).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -103,9 +147,16 @@ namespace ClassicUO.LegionScripting
         {
             (string scopeStr, string scopeKey) = GetScopeKeyPair(scope);
 
+            PersistentVarsDb db = Db;
+            if (db == null)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
             try
             {
-                await Db.DeleteValueAsync(scopeStr, scopeKey, key).ConfigureAwait(false);
+                await db.DeleteValueAsync(scopeStr, scopeKey, key).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -121,9 +172,13 @@ namespace ClassicUO.LegionScripting
         {
             (string scopeStr, string scopeKey) = GetScopeKeyPair(scope);
 
+            PersistentVarsDb db = Db;
+            if (db == null)
+                return new Dictionary<string, string>();
+
             try
             {
-                return await Db.GetAllAsync(scopeStr, scopeKey).ConfigureAwait(false);
+                return await db.GetAllAsync(scopeStr, scopeKey).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -145,7 +200,7 @@ namespace ClassicUO.LegionScripting
                 SqliteColumn.Str("value", notNull: true));
 
             // The schema constructor ensures the table; only the index and one-time id backfill remain.
-            public PersistentVarsDb() : base(Schema, DB_FILE)
+            public PersistentVarsDb(string dataDirectory = null) : base(Schema, DB_FILE, dataDirectory)
             {
                 InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
             }

@@ -47,6 +47,9 @@ namespace ClassicUO.Game.Managers
         // row helpers (AddOrUpdateAsync/DeleteAsync/GetAsync) require this to be set.
         private readonly SqliteTableSchema? _schema;
 
+        /// <summary>The default directory databases live in when the constructor is not given one.</summary>
+        internal static string DefaultDataDirectory => Path.Combine(CUOEnviroment.ExecutablePath, "Data");
+
         /// <summary>The directory that contains the database file.</summary>
         protected string DataDirectory { get; }
 
@@ -67,7 +70,7 @@ namespace ClassicUO.Game.Managers
         /// </param>
         protected SqliteDatabase(string dbFileName, string dataDirectory = null)
         {
-            DataDirectory = dataDirectory ?? Path.Combine(CUOEnviroment.ExecutablePath, "Data");
+            DataDirectory = dataDirectory ?? DefaultDataDirectory;
             DatabasePath = Path.Combine(DataDirectory, dbFileName);
 
             if (!Directory.Exists(DataDirectory))
@@ -137,9 +140,9 @@ namespace ClassicUO.Game.Managers
                         {
                             return await OpenAndRunAsync(operation).ConfigureAwait(false);
                         }
-                        catch (SqliteException ex) when (IsCorruptionError(ex) && QuarantineCorruptDatabase(ex))
+                        catch (SqliteException ex) when (IsUnusableDatabaseError(ex) && QuarantineUnusableDatabase(ex))
                         {
-                            // The file was corrupt and has been quarantined; a fresh database will be created
+                            // The file was unusable and has been quarantined; a fresh database will be created
                             // on this retry. Only one retry is attempted - if it fails again the error propagates.
                             return await OpenAndRunAsync(operation).ConfigureAwait(false);
                         }
@@ -592,12 +595,14 @@ namespace ClassicUO.Game.Managers
         private static string QuoteLiteral(string value) => "'" + value.Replace("'", "''") + "'";
 
         /// <summary>
-        /// Returns true if the exception indicates the database file itself is corrupt/unreadable
-        /// (a malformed schema or a file that is not a database) rather than a transient or usage error.
-        /// These are the only conditions that quarantining and recreating the file can recover from.
+        /// Returns true if the exception means the database file itself cannot be used - it is corrupt,
+        /// not a database, or cannot be opened (SQLITE_CANTOPEN) - rather than a transient or usage
+        /// error. These are the conditions that quarantining and recreating the file can recover from; a
+        /// file that cannot be opened because its directory is unwritable simply fails the quarantine
+        /// move, letting the original error propagate.
         /// </summary>
-        private static bool IsCorruptionError(SqliteException ex) =>
-            ex.SqliteErrorCode == SQLITE_CORRUPT || ex.SqliteErrorCode == SQLITE_NOTADB;
+        private static bool IsUnusableDatabaseError(SqliteException ex) =>
+            ex.SqliteErrorCode == SQLITE_CORRUPT || ex.SqliteErrorCode == SQLITE_NOTADB || ex.SqliteErrorCode == SQLITE_CANTOPEN;
 
         /// <summary>
         /// Returns true if the exception is transient lock contention from another client holding the
@@ -626,13 +631,16 @@ namespace ClassicUO.Game.Managers
 
         // SQLite primary result codes (see https://www.sqlite.org/rescode.html). A malformed database
         // schema, "database disk image is malformed" all report SQLITE_CORRUPT (11); a file whose header
-        // is not recognizable as a SQLite database reports SQLITE_NOTADB (26). SQLITE_BUSY (5) and
-        // SQLITE_LOCKED (6) are lock contention; a duplicate/missing column on ALTER reports the generic
-        // SQLITE_ERROR (1).
+        // is not recognizable as a SQLite database reports SQLITE_NOTADB (26). SQLITE_CANTOPEN (14),
+        // "unable to open database file", is surfaced when a file (or a WAL/journal sidecar) cannot be
+        // opened or created - e.g. the file's place is taken by a directory, or the containing directory
+        // is not writable. SQLITE_BUSY (5) and SQLITE_LOCKED (6) are lock contention; a duplicate/missing
+        // column on ALTER reports the generic SQLITE_ERROR (1).
         private const int SQLITE_ERROR = 1;
         private const int SQLITE_BUSY = 5;
         private const int SQLITE_LOCKED = 6;
         private const int SQLITE_CORRUPT = 11;
+        private const int SQLITE_CANTOPEN = 14;
         private const int SQLITE_NOTADB = 26;
 
         // How long a connection waits for a lock another client holds before giving up (SQLITE_BUSY), and
@@ -642,13 +650,14 @@ namespace ClassicUO.Game.Managers
         private const int BUSY_RETRY_BASE_DELAY_MS = 50;
 
         /// <summary>
-        /// Moves a corrupt database file (and its WAL/SHM/journal sidecars) aside so a fresh, empty
-        /// database can be created in its place, letting the client keep running instead of crashing on
-        /// startup. The corrupt copy is preserved with a <c>.corrupt</c> suffix for later inspection.
-        /// Returns true only if the primary file was successfully moved out of the way, meaning the
-        /// caller can safely retry the operation against a clean database.
+        /// Moves an unusable database file (corrupt, not a database, or one that cannot be opened - and
+        /// its WAL/SHM/journal sidecars) aside so a fresh, empty database can be created in its place,
+        /// letting the client keep running instead of crashing on startup. The bad copy is preserved with
+        /// a <c>.corrupt</c> suffix for later inspection. Returns true only if the primary file was
+        /// successfully moved out of the way, meaning the caller can safely retry the operation against a
+        /// clean database.
         /// </summary>
-        private bool QuarantineCorruptDatabase(SqliteException ex)
+        private bool QuarantineUnusableDatabase(SqliteException ex)
         {
             try
             {
@@ -668,14 +677,14 @@ namespace ClassicUO.Game.Managers
                 TryDelete(DatabasePath + "-shm");
                 TryDelete(DatabasePath + "-journal");
 
-                Log.Warn($"Corrupt SQLite database '{DatabasePath}' detected ({ex.Message.Trim()}). " +
+                Log.Warn($"Unusable SQLite database '{DatabasePath}' detected ({ex.Message.Trim()}). " +
                          $"Moved it to '{quarantinePath}' and recreating an empty database.");
 
                 return !File.Exists(DatabasePath);
             }
             catch (Exception cleanupEx)
             {
-                Log.Error($"Failed to quarantine corrupt SQLite database '{DatabasePath}': {cleanupEx.Message}");
+                Log.Error($"Failed to quarantine unusable SQLite database '{DatabasePath}': {cleanupEx.Message}");
                 return false;
             }
         }
