@@ -14,6 +14,7 @@ All notable changes to TazUO will be recorded here.
 * Added `GetSpellsInSpellbook(uint serial)`, listing all spell names in that spellbook
 
 ### Misc
+* Increase max global scale to 300% up from 175%
 * Migrated more settings to global scoped json settings
 
 ### Fixes
