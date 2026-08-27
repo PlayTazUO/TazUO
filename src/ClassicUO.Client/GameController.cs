@@ -98,7 +98,7 @@ namespace ClassicUO
         }
 
         public readonly float MinRenderScale = 0.1f;
-        public readonly float MaxRenderScale = 1.75f;
+        public readonly float MaxRenderScale = 3.0f;
 
         public float RenderScale
         {
