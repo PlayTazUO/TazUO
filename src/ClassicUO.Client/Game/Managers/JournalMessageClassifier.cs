@@ -10,7 +10,6 @@ namespace ClassicUO.Game.Managers;
 /// </summary>
 internal static class JournalMessageClassifier
 {
-    private static readonly object _patternLock = new();
     private static string _cachedPattern;
     private static Regex _cachedRegex;
 
@@ -49,29 +48,26 @@ internal static class JournalMessageClassifier
 
     private static Regex GetPattern(string pattern)
     {
-        lock (_patternLock)
+        if (pattern == _cachedPattern)
         {
-            if (pattern == _cachedPattern)
-            {
-                return _cachedRegex;
-            }
-
-            _cachedPattern = pattern;
-
-            try
-            {
-                _cachedRegex = new Regex(
-                    pattern,
-                    RegexOptions.Compiled | RegexOptions.CultureInvariant,
-                    TimeSpan.FromMilliseconds(100)
-                );
-            }
-            catch (ArgumentException)
-            {
-                _cachedRegex = null;
-            }
-
             return _cachedRegex;
         }
+
+        _cachedPattern = pattern;
+
+        try
+        {
+            _cachedRegex = new Regex(
+                pattern,
+                RegexOptions.Compiled | RegexOptions.CultureInvariant,
+                TimeSpan.FromMilliseconds(100)
+            );
+        }
+        catch (ArgumentException)
+        {
+            _cachedRegex = null;
+        }
+
+        return _cachedRegex;
     }
 }
