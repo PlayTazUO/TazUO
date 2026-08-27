@@ -216,6 +216,7 @@ namespace ClassicUO.Game.UI.Gumps
             label.X = x;
             label.Y = y;
             label.AcceptMouseInput = tooltip != null;
+            label.CanMove = true;
             label.SetTooltip(tooltip);
             Add(label);
 

@@ -492,7 +492,8 @@ namespace ClassicUO.Game.UI.Gumps
                     new string[]
                     {
                         TazLang.Get("mog_general_statusgumpstyle_standard"), TazLang.Get("mog_general_statusgumpstyle_old"),
-                        TazLang.Get("mog_general_statusgumpstyle_modernvertical"), TazLang.Get("mog_general_statusgumpstyle_modernhorizontal")
+                        TazLang.Get("mog_general_statusgumpstyle_modernvertical"), TazLang.Get("mog_general_statusgumpstyle_modernhorizontal"),
+                        TazLang.Get("mog_general_statusgumpstyle_compact")
                     },
                     (int)profile.StatusGumpStyle, (s, n) =>
                     {
