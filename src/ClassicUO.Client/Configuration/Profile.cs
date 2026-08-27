@@ -172,6 +172,7 @@ namespace ClassicUO.Configuration
         public bool EnabledCriminalActionQuery { get; set => SetProperty(ref field, value); } = true;
         public bool EnabledBeneficialCriminalActionQuery { get; set => SetProperty(ref field, value); }
         public bool UseOldStatusGump { get; set => SetProperty(ref field, value); }
+        public bool UseVerticalStatusGump { get; set => SetProperty(ref field, value); }
         public bool StatusGumpBarMutuallyExclusive { get; set => SetProperty(ref field, value); } = true;
         public int BackpackStyle { get; set => SetProperty(ref field, value); }
         public bool HighlightGameObjects { get; set => SetProperty(ref field, value); }

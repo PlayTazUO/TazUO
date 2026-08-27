@@ -36,7 +36,10 @@ internal static class MobileAttributes
             mobile.Stamina = p.ReadUInt16BE();
 
             if (mobile == world.Player)
+            {
                 TitleBarStatsManager.UpdateTitleBar();
+                EventSink.InvokePlayerStatsUpdated();
+            }
 
             // Check for bandage healing
             if (oldHits != mobile.Hits)

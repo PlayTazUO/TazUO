@@ -137,6 +137,10 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 gump = UIManager.GetGump<StatusGumpOld>();
             }
+            else if (ProfileManager.CurrentProfile.UseVerticalStatusGump)
+            {
+                gump = UIManager.GetGump<StatusGumpModernVertical>();
+            }
             else
             {
                 gump = UIManager.GetGump<StatusGumpModern>();
@@ -151,6 +155,10 @@ namespace ClassicUO.Game.UI.Gumps
             if (Client.Game.UO.Version < ClientVersion.CV_308Z || ProfileManager.CurrentProfile.UseOldStatusGump)
             {
                 gump = new StatusGumpOld(world);
+            }
+            else if (ProfileManager.CurrentProfile.UseVerticalStatusGump)
+            {
+                gump = new StatusGumpModernVertical(world);
             }
             else
             {
@@ -553,23 +561,6 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             base.Update();
-        }
-
-
-        private enum MobileStats
-        {
-            Name,
-            Strength,
-            Dexterity,
-            Intelligence,
-            HealthCurrent,
-            StaminaCurrent,
-            ManaCurrent,
-            WeightCurrent,
-            Gold,
-            AR,
-            Sex,
-            NumStats
         }
     }
 
@@ -1553,42 +1544,46 @@ namespace ClassicUO.Game.UI.Gumps
             public static ushort Hue_Text { get; set; } = 0x0386;
         }
 
-        private enum MobileStats
-        {
-            Name,
-            Strength,
-            Dexterity,
-            Intelligence,
-            HealthCurrent,
-            HealthMax,
-            StaminaCurrent,
-            StaminaMax,
-            ManaCurrent,
-            ManaMax,
-            WeightMax,
-            Followers,
-            WeightCurrent,
-            LowerReagentCost,
-            SpellDamageInc,
-            FasterCasting,
-            FasterCastRecovery,
-            StatCap,
-            HitChanceInc,
-            DefenseChanceInc,
-            LowerManaCost,
-            DamageChanceInc,
-            SwingSpeedInc,
-            Luck,
-            Gold,
-            AR,
-            RF,
-            RC,
-            RP,
-            RE,
-            Damage,
-            Sex,
-            NumStats
-        }
         private readonly GumpPicWithWidth[] _fillBars = new GumpPicWithWidth[3];
+    }
+
+    /// <summary>
+    /// Identifies the player stats the status gumps display, used to index per-stat label arrays.
+    /// </summary>
+    internal enum MobileStats
+    {
+        Name,
+        Strength,
+        Dexterity,
+        Intelligence,
+        HealthCurrent,
+        HealthMax,
+        StaminaCurrent,
+        StaminaMax,
+        ManaCurrent,
+        ManaMax,
+        WeightMax,
+        Followers,
+        WeightCurrent,
+        LowerReagentCost,
+        SpellDamageInc,
+        FasterCasting,
+        FasterCastRecovery,
+        StatCap,
+        HitChanceInc,
+        DefenseChanceInc,
+        LowerManaCost,
+        DamageChanceInc,
+        SwingSpeedInc,
+        Luck,
+        Gold,
+        AR,
+        RF,
+        RC,
+        RP,
+        RE,
+        Damage,
+        Sex,
+        NumStats
     }
 }

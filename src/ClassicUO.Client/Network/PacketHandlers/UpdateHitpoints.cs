@@ -26,6 +26,7 @@ internal static class UpdateHitpoints
         {
             SpellVisualRangeManager.Instance.ClearCasting();
             TitleBarStatsManager.UpdateTitleBar();
+            EventSink.InvokePlayerStatsUpdated();
         }
 
         // Check for bandage healing for all mobiles

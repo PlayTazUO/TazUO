@@ -18,6 +18,9 @@ internal static class UpdateStamina
         mobile.Stamina = p.ReadUInt16BE();
 
         if (mobile == world.Player)
+        {
             TitleBarStatsManager.UpdateTitleBar();
+            EventSink.InvokePlayerStatsUpdated();
+        }
     }
 }

@@ -488,6 +488,12 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
+            (new CheckboxWithLabel(TazLang.Get("mog_general_useverticalstatusgump"), isChecked: profile.UseVerticalStatusGump, valueChanged: (b) => { profile.UseVerticalStatusGump = b; }),
+                true, page);
+
+            content.BlankLine();
+
+            content.AddToRight
             (new CheckboxWithLabel(TazLang.Get("mog_general_partyinvitegump"), isChecked: profile.PartyInviteGump, valueChanged: (b) => { profile.PartyInviteGump = b; }),
                 true, page);
 

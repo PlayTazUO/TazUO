@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -42,11 +43,21 @@ internal static class GumpsTab
                 null,
                 new SearchMetadata(TazLang.Get("mog_gumpstab_originalskillsgump"), Keywords: [TazLang.Get("mog_kw_skill"), TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_original")])
             ),
-            Option.Checkbox(
+            MutuallyExclusiveCheckbox(
+                profile,
                 TazLang.Get("mog_gumpstab_oldstatusgump"),
-                new Accessor<bool>(() => profile.UseOldStatusGump),
-                null,
+                () => profile.UseOldStatusGump,
+                v => profile.UseOldStatusGump = v,
+                v => profile.UseVerticalStatusGump = v,
                 new SearchMetadata(TazLang.Get("mog_gumpstab_oldstatusgump"), Keywords: [TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_status")])
+            ),
+            MutuallyExclusiveCheckbox(
+                profile,
+                TazLang.Get("mog_gumpstab_useverticalstatusgump"),
+                () => profile.UseVerticalStatusGump,
+                v => profile.UseVerticalStatusGump = v,
+                v => profile.UseOldStatusGump = v,
+                new SearchMetadata(TazLang.Get("mog_gumpstab_useverticalstatusgump"), Keywords: [TazLang.Get("mog_kw_modern"), TazLang.Get("mog_kw_status"), TazLang.Get("mog_kw_vertical")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_gumpstab_partyinvitegump"),
@@ -86,5 +97,43 @@ internal static class GumpsTab
                 )
             )
         ).WithSearch(new SearchMetadata(Tags: [TazLang.Get("mog_kw_gump"), TazLang.Get("mog_kw_interface"), TazLang.Get("mog_kw_window")]));
+    }
+
+    /// <summary>
+    /// Builds a checkbox that, when checked, clears the mutually-exclusive sibling status-gump option.
+    /// The checkbox mirrors the backing property so a programmatic change (e.g. the sibling clearing it)
+    /// updates its visual state instead of leaving both boxes checked.
+    /// </summary>
+    private static OptionEntry MutuallyExclusiveCheckbox(
+        Profile profile,
+        string label,
+        Func<bool> getOwn,
+        Action<bool> setOwn,
+        Action<bool> clearOther,
+        SearchMetadata search)
+    {
+        return new OptionEntry(
+            () =>
+            {
+                MyraCheckButton checkbox = MyraCheckButton.CreateWithCallback(
+                    getOwn(),
+                    isChecked =>
+                    {
+                        setOwn(isChecked);
+
+                        if (isChecked)
+                            clearOther(false);
+                    },
+                    label);
+
+                profile.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName == nameof(Profile.UseOldStatusGump) || e.PropertyName == nameof(Profile.UseVerticalStatusGump))
+                        checkbox.IsChecked = getOwn();
+                };
+
+                return checkbox;
+            },
+            search);
     }
 }
