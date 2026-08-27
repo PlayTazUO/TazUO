@@ -17,7 +17,8 @@ namespace ClassicUO.Game.UI.Gumps
     {
         Standard,
         Old,
-        ModernVertical
+        ModernVertical,
+        ModernHorizontal
     }
 
     public abstract class StatusGumpBase : ScalableGump
@@ -149,6 +150,9 @@ namespace ClassicUO.Game.UI.Gumps
                 case StatusGumpStyle.ModernVertical:
                     gump = UIManager.GetGump<StatusGumpModernVertical>();
                     break;
+                case StatusGumpStyle.ModernHorizontal:
+                    gump = UIManager.GetGump<StatusGumpModernHorizontal>();
+                    break;
                 default:
                     gump = UIManager.GetGump<StatusGumpModern>();
                     break;
@@ -168,6 +172,10 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 gump = new StatusGumpModernVertical(world);
             }
+            else if (ProfileManager.CurrentProfile.StatusGumpStyle == StatusGumpStyle.ModernHorizontal)
+            {
+                gump = new StatusGumpModernHorizontal(world);
+            }
             else
             {
                 gump = new StatusGumpModern(world);
@@ -175,6 +183,10 @@ namespace ClassicUO.Game.UI.Gumps
 
             gump.X = x;
             gump.Y = y;
+
+            // The position is applied after construction, so a SetInScreen inside a constructor is a no-op.
+            // Clamp here so a stale/off-screen saved position (e.g. from a resolution change) stays reachable.
+            gump.SetInScreen();
 
             return gump;
         }
@@ -187,6 +199,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             StatusGumpBase current = UIManager.GetGump<StatusGumpOld>();
             current ??= UIManager.GetGump<StatusGumpModernVertical>();
+            current ??= UIManager.GetGump<StatusGumpModernHorizontal>();
             current ??= UIManager.GetGump<StatusGumpModern>();
             if (current == null)
                 return;

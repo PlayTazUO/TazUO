@@ -56,7 +56,7 @@ internal static class GumpsTab
                 "mog_gumpstab_statusgumpstyle_",
                 search: new SearchMetadata(
                     TazLang.Get("mog_gumpstab_statusgumpstyle"),
-                    Keywords: [TazLang.Get("mog_kw_status"), TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_modern"), TazLang.Get("mog_kw_vertical"), TazLang.Get("mog_kw_gump")]
+                    Keywords: [TazLang.Get("mog_kw_status"), TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_modern"), TazLang.Get("mog_kw_vertical"), TazLang.Get("mog_kw_horizontal"), TazLang.Get("mog_kw_gump")]
                 )
             ),
             Option.Checkbox(
