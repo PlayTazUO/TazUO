@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using ClassicUO.Configuration;
+using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
@@ -26,6 +27,9 @@ public class GridContainerSaveData
 
     private static TimeSpan INACTIVE_CUTOFF = TimeSpan.FromDays(120);
 
+    /// <summary>Locked grid entries are cleared once the item has been absent from the container this long (seconds).</summary>
+    internal const long LOCK_EXPIRY_SECONDS = 60L * 24 * 60 * 60;
+
     private Dictionary<uint, GridContainerEntry> _entries = new();
     private string _savePath => Path.Combine(ProfileManager.ProfilePath, "grid_containers.json");
 
@@ -41,6 +45,7 @@ public class GridContainerSaveData
 
         Load();
         RemoveOldContainers();
+        PruneExpiredLocks();
     }
 
     private void RemoveOldContainers()
@@ -59,6 +64,30 @@ public class GridContainerSaveData
         foreach (GridContainerEntry entry in toRemove)
         {
             _entries.Remove(entry.Serial);
+        }
+    }
+
+    /// <summary>
+    /// Clears locked slot entries whose item has been absent from the container for longer than
+    /// <see cref="LOCK_EXPIRY_SECONDS"/>. Runs at load so a lock can't silently resurface after a long absence.
+    /// </summary>
+    private void PruneExpiredLocks()
+    {
+        long cutoff = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - LOCK_EXPIRY_SECONDS;
+
+        foreach (GridContainerEntry entry in _entries.Values)
+        {
+            List<uint> expired = null;
+
+            foreach (KeyValuePair<uint, GridContainerSlotEntry> slot in entry.Slots)
+            {
+                if (slot.Value.Locked && slot.Value.LastSeen < cutoff)
+                    (expired ??= new List<uint>()).Add(slot.Key);
+            }
+
+            if (expired != null)
+                foreach (uint serial in expired)
+                    entry.Slots.Remove(serial);
         }
     }
 
@@ -389,21 +418,44 @@ public class GridContainerEntry
         IsMinimized = container.IsMinimized;
 
         // Sync all item positions from GridSlotManager to Slots
-        // First, remove any entries for items no longer in ItemPositions (they were removed/moved)
         Dictionary<int, uint> itemPositions = container.SlotManager?.ItemPositions;
         if (itemPositions != null)
         {
-            // Get list of serials currently in ItemPositions
-            var currentSerials = new HashSet<uint>(itemPositions.Values);
+            // Serials with a current slot position. Items that left the container linger in
+            // ItemPositions until another item takes their slot, so actual presence below is
+            // checked against the real contents instead.
+            var itemPositionsSerials = new HashSet<uint>(itemPositions.Values);
 
-            // Remove stale entries from Slots
-            var staleSerials = Slots.Keys.Where(serial => !currentSerials.Contains(serial)).ToList();
-            foreach (uint serial in staleSerials)
+            // Serials actually in the container right now (from the last grid rebuild).
+            var presentSerials = new HashSet<uint>();
+            foreach (Item item in container.SlotManager.ContainerContents)
+                presentSerials.Add(item.Serial);
+
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long lockExpirySeconds = GridContainerSaveData.LOCK_EXPIRY_SECONDS;
+
+            // Remove stale entries from Slots:
+            // - Unlocked entries are dropped once they lose their slot position (item moved/removed).
+            // - Locked entries survive while the item is merely away, but are cleared once the item
+            //   has been absent for LOCK_EXPIRY (checked against the real contents, not ItemPositions).
+            foreach (uint serial in Slots.Keys.ToList())
             {
-                Slots.Remove(serial);
+                GridContainerSlotEntry slotEntry = Slots[serial];
+
+                if (slotEntry.Locked)
+                {
+                    if (!presentSerials.Contains(serial) && now - slotEntry.LastSeen >= lockExpirySeconds)
+                        Slots.Remove(serial);
+                }
+                else if (!itemPositionsSerials.Contains(serial))
+                {
+                    Slots.Remove(serial);
+                }
             }
 
-            // Now sync current positions
+            // Now sync current positions and refresh last-seen for items present in the container.
+            // Stale ItemPositions entries (items that left without another item taking their slot)
+            // are kept for position memory but don't refresh the lock timestamp.
             foreach (KeyValuePair<int, uint> kvp in itemPositions)
             {
                 int slotIndex = kvp.Key;
@@ -412,6 +464,9 @@ public class GridContainerEntry
                 // Ensure this item has a slot entry with the correct position
                 GridContainerSlotEntry entry = GetSlot(itemSerial);
                 entry.Slot = slotIndex;
+
+                if (presentSerials.Contains(itemSerial))
+                    entry.LastSeen = now;
             }
         }
 
@@ -426,6 +481,13 @@ public class GridContainerSlotEntry
     [JsonPropertyName("k")] public bool Locked { get; set; }
 
     [JsonPropertyName("sl")] public int Slot { get; set; }
+
+    /// <summary>
+    /// Unix timestamp of the last time this item was seen in its container. Used to expire locked
+    /// entries after 60 days of absence. Defaults to "now" so entries from saves without the field
+    /// don't expire immediately.
+    /// </summary>
+    [JsonPropertyName("ls")] public long LastSeen { get; set; } = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 }
 
 [JsonSerializable(typeof(GridContainerEntry))]

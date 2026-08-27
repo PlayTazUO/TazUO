@@ -182,9 +182,28 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
             foreach (Item i in filteredItems)
                 filteredSerials.Add(i.Serial);
 
-            // Tracks which items have already been placed so the second pass can skip them
+            // Tracks which items have already been placed so the later passes can skip them
             // without mutating the caller's list (which may be a shared/cached collection).
             var placed = new HashSet<uint>();
+
+            // Locked pass: every locked item reclaims its saved slot. A locked item that left the
+            // container and returned (possibly while another item took over its cell) must land back
+            // on its locked slot, displacing whatever moved in. Its lock and slot live in the save
+            // data, which survives the item's absence.
+            foreach (Item item in filteredItems)
+            {
+                if (placed.Contains(item.Serial) || !_itemLocks.Contains(item.Serial))
+                    continue;
+
+                GridContainerSlotEntry entry = _gridContainer.GridContainerEntry.GetSlot(item.Serial);
+                if (entry.Slot < 0 || entry.Slot >= _gridSlots.Count)
+                    continue;
+
+                _gridSlots[entry.Slot].SetGridItem(item);
+                _gridSlots[entry.Slot].ItemGridLocked = true;
+                AddItemSlot(item.Serial, entry.Slot);
+                placed.Add(item.Serial);
+            }
 
             // First pass: Place items that have saved positions (and locked items if sorting)
             // This maintains user-customized item positions unless auto-sort is overriding
@@ -193,6 +212,10 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 uint serial = spot.Value;
 
                 if (spot.Key >= _gridSlots.Count || placed.Contains(serial))
+                    continue;
+
+                // Skip slots a locked item reclaimed above.
+                if (_gridSlots[spot.Key].SlotItem != null)
                     continue;
 
                 // Place item if it's in the filtered list AND (not sorting OR item is locked)
@@ -231,6 +254,11 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
 
                 _gridSlots[nextFreeSlot].SetGridItem(i);
                 AddItemSlot(i, nextFreeSlot);
+
+                // A locked item without a usable saved slot (e.g. out of range) still renders locked.
+                if (_itemLocks.Contains(i.Serial))
+                    _gridSlots[nextFreeSlot].ItemGridLocked = true;
+
                 placed.Add(i.Serial);
             }
         }
