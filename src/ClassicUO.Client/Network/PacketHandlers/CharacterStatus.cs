@@ -206,7 +206,11 @@ internal static class CharacterStatus
                 }
             }
 
-            if (mobile == world.Player) TitleBarStatsManager.UpdateTitleBar();
+            if (mobile == world.Player)
+            {
+                TitleBarStatsManager.UpdateTitleBar();
+                EventSink.InvokePlayerStatsUpdated();
+            }
 
             // Check for bandage healing
             if (oldHits != mobile.Hits) BandageManager.Instance.OnMobileHpChanged(mobile, oldHits, mobile.Hits);

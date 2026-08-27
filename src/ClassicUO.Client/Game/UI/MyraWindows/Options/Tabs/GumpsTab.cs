@@ -2,6 +2,7 @@
 
 using ClassicUO.Common;
 using ClassicUO.Configuration;
+using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
@@ -42,11 +43,21 @@ internal static class GumpsTab
                 null,
                 new SearchMetadata(TazLang.Get("mog_gumpstab_originalskillsgump"), Keywords: [TazLang.Get("mog_kw_skill"), TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_original")])
             ),
-            Option.Checkbox(
-                TazLang.Get("mog_gumpstab_oldstatusgump"),
-                new Accessor<bool>(() => profile.UseOldStatusGump),
-                null,
-                new SearchMetadata(TazLang.Get("mog_gumpstab_oldstatusgump"), Keywords: [TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_status")])
+            Option.LComboBox<StatusGumpStyle>(
+                TazLang.Get("mog_gumpstab_statusgumpstyle"),
+                new Accessor<StatusGumpStyle>(
+                    () => profile.StatusGumpStyle,
+                    v =>
+                    {
+                        profile.StatusGumpStyle = v;
+                        StatusGumpBase.ReplaceStatusGump();
+                    }
+                ),
+                "mog_gumpstab_statusgumpstyle_",
+                search: new SearchMetadata(
+                    TazLang.Get("mog_gumpstab_statusgumpstyle"),
+                    Keywords: [TazLang.Get("mog_kw_status"), TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_modern"), TazLang.Get("mog_kw_vertical"), TazLang.Get("mog_kw_horizontal"), TazLang.Get("mog_kw_gump")]
+                )
             ),
             Option.Checkbox(
                 TazLang.Get("mog_gumpstab_partyinvitegump"),

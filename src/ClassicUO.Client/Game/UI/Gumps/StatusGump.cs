@@ -12,6 +12,16 @@ using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps
 {
+    /// <summary>Selectable status gump layout</summary>
+    public enum StatusGumpStyle
+    {
+        Standard,
+        Old,
+        ModernVertical,
+        ModernHorizontal,
+        Compact
+    }
+
     public abstract class StatusGumpBase : ScalableGump
     {
         protected const ushort LOCK_UP_GRAPHIC = 0x0984;
@@ -133,13 +143,23 @@ namespace ClassicUO.Game.UI.Gumps
         {
             StatusGumpBase gump;
 
-            if (ProfileManager.CurrentProfile.UseOldStatusGump)
+            switch (ProfileManager.CurrentProfile.StatusGumpStyle)
             {
-                gump = UIManager.GetGump<StatusGumpOld>();
-            }
-            else
-            {
-                gump = UIManager.GetGump<StatusGumpModern>();
+                case StatusGumpStyle.Old:
+                    gump = UIManager.GetGump<StatusGumpOld>();
+                    break;
+                case StatusGumpStyle.ModernVertical:
+                    gump = UIManager.GetGump<StatusGumpModernVertical>();
+                    break;
+                case StatusGumpStyle.ModernHorizontal:
+                    gump = UIManager.GetGump<StatusGumpModernHorizontal>();
+                    break;
+                case StatusGumpStyle.Compact:
+                    gump = UIManager.GetGump<StatusGumpCompact>();
+                    break;
+                default:
+                    gump = UIManager.GetGump<StatusGumpModern>();
+                    break;
             }
             return gump;
         }
@@ -148,9 +168,21 @@ namespace ClassicUO.Game.UI.Gumps
         {
             StatusGumpBase gump;
 
-            if (Client.Game.UO.Version < ClientVersion.CV_308Z || ProfileManager.CurrentProfile.UseOldStatusGump)
+            if (Client.Game.UO.Version < ClientVersion.CV_308Z || ProfileManager.CurrentProfile.StatusGumpStyle == StatusGumpStyle.Old)
             {
                 gump = new StatusGumpOld(world);
+            }
+            else if (ProfileManager.CurrentProfile.StatusGumpStyle == StatusGumpStyle.ModernVertical)
+            {
+                gump = new StatusGumpModernVertical(world);
+            }
+            else if (ProfileManager.CurrentProfile.StatusGumpStyle == StatusGumpStyle.ModernHorizontal)
+            {
+                gump = new StatusGumpModernHorizontal(world);
+            }
+            else if (ProfileManager.CurrentProfile.StatusGumpStyle == StatusGumpStyle.Compact)
+            {
+                gump = new StatusGumpCompact(world);
             }
             else
             {
@@ -160,7 +192,32 @@ namespace ClassicUO.Game.UI.Gumps
             gump.X = x;
             gump.Y = y;
 
+            // The position is applied after construction, so a SetInScreen inside a constructor is a no-op.
+            // Clamp here so a stale/off-screen saved position (e.g. from a resolution change) stays reachable.
+            gump.SetInScreen();
+
             return gump;
+        }
+
+        /// <summary>
+        /// Replaces the currently open status gump with the style selected in the profile,
+        /// preserving its position. No-op when no status gump is open.
+        /// </summary>
+        public static void ReplaceStatusGump()
+        {
+            StatusGumpBase current = UIManager.GetGump<StatusGumpOld>();
+            current ??= UIManager.GetGump<StatusGumpModernVertical>();
+            current ??= UIManager.GetGump<StatusGumpModernHorizontal>();
+            current ??= UIManager.GetGump<StatusGumpModern>();
+            current ??= UIManager.GetGump<StatusGumpCompact>();
+            if (current == null)
+                return;
+
+            Point position = current.Location;
+            World world = current.World;
+
+            current.Dispose();
+            UIManager.Add(AddStatusGump(world, position.X, position.Y));
         }
 
         protected static ushort GetStatLockGraphic(Lock lockStatus)
@@ -553,23 +610,6 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             base.Update();
-        }
-
-
-        private enum MobileStats
-        {
-            Name,
-            Strength,
-            Dexterity,
-            Intelligence,
-            HealthCurrent,
-            StaminaCurrent,
-            ManaCurrent,
-            WeightCurrent,
-            Gold,
-            AR,
-            Sex,
-            NumStats
         }
     }
 
@@ -1553,42 +1593,46 @@ namespace ClassicUO.Game.UI.Gumps
             public static ushort Hue_Text { get; set; } = 0x0386;
         }
 
-        private enum MobileStats
-        {
-            Name,
-            Strength,
-            Dexterity,
-            Intelligence,
-            HealthCurrent,
-            HealthMax,
-            StaminaCurrent,
-            StaminaMax,
-            ManaCurrent,
-            ManaMax,
-            WeightMax,
-            Followers,
-            WeightCurrent,
-            LowerReagentCost,
-            SpellDamageInc,
-            FasterCasting,
-            FasterCastRecovery,
-            StatCap,
-            HitChanceInc,
-            DefenseChanceInc,
-            LowerManaCost,
-            DamageChanceInc,
-            SwingSpeedInc,
-            Luck,
-            Gold,
-            AR,
-            RF,
-            RC,
-            RP,
-            RE,
-            Damage,
-            Sex,
-            NumStats
-        }
         private readonly GumpPicWithWidth[] _fillBars = new GumpPicWithWidth[3];
+    }
+
+    /// <summary>
+    /// Identifies the player stats the status gumps display, used to index per-stat label arrays.
+    /// </summary>
+    internal enum MobileStats
+    {
+        Name,
+        Strength,
+        Dexterity,
+        Intelligence,
+        HealthCurrent,
+        HealthMax,
+        StaminaCurrent,
+        StaminaMax,
+        ManaCurrent,
+        ManaMax,
+        WeightMax,
+        Followers,
+        WeightCurrent,
+        LowerReagentCost,
+        SpellDamageInc,
+        FasterCasting,
+        FasterCastRecovery,
+        StatCap,
+        HitChanceInc,
+        DefenseChanceInc,
+        LowerManaCost,
+        DamageChanceInc,
+        SwingSpeedInc,
+        Luck,
+        Gold,
+        AR,
+        RF,
+        RC,
+        RP,
+        RE,
+        Damage,
+        Sex,
+        NumStats
     }
 }
