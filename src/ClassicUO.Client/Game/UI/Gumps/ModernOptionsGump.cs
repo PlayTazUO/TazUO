@@ -482,14 +482,25 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
-            (new CheckboxWithLabel(TazLang.Get("mog_general_oldstatusgump"), isChecked: profile.UseOldStatusGump, valueChanged: (b) => { profile.UseOldStatusGump = b; }),
-                true, page);
-
-            content.BlankLine();
-
-            content.AddToRight
-            (new CheckboxWithLabel(TazLang.Get("mog_general_useverticalstatusgump"), isChecked: profile.UseVerticalStatusGump, valueChanged: (b) => { profile.UseVerticalStatusGump = b; }),
-                true, page);
+            (
+                new ComboBoxWithLabel
+                (
+                    World,
+                    TazLang.Get("mog_general_statusgumpstyle"),
+                    0,
+                    ThemeSettings.COMBO_BOX_WIDTH,
+                    new string[]
+                    {
+                        TazLang.Get("mog_general_statusgumpstyle_standard"), TazLang.Get("mog_general_statusgumpstyle_old"),
+                        TazLang.Get("mog_general_statusgumpstyle_modernvertical")
+                    },
+                    (int)profile.StatusGumpStyle, (s, n) =>
+                    {
+                        profile.StatusGumpStyle = (StatusGumpStyle)s;
+                        StatusGumpBase.ReplaceStatusGump();
+                    }
+                ), true, page
+            );
 
             content.BlankLine();
 

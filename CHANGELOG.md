@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Added a new modern vertical status bar option
 * Grid container item locks now expire after 60 days of the item being absent from the container, automatically clearing the saved lock and slot
 * Separated Scavenger agent from Autoloot, they now each have their own loot lists and enabled/disabled toggles
 

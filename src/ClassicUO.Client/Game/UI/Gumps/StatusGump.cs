@@ -12,6 +12,14 @@ using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps
 {
+    /// <summary>Selectable status gump layout</summary>
+    public enum StatusGumpStyle
+    {
+        Standard,
+        Old,
+        ModernVertical
+    }
+
     public abstract class StatusGumpBase : ScalableGump
     {
         protected const ushort LOCK_UP_GRAPHIC = 0x0984;
@@ -133,17 +141,17 @@ namespace ClassicUO.Game.UI.Gumps
         {
             StatusGumpBase gump;
 
-            if (ProfileManager.CurrentProfile.UseOldStatusGump)
+            switch (ProfileManager.CurrentProfile.StatusGumpStyle)
             {
-                gump = UIManager.GetGump<StatusGumpOld>();
-            }
-            else if (ProfileManager.CurrentProfile.UseVerticalStatusGump)
-            {
-                gump = UIManager.GetGump<StatusGumpModernVertical>();
-            }
-            else
-            {
-                gump = UIManager.GetGump<StatusGumpModern>();
+                case StatusGumpStyle.Old:
+                    gump = UIManager.GetGump<StatusGumpOld>();
+                    break;
+                case StatusGumpStyle.ModernVertical:
+                    gump = UIManager.GetGump<StatusGumpModernVertical>();
+                    break;
+                default:
+                    gump = UIManager.GetGump<StatusGumpModern>();
+                    break;
             }
             return gump;
         }
@@ -152,11 +160,11 @@ namespace ClassicUO.Game.UI.Gumps
         {
             StatusGumpBase gump;
 
-            if (Client.Game.UO.Version < ClientVersion.CV_308Z || ProfileManager.CurrentProfile.UseOldStatusGump)
+            if (Client.Game.UO.Version < ClientVersion.CV_308Z || ProfileManager.CurrentProfile.StatusGumpStyle == StatusGumpStyle.Old)
             {
                 gump = new StatusGumpOld(world);
             }
-            else if (ProfileManager.CurrentProfile.UseVerticalStatusGump)
+            else if (ProfileManager.CurrentProfile.StatusGumpStyle == StatusGumpStyle.ModernVertical)
             {
                 gump = new StatusGumpModernVertical(world);
             }
@@ -169,6 +177,25 @@ namespace ClassicUO.Game.UI.Gumps
             gump.Y = y;
 
             return gump;
+        }
+
+        /// <summary>
+        /// Replaces the currently open status gump with the style selected in the profile,
+        /// preserving its position. No-op when no status gump is open.
+        /// </summary>
+        public static void ReplaceStatusGump()
+        {
+            StatusGumpBase current = UIManager.GetGump<StatusGumpOld>();
+            current ??= UIManager.GetGump<StatusGumpModernVertical>();
+            current ??= UIManager.GetGump<StatusGumpModern>();
+            if (current == null)
+                return;
+
+            Point position = current.Location;
+            World world = current.World;
+
+            current.Dispose();
+            UIManager.Add(AddStatusGump(world, position.X, position.Y));
         }
 
         protected static ushort GetStatLockGraphic(Lock lockStatus)

@@ -171,7 +171,12 @@ namespace ClassicUO.Configuration
         // visual
         public bool EnabledCriminalActionQuery { get; set => SetProperty(ref field, value); } = true;
         public bool EnabledBeneficialCriminalActionQuery { get; set => SetProperty(ref field, value); }
+        public StatusGumpStyle StatusGumpStyle { get; set => SetProperty(ref field, value); } = StatusGumpStyle.Standard;
+
+        // Retained only for one-time migration of existing profiles to StatusGumpStyle. Do not use in new code.
+        [Obsolete("Remove after 10/27/26.")]
         public bool UseOldStatusGump { get; set => SetProperty(ref field, value); }
+        [Obsolete("Remove after 10/27/26.")]
         public bool UseVerticalStatusGump { get; set => SetProperty(ref field, value); }
         public bool StatusGumpBarMutuallyExclusive { get; set => SetProperty(ref field, value); } = true;
         public int BackpackStyle { get; set => SetProperty(ref field, value); }
@@ -1017,6 +1022,18 @@ namespace ClassicUO.Configuration
                 ProfileManager.GlobalSettings.HideJournalTimestamp = HideJournalTimestamp;
 
                 ProfileMigrationVersion = 11;
+            }
+
+            if (ProfileMigrationVersion < 12)
+            {
+#pragma warning disable CS0618
+                if (UseOldStatusGump)
+                    StatusGumpStyle = StatusGumpStyle.Old;
+                else if (UseVerticalStatusGump)
+                    StatusGumpStyle = StatusGumpStyle.ModernVertical;
+#pragma warning restore CS0618
+
+                ProfileMigrationVersion = 12;
             }
 
             try //Cleanup old backups from previous save system
