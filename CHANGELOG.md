@@ -22,13 +22,15 @@ All notable changes to TazUO will be recorded here.
 * Migrated more settings to global scoped json settings
 
 ### Fixes
+* Fixed a client crash at startup when the generated `Data/Client` files (`chair.txt`, `lights.txt`, `lightshaders.txt`) could not be written or read because another process (antivirus, OneDrive, a second instance, or an editor) held a lock on them - the client now logs a clear error and continues with the built-in defaults instead of crashing
 * Fixed locked grid container items no longer reclaiming their locked cell (and appearing unlocked) after being moved out of the container and back
 * Addressed a cross-thread issue and hardened controls a bit against future cross threading
-* Added a crash fix suggestion for when Windows blocks one of TazUO's files (for example MP3Sharp.dll) with an application control policy while the game is running
+* Added a crash fix suggestion for when Windows blocks one of TazUO's files with an application control policy, whether a managed assembly loaded at runtime (for example MP3Sharp.dll) or a native library (for example FNA3D.dll) failing during startup
 * Fixed a client crash at login when the persistent-vars database could not be created or opened (e.g. the game's Data directory is not writable) - the client now logs a clear error and keeps running, with script variables simply not persisted until the directory is writable again
 * Hardened the SQLite layer to also quarantine and rebuild database files that cannot be opened (SQLite "unable to open database file"), not just files detected as corrupt
 * Fixed a client crash when using `API.Gumps.CreateGumpRenderedMapArea` (map offsets were being dereferenced as pointers), and made it render only the requested region with proper cleanup on close
 * Fixed a crash fix for a race condition while opening a container during shutdown
+* Fixed a NullReferenceException when opening a grid container while the world was tearing down (player could be nulled mid-construction)
 * Myra sliders and checkboxes no longer listen to right clicks (Causing accidental changed when closing via right click over a checkbox/slider)
 * Improved treasure map location calculations - [P.R 1012](https://github.com/PlayTazUO/TazUO/pull/1012) [Erumite](https://github.com/Erumite)
 * Door movement blocking no longer stops you from walking into closed doors when the "Open doors while pathfinding" (smooth doors) setting is enabled, and the option label is now "Block walking into doors"

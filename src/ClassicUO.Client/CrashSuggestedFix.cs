@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using ClassicUO.Utility.Logging;
@@ -24,6 +25,13 @@ internal static class CrashSuggestedFix
     ///     exception. The message text is localized, so the HRESULT is the only reliable match.
     /// </summary>
     private const int H_RESULT_BLOCKED_BY_APPLICATION_POLICY = unchecked((int)0x800711C7);
+
+    /// <summary>
+    ///     The same HRESULT as <see cref="H_RESULT_BLOCKED_BY_APPLICATION_POLICY" />, in the
+    ///     text form the loader embeds in a <see cref="DllNotFoundException" /> message when
+    ///     the block carries no inner exception with the numeric value.
+    /// </summary>
+    private const string H_RESULT_BLOCKED_BY_APPLICATION_POLICY_HEX = "0x800711C7";
 
     /// <summary>
     ///     COR_E_NOTSUPPORTED as raised by the assembly loader when a file still carries the
@@ -447,11 +455,13 @@ internal static class CrashSuggestedFix
     }
 
     /// <summary>
-    ///     Recognizes a <see cref="FileLoadException" /> raised by Windows' application control
-    ///     policy (0x800711C7) for a file that is not one of TazUO's own assemblies.
-    ///     <c>TryGetMissingAssemblyCrashFix</c> already covers <c>ClassicUO.*.dll</c> at startup;
-    ///     this catches runtime dependencies such as MP3Sharp.dll that surface the same block
-    ///     while the game is running.
+    ///     Recognizes a Windows application control policy block (0x800711C7) no matter which
+    ///     exception type surfaces it. Managed assemblies raise a <see cref="FileLoadException" />
+    ///     with the HRESULT set, while native libraries (for example FNA3D.dll at startup) raise
+    ///     a <see cref="DllNotFoundException" /> that embeds the block in a
+    ///     <see cref="System.ComponentModel.Win32Exception" /> inner or, lacking that, only as
+    ///     text in its message. <see cref="TryGetMissingAssemblyCrashFix" /> already covers
+    ///     <c>ClassicUO.*.dll</c> at startup.
     /// </summary>
     /// <param name="e">Exception under inspection.</param>
     /// <param name="fix">Set to the suggested fix text when recognized.</param>
@@ -460,14 +470,90 @@ internal static class CrashSuggestedFix
     {
         fix = null;
 
-        if (e is not FileLoadException fileLoadException ||
-            fileLoadException.HResult != H_RESULT_BLOCKED_BY_APPLICATION_POLICY)
-            return false;
+        foreach (Exception candidate in EnumerateExceptionChain(e))
+        {
+            if (candidate.HResult != H_RESULT_BLOCKED_BY_APPLICATION_POLICY)
+                continue;
 
-        string fileName = Path.GetFileName(fileLoadException.FileName ?? string.Empty);
+            // FileLoadException carries the blocked file's name; a native-library load failure
+            // names the library only in the DllNotFoundException message.
+            string fileName = candidate switch
+            {
+                FileLoadException fileLoadException => Path.GetFileName(fileLoadException.FileName ?? string.Empty),
+                _ when e is DllNotFoundException dllNotFound => ExtractQuotedLibraryName(dllNotFound),
+                _ => null
+            };
 
-        fix = BuildPolicyBlockedFileFix(fileName, "Windows blocked a file TazUO needed to load while the game was running.");
-        return true;
+            string header = candidate is FileLoadException
+                ? "Windows blocked a file TazUO needed to load while the game was running."
+                : "Windows prevented TazUO from starting.";
+
+            fix = BuildPolicyBlockedFileFix(fileName, header);
+            return true;
+        }
+
+        // Some throwers (for example FNA's FNADllMap) raise a DllNotFoundException that names
+        // the library but carries no inner exception holding the HRESULT - the hex token in the
+        // message is then the only reliable match.
+        if (e is DllNotFoundException messageOnlyDllNotFound &&
+            messageOnlyDllNotFound.Message.IndexOf(H_RESULT_BLOCKED_BY_APPLICATION_POLICY_HEX, StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            fix = BuildPolicyBlockedFileFix(ExtractQuotedLibraryName(messageOnlyDllNotFound), "Windows prevented TazUO from starting.");
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Pulls the library name out of a <see cref="DllNotFoundException" /> message. Both the
+    ///     runtime and FNA's FNADllMap raise these with the name between single quotes
+    ///     ("Unable to load DLL 'FNA3D.dll' or one of its dependencies: ..."); the surrounding
+    ///     words are runtime-generated, so the quotes are a reliable delimiter. Returns null
+    ///     when the pattern is absent rather than guessing a name.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <returns>The quoted library name, or null when the message does not follow the pattern.</returns>
+    private static string ExtractQuotedLibraryName(Exception e)
+    {
+        const string openQuote = "Unable to load DLL '";
+        string message = e.Message;
+
+        if (string.IsNullOrEmpty(message) ||
+            !message.StartsWith(openQuote, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        int closeQuote = message.IndexOf('\'', openQuote.Length);
+
+        return closeQuote < 0 ? null : message.Substring(openQuote.Length, closeQuote - openQuote.Length);
+    }
+
+    /// <summary>
+    ///     Yields the exception and every exception in its inner chain, including those nested
+    ///     inside <see cref="AggregateException" />s.
+    /// </summary>
+    /// <param name="e">Exception to walk.</param>
+    /// <returns>Each exception in the chain.</returns>
+    private static IEnumerable<Exception> EnumerateExceptionChain(Exception e)
+    {
+        var stack = new Stack<Exception>();
+        stack.Push(e);
+
+        while (stack.Count > 0)
+        {
+            Exception current = stack.Pop();
+            yield return current;
+
+            if (current is AggregateException aggregate)
+            {
+                foreach (Exception inner in aggregate.InnerExceptions)
+                    stack.Push(inner);
+            }
+            else if (current.InnerException != null)
+            {
+                stack.Push(current.InnerException);
+            }
+        }
     }
 
     /// <summary>
