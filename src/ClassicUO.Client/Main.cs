@@ -125,14 +125,14 @@ namespace ClassicUO
             ProfileManager.LoadGlobalSettings();
             ZLib.SetForceManagedZlib(ProfileManager.GlobalSettings.ManagedZlib); //Must be after global settings are loaded
 
-            ReadSettingsFromArgs(args);
-
             // still invalid, cannot load settings
             if (Settings.GlobalSettings == null)
             {
                 Settings.GlobalSettings = new Settings();
                 Settings.GlobalSettings.Save();
             }
+
+            ReadSettingsFromArgs(args);
 
             if (string.IsNullOrWhiteSpace(Settings.GlobalSettings.Language))
             {
