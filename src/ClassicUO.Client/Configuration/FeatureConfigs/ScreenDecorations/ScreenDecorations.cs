@@ -1,6 +1,9 @@
 #nullable enable
 
 using System.IO;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Migrations;
+using ClassicUO.IO.Persistency.Migrations;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
@@ -13,6 +16,9 @@ namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 public class ScreenDecorations : ObservableSettings
 {
     public const string FileName = "screen_decorations.json";
+
+    /// <summary>Which shape this file is in. Absent in a file predating migrations, which reads as 0.</summary>
+    public int SchemaVersion { get; set; } = ScreenDecorationsMigrations.LatestVersion;
 
     /// <summary>
     /// Master switch over both systems. Off means no overlay is scheduled, drawn or shaken for - not
@@ -47,9 +53,29 @@ public class ScreenDecorations : ObservableSettings
     {
         string? file = GetFilePath(profilePath);
 
-        _current = file != null && File.Exists(file)
-            ? ConfigurationResolver.Load(file, ScreenDecorationsJsonContext.DefaultToUse.ScreenDecorations) ?? new ScreenDecorations()
-            : new ScreenDecorations();
+        if (file == null)
+        {
+            _current = new ScreenDecorations();
+            return _current;
+        }
+
+        try
+        {
+            _current = VersionedJsonConfig.Load(
+                file,
+                ScreenDecorationsJsonContext.DefaultToUse.ScreenDecorations,
+                ScreenDecorationsMigrations.Pipeline,
+                static _ => true
+            ) ?? new ScreenDecorations();
+        }
+        catch (ConfigMigrationException e)
+        {
+            // Left alone on disk - a later Save() on the fallback below will overwrite it, but
+            // CorruptFiles gives the user an in-world notice, same as a corrupt JSON file today.
+            Log.Error($"Failed to migrate configuration file '{file}' - {e}");
+            ConfigurationResolver.CorruptFiles.Enqueue(file);
+            _current = new ScreenDecorations();
+        }
 
         return _current;
     }

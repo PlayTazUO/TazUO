@@ -35,6 +35,8 @@ public class IndexedComboPicker : HorizontalStackPanel
         set => NumberInput.Value = value;
     }
 
+    public (int, string) SelectedEntry => (Value, _labels[Value]);
+
     /// <summary>The number field, exposed so callers can set a tooltip/hint beyond the ctor's reach.</summary>
     public IntegerInputBox NumberInput { get; }
 

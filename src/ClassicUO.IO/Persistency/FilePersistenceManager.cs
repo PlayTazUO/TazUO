@@ -252,7 +252,7 @@ public class FilePersistenceManager<TEntryType> where TEntryType : struct, Enum
         try
         {
             string json = JsonSerializer.Serialize(data, _jsonSerializerOptions);
-            File.WriteAllText(filePath, json);
+            AtomicFile.Write(filePath, json);
             return true;
         }
         catch (Exception ex)
