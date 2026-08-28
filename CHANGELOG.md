@@ -13,6 +13,7 @@ All notable changes to TazUO will be recorded here.
 * Added a new overlay system event trigger - Buff/Debuff - [P.R 974](https://github.com/PlayTazUO/TazUO/pull/974) ([yuval-po](https://github.com/yuval-po))
 * Added search functionality to the Tinkerer's Art Browser - [P.R 974](https://github.com/PlayTazUO/TazUO/pull/974) ([yuval-po](https://github.com/yuval-po))
 * Added a translucent ground preview of the item being dragged, shown on the tile it would land on when dropped on the ground (drag distance and Z-banded), toggleable under Gameplay -> Misc, enabled by default ([bittiez](https://github.com/bittiez))
+* Added an option to classify timestamped system messages as Global Chat using configurable regular expressions - [P.R 1014](https://github.com/PlayTazUO/TazUO/pull/1014) ([Aryx75](https://github.com/Aryx75))
 
 ### Misc
 * Added a Mount Distance option to the Option's combat tab - [P.R 995](https://github.com/PlayTazUO/TazUO/pull/995) ([yuval-po](https://github.com/yuval-po))
