@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -337,54 +338,68 @@ namespace ClassicUO.Game.Data
 
             if (!File.Exists(path) || force)
             {
-                using (var writer = new StreamWriter(File.Create(path)))
+                try
                 {
-                    writer.WriteLine("# FORMAT");
-
-                    writer.WriteLine("# ID RGB R_CURVE G_CURVE B_CURVE");
-                    writer.WriteLine("# HARD LIMIT IS 63");
-                    writer.WriteLine("#");
-                    writer.WriteLine("# DEFAULT SHADERS:");
-
-                    foreach (KeyValuePair<ushort, LightShaderData> e in _shaderdata)
+                    using (var writer = new StreamWriter(File.Create(path)))
                     {
-                        writer.WriteLine($"# {e.Key} {e.Value.RGB:X6} {e.Value.RedCurve} {e.Value.GreenCurve} {e.Value.BlueCurve}");
+                        writer.WriteLine("# FORMAT");
+
+                        writer.WriteLine("# ID RGB R_CURVE G_CURVE B_CURVE");
+                        writer.WriteLine("# HARD LIMIT IS 63");
+                        writer.WriteLine("#");
+                        writer.WriteLine("# DEFAULT SHADERS:");
+
+                        foreach (KeyValuePair<ushort, LightShaderData> e in _shaderdata)
+                        {
+                            writer.WriteLine($"# {e.Key} {e.Value.RGB:X6} {e.Value.RedCurve} {e.Value.GreenCurve} {e.Value.BlueCurve}");
+                        }
                     }
+                }
+                catch (Exception e)
+                {
+                    Log.Warn($"[LightColors] Could not write '{path}': {e.Message}. Using in-memory defaults.");
                 }
             }
 
-            var lightshadersParser = new TextFileParser(File.ReadAllText(path), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
-
-            while (!lightshadersParser.IsEOF())
+            try
             {
-                List<string> ss = lightshadersParser.ReadTokens();
+                var lightshadersParser = new TextFileParser(File.ReadAllText(path), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
 
-                if (ss != null && ss.Count != 0)
+                while (!lightshadersParser.IsEOF())
                 {
-                    LightShaderCurve curver = LightShaderCurve.Standard;
-                    LightShaderCurve curveg = LightShaderCurve.Standard;
-                    LightShaderCurve curveb = LightShaderCurve.Standard;
+                    List<string> ss = lightshadersParser.ReadTokens();
 
-                    if (ushort.TryParse(ss[0], out ushort id) && ss.Count > 1)
+                    if (ss != null && ss.Count != 0)
                     {
-                        if (ss.Count > 2)
+                        LightShaderCurve curver = LightShaderCurve.Standard;
+                        LightShaderCurve curveg = LightShaderCurve.Standard;
+                        LightShaderCurve curveb = LightShaderCurve.Standard;
+
+                        if (ushort.TryParse(ss[0], out ushort id) && ss.Count > 1)
                         {
-                            Enum.TryParse(ss[2], out curver);
+                            if (ss.Count > 2)
+                            {
+                                Enum.TryParse(ss[2], out curver);
 
-                            if (ss.Count > 4)
-                            {
-                                Enum.TryParse(ss[3], out curveg);
-                                Enum.TryParse(ss[4], out curveb);
+                                if (ss.Count > 4)
+                                {
+                                    Enum.TryParse(ss[3], out curveg);
+                                    Enum.TryParse(ss[4], out curveb);
+                                }
+                                else
+                                {
+                                    curveg = curveb = curver;
+                                }
                             }
-                            else
-                            {
-                                curveg = curveb = curver;
-                            }
+
+                            _shaderdata[id] = new LightShaderData(Convert.ToUInt32(ss[1], 16), curver, curveg, curveb);
                         }
-
-                        _shaderdata[id] = new LightShaderData(Convert.ToUInt32(ss[1], 16), curver, curveg, curveb);
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                Log.Warn($"[LightColors] Could not read '{path}': {e.Message}. Using in-memory defaults.");
             }
         }
 
@@ -401,49 +416,63 @@ namespace ClassicUO.Game.Data
 
             if (!File.Exists(lights))
             {
-                using (var writer = new StreamWriter(lights))
+                try
                 {
-                    writer.WriteLine("# FORMAT");
-                    writer.WriteLine("# ITEM_ID LIGHT_SHADER_OR_HUE");
-                    writer.WriteLine("#");
-                    writer.WriteLine("# Example for shader");
-                    writer.WriteLine("# 0xE31 35");
-                    writer.WriteLine("#");
-                    writer.WriteLine("# Example for hue");
-                    writer.WriteLine("# 0xE31 H1234");
-                    writer.WriteLine("");
+                    using (var writer = new StreamWriter(lights))
+                    {
+                        writer.WriteLine("# FORMAT");
+                        writer.WriteLine("# ITEM_ID LIGHT_SHADER_OR_HUE");
+                        writer.WriteLine("#");
+                        writer.WriteLine("# Example for shader");
+                        writer.WriteLine("# 0xE31 35");
+                        writer.WriteLine("#");
+                        writer.WriteLine("# Example for hue");
+                        writer.WriteLine("# 0xE31 H1234");
+                        writer.WriteLine("");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Warn($"[LightColors] Could not write '{lights}': {e.Message}. Using in-memory defaults.");
                 }
             }
 
-            var itemlightsparser = new TextFileParser(File.ReadAllText(lights), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
-
-            while (!itemlightsparser.IsEOF())
+            try
             {
-                List<string> ss = itemlightsparser.ReadTokens();
+                var itemlightsparser = new TextFileParser(File.ReadAllText(lights), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
 
-                if (ss != null && ss.Count != 0)
+                while (!itemlightsparser.IsEOF())
                 {
-                    var entry = new ItemLightData();
+                    List<string> ss = itemlightsparser.ReadTokens();
 
-                    ushort id = ss[0].StartsWith("0x") ? Convert.ToUInt16(ss[0], 16) : Convert.ToUInt16(ss[0]);
-
-                    string color = ss[1];
-
-                    if (color.StartsWith("H"))
+                    if (ss != null && ss.Count != 0)
                     {
-                        color = color.Replace("H", "");
-                        entry.Color = ushort.Parse(color);
-                        entry.Color--;
-                        entry.IsHue = true;
-                    }
-                    else
-                    {
-                        entry.Color = ushort.Parse(color);
-                        entry.IsHue = false;
-                    }
+                        var entry = new ItemLightData();
 
-                    _itemlightdata[id] = entry;
+                        ushort id = ss[0].StartsWith("0x") ? Convert.ToUInt16(ss[0], 16) : Convert.ToUInt16(ss[0]);
+
+                        string color = ss[1];
+
+                        if (color.StartsWith("H"))
+                        {
+                            color = color.Replace("H", "");
+                            entry.Color = ushort.Parse(color);
+                            entry.Color--;
+                            entry.IsHue = true;
+                        }
+                        else
+                        {
+                            entry.Color = ushort.Parse(color);
+                            entry.IsHue = false;
+                        }
+
+                        _itemlightdata[id] = entry;
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Log.Warn($"[LightColors] Could not read '{lights}': {e.Message}. Using in-memory defaults.");
             }
         }
 
