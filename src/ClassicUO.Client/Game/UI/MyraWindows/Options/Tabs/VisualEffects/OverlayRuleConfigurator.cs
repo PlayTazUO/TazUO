@@ -50,6 +50,10 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     /// on its own. A sound index is four digits and a curve power is one; sized for either.</summary>
     private const int NUMBER_INPUT_WIDTH = 64;
 
+    /// <summary>Gap between rows in <see cref="RichParameterRows" /> - without it, a multi-row
+    /// editor (a picked-items list, a falloff's stacked fields) reads as fused to the row below.</summary>
+    private const int RICH_ROW_SPACING = 10;
+
     /// <summary>Fallback for a curve power that cannot be read off its parameters - the same value
     /// <see cref="FalloffCurve.Quadratic" /> is, so an unreadable one behaves like the default curve
     /// rather than like something arbitrary.</summary>
@@ -319,7 +323,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
         if (parameters == null)
             return null;
 
-        var grid = new MyraGrid();
+        var grid = new MyraGrid { RowSpacing = RICH_ROW_SPACING };
 
         grid.AddColumn();
         grid.AddColumn(new Proportion(ProportionType.Fill));

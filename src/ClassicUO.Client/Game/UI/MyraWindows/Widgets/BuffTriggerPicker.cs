@@ -152,7 +152,7 @@ public sealed class BuffTriggerPicker : VerticalStackPanel
             stored.Select(type => (int)type),
             short.MinValue,
             short.MaxValue
-        ) { VerticalAlignment = VerticalAlignment.Center };
+        ) { VerticalAlignment = VerticalAlignment.Top };
 
         picker.ItemsChanged += (_, _) =>
             property.SetValue(_owner, picker.PickedItems.Select(type => (short)type).ToList());
@@ -164,7 +164,7 @@ public sealed class BuffTriggerPicker : VerticalStackPanel
             {
                 new MyraLabel(ParameterMetadata.LabelFor(property), MyraLabel.TextStyle.P)
                 {
-                    VerticalAlignment = VerticalAlignment.Center, Tooltip = ParameterMetadata.TooltipFor(property)
+                    VerticalAlignment = VerticalAlignment.Top, Tooltip = ParameterMetadata.TooltipFor(property)
                 },
                 picker
             }

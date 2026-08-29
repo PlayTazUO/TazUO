@@ -163,6 +163,12 @@ public class IndexedComboPicker : HorizontalStackPanel
 
     private string? LabelFor(int value) => _labels.GetValueOrDefault(value);
 
+    /// <summary>
+    /// Looks the label up in <see cref="NameList" />'s live item collection rather than
+    /// <see cref="_orderedLabels" /> - a caller (<see cref="IndexedListPicker" />, say) may trim
+    /// entries out of the list after picking them, and indexing against the original set would then
+    /// point at the wrong row or one that no longer exists.
+    /// </summary>
     private int? PositionOf(int value)
     {
         string? label = LabelFor(value);
@@ -170,7 +176,7 @@ public class IndexedComboPicker : HorizontalStackPanel
         if (label == null)
             return null;
 
-        int position = _orderedLabels.IndexOf(label);
+        int position = NameList.Items.IndexOf(label);
 
         return position < 0 ? null : position;
     }

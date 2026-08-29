@@ -3,16 +3,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
+using Myra.Graphics2D;
+using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
-using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 /// <summary>
 /// Builds a set of chosen values from a searchable <see cref="IndexedComboPicker" />: pick one, add
-/// it, and it moves into the list beside a remove button for whichever entry is selected there.
+/// it, and it drops into a boxed list below, each row carrying its own remove glyph. A value already
+/// picked drops out of the name list, so the search never offers a duplicate.
 /// </summary>
-public class IndexedListPicker : WrapPanel
+public class IndexedListPicker : VerticalStackPanel
 {
     #region Public events
 
@@ -24,21 +27,30 @@ public class IndexedListPicker : WrapPanel
     #region Public accessors
 
     /// <summary>Every value currently picked.</summary>
-    public int[] PickedItems => _pickedItemsIndexToWidget.Keys.ToArray();
+    public int[] PickedItems => _pickedItemRows.Keys.ToArray();
 
     #endregion
 
     #region Private members
 
+    private const string REMOVE_GLYPH = "\U0001F5D9";
+    private const int SMALL_BUTTON_SIZE = 22;
+    private const int SMALL_GLYPH_SIZE = 20;
+
+    /// <summary>The glyph's ink sits a little low and right of centre at this size - the metrics
+    /// <see cref="IconButton" /> reads off the font are close but not exact for it.</summary>
+    private static readonly Point _removeGlyphNudge = new(0, -1);
+
+    private const int SPACING = 4;
+
+    private readonly List<(int Value, string Label)> _entries;
     private readonly Dictionary<int, string> _labels;
 
-    private readonly ListView _pickedItemsView;
+    private readonly VerticalStackPanel _pickedItemsPanel;
     private readonly IndexedComboPicker _picker;
     private readonly IconButton _addButton;
-    private readonly IconButton _removeButton;
 
-    private readonly Dictionary<int, Widget> _pickedItemsIndexToWidget = [];
-    private readonly Dictionary<Widget, int> _pickedItemsWidgetToIndex = [];
+    private readonly Dictionary<int, Widget> _pickedItemRows = [];
 
     #endregion
 
@@ -65,29 +77,43 @@ public class IndexedListPicker : WrapPanel
         int maxValue = int.MaxValue
     )
     {
-        List<(int Value, string Label)> entryList = [..entries];
-        _labels = entryList.ToDictionary(entry => entry.Value, entry => entry.Label);
+        Spacing = SPACING;
 
-        _addButton = new IconButton("+", OnAddClick, glyphSize: 34) { Enabled = false };
-        _removeButton = new IconButton("\U0001F5D9", OnRemoveClick, glyphSize: 34) { Enabled = false };
+        _entries = [..entries];
+        _labels = _entries.ToDictionary(entry => entry.Value, entry => entry.Label);
 
-        _pickedItemsView = new ListView { VerticalAlignment = VerticalAlignment.Top };
-        _pickedItemsView.SelectedIndexChanged += OnViewItemSelected;
-
-        _picker = new IndexedComboPicker(value, entryList, minValue, maxValue) { VerticalAlignment = VerticalAlignment.Bottom };
+        _picker = new IndexedComboPicker(value, _entries, minValue, maxValue) { VerticalAlignment = VerticalAlignment.Center };
         _picker.NumberInput.Width = numberWidth;
         _picker.NameList.Width = nameWidth;
         _picker.ValueChanged += OnPickerValueChanged;
 
-        Children.Add(_pickedItemsView);
-        Children.Add(_picker);
-        Children.Add(_addButton);
-        Children.Add(_removeButton);
+        _addButton = new IconButton("+", OnAddClick, glyphSize: 34) { Enabled = false };
+
+        var pickerRow = new HorizontalStackPanel { Spacing = SPACING };
+        pickerRow.Widgets.Add(_picker);
+        pickerRow.Widgets.Add(_addButton);
+
+        // Fixed to the picker row's own width rather than the fill column it may sit in - a box
+        // that spans the whole editor pane would strand its remove glyphs far from short labels.
+        int boxWidth = numberWidth + nameWidth + _addButton.Width!.Value + SPACING * 2;
+
+        _pickedItemsPanel = new VerticalStackPanel
+        {
+            Spacing = SPACING,
+            Width = boxWidth,
+            Border = new SolidBrush(MyraStyle.GridBorderColor),
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(4)
+        };
+
+        Widgets.Add(pickerRow);
+        Widgets.Add(_pickedItemsPanel);
 
         foreach (int seeded in initialValues ?? [])
             AddItem(seeded);
 
         RefreshAddButton(value);
+        RefreshNameListOptions();
     }
 
     #endregion
@@ -96,50 +122,70 @@ public class IndexedListPicker : WrapPanel
 
     private void OnPickerValueChanged(object? sender, int value) => RefreshAddButton(value);
 
-    private void OnViewItemSelected(object? sender, EventArgs e) =>
-        _removeButton.Enabled = _pickedItemsView.SelectedItem != null;
-
     private void OnAddClick()
     {
         if (!AddItem(_picker.Value))
             return;
 
-        RefreshAddButton(_picker.Value);
-        ItemsChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void OnRemoveClick()
-    {
-        Widget? toRemove = _pickedItemsView.SelectedItem;
-
-        if (toRemove == null || !_pickedItemsWidgetToIndex.Remove(toRemove, out int index))
-            return;
-
-        _pickedItemsIndexToWidget.Remove(index);
-        _pickedItemsView.Widgets.Remove(toRemove);
+        _picker.Value = 0;
 
         RefreshAddButton(_picker.Value);
-        _removeButton.Enabled = false;
+        RefreshNameListOptions();
         ItemsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private bool AddItem(int value)
     {
-        if (_pickedItemsIndexToWidget.ContainsKey(value))
+        if (_pickedItemRows.ContainsKey(value))
             return false;
 
-        var listItem = new MyraLabel(LabelFor(value), MyraLabel.TextStyle.P);
+        var label = new MyraLabel(LabelFor(value), MyraLabel.TextStyle.P) { VerticalAlignment = VerticalAlignment.Center };
 
-        _pickedItemsIndexToWidget.Add(value, listItem);
-        _pickedItemsWidgetToIndex.Add(listItem, value);
-        _pickedItemsView.Widgets.Add(listItem);
+        var remove = new IconButton(REMOVE_GLYPH, () => RemoveItem(value), size: SMALL_BUTTON_SIZE, glyphSize: SMALL_GLYPH_SIZE)
+        {
+            Nudge = _removeGlyphNudge
+        };
+
+        var row = new SpaceBetweenRow(label, remove, SPACING);
+
+        _pickedItemRows.Add(value, row);
+        _pickedItemsPanel.Widgets.Add(row);
 
         return true;
     }
 
+    private void RemoveItem(int value)
+    {
+        if (!_pickedItemRows.Remove(value, out Widget? row))
+            return;
+
+        _pickedItemsPanel.Widgets.Remove(row);
+
+        RefreshAddButton(_picker.Value);
+        RefreshNameListOptions();
+        ItemsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     private string LabelFor(int value) => _labels.GetValueOrDefault(value, value.ToString());
 
-    private void RefreshAddButton(int candidate) => _addButton.Enabled = !_pickedItemsIndexToWidget.ContainsKey(candidate);
+    private void RefreshAddButton(int candidate) => _addButton.Enabled = !_pickedItemRows.ContainsKey(candidate);
+
+    /// <summary>
+    /// Drops every already-picked value's name out of the search list, so picking never offers a
+    /// duplicate. Rebuilt from the full catalogue rather than trimmed incrementally - the
+    /// catalogues this drives (sounds, buffs) are at most a few hundred entries, and this only runs
+    /// on an add or remove click, not per frame.
+    /// </summary>
+    private void RefreshNameListOptions()
+    {
+        _picker.NameList.Items.Clear();
+
+        foreach ((int entryValue, string label) in _entries)
+        {
+            if (!_pickedItemRows.ContainsKey(entryValue))
+                _picker.NameList.Items.Add(label);
+        }
+    }
 
     #endregion
 }
