@@ -50,7 +50,7 @@ public class BuiltInRuleWiringTests
 
         var parameters = rule.Trigger.Parameters.Should().BeOfType<SoundPlayedParameters>().Subject;
 
-        parameters.SoundIndex.Should().Be(755);
+        parameters.SoundIndexes.Should().Equal(755);
 
         // Left at the defaults on purpose: they are the falloff the dedicated earthquake trigger had.
         parameters.MinDistance.Should().Be(0);

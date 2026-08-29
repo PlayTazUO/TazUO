@@ -54,7 +54,7 @@ public class TriggerParameterReachabilityTests
             if (property.GetCustomAttribute<BuffTriggerEditorAttribute>() is { } buffTrigger)
             {
                 claimed.Add(property.Name);
-                claimed.Add(buffTrigger.BuffTypeProperty);
+                claimed.Add(buffTrigger.BuffTypesProperty);
                 claimed.Add(buffTrigger.DurationSecondsProperty);
             }
 

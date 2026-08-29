@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ClassicUO.Configuration;
 using ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
@@ -19,16 +20,16 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 ///         one was renamed.
 ///     </para>
 /// </summary>
-/// <param name="buffTypeProperty">Sibling <see cref="short" /> holding the watched buff.</param>
+/// <param name="buffTypesProperty">Sibling <c>List&lt;short&gt;</c> holding the watched buffs.</param>
 /// <param name="durationSecondsProperty">
 ///     Sibling <see cref="float" /> holding the duration, meaningless
 ///     and hidden under <see cref="BuffTriggerMode.Active" />.
 /// </param>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-public sealed class BuffTriggerEditorAttribute(string buffTypeProperty, string durationSecondsProperty) : Attribute
+public sealed class BuffTriggerEditorAttribute(string buffTypesProperty, string durationSecondsProperty) : Attribute
 {
-    /// <summary>The sibling holding the watched buff.</summary>
-    public string BuffTypeProperty { get; } = buffTypeProperty;
+    /// <summary>The sibling holding the watched buffs.</summary>
+    public string BuffTypesProperty { get; } = buffTypesProperty;
 
     /// <summary>The sibling holding the configured duration.</summary>
     public string DurationSecondsProperty { get; } = durationSecondsProperty;
@@ -36,11 +37,11 @@ public sealed class BuffTriggerEditorAttribute(string buffTypeProperty, string d
 
 /// <summary>The properties one <see cref="BuffTriggerPicker" /> edits, resolved off its attribute.</summary>
 /// <param name="Mode">Which moment of the buff's life fires the rule.</param>
-/// <param name="BuffType">The buff being watched.</param>
+/// <param name="BuffTypes">The buffs being watched.</param>
 /// <param name="DurationSeconds">The configured duration.</param>
 public readonly record struct BuffTriggerProperties(
     PropertyInfo Mode,
-    PropertyInfo? BuffType,
+    PropertyInfo? BuffTypes,
     PropertyInfo? DurationSeconds
 );
 
@@ -100,7 +101,7 @@ public sealed class BuffTriggerPicker : VerticalStackPanel
 
         Widgets.Add(modes);
 
-        HorizontalStackPanel? typeRow = BuffTypeRow(properties.BuffType, listWidth, numberWidth);
+        HorizontalStackPanel? typeRow = BuffTypesRow(properties.BuffTypes, listWidth, numberWidth);
 
         if (typeRow != null)
             Widgets.Add(typeRow);
@@ -136,18 +137,25 @@ public sealed class BuffTriggerPicker : VerticalStackPanel
     private BuffTriggerMode CurrentMode() =>
         _properties.Mode.GetValue(_owner) is BuffTriggerMode stored ? stored : BuffTriggerMode.Added;
 
-    private HorizontalStackPanel? BuffTypeRow(PropertyInfo? property, int listWidth, int numberWidth)
+    private HorizontalStackPanel? BuffTypesRow(PropertyInfo? property, int listWidth, int numberWidth)
     {
         if (property == null)
             return null;
 
-        var picker = new BuffTypePicker(
-            property.GetValue(_owner) is short stored ? stored : (short)0,
+        List<short> stored = property.GetValue(_owner) as List<short> ?? [];
+
+        var picker = new IndexedListPicker(
+            0,
+            BuffTypePicker.CatalogueEntries,
             numberWidth,
-            listWidth
+            listWidth,
+            stored.Select(type => (int)type),
+            short.MinValue,
+            short.MaxValue
         ) { VerticalAlignment = VerticalAlignment.Center };
 
-        picker.TypeChanged += (_, buffType) => property.SetValue(_owner, buffType);
+        picker.ItemsChanged += (_, _) =>
+            property.SetValue(_owner, picker.PickedItems.Select(type => (short)type).ToList());
 
         return new HorizontalStackPanel
         {

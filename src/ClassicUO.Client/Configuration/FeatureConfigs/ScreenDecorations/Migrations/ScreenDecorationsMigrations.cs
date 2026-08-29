@@ -13,7 +13,10 @@ namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Migrations;
 /// </summary>
 internal static class ScreenDecorationsMigrations
 {
-    private static readonly IReadOnlyList<IConfigMigration<JsonObject>> _migrations = [];
+    private static readonly IReadOnlyList<IConfigMigration<JsonObject>> _migrations =
+    [
+        new MultiValueTriggerSelectorsMigration()
+    ];
 
     public static ConfigMigrationPipeline<JsonObject> Pipeline { get; } = new(
         new ConfigMigrationSequence<JsonObject>(_migrations),

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
@@ -11,8 +12,8 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 /// <summary>
-/// Marks an <see cref="int" /> property as a sound index, so the rule editor offers
-/// <see cref="SoundIndexPicker" /> for it.
+/// Marks a <c>List&lt;int&gt;</c> property as a set of sound indexes, so the rule editor offers a
+/// multi-select sound picker for it.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public sealed class SoundIndexEditorAttribute : Attribute;
@@ -43,6 +44,19 @@ public sealed class SoundIndexPicker : HorizontalStackPanel
     {
         get => _input.Value;
         set => _input.Value = value;
+    }
+
+    #endregion
+
+    #region Public methods
+
+    /// <summary>Every named sound, as (index, label) pairs a picker offering more than one at once
+    /// can be seeded with. Reads the same catalogue this picker's own name list does.</summary>
+    public static IEnumerable<(int Value, string Label)> CatalogueEntries()
+    {
+        EnsureCatalogue();
+
+        return _labels.Select(pair => (pair.Key, pair.Value));
     }
 
     #endregion

@@ -326,11 +326,11 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
 
         foreach (PropertyInfo property in parameters.GetType().GetProperties())
         {
-            if (property.PropertyType == typeof(int)
+            if (property.PropertyType == typeof(List<int>)
                 && property.GetCustomAttribute<SoundIndexEditorAttribute>() != null)
             {
-                // Centred: the editor is a single row of fields, so its label belongs beside them.
-                AddRichRow(grid, property, SoundEditor(parameters, property), VerticalAlignment.Center);
+                // Top: the editor stacks the picker row above its picked-sounds list.
+                AddRichRow(grid, property, MultiSoundEditor(parameters, property), VerticalAlignment.Top);
                 continue;
             }
 
@@ -382,15 +382,19 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
         grid.AddWidget(editor, row, 1);
     }
 
-    private static SoundIndexPicker SoundEditor(TriggerParameters parameters, PropertyInfo property)
+    private static IndexedListPicker MultiSoundEditor(TriggerParameters parameters, PropertyInfo property)
     {
-        var picker = new SoundIndexPicker(
-            property.GetValue(parameters) is int stored ? stored : 0,
+        List<int> stored = property.GetValue(parameters) as List<int> ?? [];
+
+        var picker = new IndexedListPicker(
+            0,
+            SoundIndexPicker.CatalogueEntries(),
             NUMBER_INPUT_WIDTH,
-            INPUT_WIDTH
+            INPUT_WIDTH,
+            stored
         );
 
-        picker.IndexChanged += (_, index) => property.SetValue(parameters, index);
+        picker.ItemsChanged += (_, _) => property.SetValue(parameters, picker.PickedItems.ToList());
 
         return picker;
     }
@@ -405,7 +409,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
 
         var properties = new BuffTriggerProperties(
             property,
-            owner.GetProperty(buffEditor.BuffTypeProperty),
+            owner.GetProperty(buffEditor.BuffTypesProperty),
             owner.GetProperty(buffEditor.DurationSecondsProperty)
         );
 

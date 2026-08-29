@@ -30,12 +30,12 @@ public class ScreenDecorationsPersistenceTests : IDisposable
     {
         Directory.CreateDirectory(_profileDirectory);
         string path = Path.Combine(_profileDirectory, ScreenDecorations.FileName);
-        File.WriteAllText(path, """{"enabled": true, "schema_version": 0}""");
+        File.WriteAllText(path, $$"""{"enabled": true, "schema_version": {{ScreenDecorationsMigrations.LatestVersion}}}""");
 
         ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
 
         loaded.Enabled.Should().BeTrue();
-        loaded.SchemaVersion.Should().Be(0);
+        loaded.SchemaVersion.Should().Be(ScreenDecorationsMigrations.LatestVersion);
     }
 
     [Fact]

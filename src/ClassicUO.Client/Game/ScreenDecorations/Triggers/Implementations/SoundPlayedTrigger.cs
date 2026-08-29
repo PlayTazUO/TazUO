@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 
@@ -37,6 +38,10 @@ public sealed class SoundPlayedTrigger : IEventTrigger
 
     private readonly SoundPlayedParameters _parameters;
 
+    /// <summary>Membership test for <see cref="OnSoundPlayed" />, which runs on every sound the
+    /// client plays and cannot afford a list scan per one.</summary>
+    private readonly HashSet<int> _soundIndexes;
+
     #endregion
 
     #region Ctor
@@ -48,6 +53,7 @@ public sealed class SoundPlayedTrigger : IEventTrigger
         ArgumentNullException.ThrowIfNull(parameters);
 
         _parameters = parameters;
+        _soundIndexes = [..parameters.SoundIndexes];
     }
 
     #endregion
@@ -92,7 +98,7 @@ public sealed class SoundPlayedTrigger : IEventTrigger
         int viewRange
     )
     {
-        if (soundIndex != parameters.SoundIndex || viewRange <= 0)
+        if (!parameters.SoundIndexes.Contains(soundIndex) || viewRange <= 0)
             return null;
 
         // Zero means the client's own audible range. A configured band wider than that would claim
@@ -129,7 +135,7 @@ public sealed class SoundPlayedTrigger : IEventTrigger
     {
         // Cheap reject before anything else is touched: most sounds are not this rule's, and this
         // runs on every one the client plays.
-        if (e.Index != _parameters.SoundIndex)
+        if (!_soundIndexes.Contains(e.Index))
             return;
 
         // Skipping MT dispatch: only atomics read here. If non-atomics are added, MT dispatch

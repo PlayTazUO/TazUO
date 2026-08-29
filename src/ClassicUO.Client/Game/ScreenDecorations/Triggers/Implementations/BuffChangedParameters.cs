@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
@@ -65,7 +66,7 @@ public sealed class BuffChangedParameters : TriggerParameters
     ///     </para>
     /// </summary>
     [Browsable(false)]
-    [BuffTriggerEditor(nameof(BuffType), nameof(DurationSeconds))]
+    [BuffTriggerEditor(nameof(BuffTypes), nameof(DurationSeconds))]
     [LocalizedDisplayName("overlaytrigger_buff_mode", "When")]
     [LocalizedDescription(
         "overlaytrigger_buff_mode_tooltip",
@@ -74,21 +75,21 @@ public sealed class BuffChangedParameters : TriggerParameters
     public BuffTriggerMode Mode { get; set; } = BuffTriggerMode.Added;
 
     /// <summary>
-    ///     The buff to watch for, by its numeric type.
+    ///     The buffs to watch for, by their numeric type. Any one of them fires the rule.
     ///     <para>
-    ///         A number rather than only the enum: a shard can send an id this client's
+    ///         Numbers rather than only the enum: a shard can send an id this client's
     ///         <see cref="ClassicUO.Game.Data.BuffIconType" /> has no member for, and the editor takes one
     ///         outright for those the same way it offers every name it does know.
     ///     </para>
     /// </summary>
     [Browsable(false)]
-    [LocalizedDisplayName("overlaytrigger_buff_type", "Watch buff")]
+    [LocalizedDisplayName("overlaytrigger_buff_type", "Watch buffs")]
     [LocalizedDescription(
         "overlaytrigger_buff_type_tooltip",
-        "The buff or debuff that sets this effect off.\n"
-        + "Pick one by name, or type its number if it has none."
+        "The buffs or debuffs that set this effect off - any one of them.\n"
+        + "Pick by name, or type a number if it has none."
     )]
-    public short BuffType { get; set; }
+    public List<short> BuffTypes { get; set; } = [];
 
     /// <summary>
     ///     How long one occurrence runs, in seconds. Ignored under
@@ -120,7 +121,7 @@ public sealed class BuffChangedParameters : TriggerParameters
 
     /// <inheritdoc />
     public override TriggerParameters Clone() =>
-        new BuffChangedParameters { Mode = Mode, BuffType = BuffType, DurationSeconds = DurationSeconds };
+        new BuffChangedParameters { Mode = Mode, BuffTypes = [..BuffTypes], DurationSeconds = DurationSeconds };
 
     #endregion
 }

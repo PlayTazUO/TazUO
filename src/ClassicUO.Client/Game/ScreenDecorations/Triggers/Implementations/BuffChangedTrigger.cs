@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
@@ -31,17 +32,22 @@ public sealed class BuffChangedTrigger : IEventTrigger
 
     private readonly BuffChangedParameters _parameters;
 
+    /// <summary>Membership test for the buff event handlers, which run on every buff added to or
+    /// removed from the player.</summary>
+    private readonly HashSet<short> _buffTypes;
+
     #endregion
 
     #region Ctor
 
-    /// <param name="parameters">Which buff to watch, and which moment of its life to answer to.</param>
+    /// <param name="parameters">Which buffs to watch, and which moment of their life to answer to.</param>
     /// <exception cref="ArgumentNullException"><paramref name="parameters" /> is null.</exception>
     public BuffChangedTrigger(BuffChangedParameters parameters)
     {
         ArgumentNullException.ThrowIfNull(parameters);
 
         _parameters = parameters;
+        _buffTypes = [..parameters.BuffTypes];
     }
 
     #endregion
@@ -71,7 +77,7 @@ public sealed class BuffChangedTrigger : IEventTrigger
 
     private void OnBuffAdded(object? sender, BuffEventArgs e)
     {
-        if ((short)e.Buff.Type != _parameters.BuffType)
+        if (!_buffTypes.Contains((short)e.Buff.Type))
             return;
 
         switch (_parameters.Mode)
@@ -92,7 +98,7 @@ public sealed class BuffChangedTrigger : IEventTrigger
 
     private void OnBuffRemoved(object? sender, BuffEventArgs e)
     {
-        if ((short)e.Buff.Type != _parameters.BuffType)
+        if (!_buffTypes.Contains((short)e.Buff.Type))
             return;
 
         switch (_parameters.Mode)
