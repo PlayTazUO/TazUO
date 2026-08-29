@@ -338,6 +338,14 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
                 continue;
             }
 
+            if (property.PropertyType == typeof(List<uint>)
+                && property.GetCustomAttribute<SerialListEditorAttribute>() != null)
+            {
+                // Top: the editor stacks the picker row above its picked-serials list.
+                AddRichRow(grid, property, SerialListEditor(parameters, property), VerticalAlignment.Top);
+                continue;
+            }
+
             if (property.PropertyType == typeof(BuffTriggerMode)
                 && property.GetCustomAttribute<BuffTriggerEditorAttribute>() is { } buffEditor)
             {
@@ -397,6 +405,17 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
             INPUT_WIDTH,
             stored
         );
+
+        picker.ItemsChanged += (_, _) => property.SetValue(parameters, picker.PickedItems.ToList());
+
+        return picker;
+    }
+
+    private static SerialListPicker SerialListEditor(TriggerParameters parameters, PropertyInfo property)
+    {
+        List<uint> stored = property.GetValue(parameters) as List<uint> ?? [];
+
+        var picker = new SerialListPicker(INPUT_WIDTH, stored);
 
         picker.ItemsChanged += (_, _) => property.SetValue(parameters, picker.PickedItems.ToList());
 
