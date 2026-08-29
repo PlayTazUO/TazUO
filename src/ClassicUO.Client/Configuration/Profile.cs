@@ -87,6 +87,9 @@ namespace ClassicUO.Configuration
 
     public sealed partial class Profile : JsonSave<Profile>, INotifyPropertyChanged
     {
+        internal const string DefaultSystemMessageGlobalChatRegex
+            = @"^\[(?:[01][0-9]|2[0-3]):[0-5][0-9]\] [^:\s\r\n](?:[^:\r\n]*[^:\s\r\n])?: \S(?:[^\r\n]*\S)?$";
+
         private static Profile _defaultPreview;
 
         /// <summary>Lives in the profile folder as <c>profile.json</c>.</summary>
@@ -695,6 +698,11 @@ namespace ClassicUO.Configuration
         [Obsolete("Remove on/after 10/17/26")]
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); } = false;
         public bool HideJournalSystemPrefix { get; set => SetProperty(ref field, value); } = false;
+
+        public bool ClassifySystemMessagesAsGlobalChat { get; set => SetProperty(ref field, value); } = false;
+
+        public string SystemMessageGlobalChatRegex { get; set => SetProperty(ref field, value); }
+            = DefaultSystemMessageGlobalChatRegex;
 
         public int HealthLineSizeMultiplier { get; set => SetProperty(ref field, value); } = 1;
 
