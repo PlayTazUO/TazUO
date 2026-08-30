@@ -304,6 +304,20 @@ namespace ClassicUO.Game.UI.Gumps
 
         public static void UpdateJournalOptions() => UIManager.ForEach<ResizableJournal>(p => p.UpdateOptions());
 
+        /// <summary>
+        /// Keeps reclassified Global Chat entries out of the System filter even though their
+        /// underlying text category remains <see cref="TextType.SYSTEM"/>.
+        /// </summary>
+        internal static bool MatchesMessageTypeFilter(TextType textType, MessageType messageType, MessageType filter)
+        {
+            if (messageType == MessageType.ChatSystem)
+            {
+                return filter == MessageType.ChatSystem;
+            }
+
+            return textType == TextType.SYSTEM ? filter == MessageType.System : filter == messageType;
+        }
+
         public override void Save(XmlTextWriter writer)
         {
             base.Save(writer);
@@ -1106,17 +1120,10 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         MessageType currentfilter = _resizableJournal._currentFilter[i];
 
-                        if (messageType == MessageType.ChatSystem && currentfilter == MessageType.ChatSystem)
+                        if (MatchesMessageTypeFilter(type, messageType, currentfilter))
+                        {
                             return true;
-
-                        if (type == TextType.SYSTEM && currentfilter == MessageType.System)
-                            return true;
-
-                        if (type == TextType.SYSTEM && currentfilter != MessageType.System)
-                            continue;
-
-                        if (currentfilter == messageType)
-                            return true;
+                        }
                     }
                     return false;
                 }

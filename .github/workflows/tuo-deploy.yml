@@ -56,6 +56,7 @@ jobs:
         run: |
           export LC_ALL=C.UTF-8
           VERSION="$(date -u +%y).$(date -u +%m%d).${{ github.run_number }}"
+          export VERSION
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           PY="$(command -v python3 || command -v python)"
           "$PY" - <<'PYEOF'
