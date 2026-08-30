@@ -10,6 +10,7 @@ All notable changes to TazUO will be recorded here.
 * Added a new modern compact status bar option
 * Grid container item locks now expire after 60 days of the item being absent from the container, automatically clearing the saved lock and slot
 * Separated Scavenger agent from Autoloot, they now each have their own loot lists and enabled/disabled toggles
+* Added a per-container option to disable grid highlighting without affecting other containers - [P.R 1032](https://github.com/PlayTazUO/TazUO/pull/1032) ([Aryx75](https://github.com/Aryx75))
 
 ### Legion
 * Added `API.IsKeyPressed("CTRL+SHIFT+F1")` method to see if a key(s) is currently held down
