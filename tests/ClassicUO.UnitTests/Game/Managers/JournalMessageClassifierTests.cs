@@ -21,6 +21,33 @@ public class JournalMessageClassifierTests
         Assert.Equal(MessageType.ChatSystem, result);
     }
 
+    [Fact]
+    public void Classify_MatchingSystemLikeRegularMessage_ReturnsChatSystem()
+    {
+        MessageType result = JournalMessageClassifier.Classify(
+            MessageType.Regular,
+            "[16:06] Xyrah: only a test 2",
+            true,
+            Profile.DefaultSystemMessageGlobalChatRegex,
+            true
+        );
+
+        Assert.Equal(MessageType.ChatSystem, result);
+    }
+
+    [Fact]
+    public void Classify_MatchingRegularMessageWithoutSystemContext_RemainsRegular()
+    {
+        MessageType result = JournalMessageClassifier.Classify(
+            MessageType.Regular,
+            "[16:06] Xyrah: only a test 2",
+            true,
+            Profile.DefaultSystemMessageGlobalChatRegex
+        );
+
+        Assert.Equal(MessageType.Regular, result);
+    }
+
     [Theory]
     [InlineData("World save complete. The entire process took 6.34 seconds.")]
     [InlineData("You have hidden yourself well.")]
