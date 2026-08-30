@@ -55,10 +55,10 @@ public sealed class ObjectUsedTrigger : IEventTrigger
     #region Public methods
 
     /// <inheritdoc />
-    public void Attach() => EventSink.OnObjectUsed += OnObjectUsed;
+    public void Attach() => EventSink.ObjectUsed += OnObjectUsed;
 
     /// <inheritdoc />
-    public void Detach() => EventSink.OnObjectUsed -= OnObjectUsed;
+    public void Detach() => EventSink.ObjectUsed -= OnObjectUsed;
 
     /// <inheritdoc />
     public void Dispose() => Detach();

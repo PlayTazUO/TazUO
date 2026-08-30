@@ -157,34 +157,22 @@ namespace ClassicUO.Configuration
         private static void ValidateFields(Profile profile)
         {
             if (profile == null)
-            {
                 return;
-            }
 
             if (string.IsNullOrEmpty(profile.ServerName))
-            {
-                throw new InvalidDataException();
-            }
+                throw new InvalidDataException("The current profile has no stored server name");
 
             if (string.IsNullOrEmpty(profile.Username))
-            {
-                throw new InvalidDataException();
-            }
+                throw new InvalidDataException("The current profile has no stored username");
 
             if (string.IsNullOrEmpty(profile.CharacterName))
-            {
-                throw new InvalidDataException();
-            }
+                throw new InvalidDataException("The current profile has no stored character name");
 
             if (profile.WindowClientBounds.X < 600)
-            {
                 profile.WindowClientBounds = new Point(600, profile.WindowClientBounds.Y);
-            }
 
             if (profile.WindowClientBounds.Y < 480)
-            {
                 profile.WindowClientBounds = new Point(profile.WindowClientBounds.X, 480);
-            }
         }
 
         public static void UnLoadProfile()

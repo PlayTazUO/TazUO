@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
-using Myra.Graphics2D;
-using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -46,7 +44,7 @@ public class IndexedListPicker : VerticalStackPanel
     private readonly List<(int Value, string Label)> _entries;
     private readonly Dictionary<int, string> _labels;
 
-    private readonly VerticalStackPanel _pickedItemsPanel;
+    private readonly PickedItemsBox _pickedItemsPanel;
     private readonly IndexedComboPicker _picker;
     private readonly IconButton _addButton;
 
@@ -97,14 +95,7 @@ public class IndexedListPicker : VerticalStackPanel
         // that spans the whole editor pane would strand its remove glyphs far from short labels.
         int boxWidth = numberWidth + nameWidth + _addButton.Width!.Value + SPACING * 2;
 
-        _pickedItemsPanel = new VerticalStackPanel
-        {
-            Spacing = SPACING,
-            Width = boxWidth,
-            Border = new SolidBrush(MyraStyle.GridBorderColor),
-            BorderThickness = new Thickness(1),
-            Padding = new Thickness(4)
-        };
+        _pickedItemsPanel = new PickedItemsBox(boxWidth);
 
         Widgets.Add(pickerRow);
         Widgets.Add(_pickedItemsPanel);
@@ -149,7 +140,7 @@ public class IndexedListPicker : VerticalStackPanel
         var row = new SpaceBetweenRow(label, remove, SPACING);
 
         _pickedItemRows.Add(value, row);
-        _pickedItemsPanel.Widgets.Add(row);
+        _pickedItemsPanel.AddRow(row);
 
         return true;
     }
@@ -159,7 +150,7 @@ public class IndexedListPicker : VerticalStackPanel
         if (!_pickedItemRows.Remove(value, out Widget? row))
             return;
 
-        _pickedItemsPanel.Widgets.Remove(row);
+        _pickedItemsPanel.RemoveRow(row);
 
         RefreshAddButton(_picker.Value);
         RefreshNameListOptions();

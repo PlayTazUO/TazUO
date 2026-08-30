@@ -23,7 +23,7 @@ public class ObjectUsedTriggerTests
         TriggerFiredArgs? fired = null;
         trigger.Fired += (_, args) => fired = args;
 
-        EventSink.InvokeOnObjectUsed(SECOND_SERIAL);
+        EventSink.InvokeObjectUsed(SECOND_SERIAL);
 
         fired.Should().NotBeNull();
         fired!.Signal.Duration.Should().Be(parameters.Duration);
@@ -40,7 +40,7 @@ public class ObjectUsedTriggerTests
         TriggerFiredArgs? fired = null;
         trigger.Fired += (_, args) => fired = args;
 
-        EventSink.InvokeOnObjectUsed(UNWATCHED_SERIAL);
+        EventSink.InvokeObjectUsed(UNWATCHED_SERIAL);
 
         fired.Should().BeNull();
     }
@@ -57,7 +57,7 @@ public class ObjectUsedTriggerTests
         TriggerFiredArgs? fired = null;
         trigger.Fired += (_, args) => fired = args;
 
-        EventSink.InvokeOnObjectUsed(FIRST_SERIAL);
+        EventSink.InvokeObjectUsed(FIRST_SERIAL);
 
         fired.Should().BeNull();
     }

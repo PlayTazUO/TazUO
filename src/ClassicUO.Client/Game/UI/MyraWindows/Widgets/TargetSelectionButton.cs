@@ -3,6 +3,7 @@
 using System;
 using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
+using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
@@ -33,6 +34,11 @@ public sealed class TargetSelectionButton : MyraButton
 
         Tooltip = tooltip;
         OnClick = () => World.Instance?.TargetManager.SetTargeting(picked => OnPicked(picked, accepts, onTargeted));
+
+        // MyraButton's own caption label defaults to left-aligned, which only shows once a caller
+        // gives the button more width than its text needs - as a fixed-width row of these does.
+        if (Content is Widget content)
+            content.HorizontalAlignment = HorizontalAlignment.Center;
     }
 
     #endregion
@@ -51,4 +57,4 @@ public sealed class TargetSelectionButton : MyraButton
     }
 
     #endregion
-}-559038737
+}

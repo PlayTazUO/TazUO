@@ -15,6 +15,7 @@ using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Logic;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
+using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
 using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
@@ -49,6 +50,18 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     /// <summary>Width for a numeric field standing beside a wider input, rather than filling a row
     /// on its own. A sound index is four digits and a curve power is one; sized for either.</summary>
     private const int NUMBER_INPUT_WIDTH = 64;
+
+    /// <summary>Width for a raw serial field. A serial is 32-bit - "0xFFFFFFFF" is the longest it
+    /// ever prints - so it needs nowhere near a full-width text input.</summary>
+    private const int SERIAL_INPUT_WIDTH = 120;
+
+    /// <summary>
+    /// Top margin for a rich-row label whose editor leads with a bordered, padded input rather than
+    /// plain text. A label's own top padding is 2px; a text box or combo box adds a 1px border on
+    /// top of its 3px padding, so its text starts 4px down - 2px lower than the label's. This closes
+    /// that gap rather than leaving the label sitting visibly higher than what it names.
+    /// </summary>
+    private const int RICH_ROW_LABEL_TOP_NUDGE = 6;
 
     /// <summary>Gap between rows in <see cref="RichParameterRows" /> - without it, a multi-row
     /// editor (a picked-items list, a falloff's stacked fields) reads as fused to the row below.</summary>
@@ -333,24 +346,26 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
             if (property.PropertyType == typeof(List<int>)
                 && property.GetCustomAttribute<SoundIndexEditorAttribute>() != null)
             {
-                // Top: the editor stacks the picker row above its picked-sounds list.
-                AddRichRow(grid, property, MultiSoundEditor(parameters, property), VerticalAlignment.Top);
+                // Top, nudged: the editor stacks the picker row above its picked-sounds list, and
+                // that first row leads with a bordered, padded input - see RICH_ROW_LABEL_TOP_NUDGE.
+                AddRichRow(grid, property, MultiSoundEditor(parameters, property), VerticalAlignment.Top, RICH_ROW_LABEL_TOP_NUDGE);
                 continue;
             }
 
             if (property.PropertyType == typeof(List<uint>)
                 && property.GetCustomAttribute<SerialListEditorAttribute>() != null)
             {
-                // Top: the editor stacks the picker row above its picked-serials list.
-                AddRichRow(grid, property, SerialListEditor(parameters, property), VerticalAlignment.Top);
+                // Top, nudged: same shape as the sound editor above.
+                AddRichRow(grid, property, SerialListEditor(parameters, property), VerticalAlignment.Top, RICH_ROW_LABEL_TOP_NUDGE);
                 continue;
             }
 
             if (property.PropertyType == typeof(BuffTriggerMode)
                 && property.GetCustomAttribute<BuffTriggerEditorAttribute>() is { } buffEditor)
             {
-                // Top: the editor stacks a mode row, a type row, and a conditional duration row.
-                AddRichRow(grid, property, BuffEditor(parameters, property, buffEditor), VerticalAlignment.Top);
+                // Top, nudged: the editor stacks a mode row, a type row, and a conditional duration
+                // row, and the mode row leads with the same kind of padded input.
+                AddRichRow(grid, property, BuffEditor(parameters, property, buffEditor), VerticalAlignment.Top, RICH_ROW_LABEL_TOP_NUDGE);
             }
 
             if (property.PropertyType == typeof(FalloffCurve)
@@ -373,11 +388,14 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     /// <param name="property">The parameter being edited.</param>
     /// <param name="editor">Its editor.</param>
     /// <param name="labelAlignment">Where the label sits against a multi-row editor.</param>
+    /// <param name="topMargin">Extra top margin for a Top-aligned label - see
+    /// <see cref="RICH_ROW_LABEL_TOP_NUDGE" />. Zero for anything else.</param>
     private static void AddRichRow(
         MyraGrid grid,
         PropertyInfo property,
         Widget editor,
-        VerticalAlignment labelAlignment
+        VerticalAlignment labelAlignment,
+        int topMargin = 0
     )
     {
         int row = grid.RowsProportions.Count;
@@ -389,6 +407,9 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
             VerticalAlignment = labelAlignment,
             Tooltip = ParameterMetadata.TooltipFor(property)
         };
+
+        if (topMargin != 0)
+            label.Margin = new Thickness(0, topMargin, 0, 0);
 
         grid.AddWidget(label, row, 0);
         grid.AddWidget(editor, row, 1);
@@ -415,7 +436,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     {
         List<uint> stored = property.GetValue(parameters) as List<uint> ?? [];
 
-        var picker = new SerialListPicker(INPUT_WIDTH, stored);
+        var picker = new SerialListPicker(SERIAL_INPUT_WIDTH, stored);
 
         picker.ItemsChanged += (_, _) => property.SetValue(parameters, picker.PickedItems.ToList());
 

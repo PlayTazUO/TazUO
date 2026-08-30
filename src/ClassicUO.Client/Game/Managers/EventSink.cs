@@ -192,9 +192,9 @@ public class EventSink
     /// <summary>
     /// Invoked when the client sends a double-click (use) request for an object's serial.
     /// </summary>
-    internal static event EventHandler<uint> OnObjectUsed;
+    internal static event EventHandler<uint> ObjectUsed;
 
-    internal static void InvokeOnObjectUsed(uint serial) => OnObjectUsed?.Invoke(null, serial);
+    internal static void InvokeObjectUsed(uint serial) => ObjectUsed?.Invoke(null, serial);
 
     /// <summary>
     /// Invoked when the player receives a death packet from the server

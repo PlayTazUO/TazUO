@@ -119,13 +119,6 @@ namespace ClassicUO.Network
 
         public static void Send_DoubleClick(this AsyncNetClient socket, uint serial)
         {
-            // The one chokepoint every double-click path funnels through - direct sends, the
-            // manual-use queue's re-entrant call, and AutoUnequipActionManager's batched/delayed
-            // one - so a trigger watching for "object used" only has to hook here. OpenPaperdoll
-            // sets serial's top bit as a request-my-own-paperdoll signal; a watched rule's serials
-            // never carry that bit, so it simply never matches rather than needing to be masked out.
-            EventSink.InvokeOnObjectUsed(serial);
-
             const byte ID = 0x06;
 
             int length = AsyncNetClient.PacketsTable.GetPacketLength(ID);
@@ -153,6 +146,9 @@ namespace ClassicUO.Network
             socket.Send(writer.BufferWritten);
 
             writer.Dispose();
+
+            // Lowest place to dispatch an "object used" event
+            EventSink.InvokeObjectUsed(serial);
         }
 
         public static void Send_Seed
