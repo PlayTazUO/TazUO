@@ -200,6 +200,8 @@ namespace ClassicUO.Input
         // pad is attached. Maintained from SDL_EVENT_GAMEPAD_ADDED/REMOVED.
         private static bool _gamepadConnected;
 
+        private static MouseMovedEventArgs _mouseMovedEventArg = new(Position, Position);
+
         /// <summary>
         /// Refreshes the cached window position, used to convert global cursor coords to window
         /// coords while the cursor is outside the window. Called from SDL_EVENT_WINDOW_MOVED.
@@ -303,8 +305,11 @@ namespace ClassicUO.Input
 
             IsDragging = LButtonPressed || RButtonPressed || MButtonPressed;
 
-            if (Moved != null && previous != Position)
-                Moved?.Invoke(null, new MouseMovedEventArgs(previous, Position));
+            if (Moved != null && previous != Position){
+                _mouseMovedEventArg.Previous = previous;
+                _mouseMovedEventArg.Current = Position;
+                Moved?.Invoke(null, _mouseMovedEventArg);
+            }
         }
     }
 }
