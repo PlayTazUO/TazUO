@@ -16,6 +16,8 @@ All notable changes to TazUO will be recorded here.
 * Added a world map context menu option to always show map markers regardless of zoom level
 
 ### Legion
+* Added a warning when a script fails to stop
+* Added a warning when running a script with unbounded while loops
 * Added `API.IsKeyPressed("CTRL+SHIFT+F1")` method to see if a key(s) is currently held down
 * Added `API.Gumps.CreateGumpRenderedMapArea` to build a rendered area of the map in a gump
 * Removed hard 30 second limit on `API.Pause()`
