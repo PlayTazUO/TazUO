@@ -47,6 +47,8 @@ All notable changes to TazUO will be recorded here.
 * Door movement blocking no longer stops you from walking into closed doors when the "Open doors while pathfinding" (smooth doors) setting is enabled, and the option label is now "Block walking into doors"
 * Fixed a client crash at startup when `settings.json` is missing or corrupt - command-line arguments are now applied after the fallback settings are restored
 * Fixed a NullReferenceException when an extended stats packet (0x19) arrived while the world was tearing down (player could be nulled mid-construction)
+* Fixed a NullReferenceException in the journal when a journal entry could not be recycled from the journal history (a torn read of the non-thread-safe journal deque) - the client now falls back to a fresh entry, skips null/whitespace message text, and `API.HeadMsg` ignores empty messages
+* Added a crash fix suggestion when a crash happens on a background thread spawned by a third-party plugin/assistant (for example a UO copilot running its own UI) - the crash log now points to the plugin as the likely cause instead of TazUO
 
 ## 5.31.2
 

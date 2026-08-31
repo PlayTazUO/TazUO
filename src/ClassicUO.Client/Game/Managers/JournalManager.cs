@@ -20,10 +20,15 @@ namespace ClassicUO.Game.Managers
 
         public void Add(string text, ushort hue, string name, TextType type, bool isunicode = true, MessageType messageType = MessageType.Regular)
         {
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
             if (JournalFilterManager.Instance.IgnoreMessage(text))
                 return;
 
-            JournalEntry entry = Entries.Count >= Constants.MAX_JOURNAL_HISTORY_COUNT ? Entries.RemoveFromFront() : new JournalEntry();
+            // RemoveFromFront can return null if the (non-thread-safe) deque state was torn by a
+            // concurrent reader, so fall back to a fresh entry instead of crashing on the assignment below.
+            JournalEntry entry = Entries.Count >= Constants.MAX_JOURNAL_HISTORY_COUNT ? Entries.RemoveFromFront() ?? new JournalEntry() : new JournalEntry();
 
             byte font = (byte) (isunicode ? 0 : 9);
 
