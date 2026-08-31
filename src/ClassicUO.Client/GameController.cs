@@ -147,6 +147,12 @@ namespace ClassicUO
             _filter = HandleSdlEvent;
             SDL_SetEventFilter(_filter, IntPtr.Zero);
 
+            // Seed the gamepad gate for pads already connected at startup (SDL also fires
+            // GAMEPAD_ADDED for them, but this covers any that slip through), and get the initial
+            // cursor position so the mouse isn't at (0,0) until the first motion event.
+            Mouse.SetGamepadConnected(Microsoft.Xna.Framework.Input.GamePad.GetState(Microsoft.Xna.Framework.PlayerIndex.One).IsConnected);
+            Mouse.Update(resyncPosition: true);
+
             uint displayId = SDL.SDL_GetDisplayForWindow(Window.Handle);
             nint displayMode = SDL.SDL_GetCurrentDisplayMode(displayId);
             if (displayMode != IntPtr.Zero)
@@ -883,12 +889,36 @@ namespace ClassicUO
                     Audio?.OnAudioDeviceRemoved();
                     break;
 
+                case SDL_EventType.SDL_EVENT_WINDOW_MOVED:
+                    // Refresh the cached window position (used when the cursor leaves the window)
+                    // only when the window actually moves, not every frame, and re-sync the cursor
+                    // which now maps to a different window position.
+                    Mouse.OnWindowMoved((int)sdlEvent->window.data1, (int)sdlEvent->window.data2);
+                    Mouse.Update(resyncPosition: true);
+                    break;
+
                 case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_ENTER:
                     Mouse.MouseInWindow = true;
+                    // No motion event is guaranteed right after re-entry - re-sync from SDL state.
+                    Mouse.Update(resyncPosition: true);
                     break;
 
                 case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE:
                     Mouse.MouseInWindow = false;
+                    break;
+
+                case SDL_EventType.SDL_EVENT_GAMEPAD_ADDED:
+                    Mouse.SetGamepadConnected(true);
+                    break;
+
+                case SDL_EventType.SDL_EVENT_GAMEPAD_REMOVED:
+                    // The removed pad need not be PlayerIndex.One - re-query instead of assuming
+                    // none remain connected, so the warp path keeps running when another pad stays.
+                    Mouse.SetGamepadConnected(
+                        Microsoft.Xna.Framework.Input.GamePad
+                            .GetState(Microsoft.Xna.Framework.PlayerIndex.One)
+                            .IsConnected
+                    );
                     break;
 
                 case SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED:
@@ -1004,12 +1034,20 @@ namespace ClassicUO
 
                     break;
 
-                case SDL_EventType.SDL_EVENT_MOUSE_MOTION when Scene is not null:
-                    _pendingMouseMotion = true;
+                case SDL_EventType.SDL_EVENT_MOUSE_MOTION:
+                    // Position is event-driven while the cursor is inside the window; no per-frame
+                    // SDL_GetMouseState poll needed. Drag handling still needs the pending flag.
+                    Mouse.SetPositionFromEvent(sdlEvent->motion.x, sdlEvent->motion.y);
+
+                    if (Scene is not null)
+                    {
+                        _pendingMouseMotion = true;
+                    }
+
                     break;
 
                 case SDL_EventType.SDL_EVENT_MOUSE_WHEEL when Scene is not null:
-                    Mouse.Update();
+                    Mouse.Update(resyncPosition: true);
                     bool isScrolledUp = sdlEvent->wheel.y > 0;
 
                     Mouse.RaiseWheelEvent(isScrolledUp);
@@ -1061,7 +1099,7 @@ namespace ClassicUO
                         }
 
                         Mouse.ButtonPress(buttonType);
-                        Mouse.Update();
+                        Mouse.Update(resyncPosition: true);
 
                         uint ticks = Time.Ticks;
 
@@ -1162,7 +1200,7 @@ namespace ClassicUO
                         }
 
                         Mouse.ButtonRelease(buttonType);
-                        Mouse.Update();
+                        Mouse.Update(resyncPosition: true);
 
                         break;
                     }

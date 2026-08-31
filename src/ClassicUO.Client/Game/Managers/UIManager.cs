@@ -29,6 +29,14 @@ namespace ClassicUO.Game.Managers
         private static IGui _keyboardFocusControl, _lastFocus;
         private static bool _needSort;
 
+        // Mouse-over pass cache: the per-frame pass in Update() is skipped while neither the cursor
+        // nor the gumps structure changed. _gumpsStructureVersion is bumped on every structural edit
+        // (add/remove/reorder) so a frozen cursor still re-evaluates hover when a gump appears,
+        // disappears, or changes z-order beneath it.
+        private static int _gumpsStructureVersion;
+        private static Point _lastMouseInputPosition = new Point(int.MinValue, int.MinValue);
+        private static int _lastMouseInputGumpsVersion = -1;
+
         // Ctrl-modified drag state for axis-locking and speed reduction
         private static bool _ctrlDragAxisDetermined;
         private static bool _ctrlDragLockHorizontal;
@@ -590,6 +598,7 @@ namespace ClassicUO.Game.Managers
                 if (g.IsDisposed)
                 {
                     Gumps.Remove(first);
+                    _gumpsStructureVersion++;
                     UnregisterGump(g);
                     // Unset if this was the top gump
                     if (TopMostControl == g)
@@ -620,6 +629,7 @@ namespace ClassicUO.Game.Managers
                 if (g.IsDisposed)
                 {
                     Gumps.Remove(first);
+                    _gumpsStructureVersion++;
                     UnregisterGump(g);
                     // Unset if this was the top gump
                     if (TopMostControl == g)
@@ -661,6 +671,7 @@ namespace ClassicUO.Game.Managers
 
             _needSort = Gumps.Count > 1;
 
+            _gumpsStructureVersion++;
             RegisterGump(gump);
 
             WarnIfTooManySameType(gump);
@@ -707,6 +718,9 @@ namespace ClassicUO.Game.Managers
                 s.Dispose();
             }
             Gumps.Clear();
+
+            // The whole tree is gone; a cached hit-test result pointing into it must not survive.
+            _gumpsStructureVersion++;
 
             _gumpTypeList.Clear();
         }
@@ -831,9 +845,34 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        private static void HandleMouseInput()
+        internal static void HandleMouseInput()
         {
-            IGui gump = GetMouseOverControl(Mouse.Position);
+            // GetMouseOverControl hit-tests every gump's whole control tree (including pixel
+            // Contains for pics) - expensive to run each frame with a frozen cursor. Skip that
+            // computation while neither the cursor nor the gumps structure changed, the cached
+            // control is still under the cursor, and nothing is being dragged. The per-frame hover
+            // dispatch below still runs, so controls keep receiving OnMouseOver while hovered.
+            bool recompute =
+                Mouse.Position != _lastMouseInputPosition
+                || _gumpsStructureVersion != _lastMouseInputGumpsVersion
+                || _isDraggingControl
+                || !IsCachedMouseOverControlStillUnderCursor();
+
+            IGui gump;
+
+            if (recompute)
+            {
+                _lastMouseInputPosition = Mouse.Position;
+                _lastMouseInputGumpsVersion = _gumpsStructureVersion;
+
+                gump = GetMouseOverControl(Mouse.Position);
+            }
+            else
+            {
+                // Reuse last frame's hit-test result; enter/exit transitions are impossible since
+                // the control is unchanged, but hover still needs to dispatch below.
+                gump = MouseOverControl;
+            }
 
             if (MouseOverControl != null && gump != MouseOverControl)
             {
@@ -875,6 +914,28 @@ namespace ClassicUO.Game.Managers
             //        _mouseDownControls[i].InvokeMouseOver(Mouse.Position);
             //    }
             //}
+        }
+
+        /// <summary>
+        /// Cheap check that the cached <see cref="MouseOverControl"/> would still win a hit-test at the
+        /// current cursor position: alive, interactive, and its bounds still containing the cursor.
+        /// Mirrors the coordinate transform each implementation uses in <see cref="IGui.HitTest"/>.
+        /// </summary>
+        private static bool IsCachedMouseOverControlStillUnderCursor()
+        {
+            IGui control = MouseOverControl;
+
+            if (control == null || control.IsDisposed || !control.IsVisible || !control.IsEnabled)
+            {
+                return false;
+            }
+
+            Point pos = Mouse.Position;
+
+            // Control bounds are parent-relative with a scroll offset; MyraControl bounds are screen space.
+            return control is Control c
+                ? c.Bounds.Contains(pos.X - c.ParentX - c.Offset.X, pos.Y - c.ParentY - c.Offset.Y)
+                : control.Bounds.Contains(pos);
         }
 
         private static IGui GetMouseOverControl(Point position)
@@ -921,6 +982,8 @@ namespace ClassicUO.Game.Managers
             {
                 if (start.Value == gump)
                 {
+                    _gumpsStructureVersion++;
+
                     if (gump.LayerOrder == UILayer.Under)
                     {
                         if (start != Gumps.Last)
@@ -948,6 +1011,8 @@ namespace ClassicUO.Game.Managers
         {
             if (_needSort)
             {
+                _gumpsStructureVersion++;
+
                 for (LinkedListNode<IGui> el = Gumps.First; el != null; el = el.Next)
                 {
                     IGui c = el.Value;
