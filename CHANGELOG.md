@@ -31,6 +31,7 @@ All notable changes to TazUO will be recorded here.
 * Migrated more settings to global scoped json settings
 
 ### Fixes
+* Fixed timestamped Global Chat messages sent by the local player not appearing in Global Chat journal tabs - [P.R 1035](https://github.com/PlayTazUO/TazUO/pull/1035) ([Aryx75](https://github.com/Aryx75))
 * Fixed a crash (`IndexOutOfRangeException` in `Mobile.Draw`) that could occur when rendering a mobile whose queued walk step carried an unmasked direction byte (e.g. the running flag) - the direction is now always normalized to 0-7 before use
 * Fixed a client crash at startup when the generated `Data/Client` files (`chair.txt`, `lights.txt`, `lightshaders.txt`) could not be written or read because another process (antivirus, OneDrive, a second instance, or an editor) held a lock on them - the client now logs a clear error and continues with the built-in defaults instead of crashing
 * Fixed locked grid container items no longer reclaiming their locked cell (and appearing unlocked) after being moved out of the container and back

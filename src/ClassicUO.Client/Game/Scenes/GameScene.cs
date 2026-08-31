@@ -376,8 +376,7 @@ namespace ClassicUO.Game.Scenes
             if (!string.IsNullOrEmpty(text))
             {
                 MessageType journalMessageType = JournalMessageClassifier.Classify(
-                    e.Type,
-                    text,
+                    e,
                     ProfileManager.CurrentProfile?.ClassifySystemMessagesAsGlobalChat == true,
                     ProfileManager.CurrentProfile?.SystemMessageGlobalChatRegex
                 );
