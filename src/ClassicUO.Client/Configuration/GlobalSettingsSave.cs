@@ -62,6 +62,12 @@ namespace ClassicUO.Configuration
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); }
 
         /// <summary>
+        /// When true, world map markers render at full visibility on every zoom level instead of
+        /// degrading to a small dot (or disappearing) when zoomed out past their ZoomIndex.
+        /// </summary>
+        public bool AlwaysShowWorldMapMarkers { get; set => SetProperty(ref field, value); }
+
+        /// <summary>
         /// Only applies when there is only 1 server available
         /// </summary>
         public bool SkipServerSelection { get; set => SetProperty(ref field, value); } = true;
