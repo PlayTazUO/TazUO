@@ -19,7 +19,9 @@ namespace ClassicUO.Game.UI.Gumps
         Old,
         ModernVertical,
         ModernHorizontal,
-        Compact
+        Compact,
+        CompactHorizontal,
+        ModernHorizontalBars
     }
 
     public abstract class StatusGumpBase : ScalableGump
@@ -157,6 +159,12 @@ namespace ClassicUO.Game.UI.Gumps
                 case StatusGumpStyle.Compact:
                     gump = UIManager.GetGump<StatusGumpCompact>();
                     break;
+                case StatusGumpStyle.CompactHorizontal:
+                    gump = UIManager.GetGump<StatusGumpCompactHorizontal>();
+                    break;
+                case StatusGumpStyle.ModernHorizontalBars:
+                    gump = UIManager.GetGump<StatusGumpModernHorizontalBars>();
+                    break;
                 default:
                     gump = UIManager.GetGump<StatusGumpModern>();
                     break;
@@ -184,6 +192,14 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 gump = new StatusGumpCompact(world);
             }
+            else if (ProfileManager.CurrentProfile.StatusGumpStyle == StatusGumpStyle.CompactHorizontal)
+            {
+                gump = new StatusGumpCompactHorizontal(world);
+            }
+            else if (ProfileManager.CurrentProfile.StatusGumpStyle == StatusGumpStyle.ModernHorizontalBars)
+            {
+                gump = new StatusGumpModernHorizontalBars(world);
+            }
             else
             {
                 gump = new StatusGumpModern(world);
@@ -210,6 +226,8 @@ namespace ClassicUO.Game.UI.Gumps
             current ??= UIManager.GetGump<StatusGumpModernHorizontal>();
             current ??= UIManager.GetGump<StatusGumpModern>();
             current ??= UIManager.GetGump<StatusGumpCompact>();
+            current ??= UIManager.GetGump<StatusGumpCompactHorizontal>();
+            current ??= UIManager.GetGump<StatusGumpModernHorizontalBars>();
             if (current == null)
                 return;
 
