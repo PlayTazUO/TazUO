@@ -29,6 +29,14 @@ namespace ClassicUO.Game.Managers
         private static IGui _keyboardFocusControl, _lastFocus;
         private static bool _needSort;
 
+        // Mouse-over pass cache: the per-frame pass in Update() is skipped while neither the cursor
+        // nor the gumps structure changed. _gumpsStructureVersion is bumped on every structural edit
+        // (add/remove/reorder) so a frozen cursor still re-evaluates hover when a gump appears,
+        // disappears, or changes z-order beneath it.
+        private static int _gumpsStructureVersion;
+        private static Point _lastMouseInputPosition = new Point(int.MinValue, int.MinValue);
+        private static int _lastMouseInputGumpsVersion = -1;
+
         // Ctrl-modified drag state for axis-locking and speed reduction
         private static bool _ctrlDragAxisDetermined;
         private static bool _ctrlDragLockHorizontal;
@@ -590,6 +598,7 @@ namespace ClassicUO.Game.Managers
                 if (g.IsDisposed)
                 {
                     Gumps.Remove(first);
+                    _gumpsStructureVersion++;
                     UnregisterGump(g);
                     // Unset if this was the top gump
                     if (TopMostControl == g)
@@ -620,6 +629,7 @@ namespace ClassicUO.Game.Managers
                 if (g.IsDisposed)
                 {
                     Gumps.Remove(first);
+                    _gumpsStructureVersion++;
                     UnregisterGump(g);
                     // Unset if this was the top gump
                     if (TopMostControl == g)
@@ -661,6 +671,7 @@ namespace ClassicUO.Game.Managers
 
             _needSort = Gumps.Count > 1;
 
+            _gumpsStructureVersion++;
             RegisterGump(gump);
 
             WarnIfTooManySameType(gump);
@@ -833,6 +844,21 @@ namespace ClassicUO.Game.Managers
 
         private static void HandleMouseInput()
         {
+            // GetMouseOverControl hit-tests every gump's whole control tree (including pixel
+            // Contains for pics) - expensive to run each frame with a frozen cursor. Skip while the
+            // cursor hasn't moved and no gump structure change happened; the cached MouseOverControl
+            // is still correct in that case.
+            if (
+                Mouse.Position == _lastMouseInputPosition
+                && _gumpsStructureVersion == _lastMouseInputGumpsVersion
+            )
+            {
+                return;
+            }
+
+            _lastMouseInputPosition = Mouse.Position;
+            _lastMouseInputGumpsVersion = _gumpsStructureVersion;
+
             IGui gump = GetMouseOverControl(Mouse.Position);
 
             if (MouseOverControl != null && gump != MouseOverControl)
@@ -921,6 +947,8 @@ namespace ClassicUO.Game.Managers
             {
                 if (start.Value == gump)
                 {
+                    _gumpsStructureVersion++;
+
                     if (gump.LayerOrder == UILayer.Under)
                     {
                         if (start != Gumps.Last)
@@ -948,6 +976,8 @@ namespace ClassicUO.Game.Managers
         {
             if (_needSort)
             {
+                _gumpsStructureVersion++;
+
                 for (LinkedListNode<IGui> el = Gumps.First; el != null; el = el.Next)
                 {
                     IGui c = el.Value;

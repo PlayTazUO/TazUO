@@ -752,6 +752,36 @@ namespace ClassicUO.Game.Scenes
 
             GetViewPort();
 
+            // The per-object selection pass (CheckMouseSelection -> pixel-picker RLE walks) runs for
+            // every drawn object and dominates list-building cost. Skip it entirely while neither the
+            // cursor nor the view transform moved; reuse last frame's selection, re-testing only the
+            // cached object so one that moved out from under a stationary cursor still deselects.
+            _runWorldSelection =
+                _selectionDirty
+                || SelectedObject.TranslatedMousePositionByViewport != _lastSelectionMousePosition;
+            _selectionDirty = false;
+
+            if (_runWorldSelection)
+            {
+                _lastSelectionMousePosition = SelectedObject.TranslatedMousePositionByViewport;
+                SelectedObject.Object = null;
+            }
+            else
+            {
+                // Temporarily clear so gump-set selections (from Update's OnMouseOver) don't leak
+                // into the cached world result; re-assert it only if it's still under the cursor.
+                SelectedObject.Object = null;
+
+                if (_lastWorldSelectionObject is GameObject cached && IsWorldSelectionValid(cached))
+                {
+                    SelectedObject.Object = cached;
+                }
+                else
+                {
+                    _lastWorldSelectionObject = null;
+                }
+            }
+
             bool useObjectHandles = NameOverHeadManager.IsShowing;
             if (useObjectHandles != _useObjectHandles)
             {
@@ -864,6 +894,11 @@ namespace ClassicUO.Game.Scenes
 
             UpdateTextServerEntities(_world.Mobiles.Values, true);
             UpdateTextServerEntities(_world.Items.Values, false);
+
+            if (_runWorldSelection)
+            {
+                _lastWorldSelectionObject = SelectedObject.Object as GameObject;
+            }
 
             UpdateDrawPosition = false;
         }
@@ -1366,7 +1401,6 @@ namespace ClassicUO.Game.Scenes
 
         private void DrawWorld(UltimaBatcher2D batcher, ref Matrix matrix)
         {
-            SelectedObject.Object = null;
             FillGameObjectList();
 
             // Always use render target for consistent scaling
