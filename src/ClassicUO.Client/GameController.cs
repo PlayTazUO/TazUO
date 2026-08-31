@@ -47,6 +47,7 @@ namespace ClassicUO
         private SDL_EventFilter _filter;
 
         private bool _ignoreNextTextInput;
+        private bool _pendingMouseMotion;
         private readonly float[] _intervalFixedUpdate = new float[2];
         private double _totalElapsed, _currentFpsTime;
         private uint _totalFrames;
@@ -526,6 +527,25 @@ namespace ClassicUO
             Mouse.Update();
             Profiler.ExitContext("Mouse");
 
+            if (_pendingMouseMotion && Scene != null)
+            {
+                if (UO.GameCursor != null && !UO.GameCursor.AllowDrawSDLCursor)
+                {
+                    UO.GameCursor.AllowDrawSDLCursor = true;
+                    UO.GameCursor.Graphic = 0xFFFF;
+                }
+
+                _pendingMouseMotion = false;
+
+                if (Mouse.IsDragging)
+                {
+                    if (!Scene.OnMouseDragging())
+                    {
+                        UIManager.OnMouseDragging();
+                    }
+                }
+            }
+
             Profiler.EnterContext("ProcessNetworkPackets");
             ProcessNetworkPackets();
             Profiler.ExitContext("ProcessNetworkPackets");
@@ -985,23 +1005,7 @@ namespace ClassicUO
                     break;
 
                 case SDL_EventType.SDL_EVENT_MOUSE_MOTION when Scene is not null:
-
-                    if (UO.GameCursor != null && !UO.GameCursor.AllowDrawSDLCursor)
-                    {
-                        UO.GameCursor.AllowDrawSDLCursor = true;
-                        UO.GameCursor.Graphic = 0xFFFF;
-                    }
-
-                    Mouse.Update();
-
-                    if (Mouse.IsDragging)
-                    {
-                        if (!Scene.OnMouseDragging())
-                        {
-                            UIManager.OnMouseDragging();
-                        }
-                    }
-
+                    _pendingMouseMotion = true;
                     break;
 
                 case SDL_EventType.SDL_EVENT_MOUSE_WHEEL when Scene is not null:
