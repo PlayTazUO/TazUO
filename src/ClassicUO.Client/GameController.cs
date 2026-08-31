@@ -912,7 +912,13 @@ namespace ClassicUO
                     break;
 
                 case SDL_EventType.SDL_EVENT_GAMEPAD_REMOVED:
-                    Mouse.SetGamepadConnected(false);
+                    // The removed pad need not be PlayerIndex.One - re-query instead of assuming
+                    // none remain connected, so the warp path keeps running when another pad stays.
+                    Mouse.SetGamepadConnected(
+                        Microsoft.Xna.Framework.Input.GamePad
+                            .GetState(Microsoft.Xna.Framework.PlayerIndex.One)
+                            .IsConnected
+                    );
                     break;
 
                 case SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED:

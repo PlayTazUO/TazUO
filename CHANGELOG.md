@@ -25,7 +25,7 @@ All notable changes to TazUO will be recorded here.
 * Added `GetSpellsInSpellbook(uint serial)`, listing all spell names in that spellbook
 
 ### Misc
-* Mouse hanlding performance improvements
+* Mouse handling performance improvements
 * Added auto pruning to Item Database to prevent unbounded database growth ( 120 days since item last seen, it's deleted )
 * Increase max global scale to 300% up from 175%
 * Migrated more settings to global scoped json settings

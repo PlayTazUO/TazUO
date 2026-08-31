@@ -719,6 +719,9 @@ namespace ClassicUO.Game.Managers
             }
             Gumps.Clear();
 
+            // The whole tree is gone; a cached hit-test result pointing into it must not survive.
+            _gumpsStructureVersion++;
+
             _gumpTypeList.Clear();
         }
 
@@ -842,24 +845,34 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        private static void HandleMouseInput()
+        internal static void HandleMouseInput()
         {
             // GetMouseOverControl hit-tests every gump's whole control tree (including pixel
-            // Contains for pics) - expensive to run each frame with a frozen cursor. Skip while the
-            // cursor hasn't moved and no gump structure change happened; the cached MouseOverControl
-            // is still correct in that case.
-            if (
-                Mouse.Position == _lastMouseInputPosition
-                && _gumpsStructureVersion == _lastMouseInputGumpsVersion
-            )
+            // Contains for pics) - expensive to run each frame with a frozen cursor. Skip that
+            // computation while neither the cursor nor the gumps structure changed, the cached
+            // control is still under the cursor, and nothing is being dragged. The per-frame hover
+            // dispatch below still runs, so controls keep receiving OnMouseOver while hovered.
+            bool recompute =
+                Mouse.Position != _lastMouseInputPosition
+                || _gumpsStructureVersion != _lastMouseInputGumpsVersion
+                || _isDraggingControl
+                || !IsCachedMouseOverControlStillUnderCursor();
+
+            IGui gump;
+
+            if (recompute)
             {
-                return;
+                _lastMouseInputPosition = Mouse.Position;
+                _lastMouseInputGumpsVersion = _gumpsStructureVersion;
+
+                gump = GetMouseOverControl(Mouse.Position);
             }
-
-            _lastMouseInputPosition = Mouse.Position;
-            _lastMouseInputGumpsVersion = _gumpsStructureVersion;
-
-            IGui gump = GetMouseOverControl(Mouse.Position);
+            else
+            {
+                // Reuse last frame's hit-test result; enter/exit transitions are impossible since
+                // the control is unchanged, but hover still needs to dispatch below.
+                gump = MouseOverControl;
+            }
 
             if (MouseOverControl != null && gump != MouseOverControl)
             {
@@ -901,6 +914,28 @@ namespace ClassicUO.Game.Managers
             //        _mouseDownControls[i].InvokeMouseOver(Mouse.Position);
             //    }
             //}
+        }
+
+        /// <summary>
+        /// Cheap check that the cached <see cref="MouseOverControl"/> would still win a hit-test at the
+        /// current cursor position: alive, interactive, and its bounds still containing the cursor.
+        /// Mirrors the coordinate transform each implementation uses in <see cref="IGui.HitTest"/>.
+        /// </summary>
+        private static bool IsCachedMouseOverControlStillUnderCursor()
+        {
+            IGui control = MouseOverControl;
+
+            if (control == null || control.IsDisposed || !control.IsVisible || !control.IsEnabled)
+            {
+                return false;
+            }
+
+            Point pos = Mouse.Position;
+
+            // Control bounds are parent-relative with a scroll offset; MyraControl bounds are screen space.
+            return control is Control c
+                ? c.Bounds.Contains(pos.X - c.ParentX - c.Offset.X, pos.Y - c.ParentY - c.Offset.Y)
+                : control.Bounds.Contains(pos);
         }
 
         private static IGui GetMouseOverControl(Point position)
