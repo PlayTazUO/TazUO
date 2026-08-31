@@ -23,6 +23,7 @@ namespace ClassicUO.Game.Managers
         private const int PENDING_CUSTOM_NAME_REQUESTS_DELAY_MS = 1000;
         private const int MAX_BATCH_SIZE = 500;
         private const int MAX_SEARCH_LIMIT = 10000;
+        private const int AUTO_PRUNE_MAX_AGE_DAYS = 120;
 
         private static readonly Lazy<ItemDatabaseManager> _instance = new(() => new ItemDatabaseManager());
 
@@ -56,6 +57,9 @@ namespace ClassicUO.Game.Managers
                 _connectionString = $"Data Source={_databasePath}";
                 CreateDatabaseIfNotExists();
                 _initialized = true;
+
+                _ = PruneOldItemsAsync();
+
                 Log.Trace($"ItemDatabaseManager initialized with database at: {_databasePath}");
             }
             catch (Exception ex)
@@ -331,6 +335,19 @@ namespace ClassicUO.Game.Managers
             if (!_initialized || profile == null || !profile.ItemDatabaseEnabled)
                 return;
 
+            await DeleteItemsOlderThanAsync(maxAge);
+        }
+
+        private async Task PruneOldItemsAsync()
+        {
+            if (!_initialized)
+                return;
+
+            await DeleteItemsOlderThanAsync(TimeSpan.FromDays(AUTO_PRUNE_MAX_AGE_DAYS));
+        }
+
+        private async Task DeleteItemsOlderThanAsync(TimeSpan maxAge)
+        {
             await Task.Run(() =>
             {
                 try
