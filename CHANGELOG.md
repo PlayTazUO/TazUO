@@ -36,6 +36,7 @@ All notable changes to TazUO will be recorded here.
 * Improved treasure map location calculations - [P.R 1012](https://github.com/PlayTazUO/TazUO/pull/1012) [Erumite](https://github.com/Erumite)
 * Door movement blocking no longer stops you from walking into closed doors when the "Open doors while pathfinding" (smooth doors) setting is enabled, and the option label is now "Block walking into doors"
 * Fixed a client crash at startup when `settings.json` is missing or corrupt - command-line arguments are now applied after the fallback settings are restored
+* Fixed a NullReferenceException when an extended stats packet (0x19) arrived while the world was tearing down (player could be nulled mid-construction)
 
 ## 5.31.2
 
