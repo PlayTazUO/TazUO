@@ -321,7 +321,7 @@ internal static class ExtendedCommand
 
                     case 2:
 
-                        if (serial == world.Player)
+                        if (world.Player != null && serial == world.Player)
                         {
                             byte updategump = p.ReadUInt8();
                             byte state = p.ReadUInt8();
