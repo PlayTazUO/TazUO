@@ -84,6 +84,7 @@ public partial class GridContainer : ResizableGump
         public bool? UseOldContainerStyle;
         private bool _autoSortContainer;
         private bool _bandsDisabledForContainer;
+        private bool _highlightsDisabledForContainer;
         private GridSortMode _sortMode = GridSortMode.GraphicAndHue;
 
         private readonly bool _skipSave;
@@ -132,6 +133,9 @@ public partial class GridContainer : ResizableGump
 
         /// <summary>Per-container override that disables band layout for this container even when bands are enabled globally.</summary>
         public bool BandsDisabledForContainer => _bandsDisabledForContainer;
+
+        /// <summary>Per-container override that suppresses grid-highlight rules in this container.</summary>
+        public bool HighlightsDisabledForContainer => _highlightsDisabledForContainer;
 
         public GridSortMode SortMode => _sortMode;
         public readonly GridSlotManager SlotManager;
@@ -256,6 +260,7 @@ public partial class GridContainer : ResizableGump
 
             _autoSortContainer = _gridContainerEntry.AutoSort;
             _bandsDisabledForContainer = _gridContainerEntry.BandsDisabled;
+            _highlightsDisabledForContainer = _gridContainerEntry.HighlightsDisabled;
             StackNonStackableItems = _gridContainerEntry.VisuallyStackNonStackables;
             _sortMode = (GridSortMode)_gridContainerEntry.SortMode;
 
@@ -683,6 +688,14 @@ public partial class GridContainer : ResizableGump
                 _openRegularGump.ContextMenu = GenContextMenu();
                 RequestUpdateContents();
             }, true, _bandsDisabledForContainer));
+
+            control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_disablehighlights", "Disable Highlights for This Container"), () =>
+            {
+                _highlightsDisabledForContainer = !_highlightsDisabledForContainer;
+                _gridContainerEntry.HighlightsDisabled = _highlightsDisabledForContainer;
+                _gridContainerEntry.UpdateSaveDataEntry(this);
+                _openRegularGump.ContextMenu = GenContextMenu();
+            }, true, _highlightsDisabledForContainer));
 
             if (Container != World.Player?.Backpack)
             {
