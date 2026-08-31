@@ -16,6 +16,7 @@ All notable changes to TazUO will be recorded here.
 * Added a world map context menu option to always show map markers regardless of zoom level
 
 ### Legion
+* Added a warning about upcoming changes and to update your scripts
 * Added a warning when a script fails to stop
 * Added a warning when running a script with unbounded while loops
 * Added `API.IsKeyPressed("CTRL+SHIFT+F1")` method to see if a key(s) is currently held down
