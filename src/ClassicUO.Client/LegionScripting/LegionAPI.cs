@@ -1602,6 +1602,9 @@ namespace ClassicUO.LegionScripting
         public void HeadMsg(string message, uint serial, ushort hue = ushort.MaxValue) => OnMain
         (() =>
             {
+                if (string.IsNullOrEmpty(message))
+                    return;
+
                 Entity e = World.Get(serial);
 
                 if (e == null)
