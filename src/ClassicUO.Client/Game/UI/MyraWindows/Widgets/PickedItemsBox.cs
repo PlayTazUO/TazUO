@@ -10,9 +10,8 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 /// <summary>
-/// The bordered, fixed-width box a multi-value picker (<see cref="IndexedListPicker" />,
-/// <see cref="SerialListPicker" />) shows its picked rows in - one row per item, and a grey
-/// placeholder while there are none.
+/// The bordered, fixed-width box a multi-value picker shows its picked rows in - one row per item,
+/// and a grey placeholder while there are none.
 /// </summary>
 public sealed class PickedItemsBox : VerticalStackPanel
 {

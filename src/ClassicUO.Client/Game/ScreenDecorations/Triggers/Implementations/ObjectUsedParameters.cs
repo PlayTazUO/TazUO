@@ -11,10 +11,10 @@ using Myra.Graphics2D.UI.Properties;
 namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 
 /// <summary>
-/// Fires when the player double-clicks (uses) one of several watched objects.
+/// Fires when the player double-clicks one of several watched objects.
 /// <para>
-/// Lives beside the trigger that reads it rather than with the config types, because nothing else can
-/// interpret it: the fields mean whatever <see cref="ObjectUsedTrigger" /> does with them.
+/// Lives beside the trigger that reads it rather than with the config types: the fields mean whatever
+/// <see cref="ObjectUsedTrigger" /> does with them.
 /// </para>
 /// </summary>
 public sealed class ObjectUsedParameters : TriggerParameters
@@ -34,9 +34,7 @@ public sealed class ObjectUsedParameters : TriggerParameters
 
     #region Public accessors
 
-    /// <summary>
-    /// The objects to watch, by serial. Any one of them being double-clicked fires the rule.
-    /// </summary>
+    /// <summary>The objects to watch, by serial. Any one of them fires the rule.</summary>
     [Browsable(false)]
     [SerialListEditor]
     [LocalizedDisplayName("overlaytrigger_objectused_serials", "Watch objects")]
@@ -57,9 +55,8 @@ public sealed class ObjectUsedParameters : TriggerParameters
     public float DurationSeconds { get; set; } = DEFAULT_DURATION_SECONDS;
 
     /// <summary>
-    /// The configured duration as a span, floored at zero. Hidden from the editor: it is a reading of
-    /// <see cref="DurationSeconds" />, and a property grid would otherwise offer every member of a
-    /// <see cref="TimeSpan" /> as though each were separately settable.
+    /// <see cref="DurationSeconds" /> as a span, floored at zero. Hidden from the editor, which would
+    /// otherwise offer every <see cref="TimeSpan" /> member as separately settable.
     /// </summary>
     [JsonIgnore]
     [Browsable(false)]

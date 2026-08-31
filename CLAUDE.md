@@ -320,6 +320,10 @@ dotnet build -c Debug
 dotnet test tests/ClassicUO.UnitTests/
 ```
 
+### Code Review
+- When CR requested, emit results like
+    [Bug#] [BugType] [FixComplexity] [ShortDesc] [File:Ln] - [Desc] | [Suggested fix]
+
 ### Documentation Generation
 The scripting API documentation is automatically generated during build via the `APIToMarkdown` project.
 

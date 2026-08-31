@@ -32,8 +32,8 @@ public sealed class BuffChangedTrigger : IEventTrigger
 
     private readonly BuffChangedParameters _parameters;
 
-    /// <summary>Membership test for the buff event handlers, which run on every buff added to or
-    /// removed from the player.</summary>
+    /// <summary>Membership test for the buff handlers, which run on every buff the player gains or
+    /// loses.</summary>
     private readonly HashSet<short> _buffTypes;
 
     #endregion

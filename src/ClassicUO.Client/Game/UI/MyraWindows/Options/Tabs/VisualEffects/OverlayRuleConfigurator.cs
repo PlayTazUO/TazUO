@@ -51,20 +51,18 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     /// on its own. A sound index is four digits and a curve power is one; sized for either.</summary>
     private const int NUMBER_INPUT_WIDTH = 64;
 
-    /// <summary>Width for a raw serial field. A serial is 32-bit - "0xFFFFFFFF" is the longest it
-    /// ever prints - so it needs nowhere near a full-width text input.</summary>
+    /// <summary>Width for a raw serial field - "0xFFFFFFFF" is the longest a serial ever prints.</summary>
     private const int SERIAL_INPUT_WIDTH = 120;
 
     /// <summary>
     /// Top margin for a rich-row label whose editor leads with a bordered, padded input rather than
-    /// plain text. A label's own top padding is 2px; a text box or combo box adds a 1px border on
-    /// top of its 3px padding, so its text starts 4px down - 2px lower than the label's. This closes
-    /// that gap rather than leaving the label sitting visibly higher than what it names.
+    /// plain text - that input's own border and padding push its text down, and without this the
+    /// label sits visibly higher than what it names. Tuned by eye against the rendered rows.
     /// </summary>
     private const int RICH_ROW_LABEL_TOP_NUDGE = 6;
 
-    /// <summary>Gap between rows in <see cref="RichParameterRows" /> - without it, a multi-row
-    /// editor (a picked-items list, a falloff's stacked fields) reads as fused to the row below.</summary>
+    /// <summary>Gap between rows in <see cref="RichParameterRows" /> - without it, a multi-row editor
+    /// reads as fused to the row below.</summary>
     private const int RICH_ROW_SPACING = 10;
 
     /// <summary>Fallback for a curve power that cannot be read off its parameters - the same value

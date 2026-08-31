@@ -12,14 +12,10 @@ public sealed class JsonMigrationFormat : IMigrationFormat<JsonObject>
     private readonly JsonSerializerOptions _options;
     private readonly string _versionPropertyName;
 
-    /// <param name="options">
-    /// The config's own serializer options, reused so the migrated text round-trips through the
-    /// same naming policy and converters the typed bind will use.
-    /// </param>
-    /// <param name="versionPropertyName">
-    /// Defaults to <c>schema_version</c>, matching what the client's snake-case naming policy
-    /// renders a <c>SchemaVersion</c> property to.
-    /// </param>
+    /// <param name="options">The config's own serializer options, so migrated text round-trips
+    /// through the naming policy and converters the typed bind uses.</param>
+    /// <param name="versionPropertyName">Defaults to <c>schema_version</c> - what snake-case renders
+    /// a <c>SchemaVersion</c> property to.</param>
     public JsonMigrationFormat(JsonSerializerOptions options, string versionPropertyName = "schema_version")
     {
         _options = options;

@@ -1,10 +1,9 @@
 namespace ClassicUO.IO.Persistency.Migrations;
 
 /// <summary>
-/// One upward step in a config's persisted shape. Operates on the document type and string
-/// literals only, never on live C# model types - a migration referencing a model class breaks the
-/// day a later change renames or removes it. Migrations are frozen against the shape as of their
-/// own version.
+/// One upward step in a config's persisted shape, frozen against the shape as of its own version.
+/// Touches the document and string literals only - naming a live model type breaks the day that
+/// type is renamed or removed.
 /// </summary>
 /// <typeparam name="TDocument">The mutable document form: JsonObject, XElement, or a typed graph.</typeparam>
 public interface IConfigMigration<in TDocument>

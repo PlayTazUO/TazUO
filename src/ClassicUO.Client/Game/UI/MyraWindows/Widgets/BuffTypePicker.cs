@@ -34,8 +34,8 @@ public sealed class BuffTypePicker : IndexedComboPicker
         set => Value = value;
     }
 
-    /// <summary>Every known <see cref="BuffIconType" />, as (id, label) pairs a picker offering more
-    /// than one at once can be seeded with.</summary>
+    /// <summary>Every known <see cref="BuffIconType" /> as (id, label) pairs, for seeding a
+    /// multi-select picker.</summary>
     public static IReadOnlyList<(int Value, string Label)> CatalogueEntries => _entries;
 
     #endregion

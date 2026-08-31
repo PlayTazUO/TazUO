@@ -5,10 +5,9 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 /// <summary>
-/// A horizontal row that pins its trailing widget to the right edge, whatever the leading one's own
-/// width - a label beside a remove glyph, a value beside a clear button. Needs a real width to push
-/// against: stretches itself to fill its parent, so it does nothing useful inside an unstretched
-/// container (a plain <see cref="VerticalStackPanel" /> child, say) unless that parent gives it one.
+/// A row pinning its trailing widget to the right edge whatever the leading one's width - a label
+/// beside a remove glyph. Stretches to its parent for the width to push against, so it needs a
+/// parent that gives it one.
 /// </summary>
 public class SpaceBetweenRow : HorizontalStackPanel
 {

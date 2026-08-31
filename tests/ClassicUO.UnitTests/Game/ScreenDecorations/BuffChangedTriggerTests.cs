@@ -1,3 +1,5 @@
+#nullable enable
+
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.ScreenDecorations.Triggers;

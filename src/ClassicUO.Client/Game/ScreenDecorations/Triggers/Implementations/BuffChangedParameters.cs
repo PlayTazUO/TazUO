@@ -75,11 +75,10 @@ public sealed class BuffChangedParameters : TriggerParameters
     public BuffTriggerMode Mode { get; set; } = BuffTriggerMode.Added;
 
     /// <summary>
-    ///     The buffs to watch for, by their numeric type. Any one of them fires the rule.
+    ///     The buffs to watch for, by numeric type. Any one fires the rule.
     ///     <para>
-    ///         Numbers rather than only the enum: a shard can send an id this client's
-    ///         <see cref="ClassicUO.Game.Data.BuffIconType" /> has no member for, and the editor takes one
-    ///         outright for those the same way it offers every name it does know.
+    ///         Numbers rather than only the enum: a shard can send an ID this client's
+    ///         <see cref="ClassicUO.Game.Data.BuffIconType" /> has no member for.
     ///     </para>
     /// </summary>
     [Browsable(false)]

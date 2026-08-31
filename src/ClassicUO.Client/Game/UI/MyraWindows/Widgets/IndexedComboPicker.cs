@@ -35,8 +35,6 @@ public class IndexedComboPicker : HorizontalStackPanel
         set => NumberInput.Value = value;
     }
 
-    public (int, string) SelectedEntry => (Value, _labels[Value]);
-
     /// <summary>The number field, exposed so callers can set a tooltip/hint beyond the ctor's reach.</summary>
     public IntegerInputBox NumberInput { get; }
 
@@ -163,12 +161,8 @@ public class IndexedComboPicker : HorizontalStackPanel
 
     private string? LabelFor(int value) => _labels.GetValueOrDefault(value);
 
-    /// <summary>
-    /// Looks the label up in <see cref="NameList" />'s live item collection rather than
-    /// <see cref="_orderedLabels" /> - a caller (<see cref="IndexedListPicker" />, say) may trim
-    /// entries out of the list after picking them, and indexing against the original set would then
-    /// point at the wrong row or one that no longer exists.
-    /// </summary>
+    /// <summary>Reads <see cref="NameList" />'s live items, not <see cref="_orderedLabels" /> - a caller
+    /// may trim entries out after picking them, and the original set would index the wrong row.</summary>
     private int? PositionOf(int value)
     {
         string? label = LabelFor(value);

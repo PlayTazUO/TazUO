@@ -6,10 +6,7 @@ using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 
-/// <summary>
-/// Listens for a watched object being double-clicked and raises an occurrence for its configured
-/// span.
-/// </summary>
+/// <summary>Raises an occurrence for its configured span when a watched object is double-clicked.</summary>
 public sealed class ObjectUsedTrigger : IEventTrigger
 {
     #region Public events
@@ -17,9 +14,8 @@ public sealed class ObjectUsedTrigger : IEventTrigger
     /// <inheritdoc />
     public event EventHandler<TriggerFiredArgs>? Fired;
 
-    /// <summary>Never raised - a use has no natural end, only the signal's own duration retires it.
-    /// Accessors are empty rather than the event being omitted, because the manager subscribes to
-    /// every event trigger without asking which shape it is.</summary>
+    /// <summary>Never raised - a use has no end, only the signal's duration retires it. Kept as empty
+    /// accessors because the manager subscribes to every event trigger without asking its shape.</summary>
     public event EventHandler? Ended
     {
         add { }
@@ -33,7 +29,7 @@ public sealed class ObjectUsedTrigger : IEventTrigger
     private readonly ObjectUsedParameters _parameters;
 
     /// <summary>Membership test for <see cref="OnObjectUsed" />, which runs on every double-click the
-    /// client sends and cannot afford a list scan per one.</summary>
+    /// client sends.</summary>
     private readonly HashSet<uint> _serials;
 
     #endregion

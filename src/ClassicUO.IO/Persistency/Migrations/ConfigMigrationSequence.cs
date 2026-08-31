@@ -18,11 +18,8 @@ public sealed class ConfigMigrationSequence<TDocument>
     /// <summary>Highest version this build can produce. Zero when no migration is registered.</summary>
     public int LatestVersion { get; }
 
-    /// <param name="migrations">
-    /// Every migration this config has, in ascending order. Order is the contract: it is listed by
-    /// hand rather than discovered, so two branches claiming the same version collide here as a
-    /// merge conflict instead of racing at runtime.
-    /// </param>
+    /// <param name="migrations">Every migration this config has, in strictly ascending version
+    /// order. Order is the contract, and is validated here rather than assumed.</param>
     /// <exception cref="ArgumentException">
     /// A version below 1, a duplicate version, or a version out of ascending order.
     /// </exception>
@@ -45,11 +42,9 @@ public sealed class ConfigMigrationSequence<TDocument>
         LatestVersion = migrations.Count == 0 ? 0 : migrations[^1].Version;
     }
 
-    /// <summary>
-    /// Runs every migration above <paramref name="fromVersion"/>, in order. Mutates
-    /// <paramref name="document"/> in place and does not clone it - an all-or-nothing guarantee is
-    /// the caller's, obtained by parsing a fresh document from text or cloning a typed graph first.
-    /// </summary>
+    /// <summary>Runs every migration above <paramref name="fromVersion"/>, in order, mutating
+    /// <paramref name="document"/> in place. A failure leaves it half-migrated: all-or-nothing is the
+    /// caller's, bought by parsing a throwaway document first.</summary>
     /// <returns>The version the document now sits at.</returns>
     /// <exception cref="ConfigMigrationException">
     /// A migration failed, or <paramref name="fromVersion"/> exceeds <see cref="LatestVersion"/>.

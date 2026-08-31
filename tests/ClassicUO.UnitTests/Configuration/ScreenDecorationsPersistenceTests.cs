@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Migrations;
+using ClassicUO.IO.Persistency;
 using FluentAssertions;
 using Xunit;
 
@@ -45,6 +46,44 @@ public class ScreenDecorationsPersistenceTests : IDisposable
 
         loaded.Enabled.Should().BeFalse();
         loaded.SchemaVersion.Should().Be(ScreenDecorationsMigrations.LatestVersion);
+    }
+
+    [Fact]
+    public void LoadForProfile_Of_A_File_From_A_Newer_Client_Backs_It_Up_And_Starts_Clean()
+    {
+        Directory.CreateDirectory(_profileDirectory);
+        string path = Path.Combine(_profileDirectory, ScreenDecorations.FileName);
+        const string fromTheFuture = """{"enabled": true, "schema_version": 9999}""";
+        File.WriteAllText(path, fromTheFuture);
+
+        ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
+
+        // This build cannot run those settings, so it starts clean - but the next Save() overwrites
+        // the file, so the user's real settings have to survive somewhere.
+        loaded.Enabled.Should().BeFalse();
+
+        string[] backups = Directory.GetFiles(Path.Combine(_profileDirectory, ConfigBackupStore.DirectoryName));
+        File.ReadAllText(backups.Should().ContainSingle().Subject).Should().Be(fromTheFuture);
+    }
+
+    [Fact]
+    public void LoadForProfile_Of_A_File_That_Cannot_Bind_Backs_It_Up_And_Starts_Clean()
+    {
+        Directory.CreateDirectory(_profileDirectory);
+        string path = Path.Combine(_profileDirectory, ScreenDecorations.FileName);
+
+        // Valid JSON, valid object - but no trigger kind this build knows, so only the typed bind
+        // can reject it. This is the case that used to escape as an unhandled JsonException.
+        const string unbindable =
+            """{"enabled": true, "overlays": {"rules": [{"trigger": {"parameters": {"kind": "from_a_newer_client"}}}]}}""";
+        File.WriteAllText(path, unbindable);
+
+        ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
+
+        loaded.Enabled.Should().BeFalse();
+
+        string[] backups = Directory.GetFiles(Path.Combine(_profileDirectory, ConfigBackupStore.DirectoryName));
+        File.ReadAllText(backups.Should().ContainSingle().Subject).Should().Be(unbindable);
     }
 
     public void Dispose()

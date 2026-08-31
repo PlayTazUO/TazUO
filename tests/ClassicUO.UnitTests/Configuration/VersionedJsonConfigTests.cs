@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using ClassicUO.Configuration;
+using ClassicUO.IO.Persistency;
 using ClassicUO.IO.Persistency.Migrations;
 using Xunit;
 
@@ -22,12 +23,31 @@ public class VersionedJsonConfigTests : IDisposable
     public void Load_Missing_File_Returns_Null_And_Creates_Nothing()
     {
         string path = PathFor("missing.json");
-        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new AddNameMigration(1)]);
+        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new NoOpMigration(1)]);
 
         TestConfig? result = VersionedJsonConfig.Load(path, TestConfigJsonContext.Default.TestConfig, pipeline);
 
         Assert.Null(result);
         Assert.False(Directory.Exists(_directory));
+    }
+
+    [Fact]
+    public void Load_Where_Bind_Fails_Throws_Migration_Exception_Carrying_The_Json_Error()
+    {
+        Directory.CreateDirectory(_directory);
+        string path = PathFor("unbindable.json");
+        const string original = """{"name":"ok"}""";
+        File.WriteAllText(path, original);
+
+        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new AddUnboundPropertyMigration(1)]);
+
+        ConfigMigrationException thrown = Assert.Throws<ConfigMigrationException>(
+            () => VersionedJsonConfig.Load(path, ThrowingJsonContext.Default.Unbindable, pipeline)
+        );
+
+        // The bind failure is restated, not swallowed - a caller has to be able to see what blew up.
+        Assert.IsType<JsonException>(thrown.InnerException);
+        Assert.Contains(nameof(Unbindable), thrown.Message);
     }
 
     [Fact]
@@ -40,30 +60,29 @@ public class VersionedJsonConfigTests : IDisposable
 
         ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new AddUnboundPropertyMigration(1)]);
 
-        Assert.Throws<JsonException>(() => VersionedJsonConfig.Load(path, ThrowingJsonContext.Default.Unbindable, pipeline));
+        Assert.Throws<ConfigMigrationException>(() => VersionedJsonConfig.Load(path, ThrowingJsonContext.Default.Unbindable, pipeline));
 
         Assert.Equal(original, File.ReadAllText(path));
     }
 
     [Fact]
-    public void Load_Writes_Backup_And_Does_Not_Overwrite_Existing_Backup()
+    public void Load_Backs_The_PreMigration_File_Up_Into_The_Backup_Directory()
     {
         Directory.CreateDirectory(_directory);
         string path = PathFor("config.json");
         const string original = """{"Name":"original"}""";
         File.WriteAllText(path, original);
 
-        string backupPath = $"{path}.v0.bak";
-        const string existingBackup = "already here";
-        File.WriteAllText(backupPath, existingBackup);
-
-        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new AddNameMigration(1)]);
+        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new NoOpMigration(1)]);
 
         TestConfig? result = VersionedJsonConfig.Load(path, TestConfigJsonContext.Default.TestConfig, pipeline);
 
         Assert.NotNull(result);
-        Assert.True(File.Exists(backupPath));
-        Assert.Equal(existingBackup, File.ReadAllText(backupPath));
+
+        string[] backups = Directory.GetFiles(Path.Combine(_directory, ConfigBackupStore.DirectoryName));
+
+        // The pre-migration text, not the migrated one that replaced it on disk.
+        Assert.Equal(original, File.ReadAllText(Assert.Single(backups)));
     }
 
     [Fact]
@@ -73,7 +92,7 @@ public class VersionedJsonConfigTests : IDisposable
         string path = PathFor("config.json");
         File.WriteAllText(path, """{"Name":"original"}""");
 
-        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new AddNameMigration(1)]);
+        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new NoOpMigration(1)]);
 
         TestConfig? result = VersionedJsonConfig.Load(path, TestConfigJsonContext.Default.TestConfig, pipeline);
 
@@ -100,7 +119,8 @@ public class VersionedJsonConfigTests : IDisposable
         }
     }
 
-    private sealed class AddNameMigration(int version) : IConfigMigration<JsonObject>
+    /// <summary>Changes nothing - present only to give the document a version to be carried to.</summary>
+    private sealed class NoOpMigration(int version) : IConfigMigration<JsonObject>
     {
         public int Version { get; } = version;
 

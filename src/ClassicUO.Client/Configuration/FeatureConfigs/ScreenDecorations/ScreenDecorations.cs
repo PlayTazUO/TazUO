@@ -17,7 +17,8 @@ public class ScreenDecorations : ObservableSettings
 {
     public const string FileName = "screen_decorations.json";
 
-    /// <summary>Which shape this file is in. Absent in a file predating migrations, which reads as 0.</summary>
+    /// <summary>Which shape this file is in. Defaults to latest, so a config built in memory needs no
+    /// migration; a file's real version is read off its raw JSON before this ever binds.</summary>
     public int SchemaVersion { get; set; } = ScreenDecorationsMigrations.LatestVersion;
 
     /// <summary>
@@ -64,16 +65,16 @@ public class ScreenDecorations : ObservableSettings
             _current = VersionedJsonConfig.Load(
                 file,
                 ScreenDecorationsJsonContext.DefaultToUse.ScreenDecorations,
-                ScreenDecorationsMigrations.Pipeline,
-                static _ => true
+                ScreenDecorationsMigrations.Pipeline
             ) ?? new ScreenDecorations();
         }
         catch (ConfigMigrationException e)
         {
-            // Left alone on disk - a later Save() on the fallback below will overwrite it, but
-            // CorruptFiles gives the user an in-world notice, same as a corrupt JSON file today.
-            Log.Error($"Failed to migrate configuration file '{file}' - {e}");
-            ConfigurationResolver.CorruptFiles.Enqueue(file);
+            // Covers an unreadable file, one a newer client wrote, and one whose migrated shape will
+            // not bind. All three end the same way: this build cannot run these settings, so it starts
+            // clean. Backed up first, because the next Save() overwrites what is on disk.
+            Log.Error($"Failed to load configuration file '{file}' - {e}");
+            ConfigurationResolver.BackupAndReportCorruptFile(file);
             _current = new ScreenDecorations();
         }
 

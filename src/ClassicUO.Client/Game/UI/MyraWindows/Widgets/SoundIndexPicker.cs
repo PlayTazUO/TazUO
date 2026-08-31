@@ -48,19 +48,6 @@ public sealed class SoundIndexPicker : HorizontalStackPanel
 
     #endregion
 
-    #region Public methods
-
-    /// <summary>Every named sound, as (index, label) pairs a picker offering more than one at once
-    /// can be seeded with. Reads the same catalogue this picker's own name list does.</summary>
-    public static IEnumerable<(int Value, string Label)> CatalogueEntries()
-    {
-        EnsureCatalogue();
-
-        return _labels.Select(pair => (pair.Key, pair.Value));
-    }
-
-    #endregion
-
     #region Private members
 
     private const int SPACING = 6;
@@ -138,6 +125,18 @@ public sealed class SoundIndexPicker : HorizontalStackPanel
         Widgets.Add(_input);
         Widgets.Add(_names);
         Widgets.Add(PlayButton());
+    }
+
+    #endregion
+
+    #region Public methods
+
+    /// <summary>Every named sound as (index, label) pairs, for seeding a multi-select picker.</summary>
+    public static IEnumerable<(int Value, string Label)> CatalogueEntries()
+    {
+        EnsureCatalogue();
+
+        return _labels.Select(pair => (pair.Key, pair.Value));
     }
 
     #endregion

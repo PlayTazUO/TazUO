@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Threading.Tasks;
 using System.Timers;
 using ClassicUO.Configuration;
@@ -11,11 +10,8 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
-using ClassicUO.LegionScripting;
-using ClassicUO.Network;
+using ClassicUO.IO.Persistency;
 using ClassicUO.Renderer;
-using ClassicUO.Utility;
-using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -126,15 +122,20 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (Settings.GlobalSettings.UltimaOnlineDirectory.StartsWith(CUOEnviroment.ExecutablePath))
             {
-                _userNotifications ??= new();
+                _userNotifications ??= [];
                 _userNotifications.Add(("Warning: It looks like your UO folder is stored inside TazUO, this is discouraged as you may accidentally have your UO files deleted.", Constants.HUE_ERROR));
             }
 
-            while (ConfigurationResolver.CorruptFiles.TryDequeue(out string corruptFile))
+            while (ConfigurationResolver.CorruptFiles.TryDequeue(out CorruptConfigFile corruptFile))
             {
-                _userNotifications ??= new();
-                _userNotifications.Add(($"Warning: The configuration file '{Path.GetFileName(corruptFile)}' was corrupt and could not be loaded. " +
-                                        $"Default settings were used and a backup was saved to '{Path.GetFileName(corruptFile)}.corrupt'.", Constants.HUE_ERROR));
+                string fileName = Path.GetFileName(corruptFile.Path);
+
+                string outcome = corruptFile.BackupPath != null
+                    ? $"Default settings were used and a backup was saved to '{ConfigBackupStore.DirectoryName}/{Path.GetFileName(corruptFile.BackupPath)}'."
+                    : "Default settings were used, and no backup could be saved.";
+
+                _userNotifications ??= [];
+                _userNotifications.Add(($"Warning: The configuration file '{fileName}' could not be loaded. {outcome}", Constants.HUE_ERROR));
             }
 
             // Community poll reminder is fetched asynchronously; kick it off before starting the flush
