@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using ClassicUO.Game;
 using ClassicUO.Utility.Logging;
 using IronPython.Hosting;
@@ -32,6 +33,17 @@ public partial class ScriptFile : IDisposable
     public int UserCodeStartLine { get; private set; }
 
     public bool IsPlaying => ScriptThread != null;
+
+    /// <summary>
+    /// A thread (Python) or run task (C#) that kept executing after the script was detached because
+    /// it could not be interrupted (e.g. a pure CPU loop that never blocks). It is inert - the API is
+    /// disposed and its main-thread calls no-op on the canceled token - and dies with the process.
+    /// While alive it blocks the script from being restarted.
+    /// </summary>
+    public Thread ZombieThread;
+    public Task<ScriptState<object>> CSharpRunTask;
+
+    public bool IsZombie => ZombieThread is { IsAlive: true } || CSharpRunTask is { IsCompleted: false };
 
     /// <summary>
     /// Stable, portable identifier: the script's path relative to the LegionScripts root,
@@ -282,6 +294,11 @@ public partial class ScriptFile : IDisposable
         ScopedApi?.CloseGumps();
         ScopedApi?.Dispose();
         ScopedApi = null;
+
+        // If the run task is still executing (a busy loop the cancellation token can't stop), keep
+        // the reference so the script is recognized as a zombie; otherwise drop it.
+        if (CSharpRunTask is { IsCompleted: true })
+            CSharpRunTask = null;
 
         // Clear compilation cache if module caching disabled
         if (LegionScripting.LScriptSettings.DisableModuleCache)

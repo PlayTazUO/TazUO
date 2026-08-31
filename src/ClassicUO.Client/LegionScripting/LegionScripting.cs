@@ -36,6 +36,8 @@ namespace ClassicUO.LegionScripting
         private static bool _enabled, _loaded;
         private static World _world;
 
+        private const int STOP_THREAD_DETACH_TIMEOUT_MS = 2000;
+
         public static void Init(World world)
         {
             _world = world;
@@ -413,9 +415,26 @@ namespace ClassicUO.LegionScripting
             if (RunningScripts.Contains(script)) //Already playing
                 return;
 
+            // Thread is alive but not registered - a stop is in flight for this script and it is
+            // being torn down (or is a pending detach). Don't start over it.
+            if (script.ScriptThread is { IsAlive: true })
+                return;
+
+            // A previous run may still be stuck in the background (see StopScript). It is inert but
+            // would double-execute if we started a fresh thread, so refuse until it dies.
+            if (script.IsZombie)
+            {
+                GameActions.Print(_world, $"Script '{script.FileName}' is still running in the background and cannot be restarted until it exits.", Constants.HUE_WARN);
+                return;
+            }
+
             if (script.ScriptThread == null || !script.ScriptThread.IsAlive)
             {
                 script.ReadFromFile();
+
+                WarnAboutUninterruptibleLoops(script);
+
+                script.ZombieThread = null;
 
                 // Route to correct executor based on script type
                 if (script.Type == ScriptFile.ScriptType.CSharp)
@@ -431,6 +450,23 @@ namespace ClassicUO.LegionScripting
 
             RunningScripts.Add(script);
             ScriptStarted?.Invoke(null, script);
+        }
+
+        /// <summary>
+        /// Warns when a script containing an unbounded loop is started. Such loops only stop if they
+        /// check API.StopRequested (or block via API.Pause/API.ProcessCallbacks), since a pure CPU
+        /// loop never blocks and therefore can't be interrupted by the stop logic.
+        /// </summary>
+        private static void WarnAboutUninterruptibleLoops(ScriptFile script)
+        {
+            string code = script.FileContentsJoined;
+
+            if (code.IndexOf("while True", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                code.IndexOf("while (true)", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                code.IndexOf("while(true)", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                GameActions.Print(_world, $"Script '{script.FileName}' contains an unbounded 'while' loop. Change it to {(script.Type == ScriptFile.ScriptType.Python ? "while API.StopRequested:" : "while (API.StopRequested)")}", Constants.HUE_WARN);
+            }
         }
 
         private static void ExecutePythonScript(ScriptFile script)
@@ -476,6 +512,10 @@ namespace ClassicUO.LegionScripting
                     script.ScopedApi.CancellationToken.Token
                 );
 
+                // Keep a reference so a task that ignores cancellation (a busy loop) is recognized
+                // as a zombie and blocks a restart.
+                script.CSharpRunTask = task;
+
                 // Block thread until the script completes or is canceled
                 task.Wait(script.ScopedApi.CancellationToken.Token);
             }
@@ -510,7 +550,7 @@ namespace ClassicUO.LegionScripting
         {
             MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, $"Legion Script '{script.FileName}' encountered an error.", Constants.HUE_ERROR));
 
-            ExceptionOperations eo = script.PythonEngine.GetService<ExceptionOperations>();
+            ExceptionOperations eo = script.PythonEngine?.GetService<ExceptionOperations>();
             if (eo != null)
             {
                 string formattedEx = eo.FormatException(e);
@@ -715,21 +755,78 @@ namespace ClassicUO.LegionScripting
                     script.PythonEngine.Runtime.Shutdown();
 
                 script.ScriptThread.Interrupt();
+
+                // Interrupt only lands while the script is blocked (Pause, OnMain, ...); a script
+                // stuck in a pure CPU loop never blocks and can't be interrupted. Give it a bounded
+                // grace period to exit on its own - without blocking the main thread - then detach it
+                // so the manager state stays consistent. The abandoned thread is inert (API disposed,
+                // main-thread calls no-op on the canceled token) and dies with the process. Skipped
+                // on force (client shutdown).
+                if (!force)
+                    ScheduleDetachCheck(script);
             }
-            else
+            else if (script.ScriptThread != null)
             {
-                if (script.ScriptThread != null)
-                    PyThreads.Remove(script.ScriptThread.ManagedThreadId);
-
-                // Route to correct cleanup based on script type
-                if (script.Type == ScriptFile.ScriptType.CSharp)
-                    script.CSharpScriptStopped();
-                else
-                    script.PythonScriptStopped();
-
-                script.ScriptThread = null;
-                ScriptStopped?.Invoke(null, script);
+                DetachScript(script, null, warn: false);
             }
+        }
+
+        /// <summary>
+        /// Schedules a main-thread check (without blocking it) for a script that was just asked to
+        /// stop. If the thread is still alive after the grace period - stuck in a loop the interrupt
+        /// couldn't land in - it is detached. A thread that exits on its own is cleaned up by its own
+        /// follow-up stop, so nothing is done here.
+        /// </summary>
+        private static void ScheduleDetachCheck(ScriptFile script)
+        {
+            var timer = new System.Timers.Timer(STOP_THREAD_DETACH_TIMEOUT_MS) { AutoReset = false };
+
+            timer.Elapsed += (_, _) =>
+            {
+                timer.Dispose();
+
+                MainThreadQueue.EnqueueAction(() =>
+                {
+                    // Thread already exited and was cleaned up by its follow-up stop.
+                    if (script.ScriptThread == null || !script.ScriptThread.IsAlive)
+                        return;
+
+                    DetachScript(script, script.ScriptThread, warn: true);
+                });
+            };
+
+            timer.Start();
+        }
+
+        /// <summary>
+        /// Tears down a script's runtime state and marks it stopped. Used after the script thread has
+        /// exited, or - with a <paramref name="zombieThread"/> - after a bounded wait when a stuck
+        /// thread refuses to exit. The zombie is recorded so the script can't be restarted over it.
+        /// </summary>
+        /// <param name="script">The script being stopped</param>
+        /// <param name="zombieThread">The still-alive thread being abandoned, or null if the thread already exited</param>
+        /// <param name="warn">Whether to tell the user the script kept running in the background</param>
+        private static void DetachScript(ScriptFile script, Thread zombieThread, bool warn)
+        {
+            if (zombieThread != null)
+            {
+                PyThreads.Remove(zombieThread.ManagedThreadId);
+                script.ZombieThread = zombieThread;
+            }
+            else if (script.ScriptThread != null)
+                PyThreads.Remove(script.ScriptThread.ManagedThreadId);
+
+            // Route to correct cleanup based on script type
+            if (script.Type == ScriptFile.ScriptType.CSharp)
+                script.CSharpScriptStopped();
+            else
+                script.PythonScriptStopped();
+
+            script.ScriptThread = null;
+            ScriptStopped?.Invoke(null, script);
+
+            if (warn)
+                GameActions.Print(_world, $"Script '{script.FileName}' did not stop and keeps running in the background. It is inert and will exit when the client closes or it exits itself.", Constants.HUE_WARN);
         }
 
         /// <summary>
