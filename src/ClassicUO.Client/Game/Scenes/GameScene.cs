@@ -756,9 +756,15 @@ namespace ClassicUO.Game.Scenes
             // every drawn object and dominates list-building cost. Skip it entirely while neither the
             // cursor nor the view transform moved; reuse last frame's selection, re-testing only the
             // cached object so one that moved out from under a stationary cursor still deselects.
+            // When the cursor is over a gump the result is thrown away by Update/Draw anyway, so
+            // don't pay for the pass at all.
+            bool mouseOverWorld = UIManager.IsMouseOverWorld;
             _runWorldSelection =
-                _selectionDirty
-                || SelectedObject.TranslatedMousePositionByViewport != _lastSelectionMousePosition;
+                mouseOverWorld
+                && (
+                    _selectionDirty
+                    || SelectedObject.TranslatedMousePositionByViewport != _lastSelectionMousePosition
+                );
             _selectionDirty = false;
 
             if (_runWorldSelection)
@@ -772,7 +778,11 @@ namespace ClassicUO.Game.Scenes
                 // into the cached world result; re-assert it only if it's still under the cursor.
                 SelectedObject.Object = null;
 
-                if (_lastWorldSelectionObject is GameObject cached && IsWorldSelectionValid(cached))
+                if (
+                    mouseOverWorld
+                    && _lastWorldSelectionObject is GameObject cached
+                    && IsWorldSelectionValid(cached)
+                )
                 {
                     SelectedObject.Object = cached;
                 }
@@ -1418,7 +1428,9 @@ namespace ClassicUO.Game.Scenes
 
         private void DrawWorld(UltimaBatcher2D batcher, ref Matrix matrix)
         {
+            Profiler.EnterContext("WorldSelection");
             FillGameObjectList();
+            Profiler.ExitContext("WorldSelection");
 
             // Always use render target for consistent scaling
             RenderTargetBinding[] previousRenderTargets = batcher.GraphicsDevice.GetRenderTargets();
