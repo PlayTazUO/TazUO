@@ -55,6 +55,12 @@ namespace ClassicUO.Game.Scenes
         private Point _lastSelectionMousePosition = new Point(int.MinValue, int.MinValue);
         private GameObject _lastWorldSelectionObject;
 
+        // Cached world-space cursor: MouseToWorldPosition is a pure function of the mouse position
+        // and the camera transform, so skip recomputing it while both are unchanged.
+        private Point _lastTranslatedMouseMouse = new Point(int.MinValue, int.MinValue);
+        private Rectangle _lastTranslatedMouseBounds;
+        private ulong _lastTranslatedCameraVersion = ulong.MaxValue;
+
         private readonly List<GameObject> _renderListStatics = new List<GameObject>();
         private readonly List<GameObject> _renderListTransparentObjects = new List<GameObject>();
         private readonly List<GameObject> _renderListAnimations = new List<GameObject>();

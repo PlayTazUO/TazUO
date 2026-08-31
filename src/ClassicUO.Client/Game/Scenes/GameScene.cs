@@ -925,7 +925,24 @@ namespace ClassicUO.Game.Scenes
 
             Profile currentProfile = ProfileManager.CurrentProfile;
 
-            SelectedObject.TranslatedMousePositionByViewport = Camera.MouseToWorldPosition();
+            Point cameraMouse = Camera.MousePosition;
+            Rectangle cameraBounds = Camera.Bounds;
+            ulong cameraVersion = Camera.TransformVersion;
+
+            // MouseToWorldPosition is a pure function of the mouse position and the camera transform;
+            // skip the transform while both are unchanged (or no matrix rebuild is pending).
+            if (
+                Camera.IsMatrixDirty
+                || cameraMouse != _lastTranslatedMouseMouse
+                || cameraBounds != _lastTranslatedMouseBounds
+                || cameraVersion != _lastTranslatedCameraVersion
+            )
+            {
+                SelectedObject.TranslatedMousePositionByViewport = Camera.MouseToWorldPosition();
+                _lastTranslatedMouseMouse = Camera.MousePosition;
+                _lastTranslatedMouseBounds = Camera.Bounds;
+                _lastTranslatedCameraVersion = Camera.TransformVersion;
+            }
 
             base.Update();
             SelfHealManager.Update();

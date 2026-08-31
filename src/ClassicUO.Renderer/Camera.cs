@@ -19,6 +19,15 @@ namespace ClassicUO.Renderer
         private float _lerpZoom;
         private float _zoom;
         private Vector2 _lerpOffset;
+        private ulong _transformVersion;
+
+        // Snapshots used to detect real camera changes so the matrices are only rebuilt on demand
+        // instead of every frame (see Update).
+        private Rectangle _lastBounds;
+        private float _lastZoom;
+        private bool _lastPeekingToMouse;
+        private bool _lastPeekBackwards;
+        private Point _lastMousePos;
 
 
         public Camera(float minZoomValue = 1f, float maxZoomValue = 1f, float zoomStep = 0.1f)
@@ -65,22 +74,57 @@ namespace ClassicUO.Renderer
 
         public Vector2 Offset => _lerpOffset;
 
+        /// <summary>
+        /// Increments every time the view transform is actually rebuilt, i.e. whenever the camera
+        /// changed in a way that would alter the mouse-to-world mapping. Consumers can cache work
+        /// (e.g. translated mouse position) and skip recomputation while this stays constant.
+        /// </summary>
+        public ulong TransformVersion => _transformVersion;
+
+        /// <summary>The mouse position the camera last updated from.</summary>
+        public Point MousePosition => _mousePos;
+
+        /// <summary>True when a matrix rebuild is pending but not yet performed.</summary>
+        public bool IsMatrixDirty => _updateMatrixes;
+
         public bool PeekingToMouse;
 
         public bool PeekBackwards;
 
         private float _timeDelta = 0;
         private Point _mousePos;
+        private Vector2 _peekTargetOffset;
 
         public void Update(bool force, float timeDelta, Point mousePos)
         {
-            if (force)
+            _timeDelta = timeDelta;
+            _mousePos = mousePos;
+
+            bool boundsChanged = Bounds != _lastBounds;
+            bool zoomChanged = Zoom != _lastZoom;
+            bool peekFlagsChanged = PeekingToMouse != _lastPeekingToMouse || PeekBackwards != _lastPeekBackwards;
+            bool peekTargetMoved = PeekingToMouse && mousePos != _lastMousePos;
+            bool peekStillAnimating = _lerpOffset != _peekTargetOffset;
+
+            _lastBounds = Bounds;
+            _lastZoom = Zoom;
+            _lastPeekingToMouse = PeekingToMouse;
+            _lastPeekBackwards = PeekBackwards;
+            _lastMousePos = mousePos;
+
+            // The peek offset lerps toward its target over several frames, so keep rebuilding until
+            // it settles; a stationary, settled peek then rebuilds nothing at all.
+            if (
+                force
+                || boundsChanged
+                || zoomChanged
+                || peekFlagsChanged
+                || peekTargetMoved
+                || peekStillAnimating
+            )
             {
                 _updateMatrixes = true;
             }
-
-            _timeDelta = timeDelta;
-            _mousePos = mousePos;
 
             UpdateMatrices();
         }
@@ -148,6 +192,7 @@ namespace ClassicUO.Renderer
 
             Matrix.Invert(ref _transform, out _inverseTransform);
 
+            _transformVersion++;
             _updateMatrixes = false;
         }
 
@@ -181,6 +226,8 @@ namespace ClassicUO.Renderer
                     target_offset = Vector2.Normalize(target_offset) * Utility.Easings.OutQuad(length_factor) * MAX_PEEK_DISTANCE / Zoom;
                 }
             }
+
+            _peekTargetOffset = target_offset;
 
             float dist = Vector2.Distance(target_offset, _lerpOffset);
 
