@@ -188,46 +188,121 @@ namespace ClassicUO.Input
 
         private static bool _isWarpingMouse = false;
 
-        public static void Update()
+        // Raw cursor position in window coordinates, as reported by SDL. <see cref="Position"/> is
+        // this value transformed into game (backbuffer/RenderScale) coordinates by <see cref="FinalizePosition"/>.
+        private static Point _sdlPosition;
+
+        // SDL_GetWindowPosition is a P/Invoke; cached here and refreshed only on SDL_EVENT_WINDOW_MOVED.
+        private static Point _windowPosition;
+        private static bool _windowPositionCached;
+
+        // Gates the gamepad warp path so GamePad.GetState (a P/Invoke) isn't hit every frame when no
+        // pad is attached. Maintained from SDL_EVENT_GAMEPAD_ADDED/REMOVED.
+        private static bool _gamepadConnected;
+
+        /// <summary>
+        /// Refreshes the cached window position, used to convert global cursor coords to window
+        /// coords while the cursor is outside the window. Called from SDL_EVENT_WINDOW_MOVED.
+        /// </summary>
+        public static void OnWindowMoved(int x, int y)
+        {
+            _windowPosition.X = x;
+            _windowPosition.Y = y;
+            _windowPositionCached = true;
+        }
+
+        /// <summary>
+        /// Tracks gamepad connection state so <see cref="Update"/> skips <c>GamePad.GetState</c>
+        /// entirely when no pad is attached. Called from SDL_EVENT_GAMEPAD_ADDED/REMOVED.
+        /// </summary>
+        public static void SetGamepadConnected(bool connected) => _gamepadConnected = connected;
+
+        /// <summary>
+        /// Updates the cursor position from SDL_EVENT_MOUSE_MOTION coordinates. While the cursor is
+        /// inside the window position is fully event-driven, replacing the per-frame SDL_GetMouseState poll.
+        /// </summary>
+        public static void SetPositionFromEvent(float x, float y)
+        {
+            Point previous = Position;
+            _sdlPosition.X = (int)x;
+            _sdlPosition.Y = (int)y;
+            FinalizePosition(previous);
+        }
+
+        /// <summary>
+        /// Per-frame update. Re-syncs SDL's authoritative cursor state when <paramref name="resyncPosition"/>
+        /// is set (button/wheel events, cursor re-entry) or while the cursor is outside the window (no motion
+        /// events arrive there), and applies the gamepad right-stick mouse warp, gated on a connected pad.
+        /// </summary>
+        public static void Update(bool resyncPosition = false)
         {
             if (_isWarpingMouse)
                 return;
 
             Point previous = Position;
+            bool changed = false;
 
-            if (!MouseInWindow)
+            if (resyncPosition || !MouseInWindow)
             {
-                SDL.SDL_GetGlobalMouseState(out float x, out float y);
-                SDL.SDL_GetWindowPosition(Client.Game.Window.Handle, out int winX, out int winY);
-                Position.X = (int)x - winX;
-                Position.Y = (int)y - winY;
+                if (!MouseInWindow)
+                {
+                    if (!_windowPositionCached)
+                    {
+                        SDL.SDL_GetWindowPosition(Client.Game.Window.Handle, out int winX, out int winY);
+                        _windowPosition.X = winX;
+                        _windowPosition.Y = winY;
+                        _windowPositionCached = true;
+                    }
+
+                    SDL.SDL_GetGlobalMouseState(out float gx, out float gy);
+                    _sdlPosition.X = (int)gx - _windowPosition.X;
+                    _sdlPosition.Y = (int)gy - _windowPosition.Y;
+                }
+                else
+                {
+                    SDL.SDL_GetMouseState(out float x, out float y);
+                    _sdlPosition.X = (int)x;
+                    _sdlPosition.Y = (int)y;
+                }
+
+                changed = true;
             }
-            else
+
+            if (_gamepadConnected)
             {
-                SDL.SDL_GetMouseState(out float x, out float y);
-                Position.X = (int)x;
-                Position.Y = (int)y;
                 GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
 
-                if (gamePadState.IsConnected && gamePadState.ThumbSticks.Right != Vector2.Zero)
+                if (gamePadState.ThumbSticks.Right != Vector2.Zero)
                 {
-                    Position.X += (int)(ControllerSensitivity * gamePadState.ThumbSticks.Right.X);
-                    Position.Y -= (int)(ControllerSensitivity * gamePadState.ThumbSticks.Right.Y);
+                    _sdlPosition.X += (int)(ControllerSensitivity * gamePadState.ThumbSticks.Right.X);
+                    _sdlPosition.Y -= (int)(ControllerSensitivity * gamePadState.ThumbSticks.Right.Y);
 
                     _isWarpingMouse = true;
-                    SDL.SDL_WarpMouseInWindow(Client.Game.Window.Handle, Position.X, Position.Y);
+                    SDL.SDL_WarpMouseInWindow(Client.Game.Window.Handle, _sdlPosition.X, _sdlPosition.Y);
                     _isWarpingMouse = false;
+
+                    changed = true;
                 }
             }
 
-            Position.X = (int)(((double)Position.X * Client.Game.GraphicManager.PreferredBackBufferWidth / Client.Game.Window.ClientBounds.Width) / Client.Game.RenderScale);
+            if (changed)
+            {
+                FinalizePosition(previous);
+            }
+        }
 
-            Position.Y = (int)(((double)Position.Y * Client.Game.GraphicManager.PreferredBackBufferHeight / Client.Game.Window.ClientBounds.Height) / Client.Game.RenderScale);
+        /// <summary>
+        /// Transforms <see cref="_sdlPosition"/> into game coordinates on <see cref="Position"/>,
+        /// refreshes <see cref="IsDragging"/> and raises <see cref="Moved"/> when the position changed.
+        /// </summary>
+        private static void FinalizePosition(in Point previous)
+        {
+            Position.X = (int)(((double)_sdlPosition.X * Client.Game.GraphicManager.PreferredBackBufferWidth / Client.Game.Window.ClientBounds.Width) / Client.Game.RenderScale);
+
+            Position.Y = (int)(((double)_sdlPosition.Y * Client.Game.GraphicManager.PreferredBackBufferHeight / Client.Game.Window.ClientBounds.Height) / Client.Game.RenderScale);
 
             IsDragging = LButtonPressed || RButtonPressed || MButtonPressed;
 
-            // Check for null first;
-            // While a point comparison is not a 'heavy' operation, a null check should generally be quicker.
             if (Moved != null && previous != Position)
                 Moved?.Invoke(null, new MouseMovedEventArgs(previous, Position));
         }
