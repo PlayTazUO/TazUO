@@ -17,7 +17,7 @@ namespace ClassicUO.Game.UI.Gumps
     /// small as possible. Labels refresh when the player's stats are updated by the server via
     /// <see cref="EventSink.PlayerStatsUpdated"/>.
     /// </summary>
-    public class StatusGumpCompact : StatusGumpBase
+    public class StatusGumpCompactHorizontal : StatusGumpBase
     {
         private const float FONT_SIZE = 16;
         private const int LABEL_HUE = 1153;
@@ -31,7 +31,7 @@ namespace ClassicUO.Game.UI.Gumps
         private readonly TextBox[] _textLabels = new TextBox[(int)MobileStats.NumStats];
         private readonly string[] _formats = new string[(int)MobileStats.NumStats];
 
-        public StatusGumpCompact(World world) : base(world)
+        public StatusGumpCompactHorizontal(World world) : base(world)
         {
             var background = new AlphaBlendControl(0.7f)
             {
@@ -55,30 +55,39 @@ namespace ClassicUO.Game.UI.Gumps
                     (MobileStats.Strength, "STR", "strength", VALUE_HUE),
                     (MobileStats.Dexterity, "DEX", "dexterity", VALUE_HUE),
                     (MobileStats.Intelligence, "INT", "intelligence", VALUE_HUE),
-                    (MobileStats.HealthCurrent, "HP", "hit_points", VALUE_HUE),
-                    (MobileStats.ManaCurrent, "MP", "mana", VALUE_HUE),
-                    (MobileStats.StaminaCurrent, "SP", "stamina", VALUE_HUE),
-                    (MobileStats.Damage, "D", "damage", VALUE_HUE),
-                    (MobileStats.HitChanceInc, "HCI", "hit_chance_increase", VALUE_HUE),
-                    (MobileStats.DefenseChanceInc, "DCI", "defense_chance_increase", VALUE_HUE)
                 },
                 new[]
                 {
-                    (MobileStats.SwingSpeedInc, "SSI", "swing_speed_increase", VALUE_HUE),
+                    (MobileStats.HealthCurrent, "HP", "hit_points", VALUE_HUE),
+                    (MobileStats.ManaCurrent, "MP", "mana", VALUE_HUE),
+                    (MobileStats.StaminaCurrent, "SP", "stamina", VALUE_HUE),
+                },
+                new[]
+                {
+                    (MobileStats.Damage, "D", "damage", VALUE_HUE),
                     (MobileStats.DamageChanceInc, "DI", "weapon_damage_increase", VALUE_HUE),
+                    (MobileStats.HitChanceInc, "HCI", "hit_chance_increase", VALUE_HUE),
+                    (MobileStats.SwingSpeedInc, "SSI", "swing_speed_increase", VALUE_HUE),
+                    (MobileStats.DefenseChanceInc, "DCI", "defense_chance_increase", VALUE_HUE),
+                },
+                new[]
+                {
                     (MobileStats.SpellDamageInc, "SDI", "spell_damage_increase", VALUE_HUE),
                     (MobileStats.FasterCasting, "FC", "faster_casting", VALUE_HUE),
                     (MobileStats.FasterCastRecovery, "FCR", "faster_cast_recovery", VALUE_HUE),
                     (MobileStats.LowerManaCost, "LMC", "lower_mana_cost", VALUE_HUE),
                     (MobileStats.LowerReagentCost, "LRC", "lower_reagent_cost", VALUE_HUE),
-                    (MobileStats.AR, "PH", "physical_resistance", 114),
-                    (MobileStats.RF, "FR", "fire_resistance", 40)
                 },
                 new[]
-                {
+                {      
+                    (MobileStats.AR, "PH", "physical_resistance", 114),
+                    (MobileStats.RF, "FR", "fire_resistance", 40),
                     (MobileStats.RC, "CD", "cold_resistance", 93),
                     (MobileStats.RP, "PS", "poison_resistance", 172),
                     (MobileStats.RE, "EN", "energy_resistance", VALUE_HUE),
+                },
+                new[]
+                {
                     (MobileStats.StatCap, "MST", "max_stats", VALUE_HUE),
                     (MobileStats.Luck, "LK", "luck", VALUE_HUE),
                     (MobileStats.WeightCurrent, "WT", "weight", VALUE_HUE),
