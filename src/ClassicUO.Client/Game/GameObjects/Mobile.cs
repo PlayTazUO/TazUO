@@ -740,12 +740,7 @@ namespace ClassicUO.Game.GameObjects
             if (Steps.Count != 0 && !IsDestroyed)
             {
                 ref Step step = ref Steps.Front();
-                dir = step.Direction;
-
-                if (step.Run)
-                {
-                    dir &= 7;
-                }
+                dir = (byte)(step.Direction & 7);
 
                 if (evalutate)
                 {

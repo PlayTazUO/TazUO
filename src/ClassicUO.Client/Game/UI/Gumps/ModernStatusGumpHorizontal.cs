@@ -69,7 +69,7 @@ namespace ClassicUO.Game.UI.Gumps
             x = 120;
 
             AddHeader(x,  y, "Physical");
-            AddStatRow(x, y+=ydiff, MobileStats.Damage, "DI", TazLang.Get("damage"));
+            AddStatRow(x, y+=ydiff, MobileStats.Damage, "D", TazLang.Get("damage"));
             AddStatRow(x, y+=ydiff, MobileStats.HitChanceInc, "HCI", TazLang.Get("hit_chance_increase"));
             AddStatRow(x, y+=ydiff, MobileStats.DefenseChanceInc, "DCI", TazLang.Get("defense_chance_increase"));
             AddStatRow(x, y+=ydiff, MobileStats.SwingSpeedInc, "SSI", TazLang.Get("swing_speed_increase"));

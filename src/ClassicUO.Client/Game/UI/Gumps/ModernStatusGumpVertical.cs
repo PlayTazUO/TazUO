@@ -61,7 +61,7 @@ namespace ClassicUO.Game.UI.Gumps
             AddStatRow(126, 131, MobileStats.StaminaCurrent, "SP", TazLang.Get("stamina"));
 
             AddHeader(16, 161, "Physical");
-            AddStatRow(16, 186, MobileStats.Damage, "DI", TazLang.Get("damage"));
+            AddStatRow(16, 186, MobileStats.Damage, "D", TazLang.Get("damage"));
             AddStatRow(16, 211, MobileStats.HitChanceInc, "HCI", TazLang.Get("hit_chance_increase"));
             AddStatRow(16, 236, MobileStats.DefenseChanceInc, "DCI", TazLang.Get("defense_chance_increase"));
             AddStatRow(16, 261, MobileStats.SwingSpeedInc, "SSI", TazLang.Get("swing_speed_increase"));
