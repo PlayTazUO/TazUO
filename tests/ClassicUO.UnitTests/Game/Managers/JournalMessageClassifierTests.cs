@@ -1,5 +1,6 @@
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using Xunit;
@@ -12,8 +13,7 @@ public class JournalMessageClassifierTests
     public void Classify_MatchingSystemMessage_ReturnsChatSystem()
     {
         MessageType result = JournalMessageClassifier.Classify(
-            MessageType.System,
-            "[17:00] Maxwe: Hello world",
+            CreateMessage(MessageType.System, "[17:00] Maxwe: Hello world"),
             true,
             Profile.DefaultSystemMessageGlobalChatRegex
         );
@@ -25,11 +25,9 @@ public class JournalMessageClassifierTests
     public void Classify_MatchingSystemLikeRegularMessage_ReturnsChatSystem()
     {
         MessageType result = JournalMessageClassifier.Classify(
-            MessageType.Regular,
-            "[16:06] Xyrah: only a test 2",
+            CreateMessage(MessageType.Regular, "[16:06] Xyrah: only a test 2"),
             true,
-            Profile.DefaultSystemMessageGlobalChatRegex,
-            true
+            Profile.DefaultSystemMessageGlobalChatRegex
         );
 
         Assert.Equal(MessageType.ChatSystem, result);
@@ -38,9 +36,9 @@ public class JournalMessageClassifierTests
     [Fact]
     public void Classify_MatchingRegularMessageWithoutSystemContext_RemainsRegular()
     {
+        var parent = new Mobile(null, 1);
         MessageType result = JournalMessageClassifier.Classify(
-            MessageType.Regular,
-            "[16:06] Xyrah: only a test 2",
+            CreateMessage(MessageType.Regular, "[16:06] Xyrah: only a test 2", parent),
             true,
             Profile.DefaultSystemMessageGlobalChatRegex
         );
@@ -57,8 +55,7 @@ public class JournalMessageClassifierTests
     public void Classify_NonMatchingSystemMessage_RemainsSystem(string text)
     {
         MessageType result = JournalMessageClassifier.Classify(
-            MessageType.System,
-            text,
+            CreateMessage(MessageType.System, text),
             true,
             Profile.DefaultSystemMessageGlobalChatRegex
         );
@@ -70,8 +67,7 @@ public class JournalMessageClassifierTests
     public void Classify_MatchingSystemMessageWhenDisabled_RemainsSystem()
     {
         MessageType result = JournalMessageClassifier.Classify(
-            MessageType.System,
-            "[17:00] Maxwe: Hello world",
+            CreateMessage(MessageType.System, "[17:00] Maxwe: Hello world"),
             false,
             Profile.DefaultSystemMessageGlobalChatRegex
         );
@@ -83,8 +79,7 @@ public class JournalMessageClassifierTests
     public void Classify_MatchingNonSystemMessage_PreservesOriginalType()
     {
         MessageType result = JournalMessageClassifier.Classify(
-            MessageType.Guild,
-            "[17:00] Maxwe: Hello world",
+            CreateMessage(MessageType.Guild, "[17:00] Maxwe: Hello world"),
             true,
             Profile.DefaultSystemMessageGlobalChatRegex
         );
@@ -96,8 +91,7 @@ public class JournalMessageClassifierTests
     public void Classify_CustomPattern_UsesConfiguredFormat()
     {
         MessageType result = JournalMessageClassifier.Classify(
-            MessageType.System,
-            "[Global] Maxwe > Hello world",
+            CreateMessage(MessageType.System, "[Global] Maxwe > Hello world"),
             true,
             @"^\[Global\] [^>]+ > .+$"
         );
@@ -109,8 +103,7 @@ public class JournalMessageClassifierTests
     public void Classify_InvalidPattern_RemainsSystem()
     {
         MessageType result = JournalMessageClassifier.Classify(
-            MessageType.System,
-            "[Global] Maxwe > Hello world",
+            CreateMessage(MessageType.System, "[Global] Maxwe > Hello world"),
             true,
             "["
         );
@@ -135,4 +128,10 @@ public class JournalMessageClassifierTests
         Assert.True(matchesGlobalChat);
         Assert.False(matchesSystem);
     }
+
+    private static MessageEventArgs CreateMessage(
+        MessageType type,
+        string text,
+        Entity parent = null
+    ) => new(parent, text, null, 0, type, 0, TextType.SYSTEM);
 }

@@ -14,44 +14,40 @@ internal static class JournalMessageClassifier
     private static Regex _cachedRegex;
 
     /// <summary>Reclassifies eligible journal text without changing unrelated message types.</summary>
-    /// <param name="messageType">The original server message type.</param>
-    /// <param name="text">The final journal text, matched without preprocessing.</param>
+    /// <param name="message">The original message and its source context.</param>
     /// <param name="classifySystemChat">The profile-level feature switch.</param>
     /// <param name="pattern">A .NET regex; blank or malformed patterns match nothing.</param>
-    /// <param name="isSystemLikeRegularMessage">
-    /// Whether a <see cref="MessageType.Regular"/> message is displayed as a system message because
-    /// it has no valid parent.
-    /// </param>
     /// <returns><see cref="MessageType.ChatSystem"/> on a match; otherwise the original type.</returns>
     public static MessageType Classify(
-        MessageType messageType,
-        string text,
+        MessageEventArgs message,
         bool classifySystemChat,
-        string pattern,
-        bool isSystemLikeRegularMessage = false
+        string pattern
     )
     {
         bool isEligibleMessageType =
-            messageType == MessageType.System
-            || messageType == MessageType.Regular && isSystemLikeRegularMessage;
+            message.Type == MessageType.System
+            || message.Type == MessageType.Regular
+                && (message.Parent == null || !SerialHelper.IsValid(message.Parent.Serial));
 
         if (
             !classifySystemChat
             || !isEligibleMessageType
-            || string.IsNullOrEmpty(text)
+            || string.IsNullOrEmpty(message.Text)
             || string.IsNullOrWhiteSpace(pattern)
         )
         {
-            return messageType;
+            return message.Type;
         }
 
         try
         {
-            return GetPattern(pattern)?.IsMatch(text) == true ? MessageType.ChatSystem : messageType;
+            return GetPattern(pattern)?.IsMatch(message.Text) == true
+                ? MessageType.ChatSystem
+                : message.Type;
         }
         catch (RegexMatchTimeoutException)
         {
-            return messageType;
+            return message.Type;
         }
     }
 

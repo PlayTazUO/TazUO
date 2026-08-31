@@ -375,16 +375,10 @@ namespace ClassicUO.Game.Scenes
 
             if (!string.IsNullOrEmpty(text))
             {
-                bool isSystemLikeRegularMessage =
-                    e.Type == MessageType.Regular
-                    && (e.Parent == null || !SerialHelper.IsValid(e.Parent.Serial));
-
                 MessageType journalMessageType = JournalMessageClassifier.Classify(
-                    e.Type,
-                    text,
+                    e,
                     ProfileManager.CurrentProfile?.ClassifySystemMessagesAsGlobalChat == true,
-                    ProfileManager.CurrentProfile?.SystemMessageGlobalChatRegex,
-                    isSystemLikeRegularMessage
+                    ProfileManager.CurrentProfile?.SystemMessageGlobalChatRegex
                 );
 
                 _world.Journal.Add(text, hue, name, e.TextType, e.IsUnicode, journalMessageType);
