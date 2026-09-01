@@ -973,7 +973,7 @@ namespace ClassicUO
 
                     Scene.OnKeyUp(sdlEvent->key);
 
-                    Plugin.ProcessHotkeys(0, 0, false);
+                    Plugin.ProcessHotkeys((int)sdlEvent->key.key, (int)sdlEvent->key.mod, false);
 
                     if (key == SDL_Keycode.SDLK_PRINTSCREEN)
                     {
