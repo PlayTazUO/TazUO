@@ -18,8 +18,8 @@ namespace ClassicUO.Game.UI.MyraWindows;
 /// <summary>
 /// Displays the community polls hosted in the TazUO Firebase realtime database and lets the user vote.
 /// Single-choice polls (type 0) present the options as a radio-style group; multiple-choice polls
-/// (type 1) allow any number of options. Once the user votes on a poll — tracked per-profile via
-/// <see cref="Profile.VotedPolls"/> — that poll is shown as read-only results instead of a voting form.
+/// (type 1) allow any number of options. Once the user votes on a poll — tracked machine-wide via
+/// <see cref="GlobalSettingsSave.VotedPolls"/> — that poll is shown as read-only results instead of a voting form.
 /// </summary>
 public sealed class PollsWindow : MyraControl
 {
@@ -290,22 +290,20 @@ public sealed class PollsWindow : MyraControl
 
     private static bool HasVoted(string pollId)
     {
-        Profile profile = ProfileManager.CurrentProfile;
-        if (profile == null)
-            return false;
+        string voted = ProfileManager.GlobalSettings?.VotedPolls ?? string.Empty;
 
-        return (profile.VotedPolls ?? string.Empty)
+        return voted
             .Split(';', StringSplitOptions.RemoveEmptyEntries)
             .Contains(pollId);
     }
 
     private static void MarkVoted(string pollId)
     {
-        Profile profile = ProfileManager.CurrentProfile;
-        if (profile == null || HasVoted(pollId))
+        GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+        if (globalSettings == null || HasVoted(pollId))
             return;
 
-        string voted = profile.VotedPolls ?? string.Empty;
-        profile.VotedPolls = string.IsNullOrEmpty(voted) ? pollId : $"{voted};{pollId}";
+        string voted = globalSettings.VotedPolls ?? string.Empty;
+        globalSettings.VotedPolls = string.IsNullOrEmpty(voted) ? pollId : $"{voted};{pollId}";
     }
 }

@@ -92,6 +92,12 @@ namespace ClassicUO.Configuration
         /// </summary>
         public Dictionary<string, string> LastEquipmentData { get; set => SetProperty(ref field, value); } = new Dictionary<string, string>();
 
+        /// <summary>
+        /// Semicolon-separated poll ids the user has already voted on (see FirebasePollsManager /
+        /// PollsWindow). Machine-wide.
+        /// </summary>
+        public string VotedPolls { get; set => SetProperty(ref field, value); }
+
 
         
         public int MigrationVersion { get; set => SetProperty(ref field, value); } = 0;
