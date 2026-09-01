@@ -74,6 +74,18 @@ namespace ClassicUO.Configuration
         public bool ManagedZlib { get; set => SetProperty(ref field, value); } = !PlatformHelper.IsWindows;
         public float GlobalScale { get; set => SetProperty(ref field, value); } = 1f;
 
+        /// <summary>Web map journal panel width. Machine-wide.</summary>
+        public int WebMapJournalWidth { get; set => SetProperty(ref field, value); } = 400;
+
+        /// <summary>Web map journal panel height. Machine-wide.</summary>
+        public int WebMapJournalHeight { get; set => SetProperty(ref field, value); } = 300;
+
+        /// <summary>Whether the web map journal panel is collapsed. Machine-wide.</summary>
+        public bool WebMapJournalMinimized { get; set => SetProperty(ref field, value); }
+
+        /// <summary>Whether the web map controls panel is collapsed. Machine-wide.</summary>
+        public bool WebMapControlsMinimized { get; set => SetProperty(ref field, value); }
+
 
         
         public int MigrationVersion { get; set => SetProperty(ref field, value); } = 0;

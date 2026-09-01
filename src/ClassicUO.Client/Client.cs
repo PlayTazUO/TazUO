@@ -251,6 +251,16 @@ namespace ClassicUO
                     ProfileManager.GlobalSettings.MigrationVersion = 1;
                 }
 
+                #warning Remove migration >= 10/26/26
+                if (ProfileManager.GlobalSettings.MigrationVersion < 2)
+                {
+                    ProfileManager.GlobalSettings.WebMapJournalWidth = Settings.Get(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_JOURNAL_WIDTH, 400);
+                    ProfileManager.GlobalSettings.WebMapJournalHeight = Settings.Get(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_JOURNAL_HEIGHT, 300);
+                    ProfileManager.GlobalSettings.WebMapJournalMinimized = Settings.Get(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_JOURNAL_MINIMIZED, false);
+                    ProfileManager.GlobalSettings.WebMapControlsMinimized = Settings.Get(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_CONTROLS_MINIMIZED, false);
+                    ProfileManager.GlobalSettings.MigrationVersion = 2;
+                }
+
                 Game.SetScale(ProfileManager.GlobalSettings.GlobalScale);
 
                 Game.Run();
