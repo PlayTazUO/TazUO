@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json.Serialization.Metadata;
+using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Configuration
 {
@@ -21,5 +23,10 @@ namespace ClassicUO.Configuration
         /// to the legacy hardcoded bandage range.
         /// </summary>
         public int BandageAgentDistance { get; set => SetProperty(ref field, value); } = 3;
+
+        /// <summary>
+        /// Season override filters keyed by the season the server sends. Per-account.
+        /// </summary>
+        public Dictionary<Season, Season> SeasonFilters { get; set => SetProperty(ref field, value); } = new Dictionary<Season, Season>();
     }
 }

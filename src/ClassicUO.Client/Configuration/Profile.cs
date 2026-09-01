@@ -862,6 +862,7 @@ namespace ClassicUO.Configuration
         public bool StripChatUsernameId { get; set; }
         public bool OverheadsScaleWithZoom { get; set; } = true;
         public string VotedPolls { get; set; }
+        public AutoStatLockState AutoStatLockState { get; set => SetProperty(ref field, value); } = new();
         public string BandageAgentJournalMessages { get; set; } = "You apply the bandages;You finish applying;You heal what little;You have been cured;You failed to cure;Your fingers slip";
         public bool BandageAgentUseJournalTrigger { get; set; }
         public bool CounterBarDisableIconScaling { get; set; }
@@ -1042,6 +1043,25 @@ namespace ClassicUO.Configuration
 #pragma warning restore CS0618
 
                 ProfileMigrationVersion = 12;
+            }
+
+            if (ProfileMigrationVersion < 13)
+            {
+#pragma warning disable CS0618
+                if (!string.IsNullOrWhiteSpace(OldAutoStatLockJson))
+                {
+                    try
+                    {
+                        AutoStatLockState = JsonSerializer.Deserialize(OldAutoStatLockJson, AutoStatLockStateContext.Default.AutoStatLockState) ?? new AutoStatLockState();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"Failed to migrate legacy auto stat lock state: {ex.Message}");
+                    }
+                }
+#pragma warning restore CS0618
+
+                ProfileMigrationVersion = 13;
             }
 
             try //Cleanup old backups from previous save system

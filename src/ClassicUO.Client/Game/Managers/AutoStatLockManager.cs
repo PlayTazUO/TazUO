@@ -1,10 +1,6 @@
-using System;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
-using ClassicUO.Utility.Logging;
-using ClassicUO.Game;
-using ClassicUO;
 
 namespace ClassicUO.Game.Managers;
 
@@ -24,9 +20,7 @@ public partial class AutoStatLockStateContext : JsonSerializerContext { }
 
 public class AutoStatLockManager
 {
-    private AutoStatLockState _state = new();
-    private bool _isLoaded;
-    private uint _lastLoadedSerial;
+    private static readonly AutoStatLockState _emptyState = new();
 
     public static AutoStatLockManager Instance { get; } = new();
 
@@ -36,72 +30,25 @@ public class AutoStatLockManager
     {
         get
         {
-            EnsureLoaded();
-            return _state;
+            Profile profile = ProfileManager.CurrentProfile;
+            return profile?.AutoStatLockState ?? _emptyState;
         }
-    }
-
-    private void EnsureLoaded()
-    {
-        uint playerSerial = World.Instance?.Player?.Serial ?? 0;
-        if (playerSerial == 0) return;
-
-        if (!_isLoaded || _lastLoadedSerial != playerSerial)
-        {
-            _lastLoadedSerial = playerSerial;
-            Load();
-        }
-    }
-
-    private void Load()
-    {
-        if (Client.Settings == null)
-        {
-            Log.Warn("SQLSettings not available for AutoStatLockManager");
-            _isLoaded = true;
-            return;
-        }
-
-        try
-        {
-            string json = Client.Settings.Get(SettingsScope.Char, Constants.SqlSettings.AUTO_STAT_LOCK, "");
-            _state = !string.IsNullOrWhiteSpace(json)
-                ? JsonSerializer.Deserialize(json, AutoStatLockStateContext.Default.AutoStatLockState) ?? new()
-                : new();
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"Failed to load auto stat lock state: {ex.Message}");
-            _state = new();
-        }
-
-        _isLoaded = true;
     }
 
     public void Save()
     {
-        if (Client.Settings == null) return;
-
-        try
-        {
-            string json = JsonSerializer.Serialize(_state, AutoStatLockStateContext.Default.AutoStatLockState);
-            _ = Client.Settings.SetAsync(SettingsScope.Char, Constants.SqlSettings.AUTO_STAT_LOCK, json);
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"Failed to save auto stat lock state: {ex.Message}");
-        }
+        ProfileManager.CurrentProfile?.Save();
     }
 
     public void OnStatsUpdated(World world)
     {
-        EnsureLoaded();
+        AutoStatLockState state = State;
 
-        if (!_state.Enabled || world.Player == null) return;
+        if (!state.Enabled || world.Player == null) return;
 
-        CheckAndApplyStatLock(0, world.Player.Strength, _state.DesiredStr, _state.StrEnabled, ref world.Player.StrLock);
-        CheckAndApplyStatLock(1, world.Player.Dexterity, _state.DesiredDex, _state.DexEnabled, ref world.Player.DexLock);
-        CheckAndApplyStatLock(2, world.Player.Intelligence, _state.DesiredInt, _state.IntEnabled, ref world.Player.IntLock);
+        CheckAndApplyStatLock(0, world.Player.Strength, state.DesiredStr, state.StrEnabled, ref world.Player.StrLock);
+        CheckAndApplyStatLock(1, world.Player.Dexterity, state.DesiredDex, state.DexEnabled, ref world.Player.DexLock);
+        CheckAndApplyStatLock(2, world.Player.Intelligence, state.DesiredInt, state.IntEnabled, ref world.Player.IntLock);
     }
 
     private static void CheckAndApplyStatLock(byte statIndex, ushort currentValue, ushort desiredValue, bool enabled, ref Lock lockState)
