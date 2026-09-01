@@ -82,7 +82,12 @@ public static class MobilesTab
                         i => profile.CorpseOpenOptions = i,
                         search: new SearchMetadata(TazLang.Get("mog_general_corpseopenoptions"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_type")])
                     )
-                ).WithSearch(new SearchMetadata(TazLang.Get("mog_mobilestab_misc_corpseopening"), [TazLang.Get("mog_kw_misc")], [TazLang.Get("mog_kw_corpse")]))
+                ).WithSearch(new SearchMetadata(TazLang.Get("mog_mobilestab_misc_corpseopening"), [TazLang.Get("mog_kw_misc")], [TazLang.Get("mog_kw_corpse")])),
+                Option.Checkbox(
+                    TazLang.Get("mog_mobilestab_misc_donotreopencorpses"),
+                    new Accessor<bool>(() => ProfileManager.ServerSettings.DoNotReopenCorpses),
+                    search: new SearchMetadata(TazLang.Get("mog_mobilestab_misc_donotreopencorpses"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_reopen"), TazLang.Get("mog_kw_open")])
+                )
             ).AsSearchGroup()
             .WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_open")]));
     }

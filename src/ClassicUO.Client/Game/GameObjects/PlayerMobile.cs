@@ -377,6 +377,11 @@ namespace ClassicUO.Game.GameObjects
             {
                 if (!item.IsDestroyed && item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange && !AutoOpenedCorpses.Contains(item.Serial))
                 {
+                    // Don't reopen corpses the player has already opened when the per-server option is on.
+                    if (ProfileManager.ServerSettings is { DoNotReopenCorpses: true }
+                        && CorpseManager.IsCorpseOpened(item.Serial))
+                        continue;
+
                     // Check if this is the player's own corpse
                     bool isOwnCorpse = !string.IsNullOrEmpty(item.Name) &&
                                        !string.IsNullOrEmpty(Name) &&

@@ -14,6 +14,7 @@ All notable changes to TazUO will be recorded here.
 * Separated Scavenger agent from Autoloot, they now each have their own loot lists and enabled/disabled toggles
 * Added a per-container option to disable grid highlighting without affecting other containers - [P.R 1032](https://github.com/PlayTazUO/TazUO/pull/1032) ([Aryx75](https://github.com/Aryx75))
 * Added a world map context menu option to always show map markers regardless of zoom level
+* Added a per-server "Don't reopen corpses that have already been opened" option that keeps track of opened corpses and skips auto-reopening them
 
 ### Legion
 * Added a warning about upcoming changes and to update your scripts
