@@ -86,6 +86,12 @@ namespace ClassicUO.Configuration
         /// <summary>Whether the web map controls panel is collapsed. Machine-wide.</summary>
         public bool WebMapControlsMinimized { get; set => SetProperty(ref field, value); }
 
+        /// <summary>
+        /// Per-character last-equipment snapshots used by the character selection paperdoll, keyed by a
+        /// composite server+account+character id. Machine-wide.
+        /// </summary>
+        public Dictionary<string, string> LastEquipmentData { get; set => SetProperty(ref field, value); } = new Dictionary<string, string>();
+
 
         
         public int MigrationVersion { get; set => SetProperty(ref field, value); } = 0;

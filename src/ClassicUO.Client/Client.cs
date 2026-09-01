@@ -261,6 +261,13 @@ namespace ClassicUO
                     ProfileManager.GlobalSettings.MigrationVersion = 2;
                 }
 
+                #warning Remove migration >= 10/26/26
+                if (ProfileManager.GlobalSettings.MigrationVersion < 3)
+                {
+                    LastEquipmentManager.MigrateLegacySqlSettings();
+                    ProfileManager.GlobalSettings.MigrationVersion = 3;
+                }
+
                 Game.SetScale(ProfileManager.GlobalSettings.GlobalScale);
 
                 Game.Run();
