@@ -268,6 +268,16 @@ namespace ClassicUO
                     ProfileManager.GlobalSettings.MigrationVersion = 3;
                 }
 
+                #warning Remove migration >= 10/26/26
+                if (ProfileManager.GlobalSettings.MigrationVersion < 4)
+                {
+                    ProfileManager.GlobalSettings.UseCampfireCharacterSelect = Settings.Get(SettingsScope.Global, Constants.SqlSettings.CAMPFIRE_CHAR_SELECT, false);
+                    string uiLanguage = Settings.Get(SettingsScope.Global, Constants.SqlSettings.UI_LANGUAGE, "EN");
+                    if (!string.IsNullOrWhiteSpace(uiLanguage))
+                        ProfileManager.GlobalSettings.UILanguage = uiLanguage;
+                    ProfileManager.GlobalSettings.MigrationVersion = 4;
+                }
+
                 Game.SetScale(ProfileManager.GlobalSettings.GlobalScale);
 
                 Game.Run();

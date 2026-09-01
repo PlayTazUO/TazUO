@@ -98,6 +98,15 @@ namespace ClassicUO.Configuration
         /// </summary>
         public string VotedPolls { get; set => SetProperty(ref field, value); }
 
+        /// <summary>
+        /// Uses the campfire/Diablo-style character selection screen instead of the classic list.
+        /// Global so it can be read/written at the character-selection screen before any profile loads.
+        /// </summary>
+        public bool UseCampfireCharacterSelect { get; set => SetProperty(ref field, value); }
+
+        /// <summary>UI language code used for TazLang strings. Defaults to <c>"EN"</c>.</summary>
+        public string UILanguage { get; set => SetProperty(ref field, value); } = "EN";
+
 
         
         public int MigrationVersion { get; set => SetProperty(ref field, value); } = 0;
