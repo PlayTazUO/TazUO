@@ -139,6 +139,10 @@ public sealed partial class Profile
         // When false, overheads (names, health bars, overhead text) keep a constant on-screen size
         // regardless of the camera zoom. Their positions still follow the zoomed world.
         [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.AUTO_STAT_LOCK, "")]
+        public partial string OldAutoStatLockJson { get; set; }
+
+        [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OVERHEADS_SCALE_WITH_ZOOM, true)]
         public partial bool OldOverheadsScaleWithZoom { get; set; }
 
