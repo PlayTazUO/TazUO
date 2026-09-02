@@ -8,9 +8,8 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 /// <summary>
-/// Builds a set of chosen values from a searchable <see cref="IndexedComboPicker" />: pick one, add
-/// it, and it drops into a boxed list below with its own remove glyph. A picked value leaves the name
-/// list, so the search never offers a duplicate.
+/// Builds a set of chosen values from a searchable <see cref="IndexedComboPicker" />. A picked value
+/// leaves the name list, so the search never offers a duplicate.
 /// </summary>
 public class IndexedListPicker : VerticalStackPanel
 {
@@ -69,14 +68,19 @@ public class IndexedListPicker : VerticalStackPanel
         _picker.NumberInput.Width = numberWidth;
         _picker.NameList.Width = nameWidth;
 
-        // Fixed to the picker row's own width rather than the fill column it may sit in - a box
-        // that spans the whole editor pane would strand its remove glyphs far from short labels.
-        int boxWidth = numberWidth + nameWidth + PickedItemsController<int>.ADD_BUTTON_SIZE + SPACING * 2;
+        // Fixed to the picker row's width, not the fill column it sits in - a box spanning the whole
+        // editor pane would strand its remove glyphs far from short labels. Two gaps to account for:
+        // the picker's own between its inputs, this row's before the add button.
+        int boxWidth = numberWidth
+            + IndexedComboPicker.SPACING
+            + nameWidth
+            + SPACING
+            + PickedItemsController<int>.ADD_BUTTON_SIZE;
 
         _picked = new PickedItemsController<int>(boxWidth, LabelFor, OnAddClick);
         _picked.ItemsChanged += OnPickedItemsChanged;
 
-        // Subscribed only now: the handler reads _picked, so it must not be reachable before it exists.
+        // Subscribed only now: the handler reads _picked.
         _picker.ValueChanged += OnPickerValueChanged;
 
         var pickerRow = new HorizontalStackPanel { Spacing = SPACING };
@@ -98,8 +102,7 @@ public class IndexedListPicker : VerticalStackPanel
 
     private void OnPickerValueChanged(object? sender, int value) => _picked.SetCandidate(value);
 
-    /// <summary>Every change to the set, from either button, has to retrim the name list - a removed
-    /// value becomes offerable again.</summary>
+    /// <summary>Every change retrims the name list - a removed value becomes offerable again.</summary>
     private void OnPickedItemsChanged(object? sender, EventArgs e)
     {
         RefreshNameListOptions();
@@ -112,18 +115,15 @@ public class IndexedListPicker : VerticalStackPanel
         if (!_picked.Add(_picker.Value))
             return;
 
-        // Clearing the field re-enters through OnPickerValueChanged, which re-reads the add button.
-        // After the retrim above, so the list it looks the cleared value up in is the current one.
+        // Re-enters through OnPickerValueChanged to re-read the add button. After the retrim above, so
+        // the list it looks the cleared value up in is the current one.
         _picker.Value = 0;
     }
 
     private string LabelFor(int value) => _labels.GetValueOrDefault(value, value.ToString());
 
-    /// <summary>
-    /// Drops every already-picked value's name out of the search list, so picking never offers a
-    /// duplicate. Rebuilt from the full catalogue rather than trimmed incrementally: the sound
-    /// catalogue runs to a few thousand entries, but this fires on an add or remove click only.
-    /// </summary>
+    /// <summary>Drops every picked value's name out of the search list. Rebuilt whole rather than
+    /// trimmed: a few thousand entries, but only on an add or remove click.</summary>
     private void RefreshNameListOptions()
     {
         _picker.NameList.Items.Clear();

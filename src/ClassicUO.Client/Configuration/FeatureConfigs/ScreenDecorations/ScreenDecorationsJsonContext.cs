@@ -26,10 +26,8 @@ namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 [JsonSourceGenerationOptions(IncludeFields = true)]
 internal sealed partial class ScreenDecorationsJsonContext : JsonSerializerContext
 {
-    /// <summary>
-    /// The options this config serializes with. Shared with the migration pipeline so migrated
-    /// text round-trips through the same naming policy and converters the typed bind uses.
-    /// </summary>
+    /// <summary>The options this config serializes with. Shared with the migration pipeline, so
+    /// migrated text round-trips through the same naming policy and converters.</summary>
     public static JsonSerializerOptions JsonOptions { get; } = new()
     {
         WriteIndented = true,

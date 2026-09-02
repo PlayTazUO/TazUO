@@ -58,8 +58,7 @@ public class ScreenDecorationsPersistenceTests : IDisposable
 
         ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
 
-        // This build cannot run those settings, so it starts clean - but the next Save() overwrites
-        // the file, so the user's real settings have to survive somewhere.
+        // Starting clean is fine; the next Save() overwrites the file, so the original has to survive.
         loaded.Enabled.Should().BeFalse();
 
         string[] backups = Directory.GetFiles(Path.Combine(_profileDirectory, ConfigBackupStore.DirectoryName));
@@ -72,8 +71,8 @@ public class ScreenDecorationsPersistenceTests : IDisposable
         Directory.CreateDirectory(_profileDirectory);
         string path = Path.Combine(_profileDirectory, ScreenDecorations.FileName);
 
-        // Valid JSON, valid object - but no trigger kind this build knows, so only the typed bind
-        // can reject it. This is the case that used to escape as an unhandled JsonException.
+        // Valid JSON, valid object, but no trigger kind this build knows - only the typed bind can
+        // reject it.
         const string unbindable =
             """{"enabled": true, "overlays": {"rules": [{"trigger": {"parameters": {"kind": "from_a_newer_client"}}}]}}""";
         File.WriteAllText(path, unbindable);

@@ -24,9 +24,8 @@ public enum SerialDisplayFormat
 }
 
 /// <summary>
-/// Builds a set of chosen object serials: type one in (decimal or hex) or target it in the world, and
-/// it drops into a boxed list below - <see cref="IndexedListPicker" />'s shape, with a target button
-/// where a serial's absent name search would be.
+/// Builds a set of chosen object serials: type one in (decimal or hex) or target it in the world.
+/// <see cref="IndexedListPicker" />'s shape, with a target button where its name search would be.
 /// </summary>
 public sealed class SerialListPicker : VerticalStackPanel
 {
@@ -80,7 +79,7 @@ public sealed class SerialListPicker : VerticalStackPanel
             VerticalAlignment = VerticalAlignment.Center,
             Tooltip = TazLang.Get(
                 "seriallistpicker_input_tooltip",
-                "Item serial to watch (e.g., 0xDEADBEEF or 3735928559)."
+                "Item serial to watch (e.g., 0x4000BEEF or 1073790703)."
             )
         };
 
@@ -89,14 +88,14 @@ public sealed class SerialListPicker : VerticalStackPanel
             tooltip: TazLang.Get("seriallistpicker_target_tooltip", "Target an object in the world to add its serial.")
         ) { Width = TARGET_BUTTON_WIDTH };
 
-        // Fixed to the picker row's own width rather than the fill column it may sit in - a box
-        // that spans the whole editor pane would strand its remove glyphs far from short labels.
+        // Fixed to the picker row's width, not the fill column it sits in - a box spanning the whole
+        // editor pane would strand its remove glyphs far from short labels.
         int boxWidth = inputWidth + TARGET_BUTTON_WIDTH + PickedItemsController<uint>.ADD_BUTTON_SIZE + SPACING * 2;
 
         _picked = new PickedItemsController<uint>(boxWidth, LabelFor, OnAddClick, serial => serial != NO_SERIAL);
         _picked.ItemsChanged += (_, _) => ItemsChanged?.Invoke(this, EventArgs.Empty);
 
-        // Subscribed only now: the handler reads _picked, so it must not be reachable before it exists.
+        // Subscribed only now: the handler reads _picked.
         _serialInput.ValueChanged += (_, args) => _picked.SetCandidate(unchecked((uint)args.NewValue));
 
         var pickerRow = new HorizontalStackPanel { Spacing = SPACING };

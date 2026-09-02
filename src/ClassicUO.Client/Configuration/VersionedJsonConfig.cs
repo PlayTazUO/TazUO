@@ -18,15 +18,15 @@ public static class VersionedJsonConfig
 {
     #region Private members
 
-    /// <summary>Holds the pre-migration file, so a migration that turns out to be wrong is not the
-    /// end of the user's settings. Distinct from the corrupt-file backups a failed load takes.</summary>
+    /// <summary>Holds the pre-migration file. Separate reason from the corrupt-file backups a failed
+    /// load takes, so the two do not evict each other.</summary>
     private static readonly ConfigBackupStore _migrationBackups = new("premigration");
 
     #endregion
 
     #region Public methods
 
-    /// <summary>Migrates a versioned JSON config upward, then binds it - writing the migrated form
+    /// <summary>Migrates a versioned JSON config upward, then binds it. The migrated form is written
     /// back only once it has been shown to bind.</summary>
     /// <param name="path">Path to the config file.</param>
     /// <param name="typeInfo">Source-generated type metadata for <typeparamref name="T"/>.</param>
@@ -35,10 +35,9 @@ public static class VersionedJsonConfig
     /// <returns>The bound instance, or null when the file does not exist.</returns>
     /// <exception cref="ConfigMigrationException">
     /// The file could not be brought to the current shape - unreadable, migrated by a newer client, a
-    /// migration threw, or the migrated text does not bind. <see cref="Exception.InnerException"/>
-    /// carries what actually failed (a <see cref="JsonException"/> for the last two). Nothing was
-    /// written; the file on disk is untouched.
+    /// migration threw, or the migrated text does not bind. Nothing was written.
     /// </exception>
+    /// <remarks>A failed write-back is logged, not raised: the caller's instance is already good.</remarks>
     public static T? Load<T>(
         string path,
         JsonTypeInfo<T> typeInfo,
@@ -56,10 +55,7 @@ public static class VersionedJsonConfig
         T? instance = Bind(result, typeInfo);
 
         if (instance != null && result.Changed && (accept == null || accept(instance)))
-        {
-            BackupOriginal(path);
-            AtomicFile.Write(path, result.Text);
-        }
+            WriteBack(path, result.Text);
 
         return instance;
     }
@@ -68,12 +64,9 @@ public static class VersionedJsonConfig
 
     #region Private methods
 
-    /// <summary>
-    /// Binds the migrated text, restating a bind failure as the one exception this load path raises.
-    /// A caller that has to tell "this file is beyond us" from "everything is fine" should not have to
-    /// catch two unrelated types to do it, and the migrated shape failing to bind is a fault of the
-    /// same kind as the migration itself failing.
-    /// </summary>
+    /// <summary>Binds the migrated text, restating any failure as the one exception this load path
+    /// raises - a source-generated context throws several unrelated types over bad metadata, and the
+    /// caller has one question to ask.</summary>
     /// <exception cref="ConfigMigrationException">The migrated text does not bind.</exception>
     private static T? Bind<T>(ConfigMigrationResult result, JsonTypeInfo<T> typeInfo) where T : class
     {
@@ -81,7 +74,7 @@ public static class VersionedJsonConfig
         {
             return JsonSerializer.Deserialize(result.Text, typeInfo);
         }
-        catch (JsonException e)
+        catch (Exception e)
         {
             throw new ConfigMigrationException(
                 $"Config at version {result.ToVersion} does not bind to {typeof(T).Name}: {e.Message}",
@@ -90,13 +83,28 @@ public static class VersionedJsonConfig
         }
     }
 
-    /// <summary>Copies the pre-migration file aside, keeping a bounded history per file.</summary>
-    private static void BackupOriginal(string path)
+    /// <summary>Persists the migrated text, first copying the pre-migration file aside. Failure leaves
+    /// the file unmigrated for the next load to retry.</summary>
+    private static void WriteBack(string path, string text)
     {
-        _migrationBackups.TryBackup(path, out Exception? error);
+        _migrationBackups.TryBackup(path, out Exception? backupError);
 
-        if (error != null)
-            Log.Error($"Failed to back up '{path}' before migration - {error}");
+        if (backupError != null)
+        {
+            // No backup, no write: a wrong migration would have nothing to restore from.
+            Log.Error($"Failed to back up '{path}' before migration, leaving it unmigrated - {backupError}");
+
+            return;
+        }
+
+        try
+        {
+            AtomicFile.Write(path, text);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Failed to write migrated config '{path}' - {e}");
+        }
     }
 
     #endregion

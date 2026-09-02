@@ -9,13 +9,10 @@ using System.Linq;
 namespace ClassicUO.IO.Persistency;
 
 /// <summary>
-///     Keeps a bounded set of copies of a config file, taken before something is about to replace or
-///     discard it. Copies land in a subdirectory beside the file rather than next to it, so a client
-///     sweeping its config directory for stray files cannot mistake one for junk.
+///     Keeps a bounded set of copies of a config file, in a subdirectory beside it.
 ///     <para>
-///         Retention is newest-wins: once <see cref="Retained" /> copies of a given file exist, taking another
-///         drops the oldest. A copy identical to the newest one already held is skipped, so a fault that
-///         repeats every launch cannot rotate the useful history out.
+///         Oldest copy past <see cref="Retained" /> is dropped. A copy identical to the newest held is
+///         skipped, so a fault repeating every launch cannot rotate the useful history out.
 ///     </para>
 /// </summary>
 public sealed class ConfigBackupStore
@@ -38,16 +35,11 @@ public sealed class ConfigBackupStore
 
     private const int DEFAULT_RETAINED = 3;
 
-    /// <summary>
-    ///     Sorts lexicographically in time order, so pruning needs no filesystem timestamps -
-    ///     which a copy, a sync tool or a restore can all rewrite.
-    /// </summary>
+    /// <summary>Sorts lexicographically in time order, so pruning needs no filesystem timestamps -
+    /// which a copy, sync tool or restore can rewrite.</summary>
     private const string TIMESTAMP_FORMAT = "yyyyMMdd-HHmmssfff";
 
-    /// <summary>
-    ///     Ceiling on same-millisecond copies before the name is given up on. Far past anything
-    ///     real - backups are taken on load or on migration, not in a loop.
-    /// </summary>
+    /// <summary>Ceiling on same-millisecond copies before naming gives up.</summary>
     private const int MAX_SEQUENCE = 1000;
 
     private const int SEQUENCE_DIGITS = 3;
@@ -61,8 +53,8 @@ public sealed class ConfigBackupStore
     #region Ctor
 
     /// <param name="reason">
-    ///     Why these copies are taken - "corrupt", "premigration". Becomes part of the file name, and
-    ///     separates retention: one reason's copies never evict another's.
+    ///     Why these copies are taken - "corrupt", "premigration". Part of the file name, and separates
+    ///     retention: one reason's copies never evict another's.
     /// </param>
     /// <param name="retained">How many copies of any one file to keep.</param>
     /// <exception cref="ArgumentException"><paramref name="reason" /> is blank.</exception>
@@ -83,9 +75,8 @@ public sealed class ConfigBackupStore
     #region Public methods
 
     /// <summary>
-    ///     Copies <paramref name="path" /> aside, then prunes the oldest copies past <see cref="Retained" />.
-    ///     Best-effort: a backup failing must not stop the caller from getting on with the load or save it
-    ///     was protecting, so this reports rather than throws.
+    ///     Copies <paramref name="path" /> aside, then prunes past <see cref="Retained" />. Reports rather
+    ///     than throws: a failed backup must not stop the load or save it was protecting.
     /// </summary>
     /// <param name="path">The file to copy. Nothing happens if it does not exist.</param>
     /// <param name="error">The failure, when one stopped a copy being taken.</param>
@@ -135,9 +126,8 @@ public sealed class ConfigBackupStore
         Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, DirectoryName);
 
     /// <summary>
-    ///     Names the next copy. The sequence is always present and zero-padded rather than added only on
-    ///     a clash, so every name a millisecond holds still sorts after the one before it - the ordering
-    ///     <see cref="Prune" /> evicts by.
+    ///     Names the next copy. Sequence is always present and zero-padded, so names within a millisecond
+    ///     still sort in order - what <see cref="Prune" /> evicts by.
     /// </summary>
     /// <exception cref="IOException">A thousand copies already share this millisecond.</exception>
     private string NextBackupPath(string directory, string path, List<string> existing)
@@ -154,9 +144,8 @@ public sealed class ConfigBackupStore
     }
 
     /// <summary>
-    ///     One past the highest sequence this millisecond already holds. Taken from the highest in use
-    ///     rather than the lowest free: pruning frees low sequences, and reusing one would file the new
-    ///     copy ahead of the copies it postdates.
+    ///     One past the highest sequence this millisecond holds. Highest in use rather than lowest free:
+    ///     pruning frees low sequences, and reusing one would sort the new copy ahead of older ones.
     /// </summary>
     private static int NextSequence(List<string> existing, string prefix)
     {
@@ -166,8 +155,8 @@ public sealed class ConfigBackupStore
         {
             string name = Path.GetFileName(file);
 
-            // Length-checked as well as prefix-matched: the directory is user-visible, so a file
-            // named by hand can match the prefix without carrying a sequence to read.
+            // Length-checked too: the directory is user-visible, so a hand-named file can match the
+            // prefix without carrying a sequence.
             if (!name.StartsWith(prefix, StringComparison.Ordinal) || name.Length < prefix.Length + SEQUENCE_DIGITS)
                 continue;
 
@@ -180,8 +169,7 @@ public sealed class ConfigBackupStore
 
     /// <summary>Every copy this store holds of one file, oldest first.</summary>
     private List<string> ExistingBackups(string directory, string path) =>
-        // Ordinal, because the timestamp segment is what is being ordered and a culture-aware compare
-        // would be both slower and free to disagree about digits.
+        // Ordinal: a culture-aware compare is free to disagree about digits.
         Directory.EnumerateFiles(directory, $"{Path.GetFileName(path)}.{_reason}.*{BACKUP_EXTENSION}")
             .OrderBy(file => file, StringComparer.Ordinal)
             .ToList();

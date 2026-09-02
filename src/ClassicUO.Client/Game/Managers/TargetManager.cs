@@ -172,9 +172,8 @@ namespace ClassicUO.Game.Managers
             {
                 _lastAttack = value;
 
-                // Only a real mobile gets a bar. World.Clear() zeroes this on logout and character
-                // switch, which would otherwise open a health bar for serial 0 - a mobile that cannot
-                // exist - on the way out.
+                // Only a real mobile gets a bar: World.Clear() zeroes this on logout and character
+                // switch, which would otherwise open one for serial 0.
                 if (SerialHelper.IsMobile(value) && ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.OpenHealthBarForLastAttack)
                 {
                     if (ProfileManager.CurrentProfile.UseOneHPBarForLastAttack)
@@ -250,12 +249,9 @@ namespace ClassicUO.Game.Managers
         }
 
         /// <summary>
-        /// Whether the cursor is armed for <paramref name="callback"/> specifically.
-        /// <para>
-        /// Only one callback is armed at a time, so a later <see cref="SetTargeting(Action{object}, uint, TargetType)"/>
-        /// silently displaces an earlier one. Anything that cancels on teardown must ask this first:
-        /// cancelling unconditionally would take down whatever armed the cursor after it.
-        /// </para>
+        /// Whether the cursor is armed for <paramref name="callback"/> specifically. Ask before
+        /// cancelling on teardown: a later <see cref="SetTargeting(Action{object}, uint, TargetType)"/>
+        /// displaces an earlier one, and an unconditional cancel would take that one down.
         /// </summary>
         /// <param name="callback">The callback to test for, compared by reference.</param>
         public bool IsCurrentTargetingAction(Action<object> callback) =>

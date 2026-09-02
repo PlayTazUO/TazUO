@@ -54,11 +54,8 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     /// <summary>Width for a raw serial field - "0xFFFFFFFF" is the longest a serial ever prints.</summary>
     private const int SERIAL_INPUT_WIDTH = 120;
 
-    /// <summary>
-    /// Top margin for a rich-row label whose editor leads with a bordered, padded input rather than
-    /// plain text - that input's own border and padding push its text down, and without this the
-    /// label sits visibly higher than what it names. Tuned by eye against the rendered rows.
-    /// </summary>
+    /// <summary>Top margin for a rich-row label whose editor leads with a bordered, padded input: that
+    /// border and padding push the input's text down. Tuned by eye.</summary>
     private const int RICH_ROW_LABEL_TOP_NUDGE = 6;
 
     /// <summary>Gap between rows in <see cref="RichParameterRows" /> - without it, a multi-row editor
@@ -344,8 +341,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
             if (property.PropertyType == typeof(List<int>)
                 && property.GetCustomAttribute<SoundIndexEditorAttribute>() != null)
             {
-                // Top, nudged: the editor stacks the picker row above its picked-sounds list, and
-                // that first row leads with a bordered, padded input - see RICH_ROW_LABEL_TOP_NUDGE.
+                // Top, nudged: the picker row leads with a padded input - see RICH_ROW_LABEL_TOP_NUDGE.
                 AddRichRow(grid, property, MultiSoundEditor(parameters, property), VerticalAlignment.Top, RICH_ROW_LABEL_TOP_NUDGE);
                 continue;
             }
@@ -353,7 +349,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
             if (property.PropertyType == typeof(List<uint>)
                 && property.GetCustomAttribute<SerialListEditorAttribute>() != null)
             {
-                // Top, nudged: same shape as the sound editor above.
+                // Top, nudged: same shape as the sound editor.
                 AddRichRow(grid, property, SerialListEditor(parameters, property), VerticalAlignment.Top, RICH_ROW_LABEL_TOP_NUDGE);
                 continue;
             }
@@ -361,8 +357,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
             if (property.PropertyType == typeof(BuffTriggerMode)
                 && property.GetCustomAttribute<BuffTriggerEditorAttribute>() is { } buffEditor)
             {
-                // Top, nudged: the editor stacks a mode row, a type row, and a conditional duration
-                // row, and the mode row leads with the same kind of padded input.
+                // Top, nudged: the mode row leads with the same kind of padded input.
                 AddRichRow(grid, property, BuffEditor(parameters, property, buffEditor), VerticalAlignment.Top, RICH_ROW_LABEL_TOP_NUDGE);
             }
 

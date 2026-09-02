@@ -26,6 +26,14 @@ public class IndexedComboPicker : HorizontalStackPanel
 
     #endregion
 
+    #region Public constants
+
+    /// <summary>Gap between the number field and the name list. Exposed so a caller sizing something to
+    /// this picker's width can account for it before the picker exists.</summary>
+    public const int SPACING = 6;
+
+    #endregion
+
     #region Public accessors
 
     /// <summary>The chosen value. Setting it moves both inputs.</summary>
@@ -44,8 +52,6 @@ public class IndexedComboPicker : HorizontalStackPanel
     #endregion
 
     #region Private members
-
-    private const int SPACING = 6;
 
     private readonly Dictionary<int, string> _labels = [];
     private readonly Dictionary<string, int> _values = [];

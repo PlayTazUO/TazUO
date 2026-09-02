@@ -10,10 +10,8 @@ using Xunit;
 
 namespace ClassicUO.UnitTests.Configuration;
 
-/// <summary>
-/// Exercises <see cref="MultiValueTriggerSelectorsMigration" />, which carries a rule authored before
-/// <c>sound_played</c>/<c>buff_changed</c> went multi-select forward onto their list-valued fields.
-/// </summary>
+/// <summary>Exercises <see cref="MultiValueTriggerSelectorsMigration" />, which carries a pre-
+/// multi-select rule forward onto the list-valued fields.</summary>
 public class ScreenDecorationsMigrationsTests
 {
     [Fact]

@@ -7,11 +7,9 @@ using Xunit;
 
 namespace ClassicUO.UnitTests.Configuration;
 
-/// <summary>
-/// Migrations operate on the document type and string literals only, never on live model types - a
-/// migration referencing a model class breaks the day a later change renames or removes it. This
-/// guards that the migrations namespace stays frozen against <c>Configuration.FeatureConfigs</c>.
-/// </summary>
+/// <summary>Guards that the migrations namespace stays frozen against
+/// <c>Configuration.FeatureConfigs</c>: a migration naming a live model type breaks when that type is
+/// renamed.</summary>
 public class ScreenDecorationsMigrationsNamespaceTests
 {
     private const string MigrationsNamespace = "ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Migrations";

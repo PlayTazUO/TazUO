@@ -9,10 +9,8 @@ using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
-/// <summary>
-/// The bordered, fixed-width box a multi-value picker shows its picked rows in - one row per item,
-/// and a grey placeholder while there are none.
-/// </summary>
+/// <summary>The bordered, fixed-width box a multi-value picker shows its picked rows in, with a grey
+/// placeholder while there are none.</summary>
 public sealed class PickedItemsBox : VerticalStackPanel
 {
     #region Private members
@@ -66,8 +64,7 @@ public sealed class PickedItemsBox : VerticalStackPanel
 
     #region Private methods
 
-    /// <summary>The placeholder is never removed, only hidden - counting past it is what tells an
-    /// otherwise-empty box from one with a single real row.</summary>
+    /// <summary>The placeholder is hidden, never removed, so it stays counted in <c>Widgets</c>.</summary>
     private void RefreshPlaceholder() => _placeholder.Visible = Widgets.Count == 1;
 
     #endregion

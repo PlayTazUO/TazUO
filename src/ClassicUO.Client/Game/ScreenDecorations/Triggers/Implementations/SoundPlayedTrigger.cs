@@ -39,8 +39,8 @@ public sealed class SoundPlayedTrigger : IEventTrigger
     private readonly SoundPlayedParameters _parameters;
 
     /// <summary>Membership test for <see cref="OnSoundPlayed" />'s reject, which runs on every sound
-    /// the client plays. <see cref="Evaluate" /> is static and scans the list instead - it only runs
-    /// once this has already matched.</summary>
+    /// the client plays. <see cref="Evaluate" /> scans the list instead: it runs only after a
+    /// match.</summary>
     private readonly HashSet<int> _soundIndexes;
 
     #endregion

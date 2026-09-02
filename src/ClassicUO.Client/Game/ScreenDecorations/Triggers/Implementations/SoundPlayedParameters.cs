@@ -11,8 +11,7 @@ using Myra.Graphics2D.UI.Properties;
 namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 
 /// <summary>
-/// Fires on one of several sounds playing near the player: which sounds, how near they must be, and
-/// how nearness turns into strength are all decisions for whoever wires the rule.
+/// Fires on one of several sounds playing near the player.
 /// <para>
 /// Lives beside the trigger that reads it rather than with the config types, because nothing else can
 /// interpret it: the fields mean whatever <see cref="SoundPlayedTrigger" /> does with them.
@@ -40,9 +39,8 @@ public sealed class SoundPlayedParameters : TriggerParameters
     /// <summary>
     /// The sounds to watch for, by index in the client's sound data. Any one fires the rule.
     /// <para>
-    /// Numbers rather than an enum: what an index means depends on the shard's data files, so no set
-    /// of names hardcoded here would stay right. The editor reads names out of the loaded data and
-    /// takes a raw number for anything it has none for.
+    /// Numbers rather than an enum: what an index means depends on the shard's data files. The editor
+    /// reads names out of the loaded data and takes a raw number for anything it has none for.
     /// </para>
     /// </summary>
     [Browsable(false)]

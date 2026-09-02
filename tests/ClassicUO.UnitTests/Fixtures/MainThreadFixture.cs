@@ -17,16 +17,22 @@ public class MainThreadCollection : ICollectionFixture<MainThreadFixture>
 
 /// <summary>
 /// Stands up the one thread <see cref="MainThreadQueue" /> treats as the main thread and pumps its
-/// queue, for code that refuses to run its real work anywhere else.
+/// queue.
 /// <para>
-/// Any test touching such code has to join <see cref="MainThreadCollection" />, and has to run the
-/// part that cares through <see cref="Invoke" /> - xUnit's own thread is never the main thread here,
-/// so work started from it is deferred onto this one and completes whenever it completes.
+/// A test touching such code joins <see cref="MainThreadCollection" /> and runs the part that cares
+/// through <see cref="Invoke" />: xUnit's own thread is never the main thread here, so work started
+/// from it is deferred onto this one.
 /// </para>
 /// </summary>
 public class MainThreadFixture : IDisposable
 {
     private const int INVOKE_TIMEOUT_SECONDS = 10;
+
+    /// <summary>Wait between empty passes, so the pump does not spin on a core for the whole run.</summary>
+    private const int IDLE_POLL_MILLISECONDS = 1;
+
+    /// <summary>Bounds shutdown, so a pump that will not stop fails the run rather than hanging it.</summary>
+    private const int SHUTDOWN_TIMEOUT_SECONDS = 5;
 
     private readonly Thread _mt;
     private readonly ManualResetEventSlim _resetEvent = new();
@@ -35,14 +41,12 @@ public class MainThreadFixture : IDisposable
 
     public MainThreadFixture()
     {
-        _mt = new Thread(Run) { Name = "Test Main Thread" };
+        // Background, so an undisposed fixture cannot keep the test process alive.
+        _mt = new Thread(Run) { Name = "Test Main Thread", IsBackground = true };
         _mt.Start();
     }
 
-    /// <summary>
-    /// Runs <paramref name="action" /> on the main thread and waits for it to finish, so a test can
-    /// assert on what it did rather than on whether it has got round to it yet.
-    /// </summary>
+    /// <summary>Runs <paramref name="action" /> on the main thread and waits for it to finish.</summary>
     /// <param name="action">The work to run.</param>
     /// <exception cref="TimeoutException">The main thread did not run it in time.</exception>
     public void Invoke(Action action)
@@ -71,8 +75,7 @@ public class MainThreadFixture : IDisposable
         if (!completed.Wait(TimeSpan.FromSeconds(INVOKE_TIMEOUT_SECONDS)))
             throw new TimeoutException($"Main thread did not run the action within {INVOKE_TIMEOUT_SECONDS}s.");
 
-        // Rethrown with its original stack, so a failed assertion inside the action reads as itself
-        // rather than as something this fixture did.
+        // Original stack, so a failed assertion inside the action reads as itself.
         capturedFailure?.Throw();
     }
 
@@ -81,7 +84,13 @@ public class MainThreadFixture : IDisposable
         MainThreadQueue.Load();
 
         while (!_resetEvent.IsSet)
+        {
             MainThreadQueue.ProcessQueue();
+            _resetEvent.Wait(IDLE_POLL_MILLISECONDS);
+        }
+
+        // One last pass: work enqueued during teardown still has a caller waiting on it.
+        MainThreadQueue.ProcessQueue();
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]
@@ -92,7 +101,10 @@ public class MainThreadFixture : IDisposable
 
         _disposed = true;
         _resetEvent.Set();
-        _mt.Join();
+
+        if (!_mt.Join(TimeSpan.FromSeconds(SHUTDOWN_TIMEOUT_SECONDS)))
+            throw new TimeoutException($"Main thread did not stop within {SHUTDOWN_TIMEOUT_SECONDS}s.");
+
         GC.SuppressFinalize(this);
     }
 }

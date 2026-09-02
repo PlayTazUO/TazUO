@@ -6,11 +6,8 @@ namespace ClassicUO.UnitTests.Game.UI;
 
 public class ControlsTest
 {
-    /// <summary>
-    /// <see cref="Control.Dispose" /> only does its work on the main thread and defers otherwise, so
-    /// these run through the fixture rather than on xUnit's thread - off it, the assert would race the
-    /// disposal it is checking for.
-    /// </summary>
+    /// <summary><see cref="Control.Dispose" /> only does its work on the main thread and defers
+    /// otherwise, so these run through the fixture - off it, the assert races the disposal.</summary>
     [Collection(MainThreadCollection.Name)]
     public class Dispose
     {

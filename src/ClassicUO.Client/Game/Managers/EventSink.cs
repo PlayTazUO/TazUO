@@ -189,9 +189,7 @@ public class EventSink
 
     internal static void InvokeOnOpenContainer(Item sender, uint serial) => OnOpenContainer?.Invoke(sender, serial);
 
-    /// <summary>
-    /// Invoked when the client sends a double-click (use) request for an object's serial.
-    /// </summary>
+    /// <summary>Invoked when the client sends a double-click (use) request for an object's serial.</summary>
     internal static event EventHandler<uint> ObjectUsed;
 
     internal static void InvokeObjectUsed(uint serial) => ObjectUsed?.Invoke(null, serial);

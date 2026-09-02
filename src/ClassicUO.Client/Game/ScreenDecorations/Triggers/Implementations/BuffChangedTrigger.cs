@@ -2,18 +2,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 
 /// <summary>
-/// Watches one buff type, answering to whichever moment of its life the rule was wired for.
+/// Watches the configured buff types, answering to whichever moment of their life the rule was wired for.
 /// <para>
-/// <see cref="BuffTriggerMode.Added" /> and <see cref="BuffTriggerMode.Removed" /> are momentary, like
-/// <see cref="SoundPlayedTrigger" /> or <see cref="ChatMessageTrigger" />: the event is an instant, so
-/// the parameters' duration decides how long the effect runs. <see cref="BuffTriggerMode.Active" />
-/// brackets the occurrence with the buff's own add and remove instead, the same real lifetime a
-/// stateful trigger reports through <see cref="Ended" />.
+/// <see cref="BuffTriggerMode.Added" /> and <see cref="BuffTriggerMode.Removed" /> are momentary, so
+/// the parameters' duration decides how long the effect runs and any watched buff fires it.
+/// <see cref="BuffTriggerMode.Active" /> brackets it with the buff's own add and remove instead,
+/// reported through <see cref="Ended" />, and watches a single buff - see <see cref="_buffTypes" />.
 /// </para>
 /// </summary>
 public sealed class BuffChangedTrigger : IEventTrigger
@@ -32,8 +32,14 @@ public sealed class BuffChangedTrigger : IEventTrigger
 
     private readonly BuffChangedParameters _parameters;
 
-    /// <summary>Membership test for the buff handlers, which run on every buff the player gains or
-    /// loses.</summary>
+    /// <summary>
+    /// Membership test for the buff handlers, which run on every buff the player gains or loses.
+    /// <para>
+    /// Holds one type under <see cref="BuffTriggerMode.Active" />, where a second would end the effect
+    /// while the first was still up. The editor offers a single picker; a hand-edited config keeps the
+    /// first of several.
+    /// </para>
+    /// </summary>
     private readonly HashSet<short> _buffTypes;
 
     #endregion
@@ -47,7 +53,10 @@ public sealed class BuffChangedTrigger : IEventTrigger
         ArgumentNullException.ThrowIfNull(parameters);
 
         _parameters = parameters;
-        _buffTypes = [..parameters.BuffTypes];
+
+        _buffTypes = parameters.Mode == BuffTriggerMode.Active
+            ? [..parameters.BuffTypes.Take(1)]
+            : [..parameters.BuffTypes];
     }
 
     #endregion
@@ -83,10 +92,8 @@ public sealed class BuffChangedTrigger : IEventTrigger
         switch (_parameters.Mode)
         {
             case BuffTriggerMode.Added:
-                // PlayerMobile.AddBuff() raises this on every packet for the buff, including a shard
-                // resending one already active (e.g. refreshing its timer), not just the true first
-                // application - accepted for now, since telling them apart needs plumbing the packet
-                // handler's own alreadyExists check through to here.
+                // Raised on every packet for the buff, including a shard refreshing an active one.
+                // Telling those apart needs the packet handler's alreadyExists check plumbed here.
                 Fired?.Invoke(this, new TriggerFiredArgs { Signal = new TriggerSignal { Duration = _parameters.Duration } });
                 break;
 

@@ -3,6 +3,7 @@ using System.Reflection;
 using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.UnitTests.Fixtures;
 using FluentAssertions;
 using Xunit;
 
@@ -10,13 +11,10 @@ namespace ClassicUO.UnitTests.Game.Managers
 {
     /// <summary>
     /// Guards the serial check on <see cref="ClassicUO.Game.Managers.TargetManager.LastAttack" />.
-    /// <para>
-    /// Without it, <see cref="World.Clear" /> - which zeroes the last attack on logout and character
-    /// switch - opened a health bar for serial 0, a mobile that cannot exist. That also dragged the
-    /// process-wide <c>UIManager</c> gump registry into any test that cleared a world, and its
-    /// dictionary is not thread-safe, so the suite corrupted it whenever two such tests overlapped.
-    /// </para>
+    /// Without it, <see cref="World.Clear" /> opened a health bar for serial 0 - and dragged the
+    /// process-wide, non-thread-safe <c>UIManager</c> gump registry into every test clearing a world.
     /// </summary>
+    [Collection(CurrentProfileCollection.Name)]
     public class LastAttackHealthBarTest : IDisposable
     {
         private readonly Profile _previousProfile = ProfileManager.CurrentProfile;
@@ -58,8 +56,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>The setter is private, so the profile is planted the same way
-        /// <see cref="ToolTipOverrideTest" /> plants one.</summary>
+        /// <summary>The setter is private, so the profile is planted by reflection.</summary>
         private static void SetCurrentProfile(Profile profile)
         {
             PropertyInfo prop = typeof(ProfileManager).GetProperty(

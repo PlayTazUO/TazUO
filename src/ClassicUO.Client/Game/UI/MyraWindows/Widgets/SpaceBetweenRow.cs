@@ -5,9 +5,8 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 /// <summary>
-/// A row pinning its trailing widget to the right edge whatever the leading one's width - a label
-/// beside a remove glyph. Stretches to its parent for the width to push against, so it needs a
-/// parent that gives it one.
+/// A row pinning its trailing widget to the right edge whatever the leading one's width. Stretches to
+/// its parent for the width to push against, so it needs a parent that gives it one.
 /// </summary>
 public class SpaceBetweenRow : HorizontalStackPanel
 {

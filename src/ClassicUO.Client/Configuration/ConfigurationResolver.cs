@@ -19,14 +19,13 @@ namespace ClassicUO.Configuration
         /// </summary>
         public static readonly ConcurrentQueue<CorruptConfigFile> CorruptFiles = new();
 
-        /// <summary>Holds the file as it was found, so a corrupt config the client then overwrites with
-        /// defaults is still recoverable by hand.</summary>
+        /// <summary>Holds the file as found, so a corrupt config the client overwrites with defaults is
+        /// still recoverable by hand.</summary>
         private static readonly ConfigBackupStore _corruptBackups = new("corrupt");
 
         /// <summary>
         /// Copies a config file that could not be loaded aside and records it for the in-world notice.
-        /// The one way a failed load should retire a file: every caller that falls back to defaults is
-        /// about to overwrite it, so a copy has to be taken first.
+        /// Call before falling back to defaults, which overwrite the file.
         /// </summary>
         /// <param name="file">The file that could not be loaded.</param>
         /// <returns>Where the copy was written, or null if none could be taken.</returns>

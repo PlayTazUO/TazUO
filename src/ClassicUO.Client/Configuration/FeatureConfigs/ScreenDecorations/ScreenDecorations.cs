@@ -17,8 +17,8 @@ public class ScreenDecorations : ObservableSettings
 {
     public const string FileName = "screen_decorations.json";
 
-    /// <summary>Which shape this file is in. Defaults to latest, so a config built in memory needs no
-    /// migration; a file's real version is read off its raw JSON before this ever binds.</summary>
+    /// <summary>Which shape this file is in. Defaults to latest for a config built in memory; a file's
+    /// real version is read off its raw JSON before this binds.</summary>
     public int SchemaVersion { get; set; } = ScreenDecorationsMigrations.LatestVersion;
 
     /// <summary>
@@ -70,9 +70,8 @@ public class ScreenDecorations : ObservableSettings
         }
         catch (ConfigMigrationException e)
         {
-            // Covers an unreadable file, one a newer client wrote, and one whose migrated shape will
-            // not bind. All three end the same way: this build cannot run these settings, so it starts
-            // clean. Backed up first, because the next Save() overwrites what is on disk.
+            // Unreadable, written by a newer client, or migrating to a shape that will not bind - all
+            // start clean. Backed up first, because the next Save() overwrites what is on disk.
             Log.Error($"Failed to load configuration file '{file}' - {e}");
             ConfigurationResolver.BackupAndReportCorruptFile(file);
             _current = new ScreenDecorations();

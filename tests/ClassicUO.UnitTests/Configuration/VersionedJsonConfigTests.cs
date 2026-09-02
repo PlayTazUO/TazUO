@@ -45,7 +45,7 @@ public class VersionedJsonConfigTests : IDisposable
             () => VersionedJsonConfig.Load(path, ThrowingJsonContext.Default.Unbindable, pipeline)
         );
 
-        // The bind failure is restated, not swallowed - a caller has to be able to see what blew up.
+        // The bind failure is restated, not swallowed.
         Assert.IsType<JsonException>(thrown.InnerException);
         Assert.Contains(nameof(Unbindable), thrown.Message);
     }

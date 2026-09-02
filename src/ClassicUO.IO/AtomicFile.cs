@@ -19,10 +19,9 @@ public static class AtomicFile
     /// <param name="path">File to replace.</param>
     /// <param name="contents">Text to write.</param>
     /// <param name="flushToDisk">
-    /// Forces the new content onto the device before the rename publishes it. Without this a power
-    /// loss can leave the rename committed while the data is still only in the page cache - the file
-    /// then reads as zeroes, which is worse than either version. Costs a device flush per write, so
-    /// a hot caller writing recreatable data can turn it off.
+    /// Forces the content onto the device before the rename publishes it. Without it, a power loss can
+    /// commit the rename with the data still in the page cache, and the file reads as zeroes. Costs a
+    /// device flush per write, so a hot caller writing recreatable data can turn it off.
     /// </param>
     /// <exception cref="IOException">The write or the rename failed.</exception>
     /// <exception cref="UnauthorizedAccessException">The path is not writable.</exception>
@@ -60,8 +59,8 @@ public static class AtomicFile
             return;
         }
 
-        // Written through a stream rather than File.WriteAllText so the handle is still open to flush
-        // through. Encoding matches WriteAllText's default: UTF-8, no BOM.
+        // A stream rather than File.WriteAllText, to keep the handle open to flush through. Encoding
+        // matches WriteAllText's default: UTF-8, no BOM.
         using var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None);
         using (var writer = new StreamWriter(stream, new UTF8Encoding(false), leaveOpen: true))
         {
