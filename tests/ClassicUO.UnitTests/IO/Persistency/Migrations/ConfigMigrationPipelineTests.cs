@@ -76,10 +76,54 @@ public class ConfigMigrationPipelineTests
         Assert.Equal("added", (string)reparsed["migrated"]!);
     }
 
+    [Fact]
+    public void Migrate_Preprocess_Repair_Is_Parsed_And_Reported_As_Changed()
+    {
+        var pipeline = new ConfigMigrationPipeline<JsonObject>(
+            new ConfigMigrationSequence<JsonObject>([new AddPropertyMigration(1)]),
+            new RepairingJsonFormat()
+        );
+
+        // Already at the latest version, so only the repair can mark it changed.
+        ConfigMigrationResult result = pipeline.Migrate("""{"schema_version":1,"foo":"REPAIR_ME"}""");
+
+        Assert.True(result.Changed);
+        Assert.Equal(1, result.FromVersion);
+        Assert.Equal(1, result.ToVersion);
+        Assert.Equal("""{"schema_version":1,"foo":"repaired"}""", result.Text);
+    }
+
+    [Fact]
+    public void Migrate_Preprocess_That_Changes_Nothing_Leaves_Text_Unchanged()
+    {
+        var pipeline = new ConfigMigrationPipeline<JsonObject>(
+            new ConfigMigrationSequence<JsonObject>([new AddPropertyMigration(1)]),
+            new RepairingJsonFormat()
+        );
+
+        const string text = """{"schema_version":1,"foo":"bar"}""";
+
+        ConfigMigrationResult result = pipeline.Migrate(text);
+
+        Assert.False(result.Changed);
+        Assert.Same(text, result.Text);
+    }
+
     private sealed class AddPropertyMigration(int version) : IConfigMigration<JsonObject>
     {
         public int Version { get; } = version;
 
         public void Up(JsonObject document) => document["migrated"] = "added";
+    }
+
+    /// <summary>Stands in for a format repairing what a legacy writer left behind.</summary>
+    private sealed class RepairingJsonFormat() : JsonMigrationFormat(Options)
+    {
+        public override (string Text, bool Changed) Preprocess(string text)
+        {
+            string repaired = text.Replace("REPAIR_ME", "repaired");
+
+            return (repaired, repaired != text);
+        }
     }
 }

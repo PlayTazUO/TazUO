@@ -48,9 +48,7 @@ public static class VersionedJsonConfig
         if (!File.Exists(path))
             return null;
 
-        string text = ConfigurationResolver.NormalizeText(File.ReadAllText(path));
-
-        ConfigMigrationResult result = pipeline.Migrate(text);
+        ConfigMigrationResult result = pipeline.Migrate(File.ReadAllText(path));
 
         T? instance = Bind(result, typeInfo);
 

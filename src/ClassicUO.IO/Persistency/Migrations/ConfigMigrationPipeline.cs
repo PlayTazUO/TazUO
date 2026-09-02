@@ -1,7 +1,9 @@
 namespace ClassicUO.IO.Persistency.Migrations;
 
-/// <summary>Combines a <see cref="ConfigMigrationSequence{TDocument}"/> with an
-/// <see cref="IMigrationFormat{TDocument}"/> to migrate a config's persisted text.</summary>
+/// <summary>
+///     Combines a <see cref="ConfigMigrationSequence{TDocument}" /> with an
+///     <see cref="IMigrationFormat{TDocument}" /> to migrate a config's persisted text.
+/// </summary>
 /// <typeparam name="TDocument">The mutable document form.</typeparam>
 public sealed class ConfigMigrationPipeline<TDocument>
 {
@@ -16,17 +18,28 @@ public sealed class ConfigMigrationPipeline<TDocument>
         _format = format;
     }
 
-    /// <summary>Migrates persisted text upward. Pure: reads and writes nothing outside itself.</summary>
+    /// <summary>
+    ///     Migrates persisted text upward, after letting the format repair it. Pure: reads and
+    ///     writes nothing outside itself.
+    /// </summary>
+    /// <returns>
+    ///     A result whose <see cref="ConfigMigrationResult.Changed" /> also covers a
+    ///     preprocess-only repair, so text already at the latest version still gets its fix persisted.
+    /// </returns>
     /// <exception cref="ConfigMigrationException">
-    /// Parsing failed, a migration failed, or the document was written by a newer client.
+    ///     Parsing failed, a migration failed, or the document was written by a newer client.
     /// </exception>
     public ConfigMigrationResult Migrate(string text)
     {
-        TDocument document = _format.Parse(text);
+        // Preprocess - usually a no-op but can be used to handle stuff like repairing broken escapes
+        (string processedText, bool preprocessModified) = _format.Preprocess(text);
+
+        // Parse into objects
+        TDocument document = _format.Parse(processedText);
         int fromVersion = _format.ReadVersion(document);
 
         if (fromVersion == LatestVersion)
-            return new ConfigMigrationResult(false, text, fromVersion, fromVersion);
+            return new ConfigMigrationResult(preprocessModified, processedText, fromVersion, fromVersion);
 
         int toVersion = _sequence.Apply(document, fromVersion);
 
