@@ -74,6 +74,9 @@ internal static class CrashSuggestedFix
             if (TryGetPluginPacketCrashFix(exception, out string pluginPacketFix))
                 return pluginPacketFix;
 
+            if (TryGetPluginBackgroundThreadCrashFix(exception, out string pluginThreadFix))
+                return pluginThreadFix;
+
             if (TryGetMapLoaderCrashFix(exception, out string mapFix))
                 return mapFix;
 
@@ -832,6 +835,161 @@ internal static class CrashSuggestedFix
 
         fix = sb.ToString();
         return true;
+    }
+
+    /// <summary>
+    ///     Recognizes a crash that happened on a background thread spawned via
+    ///     <c>new Thread(...).Start()</c> by code outside TazUO - typically a third-party
+    ///     plugin/assistant running its own UI or logic on a dedicated thread. When such a
+    ///     thread throws, the stack bottoms out in the runtime's thread-start callback rather
+    ///     than TazUO's game loop, and the frames above it come from the plugin, not TazUO.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetPluginBackgroundThreadCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        // ToString() on the top-level exception includes the stack traces of any inner
+        // (and aggregated) exceptions, so we can inspect the whole chain in one string.
+        string details = e.ToString();
+
+        if (string.IsNullOrEmpty(details))
+            return false;
+
+        int threadStartFrameIndex = FindThreadStartFrameIndex(details);
+
+        // Only a background-thread crash when the stack bottoms out in the runtime's
+        // thread-start callback (a plain `new Thread(...).Start()`).
+        if (threadStartFrameIndex < 0)
+            return false;
+
+        // TazUO also spawns threads of its own (scripts, the map web server, voice
+        // recognition), so only blame a plugin when non-TazUO code ran on that thread.
+        if (!HasExternalFrameAbove(details, threadStartFrameIndex))
+            return false;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("This crash happened on a background thread that was started by code outside TazUO.");
+        sb.AppendLine(
+            "The bottom of the stack trace shows a 'Thread.Start' call from a third-party plugin or assistant (for example a UO copilot or helper tool), not from TazUO's own game code, so the crash may be caused by that plugin.");
+        sb.AppendLine();
+        sb.AppendLine("Suggested fixes:");
+        sb.AppendLine("1. Update the plugin/assistant to its latest version, or temporarily disable it to confirm it is the cause.");
+        sb.AppendLine(
+            "2. If the error mentions a UI window or that a thread 'cannot access this object because a different thread owns it', the plugin is using its own window from the wrong thread - that is a plugin bug, not a TazUO bug.");
+        sb.AppendLine("3. If it keeps happening, report the crash log to the plugin's author.");
+
+        fix = sb.ToString();
+        return true;
+    }
+
+    /// <summary>
+    ///     Namespace prefixes of TazUO's own code and the libraries it ships with. Stack
+    ///     frames starting with any of these are ignored when deciding whether a background
+    ///     thread belonged to a third-party plugin.
+    /// </summary>
+    private static readonly string[] _tazUoFramePrefixes =
+    {
+        "ClassicUO.",
+        "System.",
+        "Microsoft.",          // BCL plus the bundled FNA framework (Microsoft.Xna.*)
+        "IronPython.",
+        "Microsoft.Scripting.",
+        "FontStashSharp.",
+        "MP3Sharp.",
+        "Myra.",
+        "StbTrueTypeSharp."
+    };
+
+    /// <summary>
+    ///     Returns the line index of the first stack frame that spawned the crashing thread
+    ///     (<c>System.Threading.Thread.StartHelper.Callback</c> /
+    ///     <c>System.Threading.ExecutionContext.RunInternal</c>), or -1 when the stack does
+    ///     not start from such a thread.
+    /// </summary>
+    /// <param name="stack">The <see cref="Exception.ToString" /> dump to inspect.</param>
+    private static int FindThreadStartFrameIndex(string stack)
+    {
+        StringReader reader = new(stack);
+        int lineIndex = 0;
+
+        while (reader.ReadLine() is { } line)
+        {
+            string method = ExtractFrameMethod(line);
+
+            if (method != null &&
+                (method.Contains("System.Threading.Thread.StartHelper.Callback") ||
+                 method.Contains("System.Threading.ExecutionContext.RunInternal")))
+                return lineIndex;
+
+            lineIndex++;
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    ///     Whether any stack frame above <paramref name="endFrameIndex" /> belongs to an
+    ///     assembly that is neither TazUO's nor one of its bundled libraries - i.e. code from
+    ///     a third-party plugin ran on that thread.
+    /// </summary>
+    /// <param name="stack">The <see cref="Exception.ToString" /> dump to inspect.</param>
+    /// <param name="endFrameIndex">Line index of the thread-start frame; frames above it are examined.</param>
+    private static bool HasExternalFrameAbove(string stack, int endFrameIndex)
+    {
+        StringReader reader = new(stack);
+        int lineIndex = 0;
+
+        while (lineIndex < endFrameIndex && reader.ReadLine() is { } line)
+        {
+            string method = ExtractFrameMethod(line);
+
+            if (method != null && !IsTazUoFrame(method))
+                return true;
+
+            lineIndex++;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Pulls the fully-qualified method name out of a stack frame line
+    ///     (<c>at Namespace.Type.Method(...) in file:line</c>), or null for non-frame lines
+    ///     (the exception message, blank lines, "End of stack trace" markers).
+    /// </summary>
+    /// <param name="line">A line from <see cref="Exception.ToString" />.</param>
+    private static string ExtractFrameMethod(string line)
+    {
+        string trimmed = line.TrimStart();
+
+        if (!trimmed.StartsWith("at ", StringComparison.Ordinal))
+            return null;
+
+        // Method signatures carry the parameter list and, for JIT-visible methods, file/line
+        // info - everything from the opening '(' onwards is irrelevant to the namespace check.
+        int paren = trimmed.IndexOf('(');
+        string method = paren < 0 ? trimmed.Substring(3) : trimmed.Substring(3, paren - 3);
+
+        return method.Trim();
+    }
+
+    /// <summary>
+    ///     Whether a fully-qualified method name belongs to TazUO or one of its bundled
+    ///     libraries (see <see cref="_tazUoFramePrefixes" />).
+    /// </summary>
+    /// <param name="method">Fully-qualified method name from a stack frame.</param>
+    private static bool IsTazUoFrame(string method)
+    {
+        foreach (string prefix in _tazUoFramePrefixes)
+        {
+            if (method.StartsWith(prefix, StringComparison.Ordinal))
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>

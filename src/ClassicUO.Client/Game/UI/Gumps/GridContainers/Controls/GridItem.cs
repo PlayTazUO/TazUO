@@ -1049,7 +1049,7 @@ public class GridItem : Control
         int itemCellHeight = _isListLayout ? GridContainer.LIST_ICON_SIZE : Height;
         Rectangle itemCellBounds = new(x, y, itemCellWidth, itemCellHeight);
 
-        if (_item.MatchesHighlightData)
+        if (_item.MatchesHighlightData && !_gridContainer.HighlightsDisabledForContainer)
         {
             Texture2D borderTexture = SolidColorTextureCache.GetTexture(_item.HighlightColor);
             var borderHueVec = new Vector3(1, 0, 1);

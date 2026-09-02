@@ -132,20 +132,19 @@ public static class FirebasePollsManager
 
     /// <summary>
     /// Removes saved "already voted" poll ids that are no longer present in <paramref name="polls"/> so the
-    /// per-profile <see cref="Profile.VotedPolls"/> list cannot grow indefinitely. Only call this with a
-    /// successfully fetched set — passing a stale or failed result would wrongly forget real votes. The
-    /// write is marshalled to the main thread to match the rest of the profile-mutation code.
+    /// machine-wide <see cref="GlobalSettingsSave.VotedPolls"/> list cannot grow indefinitely. Only call this
+    /// with a successfully fetched set — passing a stale or failed result would wrongly forget real votes.
     /// </summary>
     private static void PruneVotedPolls(Dictionary<string, Poll> polls)
     {
         if (polls == null)
             return;
 
-        Profile profile = ProfileManager.CurrentProfile;
-        if (profile == null)
+        GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
+        if (globalSettings == null)
             return;
 
-        string[] voted = (profile.VotedPolls ?? string.Empty)
+        string[] voted = (globalSettings.VotedPolls ?? string.Empty)
             .Split(';', StringSplitOptions.RemoveEmptyEntries);
 
         if (voted.Length == 0)
@@ -166,9 +165,7 @@ public static class FirebasePollsManager
 
         MainThreadQueue.InvokeOnMainThread(() =>
         {
-            // Guard against the active profile changing between fetch and write.
-            if (ReferenceEquals(ProfileManager.CurrentProfile, profile))
-                profile.VotedPolls = updated;
+            globalSettings.VotedPolls = updated;
         });
     }
 
@@ -184,7 +181,7 @@ public static class FirebasePollsManager
         if (polls == null || polls.Count == 0)
             return null;
 
-        int unvoted = await CountUnvotedAsync(polls);
+        int unvoted = CountUnvoted(polls);
 
         if (unvoted <= 0)
             return null;
@@ -199,9 +196,9 @@ public static class FirebasePollsManager
     }
 
     /// <summary>Counts how many of the given polls the user has not yet voted on.</summary>
-    private static async Task<int> CountUnvotedAsync(Dictionary<string, Poll> polls)
+    private static int CountUnvoted(Dictionary<string, Poll> polls)
     {
-        HashSet<string> voted = await GetVotedPollIdsAsync();
+        HashSet<string> voted = GetVotedPollIds();
 
         int count = 0;
         foreach (string pollId in polls.Keys)
@@ -214,27 +211,14 @@ public static class FirebasePollsManager
     }
 
     /// <summary>
-    /// Returns the set of poll ids the user has already voted on, read straight from the settings store.
-    ///
-    /// This deliberately does not use the in-memory <see cref="Profile.VotedPolls"/> property: that value is
-    /// populated by an asynchronous, fire-and-forget load of the Global SQL settings kicked off when the
-    /// profile loads (see <see cref="Profile.AfterLoad"/>). Because the profile is loaded as the player is
-    /// created — essentially at the same moment the poll notification is computed on entering the world — that
-    /// load may not have completed yet, leaving <see cref="Profile.VotedPolls"/> empty and making already-voted
-    /// polls look unvoted. Reading the persisted value directly avoids that race. Falls back to the in-memory
-    /// property only if the settings store is unavailable.
+    /// Returns the set of poll ids the user has already voted on, read straight from the machine-wide
+    /// <see cref="GlobalSettingsSave.VotedPolls"/>.
     /// </summary>
-    private static async Task<HashSet<string>> GetVotedPollIdsAsync()
+    private static HashSet<string> GetVotedPollIds()
     {
-        string voted;
+        string voted = ProfileManager.GlobalSettings?.VotedPolls ?? string.Empty;
 
-        if (Client.Settings != null)
-            voted = await Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.VOTED_POLLS, string.Empty);
-        else
-            voted = ProfileManager.CurrentProfile?.VotedPolls ?? string.Empty;
-
-        return new HashSet<string>((voted ?? string.Empty)
-            .Split(';', StringSplitOptions.RemoveEmptyEntries));
+        return new HashSet<string>(voted.Split(';', StringSplitOptions.RemoveEmptyEntries));
     }
 
     /// <summary>

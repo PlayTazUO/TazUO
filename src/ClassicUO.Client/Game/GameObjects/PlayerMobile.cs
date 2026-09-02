@@ -377,6 +377,11 @@ namespace ClassicUO.Game.GameObjects
             {
                 if (!item.IsDestroyed && item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange && !AutoOpenedCorpses.Contains(item.Serial))
                 {
+                    // Don't reopen corpses the player has already opened when the per-server option is on.
+                    if (ProfileManager.ServerSettings is { DoNotReopenCorpses: true }
+                        && CorpseManager.IsCorpseOpened(item.Serial))
+                        continue;
+
                     // Check if this is the player's own corpse
                     bool isOwnCorpse = !string.IsNullOrEmpty(item.Name) &&
                                        !string.IsNullOrEmpty(Name) &&
@@ -464,7 +469,7 @@ namespace ClassicUO.Game.GameObjects
             // beside the path still stops the diagonal.
             if (startX != x && startY != y)
             {
-                return TileHasDoor(startX, y, z) || TileHasDoor(x, startY, z);
+                return IsFlankingDoorBlocked(startX, y, z) || IsFlankingDoorBlocked(x, startY, z);
             }
 
             return false;
@@ -479,7 +484,42 @@ namespace ClassicUO.Game.GameObjects
                 return false;
             }
 
-            // Walk the tile's linked list instead of scanning every item in the world.
+            return FindDoorOnTile(x, y, z, out _);
+        }
+
+        // Auto-open only ever touches the tile the player is facing, so a door beside a
+        // diagonal path is never handled there. An open door still blocks the corner the
+        // server checks, so when auto-close is on, shut it right before the step so the walk
+        // can go through; otherwise fall back to the block-walking option.
+        private bool IsFlankingDoorBlocked(int x, int y, sbyte z)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+
+            if (profile.AutoOpenDoors && !IsDead)
+            {
+                if (FindDoorOnTile(x, y, z, out Item door))
+                {
+                    if (ProfileManager.GlobalSettings.AutoCloseDoors && DoorData.IsOpenDoor(door.Graphic))
+                    {
+                        AsyncNetClient.Socket.Send_DoubleClick(door.Serial);
+                        return false;
+                    }
+
+                    return profile.BlockDoorMovement;
+                }
+
+                return false;
+            }
+
+            return TileHasDoor(x, y, z);
+        }
+
+        // Walk the tile's linked list instead of scanning every item in the world.
+        private bool FindDoorOnTile(int x, int y, sbyte z, out Item door)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+            door = null;
+
             GameObject obj = World.Map.GetTile(x, y, false);
 
             while (obj?.TPrevious != null)
@@ -489,9 +529,10 @@ namespace ClassicUO.Game.GameObjects
 
             for (; obj != null; obj = obj.TNext)
             {
-                if (obj is Item door && door.ItemData.IsDoor && door.Z - 15 <= z && door.Z + 15 >= z
-                    && (!profile.SmoothDoors || DoorData.IsOpenDoor(door.Graphic)))
+                if (obj is Item d && d.ItemData.IsDoor && d.Z - 15 <= z && d.Z + 15 >= z
+                    && (!profile.SmoothDoors || DoorData.IsOpenDoor(d.Graphic)))
                 {
+                    door = d;
                     return true;
                 }
             }

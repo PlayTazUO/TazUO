@@ -108,6 +108,7 @@ public class WorldMapGump : ResizableGump
     private bool _showMarkerIcons = true;
     private bool _showMarkerNames = true;
     private bool _showMarkers = true;
+    private bool _alwaysShowMarkers;
     private bool _showCorpse = true;
     private bool _showMobiles = true;
     private bool _showMultis = true;
@@ -262,6 +263,7 @@ public class WorldMapGump : ResizableGump
         _showMarkers = ProfileManager.CurrentProfile.WorldMapShowMarkers;
         _showMultis = ProfileManager.CurrentProfile.WorldMapShowMultis;
         _showMarkerNames = ProfileManager.CurrentProfile.WorldMapShowMarkersNames;
+        _alwaysShowMarkers = ProfileManager.GlobalSettings?.AlwaysShowWorldMapMarkers ?? false;
 
 
         _hiddenMarkerFiles = string.IsNullOrEmpty(ProfileManager.CurrentProfile.WorldMapHiddenMarkerFiles) ? new List<string>() : ProfileManager.CurrentProfile.WorldMapHiddenMarkerFiles.Split(',').ToList();
@@ -305,6 +307,10 @@ public class WorldMapGump : ResizableGump
         ProfileManager.CurrentProfile.WorldMapShowMarkers = _showMarkers;
         ProfileManager.CurrentProfile.WorldMapShowMultis = _showMultis;
         ProfileManager.CurrentProfile.WorldMapShowMarkersNames = _showMarkerNames;
+        if (ProfileManager.GlobalSettings != null)
+        {
+            ProfileManager.GlobalSettings.AlwaysShowWorldMapMarkers = _alwaysShowMarkers;
+        }
 
         ProfileManager.CurrentProfile.WorldMapHiddenMarkerFiles = string.Join(",", _hiddenMarkerFiles);
         ProfileManager.CurrentProfile.WorldMapHiddenZoneFiles = string.Join(",", _hiddenZoneFiles);
@@ -346,6 +352,7 @@ public class WorldMapGump : ResizableGump
         _options.Clear();
 
         _options["show_all_markers"] = new ContextMenuItemEntry(TazLang.Get("show_all_markers"), () => { _showMarkers = !_showMarkers; SaveSettings(); }, true, _showMarkers);
+        _options["always_show_markers"] = new ContextMenuItemEntry(TazLang.Get("always_show_markers"), () => { _alwaysShowMarkers = !_alwaysShowMarkers; SaveSettings(); }, true, _alwaysShowMarkers);
         _options["show_marker_names"] = new ContextMenuItemEntry(TazLang.Get("show_marker_names"), () => { _showMarkerNames = !_showMarkerNames; SaveSettings(); }, true, _showMarkerNames);
         _options["show_marker_icons"] = new ContextMenuItemEntry(TazLang.Get("show_marker_icons"), () => { _showMarkerIcons = !_showMarkerIcons; SaveSettings(); }, true, _showMarkerIcons);
         _options["flip_map"] = new ContextMenuItemEntry(TazLang.Get("flip_map"), () =>
@@ -632,6 +639,7 @@ public class WorldMapGump : ResizableGump
         markersEntry.Add(new ContextMenuItemEntry(TazLang.Get("map_import_map_file", "Import Map File"), ImportMapFile));
 
         markersEntry.Add(_options["show_all_markers"]);
+        markersEntry.Add(_options["always_show_markers"]);
         markersEntry.Add(new ContextMenuItemEntry(""));
         markersEntry.Add(_options["show_marker_names"]);
         markersEntry.Add(_options["show_marker_icons"]);
@@ -3059,7 +3067,13 @@ public class WorldMapGump : ResizableGump
             return false;
         }
 
-        if (_zoomIndex < marker.ZoomIndex && marker.Color == Color.Transparent)
+        // A marker's ZoomIndex is the minimum zoom at which it becomes fully visible;
+        // below that it degrades to a small dot (or is skipped entirely when its color
+        // is transparent). "Always show markers" overrides the gating so markers render
+        // at every zoom level.
+        bool zoomGated = _zoomIndex < marker.ZoomIndex && !_alwaysShowMarkers;
+
+        if (zoomGated && marker.Color == Color.Transparent)
         {
             return false;
         }
@@ -3092,7 +3106,7 @@ public class WorldMapGump : ResizableGump
         bool showMarkerName = _showMarkerNames && !string.IsNullOrEmpty(marker.Name) && _zoomIndex > 5;
         bool drawSingleName = false;
 
-        if (_zoomIndex < marker.ZoomIndex || !_showMarkerIcons || marker.MarkerIcon == null)
+        if (zoomGated || !_showMarkerIcons || marker.MarkerIcon == null)
         {
             batcher.Draw
             (

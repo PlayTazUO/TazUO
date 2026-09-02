@@ -120,6 +120,10 @@ namespace ClassicUO.Game
             public const string SCALE_PETS_ENABLED = "scale_pets_enabled";
             public const string WEB_MAP_PORT = "web_map_port";
             public const string WEB_MAP_AUTO_START = "web_map_auto_start";
+            public const string WEB_MAP_JOURNAL_WIDTH = "webmap_journal_width";
+            public const string WEB_MAP_JOURNAL_HEIGHT = "webmap_journal_height";
+            public const string WEB_MAP_JOURNAL_MINIMIZED = "webmap_journal_minimized";
+            public const string WEB_MAP_CONTROLS_MINIMIZED = "webmap_controls_minimized";
             public const string MIN_GUMP_MOVE_DIST = "min_gump_move_dist";
             [Obsolete("Remove >= 10/26/26")]
             public const string GAME_SCALE = "game_scale";

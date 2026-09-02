@@ -80,6 +80,15 @@ jobs:
       - name: Build executable
         run: dotnet publish ${{ env.CUO_PROJECT_PATH }} -c Release -o ${{ env.CUO_OUTPUT_PATH }} -r ${{ matrix.rid }}
 
+      - name: Write version file
+        shell: bash
+        env:
+          PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.pull_request.number }}
+        run: |
+          export LC_ALL=C.UTF-8
+          VERSION="$(date -u +%y).$(date -u +%m%d).pr${PR_NUMBER}"
+          echo "$VERSION" > "${{ env.CUO_OUTPUT_PATH }}/v.txt"
+
       - name: Zip all builds
         shell: bash
         run: |

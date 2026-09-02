@@ -5,23 +5,36 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Added a new modern status gump with progress bars
 * Added a new modern vertical status bar option
 * Added a new modern horizontal status bar option
+* Added a new modern horizontal compact status bar option
 * Added a new modern compact status bar option
 * Grid container item locks now expire after 60 days of the item being absent from the container, automatically clearing the saved lock and slot
 * Separated Scavenger agent from Autoloot, they now each have their own loot lists and enabled/disabled toggles
+* Added a per-container option to disable grid highlighting without affecting other containers - [P.R 1032](https://github.com/PlayTazUO/TazUO/pull/1032) ([Aryx75](https://github.com/Aryx75))
+* Added a world map context menu option to always show map markers regardless of zoom level
+* Added a per-server "Don't reopen corpses that have already been opened" option that keeps track of opened corpses and skips auto-reopening them
 
 ### Legion
+* Added a warning about upcoming changes and to update your scripts
+* Added a warning when a script fails to stop
+* Added a warning when running a script with unbounded while loops
 * Added `API.IsKeyPressed("CTRL+SHIFT+F1")` method to see if a key(s) is currently held down
 * Added `API.Gumps.CreateGumpRenderedMapArea` to build a rendered area of the map in a gump
 * Removed hard 30 second limit on `API.Pause()`
 * Added `GetSpellsInSpellbook(uint serial)`, listing all spell names in that spellbook
 
 ### Misc
+* Mouse handling performance improvements
+* Added auto pruning to Item Database to prevent unbounded database growth ( 120 days since item last seen, it's deleted )
 * Increase max global scale to 300% up from 175%
 * Migrated more settings to global scoped json settings
 
 ### Fixes
+* Fixed missing key codes in plugin keyup processing
+* Fixed timestamped Global Chat messages sent by the local player not appearing in Global Chat journal tabs - [P.R 1035](https://github.com/PlayTazUO/TazUO/pull/1035) ([Aryx75](https://github.com/Aryx75))
+* Fixed a crash (`IndexOutOfRangeException` in `Mobile.Draw`) that could occur when rendering a mobile whose queued walk step carried an unmasked direction byte (e.g. the running flag) - the direction is now always normalized to 0-7 before use
 * Fixed a client crash at startup when the generated `Data/Client` files (`chair.txt`, `lights.txt`, `lightshaders.txt`) could not be written or read because another process (antivirus, OneDrive, a second instance, or an editor) held a lock on them - the client now logs a clear error and continues with the built-in defaults instead of crashing
 * Fixed locked grid container items no longer reclaiming their locked cell (and appearing unlocked) after being moved out of the container and back
 * Addressed a cross-thread issue and hardened controls a bit against future cross threading
@@ -35,6 +48,9 @@ All notable changes to TazUO will be recorded here.
 * Improved treasure map location calculations - [P.R 1012](https://github.com/PlayTazUO/TazUO/pull/1012) [Erumite](https://github.com/Erumite)
 * Door movement blocking no longer stops you from walking into closed doors when the "Open doors while pathfinding" (smooth doors) setting is enabled, and the option label is now "Block walking into doors"
 * Fixed a client crash at startup when `settings.json` is missing or corrupt - command-line arguments are now applied after the fallback settings are restored
+* Fixed a NullReferenceException when an extended stats packet (0x19) arrived while the world was tearing down (player could be nulled mid-construction)
+* Fixed a NullReferenceException in the journal when a journal entry could not be recycled from the journal history (a torn read of the non-thread-safe journal deque) - the client now falls back to a fresh entry, skips null/whitespace message text, and `API.HeadMsg` ignores empty messages
+* Added a crash fix suggestion when a crash happens on a background thread spawned by a third-party plugin/assistant (for example a UO copilot running its own UI) - the crash log now points to the plugin as the likely cause instead of TazUO
 
 ## 5.31.2
 

@@ -17,5 +17,8 @@ namespace ClassicUO.Configuration
 
         public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 80;
         public bool EnableEnhancedPackets { get; set => SetProperty(ref field, value); } = true;
+
+        /// <summary>When enabled, corpses that have already been opened are not auto-opened again.</summary>
+        public bool DoNotReopenCorpses { get; set => SetProperty(ref field, value); } = false;
     }
 }

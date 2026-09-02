@@ -47,6 +47,20 @@ namespace ClassicUO.Game.Scenes
             _oldPlayerZ;
         private int _foliageCount;
 
+        // World mouse-selection cache: the per-object pixel pass (CheckMouseSelection) is skipped
+        // while neither the cursor nor the view transform moved, and last frame's selection is
+        // reused. _selectionDirty is raised by GetViewPort when the view transform changes.
+        private bool _runWorldSelection;
+        private bool _selectionDirty = true;
+        private Point _lastSelectionMousePosition = new Point(int.MinValue, int.MinValue);
+        private GameObject _lastWorldSelectionObject;
+
+        // Cached world-space cursor: MouseToWorldPosition is a pure function of the mouse position
+        // and the camera transform, so skip recomputing it while both are unchanged.
+        private Point _lastTranslatedMouseMouse = new Point(int.MinValue, int.MinValue);
+        private Rectangle _lastTranslatedMouseBounds;
+        private ulong _lastTranslatedCameraVersion = ulong.MaxValue;
+
         private readonly List<GameObject> _renderListStatics = new List<GameObject>();
         private readonly List<GameObject> _renderListTransparentObjects = new List<GameObject>();
         private readonly List<GameObject> _renderListAnimations = new List<GameObject>();
@@ -645,9 +659,9 @@ namespace ClassicUO.Game.Scenes
 
             RecordLightOccluder(obj);
 
-            // slow as fuck
             if (
-                allowSelection
+                _runWorldSelection
+                && allowSelection
                 && obj.Z <= _maxGroundZ
                 && obj.AllowedToDraw
                 && obj.CheckMouseSelection()
@@ -674,6 +688,118 @@ namespace ClassicUO.Game.Scenes
             {
                 renderList.Add(obj);
             }
+        }
+
+        /// <summary>
+        /// Cheap screen-space re-validation of a cached world selection while the cursor is frozen.
+        /// Immovable tiles (land, static, multi, corpses) only need a liveness check - they can't
+        /// leave the cursor. Mobiles and ground items use their sprite bounds so one that moved away
+        /// still deselects without paying the pixel picker's RLE walk.
+        /// </summary>
+        private bool IsWorldSelectionValid(GameObject obj)
+        {
+            if (obj.IsDestroyed || !obj.AllowedToDraw)
+            {
+                return false;
+            }
+
+            Point mouse = SelectedObject.TranslatedMousePositionByViewport;
+
+            switch (obj)
+            {
+                case Land:
+                case Static:
+                case Multi:
+                    // Matches the foliage-index exclusion in StaticView/MultiView.CheckMouseSelection.
+                    if (obj.FoliageIndex != -1 && FoliageIndex == obj.FoliageIndex)
+                    {
+                        return false;
+                    }
+
+                    return true;
+
+                case Mobile:
+                {
+                    Point position = obj.RealScreenPosition;
+                    position.Y -= 3;
+                    position.X += (int)obj.Offset.X + 22;
+                    position.Y += (int)(obj.Offset.Y - obj.Offset.Z) + 22;
+
+                    Rectangle r = obj.FrameInfo;
+                    r.X = position.X - r.X;
+                    r.Y = position.Y - r.Y;
+
+                    return r.Contains(mouse);
+                }
+
+                case Item item:
+                    // Corpses don't move; only the liveness check above applies.
+                    return item.IsCorpse || IsPointInItemArtBounds(item, mouse);
+
+                default:
+                    return true;
+            }
+        }
+
+        private static bool IsPointInItemArtBounds(Item item, in Point mouse)
+        {
+            ushort graphic = item.DisplayedGraphic;
+
+            if (item.OnGround && item.ItemData.IsAnimated)
+            {
+                if (
+                    ProfileManager.CurrentProfile.FieldsType == 2
+                    && (StaticFilters.IsFireField(item.Graphic)
+                        || StaticFilters.IsParalyzeField(item.Graphic)
+                        || StaticFilters.IsEnergyField(item.Graphic)
+                        || StaticFilters.IsPoisonField(item.Graphic)
+                        || StaticFilters.IsWallOfStone(item.Graphic))
+                )
+                {
+                    graphic = Constants.FIELD_REPLACE_GRAPHIC;
+                }
+                else
+                {
+                    graphic += (ushort)Client.Game.UO.FileManager.Arts.File
+                        .GetValidRefEntry(graphic + 0x4000)
+                        .AnimOffset;
+                }
+            }
+
+            ref readonly SpriteInfo info = ref Client.Game.UO.Arts.GetArt(graphic);
+
+            if (info.Texture == null)
+            {
+                return true;
+            }
+
+            Point position = item.RealScreenPosition;
+            position.X += (int)item.Offset.X;
+            position.Y += (int)(item.Offset.Y + item.Offset.Z);
+
+            int width = info.UV.Width;
+            int height = info.UV.Height;
+
+            // The art is anchored at its center offset (index.Width = (w >> 1) - 22, index.Height = h - 44),
+            // so the picker's bounds rect is the full sprite shifted by that anchor.
+            Rectangle rect = new Rectangle(
+                position.X + 22 - (width >> 1),
+                position.Y + 44 - height,
+                width,
+                height
+            );
+
+            if (rect.Contains(mouse))
+            {
+                return true;
+            }
+
+            // Stacked piles repeat the art 5px up-left, matching the second PixelCheck in ItemView.
+            return !item.IsMulti
+                && !item.IsCoin
+                && item.Amount > 1
+                && item.ItemData.IsStackable
+                && new Rectangle(rect.X - 5, rect.Y - 5, width, height).Contains(mouse);
         }
 
         // Records a drawn opaque tile (terrain/static/multi) as a light occluder, bucketed by isometric column (X - Y).
@@ -1213,6 +1339,7 @@ namespace ClassicUO.Game.Scenes
             {
                 UpdateDrawPosition = true;
                 _lastCamOffset = Camera.Offset;
+                _selectionDirty = true;
             }
 
             _minTile.X = realMinRangeX;

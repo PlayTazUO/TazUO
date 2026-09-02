@@ -62,11 +62,50 @@ namespace ClassicUO.Configuration
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); }
 
         /// <summary>
+        /// When true, world map markers render at full visibility on every zoom level instead of
+        /// degrading to a small dot (or disappearing) when zoomed out past their ZoomIndex.
+        /// </summary>
+        public bool AlwaysShowWorldMapMarkers { get; set => SetProperty(ref field, value); }
+
+        /// <summary>
         /// Only applies when there is only 1 server available
         /// </summary>
         public bool SkipServerSelection { get; set => SetProperty(ref field, value); } = true;
         public bool ManagedZlib { get; set => SetProperty(ref field, value); } = !PlatformHelper.IsWindows;
         public float GlobalScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        /// <summary>Web map journal panel width. Machine-wide.</summary>
+        public int WebMapJournalWidth { get; set => SetProperty(ref field, value); } = 400;
+
+        /// <summary>Web map journal panel height. Machine-wide.</summary>
+        public int WebMapJournalHeight { get; set => SetProperty(ref field, value); } = 300;
+
+        /// <summary>Whether the web map journal panel is collapsed. Machine-wide.</summary>
+        public bool WebMapJournalMinimized { get; set => SetProperty(ref field, value); }
+
+        /// <summary>Whether the web map controls panel is collapsed. Machine-wide.</summary>
+        public bool WebMapControlsMinimized { get; set => SetProperty(ref field, value); }
+
+        /// <summary>
+        /// Per-character last-equipment snapshots used by the character selection paperdoll, keyed by a
+        /// composite server+account+character id. Machine-wide.
+        /// </summary>
+        public Dictionary<string, string> LastEquipmentData { get; set => SetProperty(ref field, value); } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Semicolon-separated poll ids the user has already voted on (see FirebasePollsManager /
+        /// PollsWindow). Machine-wide.
+        /// </summary>
+        public string VotedPolls { get; set => SetProperty(ref field, value); }
+
+        /// <summary>
+        /// Uses the campfire/Diablo-style character selection screen instead of the classic list.
+        /// Global so it can be read/written at the character-selection screen before any profile loads.
+        /// </summary>
+        public bool UseCampfireCharacterSelect { get; set => SetProperty(ref field, value); }
+
+        /// <summary>UI language code used for TazLang strings. Defaults to <c>"EN"</c>.</summary>
+        public string UILanguage { get; set => SetProperty(ref field, value); } = "EN";
 
 
         

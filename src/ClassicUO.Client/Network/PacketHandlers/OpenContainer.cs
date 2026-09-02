@@ -223,6 +223,9 @@ internal static class OpenContainer
             {
                 it.Opened = true;
 
+                if (it.IsCorpse && ProfileManager.ServerSettings is { DoNotReopenCorpses: true })
+                    CorpseManager.MarkCorpseOpened(serial);
+
                 if (!it.IsCorpse && graphic != 0xFFFF)
                     Helpers.ItemHelpers.ClearContainerAndRemoveItems(world, it);
             }
@@ -431,6 +434,9 @@ internal static class OpenContainer
             if (it != null)
             {
                 it.Opened = true;
+
+                if (it.IsCorpse && ProfileManager.ServerSettings is { DoNotReopenCorpses: true })
+                    CorpseManager.MarkCorpseOpened(serial);
 
                 if (!it.IsCorpse && graphic != 0xFFFF)
                     Helpers.ItemHelpers.ClearContainerAndRemoveItems(world, it);
