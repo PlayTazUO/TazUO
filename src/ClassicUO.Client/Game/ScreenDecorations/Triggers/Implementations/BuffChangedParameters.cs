@@ -19,8 +19,9 @@ public enum BuffTriggerMode
     /// <summary>The moment the buff is removed. Carries a duration, as <see cref="Added" /> does.</summary>
     Removed,
 
-    /// <summary>The whole span the buff is up. One buff, and no duration - the buff brackets its own
-    /// lifetime.</summary>
+    /// <summary>
+    ///     The whole span the buff is up. One buff, and no duration - the buff brackets its own lifetime.
+    /// </summary>
     Active
 }
 
@@ -48,8 +49,10 @@ public sealed class BuffChangedParameters : TriggerParameters
 
     #region Public accessors
 
-    /// <summary>Which moment of the buff's life raises the rule. No grid row:
-    /// <see cref="BuffTriggerPicker" /> edits it above the grid, along with the fields it governs.</summary>
+    /// <summary>
+    ///     Which moment of the buff's life raises the rule. No grid row:
+    ///     <see cref="BuffTriggerPicker" /> edits it above the grid, along with the fields it governs.
+    /// </summary>
     [Browsable(false)]
     [BuffTriggerEditor(nameof(BuffTypes), nameof(DurationSeconds))]
     [LocalizedDisplayName("overlaytrigger_buff_mode", "When")]
@@ -77,9 +80,11 @@ public sealed class BuffChangedParameters : TriggerParameters
     )]
     public List<short> BuffTypes { get; set; } = [];
 
-    /// <summary>How long one occurrence runs, in seconds. Ignored under
-    /// <see cref="BuffTriggerMode.Active" />. A number rather than a <see cref="TimeSpan" /> to keep the
-    /// persisted form hand-editable.</summary>
+    /// <summary>
+    ///     How long one occurrence runs, in seconds. Ignored under
+    ///     <see cref="BuffTriggerMode.Active" />. A number rather than a <see cref="TimeSpan" /> to keep the
+    ///     persisted form hand-editable.
+    /// </summary>
     [Browsable(false)]
     [LocalizedDisplayName("overlaytrigger_buff_duration", "Lasts for (seconds)")]
     [LocalizedDescription(
@@ -89,8 +94,10 @@ public sealed class BuffChangedParameters : TriggerParameters
     )]
     public float DurationSeconds { get; set; } = DEFAULT_DURATION_SECONDS;
 
-    /// <summary>The configured duration as a span, floored at zero. Hidden from the editor, which would
-    /// otherwise offer every <see cref="TimeSpan" /> member as separately settable.</summary>
+    /// <summary>
+    ///     The configured duration as a span, floored at zero. Hidden from the editor, which would
+    ///     otherwise offer every <see cref="TimeSpan" /> member as separately settable.
+    /// </summary>
     [JsonIgnore]
     [Browsable(false)]
     public TimeSpan Duration => TimeSpan.FromSeconds(Math.Max(DurationSeconds, 0f));
