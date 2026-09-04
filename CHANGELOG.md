@@ -2,7 +2,11 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## In Development
+## Future release notes
+Future release notes will be formatted by date instead of by release, most recent changes listed at the top:
+
+## 9/4/26
+* Changes listed here
 
 ### Features
 * Added a new modern status gump with progress bars
