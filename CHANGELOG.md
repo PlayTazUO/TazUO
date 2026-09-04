@@ -32,6 +32,7 @@ All notable changes to TazUO will be recorded here.
 * Migrated more settings to global scoped json settings
 
 ### Fixes
+* Fixed a NullReferenceException in `API.UseSkill()` when the player was null (world tearing down) or the skill list was not yet loaded - the call now safely returns without using the skill
 * Fixed missing key codes in plugin keyup processing
 * Fixed timestamped Global Chat messages sent by the local player not appearing in Global Chat journal tabs - [P.R 1035](https://github.com/PlayTazUO/TazUO/pull/1035) ([Aryx75](https://github.com/Aryx75))
 * Fixed a crash (`IndexOutOfRangeException` in `Mobile.Draw`) that could occur when rendering a mobile whose queued walk step carried an unmasked direction byte (e.g. the running flag) - the direction is now always normalized to 0-7 before use
