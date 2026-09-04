@@ -6,7 +6,7 @@ All notable changes to TazUO will be recorded here.
 Future release notes will be formatted by date instead of by release, most recent changes listed at the top:
 
 ## 9/4/26
-* Changes listed here
+* Custom cooldown bars now continue checking later rules when a sender filter does not match and no longer treat messages without a source as Self or Other
 
 ### Features
 * Added a new modern status gump with progress bars
@@ -36,7 +36,6 @@ Future release notes will be formatted by date instead of by release, most recen
 * Migrated more settings to global scoped json settings
 
 ### Fixes
-* Custom cooldown bars now continue checking later rules when a sender filter does not match and no longer treat messages without a source as Self or Other - [P.R 1057](https://github.com/PlayTazUO/TazUO/pull/1057) ([Aryx75](https://github.com/Aryx75))
 * Fixed the health bar indicator threshold so its percentage setting is applied correctly - [P.R 1052](https://github.com/PlayTazUO/TazUO/pull/1052) ([Aryx75](https://github.com/Aryx75))
 * Fixed a NullReferenceException in `API.UseSkill()` when the player was null (world tearing down) or the skill list was not yet loaded - the call now safely returns without using the skill
 * Fixed missing key codes in plugin keyup processing
