@@ -113,7 +113,6 @@ public sealed class ConfigBackupStore
         catch (Exception e)
         {
             error = e;
-
             return null;
         }
     }

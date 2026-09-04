@@ -128,14 +128,12 @@ namespace ClassicUO.Game.UI.Gumps
 
             while (ConfigurationResolver.CorruptFiles.TryDequeue(out CorruptConfigFile corruptFile))
             {
-                string fileName = Path.GetFileName(corruptFile.Path);
-
                 string outcome = corruptFile.BackupPath != null
-                    ? $"Default settings were used and a backup was saved to '{ConfigBackupStore.DirectoryName}/{Path.GetFileName(corruptFile.BackupPath)}'."
+                    ? $"Default settings were used and a backup was saved to '{corruptFile.BackupPath}'."
                     : "Default settings were used, and no backup could be saved.";
 
                 _userNotifications ??= [];
-                _userNotifications.Add(($"Warning: The configuration file '{fileName}' could not be loaded. {outcome}", Constants.HUE_ERROR));
+                _userNotifications.Add(($"Warning: The configuration file '{corruptFile.Name}' could not be loaded. {outcome}", Constants.HUE_ERROR));
             }
 
             // Community poll reminder is fetched asynchronously; kick it off before starting the flush
