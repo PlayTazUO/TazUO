@@ -1237,18 +1237,20 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="skillName">Can be a partial match. Will match the first skill containing this text.</param>
         public void UseSkill(string skillName) => OnMain
-        (() =>
+            (() =>
             {
-                if (skillName.Length > 0)
-                {
-                    for (int i = 0; i < World.Player.Skills.Length; i++)
-                    {
-                        if (World.Player.Skills[i].Name.IndexOf(skillName, StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            GameActions.UseSkill(World.Player.Skills[i].Index);
+                if (World.Player?.Skills == null || string.IsNullOrEmpty(skillName))
+                    return;
 
-                            break;
-                        }
+                for (int i = 0; i < World.Player.Skills.Length; i++)
+                {
+                    Skill skill = World.Player.Skills[i];
+
+                    if (skill?.Name?.IndexOf(skillName, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        GameActions.UseSkill(skill.Index);
+
+                        break;
                     }
                 }
             }
