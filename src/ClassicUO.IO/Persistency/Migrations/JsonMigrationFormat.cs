@@ -30,7 +30,8 @@ public class JsonMigrationFormat : IMigrationFormat<JsonObject>
     /// <inheritdoc cref="IMigrationFormat{TDocument}.Preprocess" />
     public virtual (string Text, bool Changed) Preprocess(string text) => (text, false);
 
-    /// <exception cref="ConfigMigrationException">The text is not a JSON object.</exception>
+    /// <inheritdoc cref="IMigrationFormat{TDocument}.Parse" />
+    /// <exception cref="ConfigMigrationException">The text is not valid JSON, or not a JSON object.</exception>
     public JsonObject Parse(string text)
     {
         JsonNode? node;
@@ -50,8 +51,10 @@ public class JsonMigrationFormat : IMigrationFormat<JsonObject>
         return document;
     }
 
+    /// <inheritdoc cref="IMigrationFormat{TDocument}.Serialize" />
     public string Serialize(JsonObject document) => document.ToJsonString(_options);
 
+    /// <inheritdoc cref="IMigrationFormat{TDocument}.ReadVersion" />
     public int ReadVersion(JsonObject document)
     {
         if (!document.TryGetPropertyValue(_versionPropertyName, out JsonNode? node) || node is not JsonValue value)
@@ -60,5 +63,6 @@ public class JsonMigrationFormat : IMigrationFormat<JsonObject>
         return value.TryGetValue(out int version) ? version : 0;
     }
 
+    /// <inheritdoc cref="IMigrationFormat{TDocument}.WriteVersion" />
     public void WriteVersion(JsonObject document, int version) => document[_versionPropertyName] = version;
 }
