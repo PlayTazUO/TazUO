@@ -411,11 +411,6 @@ namespace ClassicUO.Game.Managers
         {
             if (!_loaded) return;
 
-            if (ProfileManager.CurrentProfile.EnableScavenger)
-                foreach (Item item in _world.Items.Values)
-                    if (item != null && item.OnGround && !item.IsLocked && !item.IsCorpse && item.Distance < 3)
-                        CheckAndLoot(item);
-
             if (IsEnabled)
                 foreach (Item corpse in _world.GetCorpseSnapshot())
                     CheckCorpse(corpse);
@@ -433,12 +428,7 @@ namespace ClassicUO.Game.Managers
             if (!_loaded || !IsEnabled) return;
 
             if (sender is Item i)
-            {
                 CheckCorpse(i);
-
-                // Check for ground items to auto-loot (scavenger functionality)
-                if (ProfileManager.CurrentProfile.EnableScavenger && i.OnGround && !i.IsCorpse && !i.IsLocked && i.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange) CheckAndLoot(i);
-            }
         }
 
         private void OnOPLReceived(object sender, OPLEventArgs e)

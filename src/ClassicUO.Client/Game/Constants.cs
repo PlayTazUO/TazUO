@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using System;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game
@@ -116,11 +117,15 @@ namespace ClassicUO.Game
 
         public static class SqlSettings
         {
-            public const string MANAGED_ZLIB = "USE_MANAGED_ZLIB";
             public const string SCALE_PETS_ENABLED = "scale_pets_enabled";
             public const string WEB_MAP_PORT = "web_map_port";
             public const string WEB_MAP_AUTO_START = "web_map_auto_start";
+            public const string WEB_MAP_JOURNAL_WIDTH = "webmap_journal_width";
+            public const string WEB_MAP_JOURNAL_HEIGHT = "webmap_journal_height";
+            public const string WEB_MAP_JOURNAL_MINIMIZED = "webmap_journal_minimized";
+            public const string WEB_MAP_CONTROLS_MINIMIZED = "webmap_controls_minimized";
             public const string MIN_GUMP_MOVE_DIST = "min_gump_move_dist";
+            [Obsolete("Remove >= 10/26/26")]
             public const string GAME_SCALE = "game_scale";
             public const string AUTO_UNEQUIP_FOR_ACTIONS = "auto_unequip_for_actions";
             public const string SOUND_FILTER_IDS = "sound_filter_ids";
@@ -133,7 +138,6 @@ namespace ClassicUO.Game
             public const string QUEUE_MANUAL_ITEM_USES = "queue_manual_item_uses";
             public const string HUE_CORPSE_AFTER_AUTOLOOT = "hue_corpse_after_autoloot";
             public const string OUTLINE_NOTORIETIES = "outline_notorieties";
-            public const string IRC_AUTO_CONNECT = "irc_disable_auto_connect";
             public const string PATH_Z_LEVEL = "path_z_level";
             public const string PATHFINDING_MAX_NODES = "pathfinding_max_nodes";
             public const string PATHFINDING_MULTI_BUFFER = "pathfinding_multi_buffer";
@@ -143,7 +147,6 @@ namespace ClassicUO.Game
             public const string SINGLE_CLICK_SET_LAST_TARG = "single_click_set_last_targ";
             public const string AUTOLOOT_RETRY_DELAY = "autoloot_retry_delay";
             public const string OVERHEAD_MESSAGE_TYPES_HIDDEN = "overhead_message_types_shown";
-            public const string SKIP_SERVER_SELECTION = "skip_server_selection";
             public const string CAMPFIRE_CHAR_SELECT = "campfire_char_select";
             public const string UI_LANGUAGE = "ui_language";
             public const string AUTO_STAT_LOCK = "auto_stat_lock";

@@ -208,7 +208,6 @@ public static class MusicFilterTabContent
                     if (SoundFilterManager.Instance.FilteredMusic.Add(Math.Clamp(id, 0, 149)))
                         added++;
                 }
-                SoundFilterManager.Instance.Save(isMusic: true);
                 BuildFilterList();
                 GameActions.Print($"Added {added} music filter(s) from clipboard", Constants.HUE_SUCCESS);
             }

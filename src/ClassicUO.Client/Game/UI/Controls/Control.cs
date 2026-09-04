@@ -150,6 +150,14 @@ namespace ClassicUO.Game.UI.Controls
         get;
         set
         {
+            // The Children list is not thread-safe; scripts can reach this setter from a
+            // background thread via raw gump objects, so marshal any off-thread reparenting.
+            if (!MainThreadQueue.IsMainThread)
+            {
+                MainThreadQueue.EnqueueAction(() => Parent = value);
+                return;
+            }
+
             if (value == null)
             {
                 field?.Children.Remove(this);
@@ -495,14 +503,22 @@ namespace ClassicUO.Game.UI.Controls
         }
     }
 
+    /// <summary>
+    /// Removes disposed children from this control.
+    /// The children list can be mutated from other threads (e.g. script threads racing with
+    /// the UI thread), so children are removed by reference from a snapshot. Index-based
+    /// removal can throw ArgumentOutOfRangeException if the list shrinks mid-iteration;
+    /// removing by reference is a no-op when the element is already gone.
+    /// </summary>
     internal void CleanUpDisposedChildren()
     {
         bool childRemoved = false;
-        for (int i = Children.Count - 1; i >= 0; i--)
+
+        foreach (IGui child in Children.ToArray())
         {
-            if (i < Children.Count && Children[i]?.IsDisposed == true)
+            if (child?.IsDisposed == true)
             {
-                Children.RemoveAt(i);
+                Children.Remove(child);
                 childRemoved = true;
             }
         }
@@ -648,6 +664,13 @@ namespace ClassicUO.Game.UI.Controls
 
     public virtual T Add<T>(T c, int page = 0) where T : IGui
     {
+        // Children is not thread-safe; scripts can add children from a background thread.
+        if (!MainThreadQueue.IsMainThread)
+        {
+            MainThreadQueue.EnqueueAction(() => Add(c, page));
+            return c;
+        }
+
         c.Page = page;
         c.Parent = this;
         OnChildAdded();
@@ -657,6 +680,12 @@ namespace ClassicUO.Game.UI.Controls
 
     public void Insert(int index, IGui c, int page = 0)
     {
+        if (!MainThreadQueue.IsMainThread)
+        {
+            MainThreadQueue.EnqueueAction(() => Insert(index, c, page));
+            return;
+        }
+
         c.Page = 0;
 
         c.Parent?.Children.Remove(c);
@@ -675,6 +704,12 @@ namespace ClassicUO.Game.UI.Controls
             return;
         }
 
+        if (!MainThreadQueue.IsMainThread)
+        {
+            MainThreadQueue.EnqueueAction(() => Remove(c));
+            return;
+        }
+
         c.Parent = null;
         Children.Remove(c);
         OnChildRemoved();
@@ -682,6 +717,12 @@ namespace ClassicUO.Game.UI.Controls
 
     public virtual void Clear()
     {
+        if (!MainThreadQueue.IsMainThread)
+        {
+            MainThreadQueue.EnqueueAction(Clear);
+            return;
+        }
+
         foreach (IGui c in Children)
         {
             c.Dispose();
@@ -956,6 +997,15 @@ namespace ClassicUO.Game.UI.Controls
     {
         if (IsDisposed)
         {
+            return;
+        }
+
+        // Children is not thread-safe; scripts can dispose raw gump objects from a background
+        // thread, which would race the UI thread's PreDraw cleanup. Re-run disposal on the main
+        // thread; re-invoking the virtual method also runs any override's logic there.
+        if (!MainThreadQueue.IsMainThread)
+        {
+            MainThreadQueue.EnqueueAction(Dispose);
             return;
         }
 

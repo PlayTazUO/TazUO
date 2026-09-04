@@ -1,0 +1,209 @@
+using System;
+using ClassicUO.Assets;
+using ClassicUO.Configuration;
+using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI.Controls;
+using ClassicUO.Input;
+using FontStashSharp.RichText;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+
+namespace ClassicUO.Game.UI.Gumps
+{
+    /// <summary>
+    /// A vertical, modern-styled status gump that reports the player's stats using the
+    /// <c>MStatusGumpVertical.png</c> background. Labels refresh when the player's stats are
+    /// updated by the server via <see cref="EventSink.PlayerStatsUpdated"/>.
+    /// </summary>
+    public class StatusGumpModernVertical : StatusGumpBase
+    {
+        private const float FONT_SIZE = 16;
+        private const float NAME_FONT_SIZE = 22;
+        private const int HEADER_HUE = 54;
+        private const int LABEL_HUE = 1153;
+        private const int VALUE_HUE = 1281;
+        private const ushort BUFF_BUTTON_NORMAL = 0x7538;
+        private const ushort BUFF_BUTTON_PRESSED = 0x7539;
+
+        private readonly TextBox[] _textLabels = new TextBox[(int)MobileStats.NumStats];
+        private readonly string[] _formats = new string[(int)MobileStats.NumStats];
+
+        public StatusGumpModernVertical(World world) : base(world)
+        {
+            if (ExternalImageLoader.Instance.TryGetEmbeddedTexture("MStatusGumpVertical.png", out Texture2D background))
+            {
+                Add(new EmbeddedGumpPic(0, 0, background));
+                Width = background.Width;
+                Height = background.Height;
+            }
+
+            Add
+            (
+                new Button((int)ButtonType.BuffIcon, BUFF_BUTTON_NORMAL, BUFF_BUTTON_PRESSED, BUFF_BUTTON_PRESSED)
+                {
+                    X = 5,
+                    Y = 5,
+                    ButtonAction = ButtonAction.Activate
+                }
+            );
+
+            _formats[(int)MobileStats.Name] = "{0}";
+            AddCenteredLabel(0, 16, MobileStats.Name, NAME_FONT_SIZE, LABEL_HUE, Width);
+
+            Add(new Line(16, 43, Width - 32, 1, Color.Gray.PackedValue) { AcceptMouseInput = false });
+
+            AddHeader(16, 56, "Stats");
+            AddStatRow(16, 81, MobileStats.Strength, "STR", TazLang.Get("strength"));
+            AddStatRow(16, 106, MobileStats.Dexterity, "DEX", TazLang.Get("dexterity"));
+            AddStatRow(16, 131, MobileStats.Intelligence, "INT", TazLang.Get("intelligence"));
+            AddStatRow(126, 81, MobileStats.HealthCurrent, "HP", TazLang.Get("hit_points"));
+            AddStatRow(126, 106, MobileStats.ManaCurrent, "MP", TazLang.Get("mana"));
+            AddStatRow(126, 131, MobileStats.StaminaCurrent, "SP", TazLang.Get("stamina"));
+
+            AddHeader(16, 161, "Physical");
+            AddStatRow(16, 186, MobileStats.Damage, "D", TazLang.Get("damage"));
+            AddStatRow(16, 211, MobileStats.HitChanceInc, "HCI", TazLang.Get("hit_chance_increase"));
+            AddStatRow(16, 236, MobileStats.DefenseChanceInc, "DCI", TazLang.Get("defense_chance_increase"));
+            AddStatRow(16, 261, MobileStats.SwingSpeedInc, "SSI", TazLang.Get("swing_speed_increase"));
+            AddStatRow(16, 286, MobileStats.DamageChanceInc, "DI", TazLang.Get("weapon_damage_increase"));
+
+            AddHeader(126, 161, "Magical");
+            AddStatRow(126, 186, MobileStats.SpellDamageInc, "SDI", TazLang.Get("spell_damage_increase"));
+            AddStatRow(126, 211, MobileStats.FasterCasting, "FC", TazLang.Get("faster_casting"));
+            AddStatRow(126, 236, MobileStats.FasterCastRecovery, "FCR", TazLang.Get("faster_cast_recovery"));
+            AddStatRow(126, 261, MobileStats.LowerManaCost, "LMC", TazLang.Get("lower_mana_cost"));
+            AddStatRow(126, 286, MobileStats.LowerReagentCost, "LRC", TazLang.Get("lower_reagent_cost"));
+
+            AddHeader(16, 316, "Resistances");
+            AddStatRow(16, 341, MobileStats.AR, "PH", TazLang.Get("physical_resistance"), valueHue: 114);
+            AddStatRow(16, 366, MobileStats.RF, "FR", TazLang.Get("fire_resistance"), valueHue: 40);
+            AddStatRow(16, 391, MobileStats.RC, "CD", TazLang.Get("cold_resistance"), valueHue: 93);
+            AddStatRow(16, 416, MobileStats.RP, "PS", TazLang.Get("poison_resistance"), valueHue: 172);
+            AddStatRow(16, 441, MobileStats.RE, "EN", TazLang.Get("energy_resistance"));
+
+            AddHeader(126, 316, "Other");
+            AddStatRow(126, 341, MobileStats.StatCap, "MST", TazLang.Get("max_stats"));
+            AddStatRow(126, 366, MobileStats.Luck, "LK", TazLang.Get("luck"));
+            AddStatRow(126, 391, MobileStats.WeightCurrent, "WT", TazLang.Get("weight"));
+            AddStatRow(126, 416, MobileStats.Gold, "GD", TazLang.Get("gold"));
+            AddStatRow(126, 441, MobileStats.Followers, "FR", TazLang.Get("followers"));
+
+            UpdateLabels();
+            EventSink.PlayerStatsUpdated += OnPlayerStatsUpdated;
+        }
+
+        public override void Dispose()
+        {
+            EventSink.PlayerStatsUpdated -= OnPlayerStatsUpdated;
+            base.Dispose();
+        }
+
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
+        {
+            Parent?.OnMouseUp(X + x, Y + y, button);
+
+            if (button == MouseButtonType.Left && World.TargetManager.IsTargeting)
+            {
+                World.TargetManager.Target(World.Player);
+                Mouse.LastLeftButtonClickTime = 0;
+            }
+        }
+
+        private void OnPlayerStatsUpdated(object sender, EventArgs e) => UpdateLabels();
+
+        private void UpdateLabels()
+        {
+            if (World.Player == null)
+            {
+                return;
+            }
+
+            SetLabel(MobileStats.Name, !string.IsNullOrEmpty(World.Player.Name) ? World.Player.Name : string.Empty);
+            SetLabel(MobileStats.Strength, World.Player.Strength.ToString());
+            SetLabel(MobileStats.Dexterity, World.Player.Dexterity.ToString());
+            SetLabel(MobileStats.Intelligence, World.Player.Intelligence.ToString());
+            SetLabel(MobileStats.HealthCurrent, $"{World.Player.Hits}/{World.Player.HitsMax}");
+            SetLabel(MobileStats.ManaCurrent, $"{World.Player.Mana}/{World.Player.ManaMax}");
+            SetLabel(MobileStats.StaminaCurrent, $"{World.Player.Stamina}/{World.Player.StaminaMax}");
+            SetLabel(MobileStats.Damage, $"{World.Player.DamageMin}-{World.Player.DamageMax}");
+            SetLabel(MobileStats.HitChanceInc, World.Player.HitChanceIncrease.ToString());
+            SetLabel(MobileStats.DefenseChanceInc, World.Player.DefenseChanceIncrease.ToString());
+            SetLabel(MobileStats.SwingSpeedInc, World.Player.SwingSpeedIncrease.ToString());
+            SetLabel(MobileStats.DamageChanceInc, World.Player.DamageIncrease.ToString());
+            SetLabel(MobileStats.SpellDamageInc, World.Player.SpellDamageIncrease.ToString());
+            SetLabel(MobileStats.FasterCasting, World.Player.FasterCasting.ToString());
+            SetLabel(MobileStats.FasterCastRecovery, World.Player.FasterCastRecovery.ToString());
+            SetLabel(MobileStats.LowerManaCost, World.Player.LowerManaCost.ToString());
+            SetLabel(MobileStats.LowerReagentCost, World.Player.LowerReagentCost.ToString());
+            SetLabel(MobileStats.AR, $"{World.Player.PhysicalResistance}/{World.Player.MaxPhysicResistence}");
+            SetLabel(MobileStats.RF, $"{World.Player.FireResistance}/{World.Player.MaxFireResistence}");
+            SetLabel(MobileStats.RC, $"{World.Player.ColdResistance}/{World.Player.MaxColdResistence}");
+            SetLabel(MobileStats.RP, $"{World.Player.PoisonResistance}/{World.Player.MaxPoisonResistence}");
+            SetLabel(MobileStats.RE, $"{World.Player.EnergyResistance}/{World.Player.MaxEnergyResistence}");
+            SetLabel(MobileStats.StatCap, World.Player.StatsCap.ToString());
+            SetLabel(MobileStats.Luck, World.Player.Luck.ToString());
+            SetLabel(MobileStats.WeightCurrent, $"{World.Player.Weight}/{World.Player.WeightMax}");
+            SetLabel(MobileStats.Gold, World.Player.Gold.ToString());
+            SetLabel(MobileStats.Followers, $"{World.Player.Followers}/{World.Player.FollowersMax}");
+        }
+
+        private void SetLabel(MobileStats stat, string value)
+        {
+            TextBox label = _textLabels[(int)stat];
+
+            if (label == null || label.IsDisposed)
+            {
+                return;
+            }
+
+            string text = string.Format(_formats[(int)stat], value);
+
+            if (label.Text != text)
+            {
+                label.Text = text;
+            }
+        }
+
+        private void AddHeader(int x, int y, string text, int hue = HEADER_HUE)
+        {
+            TextBox label = TextBox.GetOne(text, EmbeddedFontNames.ALAGARD, FONT_SIZE, hue, new TextBox.RTLOptions());
+            label.X = x;
+            label.Y = y;
+            label.AcceptMouseInput = false;
+            Add(label);
+        }
+
+        private void AddStatRow(int x, int y, MobileStats stat, string label, string tooltip, int labelHue = LABEL_HUE, int valueHue = VALUE_HUE)
+        {
+            string labelColor = TextBox.ConvertHueToColor(labelHue).ToHexString();
+            string valueColor = TextBox.ConvertHueToColor(valueHue).ToHexString();
+            _formats[(int)stat] = $"/c[{labelColor}]{label} /c[{valueColor}]{{0}}";
+            AddLabel(x, y, _formats[(int)stat], stat, FONT_SIZE, tooltip);
+        }
+
+        private void AddCenteredLabel(int x, int y, MobileStats stat, float size, int hue, int width)
+        {
+            TextBox.RTLOptions options = new TextBox.RTLOptions { Width = width, Align = TextHorizontalAlignment.Center };
+            TextBox label = TextBox.GetOne(_formats[(int)stat], EmbeddedFontNames.ALAGARD, size, hue, options);
+            label.X = x;
+            label.Y = y;
+            label.AcceptMouseInput = false;
+            Add(label);
+
+            _textLabels[(int)stat] = label;
+        }
+
+        private void AddLabel(int x, int y, string text, MobileStats stat, float size = FONT_SIZE, string tooltip = null)
+        {
+            TextBox label = TextBox.GetOne(text, EmbeddedFontNames.ALAGARD, size, 0, new TextBox.RTLOptions());
+            label.X = x;
+            label.Y = y;
+            label.AcceptMouseInput = tooltip != null;
+            label.CanMove = true;
+            label.SetTooltip(tooltip);
+            Add(label);
+
+            _textLabels[(int)stat] = label;
+        }
+    }
+}

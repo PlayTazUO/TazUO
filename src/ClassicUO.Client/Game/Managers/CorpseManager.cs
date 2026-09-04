@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using System.Collections.Generic;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Utility.Collections;
@@ -8,6 +9,13 @@ namespace ClassicUO.Game.Managers
 {
     public sealed class CorpseManager
     {
+        /// <summary>Cap on tracked opened corpse serials so the set cannot grow without bound.</summary>
+        private const int MAX_OPENED_CORPSES = 10000;
+
+        /// <summary>Serials of corpses already opened this session, used to honor DoNotReopenCorpses.</summary>
+        private static readonly HashSet<uint> _openedCorpses = new HashSet<uint>();
+        private static readonly Queue<uint> _openedCorpseOrder = new Queue<uint>();
+
         private readonly Deque<CorpseInfo> _corpses = new Deque<CorpseInfo>();
         private readonly World _world;
 
@@ -15,6 +23,22 @@ namespace ClassicUO.Game.Managers
         {
             _world = world;
         }
+
+        /// <summary>Records a corpse as opened. Evicts the oldest entry once the cap is reached.</summary>
+        public static void MarkCorpseOpened(uint serial)
+        {
+            if (serial == 0) return;
+
+            if (!_openedCorpses.Add(serial)) return;
+
+            _openedCorpseOrder.Enqueue(serial);
+
+            while (_openedCorpseOrder.Count > MAX_OPENED_CORPSES && _openedCorpseOrder.TryDequeue(out uint oldest))
+                _openedCorpses.Remove(oldest);
+        }
+
+        /// <summary>Whether the given corpse has already been opened this session.</summary>
+        public static bool IsCorpseOpened(uint serial) => _openedCorpses.Contains(serial);
 
         public void Add(uint corpse, uint obj, Direction dir, bool run)
         {

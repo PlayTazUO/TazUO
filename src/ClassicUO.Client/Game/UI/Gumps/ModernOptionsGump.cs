@@ -207,7 +207,7 @@ namespace ClassicUO.Game.UI.Gumps
                 true, page);
 
             content.AddToRight
-            (new CheckboxWithLabel(TazLang.Get("mog_movementtab_doors_blockdoormovement"), isChecked: profile.BlockDoorMovement, valueChanged: (b) => { profile.BlockDoorMovement = b; }),
+            (new CheckboxWithLabel(TazLang.Get("mog_movementtab_doors_blockwalkingdoors"), isChecked: profile.BlockDoorMovement, valueChanged: (b) => { profile.BlockDoorMovement = b; }),
                 true, page);
 
             content.RemoveIndent();
@@ -482,8 +482,27 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
-            (new CheckboxWithLabel(TazLang.Get("mog_general_oldstatusgump"), isChecked: profile.UseOldStatusGump, valueChanged: (b) => { profile.UseOldStatusGump = b; }),
-                true, page);
+            (
+                new ComboBoxWithLabel
+                (
+                    World,
+                    TazLang.Get("mog_general_statusgumpstyle"),
+                    0,
+                    ThemeSettings.COMBO_BOX_WIDTH,
+                    new string[]
+                    {
+                        TazLang.Get("mog_general_statusgumpstyle_standard"), TazLang.Get("mog_general_statusgumpstyle_old"),
+                        TazLang.Get("mog_general_statusgumpstyle_modernvertical"), TazLang.Get("mog_general_statusgumpstyle_modernhorizontal"),
+                        TazLang.Get("mog_general_statusgumpstyle_modernhorizontalbars"),
+                        TazLang.Get("mog_general_statusgumpstyle_compact"), TazLang.Get("mog_general_statusgumpstyle_compacthorizontal")
+                    },
+                    (int)profile.StatusGumpStyle, (s, n) =>
+                    {
+                        profile.StatusGumpStyle = (StatusGumpStyle)s;
+                        StatusGumpBase.ReplaceStatusGump();
+                    }
+                ), true, page
+            );
 
             content.BlankLine();
 
@@ -3472,6 +3491,19 @@ namespace ClassicUO.Game.UI.Gumps
                 c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_journalhidesystemprefix"), 0, profile.HideJournalSystemPrefix,
                     (b) => { profile.HideJournalSystemPrefix = b; }), true, page);
             content.BlankLine();
+            content.AddToRight(
+                c = new CheckboxWithLabel(TazLang.Get("mog_chattab_journal_classifysystemglobalchat"), 0,
+                    profile.ClassifySystemMessagesAsGlobalChat,
+                    (b) => { profile.ClassifySystemMessagesAsGlobalChat = b; }), true, page);
+            content.BlankLine();
+
+            var systemGlobalChatRegex = new InputFieldWithLabel(
+                TazLang.Get("mog_chattab_journal_systemglobalchatregex"), ThemeSettings.INPUT_WIDTH,
+                profile.SystemMessageGlobalChatRegex, false,
+                (s, e) => { profile.SystemMessageGlobalChatRegex = ((InputField.StbTextBox)s).Text; });
+            systemGlobalChatRegex.SetTooltip(TazLang.Get("mog_chattab_journal_systemglobalchatregextooltip"));
+            content.AddToRight(systemGlobalChatRegex, true, page);
+            content.BlankLine();
 
             content.AddToRight
             (
@@ -4215,7 +4247,7 @@ namespace ClassicUO.Game.UI.Gumps
                 c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_forcemanagedzlib"), isChecked: ZLib.ManagedZlibForced,
                     valueChanged: (e) =>
                     {
-                        _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, e);
+                        ProfileManager.GlobalSettings.ManagedZlib = e;
                         ZLib.SetForceManagedZlib(e);
                     }),
                 true, page
@@ -4889,7 +4921,7 @@ namespace ClassicUO.Game.UI.Gumps
                     float scale = ((float)s.GetValue() / (float)100);
 
                     Client.Game.SetScale(scale);
-                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, scale);
+                    ProfileManager.GlobalSettings.GlobalScale = scale;
                 }
             };
 

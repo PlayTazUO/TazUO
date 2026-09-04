@@ -9,118 +9,99 @@ namespace ClassicUO.Game.Managers
 {
     public class SeasonFilter
     {
-        private Dictionary<Season, Season> _seasonFilters;
-        private bool _isLoaded;
+        private static readonly Dictionary<Season, Season> _emptyFilters = new();
 
-        public static SeasonFilter Instance
+        public static SeasonFilter Instance { get; } = new SeasonFilter();
+
+        #warning Remove migration >= 10/26/26
+        /// <summary>
+        /// One-time migration of the pre-<see cref="AccountSettingsSave"/> per-account season filter
+        /// dictionary from SQL settings into the per-account settings. The legacy row is cleared so this is
+        /// idempotent per account. Requires the current account settings to be loaded so the account scope
+        /// resolves to the account that actually stored the filters.
+        /// </summary>
+        public static void MigrateLegacySqlSettings()
         {
-            get
+            if (Client.Settings == null || ProfileManager.AccountSettings == null)
             {
-                field ??= new SeasonFilter();
-                return field;
-            }
-        }
-
-        public Dictionary<Season, Season> Filters
-        {
-            get
-            {
-                EnsureLoaded();
-                return _seasonFilters;
-            }
-        }
-
-        private SeasonFilter()
-        {
-            _seasonFilters = new Dictionary<Season, Season>();
-            _isLoaded = false;
-        }
-
-        private void EnsureLoaded()
-        {
-            if (!_isLoaded) Load();
-        }
-
-        private void Load()
-        {
-            if (Client.Settings == null)
-            {
-                Log.Warn("SQLSettings not available for SeasonFilter");
-                _seasonFilters = new Dictionary<Season, Season>();
-                _isLoaded = true;
                 return;
             }
 
-            try
-            {
-                string json = Client.Settings.Get(SettingsScope.Account, Constants.SqlSettings.SEASON_FILTER, "{}");
+            AccountSettingsSave accountSettings = ProfileManager.AccountSettings;
 
-                if (!string.IsNullOrWhiteSpace(json))
-                    _seasonFilters = JsonSerializer.Deserialize(json, SeasonFilterJsonContext.Default.DictionarySeasonSeason)
-                                     ?? new Dictionary<Season, Season>();
-                else
-                    _seasonFilters = new Dictionary<Season, Season>();
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Failed to load season filters: {ex.Message}");
-                _seasonFilters = new Dictionary<Season, Season>();
-            }
+            string json = Client.Settings.Get(SettingsScope.Account, Constants.SqlSettings.SEASON_FILTER, null);
 
-            _isLoaded = true;
-        }
-
-        private void Save()
-        {
-            if (Client.Settings == null)
+            if (string.IsNullOrWhiteSpace(json) || json == "{}")
             {
-                Log.Warn("SQLSettings not available for SeasonFilter save");
                 return;
             }
 
+            Dictionary<Season, Season> legacy;
             try
             {
-                string json = JsonSerializer.Serialize(_seasonFilters, SeasonFilterJsonContext.Default.DictionarySeasonSeason);
-                Client.Settings.Set(SettingsScope.Account, Constants.SqlSettings.SEASON_FILTER, json);
+                legacy = JsonSerializer.Deserialize(json, SeasonFilterJsonContext.Default.DictionarySeasonSeason) ?? new Dictionary<Season, Season>();
             }
             catch (Exception ex)
             {
-                Log.Error($"Failed to save season filters: {ex.Message}");
+                Log.Error($"Failed to migrate legacy SQL setting '{Constants.SqlSettings.SEASON_FILTER}': {ex.Message}");
+                return;
+            }
+
+            bool changed = false;
+
+            foreach (KeyValuePair<Season, Season> kvp in legacy)
+            {
+                if (!accountSettings.SeasonFilters.TryGetValue(kvp.Key, out Season current) || current != kvp.Value)
+                {
+                    accountSettings.SeasonFilters[kvp.Key] = kvp.Value;
+                    changed = true;
+                }
+            }
+
+            Client.Settings.Set(SettingsScope.Account, Constants.SqlSettings.SEASON_FILTER, "{}");
+
+            if (changed)
+            {
+                accountSettings.Save();
             }
         }
+
+        public Dictionary<Season, Season> Filters => ProfileManager.AccountSettings?.SeasonFilters ?? _emptyFilters;
 
         public Season ApplyFilter(Season incoming)
         {
-            EnsureLoaded();
+            if (Filters.TryGetValue(incoming, out Season replacement)) return replacement;
 
-            // If filter exists for this season, return replacement
-            if (_seasonFilters.TryGetValue(incoming, out Season replacement)) return replacement;
-
-            // No filter, return original
             return incoming;
         }
 
         public void SetFilter(Season from, Season to)
         {
-            EnsureLoaded();
-            _seasonFilters[from] = to;
+            AccountSettingsSave accountSettings = ProfileManager.AccountSettings;
+            if (accountSettings == null)
+                return;
+
+            accountSettings.SeasonFilters[from] = to;
 
             if (World.Instance != null && World.Instance.RealSeason == from) World.Instance.ChangeSeason(to);
-
-            Save();
         }
 
         public void RemoveFilter(Season from)
         {
-            EnsureLoaded();
-            if (_seasonFilters.Remove(from)) Save();
+            AccountSettingsSave accountSettings = ProfileManager.AccountSettings;
+            if (accountSettings == null)
+                return;
+
+            accountSettings.SeasonFilters.Remove(from);
         }
 
         public void Clear()
         {
-            EnsureLoaded();
-            _seasonFilters.Clear();
-            Save();
+            AccountSettingsSave accountSettings = ProfileManager.AccountSettings;
+            if (accountSettings == null)
+                return;
+
+            accountSettings.SeasonFilters.Clear();
         }
     }
 

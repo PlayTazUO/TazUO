@@ -55,9 +55,9 @@ public static class MovementTab
                 )
             ).WithSearch(new SearchMetadata(TazLang.Get("mog_movementtab_label"), Tags: [TazLang.Get("mog_kw_movement")], Keywords: [TazLang.Get("mog_kw_door")])),
             Option.Checkbox(
-                TazLang.Get("mog_movementtab_doors_blockdoormovement"),
+                TazLang.Get("mog_movementtab_doors_blockwalkingdoors"),
                 new Accessor<bool>(() => profile.BlockDoorMovement),
-                search: new SearchMetadata(TazLang.Get("mog_movementtab_doors_blockdoormovement"), Keywords: [TazLang.Get("mog_kw_door"), TazLang.Get("mog_kw_block")])
+                search: new SearchMetadata(TazLang.Get("mog_movementtab_doors_blockwalkingdoors"), Keywords: [TazLang.Get("mog_kw_door"), TazLang.Get("mog_kw_block")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_movementtab_autoavoidobstacles"),

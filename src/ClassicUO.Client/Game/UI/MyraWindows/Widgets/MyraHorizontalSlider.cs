@@ -29,7 +29,7 @@ public class MyraHorizontalSlider : HorizontalSlider
 
     public override void OnTouchDown(TouchEventArgs args)
     {
-        if (!Enabled)
+        if (!Enabled || args.Button != TouchButton.Left)
             return;
         base.OnTouchDown(args);
     }

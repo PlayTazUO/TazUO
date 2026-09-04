@@ -173,10 +173,15 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
 
         public bool IsTargetingAfterCasting()
         {
-            if (!loaded || currentSpell == null || !isCasting || ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.EnableSpellIndicators) return false;
+            if (!loaded || !isCasting || ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.EnableSpellIndicators) return false;
 
-            if (World.TargetManager.IsTargeting || (currentSpell.ShowCastRangeDuringCasting && IsCastingWithoutTarget()))
-                if (LastSpellTime + TimeSpan.FromSeconds(currentSpell.MaxDuration) > DateTime.Now)
+            // currentSpell is mutated from background threads (cast begin/end messages), so snapshot it
+            // once: the earlier null-check and the derefs below must not race with ClearCasting.
+            SpellRangeInfo spell = currentSpell;
+            if (spell == null) return false;
+
+            if (World.TargetManager.IsTargeting || (spell.ShowCastRangeDuringCasting && IsCastingWithoutTarget(spell)))
+                if (LastSpellTime + TimeSpan.FromSeconds(spell.MaxDuration) > DateTime.Now)
                     return true;
 
             return false;
@@ -184,15 +189,21 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
 
         public bool IsCastingWithoutTarget()
         {
-            if (!loaded || currentSpell == null || !isCasting || currentSpell.CastTime <= 0 || World.TargetManager.IsTargeting || ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.EnableSpellIndicators) return false;
+            if (!loaded || !isCasting || World.TargetManager.IsTargeting || ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.EnableSpellIndicators) return false;
 
-            if (LastSpellTime + TimeSpan.FromSeconds(currentSpell.MaxDuration) > DateTime.Now)
+            SpellRangeInfo spell = currentSpell;
+            return spell != null && spell.CastTime > 0 && IsCastingWithoutTarget(spell);
+        }
+
+        private bool IsCastingWithoutTarget(SpellRangeInfo spell)
+        {
+            if (LastSpellTime + TimeSpan.FromSeconds(spell.MaxDuration) > DateTime.Now)
             {
-                if (LastSpellTime + TimeSpan.FromSeconds(currentSpell.CastTime) > DateTime.Now)
+                if (LastSpellTime + TimeSpan.FromSeconds(spell.CastTime) > DateTime.Now)
                     return true;
-                else if (currentSpell.FreezeCharacterWhileCasting) World.Player.Flags &= ~Flags.Frozen;
+                else if (spell.FreezeCharacterWhileCasting && World.Player != null) World.Player.Flags &= ~Flags.Frozen;
             }
-            else if (currentSpell.FreezeCharacterWhileCasting) World.Player.Flags &= ~Flags.Frozen;
+            else if (spell.FreezeCharacterWhileCasting && World.Player != null) World.Player.Flags &= ~Flags.Frozen;
 
             return false;
         }

@@ -1,4 +1,6 @@
 ﻿using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using static ClassicUO.Assets.AnimationsLoader;
@@ -22,33 +24,58 @@ namespace ClassicUO.Game.Data
 
             if (!File.Exists(chair))
             {
-                using (var writer = new StreamWriter(chair))
+                try
                 {
-                    foreach (SittingInfoData item in _defaultTable)
+                    using (var writer = new StreamWriter(chair))
                     {
-                        writer.WriteLine($"{item.Graphic},{item.Direction1},{item.Direction2},{item.Direction3},{item.Direction4},{item.OffsetY},{item.MirrorOffsetY}");
+                        foreach (SittingInfoData item in _defaultTable)
+                        {
+                            writer.WriteLine($"{item.Graphic},{item.Direction1},{item.Direction2},{item.Direction3},{item.Direction4},{item.OffsetY},{item.MirrorOffsetY}");
+                        }
                     }
+                }
+                catch (Exception e)
+                {
+                    Log.Warn($"[ChairTable] Could not create '{chair}': {e.Message}. Using in-memory defaults.");
+                    LoadDefaults();
+                    return;
                 }
             }
 
-            var chairParse = new TextFileParser(File.ReadAllText(chair), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
-
-            while (!chairParse.IsEOF())
+            try
             {
-                List<string> ss = chairParse.ReadTokens();
+                var chairParse = new TextFileParser(File.ReadAllText(chair), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
 
-                if (ss != null && ss.Count >= 7)
+                while (!chairParse.IsEOF())
                 {
-                    ushort.TryParse(ss[0], out ushort graphic);
-                    sbyte.TryParse(ss[1], out sbyte d1);
-                    sbyte.TryParse(ss[2], out sbyte d2);
-                    sbyte.TryParse(ss[3], out sbyte d3);
-                    sbyte.TryParse(ss[4], out sbyte d4);
-                    sbyte.TryParse(ss[5], out sbyte offsetY);
-                    sbyte.TryParse(ss[6], out sbyte mirrorOffsetY);
+                    List<string> ss = chairParse.ReadTokens();
 
-                    Table.Add(graphic, new SittingInfoData(graphic, d1, d2, d3, d4, offsetY, mirrorOffsetY, false));
+                    if (ss != null && ss.Count >= 7)
+                    {
+                        ushort.TryParse(ss[0], out ushort graphic);
+                        sbyte.TryParse(ss[1], out sbyte d1);
+                        sbyte.TryParse(ss[2], out sbyte d2);
+                        sbyte.TryParse(ss[3], out sbyte d3);
+                        sbyte.TryParse(ss[4], out sbyte d4);
+                        sbyte.TryParse(ss[5], out sbyte offsetY);
+                        sbyte.TryParse(ss[6], out sbyte mirrorOffsetY);
+
+                        Table.Add(graphic, new SittingInfoData(graphic, d1, d2, d3, d4, offsetY, mirrorOffsetY, false));
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Log.Warn($"[ChairTable] Could not read '{chair}': {e.Message}. Using in-memory defaults.");
+                LoadDefaults();
+            }
+        }
+
+        private static void LoadDefaults()
+        {
+            foreach (SittingInfoData item in _defaultTable)
+            {
+                Table[item.Graphic] = item;
             }
         }
 

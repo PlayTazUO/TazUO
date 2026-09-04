@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `8/22/26`.*
+*This was generated on `9/1/26`.*
 
 ## Properties
 ### `Events`
@@ -236,6 +236,23 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `callback` | `object` | ✅ Yes | Python function to invoke when the hotkey is pressed.<br>         If None, the hotkey will be unregistered. |
 
 **Return Type:** `void` *(Does not return anything)*
+
+---
+
+### IsKeyPressed
+`(key)`
+ Returns true if the given key combination is currently held down.
+ The key format matches `OnHotKey` , e.g. "CTRL+SHIFT+F1" or "A".
+ Extra modifiers beyond those specified do not prevent a match.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `key` | `string` | ❌ No | Key combination to check, e.g. "CTRL+SHIFT+F1". |
+
+**Return Type:** `bool`
 
 ---
 
@@ -499,6 +516,28 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `serial` | `uint` | ❌ No |  |
 
 **Return Type:** `int`
+
+---
+
+### GetSpellsInSpellbook
+`(serial)`
+ Get the names of all spells scribed into a spellbook.
+ Example:
+ ```py
+ spells = API.GetSpellsInSpellbook(book_serial)
+ if spells:
+   for spell in spells:
+     API.SysMsg(spell)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `serial` | `uint` | ❌ No | Serial of the spellbook item |
+
+**Return Type:** `string[]`
 
 ---
 
@@ -2694,7 +2733,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `seconds` | `double` | ❌ No | 0-30 seconds. |
+| `seconds` | `double` | ❌ No |  |
 
 **Return Type:** `void` *(Does not return anything)*
 

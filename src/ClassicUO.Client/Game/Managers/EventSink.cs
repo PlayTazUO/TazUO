@@ -223,6 +223,14 @@ public class EventSink
     internal static void InvokeOnPlayerStatChange(object sender, int newValue) => OnPlayerHitsChanged?.Invoke(sender, newValue);
 
     /// <summary>
+    /// Invoked when the player's stats have been updated by the server (hits, mana, stamina,
+    /// attributes, resistances, gold, etc.)
+    /// </summary>
+    public static event EventHandler<EventArgs> PlayerStatsUpdated;
+
+    public static void InvokePlayerStatsUpdated() => PlayerStatsUpdated?.Invoke(null, EventArgs.Empty);
+
+    /// <summary>
     /// Called when the visual spell manager detects a spell being cast.
     /// The event argument is the spell ID.
     /// </summary>

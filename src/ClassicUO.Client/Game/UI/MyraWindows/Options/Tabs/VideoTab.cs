@@ -341,7 +341,7 @@ public static class VideoTab
                         if (scale != null)
                         {
                             Client.Game.SetScale(scale.Value);
-                            _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, scale);
+                            ProfileManager.GlobalSettings.GlobalScale = scale.Value;
                         }
                     },
                     search: new SearchMetadata(TazLang.Get("mog_apply"))

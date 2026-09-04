@@ -522,6 +522,15 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
+        /// Returns true if the given key combination is currently held down.
+        /// The key format matches <c>OnHotKey</c>, e.g. "CTRL+SHIFT+F1" or "A".
+        /// Extra modifiers beyond those specified do not prevent a match.
+        /// </summary>
+        /// <param name="key">Key combination to check, e.g. "CTRL+SHIFT+F1".</param>
+        /// <returns>True if the combination is currently pressed, false otherwise.</returns>
+        public bool IsKeyPressed(string key) => OnMain(() => CUOKeyboard.IsKeyPressed(key));
+
+        /// <summary>
         /// Schedules a callback to be invoked after a specified delay.
         ///
         /// Note that as with keyboard hotkeys, you must call `ProcessCallbacks` for the callback to actually be run.
@@ -817,6 +826,34 @@ namespace ClassicUO.LegionScripting
                     return (int)Utility.ContentsCount(i);
 
                 return 0;
+            }
+        );
+
+        /// <summary>
+        /// Get the names of all spells scribed into a spellbook.
+        /// Example:
+        /// ```py
+        /// spells = API.GetSpellsInSpellbook(book_serial)
+        /// if spells:
+        ///   for spell in spells:
+        ///     API.SysMsg(spell)
+        /// ```
+        /// </summary>
+        /// <param name="serial">Serial of the spellbook item</param>
+        /// <returns>An array of spell names contained in the book. Empty if the serial is not a spellbook.</returns>
+        public string[] GetSpellsInSpellbook(uint serial) => OnMain<string[]>
+        (() =>
+            {
+                Item spellbook = World.Items.Get(serial);
+
+                if (spellbook == null)
+                {
+                    return Array.Empty<string>();
+                }
+
+                return SpellbookGump.GetSpellDefinitions(spellbook)
+                    .Select(s => s.GetLocalizedName())
+                    .ToArray();
             }
         );
 
@@ -1200,18 +1237,20 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="skillName">Can be a partial match. Will match the first skill containing this text.</param>
         public void UseSkill(string skillName) => OnMain
-        (() =>
+            (() =>
             {
-                if (skillName.Length > 0)
-                {
-                    for (int i = 0; i < World.Player.Skills.Length; i++)
-                    {
-                        if (World.Player.Skills[i].Name.IndexOf(skillName, StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            GameActions.UseSkill(World.Player.Skills[i].Index);
+                if (World.Player?.Skills == null || string.IsNullOrEmpty(skillName))
+                    return;
 
-                            break;
-                        }
+                for (int i = 0; i < World.Player.Skills.Length; i++)
+                {
+                    Skill skill = World.Player.Skills[i];
+
+                    if (skill?.Name?.IndexOf(skillName, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        GameActions.UseSkill(skill.Index);
+
+                        break;
                     }
                 }
             }
@@ -1565,6 +1604,9 @@ namespace ClassicUO.LegionScripting
         public void HeadMsg(string message, uint serial, ushort hue = ushort.MaxValue) => OnMain
         (() =>
             {
+                if (string.IsNullOrEmpty(message))
+                    return;
+
                 Entity e = World.Get(serial);
 
                 if (e == null)
@@ -3512,11 +3554,8 @@ namespace ClassicUO.LegionScripting
         /// API.Pause(5)
         /// ```
         /// </summary>
-        /// <param name="seconds">0-30 seconds.</param>
         public void Pause(double seconds)
         {
-            seconds = Math.Clamp(seconds, 0, 30);
-
             Task.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: _cachedToken).Wait(cancellationToken: _cachedToken);
 
             if (StopRequested)
@@ -4109,82 +4148,167 @@ namespace ClassicUO.LegionScripting
         /// <summary>
         /// Use API.Gumps.CreateGump instead
         /// </summary>
-        public ApiUiBaseGump CreateGump(bool acceptMouseInput = true, bool canMove = true, bool keepOpen = false) => Gumps.CreateGump(acceptMouseInput, canMove, keepOpen);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiBaseGump CreateGump(bool acceptMouseInput = true, bool canMove = true, bool keepOpen = false)
+        {
+            GameActions.Print("API.CreateGump will be removed soon, update your script to use API.Gumps.CreateGump instead", Constants.HUE_WARN);
+            return Gumps.CreateGump(acceptMouseInput, canMove, keepOpen);
+        }
         /// <summary>
         /// Use API.Gumps.AddGump instead
         /// </summary>
-        public void AddGump(object g) => Gumps.AddGump(g);
+        [Obsolete("Remove after 11-1-26")]
+        public void AddGump(object g)
+        {
+            GameActions.Print("API.AddGump will be removed soon, update your script to use API.Gumps.AddGump instead", Constants.HUE_WARN);
+            Gumps.AddGump(g);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpCheckbox instead.
         /// </summary>
-        public ApiUiCheckbox CreateGumpCheckbox(string text = "", ushort hue = 0, bool isChecked = false) => Gumps.CreateGumpCheckbox(text, hue, isChecked);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiCheckbox CreateGumpCheckbox(string text = "", ushort hue = 0, bool isChecked = false)
+        {
+            GameActions.Print("API.CreateGumpCheckbox will be removed soon, update your script to use API.Gumps.CreateGumpCheckbox instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpCheckbox(text, hue, isChecked);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpLabel instead.
         /// </summary>
-        public ApiUiLabel CreateGumpLabel(string text, ushort hue = 996) => Gumps.CreateGumpLabel(text, hue);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiLabel CreateGumpLabel(string text, ushort hue = 996)
+        {
+            GameActions.Print("API.CreateGumpLabel will be removed soon, update your script to use API.Gumps.CreateGumpLabel instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpLabel(text, hue);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpColorBox instead.
         /// </summary>
-        public ApiUiAlphaBlendControl CreateGumpColorBox(float opacity = 0.7f, string color = "#000000") => Gumps.CreateGumpColorBox(opacity, color);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiAlphaBlendControl CreateGumpColorBox(float opacity = 0.7f, string color = "#000000")
+        {
+            GameActions.Print("API.CreateGumpColorBox will be removed soon, update your script to use API.Gumps.CreateGumpColorBox instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpColorBox(opacity, color);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpItemPic instead.
         /// </summary>
-        public ApiUiResizableStaticPic CreateGumpItemPic(uint graphic, int width, int height) => Gumps.CreateGumpItemPic(graphic, width, height);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiResizableStaticPic CreateGumpItemPic(uint graphic, int width, int height)
+        {
+            GameActions.Print("API.CreateGumpItemPic will be removed soon, update your script to use API.Gumps.CreateGumpItemPic instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpItemPic(graphic, width, height);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpButton instead.
         /// </summary>
+        [Obsolete("Remove after 11-1-26")]
         public ApiUiButton CreateGumpButton(string text = "", ushort hue = 996, ushort normal = 0x00EF, ushort pressed = 0x00F0, ushort hover = 0x00EE)
-            => Gumps.CreateGumpButton(text, hue, normal, pressed, hover);
+        {
+            GameActions.Print("API.CreateGumpButton will be removed soon, update your script to use API.Gumps.CreateGumpButton instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpButton(text, hue, normal, pressed, hover);
+        }
         /// <summary>
         /// Use API.Gumps.CreateSimpleButton instead.
         /// </summary>
-        public ApiUiNiceButton CreateSimpleButton(string text, int width, int height) => Gumps.CreateSimpleButton(text, width, height);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiNiceButton CreateSimpleButton(string text, int width, int height)
+        {
+            GameActions.Print("API.CreateSimpleButton will be removed soon, update your script to use API.Gumps.CreateSimpleButton instead", Constants.HUE_WARN);
+            return Gumps.CreateSimpleButton(text, width, height);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpRadioButton instead.
         /// </summary>
+        [Obsolete("Remove after 11-1-26")]
         public ApiUiRadioButton CreateGumpRadioButton(string text = "", int group = 0, ushort inactive = 0x00D0, ushort active = 0x00D1, ushort hue = 0xFFFF, bool isChecked = false)
-            => Gumps.CreateGumpRadioButton(text, group, inactive, active, hue, isChecked);
+        {
+            GameActions.Print("API.CreateGumpRadioButton will be removed soon, update your script to use API.Gumps.CreateGumpRadioButton instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpRadioButton(text, group, inactive, active, hue, isChecked);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpTextBox instead.
         /// </summary>
+        [Obsolete("Remove after 11-1-26")]
         public ApiUiTtfTextInputField CreateGumpTextBox(string text = "", int width = 200, int height = 30, bool multiline = false, float fontSize = 20)
-            => Gumps.CreateGumpTextBox(text, width, height, multiline, fontSize);
+        {
+            GameActions.Print("API.CreateGumpTextBox will be removed soon, update your script to use API.Gumps.CreateGumpTextBox instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpTextBox(text, width, height, multiline, fontSize);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpTTFLabel instead.
         /// </summary>
+        [Obsolete("Remove after 11-1-26")]
         public ApiUiTextBox CreateGumpTTFLabel
             (string text, float size, string color = "#FFFFFF", string font = TrueTypeLoader.EMBEDDED_FONT, string aligned = "left", int maxWidth = 0, bool applyStroke = false)
-            => Gumps.CreateGumpTTFLabel(text, size, color, font, aligned, maxWidth, applyStroke);
+        {
+            GameActions.Print("API.CreateGumpTTFLabel will be removed soon, update your script to use API.Gumps.CreateGumpTTFLabel instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpTTFLabel(text, size, color, font, aligned, maxWidth, applyStroke);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpSimpleProgressBar instead.
         /// </summary>
+        [Obsolete("Remove after 11-1-26")]
         public ApiUiSimpleProgressBar CreateGumpSimpleProgressBar
             (int width, int height, string backgroundColor = "#616161", string foregroundColor = "#212121", int value = 100, int max = 100)
-            => Gumps.CreateGumpSimpleProgressBar(width, height, backgroundColor, foregroundColor, value, max);
+        {
+            GameActions.Print("API.CreateGumpSimpleProgressBar will be removed soon, update your script to use API.Gumps.CreateGumpSimpleProgressBar instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpSimpleProgressBar(width, height, backgroundColor, foregroundColor, value, max);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpScrollArea instead.
         /// </summary>
-        public ApiUiScrollArea CreateGumpScrollArea(int x, int y, int width, int height) => Gumps.CreateGumpScrollArea(x, y, width, height);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiScrollArea CreateGumpScrollArea(int x, int y, int width, int height)
+        {
+            GameActions.Print("API.CreateGumpScrollArea will be removed soon, update your script to use API.Gumps.CreateGumpScrollArea instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpScrollArea(x, y, width, height);
+        }
         /// <summary>
         /// Use API.Gumps.CreateGumpPic instead.
         /// </summary>
-        public ApiUiGumpPic CreateGumpPic(ushort graphic, int x = 0, int y = 0, ushort hue = 0) => Gumps.CreateGumpPic(graphic, x, y, hue);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiGumpPic CreateGumpPic(ushort graphic, int x = 0, int y = 0, ushort hue = 0)
+        {
+            GameActions.Print("API.CreateGumpPic will be removed soon, update your script to use API.Gumps.CreateGumpPic instead", Constants.HUE_WARN);
+            return Gumps.CreateGumpPic(graphic, x, y, hue);
+        }
         /// <summary>
         /// Use API.Gumps.CreateDropDown instead.
         /// </summary>
-        public ApiUiControlDropDown CreateDropDown(int width, IList<string> items, int selectedIndex = 0) => Gumps.CreateDropDown(width, items, selectedIndex);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiControlDropDown CreateDropDown(int width, IList<string> items, int selectedIndex = 0)
+        {
+            GameActions.Print("API.CreateDropDown will be removed soon, update your script to use API.Gumps.CreateDropDown instead", Constants.HUE_WARN);
+            return Gumps.CreateDropDown(width, items, selectedIndex);
+        }
         /// <summary>
         /// Use API.Gumps.CreateModernGump instead.
         /// </summary>
-        public ApiUiNineSliceGump CreateModernGump(int x, int y, int width, int height, bool resizable = true, int minWidth = 50, int minHeight = 50, object onResized = null) => Gumps.CreateModernGump(x, y, width, height, resizable, minWidth, minHeight, onResized);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiNineSliceGump CreateModernGump(int x, int y, int width, int height, bool resizable = true, int minWidth = 50, int minHeight = 50, object onResized = null)
+        {
+            GameActions.Print("API.CreateModernGump will be removed soon, update your script to use API.Gumps.CreateModernGump instead", Constants.HUE_WARN);
+            return Gumps.CreateModernGump(x, y, width, height, resizable, minWidth, minHeight, onResized);
+        }
         /// <summary>
         /// Use API.Gumps.AddControlOnClick instead.
         /// </summary>
-        public object AddControlOnClick(object control, object onClick, bool leftOnly = true) => Gumps.AddControlOnClick(control, onClick, leftOnly);
+        [Obsolete("Remove after 11-1-26")]
+        public object AddControlOnClick(object control, object onClick, bool leftOnly = true)
+        {
+            GameActions.Print("API.AddControlOnClick will be removed soon, update your script to use API.Gumps.AddControlOnClick instead", Constants.HUE_WARN);
+            return Gumps.AddControlOnClick(control, onClick, leftOnly);
+        }
         /// <summary>
         /// Use API.Gumps.AddControlOnDisposed instead.
         /// </summary>
-        public ApiUiBaseControl AddControlOnDisposed(ApiUiBaseControl control, object onDispose) => Gumps.AddControlOnDisposed(control, onDispose);
+        [Obsolete("Remove after 11-1-26")]
+        public ApiUiBaseControl AddControlOnDisposed(ApiUiBaseControl control, object onDispose)
+        {
+            GameActions.Print("API.AddControlOnDisposed will be removed soon, update your script to use API.Gumps.AddControlOnDisposed instead", Constants.HUE_WARN);
+            return Gumps.AddControlOnDisposed(control, onDispose);
+        }
 
         #endregion
 

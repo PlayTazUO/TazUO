@@ -101,29 +101,36 @@ namespace ClassicUO.Configuration
 
         [JsonPropertyName("plugins")] public string[] Plugins { get; set; } = { "" };
 
-        [JsonIgnore] public bool SkipServerSelect { get; set; }
-
         /// <summary>
         /// Uses the campfire/Diablo-style character selection screen instead of the classic list.
-        /// SQL-backed (Global scope) rather than JSON so it can be read/written at the
-        /// character-selection screen before any profile is loaded; persists on assignment.
+        /// Backed by <see cref="GlobalSettingsSave.UseCampfireCharacterSelect"/> (Global scope) rather than
+        /// this JSON file so it can be read/written at the character-selection screen before any profile
+        /// is loaded.
         /// </summary>
         [JsonIgnore]
         public bool UseCampfireCharacterSelect
         {
-            get => Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.CAMPFIRE_CHAR_SELECT, false);
-            set => Client.Settings.Set(SettingsScope.Global, Constants.SqlSettings.CAMPFIRE_CHAR_SELECT, value);
+            get => ProfileManager.GlobalSettings?.UseCampfireCharacterSelect ?? false;
+            set
+            {
+                if (ProfileManager.GlobalSettings != null)
+                    ProfileManager.GlobalSettings.UseCampfireCharacterSelect = value;
+            }
         }
 
         /// <summary>
-        /// UI language code used for TazLang strings, persisted in global SQL settings.
+        /// UI language code used for TazLang strings, backed by <see cref="GlobalSettingsSave.UILanguage"/>.
         /// Defaults to <c>"EN"</c> when no value is stored.
         /// </summary>
         [JsonIgnore]
         public string UILanguage
         {
-            get => Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.UI_LANGUAGE, "EN");
-            set => Client.Settings.Set(SettingsScope.Global, Constants.SqlSettings.UI_LANGUAGE, value);
+            get => ProfileManager.GlobalSettings?.UILanguage ?? "EN";
+            set
+            {
+                if (ProfileManager.GlobalSettings != null)
+                    ProfileManager.GlobalSettings.UILanguage = value;
+            }
         }
 
         public static string GetSettingsFilepath()

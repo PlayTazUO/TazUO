@@ -40,11 +40,6 @@ public static class AutoLootAgentTabContent
         // Options
         var optRow1 = new HorizontalStackPanel { Spacing = 8 };
         optRow1.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.EnableScavenger,
-            b => profile.EnableScavenger = b,
-            "Enable Scavenger",
-            "Scavenger option allows picking objects from ground."));
-        optRow1.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.EnableAutoLootProgressBar,
             b => profile.EnableAutoLootProgressBar = b,
             "Enable Progress Bar",

@@ -87,6 +87,9 @@ namespace ClassicUO.Configuration
 
     public sealed partial class Profile : JsonSave<Profile>, INotifyPropertyChanged
     {
+        internal const string DefaultSystemMessageGlobalChatRegex
+            = @"^\[(?:[01][0-9]|2[0-3]):[0-5][0-9]\] [^:\s\r\n](?:[^:\r\n]*[^:\s\r\n])?: \S(?:[^\r\n]*\S)?$";
+
         private static Profile _defaultPreview;
 
         /// <summary>Lives in the profile folder as <c>profile.json</c>.</summary>
@@ -171,7 +174,13 @@ namespace ClassicUO.Configuration
         // visual
         public bool EnabledCriminalActionQuery { get; set => SetProperty(ref field, value); } = true;
         public bool EnabledBeneficialCriminalActionQuery { get; set => SetProperty(ref field, value); }
+        public StatusGumpStyle StatusGumpStyle { get; set => SetProperty(ref field, value); } = StatusGumpStyle.Standard;
+
+        // Retained only for one-time migration of existing profiles to StatusGumpStyle. Do not use in new code.
+        [Obsolete("Remove after 10/27/26.")]
         public bool UseOldStatusGump { get; set => SetProperty(ref field, value); }
+        [Obsolete("Remove after 10/27/26.")]
+        public bool UseVerticalStatusGump { get; set => SetProperty(ref field, value); }
         public bool StatusGumpBarMutuallyExclusive { get; set => SetProperty(ref field, value); } = true;
         public int BackpackStyle { get; set => SetProperty(ref field, value); }
         public bool HighlightGameObjects { get; set => SetProperty(ref field, value); }
@@ -690,6 +699,11 @@ namespace ClassicUO.Configuration
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); } = false;
         public bool HideJournalSystemPrefix { get; set => SetProperty(ref field, value); } = false;
 
+        public bool ClassifySystemMessagesAsGlobalChat { get; set => SetProperty(ref field, value); } = false;
+
+        public string SystemMessageGlobalChatRegex { get; set => SetProperty(ref field, value); }
+            = DefaultSystemMessageGlobalChatRegex;
+
         public int HealthLineSizeMultiplier { get; set => SetProperty(ref field, value); } = 1;
 
         public bool OpenHealthBarForLastAttack { get; set => SetProperty(ref field, value); } = true;
@@ -797,6 +811,7 @@ namespace ClassicUO.Configuration
         public bool DisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
         public bool ControllerEnabled { get; set => SetProperty(ref field, value); } = true;
         public bool EnableScavenger { get; set => SetProperty(ref field, value); } = true;
+        public string ScavengerSelectedListUid { get; set => SetProperty(ref field, value); } = "";
         public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
         public bool NearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
         public bool SpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
@@ -847,6 +862,7 @@ namespace ClassicUO.Configuration
         public bool StripChatUsernameId { get; set; }
         public bool OverheadsScaleWithZoom { get; set; } = true;
         public string VotedPolls { get; set; }
+        public AutoStatLockState AutoStatLockState { get; set => SetProperty(ref field, value); } = new();
         public string BandageAgentJournalMessages { get; set; } = "You apply the bandages;You finish applying;You heal what little;You have been cured;You failed to cure;Your fingers slip";
         public bool BandageAgentUseJournalTrigger { get; set; }
         public bool CounterBarDisableIconScaling { get; set; }
@@ -1015,6 +1031,37 @@ namespace ClassicUO.Configuration
                 ProfileManager.GlobalSettings.HideJournalTimestamp = HideJournalTimestamp;
 
                 ProfileMigrationVersion = 11;
+            }
+
+            if (ProfileMigrationVersion < 12)
+            {
+#pragma warning disable CS0618
+                if (UseOldStatusGump)
+                    StatusGumpStyle = StatusGumpStyle.Old;
+                else if (UseVerticalStatusGump)
+                    StatusGumpStyle = StatusGumpStyle.ModernVertical;
+#pragma warning restore CS0618
+
+                ProfileMigrationVersion = 12;
+            }
+
+            if (ProfileMigrationVersion < 13)
+            {
+#pragma warning disable CS0618
+                if (!string.IsNullOrWhiteSpace(OldAutoStatLockJson))
+                {
+                    try
+                    {
+                        AutoStatLockState = JsonSerializer.Deserialize(OldAutoStatLockJson, AutoStatLockStateContext.Default.AutoStatLockState) ?? new AutoStatLockState();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"Failed to migrate legacy auto stat lock state: {ex.Message}");
+                    }
+                }
+#pragma warning restore CS0618
+
+                ProfileMigrationVersion = 13;
             }
 
             try //Cleanup old backups from previous save system

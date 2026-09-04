@@ -21,6 +21,6 @@ public class MouseLeftButtonClickStateChangedEventArgs(bool previous, bool curre
 /// <param name="current">The current mouse position</param>
 public class MouseMovedEventArgs(Point previous, Point current) : EventArgs
 {
-    public readonly Point Previous = previous;
-    public readonly Point Current = current;
+    public Point Previous = previous;
+    public Point Current = current;
 }

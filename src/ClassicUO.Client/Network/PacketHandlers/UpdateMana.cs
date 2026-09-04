@@ -18,6 +18,9 @@ internal static class UpdateMana
         mobile.Mana = p.ReadUInt16BE();
 
         if (mobile == world.Player)
+        {
             TitleBarStatsManager.UpdateTitleBar();
+            EventSink.InvokePlayerStatsUpdated();
+        }
     }
 }

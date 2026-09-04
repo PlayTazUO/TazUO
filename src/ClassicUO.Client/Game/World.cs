@@ -351,6 +351,8 @@ namespace ClassicUO.Game
             {
                 string lastChar = LastCharacterManager.GetLastCharacter(LoginScene.Account, ServerName);
                 ProfileManager.Load(ServerName, LoginScene.Account, lastChar, serial);
+                SoundFilterManager.MigrateLegacySqlSettings();
+                SeasonFilter.MigrateLegacySqlSettings();
             }
 
             if (Player != null)

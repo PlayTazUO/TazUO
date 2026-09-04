@@ -241,6 +241,7 @@ namespace ClassicUO.Game.Scenes
             SpellVisualRangeManager.Instance.OnSceneLoad();
             AutoLootManager.Instance.OnSceneLoad();
             AutoSkinningManager.Instance.OnSceneLoad();
+            ScavengerManager.Instance.OnSceneLoad();
             DressAgentManager.Instance.Load();
             FriendsListManager.Instance.OnSceneLoad();
 
@@ -374,7 +375,13 @@ namespace ClassicUO.Game.Scenes
 
             if (!string.IsNullOrEmpty(text))
             {
-                _world.Journal.Add(text, hue, name, e.TextType, e.IsUnicode, e.Type);
+                MessageType journalMessageType = JournalMessageClassifier.Classify(
+                    e,
+                    ProfileManager.CurrentProfile?.ClassifySystemMessagesAsGlobalChat == true,
+                    ProfileManager.CurrentProfile?.SystemMessageGlobalChatRegex
+                );
+
+                _world.Journal.Add(text, hue, name, e.TextType, e.IsUnicode, journalMessageType);
             }
         }
 
@@ -452,6 +459,7 @@ namespace ClassicUO.Game.Scenes
             AutoLootManager.Instance.OnSceneUnload();
             GridHighlightData.Unload();
             AutoSkinningManager.Instance.OnSceneUnload();
+            ScavengerManager.Instance.OnSceneUnload();
             FriendsListManager.Instance.OnSceneUnload();
 
             NameOverHeadManager.Save();
@@ -743,6 +751,46 @@ namespace ClassicUO.Game.Scenes
 
             GetViewPort();
 
+            // The per-object selection pass (CheckMouseSelection -> pixel-picker RLE walks) runs for
+            // every drawn object and dominates list-building cost. Skip it entirely while neither the
+            // cursor nor the view transform moved; reuse last frame's selection, re-testing only the
+            // cached object so one that moved out from under a stationary cursor still deselects.
+            // When the cursor is over a gump the result is thrown away by Update/Draw anyway, so
+            // don't pay for the pass at all.
+            bool mouseOverWorld = UIManager.IsMouseOverWorld;
+            _runWorldSelection =
+                mouseOverWorld
+                && (
+                    _selectionDirty
+                    || SelectedObject.TranslatedMousePositionByViewport != _lastSelectionMousePosition
+                );
+            _selectionDirty = false;
+
+            if (_runWorldSelection)
+            {
+                _lastSelectionMousePosition = SelectedObject.TranslatedMousePositionByViewport;
+                SelectedObject.Object = null;
+            }
+            else
+            {
+                // Temporarily clear so gump-set selections (from Update's OnMouseOver) don't leak
+                // into the cached world result; re-assert it only if it's still under the cursor.
+                SelectedObject.Object = null;
+
+                if (
+                    mouseOverWorld
+                    && _lastWorldSelectionObject is GameObject cached
+                    && IsWorldSelectionValid(cached)
+                )
+                {
+                    SelectedObject.Object = cached;
+                }
+                else
+                {
+                    _lastWorldSelectionObject = null;
+                }
+            }
+
             bool useObjectHandles = NameOverHeadManager.IsShowing;
             if (useObjectHandles != _useObjectHandles)
             {
@@ -856,6 +904,11 @@ namespace ClassicUO.Game.Scenes
             UpdateTextServerEntities(_world.Mobiles.Values, true);
             UpdateTextServerEntities(_world.Items.Values, false);
 
+            if (_runWorldSelection)
+            {
+                _lastWorldSelectionObject = SelectedObject.Object as GameObject;
+            }
+
             UpdateDrawPosition = false;
         }
 
@@ -881,7 +934,24 @@ namespace ClassicUO.Game.Scenes
 
             Profile currentProfile = ProfileManager.CurrentProfile;
 
-            SelectedObject.TranslatedMousePositionByViewport = Camera.MouseToWorldPosition();
+            Point cameraMouse = Camera.MousePosition;
+            Rectangle cameraBounds = Camera.Bounds;
+            ulong cameraVersion = Camera.TransformVersion;
+
+            // MouseToWorldPosition is a pure function of the mouse position and the camera transform;
+            // skip the transform while both are unchanged (or no matrix rebuild is pending).
+            if (
+                Camera.IsMatrixDirty
+                || cameraMouse != _lastTranslatedMouseMouse
+                || cameraBounds != _lastTranslatedMouseBounds
+                || cameraVersion != _lastTranslatedCameraVersion
+            )
+            {
+                SelectedObject.TranslatedMousePositionByViewport = Camera.MouseToWorldPosition();
+                _lastTranslatedMouseMouse = Camera.MousePosition;
+                _lastTranslatedMouseBounds = Camera.Bounds;
+                _lastTranslatedCameraVersion = Camera.TransformVersion;
+            }
 
             base.Update();
             SelfHealManager.Update();
@@ -983,6 +1053,7 @@ namespace ClassicUO.Game.Scenes
 
             ObjectActionQueue.Instance.Update();
             AutoLootManager.Instance.Update();
+            ScavengerManager.Instance.Update();
             BandageManager.Instance.Update();
             GridHighlightData.ProcessQueue(_world);
             Profiler.ExitContext("Actions");
@@ -1356,8 +1427,9 @@ namespace ClassicUO.Game.Scenes
 
         private void DrawWorld(UltimaBatcher2D batcher, ref Matrix matrix)
         {
-            SelectedObject.Object = null;
+            Profiler.EnterContext("WorldSelection");
             FillGameObjectList();
+            Profiler.ExitContext("WorldSelection");
 
             // Always use render target for consistent scaling
             RenderTargetBinding[] previousRenderTargets = batcher.GraphicsDevice.GetRenderTargets();

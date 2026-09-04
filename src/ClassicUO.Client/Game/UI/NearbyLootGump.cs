@@ -240,6 +240,9 @@ namespace ClassicUO.Game.UI
                 return;
             if (corpse.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
                 return;
+            if (ProfileManager.ServerSettings is { DoNotReopenCorpses: true }
+                && CorpseManager.IsCorpseOpened(corpse.Serial))
+                return;
             if(ProfileManager.CurrentProfile.NearbyLootConcealsContainerOnOpen)
                 _corpsesRequested.Add(corpse.Serial);
 

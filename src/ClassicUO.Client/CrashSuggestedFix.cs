@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using ClassicUO.Utility.Logging;
@@ -24,6 +25,13 @@ internal static class CrashSuggestedFix
     ///     exception. The message text is localized, so the HRESULT is the only reliable match.
     /// </summary>
     private const int H_RESULT_BLOCKED_BY_APPLICATION_POLICY = unchecked((int)0x800711C7);
+
+    /// <summary>
+    ///     The same HRESULT as <see cref="H_RESULT_BLOCKED_BY_APPLICATION_POLICY" />, in the
+    ///     text form the loader embeds in a <see cref="DllNotFoundException" /> message when
+    ///     the block carries no inner exception with the numeric value.
+    /// </summary>
+    private const string H_RESULT_BLOCKED_BY_APPLICATION_POLICY_HEX = "0x800711C7";
 
     /// <summary>
     ///     COR_E_NOTSUPPORTED as raised by the assembly loader when a file still carries the
@@ -66,6 +74,9 @@ internal static class CrashSuggestedFix
             if (TryGetPluginPacketCrashFix(exception, out string pluginPacketFix))
                 return pluginPacketFix;
 
+            if (TryGetPluginBackgroundThreadCrashFix(exception, out string pluginThreadFix))
+                return pluginThreadFix;
+
             if (TryGetMapLoaderCrashFix(exception, out string mapFix))
                 return mapFix;
 
@@ -77,6 +88,9 @@ internal static class CrashSuggestedFix
 
             if (TryGetMissingAssemblyCrashFix(exception, out string assemblyFix))
                 return assemblyFix;
+
+            if (TryGetPolicyBlockedFileCrashFix(exception, out string policyBlockedFix))
+                return policyBlockedFix;
 
             if (TryGetFileAccessDeniedCrashFix(exception, out string fileAccessFix))
                 return fileAccessFix;
@@ -444,6 +458,108 @@ internal static class CrashSuggestedFix
     }
 
     /// <summary>
+    ///     Recognizes a Windows application control policy block (0x800711C7) no matter which
+    ///     exception type surfaces it. Managed assemblies raise a <see cref="FileLoadException" />
+    ///     with the HRESULT set, while native libraries (for example FNA3D.dll at startup) raise
+    ///     a <see cref="DllNotFoundException" /> that embeds the block in a
+    ///     <see cref="System.ComponentModel.Win32Exception" /> inner or, lacking that, only as
+    ///     text in its message. <see cref="TryGetMissingAssemblyCrashFix" /> already covers
+    ///     <c>ClassicUO.*.dll</c> at startup.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetPolicyBlockedFileCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        foreach (Exception candidate in EnumerateExceptionChain(e))
+        {
+            if (candidate.HResult != H_RESULT_BLOCKED_BY_APPLICATION_POLICY)
+                continue;
+
+            // FileLoadException carries the blocked file's name; a native-library load failure
+            // names the library only in the DllNotFoundException message.
+            string fileName = candidate switch
+            {
+                FileLoadException fileLoadException => Path.GetFileName(fileLoadException.FileName ?? string.Empty),
+                _ when e is DllNotFoundException dllNotFound => ExtractQuotedLibraryName(dllNotFound),
+                _ => null
+            };
+
+            string header = candidate is FileLoadException
+                ? "Windows blocked a file TazUO needed to load while the game was running."
+                : "Windows prevented TazUO from starting.";
+
+            fix = BuildPolicyBlockedFileFix(fileName, header);
+            return true;
+        }
+
+        // Some throwers (for example FNA's FNADllMap) raise a DllNotFoundException that names
+        // the library but carries no inner exception holding the HRESULT - the hex token in the
+        // message is then the only reliable match.
+        if (e is DllNotFoundException messageOnlyDllNotFound &&
+            messageOnlyDllNotFound.Message.IndexOf(H_RESULT_BLOCKED_BY_APPLICATION_POLICY_HEX, StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            fix = BuildPolicyBlockedFileFix(ExtractQuotedLibraryName(messageOnlyDllNotFound), "Windows prevented TazUO from starting.");
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Pulls the library name out of a <see cref="DllNotFoundException" /> message. Both the
+    ///     runtime and FNA's FNADllMap raise these with the name between single quotes
+    ///     ("Unable to load DLL 'FNA3D.dll' or one of its dependencies: ..."); the surrounding
+    ///     words are runtime-generated, so the quotes are a reliable delimiter. Returns null
+    ///     when the pattern is absent rather than guessing a name.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <returns>The quoted library name, or null when the message does not follow the pattern.</returns>
+    private static string ExtractQuotedLibraryName(Exception e)
+    {
+        const string openQuote = "Unable to load DLL '";
+        string message = e.Message;
+
+        if (string.IsNullOrEmpty(message) ||
+            !message.StartsWith(openQuote, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        int closeQuote = message.IndexOf('\'', openQuote.Length);
+
+        return closeQuote < 0 ? null : message.Substring(openQuote.Length, closeQuote - openQuote.Length);
+    }
+
+    /// <summary>
+    ///     Yields the exception and every exception in its inner chain, including those nested
+    ///     inside <see cref="AggregateException" />s.
+    /// </summary>
+    /// <param name="e">Exception to walk.</param>
+    /// <returns>Each exception in the chain.</returns>
+    private static IEnumerable<Exception> EnumerateExceptionChain(Exception e)
+    {
+        var stack = new Stack<Exception>();
+        stack.Push(e);
+
+        while (stack.Count > 0)
+        {
+            Exception current = stack.Pop();
+            yield return current;
+
+            if (current is AggregateException aggregate)
+            {
+                foreach (Exception inner in aggregate.InnerExceptions)
+                    stack.Push(inner);
+            }
+            else if (current.InnerException != null)
+            {
+                stack.Push(current.InnerException);
+            }
+        }
+    }
+
+    /// <summary>
     ///     Sentence subject naming the file that failed, or a neutral stand-in when the loader
     ///     reported no name. Never substitutes a likely-looking name - a wrong file name in a
     ///     crash log sends the user chasing a file that was never involved.
@@ -498,13 +614,24 @@ internal static class CrashSuggestedFix
     ///     detected S mode state since a reinstall cannot fix S mode.
     /// </summary>
     /// <param name="assemblyName">File name from the exception, or empty if unreported.</param>
-    private static string BuildAssemblyBlockedByPolicyFix(string assemblyName)
+    private static string BuildAssemblyBlockedByPolicyFix(string assemblyName) =>
+        BuildPolicyBlockedFileFix(assemblyName, "Windows prevented TazUO from starting.");
+
+    /// <summary>
+    ///     Shared advice for <see cref="H_RESULT_BLOCKED_BY_APPLICATION_POLICY" /> - a Windows
+    ///     application control policy refused a file. The same block can hit a TazUO assembly at
+    ///     startup or a runtime dependency (for example MP3Sharp.dll), so the build differs only
+    ///     in its lead-in sentence.
+    /// </summary>
+    /// <param name="fileName">File name from the exception, or empty if unreported.</param>
+    /// <param name="header">Lead-in sentence; startup and runtime failures use different wording.</param>
+    private static string BuildPolicyBlockedFileFix(string fileName, string header)
     {
         SModeState sMode = WindowsSMode.GetState();
 
         var sb = new StringBuilder();
-        sb.AppendLine("Windows prevented TazUO from starting.");
-        sb.AppendLine($"{DescribeAffectedFile(assemblyName)} is present but Windows security prevented its load. This may sometimes occur after an update.");
+        sb.AppendLine(header);
+        sb.AppendLine($"{DescribeAffectedFile(fileName)} is present but Windows security prevented its load. This may sometimes occur after an update.");
 
         // Windows S mode allows only store apps - the fix here is specific - disable it.
         if (sMode == SModeState.Enabled)
@@ -708,6 +835,161 @@ internal static class CrashSuggestedFix
 
         fix = sb.ToString();
         return true;
+    }
+
+    /// <summary>
+    ///     Recognizes a crash that happened on a background thread spawned via
+    ///     <c>new Thread(...).Start()</c> by code outside TazUO - typically a third-party
+    ///     plugin/assistant running its own UI or logic on a dedicated thread. When such a
+    ///     thread throws, the stack bottoms out in the runtime's thread-start callback rather
+    ///     than TazUO's game loop, and the frames above it come from the plugin, not TazUO.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetPluginBackgroundThreadCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        // ToString() on the top-level exception includes the stack traces of any inner
+        // (and aggregated) exceptions, so we can inspect the whole chain in one string.
+        string details = e.ToString();
+
+        if (string.IsNullOrEmpty(details))
+            return false;
+
+        int threadStartFrameIndex = FindThreadStartFrameIndex(details);
+
+        // Only a background-thread crash when the stack bottoms out in the runtime's
+        // thread-start callback (a plain `new Thread(...).Start()`).
+        if (threadStartFrameIndex < 0)
+            return false;
+
+        // TazUO also spawns threads of its own (scripts, the map web server, voice
+        // recognition), so only blame a plugin when non-TazUO code ran on that thread.
+        if (!HasExternalFrameAbove(details, threadStartFrameIndex))
+            return false;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("This crash happened on a background thread that was started by code outside TazUO.");
+        sb.AppendLine(
+            "The bottom of the stack trace shows a 'Thread.Start' call from a third-party plugin or assistant (for example a UO copilot or helper tool), not from TazUO's own game code, so the crash may be caused by that plugin.");
+        sb.AppendLine();
+        sb.AppendLine("Suggested fixes:");
+        sb.AppendLine("1. Update the plugin/assistant to its latest version, or temporarily disable it to confirm it is the cause.");
+        sb.AppendLine(
+            "2. If the error mentions a UI window or that a thread 'cannot access this object because a different thread owns it', the plugin is using its own window from the wrong thread - that is a plugin bug, not a TazUO bug.");
+        sb.AppendLine("3. If it keeps happening, report the crash log to the plugin's author.");
+
+        fix = sb.ToString();
+        return true;
+    }
+
+    /// <summary>
+    ///     Namespace prefixes of TazUO's own code and the libraries it ships with. Stack
+    ///     frames starting with any of these are ignored when deciding whether a background
+    ///     thread belonged to a third-party plugin.
+    /// </summary>
+    private static readonly string[] _tazUoFramePrefixes =
+    {
+        "ClassicUO.",
+        "System.",
+        "Microsoft.",          // BCL plus the bundled FNA framework (Microsoft.Xna.*)
+        "IronPython.",
+        "Microsoft.Scripting.",
+        "FontStashSharp.",
+        "MP3Sharp.",
+        "Myra.",
+        "StbTrueTypeSharp."
+    };
+
+    /// <summary>
+    ///     Returns the line index of the first stack frame that spawned the crashing thread
+    ///     (<c>System.Threading.Thread.StartHelper.Callback</c> /
+    ///     <c>System.Threading.ExecutionContext.RunInternal</c>), or -1 when the stack does
+    ///     not start from such a thread.
+    /// </summary>
+    /// <param name="stack">The <see cref="Exception.ToString" /> dump to inspect.</param>
+    private static int FindThreadStartFrameIndex(string stack)
+    {
+        StringReader reader = new(stack);
+        int lineIndex = 0;
+
+        while (reader.ReadLine() is { } line)
+        {
+            string method = ExtractFrameMethod(line);
+
+            if (method != null &&
+                (method.Contains("System.Threading.Thread.StartHelper.Callback") ||
+                 method.Contains("System.Threading.ExecutionContext.RunInternal")))
+                return lineIndex;
+
+            lineIndex++;
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    ///     Whether any stack frame above <paramref name="endFrameIndex" /> belongs to an
+    ///     assembly that is neither TazUO's nor one of its bundled libraries - i.e. code from
+    ///     a third-party plugin ran on that thread.
+    /// </summary>
+    /// <param name="stack">The <see cref="Exception.ToString" /> dump to inspect.</param>
+    /// <param name="endFrameIndex">Line index of the thread-start frame; frames above it are examined.</param>
+    private static bool HasExternalFrameAbove(string stack, int endFrameIndex)
+    {
+        StringReader reader = new(stack);
+        int lineIndex = 0;
+
+        while (lineIndex < endFrameIndex && reader.ReadLine() is { } line)
+        {
+            string method = ExtractFrameMethod(line);
+
+            if (method != null && !IsTazUoFrame(method))
+                return true;
+
+            lineIndex++;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Pulls the fully-qualified method name out of a stack frame line
+    ///     (<c>at Namespace.Type.Method(...) in file:line</c>), or null for non-frame lines
+    ///     (the exception message, blank lines, "End of stack trace" markers).
+    /// </summary>
+    /// <param name="line">A line from <see cref="Exception.ToString" />.</param>
+    private static string ExtractFrameMethod(string line)
+    {
+        string trimmed = line.TrimStart();
+
+        if (!trimmed.StartsWith("at ", StringComparison.Ordinal))
+            return null;
+
+        // Method signatures carry the parameter list and, for JIT-visible methods, file/line
+        // info - everything from the opening '(' onwards is irrelevant to the namespace check.
+        int paren = trimmed.IndexOf('(');
+        string method = paren < 0 ? trimmed.Substring(3) : trimmed.Substring(3, paren - 3);
+
+        return method.Trim();
+    }
+
+    /// <summary>
+    ///     Whether a fully-qualified method name belongs to TazUO or one of its bundled
+    ///     libraries (see <see cref="_tazUoFramePrefixes" />).
+    /// </summary>
+    /// <param name="method">Fully-qualified method name from a stack frame.</param>
+    private static bool IsTazUoFrame(string method)
+    {
+        foreach (string prefix in _tazUoFramePrefixes)
+        {
+            if (method.StartsWith(prefix, StringComparison.Ordinal))
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>

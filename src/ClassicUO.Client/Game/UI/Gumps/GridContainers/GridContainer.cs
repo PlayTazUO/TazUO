@@ -84,6 +84,7 @@ public partial class GridContainer : ResizableGump
         public bool? UseOldContainerStyle;
         private bool _autoSortContainer;
         private bool _bandsDisabledForContainer;
+        private bool _highlightsDisabledForContainer;
         private GridSortMode _sortMode = GridSortMode.GraphicAndHue;
 
         private readonly bool _skipSave;
@@ -132,6 +133,9 @@ public partial class GridContainer : ResizableGump
 
         /// <summary>Per-container override that disables band layout for this container even when bands are enabled globally.</summary>
         public bool BandsDisabledForContainer => _bandsDisabledForContainer;
+
+        /// <summary>Per-container override that suppresses grid-highlight rules in this container.</summary>
+        public bool HighlightsDisabledForContainer => _highlightsDisabledForContainer;
 
         public GridSortMode SortMode => _sortMode;
         public readonly GridSlotManager SlotManager;
@@ -250,12 +254,13 @@ public partial class GridContainer : ResizableGump
             if (useGridStyle != null)
                 UseOldContainerStyle = !useGridStyle;
 
-            IsPlayerBackpack = LocalSerial == World.Player.Backpack.Serial;
+            IsPlayerBackpack = LocalSerial == World.Player?.Backpack?.Serial;
 
             _gridContainerEntry = GridContainerSaveData.Instance.GetContainer(local);
 
             _autoSortContainer = _gridContainerEntry.AutoSort;
             _bandsDisabledForContainer = _gridContainerEntry.BandsDisabled;
+            _highlightsDisabledForContainer = _gridContainerEntry.HighlightsDisabled;
             StackNonStackableItems = _gridContainerEntry.VisuallyStackNonStackables;
             _sortMode = (GridSortMode)_gridContainerEntry.SortMode;
 
@@ -294,7 +299,7 @@ public partial class GridContainer : ResizableGump
 
             if (_isCorpse)
             {
-                World.Player.ManualOpenedCorpses.Remove(LocalSerial);
+                World.Player?.ManualOpenedCorpses.Remove(LocalSerial);
             }
 
             AnchorType = ProfileManager.CurrentProfile.EnableGridContainerAnchor ? ANCHOR_TYPE.NONE : ANCHOR_TYPE.DISABLED;
@@ -419,7 +424,7 @@ public partial class GridContainer : ResizableGump
                 "Alt + Double Click to select all similar items\n" +
                 "Shift + Click to add an item to your auto loot list\n" +
                 "Sort and single click looting can be enabled with the icons on the right side"));
-            _quickDropBackpack = new ResizableStaticPic(World.Player.Backpack.DisplayedGraphic, 20, 20)
+            _quickDropBackpack = new ResizableStaticPic(World.Player?.Backpack?.DisplayedGraphic ?? 0, 20, 20)
             {
                 X = Width - _openRegularGump.Width - 20 - _borderWidth,
                 Y = _borderWidth
@@ -684,7 +689,15 @@ public partial class GridContainer : ResizableGump
                 RequestUpdateContents();
             }, true, _bandsDisabledForContainer));
 
-            if (Container != World.Player.Backpack)
+            control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_disablehighlights", "Disable Highlights for This Container"), () =>
+            {
+                _highlightsDisabledForContainer = !_highlightsDisabledForContainer;
+                _gridContainerEntry.HighlightsDisabled = _highlightsDisabledForContainer;
+                _gridContainerEntry.UpdateSaveDataEntry(this);
+                _openRegularGump.ContextMenu = GenContextMenu();
+            }, true, _highlightsDisabledForContainer));
+
+            if (Container != World.Player?.Backpack)
             {
                 control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_autolootthis", "Autoloot this container"), () =>
                 {
@@ -1003,7 +1016,7 @@ public partial class GridContainer : ResizableGump
                 if (currentContainer == SelectedObject.CorpseObject)
                     SelectedObject.CorpseObject = null;
 
-                Item bank = World.Player.FindItemByLayer(Layer.Bank);
+                Item bank = World.Player?.FindItemByLayer(Layer.Bank);
 
                 if (bank != null && (currentContainer.Serial == bank.Serial || currentContainer.Container == bank.Serial))
                 {

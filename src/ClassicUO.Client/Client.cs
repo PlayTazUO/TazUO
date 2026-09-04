@@ -12,7 +12,6 @@ using SDL3;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace ClassicUO
 {
@@ -104,8 +103,6 @@ namespace ClassicUO
 
         private void LoadUOFiles()
         {
-            Task<bool> skipServerSelectTask = Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.SKIP_SERVER_SELECTION, false);
-
             TazLang.Load(Settings.GlobalSettings.UILanguage);
 
             // This provides Myra searchable combobox localization context.
@@ -190,9 +187,6 @@ namespace ClassicUO
                 Protocol |= ClientFlags.CF_SA;
             }
 
-            skipServerSelectTask.Wait();
-            Settings.GlobalSettings.SkipServerSelect = skipServerSelectTask.Result || CUOEnviroment.SkipServerSelect;
-
             Log.Trace($"Client path: '{clientPath}'");
             Log.Trace($"Client version: {clientVersion}");
             Log.Trace($"Protocol: {Protocol}");
@@ -251,7 +245,40 @@ namespace ClassicUO
                 // https://github.com/FNA-XNA/FNA/wiki/7:-FNA-Environment-Variables#fna_graphics_enable_highdpi
                 CUOEnviroment.IsHighDPI = Environment.GetEnvironmentVariable("FNA_GRAPHICS_ENABLE_HIGHDPI") == "1";
 
-                _ = Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, 1f, f => Game.SetScale(f));
+                #warning Remove migration >= 10/26/26
+                if (ProfileManager.GlobalSettings.MigrationVersion < 1){
+                    ProfileManager.GlobalSettings.GlobalScale = Settings.Get<float>(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, 1f);
+                    ProfileManager.GlobalSettings.MigrationVersion = 1;
+                }
+
+                #warning Remove migration >= 10/26/26
+                if (ProfileManager.GlobalSettings.MigrationVersion < 2)
+                {
+                    ProfileManager.GlobalSettings.WebMapJournalWidth = Settings.Get(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_JOURNAL_WIDTH, 400);
+                    ProfileManager.GlobalSettings.WebMapJournalHeight = Settings.Get(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_JOURNAL_HEIGHT, 300);
+                    ProfileManager.GlobalSettings.WebMapJournalMinimized = Settings.Get(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_JOURNAL_MINIMIZED, false);
+                    ProfileManager.GlobalSettings.WebMapControlsMinimized = Settings.Get(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_CONTROLS_MINIMIZED, false);
+                    ProfileManager.GlobalSettings.MigrationVersion = 2;
+                }
+
+                #warning Remove migration >= 10/26/26
+                if (ProfileManager.GlobalSettings.MigrationVersion < 3)
+                {
+                    LastEquipmentManager.MigrateLegacySqlSettings();
+                    ProfileManager.GlobalSettings.MigrationVersion = 3;
+                }
+
+                #warning Remove migration >= 10/26/26
+                if (ProfileManager.GlobalSettings.MigrationVersion < 4)
+                {
+                    ProfileManager.GlobalSettings.UseCampfireCharacterSelect = Settings.Get(SettingsScope.Global, Constants.SqlSettings.CAMPFIRE_CHAR_SELECT, false);
+                    string uiLanguage = Settings.Get(SettingsScope.Global, Constants.SqlSettings.UI_LANGUAGE, "EN");
+                    if (!string.IsNullOrWhiteSpace(uiLanguage))
+                        ProfileManager.GlobalSettings.UILanguage = uiLanguage;
+                    ProfileManager.GlobalSettings.MigrationVersion = 4;
+                }
+
+                Game.SetScale(ProfileManager.GlobalSettings.GlobalScale);
 
                 Game.Run();
             }
