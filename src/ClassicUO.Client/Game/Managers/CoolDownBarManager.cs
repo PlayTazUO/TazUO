@@ -28,12 +28,12 @@ namespace ClassicUO.Game.Managers
                     case 0:
                         break;
                     case 1: //self
-                        if (e.Parent != null && e.Parent.Serial != World.Player.Serial)
-                            return;
+                        if (e.Parent == null || e.Parent.Serial != World.Player.Serial)
+                            continue;
                         break;
                     case 2:
-                        if (e.Parent != null && e.Parent.Serial == World.Player.Serial)
-                            return;
+                        if (e.Parent == null || e.Parent.Serial == World.Player.Serial)
+                            continue;
                         break;
 
                 }
