@@ -41,6 +41,7 @@ public class IndexedListPicker : VerticalStackPanel
 
     #region Ctor
 
+    /// <summary>Builds the picker row and its picked-items box.</summary>
     /// <param name="value">The picker's starting value - not necessarily picked.</param>
     /// <param name="entries">Every known (value, label) pair to offer. Labels arrive display-ready
     /// (e.g. "755 - Earthquake").</param>

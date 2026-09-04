@@ -18,8 +18,13 @@ public sealed class SerialListEditorAttribute : Attribute;
 [Flags]
 public enum SerialDisplayFormat
 {
+    /// <summary>Hex only, e.g. <c>0x4000BEEF</c>.</summary>
     Hex = 1,
+
+    /// <summary>Decimal only.</summary>
     Decimal = 2,
+
+    /// <summary>Both bases, e.g. <c>0x4000BEEF (1073790703)</c>.</summary>
     Both = Hex | Decimal
 }
 
@@ -60,6 +65,7 @@ public sealed class SerialListPicker : VerticalStackPanel
 
     #region Ctor
 
+    /// <summary>Builds the picker row and its picked-items box.</summary>
     /// <param name="inputWidth">Width for the raw-serial field - no wider than "0xFFFFFFFF".</param>
     /// <param name="initialValues">Serials already picked when the widget is built.</param>
     /// <param name="displayFormat">Which base(s) a picked row is shown in.</param>

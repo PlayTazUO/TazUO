@@ -12,6 +12,7 @@ public class SpaceBetweenRow : HorizontalStackPanel
 {
     #region Ctor
 
+    /// <summary>Pairs the leading and trailing widgets into one row.</summary>
     /// <param name="leading">The widget that takes up the remaining space.</param>
     /// <param name="trailing">The widget pinned to the right edge.</param>
     /// <param name="spacing">Gap kept between them when the leading widget doesn't fill it all.</param>

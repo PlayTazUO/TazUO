@@ -31,6 +31,7 @@ public sealed class TargetSelectionButton : MyraButton
 
     #region Ctor
 
+    /// <summary>Wires the button to arm the target cursor on click.</summary>
     /// <param name="onTargeted">Called with the picked serial, or null when the player cancelled or
     /// picked something <paramref name="accepts" /> rejected.</param>
     /// <param name="accepts">Filters a valid pick - an item-only picker, say. Omitted takes any

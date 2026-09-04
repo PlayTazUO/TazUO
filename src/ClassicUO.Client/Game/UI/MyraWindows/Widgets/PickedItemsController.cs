@@ -108,6 +108,8 @@ public sealed class PickedItemsController<TValue> where TValue : notnull
     #region Public methods
 
     /// <summary>Whether <paramref name="value" /> is already picked.</summary>
+    /// <param name="value">The value to check.</param>
+    /// <returns><see langword="true" /> if picked.</returns>
     public bool Contains(TValue value) => _rows.ContainsKey(value);
 
     /// <summary>Fills the set in without raising <see cref="ItemsChanged" />, for values that came from
@@ -122,6 +124,7 @@ public sealed class PickedItemsController<TValue> where TValue : notnull
     }
 
     /// <summary>Picks <paramref name="value" />, unless it is already picked or not addable.</summary>
+    /// <param name="value">The value to pick.</param>
     /// <returns>Whether the set changed.</returns>
     public bool Add(TValue value)
     {
@@ -134,6 +137,7 @@ public sealed class PickedItemsController<TValue> where TValue : notnull
     }
 
     /// <summary>Un-picks <paramref name="value" />.</summary>
+    /// <param name="value">The value to remove.</param>
     /// <returns>Whether the set changed.</returns>
     public bool Remove(TValue value)
     {
@@ -148,6 +152,7 @@ public sealed class PickedItemsController<TValue> where TValue : notnull
     }
 
     /// <summary>Tells the controller what the picker's input now holds. Call on every change to it.</summary>
+    /// <param name="candidate">The picker's current input value.</param>
     public void SetCandidate(TValue candidate)
     {
         _candidate = candidate;

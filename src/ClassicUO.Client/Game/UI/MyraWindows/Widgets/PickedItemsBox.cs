@@ -23,6 +23,7 @@ public sealed class PickedItemsBox : VerticalStackPanel
 
     #region Ctor
 
+    /// <summary>Creates an empty box showing the placeholder.</summary>
     /// <param name="width">Fixed width, matching whatever picker row sits above this box.</param>
     public PickedItemsBox(int width)
     {
