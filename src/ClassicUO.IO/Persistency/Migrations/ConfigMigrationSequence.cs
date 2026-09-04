@@ -8,18 +8,18 @@ namespace ClassicUO.IO.Persistency.Migrations;
 
 /// <summary>
 /// Orders and runs a config's <see cref="IConfigMigration{TDocument}"/> steps. Transport-agnostic:
-/// knows nothing of JSON, XML or files, only the document type it is given.
+/// knows nothing of JSON, XML, or files, only the document type it is given.
 /// </summary>
 /// <typeparam name="TDocument">The mutable document form the migrations operate on.</typeparam>
 public sealed class ConfigMigrationSequence<TDocument>
 {
     private readonly IReadOnlyList<IConfigMigration<TDocument>> _migrations;
 
-    /// <summary>Highest version this build can produce. Zero when no migration is registered.</summary>
+    /// <summary>The highest version this build can produce. Zero when no migration is registered.</summary>
     public int LatestVersion { get; }
 
     /// <param name="migrations">Every migration this config has, in strictly ascending version
-    /// order. Order is the contract, and is validated here rather than assumed.</param>
+    /// order. Order is the contract and is validated here rather than assumed.</param>
     /// <exception cref="ArgumentException">
     /// A version below 1, a duplicate version, or a version out of ascending order.
     /// </exception>

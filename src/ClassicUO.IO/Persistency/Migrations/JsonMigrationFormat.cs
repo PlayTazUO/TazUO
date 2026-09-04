@@ -28,10 +28,6 @@ public class JsonMigrationFormat : IMigrationFormat<JsonObject>
     }
 
     /// <inheritdoc cref="IMigrationFormat{TDocument}.Preprocess" />
-    /// <remarks>
-    ///     Declared here rather than left to the interface default so subclasses can override
-    ///     it - a default interface method is not virtual through the class that inherits it.
-    /// </remarks>
     public virtual (string Text, bool Changed) Preprocess(string text) => (text, false);
 
     /// <exception cref="ConfigMigrationException">The text is not a JSON object.</exception>

@@ -43,7 +43,7 @@ public interface IMigrationFormat<TDocument>
     ///     Defaults to parsing as read.
     /// </summary>
     /// <returns>
-    ///     The text to parse, and whether it differs from what was read - a true carries into
+    ///     The text to parse, and whether it differs from what was read - a <see langword="true" /> carries into
     ///     <see cref="ConfigMigrationResult.Changed" />, persisting the repair.
     /// </returns>
     (string Text, bool Changed) Preprocess(string text) => (text, false);
