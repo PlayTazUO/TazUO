@@ -6,7 +6,7 @@ All notable changes to TazUO will be recorded here.
 Future release notes will be formatted by date instead of by release, most recent changes listed at the top:
 
 ## 9/4/26
-* Changes listed here
+* Custom cooldown bars now continue checking later rules when a sender filter does not match and no longer treat messages without a source as Self or Other
 
 ### Features
 * Added a new modern status gump with progress bars
