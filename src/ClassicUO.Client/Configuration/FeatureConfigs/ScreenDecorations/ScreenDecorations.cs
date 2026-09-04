@@ -2,8 +2,6 @@
 
 using System.IO;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Migrations;
-using ClassicUO.IO.Persistency.Migrations;
-using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
@@ -60,22 +58,11 @@ public class ScreenDecorations : ObservableSettings
             return _current;
         }
 
-        try
-        {
-            _current = VersionedJsonConfig.Load(
-                file,
-                ScreenDecorationsJsonContext.DefaultToUse.ScreenDecorations,
-                ScreenDecorationsMigrations.Pipeline
-            ) ?? new ScreenDecorations();
-        }
-        catch (ConfigMigrationException e)
-        {
-            // Unreadable, written by a newer client, or migrating to a shape that will not bind - all
-            // start clean. Backed up first, because the next Save() overwrites what is on disk.
-            Log.Error($"Failed to load configuration file '{file}' - {e}");
-            ConfigurationResolver.BackupAndReportCorruptFile(file);
-            _current = new ScreenDecorations();
-        }
+        _current = ConfigurationResolver.Load(
+            file,
+            ScreenDecorationsJsonContext.DefaultToUse.ScreenDecorations,
+            ScreenDecorationsMigrations.Pipeline
+        ) ?? new ScreenDecorations();
 
         return _current;
     }

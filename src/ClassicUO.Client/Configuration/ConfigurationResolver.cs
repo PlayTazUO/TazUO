@@ -2,99 +2,128 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
 using ClassicUO.IO;
 using ClassicUO.IO.Persistency;
+using ClassicUO.IO.Persistency.Migrations;
 using ClassicUO.Utility.Logging;
 
-namespace ClassicUO.Configuration
+namespace ClassicUO.Configuration;
+
+internal static partial class ConfigurationResolver
 {
-    internal static partial class ConfigurationResolver
+    /// <summary>
+    ///     Corrupt configuration files detected during load, recorded here so the UI can notify the
+    ///     user once they are in-world. Detection happens at boot, long before the viewport exists.
+    /// </summary>
+    public static readonly ConcurrentQueue<CorruptConfigFile> CorruptFiles = new();
+
+    /// <summary>
+    ///     Holds the file as found, so a corrupt config the client overwrites with defaults is
+    ///     still recoverable by hand.
+    /// </summary>
+    private static readonly ConfigBackupStore _corruptBackups = new("corrupt");
+
+    /// <summary>
+    ///     Copies a config file that could not be loaded aside and records it for the in-world notice.
+    ///     Call before falling back to defaults, which overwrite the file.
+    /// </summary>
+    /// <param name="file">The file that could not be loaded.</param>
+    /// <returns>Where the copy was written, or null if none could be taken.</returns>
+    public static string BackupAndReportCorruptFile(string file)
     {
-        /// <summary>
-        /// Corrupt configuration files detected during load, recorded here so the UI can notify the
-        /// user once they are in-world. Detection happens at boot, long before the viewport exists.
-        /// </summary>
-        public static readonly ConcurrentQueue<CorruptConfigFile> CorruptFiles = new();
+        string backupPath = _corruptBackups.TryBackup(file, out Exception backupError);
 
-        /// <summary>Holds the file as found, so a corrupt config the client overwrites with defaults is
-        /// still recoverable by hand.</summary>
-        private static readonly ConfigBackupStore _corruptBackups = new("corrupt");
+        if (backupError != null)
+            Log.Error($"Failed to back up corrupt configuration file '{file}' - {backupError}");
+        else if (backupPath != null)
+            Log.Warn($"Corrupt configuration file backed up to '{backupPath}'.");
 
-        /// <summary>
-        /// Copies a config file that could not be loaded aside and records it for the in-world notice.
-        /// Call before falling back to defaults, which overwrite the file.
-        /// </summary>
-        /// <param name="file">The file that could not be loaded.</param>
-        /// <returns>Where the copy was written, or null if none could be taken.</returns>
-        public static string BackupAndReportCorruptFile(string file)
+        CorruptFiles.Enqueue(new CorruptConfigFile(file, backupPath));
+
+        return backupPath;
+    }
+
+    /// <summary>Un-escapes the backslash-escaping legacy config writers applied before saving.</summary>
+    internal static string NormalizeText(string text) => EscapeNormalizeRegex().Replace(text, @"\\");
+
+    // Matches a lone backslash - not part of an already-escaped \\ pair.
+    [GeneratedRegex(@"(?<!\\)\\(?!\\)")]
+    private static partial Regex EscapeNormalizeRegex();
+
+    public static T Load<T>(string file, JsonTypeInfo<T> ctx) where T : class
+    {
+        if (!File.Exists(file))
         {
-            string backupPath = _corruptBackups.TryBackup(file, out Exception backupError);
-
-            if (backupError != null)
-                Log.Error($"Failed to back up corrupt configuration file '{file}' - {backupError}");
-            else if (backupPath != null)
-                Log.Warn($"Corrupt configuration file backed up to '{backupPath}'.");
-
-            CorruptFiles.Enqueue(new CorruptConfigFile(file, backupPath));
-
-            return backupPath;
+            Log.Warn(file + " not found.");
+            return null;
         }
 
-        /// <summary>Un-escapes the backslash-escaping legacy config writers applied before saving.</summary>
-        internal static string NormalizeText(string text) => EscapeNormalizeRegex().Replace(text, @"\\");
+        string text = NormalizeText(File.ReadAllText(file));
 
-        // Matches a lone backslash - not part of an already-escaped \\ pair.
-        [GeneratedRegex(@"(?<!\\)\\(?!\\)")]
-        private static partial Regex EscapeNormalizeRegex();
-
-        public static T Load<T>(string file, JsonTypeInfo<T> ctx) where T : class
+        try
         {
-            if (!File.Exists(file))
-            {
-                Log.Warn(file + " not found.");
-                return null;
-            }
-
-            string text = NormalizeText(File.ReadAllText(file));
-
-            try
-            {
-                return JsonSerializer.Deserialize(text, ctx);
-            }
-            catch (JsonException e)
-            {
-                // The configuration file is corrupt or malformed (e.g. truncated write,
-                // manual edit, disk corruption). Rather than crashing the client at boot,
-                // back up the bad file so it isn't silently overwritten and return null so
-                // the caller can fall back to sane defaults.
-                Log.Error($"Failed to load configuration file '{file}' - {e}");
-
-                BackupAndReportCorruptFile(file);
-
-                return null;
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Failed to load configuration file '{file}' - {e}");
-                throw;
-            }
+            return JsonSerializer.Deserialize(text, ctx);
         }
-
-        public static void Save<T>(T obj, string file, JsonTypeInfo<T> ctx) where T : class
+        catch (JsonException e)
         {
-            // this try catch is necessary when multiples cuo instances points to this file.
-            try
-            {
-                string json = JsonSerializer.Serialize(obj, ctx);
-                AtomicFile.Write(file, json);
-            }
-            catch (Exception e)
-            {
-                Log.Error(e.ToString());
-            }
+            // The configuration file is corrupt or malformed (e.g. truncated write,
+            // manual edit, disk corruption). Rather than crashing the client at boot,
+            // back up the bad file so it isn't silently overwritten and return null so
+            // the caller can fall back to sane defaults.
+            Log.Error($"Failed to load configuration file '{file}' - {e}");
+
+            BackupAndReportCorruptFile(file);
+
+            return null;
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Failed to load configuration file '{file}' - {e}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    ///     Loads a versioned config, migrating its persisted shape upward first. Same contract as
+    ///     <see cref="Load{T}(string,JsonTypeInfo{T})" />: a file that cannot be loaded is backed up,
+    ///     reported, and reported as null for the caller to answer with defaults.
+    /// </summary>
+    /// <param name="file">Path to the config file.</param>
+    /// <param name="ctx">Source-generated type metadata for <typeparamref name="T" />.</param>
+    /// <param name="pipeline">The config's migration pipeline.</param>
+    /// <returns>The loaded instance, or null when the file is missing or could not be migrated.</returns>
+    public static T Load<T>(string file, JsonTypeInfo<T> ctx, ConfigMigrationPipeline<JsonObject> pipeline) where T : class
+    {
+        try
+        {
+            return MigratingJsonLoader.Load(file, ctx, pipeline);
+        }
+        catch (ConfigMigrationException e)
+        {
+            // Unreadable, written by a newer client, or migrating to a shape that will not bind - all
+            // start clean. Backed up first, because the caller's next save overwrites what is on disk.
+            Log.Error($"Failed to load configuration file '{file}' - {e}");
+
+            BackupAndReportCorruptFile(file);
+
+            return null;
+        }
+    }
+
+    public static void Save<T>(T obj, string file, JsonTypeInfo<T> ctx) where T : class
+    {
+        // this try catch is necessary when multiples cuo instances points to this file.
+        try
+        {
+            string json = JsonSerializer.Serialize(obj, ctx);
+            AtomicFile.Write(file, json);
+        }
+        catch (Exception e)
+        {
+            Log.Error(e.ToString());
         }
     }
 }

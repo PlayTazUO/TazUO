@@ -12,20 +12,23 @@ using Xunit;
 
 namespace ClassicUO.UnitTests.Configuration;
 
-public class VersionedJsonConfigTests : IDisposable
+public class MigratingJsonLoaderTests : IDisposable
 {
-    private readonly string _directory = Path.Combine(Path.GetTempPath(), $"versioned-json-config-tests-{Guid.NewGuid():N}");
-    private static readonly JsonSerializerOptions Options = new() { WriteIndented = false };
+    private readonly string _directory = Path.Combine(Path.GetTempPath(), $"migrating-json-loader-tests-{Guid.NewGuid():N}");
+    private static readonly JsonSerializerOptions _options = new() { WriteIndented = false };
 
-    private string PathFor(string name) => Path.Combine(_directory, name);
+    private string PathFor(string name)
+    {
+        return Path.Combine(_directory, name);
+    }
 
     [Fact]
     public void Load_Missing_File_Returns_Null_And_Creates_Nothing()
     {
-        string path = PathFor("missing.json");
-        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new NoOpMigration(1)]);
+        var path = PathFor("missing.json");
+        var pipeline = MakePipeline([new NoOpMigration(1)]);
 
-        TestConfig? result = VersionedJsonConfig.Load(path, TestConfigJsonContext.Default.TestConfig, pipeline);
+        var result = MigratingJsonLoader.Load(path, TestConfigJsonContext.Default.TestConfig, pipeline);
 
         Assert.Null(result);
         Assert.False(Directory.Exists(_directory));
@@ -35,14 +38,13 @@ public class VersionedJsonConfigTests : IDisposable
     public void Load_Where_Bind_Fails_Throws_Migration_Exception_Carrying_The_Json_Error()
     {
         Directory.CreateDirectory(_directory);
-        string path = PathFor("unbindable.json");
+        var path = PathFor("unbindable.json");
         const string original = """{"name":"ok"}""";
         File.WriteAllText(path, original);
 
-        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new AddUnboundPropertyMigration(1)]);
+        var pipeline = MakePipeline([new AddUnboundPropertyMigration(1)]);
 
-        ConfigMigrationException thrown = Assert.Throws<ConfigMigrationException>(
-            () => VersionedJsonConfig.Load(path, ThrowingJsonContext.Default.Unbindable, pipeline)
+        var thrown = Assert.Throws<ConfigMigrationException>(() => MigratingJsonLoader.Load(path, ThrowingJsonContext.Default.Unbindable, pipeline)
         );
 
         // The bind failure is restated, not swallowed.
@@ -54,13 +56,13 @@ public class VersionedJsonConfigTests : IDisposable
     public void Load_Where_Bind_Fails_Leaves_File_Byte_Identical()
     {
         Directory.CreateDirectory(_directory);
-        string path = PathFor("unbindable.json");
+        var path = PathFor("unbindable.json");
         const string original = """{"name":"ok"}""";
         File.WriteAllText(path, original);
 
-        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new AddUnboundPropertyMigration(1)]);
+        var pipeline = MakePipeline([new AddUnboundPropertyMigration(1)]);
 
-        Assert.Throws<ConfigMigrationException>(() => VersionedJsonConfig.Load(path, ThrowingJsonContext.Default.Unbindable, pipeline));
+        Assert.Throws<ConfigMigrationException>(() => MigratingJsonLoader.Load(path, ThrowingJsonContext.Default.Unbindable, pipeline));
 
         Assert.Equal(original, File.ReadAllText(path));
     }
@@ -69,17 +71,17 @@ public class VersionedJsonConfigTests : IDisposable
     public void Load_Backs_The_PreMigration_File_Up_Into_The_Backup_Directory()
     {
         Directory.CreateDirectory(_directory);
-        string path = PathFor("config.json");
+        var path = PathFor("config.json");
         const string original = """{"Name":"original"}""";
         File.WriteAllText(path, original);
 
-        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new NoOpMigration(1)]);
+        var pipeline = MakePipeline([new NoOpMigration(1)]);
 
-        TestConfig? result = VersionedJsonConfig.Load(path, TestConfigJsonContext.Default.TestConfig, pipeline);
+        var result = MigratingJsonLoader.Load(path, TestConfigJsonContext.Default.TestConfig, pipeline);
 
         Assert.NotNull(result);
 
-        string[] backups = Directory.GetFiles(Path.Combine(_directory, ConfigBackupStore.DirectoryName));
+        var backups = Directory.GetFiles(Path.Combine(_directory, ConfigBackupStore.DirectoryName));
 
         // The pre-migration text, not the migrated one that replaced it on disk.
         Assert.Equal(original, File.ReadAllText(Assert.Single(backups)));
@@ -89,29 +91,31 @@ public class VersionedJsonConfigTests : IDisposable
     public void Load_Migrates_And_Rewrites_File_When_Bind_Succeeds()
     {
         Directory.CreateDirectory(_directory);
-        string path = PathFor("config.json");
+        var path = PathFor("config.json");
         File.WriteAllText(path, """{"Name":"original"}""");
 
-        ConfigMigrationPipeline<JsonObject> pipeline = MakePipeline([new NoOpMigration(1)]);
+        var pipeline = MakePipeline([new NoOpMigration(1)]);
 
-        TestConfig? result = VersionedJsonConfig.Load(path, TestConfigJsonContext.Default.TestConfig, pipeline);
+        var result = MigratingJsonLoader.Load(path, TestConfigJsonContext.Default.TestConfig, pipeline);
 
         Assert.NotNull(result);
         Assert.Equal("original", result!.Name);
 
-        JsonObject onDisk = (JsonObject)JsonNode.Parse(File.ReadAllText(path))!;
+        var onDisk = (JsonObject)JsonNode.Parse(File.ReadAllText(path))!;
         Assert.Equal(1, (int)onDisk["schema_version"]!);
     }
 
-    private static ConfigMigrationPipeline<JsonObject> MakePipeline(IConfigMigration<JsonObject>[] migrations) =>
-        new(new ConfigMigrationSequence<JsonObject>(migrations), new JsonMigrationFormat(Options));
+    private static ConfigMigrationPipeline<JsonObject> MakePipeline(IConfigMigration<JsonObject>[] migrations)
+    {
+        return new ConfigMigrationPipeline<JsonObject>(new ConfigMigrationSequence<JsonObject>(migrations), new JsonMigrationFormat(_options));
+    }
 
     public void Dispose()
     {
         try
         {
             if (Directory.Exists(_directory))
-                Directory.Delete(_directory, recursive: true);
+                Directory.Delete(_directory, true);
         }
         catch
         {
@@ -133,7 +137,10 @@ public class VersionedJsonConfigTests : IDisposable
     {
         public int Version { get; } = version;
 
-        public void Up(JsonObject document) => document["RequiredNumber"] = "boom";
+        public void Up(JsonObject document)
+        {
+            document["RequiredNumber"] = "boom";
+        }
     }
 }
 
