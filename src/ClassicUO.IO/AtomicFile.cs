@@ -36,8 +36,8 @@ public static class AtomicFile
 
         try
         {
+            // Writing is a bit non-standard here, to avoid flushing concerns. More on that in WriteTemp itself.
             WriteTemp(tempPath, contents, flushToDisk);
-
             File.Move(tempPath, path, overwrite: true);
         }
         catch
@@ -55,17 +55,16 @@ public static class AtomicFile
         if (!flushToDisk)
         {
             File.WriteAllText(tempPath, contents);
-
             return;
         }
 
-        // A stream rather than File.WriteAllText, to keep the handle open to flush through. Encoding
-        // matches WriteAllText's default: UTF-8, no BOM.
+        // When using WriteAllText, OS decides when to call fsync to flush to disk. This may create a situation where we "think" data has been stored even though it hasn't.
+        // Under normal circumstances, this is not an issue, but if a power-off occurs in this short timeframe, we risk data loss.
+        //
+        // To mitigate this, we use a stream and flush it directly, which forces dotnet to call fsync.
         using var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None);
         using (var writer = new StreamWriter(stream, new UTF8Encoding(false), leaveOpen: true))
-        {
             writer.Write(contents);
-        }
 
         stream.Flush(flushToDisk: true);
     }

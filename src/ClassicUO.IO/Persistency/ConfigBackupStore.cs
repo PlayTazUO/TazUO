@@ -35,8 +35,10 @@ public sealed class ConfigBackupStore
 
     private const int DEFAULT_RETAINED = 3;
 
-    /// <summary>Sorts lexicographically in time order, so pruning needs no filesystem timestamps -
-    /// which a copy, sync tool or restore can rewrite.</summary>
+    /// <summary>
+    ///     Sorts lexicographically in time order, so pruning needs no filesystem timestamps -
+    ///     which a copy, sync tool, or restore can rewrite.
+    /// </summary>
     private const string TIMESTAMP_FORMAT = "yyyyMMdd-HHmmssfff";
 
     /// <summary>Ceiling on same-millisecond copies before naming gives up.</summary>
@@ -93,19 +95,15 @@ public sealed class ConfigBackupStore
             if (!File.Exists(path))
                 return null;
 
-            string directory = BackupDirectory(path);
-
+            string directory = GetBackupDirectory(path);
             Directory.CreateDirectory(directory);
 
-            List<string> existing = ExistingBackups(directory, path);
-
-            if (existing.Count > 0 && SameContent(path, existing[^1]))
+            List<string> existing = GetExistingBackups(directory, path);
+            if (existing.Count > 0 && IsSameContent(path, existing[^1]))
                 return existing[^1];
 
             string backupPath = NextBackupPath(directory, path, existing);
-
             File.Copy(path, backupPath);
-
             Prune(existing);
 
             return backupPath;
@@ -121,7 +119,7 @@ public sealed class ConfigBackupStore
 
     #region Private methods
 
-    private static string BackupDirectory(string path) =>
+    private static string GetBackupDirectory(string path) =>
         Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, DirectoryName);
 
     /// <summary>
@@ -167,7 +165,7 @@ public sealed class ConfigBackupStore
     }
 
     /// <summary>Every copy this store holds of one file, oldest first.</summary>
-    private List<string> ExistingBackups(string directory, string path) =>
+    private List<string> GetExistingBackups(string directory, string path) =>
         // Ordinal: a culture-aware compare is free to disagree about digits.
         Directory.EnumerateFiles(directory, $"{Path.GetFileName(path)}.{_reason}.*{BACKUP_EXTENSION}")
             .OrderBy(file => file, StringComparer.Ordinal)
@@ -182,15 +180,13 @@ public sealed class ConfigBackupStore
             File.Delete(existing[i]);
     }
 
-    private static bool SameContent(string left, string right)
+    private static bool IsSameContent(string fileA, string fileB)
     {
-        var leftInfo = new FileInfo(left);
-        var rightInfo = new FileInfo(right);
+        var leftInfo = new FileInfo(fileA);
+        var rightInfo = new FileInfo(fileB);
 
-        if (leftInfo.Length != rightInfo.Length)
-            return false;
-
-        return File.ReadAllBytes(left).AsSpan().SequenceEqual(File.ReadAllBytes(right));
+        // Short-circuit on different length, otherwise byte-by-byte comparison
+        return leftInfo.Length == rightInfo.Length && File.ReadAllBytes(fileA).AsSpan().SequenceEqual(File.ReadAllBytes(fileB));
     }
 
     #endregion
