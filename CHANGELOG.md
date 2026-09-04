@@ -2,7 +2,11 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## In Development
+## Future release notes
+Future release notes will be formatted by date instead of by release, most recent changes listed at the top:
+
+## 9/4/26
+* Changes listed here
 
 ### Features
 * Added a new modern status gump with progress bars
@@ -14,6 +18,7 @@ All notable changes to TazUO will be recorded here.
 * Separated Scavenger agent from Autoloot, they now each have their own loot lists and enabled/disabled toggles
 * Added a per-container option to disable grid highlighting without affecting other containers - [P.R 1032](https://github.com/PlayTazUO/TazUO/pull/1032) ([Aryx75](https://github.com/Aryx75))
 * Added a world map context menu option to always show map markers regardless of zoom level
+* Added a per-server "Don't reopen corpses that have already been opened" option that keeps track of opened corpses and skips auto-reopening them
 
 ### Legion
 * Added a warning about upcoming changes and to update your scripts
@@ -31,6 +36,8 @@ All notable changes to TazUO will be recorded here.
 * Migrated more settings to global scoped json settings
 
 ### Fixes
+* Fixed the health bar indicator threshold so its percentage setting is applied correctly - [P.R 1052](https://github.com/PlayTazUO/TazUO/pull/1052) ([Aryx75](https://github.com/Aryx75))
+* Fixed a NullReferenceException in `API.UseSkill()` when the player was null (world tearing down) or the skill list was not yet loaded - the call now safely returns without using the skill
 * Fixed missing key codes in plugin keyup processing
 * Fixed timestamped Global Chat messages sent by the local player not appearing in Global Chat journal tabs - [P.R 1035](https://github.com/PlayTazUO/TazUO/pull/1035) ([Aryx75](https://github.com/Aryx75))
 * Fixed a crash (`IndexOutOfRangeException` in `Mobile.Draw`) that could occur when rendering a mobile whose queued walk step carried an unmasked direction byte (e.g. the running flag) - the direction is now always normalized to 0-7 before use
