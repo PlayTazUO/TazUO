@@ -3103,7 +3103,7 @@ public class WorldMapGump : ResizableGump
             return false;
         }
 
-        bool showMarkerName = _showMarkerNames && !string.IsNullOrEmpty(marker.Name) && _zoomIndex > 5;
+        bool showMarkerName = _showMarkerNames && !string.IsNullOrEmpty(marker.Name) && (_zoomIndex > 5 || _alwaysShowMarkers);
         bool drawSingleName = false;
 
         if (zoomGated || !_showMarkerIcons || marker.MarkerIcon == null)
@@ -3866,6 +3866,11 @@ public class WorldMapGump : ResizableGump
 
         WorldMapPathfinder.FindPathAsync(mapIndex, startX, startY, startZ, destX, destY, 8, path =>
         {
+            // The search runs on a worker thread and can complete after the player has left
+            // the world or this gump has been closed, so the world state may be gone.
+            if (IsDisposed || _world?.Player?.Pathfinder == null)
+                return;
+
             if (path == null || path.Count == 0)
             {
                 if (append)
@@ -3924,6 +3929,17 @@ public class WorldMapGump : ResizableGump
 
             _navStepFailedHandler = (blockX, blockY) =>
             {
+                // The gump can be closed or the player can leave the world between the
+                // step failing and this callback running; nothing to replan then.
+                if (IsDisposed || _world?.Player?.Pathfinder == null)
+                {
+                    _navStepFailedHandler = null;
+                    _navDest = null;
+                    _navPath = null;
+                    _navSegments = 0;
+                    return;
+                }
+
                 // Multi-segment routes can't be locally replanned around a block without
                 // skipping waypoints, so a blocked step clears the entire route.
                 if (_navSegments > 1)
