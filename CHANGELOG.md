@@ -6,6 +6,7 @@ All notable changes to TazUO will be recorded here.
 Future release notes will be formatted by date instead of by release, most recent changes listed at the top:
 
 ## 9/5/26
+* [Fix] Fixed version number in PR builds
 * [Legion] Fixed a Legion script being wrongly reported as "did not stop and keeps running in the background" (and then locked out of restarting) when it was stopped and started again within the 2 second stop grace period - the stop check now only acts on the exact thread it was issued for, so a stale check can't mistake a new run for an unstopped one
 * [Legion] Fixed a legion script crash when player was null checking for skills
 
