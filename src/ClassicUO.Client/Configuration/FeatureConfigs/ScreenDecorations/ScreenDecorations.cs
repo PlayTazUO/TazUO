@@ -64,12 +64,13 @@ public class ScreenDecorations : JsonSave<ScreenDecorations>, INotifyPropertyCha
     /// <summary>
     /// Replaces <see cref="Current"/> with the settings stored beside <paramref name="profilePath"/>.
     /// </summary>
-    /// <param name="profilePath">Directory of the profile being loaded. Null or empty falls back to
-    /// whatever <see cref="SettingsScope.Char"/> resolves to, as any other save would.</param>
+    /// <param name="profilePath">Directory of the profile being loaded. Null or empty yields defaults
+    /// and touches no file: with no profile there is nowhere these belong, and loading through
+    /// <see cref="SettingsScope.Char"/> would persist a copy under the account folder instead.</param>
     /// <returns>The loaded settings.</returns>
     public static ScreenDecorations LoadForProfile(string? profilePath) =>
         _current = string.IsNullOrEmpty(profilePath)
-            ? Load()
+            ? new ScreenDecorations()
             : LoadFrom(Path.Combine(profilePath, ConfigFileName));
 
     #endregion

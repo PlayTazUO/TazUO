@@ -21,4 +21,13 @@ public static class CorruptConfigReporter
     /// <param name="path">The file that failed to load.</param>
     /// <param name="backupPath">Where its contents were copied, or null if no copy could be taken.</param>
     public static void Report(string path, string? backupPath) => Files.Enqueue(new CorruptConfigFile(path, backupPath));
+
+    /// <summary>
+    /// Records a file that could not be loaded but whose settings an older copy still answered for.
+    /// Still worth telling the user: the settings that loaded may be behind what they last saved.
+    /// </summary>
+    /// <param name="path">The file that failed to load.</param>
+    /// <param name="backupPath">Where its contents were copied, or null if no copy could be taken.</param>
+    public static void ReportRecovered(string path, string? backupPath) =>
+        Files.Enqueue(new CorruptConfigFile(path, backupPath, CorruptConfigFallback.Backup));
 }

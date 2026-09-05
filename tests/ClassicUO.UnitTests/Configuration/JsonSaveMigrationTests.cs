@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -88,6 +89,47 @@ public class JsonSaveMigrationTests : IDisposable
         loaded.Salutation.Should().BeNull();
         File.ReadAllText(FilePath + ".corrupt").Should().Contain("from the future");
     }
+
+    [Fact]
+    public void A_File_Answered_From_Its_Backups_Is_Reported_As_Recovered()
+    {
+        Write("{ not json at all");
+        Directory.CreateDirectory(Path.GetDirectoryName(BackupPath(1))!);
+        File.WriteAllText(BackupPath(1), """{"salutation":"an older run","schema_version":1}""");
+
+        MigratingSave loaded = MigratingSave.LoadFromPath(FilePath);
+
+        loaded.Salutation.Should().Be("an older run");
+
+        // Reported, because the settings may be behind what was last saved - but not as a reset, which
+        // is what the notice would otherwise tell the user.
+        Reported().Should().ContainSingle()
+            .Which.Fallback.Should().Be(CorruptConfigFallback.Backup);
+    }
+
+    [Fact]
+    public void A_File_That_Was_Never_There_Is_Not_Reported()
+    {
+        MigratingSave.LoadFromPath(FilePath);
+
+        // A first run has nothing to warn about.
+        Reported().Should().BeEmpty();
+    }
+
+    [Fact]
+    public void A_File_Nothing_Could_Answer_For_Is_Reported_As_Reset()
+    {
+        Write("{ not json at all");
+
+        MigratingSave.LoadFromPath(FilePath);
+
+        Reported().Should().ContainSingle()
+            .Which.Fallback.Should().Be(CorruptConfigFallback.Defaults);
+    }
+
+    /// <summary>The reports for this test's own file - the queue is process-wide and shared.</summary>
+    private List<CorruptConfigFile> Reported() =>
+        CorruptConfigReporter.Files.Where(file => file.Path == FilePath).ToList();
 
     private string FilePath => Path.Combine(_directory, MigratingSave.TestFileName);
 

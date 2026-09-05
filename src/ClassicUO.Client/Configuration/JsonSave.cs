@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -40,7 +42,8 @@ namespace ClassicUO.Configuration
     /// <typeparam name="T">The concrete derived save type.</typeparam>
     public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged, new()
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        /// <summary>Raised when a property set through <see cref="SetProperty{TFieldType}"/> changes.</summary>
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         private const int MAX_BACKUPS = 3;
 
@@ -62,7 +65,7 @@ namespace ClassicUO.Configuration
         /// bind, so the migration is paid for once rather than on every load.
         /// </para>
         /// </summary>
-        protected virtual ConfigMigrationPipeline<JsonObject> MigrationPipeline => null;
+        protected virtual ConfigMigrationPipeline<JsonObject>? MigrationPipeline => null;
 
         /// <summary>The directory this file is saved in, resolved from <see cref="Scope"/>.</summary>
         [JsonIgnore] public string SaveDirectory => JsonSaveLocationHelper.GetScopeDirectory(Scope);
@@ -116,14 +119,15 @@ namespace ClassicUO.Configuration
         {
             // Try the main file first. Only it gets the migrated text written back: a backup is read to
             // recover from, not to become the new main file.
-            LoadOutcome outcome = TryLoad(filePath, persistMigration: true, out T loaded);
+            LoadOutcome outcome = TryLoad(filePath, persistMigration: true, out T? loaded);
 
-            if (outcome == LoadOutcome.Loaded)
+            if (loaded != null)
                 return loaded;
 
-            // The main file exists but couldn't be used - preserve a single copy for inspection.
-            if (File.Exists(filePath))
-                BackupCorruptFile(filePath);
+            // Copied now, before the fallbacks write over it, but reported only once the outcome is
+            // known: what the user needs to hear differs between recovered settings and fresh defaults.
+            bool hadMainFile = File.Exists(filePath);
+            string? corruptCopy = hadMainFile ? BackupCorruptFile(filePath) : null;
 
             // A shape this build cannot migrate is not worth chasing through the backups: they hold
             // older shapes of the same file, so none of them can answer what the newest one could not.
@@ -132,17 +136,26 @@ namespace ClassicUO.Configuration
                 // Fall back through the rotating backups, newest first.
                 for (int i = 1; i <= MAX_BACKUPS; i++)
                 {
-                    if (TryLoad(GetBackupPath(filePath, i), persistMigration: false, out loaded) == LoadOutcome.Loaded)
-                    {
-                        Log.Warn($"Recovered JSON save '{filePath}' from backup {i}.");
-                        return loaded;
-                    }
+                    TryLoad(GetBackupPath(filePath, i), persistMigration: false, out loaded);
+
+                    if (loaded == null)
+                        continue;
+
+                    Log.Warn($"Recovered JSON save '{filePath}' from backup {i}.");
+
+                    if (hadMainFile)
+                        CorruptConfigReporter.ReportRecovered(filePath, corruptCopy);
+
+                    return loaded;
                 }
             }
 
             // Nothing usable on disk - start fresh and persist it (already holding the lock).
-            if (File.Exists(filePath))
+            if (hadMainFile)
+            {
                 Log.Error($"Failed to load JSON save '{filePath}'; creating a fresh copy.");
+                CorruptConfigReporter.Report(filePath, corruptCopy);
+            }
 
             var fresh = new T();
             fresh.SaveCore(filePath);
@@ -182,7 +195,7 @@ namespace ClassicUO.Configuration
         /// <exception cref="IOException">The rotation or the write failed.</exception>
         private static void WriteJson(string filePath, string json)
         {
-            string directory = Path.GetDirectoryName(filePath);
+            string? directory = Path.GetDirectoryName(filePath);
 
             if (!string.IsNullOrEmpty(directory))
                 Directory.CreateDirectory(directory);
@@ -199,7 +212,7 @@ namespace ClassicUO.Configuration
         /// to <paramref name="path"/>. False when reading a backup, which stays as it was found.</param>
         /// <param name="result">The instance, when one was produced.</param>
         /// <returns>What became of the attempt.</returns>
-        private LoadOutcome TryLoad(string path, bool persistMigration, out T result)
+        private LoadOutcome TryLoad(string path, bool persistMigration, out T? result)
         {
             result = null;
 
@@ -218,7 +231,7 @@ namespace ClassicUO.Configuration
                 return LoadOutcome.Unreadable;
             }
 
-            ConfigMigrationPipeline<JsonObject> pipeline = MigrationPipeline;
+            ConfigMigrationPipeline<JsonObject>? pipeline = MigrationPipeline;
             bool shapeChanged = false;
 
             if (pipeline != null)
@@ -261,7 +274,7 @@ namespace ClassicUO.Configuration
         /// <param name="json">Text already brought to the current shape.</param>
         /// <param name="result">The bound instance, or null when the text did not bind.</param>
         /// <returns><c>true</c> when an instance was produced, <c>false</c> otherwise.</returns>
-        private bool TryBind(string path, string json, out T result)
+        private bool TryBind(string path, string json, out T? result)
         {
             result = null;
 
@@ -321,7 +334,7 @@ namespace ClassicUO.Configuration
                 {
                     string next = GetBackupPath(filePath, i + 1);
 
-                    if (!string.IsNullOrWhiteSpace(next) && File.Exists(current))
+                    if (File.Exists(current))
                     {
                         if (File.Exists(next))
                             File.Delete(next);
@@ -334,7 +347,7 @@ namespace ClassicUO.Configuration
             // Move the current main file into backup slot 1.
             string firstBackup = GetBackupPath(filePath, 1);
 
-            if (!string.IsNullOrWhiteSpace(firstBackup) && File.Exists(filePath))
+            if (File.Exists(filePath))
             {
                 if (File.Exists(firstBackup))
                     File.Delete(firstBackup);
@@ -344,18 +357,20 @@ namespace ClassicUO.Configuration
         }
 
         /// <summary>
-        /// Copies a file that could not be used aside and reports it, so the user is told rather than
-        /// silently handed defaults. Call before falling back, which overwrites what is on disk.
+        /// Copies a file that could not be used aside, so it outlives whatever is written in its place.
+        /// Call before falling back, which overwrites what is on disk. Telling the user is the caller's:
+        /// only it knows whether the fallback recovered the settings or reset them.
         /// </summary>
         /// <param name="filePath">The file that could not be used. Must exist.</param>
-        private static void BackupCorruptFile(string filePath)
+        /// <returns>Where the copy was written, or null if none could be taken.</returns>
+        private static string? BackupCorruptFile(string filePath)
         {
-            string corruptPath = filePath + ".corrupt";
+            string? corruptPath = filePath + ".corrupt";
 
             try
             {
-                // Keep at most one corrupt copy - don't overwrite an earlier failure. Still reported:
-                // the file is being answered with defaults now, whatever happened on an earlier run.
+                // Keep at most one corrupt copy - don't overwrite an earlier failure. Still returned:
+                // the file is being answered now, whatever happened on an earlier run.
                 if (!File.Exists(corruptPath))
                 {
                     File.Copy(filePath, corruptPath);
@@ -368,7 +383,7 @@ namespace ClassicUO.Configuration
                 corruptPath = null;
             }
 
-            CorruptConfigReporter.Report(filePath, corruptPath);
+            return corruptPath;
         }
 
         private static string GetBackupDirectory(string filePath) => Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, Constants.BACKUP_FOLDER);
@@ -384,7 +399,7 @@ namespace ClassicUO.Configuration
         /// <param name="propertyName">The name of the property being updated</param>
         /// <typeparam name="TFieldType">The type of property being updated</typeparam>
         /// <returns><c>true</c> if a change has occurred, <c>false</c> otherwise</returns>
-        protected bool SetProperty<TFieldType>(ref TFieldType storage, TFieldType value, [CallerMemberName] string propertyName = null)
+        protected bool SetProperty<TFieldType>(ref TFieldType storage, TFieldType value, [CallerMemberName] string? propertyName = null)
         {
             if (EqualityComparer<TFieldType>.Default.Equals(storage, value))
                 return false;
@@ -398,7 +413,7 @@ namespace ClassicUO.Configuration
         /// Raises the <see cref="PropertyChanged"/> event with the specified property name
         /// </summary>
         /// <param name="propertyName">The property that was updated. Passed by the compiler.</param>
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         /// <summary>
         /// Acquires a cross-process lock guarding this file. A save can be touched by multiple client
@@ -406,7 +421,7 @@ namespace ClassicUO.Configuration
         /// Account/Char files can also collide when the same server/account/character is logged in from more
         /// than one client - so every scope is protected with a named mutex keyed on the file path.
         /// </summary>
-        private IDisposable AcquireLock(string filePath = null) => new CrossProcessLock(filePath ?? FilePath);
+        private IDisposable AcquireLock(string? filePath = null) => new CrossProcessLock(filePath ?? FilePath);
 
         /// <summary>
         /// Why one candidate file did not yield an instance, which decides whether another is worth trying.

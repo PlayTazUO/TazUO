@@ -182,11 +182,11 @@ public sealed class ConfigBackupStore
 
     private static bool IsSameContent(string fileA, string fileB)
     {
-        var leftInfo = new FileInfo(fileA);
-        var rightInfo = new FileInfo(fileB);
+        var infoA = new FileInfo(fileA);
+        var infoB = new FileInfo(fileB);
 
         // Short-circuit on different length, otherwise byte-by-byte comparison
-        return leftInfo.Length == rightInfo.Length && File.ReadAllBytes(fileA).AsSpan().SequenceEqual(File.ReadAllBytes(fileB));
+        return infoA.Length == infoB.Length && File.ReadAllBytes(fileA).AsSpan().SequenceEqual(File.ReadAllBytes(fileB));
     }
 
     #endregion

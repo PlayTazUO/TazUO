@@ -126,15 +126,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _userNotifications.Add(("Warning: It looks like your UO folder is stored inside TazUO, this is discouraged as you may accidentally have your UO files deleted.", Constants.HUE_ERROR));
             }
 
-            while (CorruptConfigReporter.Files.TryDequeue(out CorruptConfigFile corruptFile))
-            {
-                string outcome = corruptFile.BackupPath != null
-                    ? $"Default settings were used and a backup was saved to '{corruptFile.BackupPath}'."
-                    : "Default settings were used, and no backup could be saved.";
-
-                _userNotifications ??= [];
-                _userNotifications.Add(($"Warning: The configuration file '{corruptFile.Name}' could not be loaded. {outcome}", Constants.HUE_ERROR));
-            }
+            SetCorruptFileWarnings();
 
             // Community poll reminder is fetched asynchronously; kick it off before starting the flush
             // timer so a fast result lands in the same batch as the notifications above.
@@ -152,6 +144,36 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 timer.Start();
             }
+        }
+
+        private void SetCorruptFileWarnings()
+        {
+            _userNotifications ??= [];
+
+            while (CorruptConfigReporter.Files.TryDequeue(out CorruptConfigFile corruptFile))
+            {
+                string outcome = DescribeCorruptConfigFallback(corruptFile);
+
+                _userNotifications.Add((
+                    TazLang.Get("corruptconfig_warning", [corruptFile.Name, outcome]),
+                    Constants.HUE_ERROR
+                ));
+            }
+        }
+
+        /// <summary>What answered for a config file that could not be loaded, in the user's language.</summary>
+        /// <param name="corruptFile">The reported file.</param>
+        /// <returns>The sentence following the warning itself.</returns>
+        private static string DescribeCorruptConfigFallback(CorruptConfigFile corruptFile)
+        {
+            if (corruptFile.Fallback == CorruptConfigFallback.Backup)
+                return corruptFile.BackupPath != null
+                    ? TazLang.Get("corruptconfig_recovered_backedup", [corruptFile.BackupPath])
+                    : TazLang.Get("corruptconfig_recovered", "Your settings were recovered from an earlier backup.");
+
+            return corruptFile.BackupPath != null
+                ? TazLang.Get("corruptconfig_defaults_backedup", [corruptFile.BackupPath])
+                : TazLang.Get("corruptconfig_defaults", "Default settings were used, and no backup could be saved.");
         }
 
         /// <summary>Prints and clears any queued in-world user notifications. Main thread only.</summary>
