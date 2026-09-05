@@ -3103,7 +3103,7 @@ public class WorldMapGump : ResizableGump
             return false;
         }
 
-        bool showMarkerName = _showMarkerNames && !string.IsNullOrEmpty(marker.Name) && _zoomIndex > 5;
+        bool showMarkerName = _showMarkerNames && !string.IsNullOrEmpty(marker.Name) && (_zoomIndex > 5 || _alwaysShowMarkers);
         bool drawSingleName = false;
 
         if (zoomGated || !_showMarkerIcons || marker.MarkerIcon == null)
