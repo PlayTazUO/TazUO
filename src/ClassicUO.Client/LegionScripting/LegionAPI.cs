@@ -4329,7 +4329,7 @@ namespace ClassicUO.LegionScripting
         public Skill GetSkill(string skill) => OnMain
         (() =>
             {
-                if (string.IsNullOrEmpty(skill))
+                if (string.IsNullOrEmpty(skill) || World?.Player == null)
                     return null;
 
                 foreach (Skill s in World.Player.Skills)
