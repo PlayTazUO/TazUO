@@ -773,12 +773,16 @@ namespace ClassicUO.LegionScripting
 
         /// <summary>
         /// Schedules a main-thread check (without blocking it) for a script that was just asked to
-        /// stop. If the thread is still alive after the grace period - stuck in a loop the interrupt
-        /// couldn't land in - it is detached. A thread that exits on its own is cleaned up by its own
-        /// follow-up stop, so nothing is done here.
+        /// stop. If that same thread is still alive after the grace period - stuck in a loop the
+        /// interrupt couldn't land in - it is detached. A thread that exits on its own is cleaned up
+        /// by its own follow-up stop, so nothing is done here. The check is bound to the specific
+        /// thread being stopped: if the script is stopped and restarted within the grace period, a
+        /// stale check must not mistake the new run's live thread for the one that failed to stop.
         /// </summary>
         private static void ScheduleDetachCheck(ScriptFile script)
         {
+            Thread stoppedThread = script.ScriptThread;
+
             var timer = new System.Timers.Timer(STOP_THREAD_DETACH_TIMEOUT_MS) { AutoReset = false };
 
             timer.Elapsed += (_, _) =>
@@ -787,11 +791,12 @@ namespace ClassicUO.LegionScripting
 
                 MainThreadQueue.EnqueueAction(() =>
                 {
-                    // Thread already exited and was cleaned up by its follow-up stop.
-                    if (script.ScriptThread == null || !script.ScriptThread.IsAlive)
+                    // A newer run may have replaced this thread (see PlayScript), or the thread
+                    // already exited and was cleaned up by its follow-up stop.
+                    if (!ReferenceEquals(script.ScriptThread, stoppedThread) || !stoppedThread.IsAlive)
                         return;
 
-                    DetachScript(script, script.ScriptThread, warn: true);
+                    DetachScript(script, stoppedThread, warn: true);
                 });
             };
 
