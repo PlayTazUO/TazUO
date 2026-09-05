@@ -52,7 +52,10 @@ public sealed class SoundPlayedParameters : TriggerParameters
         + "Pick by name, or type a number if it has none.\n"
         + "Press Play to hear the current choice."
     )]
-    public List<int> SoundIndexes { get; set; } = [];
+
+    // Null-normalizing: an explicit null in the persisted file would otherwise reach the trigger,
+    // which enumerates this without a guard.
+    public List<int> SoundIndexes { get; set => field = value ?? []; } = [];
 
     /// <summary>
     /// Nearest the sound may be and still count, in tiles. Above zero for an effect that should only

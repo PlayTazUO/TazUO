@@ -96,6 +96,16 @@ public class ConfigMigrationSequenceTests
     }
 
     [Fact]
+    public void Apply_Negative_Version_Throws_Without_Migrating()
+    {
+        var sequence = new ConfigMigrationSequence<TestDocument>([new RecordingMigration(1)]);
+        var document = new TestDocument();
+
+        Assert.Throws<ConfigMigrationException>(() => sequence.Apply(document, -1));
+        Assert.Empty(document.Applied);
+    }
+
+    [Fact]
     public void Apply_NonContiguous_Set_Applies_All_And_Reports_Highest()
     {
         var sequence = new ConfigMigrationSequence<TestDocument>([

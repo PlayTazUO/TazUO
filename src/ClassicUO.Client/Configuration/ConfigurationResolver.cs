@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 using System.Text.Json;
@@ -23,9 +25,9 @@ internal static partial class ConfigurationResolver
     /// </summary>
     /// <param name="file">The file that could not be loaded.</param>
     /// <returns>Where the copy was written, or null if none could be taken.</returns>
-    public static string BackupAndReportCorruptFile(string file)
+    public static string? BackupAndReportCorruptFile(string file)
     {
-        string backupPath = _corruptBackups.TryBackup(file, out Exception backupError);
+        string? backupPath = _corruptBackups.TryBackup(file, out Exception? backupError);
 
         if (backupError != null)
             Log.Error($"Failed to back up corrupt configuration file '{file}' - {backupError}");
@@ -44,7 +46,7 @@ internal static partial class ConfigurationResolver
     [GeneratedRegex(@"(?<!\\)\\(?!\\)")]
     private static partial Regex EscapeNormalizeRegex();
 
-    public static T Load<T>(string file, JsonTypeInfo<T> ctx) where T : class
+    public static T? Load<T>(string file, JsonTypeInfo<T> ctx) where T : class
     {
         if (!File.Exists(file))
         {

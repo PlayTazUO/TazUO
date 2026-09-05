@@ -53,7 +53,9 @@ public class MainThreadFixture : IDisposable
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        using var completed = new ManualResetEventSlim();
+        // Deliberately undisposed: on a timeout the queued action is still pending, and disposing here
+        // would fault its Set() inside the pump, which does not catch.
+        var completed = new ManualResetEventSlim();
         ExceptionDispatchInfo capturedFailure = null;
 
         MainThreadQueue.EnqueueAction(() =>

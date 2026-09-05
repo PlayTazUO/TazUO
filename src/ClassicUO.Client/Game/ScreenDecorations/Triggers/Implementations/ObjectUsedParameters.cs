@@ -43,7 +43,10 @@ public sealed class ObjectUsedParameters : TriggerParameters
         "The objects that set this effect off when double-clicked - any one of them.\n"
         + "Type a serial (decimal or hex), or target the object in the world."
     )]
-    public List<uint> Serials { get; set; } = [];
+
+    // Null-normalizing: an explicit null in the persisted file would otherwise reach the trigger,
+    // which enumerates this without a guard.
+    public List<uint> Serials { get; set => field = value ?? []; } = [];
 
     /// <summary>How long one occurrence runs, in seconds.</summary>
     [LocalizedDisplayName("overlaytrigger_objectused_duration", "Lasts for (seconds)")]

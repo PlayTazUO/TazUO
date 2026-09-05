@@ -38,8 +38,10 @@ public sealed class ConfigMigrationSequence<TDocument>
             previous = migration.Version;
         }
 
-        _migrations = migrations;
-        LatestVersion = migrations.Count == 0 ? 0 : migrations[^1].Version;
+        // Copied: the ordering above is the contract Apply relies on, and a caller holding the original
+        // list could otherwise reorder it afterwards.
+        _migrations = migrations.ToArray();
+        LatestVersion = _migrations.Count == 0 ? 0 : _migrations[^1].Version;
     }
 
     /// <summary>Runs every migration above <paramref name="fromVersion"/>, in order, mutating
@@ -47,10 +49,16 @@ public sealed class ConfigMigrationSequence<TDocument>
     /// caller's, bought by parsing a throwaway document first.</summary>
     /// <returns>The version the document now sits at.</returns>
     /// <exception cref="ConfigMigrationException">
-    /// A migration failed, or <paramref name="fromVersion"/> exceeds <see cref="LatestVersion"/>.
+    /// A migration failed, or <paramref name="fromVersion"/> is negative or exceeds
+    /// <see cref="LatestVersion"/>.
     /// </exception>
     public int Apply(TDocument document, int fromVersion)
     {
+        // Rejected rather than treated as unversioned: nothing writes a negative version, so the
+        // document is damaged, and migrating it would stamp the latest version over that evidence.
+        if (fromVersion < 0)
+            throw new ConfigMigrationException($"Document version {fromVersion} is not a valid version.");
+
         if (fromVersion > LatestVersion)
             throw new ConfigMigrationException($"Document is at version {fromVersion}, ahead of this build's latest known version {LatestVersion}.");
 

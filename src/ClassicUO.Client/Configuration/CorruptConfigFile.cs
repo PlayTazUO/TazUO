@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace ClassicUO.Configuration;
 
 /// <summary>
@@ -6,7 +8,7 @@ namespace ClassicUO.Configuration;
 /// </summary>
 /// <param name="Path">The file that failed to load.</param>
 /// <param name="BackupPath">Where it was copied to, or null if no copy could be taken.</param>
-public readonly record struct CorruptConfigFile(string Path, string BackupPath)
+public readonly record struct CorruptConfigFile(string Path, string? BackupPath)
 {
     /// <summary>
     ///     The original file's name, without extension

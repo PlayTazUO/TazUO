@@ -249,13 +249,11 @@ namespace ClassicUO.Game.Managers
         }
 
         /// <summary>
-        /// Whether the cursor is armed for <paramref name="callback"/> specifically. Ask before
-        /// cancelling on teardown: a later <see cref="SetTargeting(Action{object}, uint, TargetType)"/>
-        /// displaces an earlier one, and an unconditional cancel would take that one down.
+        /// Whether the cursor is armed for <paramref name="callback"/> specifically
         /// </summary>
         /// <param name="callback">The callback to test for, compared by reference.</param>
         public bool IsCurrentTargetingAction(Action<object> callback) =>
-            callback != null && TargetingState == CursorTarget.CallbackTarget && ReferenceEquals(_targetCallback, callback);
+            callback != null && IsTargeting && TargetingState == CursorTarget.CallbackTarget && ReferenceEquals(_targetCallback, callback);
 
         public void SetTargeting(CursorTarget targeting, uint cursorID, TargetType cursorType)
         {

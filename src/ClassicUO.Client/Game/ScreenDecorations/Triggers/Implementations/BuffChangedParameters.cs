@@ -78,7 +78,10 @@ public sealed class BuffChangedParameters : TriggerParameters
         + "Pick by name, or type a number if it has none.\n"
         + "Watching for a buff being active takes one buff, whose own span the effect follows."
     )]
-    public List<short> BuffTypes { get; set; } = [];
+
+    // Null-normalizing: an explicit null in the persisted file would otherwise reach the trigger,
+    // which enumerates this without a guard.
+    public List<short> BuffTypes { get; set => field = value ?? []; } = [];
 
     /// <summary>
     ///     How long one occurrence runs, in seconds. Ignored under
