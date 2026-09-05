@@ -31,7 +31,7 @@ public class JsonMigrationFormat : IMigrationFormat<JsonObject>
     public virtual (string Text, bool Changed) Preprocess(string text) => (text, false);
 
     /// <inheritdoc cref="IMigrationFormat{TDocument}.Parse" />
-    /// <exception cref="ConfigMigrationException">The text is not valid JSON, or not a JSON object.</exception>
+    /// <exception cref="ConfigDocumentMalformedException">The text is not valid JSON, or not a JSON object.</exception>
     public JsonObject Parse(string text)
     {
         JsonNode? node;
@@ -42,11 +42,11 @@ public class JsonMigrationFormat : IMigrationFormat<JsonObject>
         }
         catch (JsonException e)
         {
-            throw new ConfigMigrationException("Config text is not valid JSON.", e);
+            throw new ConfigDocumentMalformedException("Config text is not valid JSON.", e);
         }
 
         if (node is not JsonObject document)
-            throw new ConfigMigrationException("Config text does not parse to a JSON object.");
+            throw new ConfigDocumentMalformedException("Config text does not parse to a JSON object.");
 
         return document;
     }

@@ -14,7 +14,7 @@ public interface IMigrationFormat<TDocument>
     /// </summary>
     /// <param name="text">The text to parse</param>
     /// <returns>The parsed document</returns>
-    /// <exception cref="ConfigMigrationException">The text is not a document of this format</exception>
+    /// <exception cref="ConfigDocumentMalformedException">The text is not a document of this format</exception>
     TDocument Parse(string text);
 
     /// <summary>

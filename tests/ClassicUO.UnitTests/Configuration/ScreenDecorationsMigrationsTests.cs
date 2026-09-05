@@ -79,7 +79,7 @@ public class ScreenDecorationsMigrationsTests
         try
         {
             Directory.CreateDirectory(directory);
-            string path = Path.Combine(directory, ScreenDecorations.FileName);
+            string path = Path.Combine(directory, ScreenDecorations.ConfigFileName);
             File.WriteAllText(
                 path,
                 """{"enabled":true,"overlays":{"rules":[{"trigger":{"parameters":{"kind":"sound_played","sound_index":755}}}]}}"""

@@ -1,19 +1,24 @@
 #nullable enable
 
+using System.ComponentModel;
 using System.IO;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Migrations;
+using ClassicUO.IO.Persistency.Migrations;
 
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
 /// <summary>
 /// Everything the screen decoration systems - full-screen overlays and screen shake - are configured
-/// by, for one client profile. Stored beside it as <see cref="FileName"/> rather than inside
+/// by, for one client profile. Stored beside it as <see cref="ConfigFileName"/> rather than inside
 /// profile.json: the layer stacks are large, and reading them needs IncludeFields, which would
 /// change how every public field in the profile graph serializes.
 /// </summary>
-public class ScreenDecorations : ObservableSettings
+public class ScreenDecorations : JsonSave<ScreenDecorations>, INotifyPropertyChanged
 {
-    public const string FileName = "screen_decorations.json";
+    /// <summary>Name of the file these settings are stored in, inside the profile folder.</summary>
+    public const string ConfigFileName = "screen_decorations.json";
 
     /// <summary>Which shape this file is in. Defaults to latest for a config built in memory; a file's
     /// real version is read off its raw JSON before this binds.</summary>
@@ -23,11 +28,13 @@ public class ScreenDecorations : ObservableSettings
     /// Master switch over both systems. Off means no overlay is scheduled, drawn or shaken for - not
     /// merely hidden. Off by default: these effects obscure the world, so they are opt-in.
     /// </summary>
-    public bool Enabled { get; set => SetField(ref field, value); }
+    public bool Enabled { get; set => SetProperty(ref field, value); }
 
-    public OverlaySystemSettings Overlays { get; set => SetField(ref field, value); } = new();
+    /// <summary>The full-screen overlay system: its own switch, and the layers it draws.</summary>
+    public OverlaySystemSettings Overlays { get; set => SetProperty(ref field, value); } = new();
 
-    public ShakeSystemSettings Shake { get; set => SetField(ref field, value); } = new();
+    /// <summary>The screen shake system: its own switch, and how the shake behaves.</summary>
+    public ShakeSystemSettings Shake { get; set => SetProperty(ref field, value); } = new();
 
     /// <summary>Whether overlays should be running: both this system and the master switch.</summary>
     public bool OverlaysActive => Enabled && Overlays.Enabled;
@@ -37,51 +44,33 @@ public class ScreenDecorations : ObservableSettings
 
     #region Persistence
 
+    /// <summary>Lives in the profile folder alongside the other per-character configs.</summary>
+    protected override SettingsScope Scope => SettingsScope.Char;
+
+    /// <inheritdoc />
+    protected override string FileName => ConfigFileName;
+
+    /// <inheritdoc />
+    protected override JsonTypeInfo<ScreenDecorations> TypeInfo => ScreenDecorationsJsonContext.DefaultToUse.ScreenDecorations;
+
+    /// <inheritdoc />
+    protected override ConfigMigrationPipeline<JsonObject> MigrationPipeline => ScreenDecorationsMigrations.Pipeline;
+
     private static ScreenDecorations? _current;
 
     /// <summary>Decoration settings for the currently loaded profile.</summary>
     public static ScreenDecorations Current => _current ??= LoadForProfile(ProfileManager.ProfilePath);
 
     /// <summary>
-    /// Replaces <see cref="Current"/> with the settings stored beside <paramref name="profilePath"/>,
-    /// or with defaults where there are none.
+    /// Replaces <see cref="Current"/> with the settings stored beside <paramref name="profilePath"/>.
     /// </summary>
-    /// <param name="profilePath">Directory of the profile being loaded; may be null.</param>
+    /// <param name="profilePath">Directory of the profile being loaded. Null or empty falls back to
+    /// whatever <see cref="SettingsScope.Char"/> resolves to, as any other save would.</param>
     /// <returns>The loaded settings.</returns>
-    public static ScreenDecorations LoadForProfile(string? profilePath)
-    {
-        string? file = GetFilePath(profilePath);
-
-        if (file == null)
-        {
-            _current = new ScreenDecorations();
-            return _current;
-        }
-
-        _current = ConfigurationResolver.Load(
-            file,
-            ScreenDecorationsJsonContext.DefaultToUse.ScreenDecorations,
-            ScreenDecorationsMigrations.Pipeline
-        ) ?? new ScreenDecorations();
-
-        return _current;
-    }
-
-    /// <summary>
-    /// Writes these settings beside the current profile. A no-op while no profile is loaded.
-    /// </summary>
-    public void Save()
-    {
-        string? file = GetFilePath(ProfileManager.ProfilePath);
-
-        if (file == null)
-            return;
-
-        ConfigurationResolver.Save(this, file, ScreenDecorationsJsonContext.DefaultToUse.ScreenDecorations);
-    }
-
-    private static string? GetFilePath(string? profilePath) =>
-        string.IsNullOrEmpty(profilePath) ? null : Path.Combine(profilePath, FileName);
+    public static ScreenDecorations LoadForProfile(string? profilePath) =>
+        _current = string.IsNullOrEmpty(profilePath)
+            ? Load()
+            : LoadFrom(Path.Combine(profilePath, ConfigFileName));
 
     #endregion
 }

@@ -126,7 +126,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _userNotifications.Add(("Warning: It looks like your UO folder is stored inside TazUO, this is discouraged as you may accidentally have your UO files deleted.", Constants.HUE_ERROR));
             }
 
-            while (ConfigurationResolver.CorruptFiles.TryDequeue(out CorruptConfigFile corruptFile))
+            while (CorruptConfigReporter.Files.TryDequeue(out CorruptConfigFile corruptFile))
             {
                 string outcome = corruptFile.BackupPath != null
                     ? $"Default settings were used and a backup was saved to '{corruptFile.BackupPath}'."

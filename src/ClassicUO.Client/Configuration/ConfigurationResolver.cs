@@ -1,25 +1,16 @@
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
 using ClassicUO.IO;
 using ClassicUO.IO.Persistency;
-using ClassicUO.IO.Persistency.Migrations;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Configuration;
 
 internal static partial class ConfigurationResolver
 {
-    /// <summary>
-    ///     Corrupt configuration files detected during load, recorded here so the UI can notify the
-    ///     user once they are in-world. Detection happens at boot, long before the viewport exists.
-    /// </summary>
-    public static readonly ConcurrentQueue<CorruptConfigFile> CorruptFiles = new();
-
     /// <summary>
     ///     Holds the file as found, so a corrupt config the client overwrites with defaults is
     ///     still recoverable by hand.
@@ -41,7 +32,7 @@ internal static partial class ConfigurationResolver
         else if (backupPath != null)
             Log.Warn($"Corrupt configuration file backed up to '{backupPath}'.");
 
-        CorruptFiles.Enqueue(new CorruptConfigFile(file, backupPath));
+        CorruptConfigReporter.Report(file, backupPath);
 
         return backupPath;
     }
@@ -83,33 +74,6 @@ internal static partial class ConfigurationResolver
         {
             Log.Error($"Failed to load configuration file '{file}' - {e}");
             throw;
-        }
-    }
-
-    /// <summary>
-    ///     Loads a versioned config, migrating its persisted shape upward first. Same contract as
-    ///     <see cref="Load{T}(string,JsonTypeInfo{T})" />: a file that cannot be loaded is backed up,
-    ///     reported, and reported as null for the caller to answer with defaults.
-    /// </summary>
-    /// <param name="file">Path to the config file.</param>
-    /// <param name="ctx">Source-generated type metadata for <typeparamref name="T" />.</param>
-    /// <param name="pipeline">The config's migration pipeline.</param>
-    /// <returns>The loaded instance, or null when the file is missing or could not be migrated.</returns>
-    public static T Load<T>(string file, JsonTypeInfo<T> ctx, ConfigMigrationPipeline<JsonObject> pipeline) where T : class
-    {
-        try
-        {
-            return MigratingJsonLoader.Load(file, ctx, pipeline);
-        }
-        catch (ConfigMigrationException e)
-        {
-            // Unreadable, written by a newer client, or migrating to a shape that will not bind - all
-            // start clean. Backed up first, because the caller's next save overwrites what is on disk.
-            Log.Error($"Failed to load configuration file '{file}' - {e}");
-
-            BackupAndReportCorruptFile(file);
-
-            return null;
         }
     }
 

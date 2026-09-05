@@ -6,10 +6,13 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using ClassicUO.Game;
+using ClassicUO.IO;
+using ClassicUO.IO.Persistency.Migrations;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Configuration
@@ -24,7 +27,10 @@ namespace ClassicUO.Configuration
     /// <see cref="MAX_BACKUPS"/> rotating backups in a <c>backups</c> sub-folder.</description></item>
     /// <item><description><see cref="Load"/> - loads the file, falling back through the backups on failure and
     /// finally creating (and persisting) a fresh copy if nothing can be read. An unreadable main file is
-    /// preserved once as <c>&lt;file&gt;.corrupt</c> for later inspection.</description></item>
+    /// preserved once as <c>&lt;file&gt;.corrupt</c> for later inspection and reported through
+    /// <see cref="CorruptConfigReporter"/>.</description></item>
+    /// <item><description><see cref="MigrationPipeline"/> - optional. Brings an older persisted shape up to
+    /// the current one before it binds, and writes the result back.</description></item>
     /// </list>
     ///
     /// Uses the curiously-recurring-template pattern so <see cref="Load"/> can return the concrete type.
@@ -46,6 +52,17 @@ namespace ClassicUO.Configuration
 
         /// <summary>Source-generated JSON metadata used to (de)serialize this save.</summary>
         protected abstract JsonTypeInfo<T> TypeInfo { get; }
+
+        /// <summary>
+        /// Brings this save's persisted shape up to the one <typeparamref name="T"/> binds, run on the raw
+        /// text before it is deserialized. Null - the default - for a save whose shape has never changed.
+        /// <para>
+        /// A save that declares one must carry its version in the document (see
+        /// <see cref="JsonMigrationFormat"/>); the migrated text is written back once it has been shown to
+        /// bind, so the migration is paid for once rather than on every load.
+        /// </para>
+        /// </summary>
+        protected virtual ConfigMigrationPipeline<JsonObject> MigrationPipeline => null;
 
         /// <summary>The directory this file is saved in, resolved from <see cref="Scope"/>.</summary>
         [JsonIgnore] public string SaveDirectory => JsonSaveLocationHelper.GetScopeDirectory(Scope);
@@ -89,53 +106,59 @@ namespace ClassicUO.Configuration
                 SaveCore(filePath);
         }
 
+        /// <summary>
+        /// Produces an instance from <paramref name="filePath"/>, falling back through its backups and
+        /// finally to a freshly persisted default. Assumes the caller already holds the file lock.
+        /// </summary>
+        /// <param name="filePath">The main file to load.</param>
+        /// <returns>The loaded instance, or a new one when nothing on disk could be used.</returns>
         private T LoadCore(string filePath)
         {
-            // Try the main file first.
-            if (TryDeserialize(filePath, out T loaded))
+            // Try the main file first. Only it gets the migrated text written back: a backup is read to
+            // recover from, not to become the new main file.
+            LoadOutcome outcome = TryLoad(filePath, persistMigration: true, out T loaded);
+
+            if (outcome == LoadOutcome.Loaded)
                 return loaded;
 
-            // The main file exists but couldn't be parsed - preserve a single copy for inspection.
+            // The main file exists but couldn't be used - preserve a single copy for inspection.
             if (File.Exists(filePath))
                 BackupCorruptFile(filePath);
 
-            // Fall back through the rotating backups, newest first.
-            for (int i = 1; i <= MAX_BACKUPS; i++)
+            // A shape this build cannot migrate is not worth chasing through the backups: they hold
+            // older shapes of the same file, so none of them can answer what the newest one could not.
+            if (outcome != LoadOutcome.Unmigratable)
             {
-                if (TryDeserialize(GetBackupPath(filePath, i), out loaded))
+                // Fall back through the rotating backups, newest first.
+                for (int i = 1; i <= MAX_BACKUPS; i++)
                 {
-                    Log.Warn($"Recovered JSON save '{filePath}' from backup {i}.");
-                    return loaded;
+                    if (TryLoad(GetBackupPath(filePath, i), persistMigration: false, out loaded) == LoadOutcome.Loaded)
+                    {
+                        Log.Warn($"Recovered JSON save '{filePath}' from backup {i}.");
+                        return loaded;
+                    }
                 }
             }
 
-            // Nothing valid on disk - start fresh and persist it (already holding the lock).
+            // Nothing usable on disk - start fresh and persist it (already holding the lock).
             if (File.Exists(filePath))
-                Log.Error($"Failed to load JSON save '{filePath}' and all backups; creating a fresh copy.");
+                Log.Error($"Failed to load JSON save '{filePath}'; creating a fresh copy.");
 
             var fresh = new T();
             fresh.SaveCore(filePath);
             return fresh;
         }
 
+        /// <summary>
+        /// Serializes and writes this instance, swallowing any failure. Assumes the caller already holds
+        /// the file lock.
+        /// </summary>
+        /// <param name="filePath">The file to write.</param>
         private void SaveCore(string filePath)
         {
-            string tempPath = filePath + ".tmp";
-            string directory = Path.GetDirectoryName(filePath);
-
             try
             {
-                if (!string.IsNullOrEmpty(directory))
-                    Directory.CreateDirectory(directory);
-
-                string json = JsonSerializer.Serialize((T)this, TypeInfo);
-                File.WriteAllText(tempPath, json);
-
-                RotateBackups(filePath);
-
-                // RotateBackups moved the old main file into backup 1, so the destination is free.
-                File.Move(tempPath, filePath);
-                tempPath = null;
+                WriteJson(filePath, JsonSerializer.Serialize((T)this, TypeInfo));
             }
             catch (Exception e)
             {
@@ -143,26 +166,107 @@ namespace ClassicUO.Configuration
                 // e.g. when multiple instances point at the same file.
                 Log.Error($"Failed to save JSON '{filePath}': {e}");
             }
-            finally
-            {
-                if (tempPath != null && File.Exists(tempPath))
-                {
-                    try { File.Delete(tempPath); }
-                    catch { /* best effort */ }
-                }
-            }
         }
 
-        private bool TryDeserialize(string path, out T result)
+        /// <summary>
+        /// Rotates the current file into the backups, then publishes <paramref name="json"/> in its place.
+        /// <para>
+        /// Rotation first, so what is on disk is preserved before anything overwrites it. That leaves a
+        /// window where the main file is absent and backup 1 holds its content - which is what
+        /// <see cref="LoadCore"/> recovers from - rather than one where a half-written file has replaced
+        /// the only copy.
+        /// </para>
+        /// </summary>
+        /// <param name="filePath">The file to publish to. Its directory is created if missing.</param>
+        /// <param name="json">The text to write.</param>
+        /// <exception cref="IOException">The rotation or the write failed.</exception>
+        private static void WriteJson(string filePath, string json)
+        {
+            string directory = Path.GetDirectoryName(filePath);
+
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+
+            RotateBackups(filePath);
+            AtomicFile.Write(filePath, json);
+        }
+
+        /// <summary>
+        /// Reads one candidate file, migrating its shape where <see cref="MigrationPipeline"/> says to.
+        /// </summary>
+        /// <param name="path">The file to read.</param>
+        /// <param name="persistMigration">Whether a migration that changed the text should be written back
+        /// to <paramref name="path"/>. False when reading a backup, which stays as it was found.</param>
+        /// <param name="result">The instance, when one was produced.</param>
+        /// <returns>What became of the attempt.</returns>
+        private LoadOutcome TryLoad(string path, bool persistMigration, out T result)
         {
             result = null;
 
             if (!File.Exists(path))
-                return false;
+                return LoadOutcome.Unreadable;
+
+            string jsonText;
 
             try
             {
-                string json = File.ReadAllText(path);
+                jsonText = File.ReadAllText(path);
+            }
+            catch (Exception e)
+            {
+                Log.Warn($"Failed to read JSON save '{path}': {e.Message}");
+                return LoadOutcome.Unreadable;
+            }
+
+            ConfigMigrationPipeline<JsonObject> pipeline = MigrationPipeline;
+            bool shapeChanged = false;
+
+            if (pipeline != null)
+            {
+                ConfigMigrationResult migration;
+
+                try
+                {
+                    migration = pipeline.Migrate(jsonText);
+                }
+                catch (ConfigDocumentMalformedException e)
+                {
+                    // Not a document at all, so nothing was established about its shape - a backup of the
+                    // same file may well still be readable.
+                    Log.Warn($"Failed to parse JSON save '{path}': {e.Message}");
+                    return LoadOutcome.Unreadable;
+                }
+                catch (ConfigMigrationException e)
+                {
+                    Log.Error($"Cannot migrate JSON save '{path}' to the current shape - {e}");
+                    return LoadOutcome.Unmigratable;
+                }
+
+                jsonText = migration.Text;
+                shapeChanged = migration.Changed;
+            }
+
+            if (!TryBind(path, jsonText, out result))
+                return LoadOutcome.Unreadable;
+
+            // Written back only now, with the bind standing as proof the migrated text is usable.
+            if (shapeChanged && persistMigration)
+                TryPersistFile(path, jsonText);
+
+            return LoadOutcome.Loaded;
+        }
+
+        /// <summary>Deserializes prepared text, reporting failure rather than raising it.</summary>
+        /// <param name="path">The file the text came from, for logging only.</param>
+        /// <param name="json">Text already brought to the current shape.</param>
+        /// <param name="result">The bound instance, or null when the text did not bind.</param>
+        /// <returns><c>true</c> when an instance was produced, <c>false</c> otherwise.</returns>
+        private bool TryBind(string path, string json, out T result)
+        {
+            result = null;
+
+            try
+            {
                 result = JsonSerializer.Deserialize(json, TypeInfo);
                 return result != null;
             }
@@ -173,7 +277,32 @@ namespace ClassicUO.Configuration
             }
         }
 
-        private void RotateBackups(string filePath)
+        /// <summary>
+        /// Writes migrated text back over the file it came from, rotating the pre-migration version into
+        /// the backups. Logged rather than raised on failure: the caller's instance is already good, and
+        /// the next load simply migrates again.
+        /// </summary>
+        /// <param name="filePath">The file the migrated text came from.</param>
+        /// <param name="content">The migrated text, already shown to bind.</param>
+        private static void TryPersistFile(string filePath, string content)
+        {
+            try
+            {
+                WriteJson(filePath, content);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Failed to write migrated JSON save '{filePath}': {e}");
+            }
+        }
+
+        /// <summary>
+        /// Shifts the rotating backups up one slot, dropping the oldest, then moves the current file into
+        /// slot 1. The main file is left absent, for the caller to write in its place.
+        /// </summary>
+        /// <param name="filePath">The main file being rotated out.</param>
+        /// <exception cref="IOException">A slot could not be deleted or moved.</exception>
+        private static void RotateBackups(string filePath)
         {
             string backupDir = GetBackupDirectory(filePath);
             Directory.CreateDirectory(backupDir);
@@ -192,7 +321,7 @@ namespace ClassicUO.Configuration
                 {
                     string next = GetBackupPath(filePath, i + 1);
 
-                    if (File.Exists(current))
+                    if (!string.IsNullOrWhiteSpace(next) && File.Exists(current))
                     {
                         if (File.Exists(next))
                             File.Delete(next);
@@ -205,7 +334,7 @@ namespace ClassicUO.Configuration
             // Move the current main file into backup slot 1.
             string firstBackup = GetBackupPath(filePath, 1);
 
-            if (File.Exists(filePath))
+            if (!string.IsNullOrWhiteSpace(firstBackup) && File.Exists(filePath))
             {
                 if (File.Exists(firstBackup))
                     File.Delete(firstBackup);
@@ -214,23 +343,32 @@ namespace ClassicUO.Configuration
             }
         }
 
-        private void BackupCorruptFile(string filePath)
+        /// <summary>
+        /// Copies a file that could not be used aside and reports it, so the user is told rather than
+        /// silently handed defaults. Call before falling back, which overwrites what is on disk.
+        /// </summary>
+        /// <param name="filePath">The file that could not be used. Must exist.</param>
+        private static void BackupCorruptFile(string filePath)
         {
+            string corruptPath = filePath + ".corrupt";
+
             try
             {
-                string corruptPath = filePath + ".corrupt";
-
-                // Keep at most one corrupt copy - don't overwrite an earlier failure.
-                if (File.Exists(corruptPath))
-                    return;
-
-                File.Copy(filePath, corruptPath);
-                Log.Warn($"Backed up corrupt JSON save '{filePath}' to '{corruptPath}'.");
+                // Keep at most one corrupt copy - don't overwrite an earlier failure. Still reported:
+                // the file is being answered with defaults now, whatever happened on an earlier run.
+                if (!File.Exists(corruptPath))
+                {
+                    File.Copy(filePath, corruptPath);
+                    Log.Warn($"Backed up corrupt JSON save '{filePath}' to '{corruptPath}'.");
+                }
             }
             catch (Exception e)
             {
                 Log.Error($"Failed to back up corrupt JSON save '{filePath}': {e}");
+                corruptPath = null;
             }
+
+            CorruptConfigReporter.Report(filePath, corruptPath);
         }
 
         private static string GetBackupDirectory(string filePath) => Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, Constants.BACKUP_FOLDER);
@@ -244,11 +382,11 @@ namespace ClassicUO.Configuration
         /// <param name="storage">The field to update</param>
         /// <param name="value">The value to set</param>
         /// <param name="propertyName">The name of the property being updated</param>
-        /// <typeparam name="T">The type of property being updated</typeparam>
+        /// <typeparam name="TFieldType">The type of property being updated</typeparam>
         /// <returns><c>true</c> if a change has occurred, <c>false</c> otherwise</returns>
-        protected bool SetProperty<TT>(ref TT storage, TT value, [CallerMemberName] string propertyName = null)
+        protected bool SetProperty<TFieldType>(ref TFieldType storage, TFieldType value, [CallerMemberName] string propertyName = null)
         {
-            if (EqualityComparer<TT>.Default.Equals(storage, value))
+            if (EqualityComparer<TFieldType>.Default.Equals(storage, value))
                 return false;
 
             storage = value;
@@ -269,6 +407,21 @@ namespace ClassicUO.Configuration
         /// than one client - so every scope is protected with a named mutex keyed on the file path.
         /// </summary>
         private IDisposable AcquireLock(string filePath = null) => new CrossProcessLock(filePath ?? FilePath);
+
+        /// <summary>
+        /// Why one candidate file did not yield an instance, which decides whether another is worth trying.
+        /// </summary>
+        private enum LoadOutcome
+        {
+            /// <summary>An instance was produced.</summary>
+            Loaded,
+
+            /// <summary>Missing, unreadable, or not bindable text. Another copy may still be good.</summary>
+            Unreadable,
+
+            /// <summary>Readable, but its shape cannot be brought to the current one. No older copy helps.</summary>
+            Unmigratable
+        }
 
         private sealed class CrossProcessLock : IDisposable
         {

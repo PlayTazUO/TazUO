@@ -54,7 +54,9 @@ public class ConfigMigrationPipelineTests
             new JsonMigrationFormat(Options)
         );
 
-        Assert.Throws<ConfigMigrationException>(() => pipeline.Migrate(text));
+        // The malformed-specific type, not the base: a caller with a backup to fall back on only
+        // wants to try it when the text itself was unreadable.
+        Assert.Throws<ConfigDocumentMalformedException>(() => pipeline.Migrate(text));
     }
 
     [Fact]
