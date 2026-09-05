@@ -362,7 +362,7 @@ namespace ClassicUO.LegionScripting
         {
             get
             {
-                field ??= OnMain(() => new ApiPlayer(World.Player));
+                field ??= OnMain(() => World?.Player is { } p ? new ApiPlayer(p) : null);
                 return field;
             }
         }
@@ -374,7 +374,7 @@ namespace ClassicUO.LegionScripting
         {
             get
             {
-                Item i = OnMain(() => World.Player.FindItemByLayer(Layer.Bank));
+                Item i = OnMain(() => World?.Player?.FindItemByLayer(Layer.Bank));
                 return i != null ? i.Serial : 0;
             }
         }
@@ -701,7 +701,11 @@ namespace ClassicUO.LegionScripting
         /// Sets the player's war mode state (peace/war toggle).
         /// </summary>
         /// <param name="enabled">True to enable war mode, false to disable war mode</param>
-        public void SetWarMode(bool enabled) => OnMain(() => GameActions.RequestWarMode(World.Player, enabled));
+        public void SetWarMode(bool enabled) => OnMain(() =>
+        {
+            if (World?.Player != null)
+                GameActions.RequestWarMode(World.Player, enabled);
+        });
 
         /// <summary>
         /// Attempt to bandage yourself. Older clients this will not work, you will need to find a bandage, use it, and target yourself.
@@ -733,6 +737,12 @@ namespace ClassicUO.LegionScripting
         public ApiItem ClearLeftHand() => OnMain
         (() =>
             {
+                if (World?.Player == null)
+                {
+                    Found = 0;
+                    return null;
+                }
+
                 Item i = World.Player.FindItemByLayer(Layer.OneHanded);
 
                 if (i != null)
@@ -762,6 +772,12 @@ namespace ClassicUO.LegionScripting
         public ApiItem ClearRightHand() => OnMain
         (() =>
             {
+                if (World?.Player == null)
+                {
+                    Found = 0;
+                    return null;
+                }
+
                 Item i = World.Player.FindItemByLayer(Layer.TwoHanded);
 
                 if (i != null)
@@ -1098,6 +1114,9 @@ namespace ClassicUO.LegionScripting
         public void QueueMoveItemOffset(uint serial, ushort amt = 0, int x = 0, int y = 0, int z = 0, bool OSI = false) => OnMain
         (() =>
             {
+                if (World?.Map == null || World?.Player == null)
+                    return;
+
                 World.Map.GetMapZ(World.Player.X + x, World.Player.Y + y, out sbyte gz, out sbyte gz2);
 
                 bool useCalculatedZ = false;
@@ -1139,6 +1158,9 @@ namespace ClassicUO.LegionScripting
         public void MoveItemOffset(uint serial, int amt = 0, int x = 0, int y = 0, int z = 0, bool OSI = false) => OnMain
         (() =>
             {
+                if (World?.Map == null || World?.Player == null)
+                    return;
+
                 World.Map.GetMapZ(World.Player.X + x, World.Player.Y + y, out sbyte gz, out sbyte gz2);
 
                 bool useCalculatedZ = false;
@@ -1212,6 +1234,9 @@ namespace ClassicUO.LegionScripting
 
             if (container == uint.MaxValue && z == sbyte.MaxValue && x != ushort.MaxValue && y != ushort.MaxValue)
             {
+                if (World?.Map == null)
+                    return;
+
                 World.Map.GetMapZ(x, y, out sbyte landZ, out sbyte staticZ);
                 z = Math.Max(landZ, staticZ);
             }
@@ -2105,8 +2130,16 @@ namespace ClassicUO.LegionScripting
             bool pathFindStatus = OnMain
             (() =>
                 {
+                    if (World?.Player == null)
+                        return false;
+
                     if (z == int.MinValue)
+                    {
+                        if (World.Map == null)
+                            return false;
+
                         z = World.Map.GetTileZ(x, y);
+                    }
 
                     return World.Player.Pathfinder.WalkTo(x, y, z, distance, run);
                 }
@@ -2120,20 +2153,20 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player.Pathfinder.AutoWalking) && !StopRequested)
+            while (OnMain(() => World.Player?.Pathfinder?.AutoWalking == true) && !StopRequested)
             {
                 if (DateTime.Now >= expire)
                 {
-                    OnMain(() => World.Player.Pathfinder.StopAutoWalk());
+                    OnMain(() => World.Player?.Pathfinder?.StopAutoWalk());
                     return false;
                 }
 
                 Thread.Sleep(1);
             }
 
-            OnMain(() => World.Player.Pathfinder.StopAutoWalk());
+            OnMain(() => World.Player?.Pathfinder?.StopAutoWalk());
 
-            return OnMain(() => World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
+            return OnMain(() => World.Player != null && World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
 
         /// <summary>
@@ -2157,6 +2190,9 @@ namespace ClassicUO.LegionScripting
             bool pathFindStatus = OnMain
             (() =>
                 {
+                    if (World?.Player == null)
+                        return false;
+
                     Entity mob = World.Get(entity);
                     if (mob != null)
                     {
@@ -2178,19 +2214,19 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player.Pathfinder.AutoWalking) && !StopRequested)
+            while (OnMain(() => World.Player?.Pathfinder?.AutoWalking == true) && !StopRequested)
             {
                 if (DateTime.Now >= expire)
                 {
-                    OnMain(() => World.Player.Pathfinder.StopAutoWalk());
+                    OnMain(() => World.Player?.Pathfinder?.StopAutoWalk());
                     return false;
                 }
 
                 Thread.Sleep(1);
             }
 
-            OnMain(() => World.Player.Pathfinder.StopAutoWalk());
-            return OnMain(() => World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
+            OnMain(() => World.Player?.Pathfinder?.StopAutoWalk());
+            return OnMain(() => World.Player != null && World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
 
         /// <summary>
@@ -2246,8 +2282,16 @@ namespace ClassicUO.LegionScripting
         public IList<ApiPoint3D> GetPath(int x, int y, int z = int.MinValue, int distance = 1) =>
             OnMain(() =>
             {
+                if (World?.Player == null)
+                    return null;
+
                 if (z == int.MinValue)
+                {
+                    if (World.Map == null)
+                        return null;
+
                     z = World.Map.GetTileZ(x, y);
+                }
 
                 List<(int X, int Y, int Z)> path = World.Player.Pathfinder.GetPathTo(x, y, z, distance);
 
@@ -2298,7 +2342,7 @@ namespace ClassicUO.LegionScripting
         public void Run(string direction)
         {
             Direction d = Utility.GetDirection(direction);
-            OnMain(() => World.Player.Walk(d, true));
+            OnMain(() => { if (World?.Player != null) World.Player.Walk(d, true); });
         }
 
         /// <summary>
@@ -2312,7 +2356,7 @@ namespace ClassicUO.LegionScripting
         public void Walk(string direction)
         {
             Direction d = Utility.GetDirection(direction);
-            OnMain(() => World.Player.Walk(d, false));
+            OnMain(() => { if (World?.Player != null) World.Player.Walk(d, false); });
         }
 
         /// <summary>
@@ -2328,7 +2372,7 @@ namespace ClassicUO.LegionScripting
             {
                 Direction d = Utility.GetDirection(direction);
 
-                if (d != Direction.NONE && World.Player.Direction != d)
+                if (d != Direction.NONE && World?.Player != null && World.Player.Direction != d)
                     World.Player.Walk(d, false);
             }
         );
@@ -2355,6 +2399,9 @@ namespace ClassicUO.LegionScripting
         public void Dismount(bool skipQueue = true) => OnMain
         (() =>
             {
+                if (World?.Player == null)
+                    return;
+
                 if (World.Player.FindItemByLayer(Layer.Mount) != null)
                 {
                     if (skipQueue)
@@ -2572,7 +2619,7 @@ namespace ClassicUO.LegionScripting
 
                     if (info.IsLand)
                     {
-                        var land = World.Map.GetTile(info.X, info.Y) as Land;
+                        var land = World.Map?.GetTile(info.X, info.Y) as Land;
                         return land is null ? null : new ApiLand(land);
                     }
 
@@ -2592,7 +2639,11 @@ namespace ClassicUO.LegionScripting
         /// API.TargetSelf()
         /// ```
         /// </summary>
-        public void TargetSelf() => OnMain(() => World.TargetManager.Target(World.Player.Serial));
+        public void TargetSelf() => OnMain(() =>
+        {
+            if (World?.Player != null)
+                World.TargetManager.Target(World.Player.Serial);
+        });
 
         /// <summary>
         /// Target a land tile relative to your position.
@@ -2607,7 +2658,7 @@ namespace ClassicUO.LegionScripting
         public void TargetLandRel(int xOffset, int yOffset) => OnMain
         (() =>
             {
-                if (!World.TargetManager.IsTargeting)
+                if (!World.TargetManager.IsTargeting || World?.Map == null || World?.Player == null)
                     return;
 
                 ushort x = (ushort)(World.Player.X + xOffset);
@@ -2632,7 +2683,7 @@ namespace ClassicUO.LegionScripting
         public void TargetTileRel(int xOffset, int yOffset, ushort graphic = ushort.MaxValue) => OnMain
         (() =>
             {
-                if (!World.TargetManager.IsTargeting)
+                if (!World.TargetManager.IsTargeting || World?.Map == null || World?.Player == null)
                     return;
 
                 ushort x = (ushort)(World.Player.X + xOffset);
@@ -2787,6 +2838,9 @@ namespace ClassicUO.LegionScripting
         public void SetSkillLock(string skill, string up_down_locked) => OnMain
         (() =>
             {
+                if (World?.Player == null)
+                    return;
+
                 skill = skill.ToLower();
                 Game.Data.Lock status = Game.Data.Lock.Up;
 
@@ -3211,7 +3265,14 @@ namespace ClassicUO.LegionScripting
             DateTime expire = DateTime.UtcNow.AddSeconds(delay);
 
             if (ID == uint.MaxValue)
-                ID = OnMain(() => World.Player.LastGumpID);
+            {
+                uint? lastGumpId = OnMain(() => World.Player?.LastGumpID);
+
+                if (lastGumpId == null)
+                    return false;
+
+                ID = lastGumpId.Value;
+            }
 
             while (!OnMain(() => UIManager.GetGumpServer(ID) != null) && !StopRequested)
             {
@@ -3720,6 +3781,9 @@ namespace ClassicUO.LegionScripting
             return BubblingOnMain
             (() =>
                 {
+                    if (World?.Player == null)
+                        return null;
+
                     Mobile mob = World.Mobiles.Values.Where
                     (m => !m.IsDestroyed && !m.IsDead && m.Serial != World.Player.Serial && requestedNotoriety.Contains
                             ((Notoriety)(byte)m.NotorietyFlag) && m.Distance <= maxDistance && !OnIgnoreList(m)
@@ -3784,6 +3848,9 @@ namespace ClassicUO.LegionScripting
                     return null;
 
                 Notoriety[] requestedNotoriety = Utility.ConvertNotorietyOrThrow(notoriety);
+
+                if (World?.Player == null)
+                    return null;
 
                 Mobile[] list = World.Mobiles.Values.Where
                 (m => !m.IsDestroyed && !m.IsDead && m.Serial != World.Player.Serial && requestedNotoriety.Contains
@@ -3881,7 +3948,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns>A GameObject of that location.</returns>
-        public ApiGameObject GetTile(int x, int y) => OnMain(() => { return new ApiGameObject(World.Map.GetTile(x, y)); });
+        public ApiGameObject GetTile(int x, int y) => OnMain(() => { return World?.Map == null ? null : new ApiGameObject(World.Map.GetTile(x, y)); });
 
         /// <summary>
         /// Gets all static objects at a specific position (x, y coordinates).
@@ -4522,6 +4589,9 @@ namespace ClassicUO.LegionScripting
                 if (wmap == null || string.IsNullOrEmpty(name))
                     return;
 
+                if (World?.Player == null)
+                    return;
+
                 if (map == int.MaxValue)
                     map = World.MapIndex;
 
@@ -4660,6 +4730,9 @@ namespace ClassicUO.LegionScripting
         /// <param name="map">Defaults to current map</param>
         public void MarkTile(int x, int y, ushort hue, int map = -1) => OnMain(() =>
         {
+            if (World?.Map == null)
+                return;
+
             if (map < 0)
                 map = World.Map.Index;
 
