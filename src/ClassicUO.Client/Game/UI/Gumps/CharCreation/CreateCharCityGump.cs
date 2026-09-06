@@ -18,7 +18,14 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
     public class CreateCharSelectionCityGump : Gump
     {
         private readonly List<CityControl> _cityControls = new List<CityControl>();
-        private readonly string[] _cityNames = { "Felucca", "Trammel", "Ilshenar", "Malas", "Tokuno", "Ter Mur" };
+        private readonly string[] _cityNames = { 
+            Client.Game.UO.FileManager.Clilocs.GetStringOrDefault(1012001, "Felucca"), 
+            Client.Game.UO.FileManager.Clilocs.GetStringOrDefault(1012000, "Trammel"), 
+            Client.Game.UO.FileManager.Clilocs.GetStringOrDefault(1012002, "Ilshenar"), 
+            Client.Game.UO.FileManager.Clilocs.GetStringOrDefault(1060643, "Malas"), 
+            Client.Game.UO.FileManager.Clilocs.GetStringOrDefault(1151078, "Tokuno"), 
+            Client.Game.UO.FileManager.Clilocs.GetStringOrDefault(1112178, "Ter Mur")
+        };
         private readonly Label _facetName;
         private readonly HtmlControl _htmlControl;
         private readonly LoginScene _scene;
