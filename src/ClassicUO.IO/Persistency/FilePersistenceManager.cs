@@ -173,12 +173,22 @@ public class FilePersistenceManager<TEntryType> where TEntryType : struct, Enum
     /// <typeparam name="TValue">The value type being stored.</typeparam>
     /// <param name="definition">The cache definition describing where the value belongs.</param>
     /// <param name="data">The value to cache and save.</param>
+    /// <param name="flushToDisk">
+    ///     Whether to force the write onto the device before returning, rather than leaving it in the page
+    ///     cache. Off by default: a bucket holding data the client can rebuild loses nothing to a power cut
+    ///     and should not pay a device flush per write. Turn it on for a bucket whose contents cannot be
+    ///     reproduced.
+    /// </param>
     /// <returns><c>true</c> if the value was stored and written successfully; otherwise <c>false</c>.</returns>
     /// <remarks>
     ///     The in-memory cache is updated first so subsequent reads can reuse the same value.
     ///     The file write is then attempted to keep the persisted cache in sync.
     /// </remarks>
-    public bool Set<TValue>(PersistentItemDefinition<TEntryType, TValue> definition, TValue data) where TValue : class, new()
+    public bool Set<TValue>(
+        PersistentItemDefinition<TEntryType, TValue> definition,
+        TValue data,
+        bool flushToDisk = false
+    ) where TValue : class, new()
     {
         if (data == null)
         {
@@ -187,7 +197,7 @@ public class FilePersistenceManager<TEntryType> where TEntryType : struct, Enum
         }
 
         _cache[definition.Key] = data;
-        return SaveToFile(definition, data);
+        return SaveToFile(definition, data, flushToDisk);
     }
 
     /// <summary>
@@ -242,17 +252,22 @@ public class FilePersistenceManager<TEntryType> where TEntryType : struct, Enum
     /// <typeparam name="TValue">The type being persisted</typeparam>
     /// <param name="definition">The cache definition describing where to save the value</param>
     /// <param name="data">The value to serialize.</param>
+    /// <param name="flushToDisk">Whether to force the write onto the device before returning.</param>
     /// <returns><c>true</c> if the write succeeds, <c>false</c> otherwise</returns>
     /// <remarks>
     ///     Failures are logged and reported back to the caller
     /// </remarks>
-    private bool SaveToFile<TValue>(PersistentItemDefinition<TEntryType, TValue> definition, TValue data) where TValue : class, new()
+    private bool SaveToFile<TValue>(
+        PersistentItemDefinition<TEntryType, TValue> definition,
+        TValue data,
+        bool flushToDisk
+    ) where TValue : class, new()
     {
         string filePath = _filePaths[definition.Key];
         try
         {
             string json = JsonSerializer.Serialize(data, _jsonSerializerOptions);
-            AtomicFile.Write(filePath, json);
+            AtomicFile.Write(filePath, json, flushToDisk);
             return true;
         }
         catch (Exception ex)

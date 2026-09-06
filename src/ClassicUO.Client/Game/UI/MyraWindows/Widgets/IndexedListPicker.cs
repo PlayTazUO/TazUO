@@ -8,6 +8,34 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 /// <summary>
+/// An extra widget for a picker row, and the width to reserve for it.
+/// </summary>
+/// <param name="Build">
+///     Builds the widget appended after the add button - e.g. a preview button. Handed the picker it
+///     will sit in, so an accessory acting on what the inputs currently hold needs no back-reference
+///     assigned around construction.
+/// </param>
+/// <param name="Width">
+///     What it takes horizontally, so the picked-items box below still matches the row's width. The
+///     box is sized before the widget exists, so its width cannot be measured off it.
+/// </param>
+public readonly record struct PickerAccessory(Func<IndexedListPicker, Widget> Build, int Width);
+
+/// <summary>
+/// How an <see cref="IndexedListPicker" />'s two inputs are sized, and what its number field accepts.
+/// </summary>
+/// <param name="NumberWidth">Width for the raw-number field.</param>
+/// <param name="NameWidth">Width for the name list.</param>
+/// <param name="MinValue">Lower bound the number field accepts.</param>
+/// <param name="MaxValue">Upper bound the number field accepts.</param>
+public readonly record struct IndexedPickerLayout(
+    int NumberWidth,
+    int NameWidth,
+    int MinValue = int.MinValue,
+    int MaxValue = int.MaxValue
+);
+
+/// <summary>
 /// Builds a set of chosen values from a searchable <see cref="IndexedComboPicker" />. A picked value
 /// leaves the name list, so the search never offers a duplicate.
 /// </summary>
@@ -24,6 +52,12 @@ public class IndexedListPicker : VerticalStackPanel
 
     /// <summary>Every value currently picked.</summary>
     public int[] PickedItems => _picked.PickedItems;
+
+    /// <summary>
+    ///     What the picker's inputs currently hold - the candidate for the next add, not a picked value.
+    ///     Read by an accessory acting on whatever is being looked at, such as a preview button.
+    /// </summary>
+    public int Value => _picker.Value;
 
     #endregion
 
@@ -45,19 +79,15 @@ public class IndexedListPicker : VerticalStackPanel
     /// <param name="value">The picker's starting value - not necessarily picked.</param>
     /// <param name="entries">Every known (value, label) pair to offer. Labels arrive display-ready
     /// (e.g. "755 - Earthquake").</param>
-    /// <param name="numberWidth">Width for the raw-number field.</param>
-    /// <param name="nameWidth">Width for the name list.</param>
+    /// <param name="layout">How the two inputs are sized, and what the number field accepts.</param>
     /// <param name="initialValues">Values already picked when the widget is built.</param>
-    /// <param name="minValue">Lower bound the number field accepts.</param>
-    /// <param name="maxValue">Upper bound the number field accepts.</param>
+    /// <param name="accessory">An extra widget for the picker row, or null for none.</param>
     public IndexedListPicker(
         int value,
         IEnumerable<(int Value, string Label)> entries,
-        int numberWidth,
-        int nameWidth,
+        IndexedPickerLayout layout,
         IEnumerable<int>? initialValues = null,
-        int minValue = int.MinValue,
-        int maxValue = int.MaxValue
+        PickerAccessory? accessory = null
     )
     {
         Spacing = SPACING;
@@ -65,18 +95,22 @@ public class IndexedListPicker : VerticalStackPanel
         _entries = [..entries];
         _labels = _entries.ToDictionary(entry => entry.Value, entry => entry.Label);
 
-        _picker = new IndexedComboPicker(value, _entries, minValue, maxValue) { VerticalAlignment = VerticalAlignment.Center };
-        _picker.NumberInput.Width = numberWidth;
-        _picker.NameList.Width = nameWidth;
+        _picker = new IndexedComboPicker(value, _entries, layout.MinValue, layout.MaxValue)
+        {
+            VerticalAlignment = VerticalAlignment.Center, NumberInput = { Width = layout.NumberWidth }, NameList = { Width = layout.NameWidth }
+        };
 
         // Fixed to the picker row's width, not the fill column it sits in - a box spanning the whole
         // editor pane would strand its remove glyphs far from short labels. Two gaps to account for:
         // the picker's own between its inputs, this row's before the add button.
-        int boxWidth = numberWidth
+        int boxWidth = layout.NumberWidth
             + IndexedComboPicker.SPACING
-            + nameWidth
+            + layout.NameWidth
             + SPACING
             + PickedItemsController<int>.ADD_BUTTON_SIZE;
+
+        if (accessory is { } extra)
+            boxWidth += SPACING + extra.Width;
 
         _picked = new PickedItemsController<int>(boxWidth, LabelFor, OnAddClick);
         _picked.ItemsChanged += OnPickedItemsChanged;
@@ -88,8 +122,12 @@ public class IndexedListPicker : VerticalStackPanel
         pickerRow.Widgets.Add(_picker);
         pickerRow.Widgets.Add(_picked.AddButton);
 
-        Widgets.Add(pickerRow);
-        Widgets.Add(_picked.Box);
+        // Built last, and handed this picker: an accessory reading Value needs _picker in place.
+        if (accessory is { } trailing)
+            pickerRow.Widgets.Add(trailing.Build(this));
+
+        Children.Add(pickerRow);
+        Children.Add(_picked.Box);
 
         _picked.Seed(initialValues);
         _picked.SetCandidate(value);

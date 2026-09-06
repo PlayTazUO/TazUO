@@ -179,11 +179,8 @@ public sealed class BuffTriggerPicker : VerticalStackPanel
         var picker = new IndexedListPicker(
             0,
             BuffTypePicker.CatalogueEntries,
-            _numberWidth,
-            _listWidth,
-            stored.Select(type => (int)type),
-            short.MinValue,
-            short.MaxValue
+            new IndexedPickerLayout(_numberWidth, _listWidth, short.MinValue, short.MaxValue),
+            stored.Select(type => (int)type)
         ) { VerticalAlignment = VerticalAlignment.Top };
 
         picker.ItemsChanged += (_, _) =>
@@ -192,17 +189,14 @@ public sealed class BuffTriggerPicker : VerticalStackPanel
         return picker;
     }
 
-    private Widget SingleBuffPicker(PropertyInfo property, List<short> stored)
+    private IndexedComboPicker SingleBuffPicker(PropertyInfo property, List<short> stored)
     {
         var picker = new IndexedComboPicker(
             stored.Count > 0 ? stored[0] : 0,
             BuffTypePicker.CatalogueEntries,
             short.MinValue,
             short.MaxValue
-        ) { VerticalAlignment = VerticalAlignment.Center };
-
-        picker.NumberInput.Width = _numberWidth;
-        picker.NameList.Width = _listWidth;
+        ) { VerticalAlignment = VerticalAlignment.Center, NumberInput = { Width = _numberWidth }, NameList = { Width = _listWidth } };
 
         picker.ValueChanged += (_, value) => property.SetValue(_owner, new List<short> { (short)value });
 
@@ -260,9 +254,8 @@ public sealed class BuffTriggerPicker : VerticalStackPanel
         if (_buffTypesHost == null)
             return;
 
-        // Into Active: drop all but the first, so the config matches what the single picker shows.
-        if (mode == BuffTriggerMode.Active && _properties.BuffTypes?.GetValue(_owner) is List<short> { Count: > 1 } stored)
-            _properties.BuffTypes.SetValue(_owner, new List<short> { stored[0] });
+        if (mode == BuffTriggerMode.Active)
+            NormalizeToSingleBuff();
 
         _buffTypesHost.Widgets.Clear();
 
@@ -270,6 +263,24 @@ public sealed class BuffTriggerPicker : VerticalStackPanel
 
         if (row != null)
             _buffTypesHost.Widgets.Add(row);
+    }
+
+    /// <summary>
+    ///     Cuts the watched set down to the one buff <see cref="BuffTriggerMode.Active" /> brackets, and
+    ///     to exactly one: the single picker has no way to show "nothing chosen", so an empty set would
+    ///     read as buff zero while the trigger matched nothing at all.
+    /// </summary>
+    private void NormalizeToSingleBuff()
+    {
+        if (_properties.BuffTypes == null)
+            return;
+
+        List<short> stored = _properties.BuffTypes.GetValue(_owner) as List<short> ?? [];
+
+        if (stored.Count == 1)
+            return;
+
+        _properties.BuffTypes.SetValue(_owner, new List<short> { stored.Count > 0 ? stored[0] : (short)0 });
     }
 
     #endregion

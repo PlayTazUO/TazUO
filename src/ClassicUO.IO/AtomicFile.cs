@@ -42,11 +42,27 @@ public static class AtomicFile
         }
         catch
         {
-            if (File.Exists(tempPath))
-                File.Delete(tempPath);
-
+            Delete(tempPath);
             throw;
         }
+    }
+
+    public static bool Delete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                return true;
+            }
+        }
+        catch
+        {
+            // No Op
+        }
+
+        return false;
     }
 
     /// <summary>Writes the temp file, optionally not returning until the device has the bytes.</summary>

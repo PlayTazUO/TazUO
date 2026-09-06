@@ -54,6 +54,19 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     /// <summary>Width for a raw serial field - "0xFFFFFFFF" is the longest a serial ever prints.</summary>
     private const int SERIAL_INPUT_WIDTH = 120;
 
+    /// <summary>Width reserved for the sound preview button, so the picked-items box below the row
+    /// still lines up with it. Tuned by eye against the button's caption.</summary>
+    private const int SOUND_PLAY_BUTTON_WIDTH = 56;
+
+    /// <summary>
+    /// Bounds for a raw sound index. Sounds are addressed by a <see cref="ushort" /> on the wire, and a
+    /// negative one names nothing at all, so the field takes neither.
+    /// </summary>
+    private const int MIN_SOUND_INDEX = 0;
+
+    /// <inheritdoc cref="MIN_SOUND_INDEX" />
+    private const int MAX_SOUND_INDEX = ushort.MaxValue;
+
     /// <summary>Top margin for a rich-row label whose editor leads with a bordered, padded input: that
     /// border and padding push the input's text down. Tuned by eye.</summary>
     private const int RICH_ROW_LABEL_TOP_NUDGE = 6;
@@ -61,11 +74,6 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     /// <summary>Gap between rows in <see cref="RichParameterRows" /> - without it, a multi-row editor
     /// reads as fused to the row below.</summary>
     private const int RICH_ROW_SPACING = 10;
-
-    /// <summary>Fallback for a curve power that cannot be read off its parameters - the same value
-    /// <see cref="FalloffCurve.Quadratic" /> is, so an unreadable one behaves like the default curve
-    /// rather than like something arbitrary.</summary>
-    private const float DEFAULT_FALLOFF_POWER = 2f;
 
     /// <summary>Reset targets, one per definition. See <see cref="DefaultParametersFor" />.</summary>
     private static readonly Dictionary<string, TriggerParameters> _defaultParameters = [];
@@ -412,12 +420,18 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     {
         List<int> stored = property.GetValue(parameters) as List<int> ?? [];
 
+        // Previews whatever the inputs hold, so it reads back off the picker it is being built into.
+        var play = new PickerAccessory(
+            owner => SoundIndexPicker.PlayButton(() => owner.Value),
+            SOUND_PLAY_BUTTON_WIDTH
+        );
+
         var picker = new IndexedListPicker(
             0,
             SoundIndexPicker.CatalogueEntries(),
-            NUMBER_INPUT_WIDTH,
-            INPUT_WIDTH,
-            stored
+            new IndexedPickerLayout(NUMBER_INPUT_WIDTH, INPUT_WIDTH, MIN_SOUND_INDEX, MAX_SOUND_INDEX),
+            stored,
+            play
         );
 
         picker.ItemsChanged += (_, _) => property.SetValue(parameters, picker.PickedItems.ToList());

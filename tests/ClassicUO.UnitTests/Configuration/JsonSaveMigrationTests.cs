@@ -10,6 +10,7 @@ using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.IO.Persistency.Migrations;
+using ClassicUO.UnitTests.Fixtures;
 using FluentAssertions;
 using Xunit;
 
@@ -20,6 +21,7 @@ namespace ClassicUO.UnitTests.Configuration;
 /// than through any real config: the behaviour here is inherited by every save that declares a
 /// pipeline.
 /// </summary>
+[Collection(CorruptFileReportCollection.Name)]
 public class JsonSaveMigrationTests : IDisposable
 {
     private readonly string _directory = Path.Combine(Path.GetTempPath(), $"json-save-migration-tests-{Guid.NewGuid():N}");
@@ -87,7 +89,21 @@ public class JsonSaveMigrationTests : IDisposable
 
         // The backups hold older shapes of the same file, so none can answer what the newest could not.
         loaded.Salutation.Should().BeNull();
-        File.ReadAllText(FilePath + ".corrupt").Should().Contain("from the future");
+        SoleCorruptBackup().Should().Contain("from the future");
+    }
+
+    [Fact]
+    public void A_Save_Loaded_From_An_Explicit_Path_Writes_Back_To_It()
+    {
+        Write("""{"salutation":"hi","schema_version":1}""");
+
+        MigratingSave loaded = MigratingSave.LoadFromPath(FilePath);
+        loaded.Salutation = "changed";
+        loaded.Save();
+
+        // Not to the Global scope directory FilePath would otherwise resolve to.
+        File.ReadAllText(FilePath).Should().Contain("changed");
+        MigratingSave.LoadFromPath(FilePath).Salutation.Should().Be("changed");
     }
 
     [Fact]
@@ -129,7 +145,15 @@ public class JsonSaveMigrationTests : IDisposable
 
     /// <summary>The reports for this test's own file - the queue is process-wide and shared.</summary>
     private List<CorruptConfigFile> Reported() =>
-        CorruptConfigReporter.Files.Where(file => file.Path == FilePath).ToList();
+        CorruptFileManager.Files.Where(file => file.Path == FilePath).ToList();
+
+    /// <summary>The single copy the corrupt-file backups hold for this test's file.</summary>
+    private string SoleCorruptBackup()
+    {
+        string directory = Path.Combine(_directory, CorruptFileManager.BackupDirectoryName);
+
+        return File.ReadAllText(Directory.GetFiles(directory).Should().ContainSingle().Subject);
+    }
 
     private string FilePath => Path.Combine(_directory, MigratingSave.TestFileName);
 
@@ -144,7 +168,7 @@ public class JsonSaveMigrationTests : IDisposable
 
     public void Dispose()
     {
-        while (CorruptConfigReporter.Files.TryDequeue(out _))
+        while (CorruptFileManager.Files.TryDequeue(out _))
         {
         }
 

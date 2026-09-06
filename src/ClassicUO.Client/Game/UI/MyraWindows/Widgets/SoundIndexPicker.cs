@@ -124,7 +124,7 @@ public sealed class SoundIndexPicker : HorizontalStackPanel
 
         Widgets.Add(_input);
         Widgets.Add(_names);
-        Widgets.Add(PlayButton());
+        Widgets.Add(PlayButton(() => Index));
     }
 
     #endregion
@@ -139,23 +139,31 @@ public sealed class SoundIndexPicker : HorizontalStackPanel
         return _labels.Select(pair => (pair.Key, pair.Value));
     }
 
-    #endregion
-
-    #region Private methods
-
     /// <summary>
-    /// Plays the chosen sound, filters bypassed - the point is to hear what was picked, not what the
-    /// player's audio settings would let through during play.
+    /// A button playing whichever sound <paramref name="currentIndex" /> names when it is clicked,
+    /// filters bypassed - the point is to hear what was picked, not what the player's audio settings
+    /// would let through during play.
     /// </summary>
-    private MyraButton PlayButton() =>
-        new(
+    /// <param name="currentIndex">Read on click, so the button can be built before its picker exists.</param>
+    /// <returns>The button, for a picker to place where it likes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="currentIndex" /> is null.</exception>
+    public static MyraButton PlayButton(Func<int> currentIndex)
+    {
+        ArgumentNullException.ThrowIfNull(currentIndex);
+
+        return new MyraButton(
             TazLang.Get("overlaytrigger_sound_play", "Play"),
-            () => Client.Game?.Audio?.PlaySound(Index, true)
+            () => Client.Game?.Audio?.PlaySound(currentIndex(), true)
         )
         {
             VerticalAlignment = VerticalAlignment.Center,
             Tooltip = TazLang.Get("overlaytrigger_sound_play_tooltip", "Hear the chosen sound.")
         };
+    }
+
+    #endregion
+
+    #region Private methods
 
     private void OnNumberTyped(int index)
     {

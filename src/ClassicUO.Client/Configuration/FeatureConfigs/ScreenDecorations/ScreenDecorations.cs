@@ -73,5 +73,19 @@ public class ScreenDecorations : JsonSave<ScreenDecorations>, INotifyPropertyCha
             ? new ScreenDecorations()
             : LoadFrom(Path.Combine(profilePath, ConfigFileName));
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// A no-op for settings that were never loaded from a profile: with no profile there is nowhere
+    /// these belong, and <see cref="SettingsScope.Char"/> would write a stray copy under the account
+    /// folder instead. An instance loaded from a path saves back to that same path.
+    /// </remarks>
+    public override void Save()
+    {
+        if (SourcePath == null && string.IsNullOrEmpty(ProfileManager.ProfilePath))
+            return;
+
+        base.Save();
+    }
+
     #endregion
 }

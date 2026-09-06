@@ -29,8 +29,7 @@ namespace ClassicUO.Configuration
     /// <see cref="MAX_BACKUPS"/> rotating backups in a <c>backups</c> sub-folder.</description></item>
     /// <item><description><see cref="Load"/> - loads the file, falling back through the backups on failure and
     /// finally creating (and persisting) a fresh copy if nothing can be read. An unreadable main file is
-    /// preserved once as <c>&lt;file&gt;.corrupt</c> for later inspection and reported through
-    /// <see cref="CorruptConfigReporter"/>.</description></item>
+    /// copied aside and reported through <see cref="CorruptFileManager"/>.</description></item>
     /// <item><description><see cref="MigrationPipeline"/> - optional. Brings an older persisted shape up to
     /// the current one before it binds, and writes the result back.</description></item>
     /// </list>
@@ -45,7 +44,12 @@ namespace ClassicUO.Configuration
         /// <summary>Raised when a property set through <see cref="SetProperty{TFieldType}"/> changes.</summary>
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private const int MAX_BACKUPS = 3;
+        /// <summary>
+        /// How many rotating copies are kept. Deep on purpose: a shape this build cannot migrate is
+        /// answered with fresh defaults without consulting them, so the depth is what a client rolled
+        /// back to an older build has to reach past to find a version it can still read.
+        /// </summary>
+        private const int MAX_BACKUPS = 5;
 
         /// <summary>The scope that determines which folder this file is saved in.</summary>
         protected abstract SettingsScope Scope { get; }
@@ -77,28 +81,31 @@ namespace ClassicUO.Configuration
         [JsonIgnore] public string BackupDirectory => Path.Combine(SaveDirectory, Constants.BACKUP_FOLDER);
 
         /// <summary>
+        /// The file this instance was loaded from, when <see cref="LoadFrom"/> named one. Null for an
+        /// instance built in memory or loaded through <see cref="Scope"/> - those keep following the
+        /// scope, which is the point of loading through it.
+        /// </summary>
+        protected string? SourcePath { get; private set; }
+
+        /// <summary>
         /// Loads the save for type <typeparamref name="T"/> from <see cref="FilePath"/>. If the main file is
         /// missing or unreadable the backups are tried in order; if they all fail a fresh instance is created
         /// and written to disk so a valid file always exists afterwards.
         /// </summary>
-        public static T Load() => LoadFrom(new T().FilePath);
+        public static T Load() => LoadInternal(new T().FilePath, pinSource: false);
 
         /// <summary>
         /// Like <see cref="Load"/>, but reads from an explicit path rather than <see cref="FilePath"/>.
+        /// The instance is bound to that path, so a later <see cref="Save"/> writes back to the file it
+        /// came from rather than to wherever <see cref="Scope"/> resolves to by then.
         /// </summary>
-        protected static T LoadFrom(string filePath)
-        {
-            var instance = new T();
-
-            using (instance.AcquireLock(filePath))
-                return instance.LoadCore(filePath);
-        }
+        protected static T LoadFrom(string filePath) => LoadInternal(filePath, pinSource: true);
 
         /// <summary>
-        /// Saves this instance to <see cref="FilePath"/> atomically, rotating the previous version into the
-        /// backups folder.
+        /// Saves this instance atomically, rotating the previous version into the backups folder. Writes
+        /// to <see cref="SourcePath"/> where one was bound, and to <see cref="FilePath"/> otherwise.
         /// </summary>
-        public void Save() => SaveTo(FilePath);
+        public virtual void Save() => SaveTo(SourcePath ?? FilePath);
 
         /// <summary>
         /// Like <see cref="Save"/>, but writes to an explicit path rather than <see cref="FilePath"/>.
@@ -107,6 +114,27 @@ namespace ClassicUO.Configuration
         {
             using (AcquireLock(filePath))
                 SaveCore(filePath);
+        }
+
+        /// <summary>
+        /// Reads <paramref name="filePath"/> into a fresh instance, optionally binding the instance to
+        /// that path for its later saves.
+        /// </summary>
+        /// <param name="filePath">The main file to load.</param>
+        /// <param name="pinSource">Whether the instance should remember where it came from.</param>
+        /// <returns>The loaded instance, or a new one when nothing on disk could be used.</returns>
+        private static T LoadInternal(string filePath, bool pinSource)
+        {
+            var instance = new T();
+            T result;
+
+            using (instance.AcquireLock(filePath))
+                result = instance.LoadCore(filePath);
+
+            if (pinSource)
+                result.SourcePath = filePath;
+
+            return result;
         }
 
         /// <summary>
@@ -127,7 +155,7 @@ namespace ClassicUO.Configuration
             // Copied now, before the fallbacks write over it, but reported only once the outcome is
             // known: what the user needs to hear differs between recovered settings and fresh defaults.
             bool hadMainFile = File.Exists(filePath);
-            string? corruptCopy = hadMainFile ? BackupCorruptFile(filePath) : null;
+            string? corruptCopy = hadMainFile ? CorruptFileManager.Backup(filePath) : null;
 
             // A shape this build cannot migrate is not worth chasing through the backups: they hold
             // older shapes of the same file, so none of them can answer what the newest one could not.
@@ -144,7 +172,7 @@ namespace ClassicUO.Configuration
                     Log.Warn($"Recovered JSON save '{filePath}' from backup {i}.");
 
                     if (hadMainFile)
-                        CorruptConfigReporter.ReportRecovered(filePath, corruptCopy);
+                        CorruptFileManager.Report(filePath, corruptCopy, CorruptConfigFallback.Backup);
 
                     return loaded;
                 }
@@ -154,7 +182,7 @@ namespace ClassicUO.Configuration
             if (hadMainFile)
             {
                 Log.Error($"Failed to load JSON save '{filePath}'; creating a fresh copy.");
-                CorruptConfigReporter.Report(filePath, corruptCopy);
+                CorruptFileManager.Report(filePath, corruptCopy);
             }
 
             var fresh = new T();
@@ -354,36 +382,6 @@ namespace ClassicUO.Configuration
 
                 File.Move(filePath, firstBackup);
             }
-        }
-
-        /// <summary>
-        /// Copies a file that could not be used aside, so it outlives whatever is written in its place.
-        /// Call before falling back, which overwrites what is on disk. Telling the user is the caller's:
-        /// only it knows whether the fallback recovered the settings or reset them.
-        /// </summary>
-        /// <param name="filePath">The file that could not be used. Must exist.</param>
-        /// <returns>Where the copy was written, or null if none could be taken.</returns>
-        private static string? BackupCorruptFile(string filePath)
-        {
-            string? corruptPath = filePath + ".corrupt";
-
-            try
-            {
-                // Keep at most one corrupt copy - don't overwrite an earlier failure. Still returned:
-                // the file is being answered now, whatever happened on an earlier run.
-                if (!File.Exists(corruptPath))
-                {
-                    File.Copy(filePath, corruptPath);
-                    Log.Warn($"Backed up corrupt JSON save '{filePath}' to '{corruptPath}'.");
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Failed to back up corrupt JSON save '{filePath}': {e}");
-                corruptPath = null;
-            }
-
-            return corruptPath;
         }
 
         private static string GetBackupDirectory(string filePath) => Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, Constants.BACKUP_FOLDER);

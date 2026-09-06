@@ -4,6 +4,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Migrations;
 using ClassicUO.Game;
+using ClassicUO.UnitTests.Fixtures;
 using FluentAssertions;
 using Xunit;
 
@@ -11,6 +12,7 @@ namespace ClassicUO.UnitTests.Configuration;
 
 /// <summary>Exercises <see cref="ScreenDecorations.LoadForProfile"/>, the versioned-JSON load path
 /// <see cref="ClassicUO.Configuration.JsonSave{T}"/> runs in front of the config.</summary>
+[Collection(CorruptFileReportCollection.Name)]
 public class ScreenDecorationsPersistenceTests : IDisposable
 {
     private readonly string _profileDirectory = Path.Combine(Path.GetTempPath(), $"screen-decorations-tests-{Guid.NewGuid():N}");
@@ -70,7 +72,7 @@ public class ScreenDecorationsPersistenceTests : IDisposable
 
         // Starting clean is fine; the fresh copy overwrites the file, so the original has to survive.
         loaded.Enabled.Should().BeFalse();
-        File.ReadAllText(path + ".corrupt").Should().Be(fromTheFuture);
+        SoleCorruptBackup().Should().Be(fromTheFuture);
     }
 
     [Fact]
@@ -85,7 +87,7 @@ public class ScreenDecorationsPersistenceTests : IDisposable
         ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
 
         loaded.Enabled.Should().BeFalse();
-        File.ReadAllText(path + ".corrupt").Should().Be(unbindable);
+        SoleCorruptBackup().Should().Be(unbindable);
     }
 
     [Fact]
@@ -95,15 +97,16 @@ public class ScreenDecorationsPersistenceTests : IDisposable
 
         ScreenDecorations.LoadForProfile(_profileDirectory);
 
-        CorruptConfigReporter.Files.TryDequeue(out CorruptConfigFile reported).Should().BeTrue();
+        CorruptFileManager.Files.TryDequeue(out CorruptConfigFile reported).Should().BeTrue();
         reported.Path.Should().Be(path);
-        reported.BackupPath.Should().Be(path + ".corrupt");
+        File.ReadAllText(reported.BackupPath!).Should().Be("""{"enabled": true, "schema_version": 9999}""");
     }
 
     [Fact]
     public void LoadForProfile_Recovers_A_Corrupt_File_From_Its_Backup()
     {
-        string path = WriteConfig("{ this is not json");
+        const string unreadable = "{ this is not json";
+        WriteConfig(unreadable);
         Directory.CreateDirectory(Path.GetDirectoryName(BackupPath(1))!);
         File.WriteAllText(BackupPath(1), """{"enabled": true}""");
 
@@ -111,7 +114,32 @@ public class ScreenDecorationsPersistenceTests : IDisposable
 
         // Unreadable text says nothing about the shape, so an older copy is still worth trying.
         loaded.Enabled.Should().BeTrue();
-        File.Exists(path + ".corrupt").Should().BeTrue();
+        SoleCorruptBackup().Should().Be(unreadable);
+    }
+
+    /// <summary>
+    /// Saving settings loaded from an explicit path must write back to that same path, whatever
+    /// <see cref="SettingsScope.Char"/> resolves to - here a temp directory no profile ever names.
+    /// </summary>
+    [Fact]
+    public void Settings_Loaded_From_A_Path_Save_Back_To_It()
+    {
+        string path = WriteConfig("""{"enabled": false}""");
+
+        ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
+        loaded.Enabled = true;
+        loaded.Save();
+
+        ScreenDecorations.LoadForProfile(_profileDirectory).Enabled.Should().BeTrue();
+        File.ReadAllText(path).Should().Contain("true");
+    }
+
+    /// <summary>The single copy the corrupt-file backups hold for this test's config.</summary>
+    private string SoleCorruptBackup()
+    {
+        string directory = Path.Combine(_profileDirectory, CorruptFileManager.BackupDirectoryName);
+
+        return File.ReadAllText(Directory.GetFiles(directory).Should().ContainSingle().Subject);
     }
 
     private string WriteConfig(string json)
@@ -129,7 +157,7 @@ public class ScreenDecorationsPersistenceTests : IDisposable
     /// <summary>The report queue is process-wide; a leftover entry would be read as this test's.</summary>
     private static void DrainCorruptReports()
     {
-        while (CorruptConfigReporter.Files.TryDequeue(out _))
+        while (CorruptFileManager.Files.TryDequeue(out _))
         {
         }
     }

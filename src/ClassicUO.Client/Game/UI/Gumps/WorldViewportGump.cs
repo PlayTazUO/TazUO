@@ -148,12 +148,11 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void SetCorruptFileWarnings()
         {
-            _userNotifications ??= [];
-
-            while (CorruptConfigReporter.Files.TryDequeue(out CorruptConfigFile corruptFile))
+            while (CorruptFileManager.Files.TryDequeue(out CorruptConfigFile corruptFile))
             {
                 string outcome = DescribeCorruptConfigFallback(corruptFile);
 
+                _userNotifications ??= [];
                 _userNotifications.Add((
                     TazLang.Get("corruptconfig_warning", [corruptFile.Name, outcome]),
                     Constants.HUE_ERROR
@@ -199,20 +198,20 @@ namespace ClassicUO.Game.UI.Gumps
         /// notification batch while it is still open, otherwise printed directly once we are in-world.
         /// </summary>
         private void QueueUnvotedPollsNotification() => Task.Run(async () =>
-                                                                 {
-                                                                     string message = await FirebasePollsManager.GetUnvotedNotificationAsync();
+        {
+            string message = await FirebasePollsManager.GetUnvotedNotificationAsync();
 
-                                                                     if (string.IsNullOrEmpty(message))
-                                                                         return;
+            if (string.IsNullOrEmpty(message))
+                return;
 
-                                                                     MainThreadQueue.InvokeOnMainThread(() =>
-                                                                     {
-                                                                         if (_userNotifications != null)
-                                                                             _userNotifications.Add((message, Constants.HUE_WARN));
-                                                                         else if (World.Instance != null)
-                                                                             GameActions.Print(message, Constants.HUE_WARN);
-                                                                     });
-                                                                 });
+            MainThreadQueue.InvokeOnMainThread(() =>
+            {
+                if (_userNotifications != null)
+                    _userNotifications.Add((message, Constants.HUE_WARN));
+                else if (World.Instance != null)
+                    GameActions.Print(message, Constants.HUE_WARN);
+            });
+        });
 
         public override void Update()
         {
