@@ -496,6 +496,7 @@ namespace ClassicUO.Configuration
         public byte NamePlateBackgroundG { get; set => SetProperty(ref field, value); }
         public byte NamePlateBackgroundB { get; set => SetProperty(ref field, value); }
         public NamePlatePreset NamePlatePreset { get; set => SetProperty(ref field, value); } = NamePlatePreset.Custom;
+        public string NamePlateSavedPresetName { get; set => SetProperty(ref field, value); } = string.Empty;
 
         public bool LeftAlignToolTips { get; set => SetProperty(ref field, value); }
         public bool ForceCenterAlignTooltipMobiles { get; set => SetProperty(ref field, value); } = true;

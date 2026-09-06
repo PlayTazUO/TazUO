@@ -28,8 +28,6 @@ namespace ClassicUO.Game.UI.Gumps
         private List<SettingsOption> _options = new List<SettingsOption>();
         private Profile profile;
 
-        private string[] GetNamePlatePresetOptions() => NamePlatePresets.GetOptions();
-
         private string[] GetNamePlateBackgroundModeOptions() => new[]
         {
             TazLang.Get("nameplate_background_fixedcolor", "Fixed color"),
@@ -379,7 +377,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new CheckboxWithLabel
                 (TazLang.Get("mog_general_incomingmobiles"), isChecked: profile.ShowNewMobileNameIncoming,
-                    valueChanged: (b) => { profile.ShowNewMobileNameIncoming = b; }), true, page
+                    valueChanged: (b) => { profile.ShowNewMobileNameIncoming = b; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.BlankLine();
@@ -388,7 +386,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new CheckboxWithLabel
                 (TazLang.Get("mog_general_incomingcorpses"), isChecked: profile.ShowNewCorpseNameIncoming,
-                    valueChanged: (b) => { profile.ShowNewCorpseNameIncoming = b; }), true, page
+                    valueChanged: (b) => { profile.ShowNewCorpseNameIncoming = b; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.BlankLine();
@@ -2962,20 +2960,22 @@ namespace ClassicUO.Game.UI.Gumps
             NamePlatePresets.SetCustom(profile);
         }
 
-        private void ApplyNamePlatePreset(NamePlatePreset preset)
+        private void ApplyNamePlatePreset(NamePlatePresets.Entry preset)
         {
             NamePlatePresets.Apply(profile, preset);
-            MainThreadQueue.EnqueueAction(() =>
-            {
-                if (IsDisposed)
-                    return;
+            MainThreadQueue.EnqueueAction(RefreshNamePlateOptions);
+        }
 
-                string page = GetPageString();
-                var refreshed = new ModernOptionsGump(World) { X = X, Y = Y };
-                refreshed.GoToPage(page);
-                Dispose();
-                UIManager.Add(refreshed);
-            });
+        private void RefreshNamePlateOptions()
+        {
+            if (IsDisposed)
+                return;
+
+            string page = GetPageString();
+            var refreshed = new ModernOptionsGump(World) { X = X, Y = Y };
+            refreshed.GoToPage(page);
+            Dispose();
+            UIManager.Add(refreshed);
         }
 
         private void BuildTazUO()
@@ -3461,6 +3461,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             #region Nameplates
 
+            IReadOnlyList<NamePlatePresets.Entry> namePlatePresets = NamePlatePresets.GetEntries();
             page = ((int)PAGE.TUOOptions + 1003);
             content.AddToLeft(SubCategoryButton(TazLang.Get("nameplate_title", "Nameplates"), page, content.LeftWidth));
             content.ResetRightSide();
@@ -3479,12 +3480,21 @@ namespace ClassicUO.Game.UI.Gumps
                     TazLang.Get("nameplate_preset", "Preset"),
                     0,
                     ThemeSettings.COMBO_BOX_WIDTH,
-                    GetNamePlatePresetOptions(),
-                    (int)profile.NamePlatePreset,
-                    (i, s) => { ApplyNamePlatePreset((NamePlatePreset)i); },
+                    namePlatePresets.Select(p => p.Name).ToArray(),
+                    NamePlatePresets.GetSelectedIndex(profile, namePlatePresets),
+                    (i, s) => { ApplyNamePlatePreset(namePlatePresets[i]); },
                     false
                 ), true, page
             );
+
+            var saveNamePlatePreset = new ModernButton(0, 0, 200, 40, ButtonAction.Activate,
+                TazLang.Get("nameplate_savepreset"), ThemeSettings.BUTTON_FONT_COLOR);
+            saveNamePlatePreset.MouseUp += (_, e) =>
+            {
+                if (e.Button == MouseButtonType.Left)
+                    SaveNamePlatePresetWindow.Show(profile, RefreshNamePlateOptions);
+            };
+            content.AddToRight(saveNamePlatePreset, true, page);
 
             content.BlankLine();
 

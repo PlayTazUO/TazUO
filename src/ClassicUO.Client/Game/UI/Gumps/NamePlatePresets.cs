@@ -1,11 +1,54 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Gumps
 {
     internal static class NamePlatePresets
     {
+        internal sealed record Entry(string Name, NamePlatePreset BuiltIn, SavedNamePlatePreset Saved = null);
+
+        public static IReadOnlyList<Entry> GetEntries() => GetEntries(NamePlatePresetStore.Shared.Load());
+
+        internal static IReadOnlyList<Entry> GetEntries(IEnumerable<SavedNamePlatePreset> saved) =>
+            GetOptions().Select((name, index) => new Entry(name, (NamePlatePreset)index))
+                .Concat(saved.Select(p => new Entry(p.Name, NamePlatePreset.Custom, p))).ToArray();
+
+        public static int GetSelectedIndex(Profile profile, IReadOnlyList<Entry> entries)
+        {
+            if (!string.IsNullOrEmpty(profile.NamePlateSavedPresetName))
+            {
+                for (int i = 0; i < entries.Count; i++)
+                    if (entries[i].Saved != null && string.Equals(entries[i].Name, profile.NamePlateSavedPresetName, StringComparison.OrdinalIgnoreCase))
+                        return i;
+
+                return 0;
+            }
+
+            return Enum.IsDefined(profile.NamePlatePreset) ? (int)profile.NamePlatePreset : 0;
+        }
+
+        public static void Apply(Profile profile, Entry entry)
+        {
+            if (entry.Saved == null)
+                Apply(profile, entry.BuiltIn);
+            else
+            {
+                entry.Saved.ApplyTo(profile);
+                SelectSaved(profile, entry.Saved);
+                NameOverheadGump.InvalidateAllLayouts();
+            }
+        }
+
+        public static void SelectSaved(Profile profile, SavedNamePlatePreset preset)
+        {
+            profile.NamePlatePreset = NamePlatePreset.Custom;
+            profile.NamePlateSavedPresetName = preset.Name;
+        }
+
         public static string[] GetOptions() => new[]
         {
             TazLang.Get("nameplate_preset_custom", "Custom"),
@@ -29,6 +72,8 @@ namespace ClassicUO.Game.UI.Gumps
                 profile.NamePlatePreset = NamePlatePreset.Custom;
             }
 
+            profile.NamePlateSavedPresetName = string.Empty;
+
             NameOverheadGump.InvalidateAllLayouts();
         }
 
@@ -39,6 +84,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
+            profile.NamePlateSavedPresetName = string.Empty;
             profile.NamePlatePreset = preset;
 
             if (preset != NamePlatePreset.Custom)

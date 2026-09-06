@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
@@ -355,6 +356,11 @@ public static class NameplatesTab
                     () => new MyraLabel(presetLabel, MyraLabel.TextStyle.P).PlaceBefore(new PresetSelector(profile)),
                     new SearchMetadata(presetLabel, Keywords: [TazLang.Get("mog_kw_preset")])
                 ),
+                Option.Button(
+                    TazLang.Get("nameplate_savepreset"),
+                    () => SaveNamePlatePresetWindow.Show(profile, RefreshOptions),
+                    new SearchMetadata(TazLang.Get("nameplate_savepreset"), Keywords: [TazLang.Get("mog_kw_preset")])
+                ),
                 Option.IntegerInput(
                     heightLabel,
                     NameplateSetting<int>(() => profile.NamePlateHeight),
@@ -487,12 +493,12 @@ public static class NameplatesTab
                 ),
                 Option.Checkbox(
                     TazLang.Get("mog_general_incomingmobiles"),
-                    new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
+                    NameplateSetting<bool>(() => profile.ShowNewMobileNameIncoming),
                     search: new SearchMetadata(TazLang.Get("mog_general_incomingmobiles"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_mobile")])
                 ),
                 Option.Checkbox(
                     TazLang.Get("mog_general_incomingcorpses"),
-                    new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
+                    NameplateSetting<bool>(() => profile.ShowNewCorpseNameIncoming),
                     search: new SearchMetadata(TazLang.Get("mog_general_incomingcorpses"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_corpse")])
                 ),
                 OptionsUi.CheckBoxGroup(
@@ -552,30 +558,26 @@ public static class NameplatesTab
     private sealed class PresetSelector : ComboView
     {
         private readonly Profile _profile;
+        private readonly IReadOnlyList<NamePlatePresets.Entry> _entries;
         private bool _updatingSelection;
 
         public PresetSelector(Profile profile)
         {
             _profile = profile;
+            _entries = NamePlatePresets.GetEntries();
             MinWidth = 200;
             VerticalAlignment = VerticalAlignment.Center;
-            foreach (string label in NamePlatePresets.GetOptions())
-                ListView.Widgets.Add(new Label { Text = label });
+            foreach (NamePlatePresets.Entry entry in _entries)
+                ListView.Widgets.Add(new Label { Text = entry.Name });
 
-            ListView.SelectedIndex = (int)profile.NamePlatePreset;
+            ListView.SelectedIndex = NamePlatePresets.GetSelectedIndex(profile, _entries);
             ListView.SelectedIndexChanged += (_, _) =>
             {
                 if (_updatingSelection || ListView.SelectedIndex is not int index)
                     return;
 
-                NamePlatePresets.Apply(profile, (NamePlatePreset)index);
-                OptionsWindow window = UIManager.GetGump<OptionsWindow>();
-                if (window != null)
-                    MainThreadQueue.EnqueueAction(() =>
-                    {
-                        if (!window.IsDisposed)
-                            window.RefreshCurrentContent();
-                    });
+                NamePlatePresets.Apply(profile, _entries[index]);
+                MainThreadQueue.EnqueueAction(RefreshOptions);
             };
         }
 
@@ -589,18 +591,25 @@ public static class NameplatesTab
 
         private void OnProfileChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName != nameof(Profile.NamePlatePreset))
+            if (e.PropertyName != nameof(Profile.NamePlatePreset) && e.PropertyName != nameof(Profile.NamePlateSavedPresetName))
                 return;
 
             _updatingSelection = true;
             try
             {
-                ListView.SelectedIndex = (int)_profile.NamePlatePreset;
+                ListView.SelectedIndex = NamePlatePresets.GetSelectedIndex(_profile, _entries);
             }
             finally
             {
                 _updatingSelection = false;
             }
         }
+    }
+
+    private static void RefreshOptions()
+    {
+        OptionsWindow window = UIManager.GetGump<OptionsWindow>();
+        if (window != null && !window.IsDisposed)
+            window.RefreshCurrentContent();
     }
 }
