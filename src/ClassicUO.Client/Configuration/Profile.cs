@@ -31,7 +31,8 @@ namespace ClassicUO.Configuration
     public enum NamePlateBackgroundMode
     {
         FixedColor,
-        NotorietyColor
+        NotorietyColor,
+        EntityNotorietyColor
     }
 
     public enum NamePlateHealthBarMode
@@ -56,7 +57,8 @@ namespace ClassicUO.Configuration
         WorldOfWarcraftBlockyBars,
         WorldOfWarcraftCleanHealth,
         WorldOfWarcraftBlockyCast,
-        WorldOfWarcraftRedName
+        WorldOfWarcraftRedName,
+        Legacy
     }
 
     //[JsonSourceGenerationOptions(WriteIndented = true, PropertyNamingPolicy = JsonKnownNamingPolicy.Unspecified)]
@@ -485,6 +487,8 @@ namespace ClassicUO.Configuration
         public bool NamePlateShowWordOfDeathIcon { get; set => SetProperty(ref field, value); }
         public int NamePlateHeight { get; set => SetProperty(ref field, Math.Clamp(value, 0, 80)); }
         public bool NamePlateSplitHealthBar { get; set => SetProperty(ref field, value); }
+        public bool NamePlateUseNotorietyText { get; set => SetProperty(ref field, value); }
+        public bool NamePlateShowMissingHealth { get; set => SetProperty(ref field, value); } = true;
         public int NamePlateCornerRadius { get; set => SetProperty(ref field, Math.Clamp(value, 0, 40)); } = 0;
         public NamePlateHealthBarMode NamePlateHealthBarMode { get; set => SetProperty(ref field, value); } = NamePlateHealthBarMode.StatusColor;
         public NamePlateBackgroundMode NamePlateBackgroundMode { get; set => SetProperty(ref field, value); } = NamePlateBackgroundMode.FixedColor;

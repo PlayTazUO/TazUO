@@ -459,6 +459,22 @@ public class OptionsWindow : MyraControl
         return tabButton;
     }
 
+    // Presets change several settings at once; recreate the visible controls from
+    // their accessors so the values on screen agree with the applied profile.
+    internal void RefreshCurrentContent()
+    {
+        if (!string.IsNullOrWhiteSpace(_searchField.Text))
+        {
+            ApplySearch(_searchField.Text.Trim());
+            return;
+        }
+
+        _optionsPanel.Widgets.Clear();
+        if (_optionSources.TryGetValue(_lastCategory, out List<IOptionSource>? sources))
+            foreach (IOptionSource source in sources)
+                _optionsPanel.Widgets.Add(source.Render());
+    }
+
     private void ShowPage(string category)
     {
         if (_lastCategory == category)
