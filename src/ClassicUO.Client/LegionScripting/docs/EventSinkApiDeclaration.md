@@ -257,6 +257,20 @@ description: EventSinkApiDeclaration class documentation
 
 ---
 
+### ObjectUsed
+`(callback)`
+Invoked when the client sends a double-click (use) request for an object's serial.
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `callback` | `object` | ❌ No |  |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
 ### OnPlayerDeath
 `(callback)`
  Invoked when the player receives a death packet from the server

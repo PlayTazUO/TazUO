@@ -5,6 +5,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
+using ClassicUO.UnitTests.Fixtures;
 using FluentAssertions;
 using Xunit;
 
@@ -21,6 +22,7 @@ namespace ClassicUO.UnitTests.Game.Managers
     /// a failed serial lookup started returning the raw, un-overridden text instead of trying the
     /// text based override.
     /// </summary>
+    [Collection(CurrentProfileCollection.Name)]
     public class ToolTipOverrideTest : IDisposable
     {
         // Any serial in [0x40000000, 0x80000000) is treated as an item by SerialHelper.IsItem.

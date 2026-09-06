@@ -41,7 +41,8 @@ public sealed class TriggerCatalog
             new ChatMessageTriggerDefinition(),
             new ObjectPropertiesTriggerDefinition(),
             new PlayerAttributeTriggerDefinition(),
-            new BuffChangedTriggerDefinition()
+            new BuffChangedTriggerDefinition(),
+            new ObjectUsedTriggerDefinition()
         ];
 
         _byId = All.ToFrozenDictionary(definition => definition.Id, StringComparer.OrdinalIgnoreCase);

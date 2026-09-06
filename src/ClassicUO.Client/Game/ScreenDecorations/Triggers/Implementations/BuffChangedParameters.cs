@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
@@ -12,32 +13,23 @@ namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 /// <summary>When a <see cref="BuffChangedTrigger" /> answers to its buff.</summary>
 public enum BuffTriggerMode
 {
-    /// <summary>
-    ///     The moment the buff is added. Carries a duration - the add is an instant, so how
-    ///     long the effect runs is a decision for whoever wired the rule.
-    /// </summary>
+    /// <summary>The moment the buff is added. An instant, so it carries a duration.</summary>
     Added,
 
-    /// <summary>
-    ///     The moment the buff is removed. Carries a duration for the same reason
-    ///     <see cref="Added" /> does.
-    /// </summary>
+    /// <summary>The moment the buff is removed. Carries a duration, as <see cref="Added" /> does.</summary>
     Removed,
 
     /// <summary>
-    ///     The whole span the buff is up. No duration: the buff already brackets its own
-    ///     lifetime, and a configured one would either cut the effect short or hold it up after the
-    ///     buff is gone.
+    ///     The whole span the buff is up. One buff, and no duration - the buff brackets its own lifetime.
     /// </summary>
     Active
 }
 
 /// <summary>
-///     Fires on one buff being added, removed, or simply up, on the player: which buff, which of those
-///     moments, and how long a momentary one runs are all decisions for whoever wires the rule.
+///     Fires on a buff being added to, removed from, or simply up on the player.
 ///     <para>
-///         Lives beside the trigger that reads it rather than with the config types, because nothing else can
-///         interpret it: the fields mean whatever <see cref="BuffChangedTrigger" /> does with them.
+///         Lives beside the trigger that reads it rather than with the config types: the fields mean
+///         whatever <see cref="BuffChangedTrigger" /> does with them.
 ///     </para>
 /// </summary>
 public sealed class BuffChangedParameters : TriggerParameters
@@ -58,14 +50,11 @@ public sealed class BuffChangedParameters : TriggerParameters
     #region Public accessors
 
     /// <summary>
-    ///     Which moment of the buff's life raises the rule.
-    ///     <para>
-    ///         No grid row: <see cref="BuffTriggerPicker" /> edits it above the grid, where it can also hide
-    ///         the duration field for <see cref="BuffTriggerMode.Active" />, which gives it no meaning.
-    ///     </para>
+    ///     Which moment of the buff's life raises the rule. No grid row:
+    ///     <see cref="BuffTriggerPicker" /> edits it above the grid, along with the fields it governs.
     /// </summary>
     [Browsable(false)]
-    [BuffTriggerEditor(nameof(BuffType), nameof(DurationSeconds))]
+    [BuffTriggerEditor(nameof(BuffTypes), nameof(DurationSeconds))]
     [LocalizedDisplayName("overlaytrigger_buff_mode", "When")]
     [LocalizedDescription(
         "overlaytrigger_buff_mode_tooltip",
@@ -74,27 +63,30 @@ public sealed class BuffChangedParameters : TriggerParameters
     public BuffTriggerMode Mode { get; set; } = BuffTriggerMode.Added;
 
     /// <summary>
-    ///     The buff to watch for, by its numeric type.
+    ///     The buffs to watch for, by numeric type. Any one fires the rule, except under
+    ///     <see cref="BuffTriggerMode.Active" />, which honours the first alone.
     ///     <para>
-    ///         A number rather than only the enum: a shard can send an id this client's
-    ///         <see cref="ClassicUO.Game.Data.BuffIconType" /> has no member for, and the editor takes one
-    ///         outright for those the same way it offers every name it does know.
+    ///         Numbers rather than the enum: a shard can send an ID
+    ///         <see cref="ClassicUO.Game.Data.BuffIconType" /> has no member for.
     ///     </para>
     /// </summary>
     [Browsable(false)]
-    [LocalizedDisplayName("overlaytrigger_buff_type", "Watch buff")]
+    [LocalizedDisplayName("overlaytrigger_buff_type", "Watch buffs")]
     [LocalizedDescription(
         "overlaytrigger_buff_type_tooltip",
-        "The buff or debuff that sets this effect off.\n"
-        + "Pick one by name, or type its number if it has none."
+        "The buffs or debuffs that set this effect off - any one of them.\n"
+        + "Pick by name, or type a number if it has none.\n"
+        + "Watching for a buff being active takes one buff, whose own span the effect follows."
     )]
-    public short BuffType { get; set; }
+
+    // Null-normalizing: an explicit null in the persisted file would otherwise reach the trigger,
+    // which enumerates this without a guard.
+    public List<short> BuffTypes { get; set => field = value ?? []; } = [];
 
     /// <summary>
     ///     How long one occurrence runs, in seconds. Ignored under
-    ///     <see cref="BuffTriggerMode.Active" />, where the buff's own span decides that instead. Stored
-    ///     as a number rather than a <see cref="TimeSpan" /> so the persisted form stays readable and
-    ///     hand-editable.
+    ///     <see cref="BuffTriggerMode.Active" />. A number rather than a <see cref="TimeSpan" /> to keep the
+    ///     persisted form hand-editable.
     /// </summary>
     [Browsable(false)]
     [LocalizedDisplayName("overlaytrigger_buff_duration", "Lasts for (seconds)")]
@@ -106,9 +98,8 @@ public sealed class BuffChangedParameters : TriggerParameters
     public float DurationSeconds { get; set; } = DEFAULT_DURATION_SECONDS;
 
     /// <summary>
-    ///     The configured duration as a span, floored at zero. Hidden from the editor: it is a reading of
-    ///     <see cref="DurationSeconds" />, and a property grid would otherwise offer every member of a
-    ///     <see cref="TimeSpan" /> as though each were separately settable.
+    ///     The configured duration as a span, floored at zero. Hidden from the editor, which would
+    ///     otherwise offer every <see cref="TimeSpan" /> member as separately settable.
     /// </summary>
     [JsonIgnore]
     [Browsable(false)]
@@ -120,7 +111,7 @@ public sealed class BuffChangedParameters : TriggerParameters
 
     /// <inheritdoc />
     public override TriggerParameters Clone() =>
-        new BuffChangedParameters { Mode = Mode, BuffType = BuffType, DurationSeconds = DurationSeconds };
+        new BuffChangedParameters { Mode = Mode, BuffTypes = [..BuffTypes], DurationSeconds = DurationSeconds };
 
     #endregion
 }

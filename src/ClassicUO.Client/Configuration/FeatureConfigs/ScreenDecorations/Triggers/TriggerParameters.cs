@@ -20,6 +20,7 @@ namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
 [JsonDerivedType(typeof(BuffChangedParameters), BuffChangedParameters.Discriminator)]
 [JsonDerivedType(typeof(ChatMessageParameters), ChatMessageParameters.Discriminator)]
 [JsonDerivedType(typeof(ObjectPropertiesParameters), ObjectPropertiesParameters.Discriminator)]
+[JsonDerivedType(typeof(ObjectUsedParameters), ObjectUsedParameters.Discriminator)]
 [JsonDerivedType(typeof(PlayerAttributeParameters), PlayerAttributeParameters.Discriminator)]
 [JsonDerivedType(typeof(SoundPlayedParameters), SoundPlayedParameters.Discriminator)]
 public abstract class TriggerParameters

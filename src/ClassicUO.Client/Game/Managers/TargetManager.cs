@@ -171,7 +171,10 @@ namespace ClassicUO.Game.Managers
             set
             {
                 _lastAttack = value;
-                if (ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.OpenHealthBarForLastAttack)
+
+                // Only a real mobile gets a bar: World.Clear() zeroes this on logout and character
+                // switch, which would otherwise open one for serial 0.
+                if (SerialHelper.IsMobile(value) && ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.OpenHealthBarForLastAttack)
                 {
                     if (ProfileManager.CurrentProfile.UseOneHPBarForLastAttack)
                     {
@@ -244,6 +247,13 @@ namespace ClassicUO.Game.Managers
             _targetCallback = callback;
             SetTargeting(CursorTarget.CallbackTarget, cursorId, cursorType);
         }
+
+        /// <summary>
+        /// Whether the cursor is armed for <paramref name="callback"/> specifically
+        /// </summary>
+        /// <param name="callback">The callback to test for, compared by reference.</param>
+        public bool IsCurrentTargetingAction(Action<object> callback) =>
+            callback != null && IsTargeting && TargetingState == CursorTarget.CallbackTarget && ReferenceEquals(_targetCallback, callback);
 
         public void SetTargeting(CursorTarget targeting, uint cursorID, TargetType cursorType)
         {

@@ -5,10 +5,14 @@ using System.Globalization;
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 /// <summary>
-///     An <see cref="IntegerInputBox" /> that also accepts "0x.." hex text, for a graphic ID
-///     pasted from a tool that displays it that way.
+///     An <see cref="IntegerInputBox" /> that also accepts "0x.." hex text.
+///     <para>
+///         Signed 32-bit, so the range tops out at <c>0x7FFFFFFF</c> once
+///         <see cref="IntegerInputBox.MinValue" /> is at or above zero. Graphic IDs and UO serials stay
+///         inside it; a field needing the full unsigned range needs its own box.
+///     </para>
 /// </summary>
-public sealed class HexInputBox : IntegerInputBox
+public sealed class HexIntInputBox : IntegerInputBox
 {
     protected override bool IsCharAllowed(char c) => MyraInputBox.HueInputFilter(c);
 

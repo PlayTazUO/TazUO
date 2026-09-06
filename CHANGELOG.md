@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 
 ## 9/6/26
 * ***Misc:*** Changed city selection gump to use clilocs for facet location instead of hard coded
+* ***Feature:*** Added ObjectUsed API event, support for for multi-sound/serial overlay triggers and a new ObjectUsed overlay trigger - [P.R 1051](https://github.com/PlayTazUO/TazUO/pull/1051) ([yuval-po](https://github.com/yuval-po))
 
 ## 9/5/26
 * ***Fix:*** Fixed nameplate profiles not wokring with modifier only hotkeys

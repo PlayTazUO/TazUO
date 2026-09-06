@@ -1,34 +1,37 @@
-using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
-using ClassicUO.UnitTests.Game.LegionScript;
+using ClassicUO.UnitTests.Fixtures;
 using Xunit;
 
 namespace ClassicUO.UnitTests.Game.UI;
 
 public class ControlsTest
 {
+    /// <summary><see cref="Control.Dispose" /> only does its work on the main thread and defers
+    /// otherwise, so these run through the fixture - off it, the assert races the disposal.</summary>
     [Collection(MainThreadCollection.Name)]
     public class Dispose
     {
+        private readonly MainThreadFixture _mainThread;
+
+        public Dispose(MainThreadFixture mainThread) => _mainThread = mainThread;
+
         [Fact]
         public void CleanUpDisposedChildren()
         {
-            Control main = MainThreadQueue.BubblingInvokeOnMainThread(() =>
+            _mainThread.Invoke(() =>
             {
-                Control m = new Area();
+                Control main = new Area();
 
                 for (int i = 0; i < 10; i++)
-                    m.Add(new Area());
+                    main.Add(new Area());
 
-                foreach (Control child in m.Children)
+                foreach (Control child in main.Children)
                     child.Dispose();
 
-                m.CleanUpDisposedChildren();
+                main.CleanUpDisposedChildren();
 
-                return m;
+                Assert.Empty(main.Children);
             });
-
-            Assert.Empty(main.Children);
         }
     }
 }

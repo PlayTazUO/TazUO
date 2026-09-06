@@ -252,7 +252,9 @@ stacking layers cannot fix anything the shape mask does wrong.
 | `Shake/` | `ScreenShake` accumulators, `ShakeEnvelope`, `ShakeRequest` |
 | `Triggers/Definitions/` | Shipped definitions (catalog entries) |
 | `Triggers/Implementations/` | The trigger logic + their parameter types |
-| `Configuration/FeatureConfigs/ScreenDecorations/` | All persisted config; `ScreenDecorationsJsonContext` |
+| `Configuration/FeatureConfigs/ScreenDecorations/` | All persisted config; `ScreenDecorationsJsonContext`. `ScreenDecorations` is a `JsonSave<T>` (Char scope) |
+| `Configuration/FeatureConfigs/ScreenDecorations/Migrations/` | `ScreenDecorationsMigrations` - the config's schema migration list |
+| `ClassicUO.IO/Persistency/Migrations/` | Transport-agnostic schema migration engine (sequencing, JSON format, pipeline) |
 | `ClassicUO.Renderer/Effects/OverlayParams.cs` | Wire format + `Clamp()`. No editor metadata |
 | `ClassicUO.Renderer/shaders/ScreenOverlay.fx` + `.fxc` | The shader. `.fxc` is committed; **nothing detects drift** |
 | `Game/UI/MyraWindows/Options/Tabs/VisualEffects/` | General / Rules / Profiles tabs |
@@ -269,6 +271,11 @@ stacking layers cannot fix anything the shape mask does wrong.
   localized attributes otherwise fail silently by showing their English fallback.
 - All JSON needs `ScreenDecorationsJsonContext` entries. It sets `IncludeFields = true` because the
   spec structs use public fields.
+- Any change to a persisted shape needs a migration in `ScreenDecorationsMigrations` and a
+  `SchemaVersion` bump. Migrations run on the raw JSON document, never on live model types - a
+  migration referencing e.g. `LayerEffect` breaks the day that type changes shape again.
+  `JsonSave<T>.MigrationPipeline` runs them; a shape it cannot migrate starts clean rather than
+  falling back through the rotating backups, which only hold older shapes of the same file.
 - Visual verification needs a real client with UO data; an agent cannot run it. Ask the user.
 
 ## Deferred — noted, not built

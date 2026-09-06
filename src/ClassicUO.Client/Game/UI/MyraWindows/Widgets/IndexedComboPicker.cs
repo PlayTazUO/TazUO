@@ -26,6 +26,14 @@ public class IndexedComboPicker : HorizontalStackPanel
 
     #endregion
 
+    #region Public constants
+
+    /// <summary>Gap between the number field and the name list. Exposed so a caller sizing something to
+    /// this picker's width can account for it before the picker exists.</summary>
+    public const int SPACING = 6;
+
+    #endregion
+
     #region Public accessors
 
     /// <summary>The chosen value. Setting it moves both inputs.</summary>
@@ -44,8 +52,6 @@ public class IndexedComboPicker : HorizontalStackPanel
     #endregion
 
     #region Private members
-
-    private const int SPACING = 6;
 
     private readonly Dictionary<int, string> _labels = [];
     private readonly Dictionary<string, int> _values = [];
@@ -161,6 +167,8 @@ public class IndexedComboPicker : HorizontalStackPanel
 
     private string? LabelFor(int value) => _labels.GetValueOrDefault(value);
 
+    /// <summary>Reads <see cref="NameList" />'s live items, not <see cref="_orderedLabels" /> - a caller
+    /// may trim entries out after picking them, and the original set would index the wrong row.</summary>
     private int? PositionOf(int value)
     {
         string? label = LabelFor(value);
@@ -168,7 +176,7 @@ public class IndexedComboPicker : HorizontalStackPanel
         if (label == null)
             return null;
 
-        int position = _orderedLabels.IndexOf(label);
+        int position = NameList.Items.IndexOf(label);
 
         return position < 0 ? null : position;
     }

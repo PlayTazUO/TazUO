@@ -1,117 +1,68 @@
-// SPDX-License-Identifier: BSD-2-Clause
+#nullable enable
 
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
+using ClassicUO.IO;
 using ClassicUO.Utility.Logging;
 
-namespace ClassicUO.Configuration
+namespace ClassicUO.Configuration;
+
+internal static partial class ConfigurationResolver
 {
-    internal static class ConfigurationResolver
+    /// <summary>Un-escapes the backslash-escaping legacy config writers applied before saving.</summary>
+    internal static string NormalizeText(string text) => EscapeNormalizeRegex().Replace(text, @"\\");
+
+    // Matches a lone backslash - not part of an already-escaped \\ pair.
+    [GeneratedRegex(@"(?<!\\)\\(?!\\)")]
+    private static partial Regex EscapeNormalizeRegex();
+
+    public static T? Load<T>(string file, JsonTypeInfo<T> ctx) where T : class
     {
-        /// <summary>
-        /// Corrupt configuration files detected during load, recorded here so the UI can notify the
-        /// user once they are in-world. Detection happens at boot, long before the viewport exists.
-        /// </summary>
-        public static readonly ConcurrentQueue<string> CorruptFiles = new();
-
-        public static T Load<T>(string file, JsonTypeInfo<T> ctx) where T : class
+        if (!File.Exists(file))
         {
-            if (!File.Exists(file))
-            {
-                Log.Warn(file + " not found.");
-                return null;
-            }
-
-            string text = File.ReadAllText(file);
-
-            text = Regex.Replace
-            (
-                text,
-                @"(?<!\\)  # lookbehind: Check that previous character isn't a \
-                                                \\         # match a \
-                                                (?!\\)     # lookahead: Check that the following character isn't a \",
-                @"\\",
-                RegexOptions.IgnorePatternWhitespace
-            );
-
-            try
-            {
-                return JsonSerializer.Deserialize(text, ctx);
-            }
-            catch (JsonException e)
-            {
-                // The configuration file is corrupt or malformed (e.g. truncated write,
-                // manual edit, disk corruption). Rather than crashing the client at boot,
-                // back up the bad file so it isn't silently overwritten and return null so
-                // the caller can fall back to sane defaults.
-                Log.Error($"Failed to load configuration file '{file}' - {e}");
-
-                try
-                {
-                    string backup = file + ".corrupt";
-                    File.Copy(file, backup, true);
-                    Log.Warn($"Corrupt configuration file backed up to '{backup}'.");
-                }
-                catch (Exception backupError)
-                {
-                    Log.Error($"Failed to back up corrupt configuration file '{file}' - {backupError}");
-                }
-
-                CorruptFiles.Enqueue(file);
-
-                return null;
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Failed to load configuration file '{file}' - {e}");
-                throw;
-            }
+            Log.Warn(file + " not found.");
+            return null;
         }
 
-        public static void Save<T>(T obj, string file, JsonTypeInfo<T> ctx) where T : class
+        string text = NormalizeText(File.ReadAllText(file));
+
+        try
         {
-            // this try catch is necessary when multiples cuo instances points to this file.
-            try
-            {
-                var fileInfo = new FileInfo(file);
+            return JsonSerializer.Deserialize(text, ctx);
+        }
+        catch (JsonException e)
+        {
+            // The configuration file is corrupt or malformed (e.g. truncated write,
+            // manual edit, disk corruption). Rather than crashing the client at boot,
+            // back up the bad file so it isn't silently overwritten and return null so
+            // the caller can fall back to sane defaults.
+            Log.Error($"Failed to load configuration file '{file}' - {e}");
 
-                if (fileInfo.Directory != null && !fileInfo.Directory.Exists)
-                {
-                    fileInfo.Directory.Create();
-                }
+            CorruptFileManager.BackupAndReport(file);
 
-                // Create temporary file in system temp directory
-                string tempFile = Path.GetTempFileName();
+            return null;
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Failed to load configuration file '{file}' - {e}");
+            throw;
+        }
+    }
 
-                try
-                {
-                    string json = JsonSerializer.Serialize(obj, ctx);
-                    File.WriteAllText(tempFile, json);
-
-                    if (File.Exists(file))
-                        File.Delete(file);
-
-                    File.Move(tempFile, file);
-                }
-                catch
-                {
-                    // Clean up temp file if it exists
-                    if (File.Exists(tempFile))
-                    {
-                        File.Delete(tempFile);
-                    }
-                    throw; // Re-throw the original exception
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(e.ToString());
-            }
+    public static void Save<T>(T obj, string file, JsonTypeInfo<T> ctx) where T : class
+    {
+        // this try catch is necessary when multiples cuo instances points to this file.
+        try
+        {
+            string json = JsonSerializer.Serialize(obj, ctx);
+            AtomicFile.Write(file, json);
+        }
+        catch (Exception e)
+        {
+            Log.Error(e.ToString());
         }
     }
 }

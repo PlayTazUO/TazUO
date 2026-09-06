@@ -15,6 +15,7 @@ using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Logic;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
+using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
 using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
@@ -50,10 +51,29 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     /// on its own. A sound index is four digits and a curve power is one; sized for either.</summary>
     private const int NUMBER_INPUT_WIDTH = 64;
 
-    /// <summary>Fallback for a curve power that cannot be read off its parameters - the same value
-    /// <see cref="FalloffCurve.Quadratic" /> is, so an unreadable one behaves like the default curve
-    /// rather than like something arbitrary.</summary>
-    private const float DEFAULT_FALLOFF_POWER = 2f;
+    /// <summary>Width for a raw serial field - "0xFFFFFFFF" is the longest a serial ever prints.</summary>
+    private const int SERIAL_INPUT_WIDTH = 120;
+
+    /// <summary>Width reserved for the sound preview button, so the picked-items box below the row
+    /// still lines up with it. Tuned by eye against the button's caption.</summary>
+    private const int SOUND_PLAY_BUTTON_WIDTH = 56;
+
+    /// <summary>
+    /// Bounds for a raw sound index. Sounds are addressed by a <see cref="ushort" /> on the wire, and a
+    /// negative one names nothing at all, so the field takes neither.
+    /// </summary>
+    private const int MIN_SOUND_INDEX = 0;
+
+    /// <inheritdoc cref="MIN_SOUND_INDEX" />
+    private const int MAX_SOUND_INDEX = ushort.MaxValue;
+
+    /// <summary>Top margin for a rich-row label whose editor leads with a bordered, padded input: that
+    /// border and padding push the input's text down. Tuned by eye.</summary>
+    private const int RICH_ROW_LABEL_TOP_NUDGE = 6;
+
+    /// <summary>Gap between rows in <see cref="RichParameterRows" /> - without it, a multi-row editor
+    /// reads as fused to the row below.</summary>
+    private const int RICH_ROW_SPACING = 10;
 
     /// <summary>Reset targets, one per definition. See <see cref="DefaultParametersFor" />.</summary>
     private static readonly Dictionary<string, TriggerParameters> _defaultParameters = [];
@@ -319,26 +339,34 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
         if (parameters == null)
             return null;
 
-        var grid = new MyraGrid();
+        var grid = new MyraGrid { RowSpacing = RICH_ROW_SPACING };
 
         grid.AddColumn();
         grid.AddColumn(new Proportion(ProportionType.Fill));
 
         foreach (PropertyInfo property in parameters.GetType().GetProperties())
         {
-            if (property.PropertyType == typeof(int)
+            if (property.PropertyType == typeof(List<int>)
                 && property.GetCustomAttribute<SoundIndexEditorAttribute>() != null)
             {
-                // Centred: the editor is a single row of fields, so its label belongs beside them.
-                AddRichRow(grid, property, SoundEditor(parameters, property), VerticalAlignment.Center);
+                // Top, nudged: the picker row leads with a padded input - see RICH_ROW_LABEL_TOP_NUDGE.
+                AddRichRow(grid, property, MultiSoundEditor(parameters, property), VerticalAlignment.Top, RICH_ROW_LABEL_TOP_NUDGE);
+                continue;
+            }
+
+            if (property.PropertyType == typeof(List<uint>)
+                && property.GetCustomAttribute<SerialListEditorAttribute>() != null)
+            {
+                // Top, nudged: same shape as the sound editor.
+                AddRichRow(grid, property, SerialListEditor(parameters, property), VerticalAlignment.Top, RICH_ROW_LABEL_TOP_NUDGE);
                 continue;
             }
 
             if (property.PropertyType == typeof(BuffTriggerMode)
                 && property.GetCustomAttribute<BuffTriggerEditorAttribute>() is { } buffEditor)
             {
-                // Top: the editor stacks a mode row, a type row, and a conditional duration row.
-                AddRichRow(grid, property, BuffEditor(parameters, property, buffEditor), VerticalAlignment.Top);
+                // Top, nudged: the mode row leads with the same kind of padded input.
+                AddRichRow(grid, property, BuffEditor(parameters, property, buffEditor), VerticalAlignment.Top, RICH_ROW_LABEL_TOP_NUDGE);
             }
 
             if (property.PropertyType == typeof(FalloffCurve)
@@ -361,11 +389,14 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
     /// <param name="property">The parameter being edited.</param>
     /// <param name="editor">Its editor.</param>
     /// <param name="labelAlignment">Where the label sits against a multi-row editor.</param>
+    /// <param name="topMargin">Extra top margin for a Top-aligned label - see
+    /// <see cref="RICH_ROW_LABEL_TOP_NUDGE" />. Zero for anything else.</param>
     private static void AddRichRow(
         MyraGrid grid,
         PropertyInfo property,
         Widget editor,
-        VerticalAlignment labelAlignment
+        VerticalAlignment labelAlignment,
+        int topMargin = 0
     )
     {
         int row = grid.RowsProportions.Count;
@@ -378,19 +409,43 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
             Tooltip = ParameterMetadata.TooltipFor(property)
         };
 
+        if (topMargin != 0)
+            label.Margin = new Thickness(0, topMargin, 0, 0);
+
         grid.AddWidget(label, row, 0);
         grid.AddWidget(editor, row, 1);
     }
 
-    private static SoundIndexPicker SoundEditor(TriggerParameters parameters, PropertyInfo property)
+    private static IndexedListPicker MultiSoundEditor(TriggerParameters parameters, PropertyInfo property)
     {
-        var picker = new SoundIndexPicker(
-            property.GetValue(parameters) is int stored ? stored : 0,
-            NUMBER_INPUT_WIDTH,
-            INPUT_WIDTH
+        List<int> stored = property.GetValue(parameters) as List<int> ?? [];
+
+        // Previews whatever the inputs hold, so it reads back off the picker it is being built into.
+        var play = new PickerAccessory(
+            owner => SoundIndexPicker.PlayButton(() => owner.Value),
+            SOUND_PLAY_BUTTON_WIDTH
         );
 
-        picker.IndexChanged += (_, index) => property.SetValue(parameters, index);
+        var picker = new IndexedListPicker(
+            0,
+            SoundIndexPicker.CatalogueEntries(),
+            new IndexedPickerLayout(NUMBER_INPUT_WIDTH, INPUT_WIDTH, MIN_SOUND_INDEX, MAX_SOUND_INDEX),
+            stored,
+            play
+        );
+
+        picker.ItemsChanged += (_, _) => property.SetValue(parameters, picker.PickedItems.ToList());
+
+        return picker;
+    }
+
+    private static SerialListPicker SerialListEditor(TriggerParameters parameters, PropertyInfo property)
+    {
+        List<uint> stored = property.GetValue(parameters) as List<uint> ?? [];
+
+        var picker = new SerialListPicker(SERIAL_INPUT_WIDTH, stored);
+
+        picker.ItemsChanged += (_, _) => property.SetValue(parameters, picker.PickedItems.ToList());
 
         return picker;
     }
@@ -405,7 +460,7 @@ internal sealed class OverlayRuleConfigurator : IRuleConfigurator<OverlayRule>
 
         var properties = new BuffTriggerProperties(
             property,
-            owner.GetProperty(buffEditor.BuffTypeProperty),
+            owner.GetProperty(buffEditor.BuffTypesProperty),
             owner.GetProperty(buffEditor.DurationSecondsProperty)
         );
 
