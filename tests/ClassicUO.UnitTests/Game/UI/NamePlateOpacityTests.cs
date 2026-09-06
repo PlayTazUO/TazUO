@@ -46,23 +46,23 @@ public class NamePlateOpacityTests
     }
 
     [Fact]
-    public void BackgroundAndHealthOpacityAreIndependent()
+    public void CombinedHealthBarOpacityControlsTheBackingSurface()
     {
         float[,] pixels = Draw(0, 25, 0, 0, true);
-        Assert.Equal(0.25f, pixels[20, 12]);
-        Assert.Equal(0.25f, pixels[80, 12]);
+        Assert.Equal(0, pixels[20, 12]);
+        Assert.Equal(0, pixels[80, 12]);
 
         pixels = Draw(0, 25, 50, 0, true);
-        Assert.Equal(0.625f, pixels[20, 12]);
-        Assert.Equal(0.625f, pixels[80, 12]);
+        Assert.Equal(0.5625f, pixels[20, 12]);
+        Assert.Equal(0.5625f, pixels[80, 12]);
     }
 
     [Fact]
     public void LegacyMissingHealthShowsOnlyTheConfiguredBackground()
     {
         float[,] pixels = Draw(0, 25, 50, 50, false);
-        Assert.Equal(0.625f, pixels[20, 12]);
-        Assert.Equal(0.25f, pixels[80, 12]);
+        Assert.Equal(0.5625f, pixels[20, 12]);
+        Assert.Equal(0.125f, pixels[80, 12]);
     }
 
     [Theory]

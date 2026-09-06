@@ -1091,7 +1091,10 @@ namespace ClassicUO.Game.UI.Gumps
 
             Texture2D backgroundTexture;
             Vector3 backgroundHue;
-            float backgroundAlpha = profile.NamePlateOpacity / 100f;
+            // In the combined layout the health bar occupies the nameplate's
+            // background. Scale that backing by the health-bar opacity so a
+            // zero-opacity bar does not leave the nameplate surface visible.
+            float backgroundAlpha = GetNamePlateBackgroundOpacity(entity);
 
             if (TryGetBackgroundHue(entity, out ushort hue))
             {
@@ -1110,7 +1113,7 @@ namespace ClassicUO.Game.UI.Gumps
         private Color GetTextSurfaceColor(Entity entity, Mobile mobile)
         {
             Profile profile = ProfileManager.CurrentProfile;
-            Color background = ApplyAlphaOverBlack(GetNamePlateBackgroundColor(entity), profile.NamePlateOpacity / 100f);
+            Color background = ApplyAlphaOverBlack(GetNamePlateBackgroundColor(entity), GetNamePlateBackgroundOpacity(entity));
 
             if (!_useSplitLayout && mobile != null && ProfileManager.CurrentProfile.NamePlateHealthBar)
             {
@@ -1123,6 +1126,19 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             return background;
+        }
+
+        private float GetNamePlateBackgroundOpacity(Entity entity)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+            float backgroundOpacity = Math.Clamp(profile.NamePlateOpacity / 100f, 0f, 1f);
+
+            if (!_useSplitLayout && entity is Mobile && profile.NamePlateHealthBar)
+            {
+                backgroundOpacity *= Math.Clamp(profile.NamePlateHealthBarOpacity / 100f, 0f, 1f);
+            }
+
+            return backgroundOpacity;
         }
 
         private Color GetNamePlateBackgroundColor(Entity entity)
