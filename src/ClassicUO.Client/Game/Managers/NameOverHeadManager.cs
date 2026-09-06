@@ -70,6 +70,8 @@ namespace ClassicUO.Game.Managers
         private NameOverHeadHandlerGump _gump;
         private static SDL.SDL_Keycode _lastKeySym = SDL.SDL_Keycode.SDLK_UNKNOWN;
         private static SDL.SDL_Keymod _lastKeyMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
+        private static bool _keyHotkeyPressed;
+        private static NameOverheadOption _modifierHotkeyOption;
         private readonly World _world;
 
         public NameOverHeadManager(World world) { _world = world; }
@@ -156,7 +158,13 @@ namespace ClassicUO.Game.Managers
             return false;
         }
 
-        public static bool IsTemporarilyShowing { get; private set; }
+        /// <summary>
+        ///     True while a profile hotkey is being held: a key-based binding latched by
+        ///     <see cref="RegisterKeyDown"/>/<see cref="RegisterKeyUp"/>, or a modifier-only chord
+        ///     polled by <see cref="UpdateHeldHotkeys"/>.
+        /// </summary>
+        public static bool IsTemporarilyShowing => _keyHotkeyPressed || _modifierHotkeyOption != null;
+
         public static bool IsShowing => IsPermaToggled || IsTemporarilyShowing || HotKeys.IsPressed(HotKeyRegistrar.ShowNameplatesId);
 
         private static List<NameOverheadOption> Options { get; set; } = new List<NameOverheadOption>();
@@ -311,6 +319,13 @@ namespace ClassicUO.Game.Managers
 
         public static void Load()
         {
+            // Fresh session: drop any hotkey latch state left over from a previous login (a held
+            // profile hotkey may not have produced a key-up before the scene tore down).
+            _lastKeySym = SDL.SDL_Keycode.SDLK_UNKNOWN;
+            _lastKeyMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
+            _keyHotkeyPressed = false;
+            _modifierHotkeyOption = null;
+
             string path = Path.Combine(ProfileManager.ProfilePath, "nameoverhead.xml");
 
             if (!File.Exists(path))
@@ -474,8 +489,7 @@ namespace ClassicUO.Game.Managers
                 return;
 
             SetActiveOption(option);
-
-            IsTemporarilyShowing = true;
+            _keyHotkeyPressed = true;
         }
 
         public static void RegisterKeyUp(SDL.SDL_Keycode key)
@@ -484,8 +498,44 @@ namespace ClassicUO.Game.Managers
                 return;
 
             _lastKeySym = SDL.SDL_Keycode.SDLK_UNKNOWN;
+            _keyHotkeyPressed = false;
+        }
 
-            IsTemporarilyShowing = false;
+        /// <summary>
+        ///     Polls for held modifier-only profile hotkeys. Key-based bindings are edge-triggered from
+        ///     <see cref="RegisterKeyDown"/>/<see cref="RegisterKeyUp"/>; a bare modifier chord has no key
+        ///     to latch onto, so it is matched against the live modifier state each frame. A key-based
+        ///     hotkey that is currently held takes precedence.
+        /// </summary>
+        public void UpdateHeldHotkeys()
+        {
+            if (_keyHotkeyPressed)
+                return;
+
+            NameOverheadOption held = Options.FirstOrDefault(IsModifierOnlyHotkeyHeld);
+
+            if (held == null)
+            {
+                _modifierHotkeyOption = null;
+                return;
+            }
+
+            if (!ReferenceEquals(_modifierHotkeyOption, held))
+            {
+                _modifierHotkeyOption = held;
+                SetActiveOption(held);
+            }
+        }
+
+        private static bool IsModifierOnlyHotkeyHeld(NameOverheadOption option)
+        {
+            if (option.Key != SDL.SDL_Keycode.SDLK_UNKNOWN)
+                return false;
+
+            if (!option.Alt && !option.Ctrl && !option.Shift)
+                return false;
+
+            return option.Ctrl == Keyboard.Ctrl && option.Shift == Keyboard.Shift && option.Alt == Keyboard.Alt;
         }
 
         public void SetActiveOption(NameOverheadOption option)

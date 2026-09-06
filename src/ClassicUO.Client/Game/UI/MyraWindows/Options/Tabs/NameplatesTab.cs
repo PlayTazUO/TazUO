@@ -88,7 +88,8 @@ public static class NameplatesTab
                     new HotkeyInput(
                         existingSelection: currentHotkey,
                         onSelectionChanged: e => OnProfileHotkeyChanged(profile, e),
-                        capturesMouseEvents: false
+                        capturesMouseEvents: false,
+                        bindingValidator: ValidateNameplateHotkey
                     )
                     {
                         Padding = new Thickness(MyraStyle.STANDARD_SPACING, 0, 0, 0),
@@ -148,6 +149,12 @@ public static class NameplatesTab
     {
         HotkeyBinding value = e.NewValue;
 
+        // Nameplate dispatch is keyboard-only (a concrete key, or modifiers alone); a mouse, wheel or
+        // controller binding could never fire here, so it must not overwrite an existing assignment.
+        // Empty bindings (Clear) are how a hotkey is removed.
+        if (value.HasMouseButton || value.WheelScroll || value.HasController)
+            return;
+
         // We have to check for hotkey conflicts first.
         NameOverheadOption option = NameOverHeadManager.FindOptionByHotkey(value.Key, value.Alt, value.Ctrl, value.Shift);
 
@@ -170,6 +177,27 @@ public static class NameplatesTab
                 null
             )
         );
+    }
+
+    /// <summary>
+    ///     Rejects hotkey bindings the nameplate system can never trigger. Profile hotkeys are matched
+    ///     against the keyboard only - a concrete key in <see cref="NameOverHeadManager.RegisterKeyDown"/>,
+    ///     or held modifiers alone in <see cref="NameOverHeadManager.UpdateHeldHotkeys"/> - so a mouse,
+    ///     wheel or controller capture would be saved yet never fire. Empty bindings are allowed - they
+    ///     are how a hotkey is cleared.
+    /// </summary>
+    private static bool ValidateNameplateHotkey(HotkeyBinding binding)
+    {
+        if (!binding.HasMouseButton && !binding.WheelScroll && !binding.HasController)
+            return true;
+
+        GameActions.Print(
+            World.Instance,
+            TazLang.Get("mog_nameplates_optionstab_hotkeykeyboardonly"),
+            Constants.HUE_ERROR
+        );
+
+        return false;
     }
 
     private static VisualContainer GetItemsBoxesPanel(NameOverheadOption profile) =>

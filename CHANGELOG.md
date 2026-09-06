@@ -2,11 +2,22 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## Future release notes
-Future release notes will be formatted by date instead of by release, most recent changes listed at the top:
+
+## 9/6/26
+* ***Misc:*** Changed city selection gump to use clilocs for facet location instead of hard coded
+* ***Feature:*** Added ObjectUsed API event, support for for multi-sound/serial overlay triggers and a new ObjectUsed overlay trigger - [P.R 1051](https://github.com/PlayTazUO/TazUO/pull/1051) ([yuval-po](https://github.com/yuval-po))
+
+## 9/5/26
+* ***Fix:*** Fixed nameplate profiles not wokring with modifier only hotkeys
+* ***Fix:*** Fixed the world map "always show markers at any zoom" option not showing marker name labels when zoomed out - labels now respect the always-show override instead of being hidden below zoom level 6
+* ***Fix:*** Fixed a NullReferenceException in world map pathfinding when the player left the world or closed the map gump while a path search was still running on its background thread - the completion and step-failed callbacks now check whether the world/player is still present and abandon cleanly instead of crashing
+* ***Legion:*** Hardened the Legion scripting API against the world, player, or map going null while a script is running (e.g. during world teardown) - calls like `API.Pathfind`, `API.PathfindEntity`, `API.GetPath`, movement, targeting, and item handling now safely return false/null instead of throwing a NullReferenceException
+* ***Fix:*** Fixed version number in PR builds
+* ***Legion:*** Fixed a Legion script being wrongly reported as "did not stop and keeps running in the background" (and then locked out of restarting) when it was stopped and started again within the 2 second stop grace period - the stop check now only acts on the exact thread it was issued for, so a stale check can't mistake a new run for an unstopped one
+* ***Legion:*** Fixed a legion script crash when player was null checking for skills
 
 ## 9/4/26
-* Changes listed here
+* ***Feature:*** Custom cooldown bars now continue checking later rules when a sender filter does not match and no longer treat messages without a source as Self or Other
 
 ### Features
 * Added a new modern status gump with progress bars
@@ -36,6 +47,7 @@ Future release notes will be formatted by date instead of by release, most recen
 * Migrated more settings to global scoped json settings
 
 ### Fixes
+* Fixed the health bar indicator threshold so its percentage setting is applied correctly - [P.R 1052](https://github.com/PlayTazUO/TazUO/pull/1052) ([Aryx75](https://github.com/Aryx75))
 * Fixed a NullReferenceException in `API.UseSkill()` when the player was null (world tearing down) or the skill list was not yet loaded - the call now safely returns without using the skill
 * Fixed missing key codes in plugin keyup processing
 * Fixed timestamped Global Chat messages sent by the local player not appearing in Global Chat journal tabs - [P.R 1035](https://github.com/PlayTazUO/TazUO/pull/1035) ([Aryx75](https://github.com/Aryx75))

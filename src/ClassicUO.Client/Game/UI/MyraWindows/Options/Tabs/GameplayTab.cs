@@ -54,7 +54,10 @@ public static class GameplayTab
                     TazLang.Get("mog_tazuo_onlyshowbelowhp"),
                     0,
                     100,
-                    new Accessor<float>(() => profile.ShowHealthIndicatorBelow),
+                    new Accessor<float>(
+                        () => profile.ShowHealthIndicatorBelow * 100f,
+                        value => profile.ShowHealthIndicatorBelow = value / 100f
+                    ),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_onlyshowbelowhp"), Keywords: [TazLang.Get("mog_kw_hp")])
                 ),
                 Option.Slider(
