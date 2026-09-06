@@ -984,7 +984,7 @@ namespace ClassicUO.Game.UI.Gumps
                     bool isInParty = World.Party.Contains(m.Serial);
                     bool showAllResources = isPlayer || isInParty;
                     int barCount = showAllResources ? 3 : 1;
-                    float _alpha = ProfileManager.CurrentProfile.NamePlateHealthBarOpacity / 100f;
+                    float _alpha = GetNamePlateResourceOpacity();
 
                     double hpPercent = GetResourcePercent(m.Hits, m.HitsMax);
                     Color fillColor = GetHealthFillColor(m, hpPercent);
@@ -1135,10 +1135,23 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (!_useSplitLayout && entity is Mobile && profile.NamePlateHealthBar)
             {
-                backgroundOpacity *= Math.Clamp(profile.NamePlateHealthBarOpacity / 100f, 0f, 1f);
+                return backgroundOpacity * Math.Clamp(profile.NamePlateHealthBarOpacity / 100f, 0f, 1f);
             }
 
             return backgroundOpacity;
+        }
+
+        private float GetNamePlateResourceOpacity()
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+            float healthBarOpacity = Math.Clamp(profile.NamePlateHealthBarOpacity / 100f, 0f, 1f);
+
+            if (!_useSplitLayout)
+            {
+                healthBarOpacity *= Math.Clamp(profile.NamePlateOpacity / 100f, 0f, 1f);
+            }
+
+            return healthBarOpacity;
         }
 
         private Color GetNamePlateBackgroundColor(Entity entity)

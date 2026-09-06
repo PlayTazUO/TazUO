@@ -37,7 +37,7 @@ public class NamePlateOpacityTests
     [InlineData(6, 1)]
     public void HalfOpacityDoesNotStackAnOpaqueUnderlayOrMissingFill(int radius, double percent)
     {
-        float[,] pixels = Draw(radius, 0, 50, 50, true, percent);
+        float[,] pixels = Draw(radius, 0, 50, 50, true, percent, applyOverallOpacity: false);
         Assert.Equal(0.5f, pixels[20, 12]); // Filled HP.
         Assert.Equal(0.5f, pixels[80, 12]); // Missing HP.
         Assert.Equal(0.5f, pixels[50, 0]); // Shared nameplate/resource outline.
@@ -53,15 +53,19 @@ public class NamePlateOpacityTests
         Assert.Equal(0, pixels[80, 12]);
 
         pixels = Draw(0, 25, 50, 0, true);
-        Assert.Equal(0.5625f, pixels[20, 12]);
-        Assert.Equal(0.5625f, pixels[80, 12]);
+        Assert.Equal(0.234375f, pixels[20, 12]);
+        Assert.Equal(0.234375f, pixels[80, 12]);
+
+        pixels = Draw(0, 0, 50, 0, true);
+        Assert.Equal(0, pixels[20, 12]);
+        Assert.Equal(0, pixels[80, 12]);
     }
 
     [Fact]
     public void LegacyMissingHealthShowsOnlyTheConfiguredBackground()
     {
         float[,] pixels = Draw(0, 25, 50, 50, false);
-        Assert.Equal(0.5625f, pixels[20, 12]);
+        Assert.Equal(0.234375f, pixels[20, 12]);
         Assert.Equal(0.125f, pixels[80, 12]);
     }
 
@@ -72,7 +76,7 @@ public class NamePlateOpacityTests
     [InlineData(true, 6)]
     public void PlayerAndPartyResourceRowsHonorOpacity(bool split, int radius)
     {
-        float[,] pixels = Draw(radius, 0, 50, 50, true, barCount: 3, split: split);
+        float[,] pixels = Draw(radius, 0, 50, 50, true, barCount: 3, split: split, applyOverallOpacity: false);
         int offset = split ? 24 : 0;
         for (int row = 0; row < 3; row++)
         {
@@ -87,7 +91,7 @@ public class NamePlateOpacityTests
     // Record real batcher quads before GPU submission. No graphics device or game
     // assets are needed to check the geometry and alpha sent by the nameplate renderer.
     private static float[,] Draw(int radius, byte background, byte health, byte border, bool showMissing,
-        double percent = 0.5d, int barCount = 1, bool split = false)
+        double percent = 0.5d, int barCount = 1, bool split = false, bool applyOverallOpacity = true)
     {
         var profile = new Profile
         {
@@ -131,13 +135,17 @@ public class NamePlateOpacityTests
             var bounds = new Rectangle(0, 0, 100, 24);
 
             Invoke(gump, "DrawNamePlateBackground", batcher, mobile, bounds, radius);
+            float resourceOpacity = health / 100f;
+            if (applyOverallOpacity && !split)
+                resourceOpacity *= background / 100f;
+
             for (int row = 0; row < barCount; row++)
             {
                 Rectangle resourceBounds = (Rectangle)typeof(NameOverheadGump)
                     .GetMethod("GetResourceBarBounds", BindingFlags.Instance | BindingFlags.NonPublic)
                     .Invoke(gump, [0, 0, row, barCount]);
                 Invoke(gump, "DrawResourceBar", batcher, resourceBounds, texture,
-                    ShaderHueTranslator.GetHueVector(0, false, health / 100f), percent, health / 100f);
+                    ShaderHueTranslator.GetHueVector(0, false, resourceOpacity), percent, resourceOpacity);
             }
 
             var pixels = new float[100, totalHeight];
