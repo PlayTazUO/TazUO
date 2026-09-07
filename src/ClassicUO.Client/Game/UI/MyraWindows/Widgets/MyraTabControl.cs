@@ -64,6 +64,19 @@ public class MyraTabControl : TabControl
             SelectedIndex = 0;
     }
 
+    /// <summary>Rebuilds the selected page while preserving its parent tabs and their selections.</summary>
+    internal void RefreshSelectedContent()
+    {
+        if (SelectedItem?.Content is MyraTabControl nestedTabs)
+        {
+            nestedTabs.RefreshSelectedContent();
+        }
+        else if (SelectedItem?.Tag is int index && index >= 0 && index < _builders.Count)
+        {
+            SelectedItem.Content = _builders[index]();
+        }
+    }
+
     private void OnTabSelected(object? sender, EventArgs e)
     {
         if (SelectedItem == null || SelectedItem.Content != null) return;
