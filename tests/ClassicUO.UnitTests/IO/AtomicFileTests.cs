@@ -58,7 +58,14 @@ public class AtomicFileTests : IDisposable
         string blockedPath = Path.Combine(_directory, "blocked");
         Directory.CreateDirectory(blockedPath);
 
-        Assert.ThrowsAny<IOException>(() => AtomicFile.Write(blockedPath, "new"));
+        Exception thrown = Record.Exception(() => AtomicFile.Write(blockedPath, "new"));
+
+        // Windows reports a rename onto a directory as UnauthorizedAccessException, Unix as IOException.
+        // Neither derives from the other, so both are named here.
+        Assert.True(
+            thrown is IOException or UnauthorizedAccessException,
+            $"Expected a failed rename, got: {thrown?.GetType().Name ?? "no exception"}"
+        );
 
         Assert.Equal("original", File.ReadAllText(path));
         Assert.DoesNotContain(Directory.GetFiles(_directory), f => f.Contains(".tmp"));
