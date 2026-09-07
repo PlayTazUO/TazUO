@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/7/26
+* ***Legion:*** Added optional filters to `API.GetAllMobiles()` - `name` (case-insensitive partial match), `graphics`, `hues`, `minDistance`, `isHuman`, `isFemale`, `isGhost` (dead mobiles), `isFriend` (friends list), `poisoned`, `paralyzed`, and `hasLineOfSight`; each is ignored unless supplied, and `True`/`False` toggles include or exclude
+
 ## 9/6/26
 * ***Misc:*** Changed city selection gump to use clilocs for facet location instead of hard coded
 
