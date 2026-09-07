@@ -215,7 +215,8 @@ namespace ClassicUO.Configuration
         /// The new content is staged first, so a write that fails - a full disk, a revoked permission -
         /// leaves the file already on disk exactly as it was. Only once the bytes are down does the
         /// current version rotate out, and the destination it frees is filled by a rename. The main file
-        /// is therefore absent for one rename rather than for a whole write.
+        /// is therefore absent for one rename rather than for a whole write, and a rename that fails puts
+        /// the rotated version back rather than leaving the file to be recovered from a backup.
         /// </para>
         /// </summary>
         /// <param name="filePath">The file to publish to. Its directory is created if missing.</param>
@@ -224,16 +225,43 @@ namespace ClassicUO.Configuration
         private static void WriteJson(string filePath, string json)
         {
             string stagedPath = AtomicFile.Stage(filePath, json);
+            bool rotated = false;
 
             try
             {
-                RotateBackups(filePath);
+                rotated = RotateBackups(filePath);
                 AtomicFile.Publish(stagedPath, filePath);
             }
             catch
             {
                 AtomicFile.Delete(stagedPath);
+
+                if (rotated)
+                    RestoreRotated(filePath);
+
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Moves the version <see cref="RotateBackups"/> put in slot 1 back over the main file, after a
+        /// publish that failed to fill the place it left. Best effort: the caller is already raising the
+        /// failure that led here. The deeper slots stay shifted, which costs a duplicate rather than a
+        /// version.
+        /// </summary>
+        /// <param name="filePath">The main file to put back.</param>
+        private static void RestoreRotated(string filePath)
+        {
+            try
+            {
+                string firstBackup = GetBackupPath(filePath, 1);
+
+                if (File.Exists(firstBackup) && !File.Exists(filePath))
+                    File.Move(firstBackup, filePath);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Failed to restore '{filePath}' after a failed save: {e}");
             }
         }
 
@@ -347,8 +375,10 @@ namespace ClassicUO.Configuration
         /// slot 1. The main file is left absent, for the caller to write in its place.
         /// </summary>
         /// <param name="filePath">The main file being rotated out.</param>
+        /// <returns><c>true</c> when the main file was moved into slot 1 and the caller now owes it a
+        /// replacement, <c>false</c> when there was no main file to rotate.</returns>
         /// <exception cref="IOException">A slot could not be deleted or moved.</exception>
-        private static void RotateBackups(string filePath)
+        private static bool RotateBackups(string filePath)
         {
             string backupDir = GetBackupDirectory(filePath);
             Directory.CreateDirectory(backupDir);
@@ -380,13 +410,14 @@ namespace ClassicUO.Configuration
             // Move the current main file into backup slot 1.
             string firstBackup = GetBackupPath(filePath, 1);
 
-            if (File.Exists(filePath))
-            {
-                if (File.Exists(firstBackup))
-                    File.Delete(firstBackup);
+            if (!File.Exists(filePath))
+                return false;
 
-                File.Move(filePath, firstBackup);
-            }
+            if (File.Exists(firstBackup))
+                File.Delete(firstBackup);
+
+            File.Move(filePath, firstBackup);
+            return true;
         }
 
         private static string GetBackupDirectory(string filePath) => Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty, Constants.BACKUP_FOLDER);
