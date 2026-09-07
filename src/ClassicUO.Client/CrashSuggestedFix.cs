@@ -56,6 +56,9 @@ internal static class CrashSuggestedFix
             if (TryGetDisplayAdapterCrashFix(exception, out string displayFix))
                 return displayFix;
 
+            if (TryGetSdlVideoInitCrashFix(exception, out string sdlVideoInitFix))
+                return sdlVideoInitFix;
+
             if (Client.IsShaderCompileFailure(exception))
                 return Client.GraphicsShaderHelpMessage;
 
@@ -154,6 +157,53 @@ internal static class CrashSuggestedFix
         sb.AppendLine("3. If you use a docking station or KVM switch, try connecting your monitor directly to test.");
         sb.AppendLine("4. Update your graphics card drivers to the latest version.");
         sb.AppendLine("5. Simply restart TazUO - it should start normally once your displays are stable.");
+        fix = sb.ToString();
+        return true;
+    }
+
+    /// <summary>
+    ///     Recognizes SDL failing to bring up the video subsystem on startup - FNA's
+    ///     <c>SDL3_FNAPlatform.ProgramInit</c> throws when <c>SDL_Init</c> returns false. The
+    ///     SDL error "The video driver did not add any displays" means the process was offered
+    ///     no screen to use, which happens when the game runs outside a logged-in graphical
+    ///     desktop session (SSH, an automated launch context) or on a headless/virtual machine
+    ///     with no display configured.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetSdlVideoInitCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        // ToString() on the top-level exception includes the messages and stack traces of any
+        // inner (and aggregated) exceptions, so the whole chain can be inspected in one string.
+        string details = e.ToString();
+
+        // SDL error strings are not localized, so the text is a reliable match. Scoped to the
+        // zero-displays error rather than every SDL_Init failure, since other SDL init errors
+        // need different advice.
+        if (string.IsNullOrEmpty(details) ||
+            !details.Contains("The video driver did not add any displays") ||
+            !details.Contains("SDL3_FNAPlatform.ProgramInit"))
+            return false;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("TazUO could not start because the graphics system had no display to use.");
+        sb.AppendLine(
+            "The game opens its window through SDL, and the operating system did not offer it a single screen " +
+            "('The video driver did not add any displays').");
+        sb.AppendLine("This is an environment problem, not a fault in TazUO: the game was started without access to a graphical desktop session.");
+        sb.AppendLine();
+        sb.AppendLine("Suggested fixes:");
+        sb.AppendLine(
+            "1. Launch TazUO from your logged-in desktop - open it from Finder (macOS), the launcher, or a Terminal inside your desktop session.");
+        sb.AppendLine(
+            "2. Do not start it over SSH, from a scheduled task/login item, or from a script that runs outside your desktop session - those have no screen access.");
+        sb.AppendLine(
+            "3. Make sure a user is logged into the machine's desktop before starting TazUO; if the machine is sitting at the login screen, log in first.");
+        sb.AppendLine("4. On a virtual machine or headless setup, make sure a real or virtual display is available and powered on.");
+        sb.AppendLine("5. Restart the computer and try launching TazUO normally.");
         fix = sb.ToString();
         return true;
     }
