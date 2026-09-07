@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `9/5/26`.*
+*This was generated on `9/7/26`.*
 
 ## Properties
 ### `Events`
@@ -2987,8 +2987,9 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ---
 
 ### GetAllMobiles
-`(graphic, distance, notoriety, sortby)`
+`(graphic, distance, notoriety, sortby, name, graphics, minDistance, isHuman, isFemale, isGhost, isFriend, poisoned, paralyzed, hasLineOfSight, hues)`
  Return a list of all mobiles the client is aware of, optionally filtered by graphic, distance, and/or notoriety.
+ Any additional filter is ignored unless supplied.
  Example:
  ```py
  # Get all mobiles
@@ -3001,6 +3002,10 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  enemies = API.GetAllMobiles(distance=15, notoriety=[API.Notoriety.Murderer, API.Notoriety.Criminal])
  # Get all mobiles sorted by current hits, lowest first
  sorted_by_hits = API.GetAllMobiles(sortby="hits")
+ # Get all poisonous ogres within 10 tiles in line of sight
+ targets = API.GetAllMobiles(name="ogre", distance=10, poisoned=True, hasLineOfSight=True)
+ # Get only dead friends with a specific hue, at least 2 tiles away
+ ghosts = API.GetAllMobiles(isGhost=True, isFriend=True, minDistance=2, hues=[0x83EA])
  ```
 
 
@@ -3012,6 +3017,17 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `distance` | `int?` | ✅ Yes | Optional maximum distance from player |
 | `notoriety` | `IList<Notoriety>` | ✅ Yes | Optional list of notoriety flags to filter by |
 | `sortby` | `string` | ✅ Yes | Sort order, case insensitive: "Distance", "Hits" or "MaxHits". Defaults to "Distance". |
+| `name` | `string` | ✅ Yes | Optional partial name to match, case insensitive |
+| `graphics` | `ushort[]` | ✅ Yes | Optional list of graphic IDs to match; a mobile matches if its graphic equals any entry |
+| `minDistance` | `int?` | ✅ Yes | Optional minimum distance from player |
+| `isHuman` | `bool?` | ✅ Yes | When set, only include (True) or exclude (False) humanoid mobiles |
+| `isFemale` | `bool?` | ✅ Yes | When set, only include (True) or exclude (False) female mobiles |
+| `isGhost` | `bool?` | ✅ Yes | When set, only include (True) or exclude (False) ghosts (dead mobiles) |
+| `isFriend` | `bool?` | ✅ Yes | When set, only include (True) or exclude (False) mobiles on the friends list |
+| `poisoned` | `bool?` | ✅ Yes | When set, only include (True) or exclude (False) poisoned mobiles |
+| `paralyzed` | `bool?` | ✅ Yes | When set, only include (True) or exclude (False) paralyzed mobiles |
+| `hasLineOfSight` | `bool?` | ✅ Yes | When set, only include (True) or exclude (False) mobiles with line of sight to the player |
+| `hues` | `ushort[]` | ✅ Yes | Optional list of hues to match; a mobile matches if its hue equals any entry |
 
 **Return Type:** `ApiMobile[]`
 
