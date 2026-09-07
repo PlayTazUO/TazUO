@@ -429,12 +429,12 @@ public static class NameplatesTab
                     100,
                     NameplateSetting<byte>(() => profile.NamePlateOpacity),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_backgroundopacity"), Keywords: [TazLang.Get("mog_kw_background"), TazLang.Get("mog_kw_opacity")])
-                ), TazLang.Get("nameplate_backgroundopacitytooltip")),
+                ), TazLang.Get("nameplate_backgroundopacity_tooltip")),
                 Option.LComboBox(
                     TazLang.Get("mog_kw_mode"),
                     NameplateSetting<NamePlateBackgroundMode>(() => profile.NamePlateBackgroundMode),
                     "nameplate_background_",
-                    tooltip: TazLang.Get("nameplate_background_entitynotorietytooltip"),
+                    tooltip: TazLang.Get("nameplate_backgroundmode_tooltip"),
                     search: new SearchMetadata(TazLang.Get("mog_kw_mode"), Keywords: [TazLang.Get("mog_kw_mode"), TazLang.Get("mog_kw_background")])
                 )
             ),
@@ -509,7 +509,7 @@ public static class NameplatesTab
                         100,
                         NameplateSetting<byte>(() => profile.NamePlateHealthBarOpacity),
                         search: new SearchMetadata(TazLang.Get("mog_tazuo_hpopacity"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_opacity")])
-                    ), TazLang.Get("nameplate_hpopacitytooltip")),
+                    ), TazLang.Get("nameplate_resourceopacity_tooltip")),
                     OptionsUi.CheckBoxGroup(
                         new PropertyBinder(NameplateSetting<bool>(() => profile.NamePlateHideAtFullHealth), TazLang.Get("mog_tazuo_hidenameplatesiffullhealth")),
                         Option.Checkbox(
@@ -519,13 +519,13 @@ public static class NameplatesTab
                         )
                     ).WithSearch(new SearchMetadata(Tags: [TazLang.Get("mog_kw_nameplate")], Keywords: [TazLang.Get("mog_kw_hide"), TazLang.Get("mog_kw_health")]))
                 ).WithSearch(new SearchMetadata(Tags: [TazLang.Get("mog_kw_nameplate")], Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp")])),
-                Option.Slider(
+                WithTooltip(Option.Slider(
                     TazLang.Get("mog_tazuo_borderopacity"),
                     0,
                     100,
                     NameplateSetting<byte>(() => profile.NamePlateBorderOpacity),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_borderopacity"), Keywords: [TazLang.Get("mog_kw_border"), TazLang.Get("mog_kw_opacity")])
-                ),
+                ), TazLang.Get("nameplate_borderopacity_tooltip")),
                 Option.Checkbox(
                     TazLang.Get("mog_tazuo_avoidoverlap"),
                     NameplateSetting<bool>(() => profile.NamePlateAvoidOverlap),

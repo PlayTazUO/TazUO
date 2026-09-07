@@ -3513,11 +3513,12 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                new SliderWithLabel
+                c = new SliderWithLabel
                 (TazLang.Get("nameplate_hpopacity", "HP opacity"), 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateHealthBarOpacity,
                     (i) => { profile.NamePlateHealthBarOpacity = (byte)i; SetNamePlatePresetCustom(); }),
                 true, page
             );
+            c.SetTooltip(TazLang.Get("nameplate_resourceopacity_tooltip"));
 
             content.AddToRight
             (
@@ -3611,7 +3612,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                new ComboBoxWithLabel
+                c = new ComboBoxWithLabel
                 (
                     World,
                     TazLang.Get("nameplate_backgroundmode", "Background mode"),
@@ -3623,21 +3624,24 @@ namespace ClassicUO.Game.UI.Gumps
                     false
                 ), true, page
             );
+            c.SetTooltip(TazLang.Get("nameplate_backgroundmode_tooltip"));
 
             content.AddToRight
             (
-                new SliderWithLabel
+                c = new SliderWithLabel
                 (TazLang.Get("nameplate_borderopacity", "Border opacity"), 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateBorderOpacity,
                     (i) => { profile.NamePlateBorderOpacity = (byte)i; SetNamePlatePresetCustom(); }),
                 true, page
             );
+            c.SetTooltip(TazLang.Get("nameplate_borderopacity_tooltip"));
 
             content.AddToRight
             (
-                new SliderWithLabel
+                c = new SliderWithLabel
                 (TazLang.Get("nameplate_backgroundopacity", "Background opacity"), 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateOpacity,
                     (i) => { profile.NamePlateOpacity = (byte)i; SetNamePlatePresetCustom(); }), true, page
             );
+            c.SetTooltip(TazLang.Get("nameplate_backgroundopacity_tooltip"));
 
             content.AddToRight
             (

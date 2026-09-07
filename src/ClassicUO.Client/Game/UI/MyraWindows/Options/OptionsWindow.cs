@@ -469,10 +469,17 @@ public class OptionsWindow : MyraControl
             return;
         }
 
-        _optionsPanel.Widgets.Clear();
         if (_optionSources.TryGetValue(_lastCategory, out List<IOptionSource>? sources))
-            foreach (IOptionSource source in sources)
-                _optionsPanel.Widgets.Add(source.Render());
+        {
+            for (int i = 0; i < sources.Count; i++)
+            {
+                // Rebuilding the category would reset nested tabs to their first page.
+                if (_optionsPanel.Widgets[i] is MyraTabControl tabs)
+                    tabs.RefreshSelectedContent();
+                else
+                    _optionsPanel.Widgets[i] = sources[i].Render();
+            }
+        }
     }
 
     private void ShowPage(string category)
