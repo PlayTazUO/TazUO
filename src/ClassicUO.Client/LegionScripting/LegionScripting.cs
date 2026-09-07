@@ -469,6 +469,27 @@ namespace ClassicUO.LegionScripting
             }
         }
 
+        /// <summary>
+        /// Schedules the thread-finished cleanup (<see cref="StopScript" />) for a script whose
+        /// thread is about to exit. A stop issued just as the script was finishing leaves a pending
+        /// <see cref="ThreadInterruptedException" /> that surfaces on the thread's next blocking
+        /// call - frequently here, taking the dispatch queue's internal lock - which would otherwise
+        /// kill the thread before it schedules its own cleanup. The interrupt is one-shot and is
+        /// consumed by the throw, so a single retry cannot be interrupted again.
+        /// </summary>
+        /// <param name="script">Script whose thread has finished.</param>
+        private static void EnqueueThreadFinishedStop(ScriptFile script)
+        {
+            try
+            {
+                MainThreadQueue.EnqueueAction(() => StopScript(script));
+            }
+            catch (ThreadInterruptedException)
+            {
+                MainThreadQueue.EnqueueAction(() => StopScript(script));
+            }
+        }
+
         private static void ExecutePythonScript(ScriptFile script)
         {
             script.SetupPythonEngine();
@@ -496,7 +517,7 @@ namespace ClassicUO.LegionScripting
                 catch (ThreadAbortException) { }
             }
 
-            MainThreadQueue.EnqueueAction(() => { StopScript(script); });
+            EnqueueThreadFinishedStop(script);
         }
 
         private static void ExecuteCSharpScript(ScriptFile script)
@@ -538,7 +559,7 @@ namespace ClassicUO.LegionScripting
                 ShowCSharpRuntimeError(script, e);
             }
 
-            MainThreadQueue.EnqueueAction(() => { StopScript(script); });
+            EnqueueThreadFinishedStop(script);
         }
 
         /// <summary>

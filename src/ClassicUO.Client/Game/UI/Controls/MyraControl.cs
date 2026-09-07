@@ -164,14 +164,14 @@ public class MyraControl : IGui
     public List<IGui> Children { get; } = new();
     public ClickPriority Priority { get; set; }
     public bool CanCloseWithRightClick { get; set; } = true;
-    public bool IsModal { get; } = false;
+    public bool IsModal { get; protected set; } = false;
     public float Alpha { get; set; }
     public bool WantUpdateSize { get; set; }
     public UILayer LayerOrder { get; set; } = UILayer.Default;
     public bool IsFromServer { get; set; }
     public Point Location { get; set; } = Point.Zero;
     public bool HasKeyboardFocus => UIManager.KeyboardFocusControl == this;
-    public bool ModalClickOutsideAreaClosesThisControl { get; } = true;
+    public bool ModalClickOutsideAreaClosesThisControl { get; protected set; } = true;
 
     /// <summary>
     /// Do not set this manually, should only be set by UIManager

@@ -3,6 +3,11 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/7/26
+* ***Legion:*** Added optional filters to `API.GetAllMobiles()` - `name` (case-insensitive partial match), `graphics`, `hues`, `minDistance`, `isHuman`, `isFemale`, `isGhost` (dead mobiles), `isFriend` (friends list), `poisoned`, `paralyzed`, and `hasLineOfSight`; each is ignored unless supplied, and `True`/`False` toggles include or exclude
+* ***Fix:*** Added a crash fix suggestion for when SDL cannot start the video system because the OS offers no display to the process (game launched outside a graphical desktop session, e.g. over SSH or on a headless machine) - crash logs now explain the cause and how to launch the game with a desktop display
+* ***Fix:*** Fixed a `ThreadInterruptedException` client crash when stopping a Legion script at the exact moment it was finishing on its own - the stop's pending thread interrupt now surfaces safely at the script's final cleanup instead of killing the script thread as an unhandled exception
+
 ## 9/6/26
 * ***Misc:*** Changed city selection gump to use clilocs for facet location instead of hard coded
 * ***Feature:*** Added ObjectUsed API event, support for for multi-sound/serial overlay triggers and a new ObjectUsed overlay trigger - [P.R 1051](https://github.com/PlayTazUO/TazUO/pull/1051) ([yuval-po](https://github.com/yuval-po))

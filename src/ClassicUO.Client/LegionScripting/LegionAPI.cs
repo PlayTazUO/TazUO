@@ -3891,6 +3891,7 @@ namespace ClassicUO.LegionScripting
 
         /// <summary>
         /// Return a list of all mobiles the client is aware of, optionally filtered by graphic, distance, and/or notoriety.
+        /// Any additional filter is ignored unless supplied.
         /// Example:
         /// ```py
         /// # Get all mobiles
@@ -3903,22 +3904,79 @@ namespace ClassicUO.LegionScripting
         /// enemies = API.GetAllMobiles(distance=15, notoriety=[API.Notoriety.Murderer, API.Notoriety.Criminal])
         /// # Get all mobiles sorted by current hits, lowest first
         /// sorted_by_hits = API.GetAllMobiles(sortby="hits")
+        /// # Get all poisonous ogres within 10 tiles in line of sight
+        /// targets = API.GetAllMobiles(name="ogre", distance=10, poisoned=True, hasLineOfSight=True)
+        /// # Get only dead friends with a specific hue, at least 2 tiles away
+        /// ghosts = API.GetAllMobiles(isGhost=True, isFriend=True, minDistance=2, hues=[0x83EA])
         /// ```
         /// </summary>
         /// <param name="graphic">Optional graphic ID to filter by</param>
         /// <param name="distance">Optional maximum distance from player</param>
         /// <param name="notoriety">Optional list of notoriety flags to filter by</param>
         /// <param name="sortby">Sort order, case insensitive: "Distance", "Hits" or "MaxHits". Defaults to "Distance".</param>
+        /// <param name="name">Optional partial name to match, case insensitive</param>
+        /// <param name="graphics">Optional list of graphic IDs to match; a mobile matches if its graphic equals any entry</param>
+        /// <param name="minDistance">Optional minimum distance from player</param>
+        /// <param name="isHuman">When set, only include (True) or exclude (False) humanoid mobiles</param>
+        /// <param name="isFemale">When set, only include (True) or exclude (False) female mobiles</param>
+        /// <param name="isGhost">When set, only include (True) or exclude (False) ghosts (dead mobiles)</param>
+        /// <param name="isFriend">When set, only include (True) or exclude (False) mobiles on the friends list</param>
+        /// <param name="poisoned">When set, only include (True) or exclude (False) poisoned mobiles</param>
+        /// <param name="paralyzed">When set, only include (True) or exclude (False) paralyzed mobiles</param>
+        /// <param name="hasLineOfSight">When set, only include (True) or exclude (False) mobiles with line of sight to the player</param>
+        /// <param name="hues">Optional list of hues to match; a mobile matches if its hue equals any entry</param>
         /// <returns></returns>
-        public ApiMobile[] GetAllMobiles(ushort? graphic = null, int? distance = null, IList<Notoriety> notoriety = null, string sortby = "Distance") => BubblingOnMain(() =>
+        public ApiMobile[] GetAllMobiles(ushort? graphic = null, int? distance = null, IList<Notoriety> notoriety = null, string sortby = "Distance", string name = null, ushort[] graphics = null, int? minDistance = null, bool? isHuman = null, bool? isFemale = null, bool? isGhost = null, bool? isFriend = null, bool? poisoned = null, bool? paralyzed = null, bool? hasLineOfSight = null, ushort[] hues = null) => BubblingOnMain(() =>
         {
             IEnumerable<Mobile> mobiles = World.Mobiles.Values.AsEnumerable();
 
             if (graphic.HasValue)
                 mobiles = mobiles.Where(m => m.Graphic == graphic.Value);
 
+            if (graphics != null && graphics.Length > 0)
+            {
+                HashSet<ushort> requestedGraphics = new(graphics);
+                mobiles = mobiles.Where(m => requestedGraphics.Contains(m.Graphic));
+            }
+
             if (distance.HasValue)
                 mobiles = mobiles.Where(m => m.Distance <= distance.Value);
+
+            if (minDistance.HasValue)
+                mobiles = mobiles.Where(m => m.Distance >= minDistance.Value);
+
+            if (!string.IsNullOrWhiteSpace(name))
+                mobiles = mobiles.Where(m => m.Name.ContainsIgnoreCase(name));
+
+            if (isHuman.HasValue)
+                mobiles = mobiles.Where(m => m.IsHuman == isHuman.Value);
+
+            if (isFemale.HasValue)
+                mobiles = mobiles.Where(m => m.IsFemale == isFemale.Value);
+
+            if (isGhost.HasValue)
+                mobiles = mobiles.Where(m => m.IsDead == isGhost.Value);
+
+            if (isFriend.HasValue)
+            {
+                HashSet<uint> friends = new(FriendsListManager.Instance.GetAllFriends());
+                mobiles = mobiles.Where(m => friends.Contains(m.Serial) == isFriend.Value);
+            }
+
+            if (poisoned.HasValue)
+                mobiles = mobiles.Where(m => m.IsPoisoned == poisoned.Value);
+
+            if (paralyzed.HasValue)
+                mobiles = mobiles.Where(m => m.IsParalyzed == paralyzed.Value);
+
+            if (hasLineOfSight.HasValue)
+                mobiles = mobiles.Where(m => m.HasLineOfSightFrom() == hasLineOfSight.Value);
+
+            if (hues != null && hues.Length > 0)
+            {
+                HashSet<ushort> requestedHues = new(hues);
+                mobiles = mobiles.Where(m => requestedHues.Contains(m.Hue));
+            }
 
             if (notoriety != null && notoriety.Count > 0)
             {

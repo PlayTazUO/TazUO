@@ -58,6 +58,25 @@ public class CrashSuggestedFixTests
     }
 
     [Fact]
+    public void Get_SdlVideoInitZeroDisplays_ReturnsDisplayAdvice()
+    {
+        Exception inner = new InvalidOperationException("SDL_Init failed: The video driver did not add any displays");
+
+        SetStackTrace(
+            inner,
+            "   at Microsoft.Xna.Framework.SDL3_FNAPlatform.ProgramInit(LaunchParameters args) in SDL3_FNAPlatform.cs:line 202\n" +
+            "   at Microsoft.Xna.Framework.FNAPlatform..cctor() in FNAPlatform.cs:line 238");
+
+        Exception exception = new TypeInitializationException("Microsoft.Xna.Framework.FNAPlatform", inner);
+
+        string fix = CrashSuggestedFix.Get(exception);
+
+        fix.Should().NotBeNullOrWhiteSpace();
+        fix.Should().Contain("display");
+        fix.Should().Contain("desktop session");
+    }
+
+    [Fact]
     public void Get_NoStackTrace_ReturnsNull()
     {
         CrashSuggestedFix.Get(new InvalidOperationException("message")).Should().BeNull();
@@ -67,9 +86,14 @@ public class CrashSuggestedFixTests
     {
         Exception exception = new InvalidOperationException("The calling thread cannot access this object because a different thread owns it.");
 
-        FieldInfo field = typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
-        field!.SetValue(exception, stackTrace);
+        SetStackTrace(exception, stackTrace);
 
         return exception;
+    }
+
+    private static void SetStackTrace(Exception exception, string stackTrace)
+    {
+        FieldInfo field = typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
+        field!.SetValue(exception, stackTrace);
     }
 }
