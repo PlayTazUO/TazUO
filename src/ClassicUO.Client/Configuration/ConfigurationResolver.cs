@@ -12,7 +12,10 @@ namespace ClassicUO.Configuration;
 
 internal static partial class ConfigurationResolver
 {
-    /// <summary>Un-escapes the backslash-escaping legacy config writers applied before saving.</summary>
+    /// <summary>
+    ///     Doubles every lone backslash, so text a legacy writer left with raw path separators parses as
+    ///     JSON. An already-escaped pair is left alone.
+    /// </summary>
     internal static string NormalizeText(string text) => EscapeNormalizeRegex().Replace(text, @"\\");
 
     // Matches a lone backslash - not part of an already-escaped \\ pair.

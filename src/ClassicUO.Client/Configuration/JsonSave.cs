@@ -210,26 +210,31 @@ namespace ClassicUO.Configuration
         }
 
         /// <summary>
-        /// Rotates the current file into the backups, then publishes <paramref name="json"/> in its place.
+        /// Rotates the current file into the backups and publishes <paramref name="json"/> in its place.
         /// <para>
-        /// Rotation first, so what is on disk is preserved before anything overwrites it. That leaves a
-        /// window where the main file is absent and backup 1 holds its content - which is what
-        /// <see cref="LoadCore"/> recovers from - rather than one where a half-written file has replaced
-        /// the only copy.
+        /// The new content is staged first, so a write that fails - a full disk, a revoked permission -
+        /// leaves the file already on disk exactly as it was. Only once the bytes are down does the
+        /// current version rotate out, and the destination it frees is filled by a rename. The main file
+        /// is therefore absent for one rename rather than for a whole write.
         /// </para>
         /// </summary>
         /// <param name="filePath">The file to publish to. Its directory is created if missing.</param>
         /// <param name="json">The text to write.</param>
-        /// <exception cref="IOException">The rotation or the write failed.</exception>
+        /// <exception cref="IOException">The write, the rotation, or the publish failed.</exception>
         private static void WriteJson(string filePath, string json)
         {
-            string? directory = Path.GetDirectoryName(filePath);
+            string stagedPath = AtomicFile.Stage(filePath, json);
 
-            if (!string.IsNullOrEmpty(directory))
-                Directory.CreateDirectory(directory);
-
-            RotateBackups(filePath);
-            AtomicFile.Write(filePath, json);
+            try
+            {
+                RotateBackups(filePath);
+                AtomicFile.Publish(stagedPath, filePath);
+            }
+            catch
+            {
+                AtomicFile.Delete(stagedPath);
+                throw;
+            }
         }
 
         /// <summary>

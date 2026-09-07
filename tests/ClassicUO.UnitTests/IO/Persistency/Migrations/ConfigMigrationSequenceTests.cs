@@ -101,7 +101,9 @@ public class ConfigMigrationSequenceTests
         var sequence = new ConfigMigrationSequence<TestDocument>([new RecordingMigration(1)]);
         var document = new TestDocument();
 
-        Assert.Throws<ConfigMigrationException>(() => sequence.Apply(document, -1));
+        // Malformed, not a plain migration failure: the caller reads that apart to decide whether the
+        // file's other copies are worth trying.
+        Assert.Throws<ConfigDocumentMalformedException>(() => sequence.Apply(document, -1));
         Assert.Empty(document.Applied);
     }
 

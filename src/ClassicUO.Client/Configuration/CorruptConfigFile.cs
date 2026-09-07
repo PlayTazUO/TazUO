@@ -26,7 +26,8 @@ public readonly record struct CorruptConfigFile(
 )
 {
     /// <summary>
-    ///     The original file's name, without extension
+    ///     The original file's name, extension included - what the notice names it by, since the
+    ///     directory it sits in means nothing to the reader.
     /// </summary>
     public string Name => System.IO.Path.GetFileName(Path);
 }

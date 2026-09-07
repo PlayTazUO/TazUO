@@ -48,16 +48,19 @@ public sealed class ConfigMigrationSequence<TDocument>
     /// <paramref name="document"/> in place. A failure leaves it half-migrated: all-or-nothing is the
     /// caller's, bought by parsing a throwaway document first.</summary>
     /// <returns>The version the document now sits at.</returns>
+    /// <exception cref="ConfigDocumentMalformedException">
+    /// <paramref name="fromVersion"/> is negative, which no writer produces.
+    /// </exception>
     /// <exception cref="ConfigMigrationException">
-    /// A migration failed, or <paramref name="fromVersion"/> is negative or exceeds
-    /// <see cref="LatestVersion"/>.
+    /// A migration failed, or <paramref name="fromVersion"/> exceeds <see cref="LatestVersion"/>.
     /// </exception>
     public int Apply(TDocument document, int fromVersion)
     {
-        // Rejected rather than treated as unversioned: nothing writes a negative version, so the
-        // document is damaged, and migrating it would stamp the latest version over that evidence.
+        // Malformed rather than unmigratable: nothing writes a negative version, so the marker is
+        // damaged rather than describing a shape this build is too old for - and a damaged marker
+        // says nothing about the other copies of the file, which are still worth reading.
         if (fromVersion < 0)
-            throw new ConfigMigrationException($"Document version {fromVersion} is not a valid version.");
+            throw new ConfigDocumentMalformedException($"Document version {fromVersion} is not a valid version.");
 
         if (fromVersion > LatestVersion)
             throw new ConfigMigrationException($"Document is at version {fromVersion}, ahead of this build's latest known version {LatestVersion}.");

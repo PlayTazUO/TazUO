@@ -27,26 +27,72 @@ public static class AtomicFile
     /// <exception cref="UnauthorizedAccessException">The path is not writable.</exception>
     public static void Write(string path, string contents, bool flushToDisk = true)
     {
+        string stagedPath = Stage(path, contents, flushToDisk);
+
+        try
+        {
+            Publish(stagedPath, path);
+        }
+        catch
+        {
+            Delete(stagedPath);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Writes <paramref name="contents"/> to a temp file beside <paramref name="path"/> without
+    /// touching <paramref name="path"/> itself, for a caller with work to do between the write and the
+    /// rename that publishes it - rotating the current version out, say. Pair with <see cref="Publish"/>,
+    /// and <see cref="Delete"/> the staged file on any path that abandons it.
+    /// </summary>
+    /// <param name="path">The file that will eventually be replaced. Its directory is created if missing.</param>
+    /// <param name="contents">Text to write.</param>
+    /// <param name="flushToDisk">As <see cref="Write"/>.</param>
+    /// <returns>The staged file's path.</returns>
+    /// <exception cref="IOException">The write failed.</exception>
+    /// <exception cref="UnauthorizedAccessException">The path is not writable.</exception>
+    public static string Stage(string path, string contents, bool flushToDisk = true)
+    {
         string? directory = Path.GetDirectoryName(path);
 
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             Directory.CreateDirectory(directory);
 
-        string tempPath = Path.Combine(directory ?? string.Empty, $"{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
+        string stagedPath = Path.Combine(directory ?? string.Empty, $"{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
 
         try
         {
             // Writing is a bit non-standard here, to avoid flushing concerns. More on that in WriteTemp itself.
-            WriteTemp(tempPath, contents, flushToDisk);
-            File.Move(tempPath, path, overwrite: true);
+            WriteTemp(stagedPath, contents, flushToDisk);
         }
         catch
         {
-            Delete(tempPath);
+            Delete(stagedPath);
             throw;
         }
+
+        return stagedPath;
     }
 
+    /// <summary>
+    /// Renames a <see cref="Stage"/>d file over <paramref name="path"/>. The single step a reader can
+    /// observe, which is what makes the replacement atomic.
+    /// </summary>
+    /// <param name="stagedPath">The staged file to publish.</param>
+    /// <param name="path">The file to replace. Need not exist.</param>
+    /// <exception cref="IOException">The rename failed.</exception>
+    /// <exception cref="UnauthorizedAccessException">The path is not writable.</exception>
+    public static void Publish(string stagedPath, string path) => File.Move(stagedPath, path, overwrite: true);
+
+    /// <summary>
+    ///     Deletes a file, given by a relative or absolute path
+    /// </summary>
+    /// <param name="path">The file to delete</param>
+    /// <returns>
+    ///     <see langword="true" /> if the file was deleted, <see langword="false" /> if the file does not exist or could
+    ///     not be deleted
+    /// </returns>
     public static bool Delete(string path)
     {
         try
