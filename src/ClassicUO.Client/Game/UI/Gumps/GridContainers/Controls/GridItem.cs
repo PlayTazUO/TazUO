@@ -177,6 +177,23 @@ public class GridItem : Control
     }
 
     /// <summary>
+    /// Selects this slot's item for the multi-move system and highlights the slot.
+    /// No-op when the slot is empty or the item is already selected.
+    /// </summary>
+    /// <returns>True when the item was newly selected.</returns>
+    public bool SelectForMultiMove()
+    {
+        if (_item == null || MultiItemMoveGump.IsSelected(_item.Serial))
+            return false;
+
+        if (!MultiItemMoveGump.TrySelect(_item))
+            return false;
+
+        _selectHighlight = true;
+        return true;
+    }
+
+    /// <summary>
     /// Set this grid slot's item. Set to null for empty slot.
     /// </summary>
     /// <param name="item"></param>
