@@ -51,9 +51,10 @@ public sealed class ConfigMigrationSequence<TDocument>
     /// <exception cref="ConfigDocumentMalformedException">
     /// <paramref name="fromVersion"/> is negative, which no writer produces.
     /// </exception>
-    /// <exception cref="ConfigMigrationException">
-    /// A migration failed, or <paramref name="fromVersion"/> exceeds <see cref="LatestVersion"/>.
+    /// <exception cref="ConfigVersionAheadException">
+    /// <paramref name="fromVersion"/> exceeds <see cref="LatestVersion"/>.
     /// </exception>
+    /// <exception cref="ConfigMigrationException">A migration failed.</exception>
     public int Apply(TDocument document, int fromVersion)
     {
         // Malformed rather than unmigratable: nothing writes a negative version, so the marker is
@@ -63,7 +64,7 @@ public sealed class ConfigMigrationSequence<TDocument>
             throw new ConfigDocumentMalformedException($"Document version {fromVersion} is not a valid version.");
 
         if (fromVersion > LatestVersion)
-            throw new ConfigMigrationException($"Document is at version {fromVersion}, ahead of this build's latest known version {LatestVersion}.");
+            throw new ConfigVersionAheadException(fromVersion, LatestVersion);
 
         if (fromVersion == LatestVersion)
             return fromVersion;

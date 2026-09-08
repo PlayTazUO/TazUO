@@ -165,14 +165,24 @@ namespace ClassicUO.Game.UI.Gumps
         /// <returns>The sentence following the warning itself.</returns>
         private static string DescribeCorruptConfigFallback(CorruptConfigFile corruptFile)
         {
-            if (corruptFile.Fallback == CorruptConfigFallback.Backup)
-                return corruptFile.BackupPath != null
-                    ? TazLang.Get("corruptconfig_recovered_backedup", [corruptFile.BackupPath])
-                    : TazLang.Get("corruptconfig_recovered", "Your settings were recovered from an earlier backup.");
+            switch (corruptFile.Fallback)
+            {
+                case CorruptConfigFallback.Backup:
+                    return corruptFile.BackupPath != null
+                        ? TazLang.Get("corruptconfig_recovered_backedup", [corruptFile.BackupPath])
+                        : TazLang.Get("corruptconfig_recovered", "Your settings were recovered from an earlier backup.");
 
-            return corruptFile.BackupPath != null
-                ? TazLang.Get("corruptconfig_defaults_backedup", [corruptFile.BackupPath])
-                : TazLang.Get("corruptconfig_defaults", "Default settings were used, and no backup could be saved.");
+                case CorruptConfigFallback.Preserved:
+                    return TazLang.Get(
+                        "corruptconfig_preserved",
+                        "It was written by a newer version of TazUO, so it was left untouched. Default settings are in use for this session and will not be saved over it."
+                    );
+
+                default:
+                    return corruptFile.BackupPath != null
+                        ? TazLang.Get("corruptconfig_defaults_backedup", [corruptFile.BackupPath])
+                        : TazLang.Get("corruptconfig_defaults", "Default settings were used, and no backup could be saved.");
+            }
         }
 
         /// <summary>Prints and clears any queued in-world user notifications. Main thread only.</summary>

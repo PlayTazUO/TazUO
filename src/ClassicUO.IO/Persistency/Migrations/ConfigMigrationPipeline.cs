@@ -26,9 +26,9 @@ public sealed class ConfigMigrationPipeline<TDocument>
     ///     A result whose <see cref="ConfigMigrationResult.Changed" /> also covers a
     ///     preprocess-only repair, so text already at the latest version still gets its fix persisted.
     /// </returns>
-    /// <exception cref="ConfigMigrationException">
-    ///     Parsing failed, a migration failed, or the document was written by a newer client.
-    /// </exception>
+    /// <exception cref="ConfigDocumentMalformedException">Parsing failed.</exception>
+    /// <exception cref="ConfigVersionAheadException">The document was written by a newer build.</exception>
+    /// <exception cref="ConfigMigrationException">A migration failed.</exception>
     public ConfigMigrationResult Migrate(string text)
     {
         // Preprocess - usually a no-op but can be used to handle stuff like repairing broken escapes

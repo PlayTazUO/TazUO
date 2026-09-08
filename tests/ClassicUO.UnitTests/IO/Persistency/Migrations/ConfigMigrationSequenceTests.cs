@@ -92,7 +92,12 @@ public class ConfigMigrationSequenceTests
         var sequence = new ConfigMigrationSequence<TestDocument>([new RecordingMigration(1)]);
         var document = new TestDocument();
 
-        Assert.Throws<ConfigMigrationException>(() => sequence.Apply(document, 5));
+        // Its own type, not a plain migration failure: the document is intact and the caller has to
+        // read that apart to know it must not be replaced.
+        ConfigVersionAheadException ex = Assert.Throws<ConfigVersionAheadException>(() => sequence.Apply(document, 5));
+
+        Assert.Equal(5, ex.DocumentVersion);
+        Assert.Equal(1, ex.LatestKnownVersion);
     }
 
     [Fact]

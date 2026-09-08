@@ -26,6 +26,13 @@ public class JsonSaveMigrationTests : IDisposable
 {
     private readonly string _directory = Path.Combine(Path.GetTempPath(), $"json-save-migration-tests-{Guid.NewGuid():N}");
 
+    /// <summary>A well-formed file at a version no migration in the test's sequence can reach.</summary>
+    private const string FromTheFuture = """{"salutation":"from the future","schema_version":9999}""";
+
+    /// <summary>A well-formed file at a version this build migrates from, holding content that makes
+    /// the migration throw - valid JSON, bad data.</summary>
+    private const string DefeatsTheMigration = $$"""{"greeting":"{{RenameGreetingMigration.FailOn}}"}""";
+
     [Fact]
     public void An_Unversioned_File_Is_Migrated_Before_It_Binds()
     {
@@ -79,17 +86,79 @@ public class JsonSaveMigrationTests : IDisposable
     }
 
     [Fact]
-    public void A_Shape_This_Build_Cannot_Migrate_Starts_Clean_Without_Consulting_The_Backups()
+    public void A_File_From_A_Newer_Build_Starts_Clean_Without_Consulting_The_Backups()
     {
-        Write("""{"salutation":"from the future","schema_version":9999}""");
+        Write(FromTheFuture);
         Directory.CreateDirectory(Path.GetDirectoryName(BackupPath(1))!);
         File.WriteAllText(BackupPath(1), """{"salutation":"an older run","schema_version":1}""");
 
         MigratingSave loaded = MigratingSave.LoadFromPath(FilePath);
 
-        // The backups hold older shapes of the same file, so none can answer what the newest could not.
+        // Readable though this backup is, it holds a staler copy of settings that equally cannot be
+        // saved, so reading it would only hide that the real file is sitting untouched on disk.
         loaded.Salutation.Should().BeNull();
-        SoleCorruptBackup().Should().Contain("from the future");
+    }
+
+    [Fact]
+    public void A_File_From_A_Newer_Build_Is_Left_Exactly_As_It_Is()
+    {
+        Write(FromTheFuture);
+
+        MigratingSave.LoadFromPath(FilePath);
+
+        // The file is valid, just ahead of this build - resetting it would destroy settings the build
+        // that wrote it still reads, so nothing is written, rotated, or copied aside.
+        File.ReadAllText(FilePath).Should().Be(FromTheFuture);
+        File.Exists(BackupPath(1)).Should().BeFalse();
+        Directory.Exists(Path.Combine(_directory, CorruptFileManager.BackupDirectoryName)).Should().BeFalse();
+
+        Reported().Should().ContainSingle()
+            .Which.Fallback.Should().Be(CorruptConfigFallback.Preserved);
+    }
+
+    [Fact]
+    public void A_Document_That_Defeats_A_Migration_Is_Answered_From_The_Backups()
+    {
+        Write(DefeatsTheMigration);
+        Directory.CreateDirectory(Path.GetDirectoryName(BackupPath(1))!);
+        File.WriteAllText(BackupPath(1), """{"salutation":"an older run","schema_version":1}""");
+
+        MigratingSave loaded = MigratingSave.LoadFromPath(FilePath);
+
+        // A version this build starts from and a migration that still failed points at the content, not
+        // at the build - so the file is damaged like any other, and an older copy is worth trying.
+        loaded.Salutation.Should().Be("an older run");
+        Reported().Should().ContainSingle()
+            .Which.Fallback.Should().Be(CorruptConfigFallback.Backup);
+    }
+
+    [Fact]
+    public void A_Document_That_Defeats_A_Migration_Does_Not_Suppress_Saves()
+    {
+        Write(DefeatsTheMigration);
+
+        MigratingSave loaded = MigratingSave.LoadFromPath(FilePath);
+        loaded.Salutation = "set by hand";
+        loaded.Save();
+
+        // Suppression is for a file worth keeping. Applied here it would wedge a damaged config at
+        // defaults for good, with no way to put it right from the UI.
+        MigratingSave.LoadFromPath(FilePath).Salutation.Should().Be("set by hand");
+    }
+
+    [Fact]
+    public void Saves_Are_Suppressed_For_A_File_From_A_Newer_Build()
+    {
+        Write(FromTheFuture);
+
+        MigratingSave loaded = MigratingSave.LoadFromPath(FilePath);
+        loaded.Salutation = "this session's defaults";
+        loaded.Save();
+
+        // Suppression outlives the load: a save later in the session would destroy the file just as
+        // surely as persisting the defaults at load time would have.
+        File.ReadAllText(FilePath).Should().Be(FromTheFuture);
+        File.Exists(BackupPath(1)).Should().BeFalse();
     }
 
     [Fact]
@@ -147,14 +216,6 @@ public class JsonSaveMigrationTests : IDisposable
     private List<CorruptConfigFile> Reported() =>
         CorruptFileManager.Files.Where(file => file.Path == FilePath).ToList();
 
-    /// <summary>The single copy the corrupt-file backups hold for this test's file.</summary>
-    private string SoleCorruptBackup()
-    {
-        string directory = Path.Combine(_directory, CorruptFileManager.BackupDirectoryName);
-
-        return File.ReadAllText(Directory.GetFiles(directory).Should().ContainSingle().Subject);
-    }
-
     private string FilePath => Path.Combine(_directory, MigratingSave.TestFileName);
 
     private string BackupPath(int index) =>
@@ -184,15 +245,25 @@ public class JsonSaveMigrationTests : IDisposable
     }
 }
 
-/// <summary>Renames <c>greeting</c> to <c>salutation</c> - enough of a shape change to observe.</summary>
+/// <summary>
+/// Renames <c>greeting</c> to <c>salutation</c> - enough of a shape change to observe. Throws on the
+/// one value <see cref="FailOn"/> names, so a migration defeated by a document's content can be
+/// exercised without a second save type.
+/// </summary>
 internal sealed class RenameGreetingMigration : IConfigMigration<JsonObject>
 {
+    /// <summary>The greeting this migration cannot handle.</summary>
+    public const string FailOn = "boom";
+
     public int Version => 1;
 
     public void Up(JsonObject document)
     {
         if (!document.Remove("greeting", out JsonNode value))
             return;
+
+        if (value is JsonValue greeting && greeting.TryGetValue(out string text) && text == FailOn)
+            throw new InvalidOperationException($"Cannot migrate the greeting '{FailOn}'.");
 
         document["salutation"] = value;
     }

@@ -29,7 +29,9 @@ namespace ClassicUO.Configuration
     /// <see cref="MAX_BACKUPS"/> rotating backups in a <c>backups</c> sub-folder.</description></item>
     /// <item><description><see cref="Load"/> - loads the file, falling back through the backups on failure and
     /// finally creating (and persisting) a fresh copy if nothing can be read. An unreadable main file is
-    /// copied aside and reported through <see cref="CorruptFileManager"/>.</description></item>
+    /// copied aside and reported through <see cref="CorruptFileManager"/>. The one exception is a file
+    /// written by a newer build, which is left alone and never written to by the instance standing in for
+    /// it.</description></item>
     /// <item><description><see cref="MigrationPipeline"/> - optional. Brings an older persisted shape up to
     /// the current one before it binds, and writes the result back.</description></item>
     /// </list>
@@ -44,11 +46,7 @@ namespace ClassicUO.Configuration
         /// <summary>Raised when a property set through <see cref="SetProperty{TFieldType}"/> changes.</summary>
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        /// <summary>
-        /// How many rotating copies are kept. Deep on purpose: a shape this build cannot migrate is
-        /// answered with fresh defaults without consulting them, so the depth is what a client rolled
-        /// back to an older build has to reach past to find a version it can still read.
-        /// </summary>
+        /// <summary>How many rotating copies of the file are kept beside it.</summary>
         private const int MAX_BACKUPS = 5;
 
         /// <summary>The scope that determines which folder this file is saved in.</summary>
@@ -88,9 +86,17 @@ namespace ClassicUO.Configuration
         protected string? SourcePath { get; private set; }
 
         /// <summary>
+        /// Set on an instance that stands in for a file it must not write over - see
+        /// <see cref="NewLeavingFileIntact"/>. Holds for the instance's whole life: the file stays
+        /// unreadable to this build no matter how much later the save comes.
+        /// </summary>
+        private bool _savesSuppressed;
+
+        /// <summary>
         /// Loads the save for type <typeparamref name="T"/> from <see cref="FilePath"/>. If the main file is
         /// missing or unreadable the backups are tried in order; if they all fail a fresh instance is created
-        /// and written to disk so a valid file always exists afterwards.
+        /// and written to disk so a valid file always exists afterwards. A file written by a newer build is
+        /// the exception - see <see cref="MigrationPipeline"/>.
         /// </summary>
         public static T Load() => LoadInternal(new T().FilePath, pinSource: false);
 
@@ -104,6 +110,10 @@ namespace ClassicUO.Configuration
         /// <summary>
         /// Saves this instance atomically, rotating the previous version into the backups folder. Writes
         /// to <see cref="SourcePath"/> where one was bound, and to <see cref="FilePath"/> otherwise.
+        /// <para>
+        /// A no-op on an instance that stands in for a file written by a newer build: those defaults are
+        /// not what the file holds, and writing them would destroy it.
+        /// </para>
         /// </summary>
         public virtual void Save() => SaveTo(SourcePath ?? FilePath);
 
@@ -152,30 +162,31 @@ namespace ClassicUO.Configuration
             if (loaded != null)
                 return loaded;
 
+            // The one outcome that says the file is intact rather than damaged, and so the one worth
+            // more than anything that could replace it. A backup would be a staler copy of the same
+            // settings that equally cannot be saved, so nothing is gained by reading one.
+            if (outcome == LoadOutcome.AheadOfThisBuild)
+                return NewLeavingFileIntact(filePath);
+
             // Copied now, before the fallbacks write over it, but reported only once the outcome is
             // known: what the user needs to hear differs between recovered settings and fresh defaults.
             bool hadMainFile = File.Exists(filePath);
             string? corruptCopy = hadMainFile ? CorruptFileManager.Backup(filePath) : null;
 
-            // A shape this build cannot migrate is not worth chasing through the backups: they hold
-            // older shapes of the same file, so none of them can answer what the newest one could not.
-            if (outcome != LoadOutcome.Unmigratable)
+            // Fall back through the rotating backups, newest first.
+            for (int i = 1; i <= MAX_BACKUPS; i++)
             {
-                // Fall back through the rotating backups, newest first.
-                for (int i = 1; i <= MAX_BACKUPS; i++)
-                {
-                    TryLoad(GetBackupPath(filePath, i), persistMigration: false, out loaded);
+                TryLoad(GetBackupPath(filePath, i), persistMigration: false, out loaded);
 
-                    if (loaded == null)
-                        continue;
+                if (loaded == null)
+                    continue;
 
-                    Log.Warn($"Recovered JSON save '{filePath}' from backup {i}.");
+                Log.Warn($"Recovered JSON save '{filePath}' from backup {i}.");
 
-                    if (hadMainFile)
-                        CorruptFileManager.Report(filePath, corruptCopy, CorruptConfigFallback.Backup);
+                if (hadMainFile)
+                    CorruptFileManager.Report(filePath, corruptCopy, CorruptConfigFallback.Backup);
 
-                    return loaded;
-                }
+                return loaded;
             }
 
             // Nothing usable on disk - start fresh and persist it (already holding the lock).
@@ -191,12 +202,37 @@ namespace ClassicUO.Configuration
         }
 
         /// <summary>
+        /// Answers a file written by a newer build with defaults that will never be written back over it.
+        /// <para>
+        /// Nothing is copied aside: the file is undamaged, and it is the only copy of settings the build
+        /// that wrote it still reads. Persisting defaults here would destroy them, and so would any save
+        /// later in the session - hence the suppression rather than a one-off skip.
+        /// </para>
+        /// </summary>
+        /// <param name="filePath">The file being left as it is.</param>
+        /// <returns>A default instance whose saves are suppressed.</returns>
+        private static T NewLeavingFileIntact(string filePath)
+        {
+            Log.Error($"JSON save '{filePath}' was written by a newer build; leaving it as it is and running on defaults.");
+            CorruptFileManager.Report(filePath, backupPath: null, CorruptConfigFallback.Preserved);
+
+            var fresh = new T { _savesSuppressed = true };
+            return fresh;
+        }
+
+        /// <summary>
         /// Serializes and writes this instance, swallowing any failure. Assumes the caller already holds
         /// the file lock.
         /// </summary>
         /// <param name="filePath">The file to write.</param>
         private void SaveCore(string filePath)
         {
+            if (_savesSuppressed)
+            {
+                Log.Trace($"Skipping save of '{filePath}': the file on disk is newer than this build can read.");
+                return;
+            }
+
             try
             {
                 WriteJson(filePath, JsonSerializer.Serialize((T)this, TypeInfo));
@@ -310,10 +346,18 @@ namespace ClassicUO.Configuration
                     Log.Warn($"Failed to parse JSON save '{path}': {e.Message}");
                     return LoadOutcome.Unreadable;
                 }
+                catch (ConfigVersionAheadException e)
+                {
+                    Log.Error($"JSON save '{path}' was written by a newer build - {e.Message}");
+                    return LoadOutcome.AheadOfThisBuild;
+                }
                 catch (ConfigMigrationException e)
                 {
+                    // The document parsed and its version was one this build starts from, so a migration
+                    // failing over it points at the content, not at the build. Damaged like any other
+                    // unreadable file, and answered the same way.
                     Log.Error($"Cannot migrate JSON save '{path}' to the current shape - {e}");
-                    return LoadOutcome.Unmigratable;
+                    return LoadOutcome.Unreadable;
                 }
 
                 jsonText = migration.Text;
@@ -465,11 +509,17 @@ namespace ClassicUO.Configuration
             /// <summary>An instance was produced.</summary>
             Loaded,
 
-            /// <summary>Missing, unreadable, or not bindable text. Another copy may still be good.</summary>
+            /// <summary>
+            /// Missing text, unreadable text, text that defeated a migration, or text that did not bind.
+            /// Damaged either way, so another copy may still be good and this one may be replaced.
+            /// </summary>
             Unreadable,
 
-            /// <summary>Readable, but its shape cannot be brought to the current one. No older copy helps.</summary>
-            Unmigratable
+            /// <summary>
+            /// Intact, but at a version above the highest this build knows. Not damaged and not to be
+            /// replaced - see <see cref="NewLeavingFileIntact"/>.
+            /// </summary>
+            AheadOfThisBuild
         }
 
         private sealed class CrossProcessLock : IDisposable

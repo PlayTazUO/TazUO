@@ -17,6 +17,9 @@ public class ScreenDecorationsPersistenceTests : IDisposable
 {
     private readonly string _profileDirectory = Path.Combine(Path.GetTempPath(), $"screen-decorations-tests-{Guid.NewGuid():N}");
 
+    /// <summary>A well-formed config at a version this build has no migration path to.</summary>
+    private const string FromTheFuture = """{"enabled": true, "schema_version": 9999}""";
+
     public ScreenDecorationsPersistenceTests() => DrainCorruptReports();
 
     [Fact]
@@ -63,16 +66,28 @@ public class ScreenDecorationsPersistenceTests : IDisposable
     }
 
     [Fact]
-    public void LoadForProfile_Of_A_File_From_A_Newer_Client_Backs_It_Up_And_Starts_Clean()
+    public void LoadForProfile_Of_A_File_From_A_Newer_Client_Starts_Clean_And_Leaves_It_Alone()
     {
-        const string fromTheFuture = """{"enabled": true, "schema_version": 9999}""";
-        string path = WriteConfig(fromTheFuture);
+        string path = WriteConfig(FromTheFuture);
 
         ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
 
-        // Starting clean is fine; the fresh copy overwrites the file, so the original has to survive.
+        // The newer client's settings are intact and still its own; this one just runs on defaults.
         loaded.Enabled.Should().BeFalse();
-        SoleCorruptBackup().Should().Be(fromTheFuture);
+        File.ReadAllText(path).Should().Be(FromTheFuture);
+        File.Exists(BackupPath(1)).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Settings_Standing_In_For_A_Newer_Client_File_Never_Save_Over_It()
+    {
+        string path = WriteConfig(FromTheFuture);
+
+        ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
+        loaded.Enabled = true;
+        loaded.Save();
+
+        File.ReadAllText(path).Should().Be(FromTheFuture);
     }
 
     [Fact]
@@ -93,13 +108,29 @@ public class ScreenDecorationsPersistenceTests : IDisposable
     [Fact]
     public void LoadForProfile_Reports_A_File_It_Could_Not_Use_So_The_User_Is_Told()
     {
-        string path = WriteConfig("""{"enabled": true, "schema_version": 9999}""");
+        const string unreadable = "{ this is not json";
+        string path = WriteConfig(unreadable);
 
         ScreenDecorations.LoadForProfile(_profileDirectory);
 
         CorruptFileManager.Files.TryDequeue(out CorruptConfigFile reported).Should().BeTrue();
         reported.Path.Should().Be(path);
-        File.ReadAllText(reported.BackupPath!).Should().Be("""{"enabled": true, "schema_version": 9999}""");
+        reported.Fallback.Should().Be(CorruptConfigFallback.Defaults);
+        File.ReadAllText(reported.BackupPath!).Should().Be(unreadable);
+    }
+
+    [Fact]
+    public void LoadForProfile_Reports_A_Newer_Client_File_As_Left_Alone()
+    {
+        string path = WriteConfig(FromTheFuture);
+
+        ScreenDecorations.LoadForProfile(_profileDirectory);
+
+        // No copy is named, because none was taken - the file the notice points at is still the file.
+        CorruptFileManager.Files.TryDequeue(out CorruptConfigFile reported).Should().BeTrue();
+        reported.Path.Should().Be(path);
+        reported.Fallback.Should().Be(CorruptConfigFallback.Preserved);
+        reported.BackupPath.Should().BeNull();
     }
 
     [Fact]

@@ -9,7 +9,13 @@ public enum CorruptConfigFallback
     Defaults,
 
     /// <summary>An older copy of the same file loaded in its place, so the settings survived.</summary>
-    Backup
+    Backup,
+
+    /// <summary>
+    ///     Nothing was read and nothing was written: the file was written by a newer build, so it was
+    ///     left for that build to read again. Defaults answer for the session, and are not saved over it.
+    /// </summary>
+    Preserved
 }
 
 /// <summary>
