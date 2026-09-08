@@ -59,6 +59,8 @@ public static class AtomicFile
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             Directory.CreateDirectory(directory);
 
+        // Unique so concurrent writers can't clobber each other's bytes. Costs a leaked temp file if the
+        // process dies before Publish; nothing sweeps them.
         string stagedPath = Path.Combine(directory ?? string.Empty, $"{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
 
         try

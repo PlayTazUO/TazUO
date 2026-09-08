@@ -266,9 +266,8 @@ public sealed class BuffTriggerPicker : VerticalStackPanel
     }
 
     /// <summary>
-    ///     Cuts the watched set down to the one buff <see cref="BuffTriggerMode.Active" /> brackets, and
-    ///     to exactly one: the single picker has no way to show "nothing chosen", so an empty set would
-    ///     read as buff zero while the trigger matched nothing at all.
+    ///     Cuts the watched set down to the one buff <see cref="BuffTriggerMode.Active" /> brackets. An
+    ///     empty set stays empty: the single picker shows zero at rest, and that is not a choice.
     /// </summary>
     private void NormalizeToSingleBuff()
     {
@@ -277,10 +276,10 @@ public sealed class BuffTriggerPicker : VerticalStackPanel
 
         List<short> stored = _properties.BuffTypes.GetValue(_owner) as List<short> ?? [];
 
-        if (stored.Count == 1)
+        if (stored.Count <= 1)
             return;
 
-        _properties.BuffTypes.SetValue(_owner, new List<short> { stored.Count > 0 ? stored[0] : (short)0 });
+        _properties.BuffTypes.SetValue(_owner, new List<short> { stored[0] });
     }
 
     #endregion

@@ -271,9 +271,10 @@ stacking layers cannot fix anything the shape mask does wrong.
   localized attributes otherwise fail silently by showing their English fallback.
 - All JSON needs `ScreenDecorationsJsonContext` entries. It sets `IncludeFields = true` because the
   spec structs use public fields.
-- Any change to a persisted shape needs a migration in `ScreenDecorationsMigrations` and a
-  `SchemaVersion` bump. Migrations run on the raw JSON document, never on live model types - a
-  migration referencing e.g. `LayerEffect` breaks the day that type changes shape again.
+- Any change to a persisted shape needs a migration in `ScreenDecorationsMigrations`; the version
+  follows from the list and is stamped on save. Migrations run on the raw JSON document, never on
+  live model types - a migration referencing e.g. `LayerEffect` breaks the day that type changes
+  shape again.
   `JsonSave<T>.MigrationPipeline` runs them; a shape it cannot migrate starts clean rather than
   falling back through the rotating backups, which only hold older shapes of the same file.
 - Visual verification needs a real client with UO data; an agent cannot run it. Ask the user.

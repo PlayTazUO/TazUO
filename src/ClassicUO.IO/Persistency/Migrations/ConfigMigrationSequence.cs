@@ -18,29 +18,29 @@ public sealed class ConfigMigrationSequence<TDocument>
     /// <summary>The highest version this build can produce. Zero when no migration is registered.</summary>
     public int LatestVersion { get; }
 
-    /// <param name="migrations">Every migration this config has, in strictly ascending version
-    /// order. Order is the contract and is validated here rather than assumed.</param>
-    /// <exception cref="ArgumentException">
-    /// A version below 1, a duplicate version, or a version out of ascending order.
-    /// </exception>
+    /// <param name="migrations">Every migration this config has, in any order - sorted by version here.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="migrations"/> is null.</exception>
+    /// <exception cref="ArgumentException">A version below 1, or two migrations claiming one version.</exception>
     public ConfigMigrationSequence(IReadOnlyList<IConfigMigration<TDocument>> migrations)
     {
+        ArgumentNullException.ThrowIfNull(migrations);
+
+        // Copied, so a caller holding the original list cannot reorder what Apply walks.
+        _migrations = migrations.OrderBy(migration => migration.Version).ToArray();
+
         int previous = 0;
 
-        foreach (IConfigMigration<TDocument> migration in migrations)
+        foreach (IConfigMigration<TDocument> migration in _migrations)
         {
             if (migration.Version < 1)
                 throw new ArgumentException($"Migration version must be >= 1, got {migration.Version}.", nameof(migrations));
 
-            if (migration.Version <= previous)
-                throw new ArgumentException($"Migration versions must be strictly ascending and unique; {migration.Version} follows {previous}.", nameof(migrations));
+            if (migration.Version == previous)
+                throw new ArgumentException($"Two migrations claim version {migration.Version}.", nameof(migrations));
 
             previous = migration.Version;
         }
 
-        // Copied: the ordering above is the contract Apply relies on, and a caller holding the original
-        // list could otherwise reorder it afterwards.
-        _migrations = migrations.ToArray();
         LatestVersion = _migrations.Count == 0 ? 0 : _migrations[^1].Version;
     }
 

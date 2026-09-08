@@ -20,12 +20,33 @@ public class ConfigMigrationSequenceTests
     }
 
     [Fact]
-    public void Ctor_Throws_For_Descending_Order()
+    public void Ctor_Sorts_Migrations_Given_Out_Of_Order()
+    {
+        var migrations = new List<IConfigMigration<TestDocument>>
+        {
+            new RecordingMigration(3),
+            new RecordingMigration(1),
+            new RecordingMigration(2)
+        };
+
+        var sequence = new ConfigMigrationSequence<TestDocument>(migrations);
+        var document = new TestDocument();
+
+        Assert.Equal(3, sequence.LatestVersion);
+
+        sequence.Apply(document, 0);
+
+        Assert.Equal(["v1", "v2", "v3"], document.Applied);
+    }
+
+    [Fact]
+    public void Ctor_Throws_For_Duplicate_Versions_Given_Out_Of_Order()
     {
         var migrations = new List<IConfigMigration<TestDocument>>
         {
             new RecordingMigration(2),
-            new RecordingMigration(1)
+            new RecordingMigration(1),
+            new RecordingMigration(2)
         };
 
         Assert.Throws<ArgumentException>(() => new ConfigMigrationSequence<TestDocument>(migrations));

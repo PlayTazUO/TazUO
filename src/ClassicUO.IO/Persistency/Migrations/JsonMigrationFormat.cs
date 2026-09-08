@@ -18,8 +18,7 @@ public class JsonMigrationFormat : IMigrationFormat<JsonObject>
     ///     through the naming policy and converters the typed bind uses.
     /// </param>
     /// <param name="versionPropertyName">
-    ///     Defaults to <c>schema_version</c> - what snake-case renders
-    ///     a <c>SchemaVersion</c> property to.
+    ///     Defaults to <c>schema_version</c>, the snake-case form the configs are written in.
     /// </param>
     public JsonMigrationFormat(JsonSerializerOptions options, string versionPropertyName = "schema_version")
     {

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.Json.Nodes;
 using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Migrations;
@@ -48,21 +49,49 @@ public class ScreenDecorationsPersistenceTests : IDisposable
     [Fact]
     public void LoadForProfile_Reads_A_File_That_Already_Carries_SchemaVersion()
     {
-        WriteConfig($$"""{"enabled": true, "schema_version": {{ScreenDecorationsMigrations.LatestVersion}}}""");
+        string path = WriteConfig($$"""{"enabled": true, "schema_version": {{ScreenDecorationsMigrations.LatestVersion}}}""");
 
         ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
 
         loaded.Enabled.Should().BeTrue();
-        loaded.SchemaVersion.Should().Be(ScreenDecorationsMigrations.LatestVersion);
+
+        // Already current, so nothing is rewritten.
+        File.Exists(BackupPath(1)).Should().BeFalse();
+        VersionOf(path).Should().Be(ScreenDecorationsMigrations.LatestVersion);
     }
 
     [Fact]
-    public void LoadForProfile_With_No_File_Returns_Defaults_At_Latest_SchemaVersion()
+    public void Save_Stamps_The_Current_SchemaVersion_Without_The_Model_Holding_One()
+    {
+        string path = WriteConfig("""{"enabled": false}""");
+
+        ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
+        loaded.Enabled = true;
+        loaded.Save();
+
+        VersionOf(path).Should().Be(ScreenDecorationsMigrations.LatestVersion);
+    }
+
+    [Fact]
+    public void LoadForProfile_With_No_File_Returns_Defaults_And_Writes_Nothing()
     {
         ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
 
         loaded.Enabled.Should().BeFalse();
-        loaded.SchemaVersion.Should().Be(ScreenDecorationsMigrations.LatestVersion);
+        File.Exists(Path.Combine(_profileDirectory, ScreenDecorations.ConfigFileName)).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Saving_Settings_That_Had_No_File_Creates_One()
+    {
+        ScreenDecorations loaded = ScreenDecorations.LoadForProfile(_profileDirectory);
+        loaded.Enabled = true;
+        loaded.Save();
+
+        string path = Path.Combine(_profileDirectory, ScreenDecorations.ConfigFileName);
+
+        File.Exists(path).Should().BeTrue();
+        VersionOf(path).Should().Be(ScreenDecorationsMigrations.LatestVersion);
     }
 
     [Fact]
@@ -181,6 +210,9 @@ public class ScreenDecorationsPersistenceTests : IDisposable
 
         return path;
     }
+
+    private static int VersionOf(string path) =>
+        JsonNode.Parse(File.ReadAllText(path))!["schema_version"]!.GetValue<int>();
 
     private string BackupPath(int index) =>
         Path.Combine(_profileDirectory, Constants.BACKUP_FOLDER, $"{ScreenDecorations.ConfigFileName}.{index}");

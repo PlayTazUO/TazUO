@@ -41,7 +41,7 @@ public class JsonSaveMigrationTests : IDisposable
         MigratingSave loaded = MigratingSave.LoadFromPath(FilePath);
 
         loaded.Salutation.Should().Be("hi");
-        loaded.SchemaVersion.Should().Be(1);
+        VersionOf(FilePath).Should().Be(1);
     }
 
     [Fact]
@@ -221,6 +221,9 @@ public class JsonSaveMigrationTests : IDisposable
     private string BackupPath(int index) =>
         Path.Combine(_directory, Constants.BACKUP_FOLDER, $"{MigratingSave.TestFileName}.{index}");
 
+    private static int VersionOf(string path) =>
+        JsonNode.Parse(File.ReadAllText(path))!["schema_version"]!.GetValue<int>();
+
     private void Write(string json)
     {
         Directory.CreateDirectory(_directory);
@@ -279,8 +282,6 @@ internal sealed class MigratingSave : JsonSave<MigratingSave>, INotifyPropertyCh
         new ConfigMigrationSequence<JsonObject>(new List<IConfigMigration<JsonObject>> { new RenameGreetingMigration() }),
         new JsonMigrationFormat(MigratingSaveJsonContext.SerializerOptions)
     );
-
-    public int SchemaVersion { get; set; } = 1;
 
     public string Salutation { get; set; }
 

@@ -7,9 +7,9 @@ using ClassicUO.IO.Persistency.Migrations;
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Migrations;
 
 /// <summary>
-/// Every shape change <c>screen_decorations.json</c> has been through, in order. Listed by hand, not
-/// discovered: two branches claiming one version must collide here as a merge conflict, and
-/// reflection scanning does not survive trimming.
+///     Every shape change <c>screen_decorations.json</c> has been through. Listed by hand rather than
+///     discovered, because reflection scanning does not survive trimming; the sequence sorts and
+///     version-checks the list, so where an entry sits here does not matter.
 /// </summary>
 internal static class ScreenDecorationsMigrations
 {

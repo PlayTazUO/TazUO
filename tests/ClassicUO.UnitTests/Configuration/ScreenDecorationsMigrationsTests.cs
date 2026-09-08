@@ -87,7 +87,7 @@ public class ScreenDecorationsMigrationsTests
 
             ScreenDecorations loaded = ScreenDecorations.LoadForProfile(directory);
 
-            loaded.SchemaVersion.Should().Be(ScreenDecorationsMigrations.LatestVersion);
+            File.ReadAllText(path).Should().Contain($"\"schema_version\": {ScreenDecorationsMigrations.LatestVersion}");
 
             var parameters = loaded.Overlays.Rules[0].Trigger.Parameters
                 .Should().BeOfType<SoundPlayedParameters>().Subject;

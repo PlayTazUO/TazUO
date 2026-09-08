@@ -48,4 +48,19 @@ public sealed class ConfigMigrationPipeline<TDocument>
 
         return new ConfigMigrationResult(true, serialized, fromVersion, toVersion);
     }
+
+    /// <summary>
+    ///     Writes <see cref="LatestVersion" /> into already-serialized text, so the version need not be a
+    ///     field on the model.
+    /// </summary>
+    /// <param name="text">Serialized config text.</param>
+    /// <returns>The same text carrying the current version.</returns>
+    /// <exception cref="ConfigDocumentMalformedException">Parsing failed.</exception>
+    public string Stamp(string text)
+    {
+        TDocument document = _format.Parse(text);
+        _format.WriteVersion(document, LatestVersion);
+
+        return _format.Serialize(document);
+    }
 }

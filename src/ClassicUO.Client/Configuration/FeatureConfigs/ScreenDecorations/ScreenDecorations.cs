@@ -20,10 +20,6 @@ public class ScreenDecorations : JsonSave<ScreenDecorations>, INotifyPropertyCha
     /// <summary>Name of the file these settings are stored in, inside the profile folder.</summary>
     public const string ConfigFileName = "screen_decorations.json";
 
-    /// <summary>Which shape this file is in. Defaults to latest for a config built in memory; a file's
-    /// real version is read off its raw JSON before this binds.</summary>
-    public int SchemaVersion { get; set; } = ScreenDecorationsMigrations.LatestVersion;
-
     /// <summary>
     /// Master switch over both systems. Off means no overlay is scheduled, drawn or shaken for - not
     /// merely hidden. Off by default: these effects obscure the world, so they are opt-in.
@@ -55,6 +51,9 @@ public class ScreenDecorations : JsonSave<ScreenDecorations>, INotifyPropertyCha
 
     /// <inheritdoc />
     protected override ConfigMigrationPipeline<JsonObject> MigrationPipeline => ScreenDecorationsMigrations.Pipeline;
+
+    /// <inheritdoc />
+    protected override bool PersistFreshDefaults => false;
 
     private static ScreenDecorations? _current;
 
