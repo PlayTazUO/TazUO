@@ -174,7 +174,7 @@ namespace ClassicUO.Game.Managers
 
                 // Only a real mobile gets a bar: World.Clear() zeroes this on logout and character
                 // switch, which would otherwise open one for serial 0.
-                if (SerialHelper.IsMobile(value) && (ProfileManager.CurrentProfile?.OpenHealthBarForLastAttack) == true)
+                if (SerialHelper.IsMobile(value) && ProfileManager.CurrentProfile?.OpenHealthBarForLastAttack == true)
                 {
                     if (ProfileManager.CurrentProfile.UseOneHPBarForLastAttack)
                     {

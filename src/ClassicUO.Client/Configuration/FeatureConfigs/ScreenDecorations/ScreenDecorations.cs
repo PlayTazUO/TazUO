@@ -3,6 +3,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Migrations;
 using ClassicUO.IO.Persistency.Migrations;
@@ -33,9 +34,11 @@ public class ScreenDecorations : JsonSave<ScreenDecorations>, INotifyPropertyCha
     public ShakeSystemSettings Shake { get; set => SetProperty(ref field, value); } = new();
 
     /// <summary>Whether overlays should be running: both this system and the master switch.</summary>
+    [JsonIgnore]
     public bool OverlaysActive => Enabled && Overlays.Enabled;
 
     /// <summary>Whether shake should be applied: both this system and the master switch.</summary>
+    [JsonIgnore]
     public bool ShakeActive => Enabled && Shake.Enabled;
 
     #region Persistence

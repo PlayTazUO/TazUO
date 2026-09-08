@@ -461,40 +461,21 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
         string backupDir = GetBackupDirectory(filePath);
         Directory.CreateDirectory(backupDir);
 
-        // Rotate existing backups: oldest deleted, each other shifted up one (2 -> 3, 1 -> 2).
-        for (int i = MAX_BACKUPS; i > 0; i--)
+        // Shifted up one by overwriting moves (4 -> 5, then 3 -> 4, ...). The oldest slot is replaced
+        // rather than emptied first, so a move that fails has not already discarded a version.
+        for (int i = MAX_BACKUPS - 1; i > 0; i--)
         {
             string current = GetBackupPath(filePath, i);
 
-            if (i == MAX_BACKUPS)
-            {
-                if (File.Exists(current))
-                    File.Delete(current);
-            }
-            else
-            {
-                string next = GetBackupPath(filePath, i + 1);
-
-                if (File.Exists(current))
-                {
-                    if (File.Exists(next))
-                        File.Delete(next);
-
-                    File.Move(current, next);
-                }
-            }
+            if (File.Exists(current))
+                File.Move(current, GetBackupPath(filePath, i + 1), overwrite: true);
         }
 
         // Move the current main file into backup slot 1.
-        string firstBackup = GetBackupPath(filePath, 1);
-
         if (!File.Exists(filePath))
             return false;
 
-        if (File.Exists(firstBackup))
-            File.Delete(firstBackup);
-
-        File.Move(filePath, firstBackup);
+        File.Move(filePath, GetBackupPath(filePath, 1), overwrite: true);
         return true;
     }
 
@@ -533,7 +514,7 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     ///     Account/Char files can also collide when the same server/account/character is logged in from more
     ///     than one client - so every scope is protected with a named mutex keyed on the file path.
     /// </summary>
-    private IDisposable AcquireLock(string? filePath = null) => new CrossProcessLock(filePath ?? FilePath);
+    private CrossProcessLock AcquireLock(string? filePath = null) => new CrossProcessLock(filePath ?? FilePath);
 
     /// <summary>
     ///     Why one candidate file did not yield an instance, which decides whether another is worth trying.
