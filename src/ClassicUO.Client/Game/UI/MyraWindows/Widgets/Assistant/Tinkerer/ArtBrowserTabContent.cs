@@ -149,7 +149,7 @@ public static class ArtBrowserTabContent
                 _namedEntries,
                 0,
                 Math.Max(0, _maxGraphic - 1),
-                new HexInputBox()
+                new HexIntInputBox()
             )
             {
                 NumberInput =

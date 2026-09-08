@@ -189,6 +189,12 @@ public class EventSink
 
     internal static void InvokeOnOpenContainer(Item sender, uint serial) => OnOpenContainer?.Invoke(sender, serial);
 
+    /// <summary>Invoked when the client sends a double-click (use) request for an object's serial.</summary>
+    [ApiEvent]
+    internal static event EventHandler<uint> ObjectUsed;
+
+    internal static void InvokeObjectUsed(uint serial) => ObjectUsed?.Invoke(null, serial);
+
     /// <summary>
     /// Invoked when the player receives a death packet from the server
     /// </summary>

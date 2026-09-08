@@ -8,6 +8,7 @@ using ClassicUO.LegionScripting.ApiClasses;
 using FluentAssertions;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
+using ClassicUO.UnitTests.Fixtures;
 using Xunit;
 
 namespace ClassicUO.UnitTests.Game.LegionScript;

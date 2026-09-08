@@ -3636,6 +3636,12 @@ class EventSinkApiDeclaration:
         """
         pass
 
+    def ObjectUsed(self, callback: "Any") -> None:
+        """
+        Invoked when the client sends a double-click (use) request for an object's serial.
+        """
+        pass
+
     def OnPlayerDeath(self, callback: "Any") -> None:
         """
          Invoked when the player receives a death packet from the server

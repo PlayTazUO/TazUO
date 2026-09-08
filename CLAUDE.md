@@ -86,6 +86,7 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
 ### Comments/Docs
 - XMLDocs: public/internal always, with `<param>`/`<returns>`/`<exception>`. Private/protected when
   non-trivial. Inline comments welcome on non-trivial code.
+- Missing `<summary>` (or `<returns>`/`<exception>` where applicable) = undocumented, not partial.
 - Content: the why, the pitfall, the constraint. Restating the name is noise. Must stand alone.
 - Class docs: purpose + what a consumer needs to use it safely (ownership, lifetime, threading).
   Nothing else; don't restate the declaration.
@@ -319,6 +320,10 @@ dotnet build -c Debug
 ```bash
 dotnet test tests/ClassicUO.UnitTests/
 ```
+
+### Code Review
+- When CR requested, emit results like
+    [Bug#] [BugType] [FixComplexity] [ShortDesc] [File:Ln] - [Desc] | [Suggested fix]
 
 ### Documentation Generation
 The scripting API documentation is automatically generated during build via the `APIToMarkdown` project.
