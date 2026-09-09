@@ -723,6 +723,10 @@ public partial class GridContainer : ResizableGump
             PopulateMultiMoveGraphicEntries(selectByGraphic);
             multiMoveMenu.Add(selectByGraphic);
 
+            var selectByName = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbyname", "Select by name"));
+            PopulateMultiMoveNameEntries(selectByName);
+            multiMoveMenu.Add(selectByName);
+
             control.Add(multiMoveMenu);
 
             control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_renamecontainer", "Rename container"), () =>
@@ -853,6 +857,35 @@ public partial class GridContainer : ResizableGump
                 {
                     ArtGraphic = graphic
                 });
+            }
+        }
+
+        /// <summary>Adds one entry per distinct item name present in this container to <paramref name="parent"/>.</summary>
+        private void PopulateMultiMoveNameEntries(ContextMenuItemEntry parent)
+        {
+            // GenContextMenu is first built in BuildTopBar, before SlotManager exists.
+            if (SlotManager == null)
+                return;
+
+            var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (GridItem gridItem in SlotManager.GridSlots.Values)
+            {
+                Item item = gridItem.SlotItem;
+                if (item == null)
+                    continue;
+
+                string name = item.GetNormalizedName(false);
+                if (string.IsNullOrEmpty(name))
+                    continue;
+
+                if (!names.ContainsKey(name))
+                    names[name] = name;
+            }
+
+            foreach (string name in names.Values.OrderBy(n => n))
+            {
+                parent.Add(new ContextMenuItemEntry(name, () => SelectItemsForMultiMove(item => string.Equals(name, item.GetNormalizedName(false), StringComparison.OrdinalIgnoreCase))));
             }
         }
 
