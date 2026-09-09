@@ -1,7 +1,7 @@
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
-using ClassicUO.UnitTests.Game.LegionScript;
+using ClassicUO.UnitTests.Fixtures;
 using Microsoft.Xna.Framework;
 using Xunit;
 
@@ -23,12 +23,14 @@ public class UIManagerMouseOverTests
 
     private static HoverCounterControl CreateHoverable()
     {
-        HoverCounterControl c = new();
-        c.IsEnabled = true;
-        c.X = 0;
-        c.Y = 0;
-        c.Width = 100;
-        c.Height = 100;
+        HoverCounterControl c = new()
+        {
+            IsEnabled = true,
+            X = 0,
+            Y = 0,
+            Width = 100,
+            Height = 100
+        };
         return c;
     }
 

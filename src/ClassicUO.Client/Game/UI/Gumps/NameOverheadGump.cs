@@ -984,7 +984,7 @@ namespace ClassicUO.Game.UI.Gumps
                     bool isInParty = World.Party.Contains(m.Serial);
                     bool showAllResources = isPlayer || isInParty;
                     int barCount = showAllResources ? 3 : 1;
-                    float _alpha = ProfileManager.CurrentProfile.NamePlateHealthBarOpacity / 100f;
+                    float _alpha = GetNamePlateResourceOpacity();
 
                     double hpPercent = GetResourcePercent(m.Hits, m.HitsMax);
                     Color fillColor = GetHealthFillColor(m, hpPercent);
@@ -1028,7 +1028,9 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             Mobile textMobile = _isMobile ? World.Mobiles.Get(LocalSerial) : null;
-            Color textColor = GetContrastingTextColor(GetTextSurfaceColor(nameplateEntity, textMobile));
+            Color textColor = ProfileManager.CurrentProfile.NamePlateUseNotorietyText
+                ? TextBox.ConvertHueToColor(textMobile != null ? Notoriety.GetHue(textMobile.NotorietyFlag) : 0x0481)
+                : GetContrastingTextColor(GetTextSurfaceColor(nameplateEntity, textMobile));
             int textX = (int)(nameBounds.X + 2 + _textDrawOffset.X);
             int textDrawY = (int)(textY + 2 + _textDrawOffset.Y);
 
@@ -1073,7 +1075,12 @@ namespace ClassicUO.Game.UI.Gumps
             float borderAlpha = profile.NamePlateBorderOpacity / 100f;
             Vector3 borderHue = ShaderHueTranslator.GetHueVector(0, false, borderAlpha);
 
-            DrawRoundedRectangle(batcher, _borderColor, bounds, borderHue, radius);
+            // In the combined layout the resource bars supply their own outlines.
+            // Exclude them here so border opacity isn't applied twice to shared edges.
+            Rectangle resourceBounds = !_useSplitLayout && entity is Mobile && profile.NamePlateHealthBar
+                ? new Rectangle(GetCenteredX(X, _healthBarWidth), Y, _healthBarWidth, Height)
+                : Rectangle.Empty;
+            DrawRoundedRectangleBorder(batcher, _borderColor, bounds, borderHue, radius, resourceBounds);
 
             Rectangle innerBounds = new Rectangle(bounds.X + 1, bounds.Y + 1, Math.Max(0, bounds.Width - 2), Math.Max(0, bounds.Height - 2));
 
@@ -1084,12 +1091,15 @@ namespace ClassicUO.Game.UI.Gumps
 
             Texture2D backgroundTexture;
             Vector3 backgroundHue;
-            float backgroundAlpha = profile.NamePlateOpacity / 100f;
+            // In the combined layout the health bar occupies the nameplate's
+            // background. Scale that backing by the health-bar opacity so a
+            // zero-opacity bar does not leave the nameplate surface visible.
+            float backgroundAlpha = GetNamePlateBackgroundOpacity(entity);
 
-            if (profile.NamePlateBackgroundMode == NamePlateBackgroundMode.NotorietyColor && entity is Mobile mobile)
+            if (TryGetBackgroundHue(entity, out ushort hue))
             {
                 backgroundTexture = SolidColorTextureCache.GetTexture(Color.Black);
-                backgroundHue = ShaderHueTranslator.GetHueVector(GetNamePlateNotorietyHue(mobile), false, backgroundAlpha);
+                backgroundHue = ShaderHueTranslator.GetHueVector(hue, false, backgroundAlpha);
             }
             else
             {
@@ -1103,27 +1113,73 @@ namespace ClassicUO.Game.UI.Gumps
         private Color GetTextSurfaceColor(Entity entity, Mobile mobile)
         {
             Profile profile = ProfileManager.CurrentProfile;
+            Color background = ApplyAlphaOverBlack(GetNamePlateBackgroundColor(entity), GetNamePlateBackgroundOpacity(entity));
 
             if (!_useSplitLayout && mobile != null && ProfileManager.CurrentProfile.NamePlateHealthBar)
             {
                 double hpPercent = GetResourcePercent(mobile.Hits, mobile.HitsMax);
-                Color surface = hpPercent >= 0.5d ? GetHealthFillColor(mobile, hpPercent) : MissingHealthBackgroundColor;
-                return ApplyAlphaOverBlack(surface, profile.NamePlateHealthBarOpacity / 100f);
+                if (hpPercent >= 0.5d || profile.NamePlateShowMissingHealth)
+                {
+                    Color surface = hpPercent >= 0.5d ? GetHealthFillColor(mobile, hpPercent) : MissingHealthBackgroundColor;
+                    return Color.Lerp(background, surface, Math.Clamp(profile.NamePlateHealthBarOpacity / 100f, 0f, 1f));
+                }
             }
 
-            return ApplyAlphaOverBlack(GetNamePlateBackgroundColor(entity), profile.NamePlateOpacity / 100f);
+            return background;
+        }
+
+        private float GetNamePlateBackgroundOpacity(Entity entity)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+            float backgroundOpacity = Math.Clamp(profile.NamePlateOpacity / 100f, 0f, 1f);
+
+            if (!_useSplitLayout && entity is Mobile && profile.NamePlateHealthBar)
+            {
+                return backgroundOpacity * Math.Clamp(profile.NamePlateHealthBarOpacity / 100f, 0f, 1f);
+            }
+
+            return backgroundOpacity;
+        }
+
+        private float GetNamePlateResourceOpacity()
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+            float healthBarOpacity = Math.Clamp(profile.NamePlateHealthBarOpacity / 100f, 0f, 1f);
+
+            if (!_useSplitLayout)
+            {
+                healthBarOpacity *= Math.Clamp(profile.NamePlateOpacity / 100f, 0f, 1f);
+            }
+
+            return healthBarOpacity;
         }
 
         private Color GetNamePlateBackgroundColor(Entity entity)
         {
             Profile profile = ProfileManager.CurrentProfile;
 
-            if (profile.NamePlateBackgroundMode == NamePlateBackgroundMode.NotorietyColor && entity is Mobile mobile)
+            if (TryGetBackgroundHue(entity, out ushort hue))
             {
-                return TextBox.ConvertHueToColor(GetNamePlateNotorietyHue(mobile));
+                return TextBox.ConvertHueToColor(hue);
             }
 
             return new Color(profile.NamePlateBackgroundR, profile.NamePlateBackgroundG, profile.NamePlateBackgroundB);
+        }
+
+        private bool TryGetBackgroundHue(Entity entity, out ushort hue)
+        {
+            switch (ProfileManager.CurrentProfile.NamePlateBackgroundMode)
+            {
+                case NamePlateBackgroundMode.EntityNotorietyColor:
+                    hue = Notoriety.GetHue(entity is Mobile entityMobile ? entityMobile.NotorietyFlag : NotorietyFlag.Gray);
+                    return true;
+                case NamePlateBackgroundMode.NotorietyColor when entity is Mobile mobile:
+                    hue = GetNamePlateNotorietyHue(mobile);
+                    return true;
+                default:
+                    hue = 0;
+                    return false;
+            }
         }
 
         private Color GetHealthFillColor(Mobile mobile, double hpPercent)
@@ -1310,21 +1366,29 @@ namespace ClassicUO.Game.UI.Gumps
             int radius = GetCornerRadius(bounds.Width, bounds.Height);
             percent = double.IsNaN(percent) || double.IsInfinity(percent) ? 0 : Math.Clamp(percent, 0, 1);
 
-            DrawRoundedRectangle(batcher, _borderColor, bounds, ShaderHueTranslator.GetHueVector(0), radius);
+            DrawRoundedRectangleBorder(batcher, _borderColor, bounds,
+                ShaderHueTranslator.GetHueVector(0, false, ProfileManager.CurrentProfile.NamePlateBorderOpacity / 100f), radius);
 
             Rectangle fillBounds = new Rectangle(bounds.X + 1, bounds.Y + 1, Math.Max(0, bounds.Width - 2), Math.Max(0, bounds.Height - 2));
 
             if (fillBounds.Width > 0 && fillBounds.Height > 0)
             {
-                DrawRoundedRectangle(
+                int fillWidth = Math.Min(fillBounds.Width, (int)Math.Round(fillBounds.Width * percent));
+
+                // Filled and missing resources occupy disjoint pixels. Painting the missing
+                // portion under the fill would make a 50% bar more opaque than requested.
+                if (ProfileManager.CurrentProfile.NamePlateShowMissingHealth)
+                {
+                    DrawRoundedRectangleClipped(
                         batcher,
                         SolidColorTextureCache.GetTexture(MissingHealthBackgroundColor),
                         fillBounds,
                         ShaderHueTranslator.GetHueVector(0, false, alpha),
-                        Math.Max(0, radius - 1)
+                        Math.Max(0, radius - 1),
+                        fillBounds.Width,
+                        fillWidth
                     );
-
-                int fillWidth = Math.Min(fillBounds.Width, (int)Math.Round(fillBounds.Width * percent));
+                }
 
                 if (fillWidth > 0)
                 {
@@ -1373,7 +1437,90 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        private static void DrawRoundedRectangleClipped(UltimaBatcher2D batcher, Texture2D texture, Rectangle bounds, Vector3 hueVector, int radius, int clipWidth)
+        private static void DrawRoundedRectangleBorder(UltimaBatcher2D batcher, Texture2D texture, Rectangle bounds, Vector3 hueVector, int radius, Rectangle excludedBounds = default)
+        {
+            if (bounds.Width <= 0 || bounds.Height <= 0 || excludedBounds.Contains(bounds))
+            {
+                return;
+            }
+
+            radius = Math.Clamp(radius, 0, Math.Min(bounds.Width, bounds.Height) >> 1);
+
+            if (bounds.Width <= 2 || bounds.Height <= 2)
+            {
+                DrawRoundedRectangle(batcher, texture, bounds, hueVector, radius);
+                return;
+            }
+
+            if (radius == 0 && excludedBounds.IsEmpty)
+            {
+                // Square plates are common: draw four disjoint strips instead of
+                // submitting two quads for every row of every visible nameplate.
+                batcher.Draw(texture, new Rectangle(bounds.X, bounds.Y, bounds.Width, 1), hueVector);
+                batcher.Draw(texture, new Rectangle(bounds.X, bounds.Bottom - 1, bounds.Width, 1), hueVector);
+                batcher.Draw(texture, new Rectangle(bounds.X, bounds.Y + 1, 1, bounds.Height - 2), hueVector);
+                batcher.Draw(texture, new Rectangle(bounds.Right - 1, bounds.Y + 1, 1, bounds.Height - 2), hueVector);
+                return;
+            }
+
+            int[] outerInsets = GetRoundedRectangleInsets(bounds.Height, radius);
+            int innerRadius = Math.Max(0, radius - 1);
+            int[] innerInsets = GetRoundedRectangleInsets(bounds.Height - 2, innerRadius);
+
+            for (int row = 0; row < bounds.Height; row++)
+            {
+                int outerInset = outerInsets[row];
+                int outerLeft = bounds.X + outerInset;
+                int outerRight = bounds.Right - outerInset;
+
+                if (outerRight <= outerLeft)
+                {
+                    continue;
+                }
+
+                if (row == 0 || row == bounds.Height - 1)
+                {
+                    DrawBorderSpan(batcher, texture, outerLeft, outerRight, bounds.Y + row, hueVector, excludedBounds);
+                    continue;
+                }
+
+                int innerInset = innerInsets[row - 1];
+                int innerLeft = Math.Clamp(bounds.X + 1 + innerInset, outerLeft, outerRight);
+                int innerRight = Math.Clamp(bounds.Right - 1 - innerInset, outerLeft, outerRight);
+
+                if (innerRight <= innerLeft)
+                {
+                    DrawBorderSpan(batcher, texture, outerLeft, outerRight, bounds.Y + row, hueVector, excludedBounds);
+                    continue;
+                }
+
+                if (innerLeft > outerLeft)
+                {
+                    DrawBorderSpan(batcher, texture, outerLeft, innerLeft, bounds.Y + row, hueVector, excludedBounds);
+                }
+
+                if (outerRight > innerRight)
+                {
+                    DrawBorderSpan(batcher, texture, innerRight, outerRight, bounds.Y + row, hueVector, excludedBounds);
+                }
+            }
+        }
+
+        private static void DrawBorderSpan(UltimaBatcher2D batcher, Texture2D texture, int left, int right, int y, Vector3 hueVector, Rectangle excludedBounds)
+        {
+            if (y >= excludedBounds.Top && y < excludedBounds.Bottom && left < excludedBounds.Right && right > excludedBounds.Left)
+            {
+                if (left < excludedBounds.Left)
+                    batcher.Draw(texture, new Rectangle(left, y, excludedBounds.Left - left, 1), hueVector);
+                if (right > excludedBounds.Right)
+                    batcher.Draw(texture, new Rectangle(excludedBounds.Right, y, right - excludedBounds.Right, 1), hueVector);
+                return;
+            }
+
+            batcher.Draw(texture, new Rectangle(left, y, right - left, 1), hueVector);
+        }
+
+        private static void DrawRoundedRectangleClipped(UltimaBatcher2D batcher, Texture2D texture, Rectangle bounds, Vector3 hueVector, int radius, int clipWidth, int clipStart = 0)
         {
             if (bounds.Width <= 0 || bounds.Height <= 0 || clipWidth <= 0)
             {
@@ -1382,10 +1529,14 @@ namespace ClassicUO.Game.UI.Gumps
 
             radius = Math.Clamp(radius, 0, Math.Min(bounds.Width, bounds.Height) >> 1);
             int clippedWidth = Math.Min(bounds.Width, clipWidth);
+            clipStart = Math.Clamp(clipStart, 0, clippedWidth);
+
+            if (clipStart == clippedWidth)
+                return;
 
             if (radius <= 0)
             {
-                batcher.Draw(texture, new Rectangle(bounds.X, bounds.Y, clippedWidth, bounds.Height), hueVector);
+                batcher.Draw(texture, new Rectangle(bounds.X + clipStart, bounds.Y, clippedWidth - clipStart, bounds.Height), hueVector);
                 return;
             }
 
@@ -1395,7 +1546,7 @@ namespace ClassicUO.Game.UI.Gumps
             for (int row = 0; row < bounds.Height; row++)
             {
                 int inset = insets[row];
-                int rowLeft = bounds.X + inset;
+                int rowLeft = Math.Max(bounds.X + inset, bounds.X + clipStart);
                 int rowRight = Math.Min(bounds.Right - inset, clipRight);
                 int width = rowRight - rowLeft;
 

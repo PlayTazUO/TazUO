@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Threading.Tasks;
 using System.Timers;
 using ClassicUO.Configuration;
@@ -11,11 +10,8 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
-using ClassicUO.LegionScripting;
-using ClassicUO.Network;
+using ClassicUO.IO.Persistency;
 using ClassicUO.Renderer;
-using ClassicUO.Utility;
-using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -126,16 +122,11 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (Settings.GlobalSettings.UltimaOnlineDirectory.StartsWith(CUOEnviroment.ExecutablePath))
             {
-                _userNotifications ??= new();
+                _userNotifications ??= [];
                 _userNotifications.Add(("Warning: It looks like your UO folder is stored inside TazUO, this is discouraged as you may accidentally have your UO files deleted.", Constants.HUE_ERROR));
             }
 
-            while (ConfigurationResolver.CorruptFiles.TryDequeue(out string corruptFile))
-            {
-                _userNotifications ??= new();
-                _userNotifications.Add(($"Warning: The configuration file '{Path.GetFileName(corruptFile)}' was corrupt and could not be loaded. " +
-                                        $"Default settings were used and a backup was saved to '{Path.GetFileName(corruptFile)}.corrupt'.", Constants.HUE_ERROR));
-            }
+            SetCorruptFileWarnings();
 
             // Community poll reminder is fetched asynchronously; kick it off before starting the flush
             // timer so a fast result lands in the same batch as the notifications above.
@@ -152,6 +143,45 @@ namespace ClassicUO.Game.UI.Gumps
                     timer?.Stop();
                 };
                 timer.Start();
+            }
+        }
+
+        private void SetCorruptFileWarnings()
+        {
+            while (CorruptFileManager.Files.TryDequeue(out CorruptConfigFile corruptFile))
+            {
+                string outcome = DescribeCorruptConfigFallback(corruptFile);
+
+                _userNotifications ??= [];
+                _userNotifications.Add((
+                    TazLang.Get("corruptconfig_warning", [corruptFile.Name, outcome]),
+                    Constants.HUE_ERROR
+                ));
+            }
+        }
+
+        /// <summary>What answered for a config file that could not be loaded, in the user's language.</summary>
+        /// <param name="corruptFile">The reported file.</param>
+        /// <returns>The sentence following the warning itself.</returns>
+        private static string DescribeCorruptConfigFallback(CorruptConfigFile corruptFile)
+        {
+            switch (corruptFile.Fallback)
+            {
+                case CorruptConfigFallback.Backup:
+                    return corruptFile.BackupPath != null
+                        ? TazLang.Get("corruptconfig_recovered_backedup", [corruptFile.BackupPath])
+                        : TazLang.Get("corruptconfig_recovered", "Your settings were recovered from an earlier backup.");
+
+                case CorruptConfigFallback.Preserved:
+                    return TazLang.Get(
+                        "corruptconfig_preserved",
+                        "It was written by a newer version of TazUO, so it was left untouched. Default settings are in use for this session and will not be saved over it."
+                    );
+
+                default:
+                    return corruptFile.BackupPath != null
+                        ? TazLang.Get("corruptconfig_defaults_backedup", [corruptFile.BackupPath])
+                        : TazLang.Get("corruptconfig_defaults", "Default settings were used, and no backup could be saved.");
             }
         }
 
@@ -178,20 +208,20 @@ namespace ClassicUO.Game.UI.Gumps
         /// notification batch while it is still open, otherwise printed directly once we are in-world.
         /// </summary>
         private void QueueUnvotedPollsNotification() => Task.Run(async () =>
-                                                                 {
-                                                                     string message = await FirebasePollsManager.GetUnvotedNotificationAsync();
+        {
+            string message = await FirebasePollsManager.GetUnvotedNotificationAsync();
 
-                                                                     if (string.IsNullOrEmpty(message))
-                                                                         return;
+            if (string.IsNullOrEmpty(message))
+                return;
 
-                                                                     MainThreadQueue.InvokeOnMainThread(() =>
-                                                                     {
-                                                                         if (_userNotifications != null)
-                                                                             _userNotifications.Add((message, Constants.HUE_WARN));
-                                                                         else if (World.Instance != null)
-                                                                             GameActions.Print(message, Constants.HUE_WARN);
-                                                                     });
-                                                                 });
+            MainThreadQueue.InvokeOnMainThread(() =>
+            {
+                if (_userNotifications != null)
+                    _userNotifications.Add((message, Constants.HUE_WARN));
+                else if (World.Instance != null)
+                    GameActions.Print(message, Constants.HUE_WARN);
+            });
+        });
 
         public override void Update()
         {

@@ -1,3 +1,7 @@
+using System;
+using System.ComponentModel;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
@@ -88,7 +92,8 @@ public static class NameplatesTab
                     new HotkeyInput(
                         existingSelection: currentHotkey,
                         onSelectionChanged: e => OnProfileHotkeyChanged(profile, e),
-                        capturesMouseEvents: false
+                        capturesMouseEvents: false,
+                        bindingValidator: ValidateNameplateHotkey
                     )
                     {
                         Padding = new Thickness(MyraStyle.STANDARD_SPACING, 0, 0, 0),
@@ -148,6 +153,12 @@ public static class NameplatesTab
     {
         HotkeyBinding value = e.NewValue;
 
+        // Nameplate dispatch is keyboard-only (a concrete key, or modifiers alone); a mouse, wheel or
+        // controller binding could never fire here, so it must not overwrite an existing assignment.
+        // Empty bindings (Clear) are how a hotkey is removed.
+        if (value.HasMouseButton || value.WheelScroll || value.HasController)
+            return;
+
         // We have to check for hotkey conflicts first.
         NameOverheadOption option = NameOverHeadManager.FindOptionByHotkey(value.Key, value.Alt, value.Ctrl, value.Shift);
 
@@ -170,6 +181,27 @@ public static class NameplatesTab
                 null
             )
         );
+    }
+
+    /// <summary>
+    ///     Rejects hotkey bindings the nameplate system can never trigger. Profile hotkeys are matched
+    ///     against the keyboard only - a concrete key in <see cref="NameOverHeadManager.RegisterKeyDown"/>,
+    ///     or held modifiers alone in <see cref="NameOverHeadManager.UpdateHeldHotkeys"/> - so a mouse,
+    ///     wheel or controller capture would be saved yet never fire. Empty bindings are allowed - they
+    ///     are how a hotkey is cleared.
+    /// </summary>
+    private static bool ValidateNameplateHotkey(HotkeyBinding binding)
+    {
+        if (!binding.HasMouseButton && !binding.WheelScroll && !binding.HasController)
+            return true;
+
+        GameActions.Print(
+            World.Instance,
+            TazLang.Get("mog_nameplates_optionstab_hotkeykeyboardonly"),
+            Constants.HUE_ERROR
+        );
+
+        return false;
     }
 
     private static VisualContainer GetItemsBoxesPanel(NameOverheadOption profile) =>
@@ -308,7 +340,6 @@ public static class NameplatesTab
     private static OptionFragment GeneralSettingsLeftSide()
     {
         Profile profile = ProfileManager.CurrentProfile;
-
         const string locNameplatesHealth = "nameplate_health_";
         string nameWidthLabel = TazLang.Get("nameplate_width", "Name width");
         string heightLabel = TazLang.Get("nameplate_height", "Height");
@@ -316,42 +347,56 @@ public static class NameplatesTab
         string separateHealthBarWidthLabel = TazLang.Get("nameplate_separatehealthbarwidth", TazLang.Get("mog_tazuo_separatehealthbarwidth"));
         string healthBarWidthLabel = TazLang.Get("nameplate_healthbarwidth", TazLang.Get("mog_tazuo_healthbarwidth"));
         string splitHealthBarLabel = TazLang.Get("nameplate_splithealthbar", TazLang.Get("mog_tazuo_splithealthbar"));
+        string presetLabel = TazLang.Get("nameplate_preset", TazLang.Get("mog_kw_preset"));
 
         return OptionsUi.Vertical(
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = TazLang.Get("mog_kw_appearance") },
+                new OptionEntry(
+                    () => new MyraLabel(presetLabel, MyraLabel.TextStyle.P).PlaceBefore(new PresetSelector(profile)),
+                    new SearchMetadata(presetLabel, Keywords: [TazLang.Get("mog_kw_preset")])
+                ),
+                Option.Button(
+                    TazLang.Get("nameplate_savepreset"),
+                    () => SaveNamePlatePresetWindow.Show(profile, RefreshOptions),
+                    new SearchMetadata(TazLang.Get("nameplate_savepreset"), Keywords: [TazLang.Get("mog_kw_preset")])
+                ),
                 Option.IntegerInput(
                     heightLabel,
-                    new Accessor<int>(() => profile.NamePlateHeight),
+                    NameplateSetting<int>(() => profile.NamePlateHeight),
                     0,
                     80,
                     search: new SearchMetadata(heightLabel, Keywords: [TazLang.Get("mog_kw_height")])
                 ),
                 Option.IntegerInput(
                     nameWidthLabel,
-                    new Accessor<int>(() => profile.NamePlateFixedWidth),
+                    NameplateSetting<int>(() => profile.NamePlateFixedWidth),
                     60,
                     300,
                     search: new SearchMetadata(nameWidthLabel, Keywords: [TazLang.Get("mog_kw_width")])
                 ),
                 Option.IntegerInput(
                     cornerRadiusLabel,
-                    new Accessor<int>(() => profile.NamePlateCornerRadius),
+                    NameplateSetting<int>(() => profile.NamePlateCornerRadius),
                     0,
                     40,
                     search: new SearchMetadata(cornerRadiusLabel, Keywords: [TazLang.Get("mog_kw_corner"), TazLang.Get("mog_kw_radius")])
                 ),
                 Option.FontSelector(
                     TazLang.Get("mog_tazuo_nameplatefont"),
-                    new Accessor<string>(() => profile.NamePlateFont),
-                    s => profile.NamePlateFont = s,
+                    NameplateSetting<string>(() => profile.NamePlateFont),
+                    s => { profile.NamePlateFont = s; NamePlatePresets.SetCustom(profile); },
                     new SearchMetadata(TazLang.Get("mog_tazuo_nameplatefont"), Keywords: [TazLang.Get("mog_kw_font")])
+                ),
+                Option.Checkbox(
+                    TazLang.Get("nameplate_notorietytext"),
+                    NameplateSetting<bool>(() => profile.NamePlateUseNotorietyText)
                 ),
                 Option.Slider(
                     TazLang.Get("mog_kw_size"),
                     5,
                     50,
-                    new Accessor<int>(() => profile.NamePlateFontSize),
+                    NameplateSetting<int>(() => profile.NamePlateFontSize),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_sharedsize"), Keywords: [TazLang.Get("mog_kw_size")])
                 )
             ),
@@ -361,59 +406,65 @@ public static class NameplatesTab
                     TazLang.Get("mog_kw_red"),
                     0,
                     255,
-                    new Accessor<byte>(() => profile.NamePlateBackgroundR),
+                    NameplateSetting<byte>(() => profile.NamePlateBackgroundR),
                     search: new SearchMetadata(TazLang.Get("mog_kw_red"), Keywords: [TazLang.Get("mog_kw_red"), TazLang.Get("mog_kw_color")])
                 ),
                 Option.Slider(
                     TazLang.Get("mog_kw_green"),
                     0,
                     255,
-                    new Accessor<byte>(() => profile.NamePlateBackgroundG),
+                    NameplateSetting<byte>(() => profile.NamePlateBackgroundG),
                     search: new SearchMetadata(TazLang.Get("mog_kw_green"), Keywords: [TazLang.Get("mog_kw_green"), TazLang.Get("mog_kw_color")])
                 ),
                 Option.Slider(
                     TazLang.Get("mog_kw_blue"),
                     0,
                     255,
-                    new Accessor<byte>(() => profile.NamePlateBackgroundB),
+                    NameplateSetting<byte>(() => profile.NamePlateBackgroundB),
                     search: new SearchMetadata(TazLang.Get("mog_kw_blue"), Keywords: [TazLang.Get("mog_kw_blue"), TazLang.Get("mog_kw_color")])
                 ),
-                Option.Slider(
+                WithTooltip(Option.Slider(
                     TazLang.Get("mog_tazuo_backgroundopacity"),
                     0,
                     100,
-                    new Accessor<byte>(() => profile.NamePlateOpacity),
+                    NameplateSetting<byte>(() => profile.NamePlateOpacity),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_backgroundopacity"), Keywords: [TazLang.Get("mog_kw_background"), TazLang.Get("mog_kw_opacity")])
-                ),
-                Option.ComboBox(
+                ), TazLang.Get("nameplate_backgroundopacity_tooltip")),
+                Option.LComboBox(
                     TazLang.Get("mog_kw_mode"),
-                    new Accessor<NamePlateBackgroundMode>(() => profile.NamePlateBackgroundMode),
+                    NameplateSetting<NamePlateBackgroundMode>(() => profile.NamePlateBackgroundMode),
+                    "nameplate_background_",
+                    tooltip: TazLang.Get("nameplate_backgroundmode_tooltip"),
                     search: new SearchMetadata(TazLang.Get("mog_kw_mode"), Keywords: [TazLang.Get("mog_kw_mode"), TazLang.Get("mog_kw_background")])
                 )
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = TazLang.Get("mog_kw_healthbar") },
+                Option.Checkbox(
+                    TazLang.Get("nameplate_showmissinghealth"),
+                    NameplateSetting<bool>(() => profile.NamePlateShowMissingHealth)
+                ),
                 Option.LComboBox(
                     TazLang.Get("mog_kw_mode"),
-                    new Accessor<NamePlateHealthBarMode>(() => profile.NamePlateHealthBarMode),
+                    NameplateSetting<NamePlateHealthBarMode>(() => profile.NamePlateHealthBarMode),
                     locNameplatesHealth,
                     search: new SearchMetadata(TazLang.Get("mog_kw_mode"), Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_mode")])
                 ),
                 Option.Checkbox(
                     separateHealthBarWidthLabel,
-                    new Accessor<bool>(() => profile.NamePlateUseFixedHealthBarWidth),
+                    NameplateSetting<bool>(() => profile.NamePlateUseFixedHealthBarWidth),
                     search: new SearchMetadata(separateHealthBarWidthLabel, Keywords: [TazLang.Get("mog_kw_fixed"), TazLang.Get("mog_kw_width"), TazLang.Get("mog_kw_healthbar")])
                 ),
                 Option.IntegerInput(
                     healthBarWidthLabel,
-                    new Accessor<int>(() => profile.NamePlateHealthBarFixedWidth),
+                    NameplateSetting<int>(() => profile.NamePlateHealthBarFixedWidth),
                     60,
                     300,
                     search: new SearchMetadata(healthBarWidthLabel, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_width")])
                 ),
                 Option.Checkbox(
                     splitHealthBarLabel,
-                    new Accessor<bool>(() => profile.NamePlateSplitHealthBar),
+                    NameplateSetting<bool>(() => profile.NamePlateSplitHealthBar),
                     search: new SearchMetadata(splitHealthBarLabel, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_split")])
                 )
             )
@@ -424,68 +475,60 @@ public static class NameplatesTab
     {
         Profile profile = ProfileManager.CurrentProfile;
 
-        const string locNameplatesHealth = "nameplate_health_";
         string fixedWidthLabel = TazLang.Get("nameplate_fixedwidth", TazLang.Get("mog_tazuo_fixedwidth"));
         string showWordOfDeathIconLabel = TazLang.Get("nameplate_showwordofdeathicon", TazLang.Get("mog_tazuo_showwordofdeathicon"));
-        string presetLabel = TazLang.Get("nameplate_preset", TazLang.Get("mog_kw_preset"));
 
         return OptionsUi.Vertical(
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = TazLang.Get("mog_kw_misc") },
                 Option.Checkbox(
                     fixedWidthLabel,
-                    new Accessor<bool>(() => profile.NamePlateUseFixedWidth),
+                    NameplateSetting<bool>(() => profile.NamePlateUseFixedWidth),
                     search: new SearchMetadata(fixedWidthLabel, Keywords: [TazLang.Get("mog_kw_fixed"), TazLang.Get("mog_kw_width")])
                 ),
                 Option.Checkbox(
                     showWordOfDeathIconLabel,
-                    new Accessor<bool>(() => profile.NamePlateShowWordOfDeathIcon),
+                    NameplateSetting<bool>(() => profile.NamePlateShowWordOfDeathIcon),
                     search: new SearchMetadata(showWordOfDeathIconLabel, Keywords: [TazLang.Get("mog_kw_icon"), TazLang.Get("mog_kw_death")])
-                ),
-                Option.LComboBox(
-                    presetLabel,
-                    new Accessor<NamePlatePreset>(() => profile.NamePlatePreset),
-                    locNameplatesHealth,
-                    search: new SearchMetadata(presetLabel, Keywords: [TazLang.Get("mog_kw_preset")])
                 ),
                 Option.Checkbox(
                     TazLang.Get("mog_general_incomingmobiles"),
-                    new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
+                    NameplateSetting<bool>(() => profile.ShowNewMobileNameIncoming),
                     search: new SearchMetadata(TazLang.Get("mog_general_incomingmobiles"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_mobile")])
                 ),
                 Option.Checkbox(
                     TazLang.Get("mog_general_incomingcorpses"),
-                    new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
+                    NameplateSetting<bool>(() => profile.ShowNewCorpseNameIncoming),
                     search: new SearchMetadata(TazLang.Get("mog_general_incomingcorpses"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_corpse")])
                 ),
                 OptionsUi.CheckBoxGroup(
-                    new PropertyBinder(new Accessor<bool>(() => profile.NamePlateHealthBar), TazLang.Get("mog_tazuo_nameplatesalsoactashealthbars")),
-                    Option.Slider(
+                    new PropertyBinder(NameplateSetting<bool>(() => profile.NamePlateHealthBar), TazLang.Get("mog_tazuo_nameplatesalsoactashealthbars")),
+                    WithTooltip(Option.Slider(
                         TazLang.Get("mog_tazuo_hpopacity"),
                         0,
                         100,
-                        new Accessor<byte>(() => profile.NamePlateHealthBarOpacity),
+                        NameplateSetting<byte>(() => profile.NamePlateHealthBarOpacity),
                         search: new SearchMetadata(TazLang.Get("mog_tazuo_hpopacity"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_opacity")])
-                    ),
+                    ), TazLang.Get("nameplate_resourceopacity_tooltip")),
                     OptionsUi.CheckBoxGroup(
-                        new PropertyBinder(new Accessor<bool>(() => profile.NamePlateHideAtFullHealth), TazLang.Get("mog_tazuo_hidenameplatesiffullhealth")),
+                        new PropertyBinder(NameplateSetting<bool>(() => profile.NamePlateHideAtFullHealth), TazLang.Get("mog_tazuo_hidenameplatesiffullhealth")),
                         Option.Checkbox(
                             TazLang.Get("mog_tazuo_onlyinwarmode"),
-                            new Accessor<bool>(() => profile.NamePlateHideAtFullHealthInWarmode),
+                            NameplateSetting<bool>(() => profile.NamePlateHideAtFullHealthInWarmode),
                             search: new SearchMetadata(TazLang.Get("mog_tazuo_onlyinwarmode"), Keywords: [TazLang.Get("mog_kw_war"), TazLang.Get("mog_kw_mode")])
                         )
                     ).WithSearch(new SearchMetadata(Tags: [TazLang.Get("mog_kw_nameplate")], Keywords: [TazLang.Get("mog_kw_hide"), TazLang.Get("mog_kw_health")]))
                 ).WithSearch(new SearchMetadata(Tags: [TazLang.Get("mog_kw_nameplate")], Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp")])),
-                Option.Slider(
+                WithTooltip(Option.Slider(
                     TazLang.Get("mog_tazuo_borderopacity"),
                     0,
                     100,
-                    new Accessor<byte>(() => profile.NamePlateBorderOpacity),
+                    NameplateSetting<byte>(() => profile.NamePlateBorderOpacity),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_borderopacity"), Keywords: [TazLang.Get("mog_kw_border"), TazLang.Get("mog_kw_opacity")])
-                ),
+                ), TazLang.Get("nameplate_borderopacity_tooltip")),
                 Option.Checkbox(
                     TazLang.Get("mog_tazuo_avoidoverlap"),
-                    new Accessor<bool>(() => profile.NamePlateAvoidOverlap),
+                    NameplateSetting<bool>(() => profile.NamePlateAvoidOverlap),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_avoidoverlap"), Keywords: [TazLang.Get("mog_kw_overlap"), TazLang.Get("mog_kw_avoid")])
                 )
             )
@@ -493,4 +536,80 @@ public static class NameplatesTab
     }
 
     #endregion General Sub-Tab
+
+    private static OptionEntry WithTooltip(OptionEntry entry, string tooltip) => new(() =>
+    {
+        Widget widget = entry.Render();
+        widget.Tooltip = tooltip;
+        return widget;
+    }, entry.Search);
+
+    private static Accessor<T> NameplateSetting<T>(Expression<Func<T>> expression)
+    {
+        var accessor = new Accessor<T>(expression);
+        Profile profile = ProfileManager.CurrentProfile;
+        return new Accessor<T>(accessor.Get, value =>
+        {
+            accessor.Set(value);
+            NamePlatePresets.SetCustom(profile);
+        });
+    }
+
+    private sealed class PresetSelector : ComboView
+    {
+        private readonly Profile _profile;
+        private readonly IReadOnlyList<NamePlatePresets.Entry> _entries;
+        private bool _updatingSelection;
+
+        public PresetSelector(Profile profile)
+        {
+            _profile = profile;
+            _entries = NamePlatePresets.GetEntries();
+            MinWidth = 200;
+            VerticalAlignment = VerticalAlignment.Center;
+            foreach (NamePlatePresets.Entry entry in _entries)
+                ListView.Widgets.Add(new Label { Text = entry.Name });
+
+            ListView.SelectedIndex = NamePlatePresets.GetSelectedIndex(profile, _entries);
+            ListView.SelectedIndexChanged += (_, _) =>
+            {
+                if (_updatingSelection || ListView.SelectedIndex is not int index)
+                    return;
+
+                NamePlatePresets.Apply(profile, _entries[index]);
+                MainThreadQueue.EnqueueAction(RefreshOptions);
+            };
+        }
+
+        protected override void OnPlacedChanged()
+        {
+            base.OnPlacedChanged();
+            _profile.PropertyChanged -= OnProfileChanged;
+            if (Desktop != null)
+                _profile.PropertyChanged += OnProfileChanged;
+        }
+
+        private void OnProfileChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(Profile.NamePlatePreset) && e.PropertyName != nameof(Profile.NamePlateSavedPresetName))
+                return;
+
+            _updatingSelection = true;
+            try
+            {
+                ListView.SelectedIndex = NamePlatePresets.GetSelectedIndex(_profile, _entries);
+            }
+            finally
+            {
+                _updatingSelection = false;
+            }
+        }
+    }
+
+    private static void RefreshOptions()
+    {
+        OptionsWindow window = UIManager.GetGump<OptionsWindow>();
+        if (window != null && !window.IsDisposed)
+            window.RefreshCurrentContent();
+    }
 }

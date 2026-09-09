@@ -150,6 +150,14 @@ namespace ClassicUO.Assets
             return text;
         }
 
+        public string GetStringOrDefault(int number, string fallback)
+        {
+            if (_entries.TryGetValue(number, out string text))
+                return text;
+            
+            return fallback;
+        }
+
         public string GetEnglishString(int number)
         {
             _englishEntries.TryGetValue(number, out string text);

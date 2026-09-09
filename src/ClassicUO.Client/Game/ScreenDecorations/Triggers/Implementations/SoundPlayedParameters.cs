@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
@@ -10,8 +11,7 @@ using Myra.Graphics2D.UI.Properties;
 namespace ClassicUO.Game.ScreenDecorations.Triggers.Implementations;
 
 /// <summary>
-/// Fires on one sound being played near the player: which sound, how near it has to be, and how its
-/// nearness turns into strength are all decisions for whoever wires the rule.
+/// Fires on one of several sounds playing near the player.
 /// <para>
 /// Lives beside the trigger that reads it rather than with the config types, because nothing else can
 /// interpret it: the fields mean whatever <see cref="SoundPlayedTrigger" /> does with them.
@@ -37,24 +37,25 @@ public sealed class SoundPlayedParameters : TriggerParameters
     #region Public accessors
 
     /// <summary>
-    /// The sound to watch for, by its index in the client's sound data.
+    /// The sounds to watch for, by index in the client's sound data. Any one fires the rule.
     /// <para>
-    /// A number rather than an enum: what any given index is depends on the shard's data files, so
-    /// there is no set of names this client could name in code and still be right about. The editor
-    /// reads the names out of the loaded data instead, and takes a raw number for anything it cannot
-    /// find one for.
+    /// Numbers rather than an enum: what an index means depends on the shard's data files. The editor
+    /// reads names out of the loaded data and takes a raw number for anything it has none for.
     /// </para>
     /// </summary>
     [Browsable(false)]
     [SoundIndexEditor]
-    [LocalizedDisplayName("overlaytrigger_sound_index", "Play on sound")]
+    [LocalizedDisplayName("overlaytrigger_sound_index", "Play on sounds")]
     [LocalizedDescription(
         "overlaytrigger_sound_index_tooltip",
-        "The sound that sets this effect off.\n"
-        + "Pick one by name, or type its number if it has none.\n"
+        "The sounds that set this effect off - any one of them.\n"
+        + "Pick by name, or type a number if it has none.\n"
         + "Press Play to hear the current choice."
     )]
-    public int SoundIndex { get; set; }
+
+    // Null-normalizing: an explicit null in the persisted file would otherwise reach the trigger,
+    // which enumerates this without a guard.
+    public List<int> SoundIndexes { get; set => field = value ?? []; } = [];
 
     /// <summary>
     /// Nearest the sound may be and still count, in tiles. Above zero for an effect that should only
@@ -174,7 +175,7 @@ public sealed class SoundPlayedParameters : TriggerParameters
     public override TriggerParameters Clone() =>
         new SoundPlayedParameters
         {
-            SoundIndex = SoundIndex,
+            SoundIndexes = [..SoundIndexes],
             MinDistance = MinDistance,
             MaxDistance = MaxDistance,
             Curve = Curve,

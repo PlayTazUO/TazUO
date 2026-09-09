@@ -97,7 +97,7 @@ public static class BuiltInRules
     /// </summary>
     /// <returns>The parameters.</returns>
     private static SoundPlayedParameters EarthquakeSound() =>
-        new() { SoundIndex = EARTHQUAKE_SOUND_INDEX };
+        new() { SoundIndexes = [EARTHQUAKE_SOUND_INDEX] };
 
     /// <summary>
     /// One boolean field of the player's state, as the single-condition expression that tests it.

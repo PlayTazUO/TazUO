@@ -17,7 +17,7 @@ public class SoundPlayedTriggerTests
     private const int PLAYER_Y = 1000;
     private const int SOUND = 755;
 
-    private static SoundPlayedParameters Parameters() => new() { SoundIndex = SOUND };
+    private static SoundPlayedParameters Parameters() => new() { SoundIndexes = [SOUND] };
 
     private static TriggerSignal? EvaluateAt(SoundPlayedParameters parameters, int tilesAway, int soundIndex = SOUND) =>
         SoundPlayedTrigger.Evaluate(
@@ -176,11 +176,20 @@ public class SoundPlayedTriggerTests
     }
 
     [Fact]
+    public void AnyOfSeveralConfiguredSoundsMatches()
+    {
+        var parameters = new SoundPlayedParameters { SoundIndexes = [SOUND, SOUND + 1, SOUND + 2] };
+
+        EvaluateAt(parameters, 0, SOUND + 1).Should().NotBeNull();
+        EvaluateAt(parameters, 0, SOUND + 3).Should().BeNull();
+    }
+
+    [Fact]
     public void CloningCopiesEveryParameter()
     {
         var parameters = new SoundPlayedParameters
         {
-            SoundIndex = 42,
+            SoundIndexes = [42, 43],
             MinDistance = 2,
             MaxDistance = 11,
             Curve = FalloffCurve.Custom,
@@ -217,7 +226,7 @@ public class SoundPlayedTriggerTests
     [Fact]
     public void ParametersRoundTripThroughThePolymorphicSerializer()
     {
-        var parameters = new SoundPlayedParameters { SoundIndex = 755, MaxDistance = 9 };
+        var parameters = new SoundPlayedParameters { SoundIndexes = [755, 756], MaxDistance = 9 };
 
         string json = JsonSerializer.Serialize<TriggerParameters>(
             parameters,

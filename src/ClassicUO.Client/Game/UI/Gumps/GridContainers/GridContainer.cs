@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Utility;
@@ -412,6 +413,9 @@ public partial class GridContainer : ResizableGump
             {
                 if (e.Button == MouseButtonType.Left)
                 {
+                    // Rebuild every open so content-driven entries (item layers/graphics)
+                    // reflect the container's current contents.
+                    _openRegularGump.ContextMenu = GenContextMenu();
                     _openRegularGump.ContextMenu?.Show();
                 }
             };
@@ -708,6 +712,23 @@ public partial class GridContainer : ResizableGump
             // Re-applies highlight rules and colors; useful if item highlights desync after SOS loot or container refresh.
             control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_refreshhighlights", "Refresh item highlights"), GridHighlightData.RecheckMatchStatus));
 
+            var multiMoveMenu = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove", "Multi Move"));
+            multiMoveMenu.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectall", "Select all"), () => SelectItemsForMultiMove(_ => true)));
+
+            var selectByLayer = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbylayer", "Select by layer"));
+            PopulateMultiMoveLayerEntries(selectByLayer);
+            multiMoveMenu.Add(selectByLayer);
+
+            var selectByGraphic = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbygraphic", "Select by graphic"));
+            PopulateMultiMoveGraphicEntries(selectByGraphic);
+            multiMoveMenu.Add(selectByGraphic);
+
+            var selectByName = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbyname", "Select by name"));
+            PopulateMultiMoveNameEntries(selectByName);
+            multiMoveMenu.Add(selectByName);
+
+            control.Add(multiMoveMenu);
+
             control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_renamecontainer", "Rename container"), () =>
             {
                 new PromptPopupWindow(TazLang.Get("gridcontainer_rename_title", "Rename Container"), TazLang.Get("gridcontainer_rename_desc", "Type in a custom name for this container."), s =>
@@ -757,6 +778,147 @@ public partial class GridContainer : ResizableGump
 
             return control;
         }
+
+        /// <summary>
+        /// Selects the items currently displayed in this container that match <paramref name="predicate"/>
+        /// for the multi-move system, then reveals the multi-move gump.
+        /// </summary>
+        private void SelectItemsForMultiMove(Func<Item, bool> predicate)
+        {
+            bool selected = false;
+
+            foreach (GridItem gridItem in SlotManager.GridSlots.Values)
+            {
+                Item item = gridItem.SlotItem;
+
+                if (item == null || !predicate(item))
+                    continue;
+
+                if (gridItem.SelectForMultiMove())
+                    selected = true;
+            }
+
+            if (selected)
+                MultiItemMoveGump.ShowNextTo(this);
+        }
+
+        /// <summary>
+        /// The layer used to categorize an item for multi-move layer selection. Container items have no
+        /// live layer, so the item graphic's equip slot from tiledata is used instead.
+        /// </summary>
+        private static Layer GetItemMultiMoveLayer(Item item) => (Layer)item.ItemData.Layer;
+
+        /// <summary>Adds one entry per item layer present in this container to <paramref name="parent"/>.</summary>
+        private void PopulateMultiMoveLayerEntries(ContextMenuItemEntry parent)
+        {
+            // GenContextMenu is first built in BuildTopBar, before SlotManager exists.
+            if (SlotManager == null)
+                return;
+
+            var layers = new HashSet<Layer>();
+
+            foreach (GridItem gridItem in SlotManager.GridSlots.Values)
+            {
+                Item item = gridItem.SlotItem;
+
+                if (item == null)
+                    continue;
+
+                Layer layer = GetItemMultiMoveLayer(item);
+                if (layer != Layer.Invalid)
+                    layers.Add(layer);
+            }
+
+            foreach (Layer layer in layers.OrderBy(l => l))
+            {
+                parent.Add(new ContextMenuItemEntry(GetLayerName(layer), () => SelectItemsForMultiMove(item => GetItemMultiMoveLayer(item) == layer)));
+            }
+        }
+
+        /// <summary>Adds one entry per item graphic present in this container to <paramref name="parent"/>.</summary>
+        private void PopulateMultiMoveGraphicEntries(ContextMenuItemEntry parent)
+        {
+            // GenContextMenu is first built in BuildTopBar, before SlotManager exists.
+            if (SlotManager == null)
+                return;
+
+            var graphics = new HashSet<ushort>();
+
+            foreach (GridItem gridItem in SlotManager.GridSlots.Values)
+            {
+                Item item = gridItem.SlotItem;
+                if (item != null)
+                    graphics.Add(item.Graphic);
+            }
+
+            foreach (ushort graphic in graphics.OrderBy(g => g))
+            {
+                parent.Add(new ContextMenuItemEntry($"0x{graphic:X4}", () => SelectItemsForMultiMove(item => item.Graphic == graphic))
+                {
+                    ArtGraphic = graphic
+                });
+            }
+        }
+
+        /// <summary>Adds one entry per distinct item name present in this container to <paramref name="parent"/>.</summary>
+        private void PopulateMultiMoveNameEntries(ContextMenuItemEntry parent)
+        {
+            // GenContextMenu is first built in BuildTopBar, before SlotManager exists.
+            if (SlotManager == null)
+                return;
+
+            var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (GridItem gridItem in SlotManager.GridSlots.Values)
+            {
+                Item item = gridItem.SlotItem;
+                if (item == null)
+                    continue;
+
+                string name = item.GetNormalizedName(false);
+                if (string.IsNullOrEmpty(name))
+                    continue;
+
+                if (!names.ContainsKey(name))
+                    names[name] = name;
+            }
+
+            foreach (string name in names.Values.OrderBy(n => n))
+            {
+                parent.Add(new ContextMenuItemEntry(name, () => SelectItemsForMultiMove(item => string.Equals(name, item.GetNormalizedName(false), StringComparison.OrdinalIgnoreCase))));
+            }
+        }
+
+        private static string GetLayerName(Layer layer) =>
+            _layerNames.TryGetValue(layer, out string name) ? name : layer.ToString();
+
+        private static readonly Dictionary<Layer, string> _layerNames = new()
+        {
+            { Layer.OneHanded, "One-Handed" },
+            { Layer.TwoHanded, "Two-Handed" },
+            { Layer.Shoes, "Shoes" },
+            { Layer.Pants, "Pants" },
+            { Layer.Shirt, "Shirt" },
+            { Layer.Helmet, "Helmet" },
+            { Layer.Gloves, "Gloves" },
+            { Layer.Ring, "Ring" },
+            { Layer.Talisman, "Talisman" },
+            { Layer.Neck, "Necklace" },
+            { Layer.Waist, "Waist" },
+            { Layer.Torso, "Torso" },
+            { Layer.Bracelet, "Bracelet" },
+            { Layer.Face, "Face" },
+            { Layer.Tunic, "Tunic" },
+            { Layer.Earrings, "Earrings" },
+            { Layer.Arms, "Arms" },
+            { Layer.Cloak, "Cloak" },
+            { Layer.Backpack, "Backpack" },
+            { Layer.Robe, "Robe" },
+            { Layer.Skirt, "Skirt" },
+            { Layer.Legs, "Legs" },
+            { Layer.Mount, "Mount" }
+        };
+
         /// <summary>
         /// Border width implied by the profile's current border style. Used by the static size
         /// helpers, which run before an instance exists and so can't read <see cref="_borderWidth"/>.

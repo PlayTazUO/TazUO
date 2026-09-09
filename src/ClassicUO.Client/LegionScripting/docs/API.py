@@ -2981,9 +2981,10 @@ def FindMobile(serial: "int") -> "ApiMobile":
     """
     pass
 
-def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, notoriety: "list[Notoriety]" = None, sortby: "str" = "Distance") -> "list[ApiMobile]":
+def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, notoriety: "list[Notoriety]" = None, sortby: "str" = "Distance", name: "str" = None, graphics: "list[int]" = None, minDistance: "int | None" = None, isHuman: "bool | None" = None, isFemale: "bool | None" = None, isGhost: "bool | None" = None, isFriend: "bool | None" = None, poisoned: "bool | None" = None, paralyzed: "bool | None" = None, hasLineOfSight: "bool | None" = None, hues: "list[int]" = None) -> "list[ApiMobile]":
     """
      Return a list of all mobiles the client is aware of, optionally filtered by graphic, distance, and/or notoriety.
+     Any additional filter is ignored unless supplied.
      Example:
      ```py
      # Get all mobiles
@@ -2996,6 +2997,10 @@ def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, n
      enemies = API.GetAllMobiles(distance=15, notoriety=[API.Notoriety.Murderer, API.Notoriety.Criminal])
      # Get all mobiles sorted by current hits, lowest first
      sorted_by_hits = API.GetAllMobiles(sortby="hits")
+     # Get all poisonous ogres within 10 tiles in line of sight
+     targets = API.GetAllMobiles(name="ogre", distance=10, poisoned=True, hasLineOfSight=True)
+     # Get only dead friends with a specific hue, at least 2 tiles away
+     ghosts = API.GetAllMobiles(isGhost=True, isFriend=True, minDistance=2, hues=[0x83EA])
      ```
     
     """
@@ -3628,6 +3633,12 @@ class EventSinkApiDeclaration:
          Invoked when a container is opened.
          The event's 'sender' is the Item, the event's argument is the item's serial
         
+        """
+        pass
+
+    def ObjectUsed(self, callback: "Any") -> None:
+        """
+        Invoked when the client sends a double-click (use) request for an object's serial.
         """
         pass
 

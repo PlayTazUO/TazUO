@@ -957,6 +957,9 @@ namespace ClassicUO.Game.Scenes
             SelfHealManager.Update();
             ScreenOverlayManager.Instance.Tick();
 
+            if (_world.InGame)
+                _world.NameOverHeadManager.UpdateHeldHotkeys();
+
             if (_waitingForWindowResize)
             {
                 if (_expectedWindowSize.HasValue)
