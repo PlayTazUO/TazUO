@@ -2755,8 +2755,10 @@ namespace ClassicUO.Game.Managers
                     PromptSetMount();
                     break;
                 case GameActions.MountResult.MountNotFound:
+                    PromptSetMount();
+                    break;
                 case GameActions.MountResult.MountTooFar:
-                    GameActions.Print("Saved mount was not found or is too far", Constants.HUE_WARN);
+                    GameActions.Print("Saved mount is too far", Constants.HUE_WARN);
                     break;
             }
         }
