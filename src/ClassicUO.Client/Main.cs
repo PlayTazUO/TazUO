@@ -224,6 +224,10 @@ namespace ClassicUO
 
                     case 3: // SDL/FNA auto-select
                         break;
+                    case 4: // DirectX 11
+                        Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", "D3D11");
+                        SDL.SDL_SetHint(SDL.SDL_HINT_RENDER_DRIVER, "direct3d11");
+                        break;
                 }
 
                 Client.Run(pluginHost);
