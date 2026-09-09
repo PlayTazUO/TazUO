@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 
 ## 9/8/26
 * ***Feature:*** Added a "Multi Move" sub-menu to the grid container context menu for selecting items into the multi-move system - "Select all", "Select by layer" (populated only with layers present in the container), and "Select by graphic" (each entry shows the item's art next to its graphic id)
+* ***Fix:*** Fixed a NullReferenceException when opening a grid container caused by the new "Multi Move" context menu being built before the container's slot manager existed
 
 ## 9/7/26
 * ***Legion:*** Added optional filters to `API.GetAllMobiles()` - `name` (case-insensitive partial match), `graphics`, `hues`, `minDistance`, `isHuman`, `isFemale`, `isGhost` (dead mobiles), `isFriend` (friends list), `poisoned`, `paralyzed`, and `hasLineOfSight`; each is ignored unless supplied, and `True`/`False` toggles include or exclude

@@ -807,6 +807,10 @@ public partial class GridContainer : ResizableGump
         /// <summary>Adds one entry per item layer present in this container to <paramref name="parent"/>.</summary>
         private void PopulateMultiMoveLayerEntries(ContextMenuItemEntry parent)
         {
+            // GenContextMenu is first built in BuildTopBar, before SlotManager exists.
+            if (SlotManager == null)
+                return;
+
             var layers = new HashSet<Layer>();
 
             foreach (GridItem gridItem in SlotManager.GridSlots.Values)
@@ -830,6 +834,10 @@ public partial class GridContainer : ResizableGump
         /// <summary>Adds one entry per item graphic present in this container to <paramref name="parent"/>.</summary>
         private void PopulateMultiMoveGraphicEntries(ContextMenuItemEntry parent)
         {
+            // GenContextMenu is first built in BuildTopBar, before SlotManager exists.
+            if (SlotManager == null)
+                return;
+
             var graphics = new HashSet<ushort>();
 
             foreach (GridItem gridItem in SlotManager.GridSlots.Values)
