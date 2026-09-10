@@ -4,7 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 9/10/26
-* ***Feature:*** Added `ForceDriver = 4` to force DirectX 11. Set it in the profile's `settings.json`. This can significantly improve performance on some Windows machines where OpenGL performs poorly. **If you experience low FPS or unusually poor performance, try setting `ForceDriver` to `4`.**
+* ***Feature:*** Added `ForceDriver = 4` to force DirectX 11. Set it in the profile's `settings.json`. This can significantly improve performance on some Windows machines where OpenGL performs poorly. **If you experience low FPS or unusually poor performance, try setting `ForceDriver` to `4`** - [P.R 1067](https://github.com/PlayTazUO/TazUO/pull/1067) ([LasherasGH](https://github.com/LasherasGH))
 
 ## 9/8/26
 * ***Feature:*** Added a "Multi Move" sub-menu to the grid container context menu for selecting items into the multi-move system - "Select all", "Select by layer" (populated only with layers present in the container), "Select by graphic" (each entry shows the item's art next to its graphic id), and "Select by name" (distinct item names, no duplicates)
