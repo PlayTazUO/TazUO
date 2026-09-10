@@ -2,6 +2,9 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 9/10/26
+* ***Feature:*** Added `ForceDriver = 4` to force DirectX 11. Set it in the profile's `settings.json`. This can significantly improve performance on some Windows machines where OpenGL performs poorly. **If you experience low FPS or unusually poor performance, try setting `ForceDriver` to `4`.**
+
 ## In Development
 
 ### Features
