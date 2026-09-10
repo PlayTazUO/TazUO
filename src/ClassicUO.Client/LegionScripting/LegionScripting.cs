@@ -465,7 +465,7 @@ namespace ClassicUO.LegionScripting
                 code.IndexOf("while (true)", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 code.IndexOf("while(true)", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                GameActions.Print(_world, $"Script '{script.FileName}' contains an unbounded 'while' loop. Change it to {(script.Type == ScriptFile.ScriptType.Python ? "while API.StopRequested:" : "while (API.StopRequested)")}", Constants.HUE_WARN);
+                GameActions.Print(_world, $"Script '{script.FileName}' contains an unbounded 'while' loop. Change it to {(script.Type == ScriptFile.ScriptType.Python ? "while not API.StopRequested:" : "while (!API.StopRequested)")}", Constants.HUE_WARN);
             }
         }
 
