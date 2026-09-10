@@ -2646,6 +2646,53 @@ namespace ClassicUO.LegionScripting
         });
 
         /// <summary>
+        /// Target the spot at an offset from your position, resolving it the same way a click would:
+        /// the topmost visible object there is targeted, whether that is an entity, a static/multi, or land.
+        /// Example:
+        /// ```py
+        /// API.TargetRel(1, 1)
+        /// ```
+        /// </summary>
+        /// <param name="xOffset">X offset from your position, in tiles.</param>
+        /// <param name="yOffset">Y offset from your position, in tiles.</param>
+        /// <param name="tilesOnly">When true (default), entities are ignored and only statics/multi or land are targeted.</param>
+        public void TargetRel(int xOffset, int yOffset, bool tilesOnly = true) => OnMain
+        (() =>
+            {
+                if (!World.TargetManager.IsTargeting || World?.Map == null || World?.Player == null)
+                    return;
+
+                ushort x = (ushort)(World.Player.X + xOffset);
+                ushort y = (ushort)(World.Player.Y + yOffset);
+
+                GameObject top = null;
+                for (GameObject obj = World.Map.GetTile(x, y); obj != null; obj = obj.TNext)
+                {
+                    if (obj.AlphaHue != 0 && (!tilesOnly || obj is not Entity))
+                        top = obj;
+                }
+
+                switch (top)
+                {
+                    case Entity ent:
+                        World.TargetManager.Target(ent.Serial);
+
+                        break;
+
+                    case Land land:
+                        World.TargetManager.Target(0, land.X, land.Y, land.Z, land.TileData.IsWet);
+
+                        break;
+
+                    case GameObject gameObject:
+                        World.TargetManager.Target(gameObject.Graphic, gameObject.X, gameObject.Y, gameObject.Z);
+
+                        break;
+                }
+            }
+        );
+
+        /// <summary>
         /// Target a land tile relative to your position.
         /// If this doesn't work, try TargetTileRel instead.
         /// Example:
@@ -2670,8 +2717,8 @@ namespace ClassicUO.LegionScripting
         );
 
         /// <summary>
-        /// Target a tile relative to your location.
-        /// If this doesn't work, try TargetLandRel instead.'
+        /// Target the highest visible object at a tile relative to your location, skipping land.
+        /// Resolves the spot the same way <see cref="TargetRel"/> does, but never falls back to land.
         /// Example:
         /// ```py
         /// API.TargetTileRel(1, 1)
@@ -2679,8 +2726,9 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="xOffset">X Offset from your position</param>
         /// <param name="yOffset">Y Offset from your position</param>
-        /// <param name="graphic">Optional graphic, will try to use the graphic of the tile at that location if left empty.</param>
-        public void TargetTileRel(int xOffset, int yOffset, ushort graphic = ushort.MaxValue) => OnMain
+        /// <param name="graphic">Optional graphic, will try to use the graphic of the highest tile at that location if left empty.</param>
+        /// <param name="tilesOnly">When true (default), entities are ignored and only statics/multi are targeted.</param>
+        public void TargetTileRel(int xOffset, int yOffset, ushort graphic = ushort.MaxValue, bool tilesOnly = true) => OnMain
         (() =>
             {
                 if (!World.TargetManager.IsTargeting || World?.Map == null || World?.Player == null)
@@ -2689,12 +2737,33 @@ namespace ClassicUO.LegionScripting
                 ushort x = (ushort)(World.Player.X + xOffset);
                 ushort y = (ushort)(World.Player.Y + yOffset);
                 short z = World.Player.Z;
-                GameObject g = World.Map.GetTile(x, y);
 
-                if (graphic == ushort.MaxValue && g != null)
+                if (graphic == ushort.MaxValue)
                 {
-                    graphic = g.Graphic;
-                    z = g.Z;
+                    GameObject top = null;
+
+                    for (GameObject obj = World.Map.GetTile(x, y); obj != null; obj = obj.TNext)
+                    {
+                        if (obj is not Land && obj.AlphaHue != 0 && (!tilesOnly || obj is not Entity))
+                            top = obj;
+                    }
+
+                    switch (top)
+                    {
+                        case Entity ent:
+                            World.TargetManager.Target(ent.Serial);
+
+                            return;
+
+                        case GameObject gameObject:
+                            graphic = gameObject.Graphic;
+                            z = gameObject.Z;
+
+                            break;
+
+                        default:
+                            return;
+                    }
                 }
 
                 World.TargetManager.Target(graphic, x, y, z);

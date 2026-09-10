@@ -54,3 +54,31 @@ description:  Represents a Python-accessible entity in the game world, such as a
 
 ---
 
+### Target
+
+ Attempts to target this entity. Only has any effect while the client is waiting for a target selection.
+
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### TargetRel
+`(xOffset, yOffset, tilesOnly)`
+ Attempts to target the spot at an offset from this entity's position, resolving it the same way a
+ click would: the topmost visible object there is targeted, whether that is an entity, a static/multi,
+ or land. Only has any effect while the client is waiting for a target selection.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `xOffset` | `int` | ❌ No | X offset from this entity's position, in tiles. |
+| `yOffset` | `int` | ❌ No | Y offset from this entity's position, in tiles. |
+| `tilesOnly` | `bool` | ✅ Yes | When true (default), entities are ignored and only statics/multi or land are targeted. |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+

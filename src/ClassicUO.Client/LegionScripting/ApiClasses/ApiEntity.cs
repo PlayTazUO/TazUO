@@ -77,6 +77,68 @@ public class ApiEntity : ApiGameObject
         entity = null;
     }
 
+    /// <summary>
+    /// Attempts to target this entity. Only has any effect while the client is waiting for a target selection.
+    /// </summary>
+    public void Target()
+    {
+        Entity e = GetEntity();
+
+        if (e == null) return;
+
+        MainThreadQueue.InvokeOnMainThread(() => World.Instance?.TargetManager.Target(e.Serial));
+    }
+
+    /// <summary>
+    /// Attempts to target the spot at an offset from this entity's position, resolving it the same way a
+    /// click would: the topmost visible object there is targeted, whether that is an entity, a static/multi,
+    /// or land. Only has any effect while the client is waiting for a target selection.
+    /// </summary>
+    /// <param name="xOffset">X offset from this entity's position, in tiles.</param>
+    /// <param name="yOffset">Y offset from this entity's position, in tiles.</param>
+    /// <param name="tilesOnly">When true (default), entities are ignored and only statics/multi or land are targeted.</param>
+    public void TargetRel(int xOffset, int yOffset, bool tilesOnly = true)
+    {
+        Entity e = GetEntity();
+
+        if (e == null) return;
+
+        MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if (e.IsDestroyed || World.Instance?.TargetManager is not { } targetManager || !targetManager.IsTargeting || World.Instance.Map == null)
+                return;
+
+            ushort x = (ushort)(e.X + xOffset);
+            ushort y = (ushort)(e.Y + yOffset);
+
+            GameObject top = null;
+
+            for (GameObject obj = World.Instance.Map.GetTile(x, y); obj != null; obj = obj.TNext)
+            {
+                if (obj.AlphaHue != 0 && (!tilesOnly || obj is not Entity))
+                    top = obj;
+            }
+
+            switch (top)
+            {
+                case Entity ent:
+                    targetManager.Target(ent.Serial);
+
+                    break;
+
+                case Land land:
+                    targetManager.Target(0, land.X, land.Y, land.Z, land.TileData.IsWet);
+
+                    break;
+
+                case GameObject gameObject:
+                    targetManager.Target(gameObject.Graphic, gameObject.X, gameObject.Y, gameObject.Z);
+
+                    break;
+            }
+        });
+    }
+
     protected Entity entity;
     protected Entity GetEntity()
     {
