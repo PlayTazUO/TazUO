@@ -4,6 +4,7 @@ using ClassicUO.LegionScripting.ApiClasses;
 using FluentAssertions;
 using IronPython.Hosting;
 using Microsoft.Scripting.Hosting;
+using ClassicUO.UnitTests.Fixtures;
 using Xunit;
 
 namespace ClassicUO.UnitTests.Game.LegionScript;

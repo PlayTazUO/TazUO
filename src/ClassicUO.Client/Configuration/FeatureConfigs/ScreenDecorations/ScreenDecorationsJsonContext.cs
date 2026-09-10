@@ -1,8 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
@@ -11,7 +8,6 @@ using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Rules;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Triggers;
 using ClassicUO.Configuration.Json;
 using ClassicUO.Game.Logic;
-using ClassicUO.Renderer.Effects;
 
 namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 
@@ -30,18 +26,15 @@ namespace ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 [JsonSourceGenerationOptions(IncludeFields = true)]
 internal sealed partial class ScreenDecorationsJsonContext : JsonSerializerContext
 {
-    private static Lazy<JsonSerializerOptions> JsonOptions { get; } = new(() =>
+    /// <summary>The options this config serializes with. Shared with the migration pipeline, so
+    /// migrated text round-trips through the same naming policy and converters.</summary>
+    public static JsonSerializerOptions JsonOptions { get; } = new()
     {
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            IncludeFields = true,
-            PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance,
-            Converters = { new ColorJsonConverter(), new JsonStringEnumConverter() }
-        };
+        WriteIndented = true,
+        IncludeFields = true,
+        PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance,
+        Converters = { new ColorJsonConverter(), new JsonStringEnumConverter() }
+    };
 
-        return options;
-    });
-
-    public static ScreenDecorationsJsonContext DefaultToUse { get; } = new(JsonOptions.Value);
+    public static ScreenDecorationsJsonContext DefaultToUse { get; } = new(JsonOptions);
 }

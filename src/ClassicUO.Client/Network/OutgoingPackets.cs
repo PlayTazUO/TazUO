@@ -146,6 +146,9 @@ namespace ClassicUO.Network
             socket.Send(writer.BufferWritten);
 
             writer.Dispose();
+
+            // Lowest place to dispatch an "object used" event
+            EventSink.InvokeObjectUsed(serial);
         }
 
         public static void Send_Seed

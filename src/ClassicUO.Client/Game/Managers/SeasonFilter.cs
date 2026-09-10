@@ -51,7 +51,7 @@ namespace ClassicUO.Game.Managers
 
             foreach (KeyValuePair<Season, Season> kvp in legacy)
             {
-                if (accountSettings.SeasonFilters[kvp.Key] != kvp.Value)
+                if (!accountSettings.SeasonFilters.TryGetValue(kvp.Key, out Season current) || current != kvp.Value)
                 {
                     accountSettings.SeasonFilters[kvp.Key] = kvp.Value;
                     changed = true;

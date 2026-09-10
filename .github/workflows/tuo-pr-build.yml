@@ -86,7 +86,7 @@ jobs:
           PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.pull_request.number }}
         run: |
           export LC_ALL=C.UTF-8
-          VERSION="$(date -u +%y).$(date -u +%m%d).pr${PR_NUMBER}"
+          VERSION="$(date -u +%y).$(date -u +%m%d).${PR_NUMBER}"
           echo "$VERSION" > "${{ env.CUO_OUTPUT_PATH }}/v.txt"
 
       - name: Zip all builds

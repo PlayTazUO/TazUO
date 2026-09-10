@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
@@ -11,8 +12,8 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 /// <summary>
-/// Marks an <see cref="int" /> property as a sound index, so the rule editor offers
-/// <see cref="SoundIndexPicker" /> for it.
+/// Marks a <c>List&lt;int&gt;</c> property as a set of sound indexes, so the rule editor offers a
+/// multi-select sound picker for it.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public sealed class SoundIndexEditorAttribute : Attribute;
@@ -123,26 +124,46 @@ public sealed class SoundIndexPicker : HorizontalStackPanel
 
         Widgets.Add(_input);
         Widgets.Add(_names);
-        Widgets.Add(PlayButton());
+        Widgets.Add(PlayButton(() => Index));
     }
 
     #endregion
 
-    #region Private methods
+    #region Public methods
+
+    /// <summary>Every named sound as (index, label) pairs, for seeding a multi-select picker.</summary>
+    public static IEnumerable<(int Value, string Label)> CatalogueEntries()
+    {
+        EnsureCatalogue();
+
+        return _labels.Select(pair => (pair.Key, pair.Value));
+    }
 
     /// <summary>
-    /// Plays the chosen sound, filters bypassed - the point is to hear what was picked, not what the
-    /// player's audio settings would let through during play.
+    /// A button playing whichever sound <paramref name="currentIndex" /> names when it is clicked,
+    /// filters bypassed - the point is to hear what was picked, not what the player's audio settings
+    /// would let through during play.
     /// </summary>
-    private MyraButton PlayButton() =>
-        new(
+    /// <param name="currentIndex">Read on click, so the button can be built before its picker exists.</param>
+    /// <returns>The button, for a picker to place where it likes.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="currentIndex" /> is null.</exception>
+    public static MyraButton PlayButton(Func<int> currentIndex)
+    {
+        ArgumentNullException.ThrowIfNull(currentIndex);
+
+        return new MyraButton(
             TazLang.Get("overlaytrigger_sound_play", "Play"),
-            () => Client.Game?.Audio?.PlaySound(Index, true)
+            () => Client.Game?.Audio?.PlaySound(currentIndex(), true)
         )
         {
             VerticalAlignment = VerticalAlignment.Center,
             Tooltip = TazLang.Get("overlaytrigger_sound_play_tooltip", "Hear the chosen sound.")
         };
+    }
+
+    #endregion
+
+    #region Private methods
 
     private void OnNumberTyped(int index)
     {
