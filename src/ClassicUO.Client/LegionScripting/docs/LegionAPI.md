@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `9/7/26`.*
+*This was generated on `9/10/26`.*
 
 ## Properties
 ### `Events`
@@ -2019,6 +2019,28 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ---
 
+### TargetRel
+`(xOffset, yOffset, tilesOnly)`
+ Target the spot at an offset from your position, resolving it the same way a click would:
+ the topmost visible object there is targeted, whether that is an entity, a static/multi, or land.
+ Example:
+ ```py
+ API.TargetRel(1, 1)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `xOffset` | `int` | ❌ No | X offset from your position, in tiles. |
+| `yOffset` | `int` | ❌ No | Y offset from your position, in tiles. |
+| `tilesOnly` | `bool` | ✅ Yes | When true (default), entities are ignored and only statics/multi or land are targeted. |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
 ### TargetLandRel
 `(xOffset, yOffset)`
  Target a land tile relative to your position.
@@ -2041,9 +2063,9 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ---
 
 ### TargetTileRel
-`(xOffset, yOffset, graphic)`
- Target a tile relative to your location.
- If this doesn't work, try TargetLandRel instead.'
+`(xOffset, yOffset, graphic, tilesOnly)`
+ Target the highest visible object at a tile relative to your location, skipping land.
+ Resolves the spot the same way <see cref="TargetRel"/> does, but never falls back to land.
  Example:
  ```py
  API.TargetTileRel(1, 1)
@@ -2056,7 +2078,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | --- | --- | --- | --- |
 | `xOffset` | `int` | ❌ No | X Offset from your position |
 | `yOffset` | `int` | ❌ No | Y Offset from your position |
-| `graphic` | `ushort` | ✅ Yes | Optional graphic, will try to use the graphic of the tile at that location if left empty. |
+| `graphic` | `ushort` | ✅ Yes | Optional graphic, will try to use the graphic of the highest tile at that location if left empty. |
+| `tilesOnly` | `bool` | ✅ Yes | When true (default), entities are ignored and only statics/multi are targeted. |
 
 **Return Type:** `void` *(Does not return anything)*
 

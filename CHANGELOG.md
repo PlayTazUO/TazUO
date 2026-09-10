@@ -5,6 +5,8 @@ All notable changes to TazUO will be recorded here.
 
 ## 9/10/26
 * ***Feature:*** Added `ForceDriver = 4` to force DirectX 11. Set it in the profile's `settings.json`. This can significantly improve performance on some Windows machines where OpenGL performs poorly. **If you experience low FPS or unusually poor performance, try setting `ForceDriver` to `4`** - [P.R 1067](https://github.com/PlayTazUO/TazUO/pull/1067) ([LasherasGH](https://github.com/LasherasGH))
+* ***Legion:*** Added `API.TargetRel()` to target the topmost visible object (entity, static/multi, or land) at a tile offset from the player, and added `Target()`/`TargetRel()` to entity objects to target the entity itself or a tile relative to its position
+* ***Legion:*** Fixed `API.TargetTileRel()` to target the highest non-land tile at the location instead of the base land tile. `API.TargetRel()`, `API.TargetTileRel()`, and entity `TargetRel()` accept a new `tilesOnly` argument (default `True`) to ignore entities
 
 ## 9/8/26
 * ***Feature:*** Added a "Multi Move" sub-menu to the grid container context menu for selecting items into the multi-move system - "Select all", "Select by layer" (populated only with layers present in the container), "Select by graphic" (each entry shows the item's art next to its graphic id), and "Select by name" (distinct item names, no duplicates)
