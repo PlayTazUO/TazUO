@@ -36,6 +36,7 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
 
         private bool isCasting { get; set; } = false;
         private SpellRangeInfo currentSpell { get; set; }
+        private bool frozenBySpell = false;
 
         /// <summary>
         /// Monotonic tick of the last time the server reported a cast failure (a <see cref="stopAtClilocs"/>
@@ -80,18 +81,17 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
                         SetCasting(spell);
             });
 
-        public void OnClilocReceived(int cliloc) =>
-            Task.Factory.StartNew(() =>
+        public void OnClilocReceived(int cliloc)
+        {
+            if (stopAtClilocs.Contains(cliloc))
             {
-                if (stopAtClilocs.Contains(cliloc))
-                {
-                    // Record the failure regardless of our isCasting flag: a damage packet may have
-                    // already cleared isCasting before this disrupt cliloc arrives (packet ordering),
-                    // and consumers still need to know the cast just failed.
-                    LastCastFailedTick = ClassicUO.Time.Ticks;
-                    if (isCasting) ClearCasting();
-                }
-            });
+                // Record the failure regardless of our isCasting flag: a damage packet may have
+                // already cleared isCasting before this disrupt cliloc arrives (packet ordering),
+                // and consumers still need to know the cast just failed.
+                LastCastFailedTick = ClassicUO.Time.Ticks;
+                if (isCasting) ClearCasting();
+            }
+        }
 
         private void SetCasting(SpellRangeInfo spell)
         {
@@ -101,7 +101,11 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
             currentSpell = spell;
             isCasting = true;
 
-            if (currentSpell != null && currentSpell.FreezeCharacterWhileCasting) World.Player.Flags |= Flags.Frozen;
+            if (currentSpell != null && currentSpell.FreezeCharacterWhileCasting)
+            {
+                frozenBySpell = true;
+                World.Player.Flags |= Flags.Frozen;
+            }
 
             World.Player.IsCasting = true;
             EventSink.InvokeSpellCastBegin(spell.ID);
@@ -115,9 +119,13 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
 
             if (World?.Player != null)
             {
-                World.Player.Flags &= ~Flags.Frozen;
+                // Only release the freeze this manager applied: Flags.Frozen also models server-side
+                // paralysis, so clearing it unconditionally silently un-paralyzes the player.
+                if (frozenBySpell) World.Player.Flags &= ~Flags.Frozen;
                 World.Player.IsCasting = false;
             }
+
+            frozenBySpell = false;
 
             EventSink.InvokeSpellCastEnd();
         }
@@ -197,14 +205,14 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
 
         private bool IsCastingWithoutTarget(SpellRangeInfo spell)
         {
-            if (LastSpellTime + TimeSpan.FromSeconds(spell.MaxDuration) > DateTime.Now)
-            {
-                if (LastSpellTime + TimeSpan.FromSeconds(spell.CastTime) > DateTime.Now)
-                    return true;
-                else if (spell.FreezeCharacterWhileCasting && World.Player != null) World.Player.Flags &= ~Flags.Frozen;
-            }
-            else if (spell.FreezeCharacterWhileCasting && World.Player != null) World.Player.Flags &= ~Flags.Frozen;
+            if (LastSpellTime + TimeSpan.FromSeconds(spell.MaxDuration) > DateTime.Now
+                && LastSpellTime + TimeSpan.FromSeconds(spell.CastTime) > DateTime.Now)
+                return true;
 
+            // The cast window elapsed and no target cursor is pending. No packet marks a *successful*
+            // cast, so this poll is the only place it ends; ClearCasting also drops
+            // PlayerMobile.IsCasting, which otherwise stayed true until the next cast or HP change.
+            ClearCasting();
             return false;
         }
 
