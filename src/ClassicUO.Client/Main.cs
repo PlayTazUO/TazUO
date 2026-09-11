@@ -123,7 +123,6 @@ namespace ClassicUO
 
             Settings.GlobalSettings = ConfigurationResolver.Load(globalSettingsPath, SettingsJsonContext.RealDefault.Settings);
             ProfileManager.LoadGlobalSettings();
-            ZLib.SetForceManagedZlib(ProfileManager.GlobalSettings.ManagedZlib); //Must be after global settings are loaded
 
             // still invalid, cannot load settings
             if (Settings.GlobalSettings == null)
@@ -538,11 +537,6 @@ namespace ClassicUO
                             CUOEnviroment.NoServerPing = true;
 
                             break;
-
-                        case "zlib":
-                            EnableZlibCommandLineOverride();
-
-                            break;
                     }
                 } catch(Exception e)
                 {
@@ -551,39 +545,6 @@ namespace ClassicUO
                 }
             }
         }
-
-        /// <summary>
-        /// Honors the <c>-zlib</c> command-line argument (force the managed zlib backend).
-        /// A stale or mismatched <c>ClassicUO.Utility.dll</c> - for example after a partial
-        /// update - can be missing the newer ZLib entry points, which otherwise crashes
-        /// startup with a <see cref="MissingMethodException"/>. Because such an exception is
-        /// raised when the method that *contains* the unresolved call is JIT-compiled, each
-        /// entry point lives in its own tiny method so the guarded calls below can catch the
-        /// failure and fall back instead of taking the whole client down.
-        /// </summary>
-        private static void EnableZlibCommandLineOverride()
-        {
-            try
-            {
-                InvokeZlibSetCommandLineOverride();
-                return;
-            }
-            catch (MissingMethodException) { }
-
-            try
-            {
-                InvokeZlibForceManaged();
-                Log.Warn("Enabled managed zlib via the legacy entry point; ClassicUO.Utility.dll appears to be out of date.");
-                return;
-            }
-            catch (MissingMethodException) { }
-
-            Log.Warn("Could not honor the -zlib argument: ClassicUO.Utility.dll is out of date. Enable managed zlib from the Options menu (login screen) instead, or reinstall TazUO so all files are updated together.");
-        }
-
-        private static void InvokeZlibSetCommandLineOverride() => ZLib.SetCommandLineOverride();
-
-        private static void InvokeZlibForceManaged() => ZLib.SetForceManagedZlib(true);
 
         private static void CopyRequiredLibs()
         {

@@ -8,7 +8,7 @@ namespace ClassicUO.Utility
 {
     public static class ZLibManaged
     {
-        public static void Decompress
+        public static ZLib.ZLibError Decompress
         (
             byte[] source,
             int sourceStart,
@@ -18,45 +18,76 @@ namespace ClassicUO.Utility
             int length
         )
         {
-            using (var stream = new MemoryStream(source, sourceStart, sourceLength - offset, true))
+            using (var stream = new MemoryStream(source, sourceStart, sourceLength - offset, false))
             {
                 using (var ds = new ZLibStream(stream, CompressionMode.Decompress))
                 {
-                    int totalRead = 0;
-
-                    while (totalRead < length)
-                    {
-                        // Read directly into destination buffer in chunks
-                        int toRead = Math.Min(4096, length - totalRead);
-                        int bytesRead = ds.Read(dest, totalRead, toRead);
-                        if (bytesRead <= 0)
-                            break;
-                        totalRead += bytesRead;
-                    }
+                    return ReadAll(ds, dest, length);
                 }
             }
         }
 
-        public static unsafe void Decompress(IntPtr source, int sourceLength, int offset, IntPtr dest, int length)
+        public static unsafe ZLib.ZLibError Decompress(IntPtr source, int sourceLength, int offset, IntPtr dest, int length)
         {
-            // Use a temporary buffer to leverage the optimized byte array version
-            byte[] tempDest = new byte[length];
-            byte[] tempSource = new byte[sourceLength - offset];
-
-            // Copy from unmanaged to managed
-            fixed (byte* tempSourcePtr = tempSource)
+            // UnmanagedMemoryStream wraps the caller's pinned buffers, so decompression writes
+            // straight into the destination: no staging arrays and no extra copy of either buffer.
+            using (var stream = new UnmanagedMemoryStream((byte*) source + offset, sourceLength - offset))
             {
-                Buffer.MemoryCopy((byte*)source.ToPointer(), tempSourcePtr, tempSource.Length, tempSource.Length);
+                using (var ds = new ZLibStream(stream, CompressionMode.Decompress))
+                {
+                    return ReadAll(ds, new Span<byte>((void*) dest, length));
+                }
+            }
+        }
+
+        private static ZLib.ZLibError ReadAll(ZLibStream stream, byte[] dest, int length)
+        {
+            int totalRead = 0;
+
+            while (totalRead < length)
+            {
+                int bytesRead = stream.Read(dest, totalRead, length - totalRead);
+
+                // The destination is the exact uncompressed size, so ending early means the
+                // compressed input was truncated.
+                if (bytesRead <= 0)
+                    return ZLib.ZLibError.DataError;
+
+                totalRead += bytesRead;
             }
 
-            // Decompress using the byte array version
-            Decompress(tempSource, 0, sourceLength, offset, tempDest, length);
+            return HasMoreOutput(stream) ? ZLib.ZLibError.BufferError : ZLib.ZLibError.Ok;
+        }
 
-            // Copy result back to unmanaged
-            fixed (byte* tempDestPtr = tempDest)
+        private static ZLib.ZLibError ReadAll(ZLibStream stream, Span<byte> dest)
+        {
+            int totalRead = 0;
+
+            while (totalRead < dest.Length)
             {
-                Buffer.MemoryCopy(tempDestPtr, (byte*)dest.ToPointer(), length, length);
+                int bytesRead = stream.Read(dest.Slice(totalRead));
+
+                // The destination is the exact uncompressed size, so ending early means the
+                // compressed input was truncated.
+                if (bytesRead <= 0)
+                    return ZLib.ZLibError.DataError;
+
+                totalRead += bytesRead;
             }
+
+            return HasMoreOutput(stream) ? ZLib.ZLibError.BufferError : ZLib.ZLibError.Ok;
+        }
+
+        /// <summary>
+        ///     Probes for a single decompressed byte past the destination buffer. A byte means the
+        ///     uncompressed data is larger than the caller-provided buffer; end of stream means the
+        ///     buffer held all of it.
+        /// </summary>
+        private static bool HasMoreOutput(ZLibStream stream)
+        {
+            Span<byte> probe = stackalloc byte[1];
+
+            return stream.Read(probe) > 0;
         }
 
         public static void Compress(byte[] dest, ref int destLength, byte[] source)
