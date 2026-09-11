@@ -28,9 +28,7 @@ namespace ClassicUO.Utility
         {
             try
             {
-                ZLibManaged.Decompress(source, offset, source.Length, offset, dest, length);
-
-                return ZLibError.Ok;
+                return ZLibManaged.Decompress(source, offset, source.Length, offset, dest, length);
             }
             catch (Exception e) when (e is InvalidDataException or IOException)
             {
@@ -42,9 +40,7 @@ namespace ClassicUO.Utility
         {
             try
             {
-                ZLibManaged.Decompress(source, sourceLength, offset, dest, length);
-
-                return ZLibError.Ok;
+                return ZLibManaged.Decompress(source, sourceLength, offset, dest, length);
             }
             catch (Exception e) when (e is InvalidDataException or IOException)
             {

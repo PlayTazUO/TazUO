@@ -8,7 +8,7 @@ namespace ClassicUO.Utility
 {
     public static class ZLibManaged
     {
-        public static void Decompress
+        public static ZLib.ZLibError Decompress
         (
             byte[] source,
             int sourceStart,
@@ -22,25 +22,25 @@ namespace ClassicUO.Utility
             {
                 using (var ds = new ZLibStream(stream, CompressionMode.Decompress))
                 {
-                    ReadAll(ds, dest, length);
+                    return ReadAll(ds, dest, length);
                 }
             }
         }
 
-        public static unsafe void Decompress(IntPtr source, int sourceLength, int offset, IntPtr dest, int length)
+        public static unsafe ZLib.ZLibError Decompress(IntPtr source, int sourceLength, int offset, IntPtr dest, int length)
         {
             // UnmanagedMemoryStream wraps the caller's pinned buffers, so decompression writes
             // straight into the destination: no staging arrays and no extra copy of either buffer.
-            using (var stream = new UnmanagedMemoryStream((byte*) source, sourceLength - offset))
+            using (var stream = new UnmanagedMemoryStream((byte*) source + offset, sourceLength - offset))
             {
                 using (var ds = new ZLibStream(stream, CompressionMode.Decompress))
                 {
-                    ReadAll(ds, new Span<byte>((void*) dest, length));
+                    return ReadAll(ds, new Span<byte>((void*) dest, length));
                 }
             }
         }
 
-        private static void ReadAll(ZLibStream stream, byte[] dest, int length)
+        private static ZLib.ZLibError ReadAll(ZLibStream stream, byte[] dest, int length)
         {
             int totalRead = 0;
 
@@ -48,14 +48,18 @@ namespace ClassicUO.Utility
             {
                 int bytesRead = stream.Read(dest, totalRead, length - totalRead);
 
+                // The destination is the exact uncompressed size, so ending early means the
+                // compressed input was truncated.
                 if (bytesRead <= 0)
-                    break;
+                    return ZLib.ZLibError.DataError;
 
                 totalRead += bytesRead;
             }
+
+            return HasMoreOutput(stream) ? ZLib.ZLibError.BufferError : ZLib.ZLibError.Ok;
         }
 
-        private static void ReadAll(ZLibStream stream, Span<byte> dest)
+        private static ZLib.ZLibError ReadAll(ZLibStream stream, Span<byte> dest)
         {
             int totalRead = 0;
 
@@ -63,11 +67,27 @@ namespace ClassicUO.Utility
             {
                 int bytesRead = stream.Read(dest.Slice(totalRead));
 
+                // The destination is the exact uncompressed size, so ending early means the
+                // compressed input was truncated.
                 if (bytesRead <= 0)
-                    break;
+                    return ZLib.ZLibError.DataError;
 
                 totalRead += bytesRead;
             }
+
+            return HasMoreOutput(stream) ? ZLib.ZLibError.BufferError : ZLib.ZLibError.Ok;
+        }
+
+        /// <summary>
+        ///     Probes for a single decompressed byte past the destination buffer. A byte means the
+        ///     uncompressed data is larger than the caller-provided buffer; end of stream means the
+        ///     buffer held all of it.
+        /// </summary>
+        private static bool HasMoreOutput(ZLibStream stream)
+        {
+            Span<byte> probe = stackalloc byte[1];
+
+            return stream.Read(probe) > 0;
         }
 
         public static void Compress(byte[] dest, ref int destLength, byte[] source)
