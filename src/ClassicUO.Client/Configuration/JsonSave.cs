@@ -114,6 +114,19 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     private bool _savesSuppressed;
 
     /// <summary>
+    ///     The last-known identity of the file behind <see cref="_fingerprintPath"/>, captured after
+    ///     every load and successful save. A later save whose file no longer matches this saw an
+    ///     external change and asks before overwriting it.
+    /// </summary>
+    private FileFingerprint? _fingerprint;
+
+    /// <summary>
+    ///     The path <see cref="_fingerprint"/> describes. A Save-As to another path is not compared
+    ///     against it.
+    /// </summary>
+    private string? _fingerprintPath;
+
+    /// <summary>
     ///     Loads the save for type <typeparamref name="T" /> from <see cref="FilePath" />. If the main file is
     ///     missing or unreadable the backups are tried in order; if they all fail a fresh instance is created,
     ///     and written to disk unless <see cref="PersistFreshDefaults" /> says otherwise. A file written by a
@@ -140,12 +153,98 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
 
     /// <summary>
     ///     Like <see cref="Save" />, but writes to an explicit path rather than <see cref="FilePath" />.
+    ///     A path other than the one this instance loaded (a Save-As) is written unconditionally.
     /// </summary>
-    protected void SaveTo(string filePath)
+    protected void SaveTo(string filePath) => SaveTo(filePath, false);
+
+    /// <summary>
+    ///     Writes this instance to <paramref name="filePath"/>, first checking that the file has not
+    ///     changed on disk since this instance loaded or last wrote it. On a change the write is
+    ///     withheld and the user is asked which copy to keep - see
+    ///     <see cref="JsonSaveConflictHandler"/>. <paramref name="overwriteExternal"/> skips that
+    ///     check for the user's "keep this client's version" answer.
+    /// </summary>
+    /// <param name="filePath">The file to write.</param>
+    /// <param name="overwriteExternal">Whether to write over an externally changed file.</param>
+    private void SaveTo(string filePath, bool overwriteExternal)
     {
+        bool conflicted = false;
+
         using (AcquireLock(filePath))
-            SaveCore(filePath);
+        {
+            if (!overwriteExternal && HasExternalChange(filePath))
+                conflicted = true;
+            else
+            {
+                SaveCore(filePath);
+                CaptureFingerprint(filePath);
+            }
+        }
+
+        if (conflicted)
+            RaiseConflict(filePath);
     }
+
+    /// <summary>
+    ///     Remembers the current file identity so a later external change can be told apart from our
+    ///     own writes. Called after every load and successful save.
+    /// </summary>
+    /// <param name="filePath">The file to fingerprint.</param>
+    private void CaptureFingerprint(string filePath)
+    {
+        _fingerprintPath = filePath;
+        _fingerprint = FileFingerprint.Capture(filePath);
+    }
+
+    /// <summary>
+    ///     Whether the file changed since <see cref="CaptureFingerprint"/> last ran. False for a path
+    ///     this instance never loaded, so a Save-As is never mistaken for a conflict.
+    /// </summary>
+    /// <param name="filePath">The file being saved to.</param>
+    private bool HasExternalChange(string filePath)
+    {
+        if (_fingerprint is not { } fingerprint || !string.Equals(filePath, _fingerprintPath, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return fingerprint.DiffersFrom(FileFingerprint.Capture(filePath));
+    }
+
+    /// <summary>
+    ///     Withholds the write and asks the user which copy to keep. The on-disk version wins when
+    ///     there is no prompt (headless, or before the UI is up).
+    /// </summary>
+    /// <param name="filePath">The conflicted file.</param>
+    private void RaiseConflict(string filePath)
+    {
+        FileFingerprint disk = FileFingerprint.Capture(filePath);
+
+        var conflict = new JsonSaveConflict(
+            filePath,
+            disk.LastWriteUtc,
+            overwriteLocal =>
+            {
+                if (overwriteLocal)
+                {
+                    SaveTo(filePath, true);
+                    return;
+                }
+
+                OnKeptDiskVersion();
+            });
+
+        if (!JsonSaveConflictHandler.Request(conflict))
+        {
+            Log.Warn($"JSON save '{filePath}' changed on disk since it was loaded; keeping the disk version.");
+            OnKeptDiskVersion();
+        }
+    }
+
+    /// <summary>
+    ///     Invoked when a save was withheld because the file on disk changed and the disk version was
+    ///     kept - either by the user or because no prompt was available. Override to reload the disk
+    ///     content into this instance so it stops diverging from the file.
+    /// </summary>
+    protected virtual void OnKeptDiskVersion() { }
 
     /// <summary>
     ///     Reads <paramref name="filePath" /> into a fresh instance, optionally binding the instance to
@@ -164,6 +263,8 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
 
         if (pinSource)
             result.SourcePath = filePath;
+
+        result.CaptureFingerprint(filePath);
 
         return result;
     }
@@ -515,6 +616,27 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     ///     than one client - so every scope is protected with a named mutex keyed on the file path.
     /// </summary>
     private CrossProcessLock AcquireLock(string? filePath = null) => new CrossProcessLock(filePath ?? FilePath);
+
+    /// <summary>
+    ///     A file's identity at one moment. Compared by value to detect that another process has
+    ///     created, deleted or rewritten the file since this instance last touched it.
+    /// </summary>
+    private readonly record struct FileFingerprint(bool Exists, DateTime LastWriteUtc, DateTime CreationUtc)
+    {
+        /// <summary>Reads the current identity of <paramref name="filePath"/>, missing file included.</summary>
+        public static FileFingerprint Capture(string filePath)
+        {
+            var info = new FileInfo(filePath);
+
+            return info.Exists
+                ? new FileFingerprint(true, info.LastWriteTimeUtc, info.CreationTimeUtc)
+                : new FileFingerprint(false, default, default);
+        }
+
+        /// <summary>Whether <paramref name="other"/> describes a different file state.</summary>
+        public bool DiffersFrom(FileFingerprint other) =>
+            Exists != other.Exists || LastWriteUtc != other.LastWriteUtc || CreationUtc != other.CreationUtc;
+    }
 
     /// <summary>
     ///     Why one candidate file did not yield an instance, which decides whether another is worth trying.

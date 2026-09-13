@@ -123,6 +123,7 @@ namespace ClassicUO
         protected override void Initialize() //Called during Game.Run() in FNA
         {
             MainThreadQueue.Load();
+            JsonSaveConflictDialog.Register();
 
             if (GraphicManager.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
             {
@@ -291,19 +292,11 @@ namespace ClassicUO
         protected override void UnloadContent()
         {
             ItemDatabaseManager.Instance.Dispose();
-            SDL_GetWindowBordersSize(Window.Handle, out int top, out int left, out _, out _);
-
-            Settings.GlobalSettings.WindowPosition = new Point(
-                Math.Max(0, Window.ClientBounds.X - left),
-                Math.Max(0, Window.ClientBounds.Y - top)
-            );
 
             Audio?.StopMusic();
             Audio?.StopSounds();
             Audio?.StopAmbientSound();
             VoiceRecognitionManager.Instance.Dispose();
-            Settings.GlobalSettings.Save();
-            ProfileManager.SaveGlobalSettings();
 
             if (_pluginsInitialized)
                 Plugin.OnClosing();
@@ -351,6 +344,10 @@ namespace ClassicUO
                 drawScene = true;
             else
                 drawScene = false;
+
+            // A conflict raised while the outgoing scene unloaded had its dialog cleared with the
+            // rest of that scene's UI; bring it back so the question is not silently lost.
+            JsonSaveConflictHandler.ResurfacePending();
         }
 
         public void SetVSync(bool value)
@@ -1300,11 +1297,54 @@ namespace ClassicUO
             return true;
         }
 
+        /// <summary>
+        ///     How long the client keeps its window up for the user to answer save conflicts raised
+        ///     during teardown before it gives up and keeps the disk versions.
+        /// </summary>
+        private const long EXIT_CONFLICT_WAIT_MS = 5 * 60 * 1000;
+
         protected override void OnExiting(object sender, EventArgs args)
         {
             Scene?.Dispose();
+            Scene = null;
+            drawScene = false;
+
+            // These used to be written while the graphics device tore down, too late for a conflict to
+            // be answered. Write them now, with the window still up, then give the user time to answer.
+            SDL_GetWindowBordersSize(Window.Handle, out int top, out int left, out _, out _);
+
+            Settings.GlobalSettings.WindowPosition = new Point(
+                Math.Max(0, Window.ClientBounds.X - left),
+                Math.Max(0, Window.ClientBounds.Y - top)
+            );
+
+            Settings.GlobalSettings.Save();
+            ProfileManager.SaveGlobalSettings();
+
+            WaitForPendingSaveConflicts();
 
             base.OnExiting(sender, args);
+        }
+
+        /// <summary>
+        ///     Keeps the client alive - pumping frames so the dialogs render and take input - until
+        ///     every save conflict raised during teardown has been answered. Timing out keeps the disk
+        ///     versions, the same outcome as an unanswered prompt, rather than hanging the process.
+        /// </summary>
+        private void WaitForPendingSaveConflicts()
+        {
+            if (!JsonSaveConflictHandler.HasPendingConflicts)
+                return;
+
+            JsonSaveConflictHandler.ResurfacePending();
+
+            var waited = Stopwatch.StartNew();
+
+            while (JsonSaveConflictHandler.HasPendingConflicts && waited.ElapsedMilliseconds < EXIT_CONFLICT_WAIT_MS)
+                Tick();
+
+            if (JsonSaveConflictHandler.HasPendingConflicts)
+                Log.Warn("Timed out waiting for save-conflict responses; the files on disk were kept.");
         }
 
         public void TakeScreenshot(string prefix = "screenshot")
