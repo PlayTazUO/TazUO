@@ -119,7 +119,6 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     ///     external change and asks before overwriting it.
     /// </summary>
     private FileFingerprint? _fingerprint;
-
     /// <summary>
     ///     The path <see cref="_fingerprint"/> describes. A Save-As to another path is not compared
     ///     against it.
@@ -169,11 +168,15 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     private void SaveTo(string filePath, bool overwriteExternal)
     {
         bool conflicted = false;
+        DateTime diskModifiedUtc = default;
 
         using (AcquireLock(filePath))
         {
-            if (!overwriteExternal && HasExternalChange(filePath))
+            if (!overwriteExternal && HasExternalChange(filePath, out FileFingerprint disk))
+            {
                 conflicted = true;
+                diskModifiedUtc = disk.LastWriteUtc;
+            }
             else
             {
                 SaveCore(filePath);
@@ -182,7 +185,7 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
         }
 
         if (conflicted)
-            RaiseConflict(filePath);
+            RaiseConflict(filePath, diskModifiedUtc);
     }
 
     /// <summary>
@@ -197,16 +200,22 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     }
 
     /// <summary>
-    ///     Whether the file changed since <see cref="CaptureFingerprint"/> last ran. False for a path
-    ///     this instance never loaded, so a Save-As is never mistaken for a conflict.
+    ///     Whether the file changed since <see cref="CaptureFingerprint"/> last ran, judged by content
+    ///     so a rewrite that leaves the bytes identical is not a conflict. False for a path this
+    ///     instance never loaded, so a Save-As is never mistaken for a conflict.
     /// </summary>
     /// <param name="filePath">The file being saved to.</param>
-    private bool HasExternalChange(string filePath)
+    /// <param name="disk">The file's identity now, for the caller's conflict message.</param>
+    private bool HasExternalChange(string filePath, out FileFingerprint disk)
     {
+        disk = default;
+
         if (_fingerprint is not { } fingerprint || !string.Equals(filePath, _fingerprintPath, StringComparison.OrdinalIgnoreCase))
             return false;
 
-        return fingerprint.DiffersFrom(FileFingerprint.Capture(filePath));
+        disk = FileFingerprint.Capture(filePath);
+
+        return fingerprint.DiffersFrom(disk);
     }
 
     /// <summary>
@@ -214,13 +223,12 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     ///     there is no prompt (headless, or before the UI is up).
     /// </summary>
     /// <param name="filePath">The conflicted file.</param>
-    private void RaiseConflict(string filePath)
+    /// <param name="diskModifiedUtc">When the on-disk file was last written.</param>
+    private void RaiseConflict(string filePath, DateTime diskModifiedUtc)
     {
-        FileFingerprint disk = FileFingerprint.Capture(filePath);
-
         var conflict = new JsonSaveConflict(
             filePath,
-            disk.LastWriteUtc,
+            diskModifiedUtc,
             overwriteLocal =>
             {
                 if (overwriteLocal)
@@ -618,24 +626,39 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     private CrossProcessLock AcquireLock(string? filePath = null) => new CrossProcessLock(filePath ?? FilePath);
 
     /// <summary>
-    ///     A file's identity at one moment. Compared by value to detect that another process has
-    ///     created, deleted or rewritten the file since this instance last touched it.
+    ///     A file's content at one moment, used to detect that another process created, deleted or
+    ///     changed the file since this instance last touched it. Judged by SHA-256 rather than
+    ///     timestamps so a rewrite that leaves the bytes identical is not mistaken for a change.
     /// </summary>
-    private readonly record struct FileFingerprint(bool Exists, DateTime LastWriteUtc, DateTime CreationUtc)
+    private readonly record struct FileFingerprint(bool Exists, byte[]? Sha256, DateTime LastWriteUtc)
     {
         /// <summary>Reads the current identity of <paramref name="filePath"/>, missing file included.</summary>
         public static FileFingerprint Capture(string filePath)
         {
             var info = new FileInfo(filePath);
 
-            return info.Exists
-                ? new FileFingerprint(true, info.LastWriteTimeUtc, info.CreationTimeUtc)
-                : new FileFingerprint(false, default, default);
+            if (!info.Exists)
+                return new FileFingerprint(false, null, default);
+
+            try
+            {
+                using var stream = File.OpenRead(filePath);
+                return new FileFingerprint(true, SHA256.HashData(stream), info.LastWriteTimeUtc);
+            }
+            catch (IOException)
+            {
+                // The read raced a delete or an exclusive lock. Report it as missing so the caller
+                // treats an uncertain state as changed rather than as unchanged.
+                return new FileFingerprint(false, null, default);
+            }
         }
 
         /// <summary>Whether <paramref name="other"/> describes a different file state.</summary>
         public bool DiffersFrom(FileFingerprint other) =>
-            Exists != other.Exists || LastWriteUtc != other.LastWriteUtc || CreationUtc != other.CreationUtc;
+            Exists != other.Exists || !Equals(Sha256, other.Sha256);
+
+        private static bool Equals(byte[]? left, byte[]? right) =>
+            left == null ? right == null : right != null && left.AsSpan().SequenceEqual(right);
     }
 
     /// <summary>

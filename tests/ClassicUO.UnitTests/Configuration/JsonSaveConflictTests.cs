@@ -34,6 +34,24 @@ public class JsonSaveConflictTests : IDisposable
     }
 
     [Fact]
+    public void A_Touched_But_Identical_File_Does_Not_Prompt()
+    {
+        LoadCurrent();
+        MigratingSave save = MigratingSave.LoadFromPath(FilePath);
+        bool prompted = false;
+        JsonSaveConflictHandler.Prompt = _ => prompted = true;
+
+        // Same bytes, newer timestamp: another client re-saved what it found without changing it.
+        File.SetLastWriteTimeUtc(FilePath, DateTime.UtcNow.AddMinutes(1));
+
+        save.Salutation = "mine";
+        save.Save();
+
+        prompted.Should().BeFalse();
+        File.ReadAllText(FilePath).Should().Contain("mine");
+    }
+
+    [Fact]
     public void A_Changed_File_Is_Kept_When_No_Prompt_Is_Available()
     {
         LoadCurrent();
