@@ -4,6 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 9/12/26
+* ***Feature:*** Increased the maximum world map zoom from 8x to 10x
 * ***Legion:*** Added `API.SetLastTarget()` to override the client's last target - pass an entity `serial`, or a location (`x`, `y`, `z`) with an optional `graphic` to set a static (or land when omitted)
 
 ## 9/10/26
