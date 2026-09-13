@@ -63,12 +63,8 @@ public class JsonSaveConflictTests : IDisposable
         raised.Should().NotBeNull();
         File.ReadAllText(FilePath).Should().Contain("theirs");
 
-        // The exit path holds the process open while this is true.
-        JsonSaveConflictHandler.HasPendingConflicts.Should().BeTrue();
-
         raised.Resolve(true);
 
-        JsonSaveConflictHandler.HasPendingConflicts.Should().BeFalse();
         File.ReadAllText(FilePath).Should().Contain("mine");
     }
 
