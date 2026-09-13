@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/12/26
+* ***Legion:*** Added `API.SetLastTarget()` to override the client's last target - pass an entity `serial`, or a location (`x`, `y`, `z`) with an optional `graphic` to set a static (or land when omitted)
+
 ## 9/10/26
 * ***Feature:*** Added `ForceDriver = 4` to force DirectX 11. Set it in the profile's `settings.json`. This can significantly improve performance on some Windows machines where OpenGL performs poorly. **If you experience low FPS or unusually poor performance, try setting `ForceDriver` to `4`** - [P.R 1067](https://github.com/PlayTazUO/TazUO/pull/1067) ([LasherasGH](https://github.com/LasherasGH))
 * ***Legion:*** Added `API.TargetRel()` to target the topmost visible object (entity, static/multi, or land) at a tile offset from the player, and added `Target()`/`TargetRel()` to entity objects to target the entity itself or a tile relative to its position
