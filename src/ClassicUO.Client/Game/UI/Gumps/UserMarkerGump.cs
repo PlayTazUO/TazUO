@@ -35,9 +35,9 @@ namespace ClassicUO.Game.UI.Gumps
         private const int MAX_NAME_LEN = 25;
 
         // Zoom index gates at which world-map zoom level the marker's icon starts to appear
-        // (0 = always visible, up to 9 for the most zoomed-in level). New markers default to 3.
+        // (0 = always visible, up to 10 for the most zoomed-in level). New markers default to 3.
         private const int MIN_ZOOM = 0;
-        private const int MAX_ZOOM = 9;
+        private const int MAX_ZOOM = 10;
         private const int DEFAULT_ZOOM = 3;
 
         private const int MAP_MIN_CORD = 0;
