@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `9/10/26`.*
+*This was generated on `9/12/26`.*
 
 ## Properties
 ### `Events`
@@ -2122,6 +2122,32 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.SysMsg("Targeting cancelled, april fools made you target something!")
  ```
 
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### SetLastTarget
+`(serial, x, y, z, graphic)`
+ Override the client's last target. Pass a serial for an entity, or a location (x/y/z)
+ for a land tile. Include graphic to mark the location as a static instead.
+ Example:
+ ```py
+ API.SetLastTarget(serial=0x12345678)
+ API.SetLastTarget(x=1243, y=1337, z=0)
+ API.SetLastTarget(x=1243, y=1337, z=0, graphic=0x1)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `serial` | `uint?` | ✅ Yes | Serial of the item/mobile to target. Takes precedence over location. |
+| `x` | `ushort?` | ✅ Yes | X coordinate of the target location. |
+| `y` | `ushort?` | ✅ Yes | Y coordinate of the target location. |
+| `z` | `short?` | ✅ Yes | Z coordinate of the target location. |
+| `graphic` | `ushort?` | ✅ Yes | Graphic of the static at the location. Omit to target land. |
 
 **Return Type:** `void` *(Does not return anything)*
 

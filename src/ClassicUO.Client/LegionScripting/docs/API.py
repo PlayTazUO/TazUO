@@ -2427,6 +2427,20 @@ def CancelTarget() -> None:
     """
     pass
 
+def SetLastTarget(serial: "int | None" = None, x: "int | None" = None, y: "int | None" = None, z: "int | None" = None, graphic: "int | None" = None) -> None:
+    """
+     Override the client's last target. Pass a serial for an entity, or a location (x/y/z)
+     for a land tile. Include graphic to mark the location as a static instead.
+     Example:
+     ```py
+     API.SetLastTarget(serial=0x12345678)
+     API.SetLastTarget(x=1243, y=1337, z=0)
+     API.SetLastTarget(x=1243, y=1337, z=0, graphic=0x1)
+     ```
+    
+    """
+    pass
+
 def PreTarget(serial: "int", targetType: "str" = "neutral") -> None:
     """
      Sets a pre-target that will be automatically applied when the next targeting request comes from the server.

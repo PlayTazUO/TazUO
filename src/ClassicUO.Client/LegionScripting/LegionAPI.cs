@@ -2803,6 +2803,44 @@ namespace ClassicUO.LegionScripting
         public void CancelTarget() => OnMain(World.TargetManager.CancelTarget);
 
         /// <summary>
+        /// Override the client's last target. Pass a serial for an entity, or a location (x/y/z)
+        /// for a land tile. Include graphic to mark the location as a static instead.
+        /// Example:
+        /// ```py
+        /// API.SetLastTarget(serial=0x12345678)
+        /// API.SetLastTarget(x=1243, y=1337, z=0)
+        /// API.SetLastTarget(x=1243, y=1337, z=0, graphic=0x1)
+        /// ```
+        /// </summary>
+        /// <param name="serial">Serial of the item/mobile to target. Takes precedence over location.</param>
+        /// <param name="x">X coordinate of the target location.</param>
+        /// <param name="y">Y coordinate of the target location.</param>
+        /// <param name="z">Z coordinate of the target location.</param>
+        /// <param name="graphic">Graphic of the static at the location. Omit to target land.</param>
+        public void SetLastTarget(uint? serial = null, ushort? x = null, ushort? y = null, short? z = null, ushort? graphic = null) => OnMain
+        (() =>
+            {
+                LastTargetInfo info = World.TargetManager.LastTargetInfo;
+
+                if (serial.HasValue && SerialHelper.IsValid(serial.Value))
+                {
+                    info.SetEntity(serial.Value);
+                }
+                else if (x.HasValue && y.HasValue && z.HasValue)
+                {
+                    if (graphic.HasValue)
+                    {
+                        info.SetStatic(graphic.Value, x.Value, y.Value, (sbyte)z.Value);
+                    }
+                    else
+                    {
+                        info.SetLand(x.Value, y.Value, (sbyte)z.Value);
+                    }
+                }
+            }
+        );
+
+        /// <summary>
         /// Sets a pre-target that will be automatically applied when the next targeting request comes from the server.
         /// This is useful for automating actions that require targeting, like using bandages or spells.
         /// Example:
