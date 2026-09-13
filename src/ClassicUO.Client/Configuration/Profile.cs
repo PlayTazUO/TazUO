@@ -817,6 +817,11 @@ namespace ClassicUO.Configuration
         public bool ControllerEnabled { get; set => SetProperty(ref field, value); } = true;
         public bool EnableScavenger { get; set => SetProperty(ref field, value); } = true;
         public string ScavengerSelectedListUid { get; set => SetProperty(ref field, value); } = "";
+        /// <summary>
+        /// When set, the scavenger ignores items whose properties mark them as locked down or secured.
+        /// Items without a received property list are not filtered, so some house decor can still be queued.
+        /// </summary>
+        public bool ScavengerSkipLockedDown { get; set => SetProperty(ref field, value); } = true;
         public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
         public bool NearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
         public bool SpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;

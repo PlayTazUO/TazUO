@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
+using ClassicUO.Game.Data;
 
 namespace ClassicUO.Game.Managers
 {
@@ -36,18 +37,20 @@ namespace ClassicUO.Game.Managers
         {
             get
             {
-                if (field == null)
-                    field = new();
+                field ??= new ScavengerManager();
                 return field;
             }
-            private set => field = value;
+            private set;
         }
 
         /// <summary>
         /// Entries of the currently selected scavenger list. Matching, adding and removing all
         /// operate against this list.
         /// </summary>
-        public List<ScavengerEntry> ScavengerEntries => _currentList?.Entries ?? _fallbackEntries;
+        public List<ScavengerEntry> ScavengerEntries
+        {
+            get => _currentList?.Entries ?? field;
+        } = [];
 
         /// <summary>
         /// All configured scavenger lists. There is always at least one.
@@ -70,13 +73,15 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         public const string DefaultListName = "Default";
 
-        private readonly HashSet<uint> _quickContainsLookup = new();
-        private readonly HashSet<uint> _recentlyLooted = new();
+        /// <summary>Clilocs that mark an item as house decor the player cannot pick up.</summary>
+        private static readonly ClilocValues[] _lockedDownClilocs = [ClilocValues.LockedDown, ClilocValues.LockedDownAndSecured];
+
+        private readonly HashSet<uint> _quickContainsLookup = [];
+        private readonly HashSet<uint> _recentlyLooted = [];
         private readonly PriorityQueue<(uint item, ScavengerEntry entry), ScavengerPriority> _lootItems = new();
-        private readonly List<ScavengerEntry> _fallbackEntries = new();
         private ScavengerData _data = new();
         private ScavengerList _currentList;
-        private bool _loaded = false;
+        private bool _loaded;
         private long _nextLootTime = Time.Ticks;
         private long _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
         private bool IsEnabled => ProfileManager.CurrentProfile.EnableScavenger;
@@ -111,10 +116,22 @@ namespace ClassicUO.Game.Managers
 
         public void LootItem(Item item, ScavengerEntry entry = null, ScavengerPriority priority = ScavengerPriority.Normal)
         {
-            if (item == null || !_recentlyLooted.Add(item.Serial) || !_quickContainsLookup.Add(item.Serial)) return;
+            // Sanity + spam filter
+            if (item == null || !_recentlyLooted.Add(item.Serial))
+                return;
+
+            // Check and avoid locked items
+            if ((ProfileManager.CurrentProfile?.ScavengerSkipLockedDown ?? true) &&
+                _world.OPL.MatchClilocs(item.Serial, false, _lockedDownClilocs))
+                return;
+
+            // Mark item as "in progress"
+            if (!_quickContainsLookup.Add(item.Serial))
+                return;
 
             if (entry != null)
                 priority = entry.Priority;
+
             _lootItems.Enqueue((item, entry), priority);
             _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
         }
@@ -124,10 +141,13 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private void CheckAndLoot(Item i)
         {
-            if (!_loaded || i == null || _quickContainsLookup.Contains(i.Serial)) return;
+            if (!_loaded || i == null || _quickContainsLookup.Contains(i.Serial))
+                return;
 
             ScavengerEntry entry = IsOnLootList(i);
-            if (entry != null) LootItem(i, entry);
+
+            if (entry != null)
+                LootItem(i, entry);
         }
 
         /// <summary>
@@ -137,7 +157,8 @@ namespace ClassicUO.Game.Managers
         /// <returns>The matched ScavengerEntry, or null if no match found</returns>
         private ScavengerEntry IsOnLootList(Item i)
         {
-            if (!_loaded) return null;
+            if (!_loaded)
+                return null;
 
             foreach (ScavengerEntry entry in ScavengerEntries)
                 if (entry.Match(i))
@@ -184,7 +205,7 @@ namespace ClassicUO.Game.Managers
         private void EnsureAtLeastOneList()
         {
             _data ??= new ScavengerData();
-            _data.Lists ??= new List<ScavengerList>();
+            _data.Lists ??= [];
 
             if (_data.Lists.Count == 0)
                 _data.Lists.Add(new ScavengerList { Name = DefaultListName });
@@ -516,7 +537,7 @@ namespace ClassicUO.Game.Managers
         public class ScavengerList
         {
             public string Name { get; set; } = "";
-            public List<ScavengerEntry> Entries { get; set; } = new();
+            public List<ScavengerEntry> Entries { get; set; } = [];
             /// <summary>
             /// Do not set this manually.
             /// </summary>
@@ -532,7 +553,7 @@ namespace ClassicUO.Game.Managers
         {
             public const string ScavengerFileName = "Scavenger.json";
 
-            public List<ScavengerList> Lists { get; set; } = new();
+            public List<ScavengerList> Lists { get; set; } = [];
 
             /// <summary>Lives in the server folder so it is shared across all characters on a server.</summary>
             protected override SettingsScope Scope => SettingsScope.Server;
@@ -545,17 +566,17 @@ namespace ClassicUO.Game.Managers
         public class ScavengerEntry
         {
             public string Name { get; set; } = "";
-            public int Graphic { get; set; } = 0;
+            public int Graphic { get; set; }
             public ushort Hue { get; set; } = ushort.MaxValue;
             [JsonConverter(typeof(RawStringConverter))]
             public string RegexSearch { get; set; } = string.Empty;
-            public uint DestinationContainer { get; set; } = 0;
+            public uint DestinationContainer { get; set; }
             public ScavengerPriority Priority { get; set; } = ScavengerPriority.Normal;
             /// <summary>
             /// Maximum number of matching items to keep in the destination container when scavenging
             /// this entry. Counts items already in the destination. 0 = no limit (pick up all).
             /// </summary>
-            public int MaxAmount { get; set; } = 0;
+            public int MaxAmount { get; set; }
             private bool RegexMatch => !string.IsNullOrEmpty(RegexSearch);
             /// <summary>
             /// Do not set this manually.

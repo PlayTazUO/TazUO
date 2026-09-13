@@ -1,13 +1,11 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
-
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Controls;
-using ClassicUO.Game.UI.Gumps.GridHighLight;
-using ClassicUO.Network;
 using ClassicUO.Network.PacketHandlers.Helpers;
 using ClassicUO.Utility;
 
@@ -16,7 +14,7 @@ namespace ClassicUO.Game.Managers
     public sealed class ObjectPropertiesListManager
     {
         private readonly Dictionary<uint, ItemProperty> _itemsProperties = new Dictionary<uint, ItemProperty>();
-        private World _world;
+        private readonly World _world;
 
         public ObjectPropertiesListManager(World world)
         {
@@ -106,14 +104,37 @@ namespace ClassicUO.Game.Managers
 
             return false;
         }
+
         public int[] GetClilocs(uint serial)
         {
             if (_itemsProperties.TryGetValue(serial, out ItemProperty p) && p.Clilocs != null)
-            {
                 return p.Clilocs;
+
+            return [];
+        }
+
+        /// <summary>
+        /// Checks whether the item, given by serial, has the given <see cref="ClilocValues"/>
+        /// </summary>
+        /// <param name="serial">The serial of the item to check</param>
+        /// <param name="requireAll">Whether all values must be found</param>
+        /// <param name="values">The values to look for</param>
+        /// <returns><see langword="true"/> if the item has the given <see cref="ClilocValues"/>, <see langword="false"/> otherwise</returns>
+        public bool MatchClilocs(uint serial, bool requireAll, params ClilocValues[] values)
+        {
+            if (serial == 0 || values == null)
+                return false;
+
+            int[] clilocs = GetClilocs(serial);
+
+            foreach (ClilocValues value in values)
+            {
+                bool found = clilocs.Any(cliloc => cliloc == (int)value);
+                if (found != requireAll)
+                    return found;
             }
 
-            return Array.Empty<int>();
+            return requireAll;
         }
 
         public int GetNameCliloc(uint serial)

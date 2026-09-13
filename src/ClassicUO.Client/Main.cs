@@ -50,58 +50,12 @@ namespace ClassicUO
             CUOEnviroment.GameThread = Thread.CurrentThread;
             CUOEnviroment.GameThread.Name = "TUO_MAIN_THREAD";
 
-            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-            {
-                var sb = new StringBuilder();
-#if DEV_BUILD || DEBUG
-                sb.Append($"[TazUO - DEV (DEBUG: {CUOEnviroment.Debug}) - {CUOEnviroment.Version} - {DateTime.Now}]");
-#else
-                sb.Append($"[TazUO [STANDARD_BUILD] - {CUOEnviroment.Version} - {DateTime.Now}]");
-#endif
-                sb.Append($" [{RuntimeInformation.FrameworkDescription}] [{RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})]");
-
-                sb.Append($" [{Thread.CurrentThread.Name}]");
-
-
-                if (Settings.GlobalSettings != null)
-                    sb.Append($"[{Settings.GlobalSettings.ClientVersion}]");
-
-                sb.AppendLine();
-
-                sb.AppendFormat("Exception:\n{0}\n", e.ExceptionObject);
-                sb.AppendLine();
-
-                string suggestedFix = CrashSuggestedFix.Get(e.ExceptionObject);
-
-                HtmlCrashLogGen.Generate(sb.ToString(), additional_notes: suggestedFix.NotNullNotEmpty() ? suggestedFix : string.Empty);
-
-#if !DEBUG
-                if (!suggestedFix.NotNullNotEmpty())
-                    new CrashReporter().SendMessage(sb.ToString());
-#endif
-
-
-                if (suggestedFix != null)
-                    sb.AppendLine(suggestedFix);
-
-                Log.Panic(e.ExceptionObject.ToString());
-                string path = Path.Combine(CUOEnviroment.ExecutablePath, "Logs");
-
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-
-                using (var crashfile = new LogFile(path, "crash.txt"))
-                {
-                    crashfile.Write(sb.ToString());
-                }
-            };
+            AppDomain.CurrentDomain.UnhandledException += (_, e) => CrashReporter.ReportAppDomainException(e);
 
             ReadSettingsFromArgs(args);
 
             if (CUOEnviroment.IsHighDPI)
-            {
                 Environment.SetEnvironmentVariable("FNA_GRAPHICS_ENABLE_HIGHDPI", "1");
-            }
 
             // NOTE: this is a workaroud to fix d3d11 on windows 11 + scale windows
             Environment.SetEnvironmentVariable("FNA3D_D3D11_FORCE_BITBLT", "1");
