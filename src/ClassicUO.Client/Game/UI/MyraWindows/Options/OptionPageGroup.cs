@@ -23,6 +23,12 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
     /// <inheritdoc/>
     public bool InheritsSearch { get; set; } = true;
 
+    public int? MinWidth { get; set; }
+    public int? MinHeight { get; set; }
+
+    public int? MaxWidth { get; set; }
+    public int? MaxHeight { get; set; }
+
     /// <param name="search">Optional search metadata for this group</param>
     /// <param name="pages">Factories producing the initial set of pages, added in order</param>
     public OptionPageGroup(SearchMetadata? search, params Func<IOptionSource>[] pages) : this(search)
@@ -78,7 +84,14 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
         for (int i = 0; i < _pages.Count; i++)
             widgets[i] = _pages[i].ContentFactory().Render();
 
-        return new PageControl(widgets) { RetainSizeWhenPaging = true };
+        return new PageControl(widgets)
+        {
+            RetainSizeWhenPaging = true,
+            MinHeight = MinHeight,
+            MinWidth = MinWidth,
+            MaxHeight = MaxHeight,
+            MaxWidth = MaxWidth,
+        };
     }
 
     private readonly record struct OptionPageDefinition(Func<IOptionSource> ContentFactory);

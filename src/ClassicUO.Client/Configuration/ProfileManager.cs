@@ -62,7 +62,7 @@ namespace ClassicUO.Configuration
             GlobalSettings = GlobalSettingsSave.Load();
 
             // The crashreporter caches its opt-out setting, as the global config is nulled
-            // during some operations - have to track separatly.
+            // during some operations - have to track separately.
             CrashReporter.RefreshReportingPreference();
         }
 

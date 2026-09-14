@@ -49,21 +49,25 @@ public class CrashReporter
     public void SendMessage(string msgSend)
     {
 #if DEBUG
-#pragma warning disable CS0162 // Everything past the DEBUG short-circuit is deliberately unreachable.
         return;
-#endif
-        if (string.IsNullOrEmpty(WebHook) || !IsReportingEnabled())
-            return;
+#else
+        try
+        {
+            if (string.IsNullOrEmpty(WebHook) || !IsReportingEnabled())
+                return;
 
-        // ReSharper disable once ShortLivedHttpClient - Usually done on client death so no point in keeping instance alive
-        using var httpClient = new HttpClient();
+            // ReSharper disable once ShortLivedHttpClient - Usually done on client death so no point in keeping instance alive
+            using var httpClient = new HttpClient();
 
-        var form = new MultipartFormDataContent();
-        byte[] fileBytes = Encoding.Unicode.GetBytes(msgSend);
-        form.Add(new ByteArrayContent(fileBytes, 0, fileBytes.Length), "Document", "log.txt");
-        httpClient.PostAsync(WebHook, form).Wait();
-#if DEBUG
-#pragma warning restore CS0162
+            var form = new MultipartFormDataContent();
+            byte[] fileBytes = Encoding.Unicode.GetBytes(msgSend);
+            form.Add(new ByteArrayContent(fileBytes, 0, fileBytes.Length), "Document", "log.txt");
+            httpClient.PostAsync(WebHook, form).Wait(15_000);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Failed to upload a crash report - {e}");
+        }
 #endif
     }
 
@@ -126,7 +130,6 @@ public class CrashReporter
     public static bool IsReportingEnabled()
     {
         RefreshReportingPreference();
-
         return _reportingEnabled;
     }
 
