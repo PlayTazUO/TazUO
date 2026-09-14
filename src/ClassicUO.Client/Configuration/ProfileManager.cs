@@ -3,6 +3,7 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
@@ -56,7 +57,14 @@ namespace ClassicUO.Configuration
         /// <summary>Settings for the currently logged-in account. Loaded once the server and account are known.</summary>
         public static AccountSettingsSave AccountSettings { get; private set; }
 
-        public static void LoadGlobalSettings() => GlobalSettings = GlobalSettingsSave.Load();
+        public static void LoadGlobalSettings()
+        {
+            GlobalSettings = GlobalSettingsSave.Load();
+
+            // The crashreporter caches its opt-out setting, as the global config is nulled
+            // during some operations - have to track separatly.
+            CrashReporter.RefreshReportingPreference();
+        }
 
         /// <summary>
         /// Loads the settings for the currently selected server. The server folder is derived from
@@ -73,6 +81,10 @@ namespace ClassicUO.Configuration
         public static void SaveGlobalSettings()
         {
             GlobalSettings?.Save();
+
+            // Must happen before the instance is dropped, or a crash during shutdown loses the opt-out.
+            CrashReporter.RefreshReportingPreference();
+
             GlobalSettings = null;
         }
 

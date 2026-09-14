@@ -8,6 +8,9 @@ using ClassicUO.Configuration;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 
+// ReSharper disable HeuristicUnreachableCode
+#pragma warning disable CS0162 // Unreachable code detected - Conditional compilation here. Warning is unnecessary.
+
 namespace ClassicUO.Game.Managers;
 
 /// <summary>
@@ -28,6 +31,13 @@ public class CrashReporter
     private static readonly Lazy<string> _installId = new(ResolveInstallId, LazyThreadSafetyMode.ExecutionAndPublication);
 
     /// <summary>
+    ///     Last value read from <see cref="GlobalSettingsSave.SendCrashReports"/>. Held separately because
+    ///     <see cref="ProfileManager.GlobalSettings"/> is null before it is loaded and again once it is saved
+    ///     at shutdown - a crash in either window must not fall back to uploading against the player's wishes.
+    /// </summary>
+    private static bool _reportingEnabled = true;
+
+    /// <summary>
     ///     Uploads <paramref name="msgSend" /> to <see cref="WebHook" /> as <c>log.txt</c>, blocking until the
     ///     POST completes. Does nothing if no webhook is set, or if the player has turned crash reporting off
     ///     via <see cref="GlobalSettingsSave.SendCrashReports" />.
@@ -39,6 +49,7 @@ public class CrashReporter
     public void SendMessage(string msgSend)
     {
 #if DEBUG
+#pragma warning disable CS0162 // Everything past the DEBUG short-circuit is deliberately unreachable.
         return;
 #endif
         if (string.IsNullOrEmpty(WebHook) || !IsReportingEnabled())
@@ -51,6 +62,9 @@ public class CrashReporter
         byte[] fileBytes = Encoding.Unicode.GetBytes(msgSend);
         form.Add(new ByteArrayContent(fileBytes, 0, fileBytes.Length), "Document", "log.txt");
         httpClient.PostAsync(WebHook, form).Wait();
+#if DEBUG
+#pragma warning restore CS0162
+#endif
     }
 
     /// <summary>
@@ -105,10 +119,29 @@ public class CrashReporter
     }
 
     /// <summary>
-    ///     Whether the player has left crash-report uploading on. Defaults to enabled when global settings are
-    ///     unavailable, which is the case when the crash happens before or after their lifetime.
+    ///     Whether the player has left crash-report uploading on, answered from the cached preference so a crash
+    ///     outside the lifetime of <see cref="ProfileManager.GlobalSettings"/> still honours their choice.
+    ///     Enabled until settings have been read at least once, since there is nothing else to go on.
     /// </summary>
-    public static bool IsReportingEnabled() => ProfileManager.GlobalSettings?.SendCrashReports ?? true;
+    public static bool IsReportingEnabled()
+    {
+        RefreshReportingPreference();
+
+        return _reportingEnabled;
+    }
+
+    /// <summary>
+    ///     Re-reads <see cref="GlobalSettingsSave.SendCrashReports"/> into the cache backing
+    ///     <see cref="IsReportingEnabled"/>. Call while <see cref="ProfileManager.GlobalSettings"/> is loaded,
+    ///     and again immediately before it is discarded; a null instance leaves the cached value untouched.
+    /// </summary>
+    public static void RefreshReportingPreference()
+    {
+        GlobalSettingsSave settings = ProfileManager.GlobalSettings;
+
+        if (settings != null)
+            _reportingEnabled = settings.SendCrashReports;
+    }
 
     /// <summary>
     ///     Returns this installation's anonymous identifier, used to group crash reports coming from the same client.

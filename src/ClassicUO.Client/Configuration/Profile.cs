@@ -818,9 +818,7 @@ namespace ClassicUO.Configuration
         public bool EnableScavenger { get; set => SetProperty(ref field, value); } = true;
         public string ScavengerSelectedListUid { get; set => SetProperty(ref field, value); } = "";
         /// <summary>
-        /// When set, the scavenger ignores items whose properties mark them as locked down or secured.
-        /// An item whose property list has not arrived yet is passed over for that scan and reconsidered
-        /// once the server answers, so house decor is never grabbed on the strength of missing data.
+        /// Determines whether the Scavanger Agent will attempt to ignore locked-down/secured items
         /// </summary>
         public bool ScavengerSkipLockedDown { get; set => SetProperty(ref field, value); } = true;
         public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
@@ -996,7 +994,7 @@ namespace ClassicUO.Configuration
                 ProfileManager.GlobalSettings.UseCircleOfTransparency = UseCircleOfTransparency;
                 ProfileManager.GlobalSettings.CircleOfTransparencyRadius = CircleOfTransparencyRadius;
                 ProfileManager.GlobalSettings.CircleOfTransparencyType = CircleOfTransparencyType;
-                
+
                 ProfileMigrationVersion = 7;
             }
 

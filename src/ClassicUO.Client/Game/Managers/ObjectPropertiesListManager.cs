@@ -124,9 +124,9 @@ namespace ClassicUO.Game.Managers
         /// decides the result exactly as it does for an item with an empty list. An empty <paramref name="values"/>
         /// likewise yields <paramref name="requireAll"/>: everything in an empty set is present, nothing in it is.
         /// </returns>
-        public bool MatchClilocs(uint serial, bool requireAll, params ClilocValues[] values)
+        public bool MatchClilocs(uint serial, bool requireAll, params ReadOnlySpan<ClilocValues> values)
         {
-            if (serial == 0 || values == null)
+            if (serial == 0)
                 return false;
 
             int[] clilocs = GetClilocs(serial);

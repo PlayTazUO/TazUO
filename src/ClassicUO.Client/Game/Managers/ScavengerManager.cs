@@ -119,8 +119,8 @@ namespace ClassicUO.Game.Managers
             if (item == null)
                 return;
 
-            // Runs ahead of the spam filter: an item still awaiting its property list must stay eligible
-            // for the next pass rather than burn its slot in _recentlyLooted.
+            // Runs ahead of the spam filter: a rejected item must not burn a slot in _recentlyLooted,
+            // which is reserved for items actually queued for pickup.
             if (ShouldSkipAsLockedDown(item))
                 return;
 
@@ -139,9 +139,11 @@ namespace ClassicUO.Game.Managers
         /// Whether the item must be left alone because it is locked down or secured inside a house.
         /// </summary>
         /// <remarks>
-        /// Says "skip" while the property list is still missing, so nothing is grabbed on the strength of
-        /// absent data. The <see cref="ObjectPropertiesListManager.Contains"/> probe queues an OPL request
-        /// as a side effect, which is what makes a later pass able to answer properly.
+        /// Only proof skips an item: the property list must have arrived and must carry one of the clilocs.
+        /// An item still awaiting its list is treated as normal loot, so the scavenger keeps working against
+        /// servers that never answer an OPL request. The <see cref="ObjectPropertiesListManager.Contains"/>
+        /// probe queues that request as a side effect, so an item the server refuses to hand over is
+        /// recognised and skipped once it comes back around after the retry delay.
         /// </remarks>
         private bool ShouldSkipAsLockedDown(Item item)
         {
