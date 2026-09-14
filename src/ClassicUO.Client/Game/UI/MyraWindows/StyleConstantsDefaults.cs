@@ -38,6 +38,18 @@ public static class StyleConstantsDefaults
     /// </summary>
     public const int RESET_ICON_FONT_SIZE = 24;
 
+    /// <summary>
+    /// A standard icon for a caveat attached to a setting - something the user should know before
+    /// trusting it, short of an error.
+    /// Must be used with a supported font such as <see cref="ClassicUO.Assets.EmbeddedFontNames.NOTO_SANS_2_SYMBOLS"/>
+    /// </summary>
+    public const string WarningLabelIconText = "⚠";
+
+    /// <summary>
+    /// Point size the warning glyph is drawn at when it sits inline beside a control's own label.
+    /// </summary>
+    public const int WarningIconFontSize = 32;
+
     public const int TOOLBAR_BUTTON_SIZE = 28;
 
     #region Inputs
