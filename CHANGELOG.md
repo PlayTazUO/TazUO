@@ -3,6 +3,12 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/13/26
+* ***Feature:*** Added a "Skip locked-down items" option to the Scavenger agent tab (on by default) so locked down or secured house decorations are no longer picked up - [P.R 1079](https://github.com/PlayTazUO/TazUO/pull/1079) ([yuval-po](https://github.com/yuval-po))
+* ***Feature:*** Added a "Send crash reports" option under Options > Misc (on by default) to opt out of uploading crash reports; crash logs are still written to your Logs folder either way - [P.R 1079](https://github.com/PlayTazUO/TazUO/pull/1079) ([yuval-po](https://github.com/yuval-po))
+* ***Misc:*** Crash reports now include the .NET runtime, OS/architecture, and an anonymous install ID (a random value in `Data/installid`, no hardware, account, or network information) to group reports from the same installation - [P.R 1079](https://github.com/PlayTazUO/TazUO/pull/1079) ([yuval-po](https://github.com/yuval-po))
+* ***Misc:*** Localized the Scavenger agent tab - [P.R 1079](https://github.com/PlayTazUO/TazUO/pull/1079) ([yuval-po](https://github.com/yuval-po))
+
 ## 9/12/26
 * ***Feature:*** Increased the maximum world map zoom from 8x to 10x
 * ***Legion:*** Added `API.SetLastTarget()` to override the client's last target - pass an entity `serial`, or a location (`x`, `y`, `z`) with an optional `graphic` to set a static (or land when omitted)
