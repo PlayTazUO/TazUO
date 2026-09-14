@@ -5,7 +5,12 @@ namespace ClassicUO.Game.Data;
 ///     (see <see cref="ClassicUO.Game.Managers.ObjectPropertiesListManager"/>). Only IDs the client
 ///     actually reacts to belong here; the full cliloc table lives in the UO data files.
 /// </summary>
-public enum ClilocValues : uint
+/// <remarks>
+///     Backed by <see cref="int"/> to match <c>ItemProperty.Clilocs</c>. The wire format is a big-endian
+///     uint32, but every ID in use is well inside the positive int range and the packet reader narrows to
+///     <see cref="int"/> on arrival.
+/// </remarks>
+public enum ClilocValues : int
 {
     /// <summary>"Locked down" - item is fixed in place inside a house and cannot be picked up.</summary>
     LockedDown = 501643, // 0x7A78B

@@ -819,7 +819,8 @@ namespace ClassicUO.Configuration
         public string ScavengerSelectedListUid { get; set => SetProperty(ref field, value); } = "";
         /// <summary>
         /// When set, the scavenger ignores items whose properties mark them as locked down or secured.
-        /// Items without a received property list are not filtered, so some house decor can still be queued.
+        /// An item whose property list has not arrived yet is passed over for that scan and reconsidered
+        /// once the server answers, so house decor is never grabbed on the strength of missing data.
         /// </summary>
         public bool ScavengerSkipLockedDown { get; set => SetProperty(ref field, value); } = true;
         public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }

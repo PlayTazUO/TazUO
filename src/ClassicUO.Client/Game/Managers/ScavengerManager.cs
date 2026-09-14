@@ -116,17 +116,16 @@ namespace ClassicUO.Game.Managers
 
         public void LootItem(Item item, ScavengerEntry entry = null, ScavengerPriority priority = ScavengerPriority.Normal)
         {
-            // Sanity + spam filter
-            if (item == null || !_recentlyLooted.Add(item.Serial))
+            if (item == null)
                 return;
 
-            // Check and avoid locked items
-            if ((ProfileManager.CurrentProfile?.ScavengerSkipLockedDown ?? true) &&
-                _world.OPL.MatchClilocs(item.Serial, false, _lockedDownClilocs))
+            // Runs ahead of the spam filter: an item still awaiting its property list must stay eligible
+            // for the next pass rather than burn its slot in _recentlyLooted.
+            if (ShouldSkipAsLockedDown(item))
                 return;
 
-            // Mark item as "in progress"
-            if (!_quickContainsLookup.Add(item.Serial))
+            // Spam filter, then mark the item as "in progress"
+            if (!_recentlyLooted.Add(item.Serial) || !_quickContainsLookup.Add(item.Serial))
                 return;
 
             if (entry != null)
@@ -134,6 +133,26 @@ namespace ClassicUO.Game.Managers
 
             _lootItems.Enqueue((item, entry), priority);
             _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
+        }
+
+        /// <summary>
+        /// Whether the item must be left alone because it is locked down or secured inside a house.
+        /// </summary>
+        /// <remarks>
+        /// Says "skip" while the property list is still missing, so nothing is grabbed on the strength of
+        /// absent data. The <see cref="ObjectPropertiesListManager.Contains"/> probe queues an OPL request
+        /// as a side effect, which is what makes a later pass able to answer properly.
+        /// </remarks>
+        private bool ShouldSkipAsLockedDown(Item item)
+        {
+            if (!(ProfileManager.CurrentProfile?.ScavengerSkipLockedDown ?? true))
+                return false;
+
+            // This here is a double dict lookup. Not too terrible but can be reduced to one if performance is deemed inadequate.
+            if (!_world.OPL.Contains(item.Serial))
+                return false;
+
+            return _world.OPL.MatchClilocs(item.Serial, false, _lockedDownClilocs);
         }
 
         /// <summary>

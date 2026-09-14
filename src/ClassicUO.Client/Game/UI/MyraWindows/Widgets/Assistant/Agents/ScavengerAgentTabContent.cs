@@ -140,7 +140,7 @@ public static class ScavengerAgentTabContent
             if (current == null) return;
             new MyraDialog(TazLang.Get("scavenger_list_deletetitle", "Delete Scavenger List"),
                 new MyraLabel(
-                    TazLang.Get("scavenger_list_deleteconfirm", "Delete list \"{0}\" and all of its entries?", [current.Name]),
+                    TazLang.GetEx("scavenger_list_deleteconfirm", "Delete list \"{0}\" and all of its entries?", [current.Name]),
                     MyraLabel.TextStyle.P
                 ),
                 ok =>

@@ -153,6 +153,13 @@ public static class MiscTab
                 new SearchMetadata(TazLang.Get("mog_misctab_enableautoresynconhangdetection"), Keywords: [TazLang.Get("mog_kw_resync"), TazLang.Get("mog_kw_hang")])
             ),
             Option.Checkbox(
+                TazLang.Get("mog_misctab_sendcrashreports"),
+                new Accessor<bool>(() => ProfileManager.GlobalSettings.SendCrashReports),
+                TazLang.Get("mog_misctab_sendcrashreportstooltip"),
+                new SearchMetadata(TazLang.Get("mog_misctab_sendcrashreports"),
+                    Keywords: [TazLang.Get("mog_kw_crash"), TazLang.Get("mog_kw_report"), TazLang.Get("mog_kw_privacy")])
+            ),
+            Option.Checkbox(
                 TazLang.Get("mog_misctab_usemanagedzlib"),
                 ZLib.ManagedZlibForced,
                 newValue =>

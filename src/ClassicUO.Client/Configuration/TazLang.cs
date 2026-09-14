@@ -28,7 +28,7 @@ namespace ClassicUO.Configuration
         /// <paramref name="fallback"/> when the key is not found. The fallback is a template too, so it
         /// carries the same <c>{0}</c> placeholders as the localized string.
         /// </summary>
-        public static string Get(string key, string fallback, string[] replace) => Format(key, _strings.GetValueOrDefault(key, fallback), replace);
+        public static string GetEx(string key, string fallback, string[] replace) => Format(key, _strings.GetValueOrDefault(key, fallback), replace);
 
         /// <summary>
         /// Applies <paramref name="replace"/> to <paramref name="template"/>, returning the unformatted

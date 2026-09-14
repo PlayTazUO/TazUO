@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
@@ -14,12 +13,12 @@ namespace ClassicUO.Game.Managers;
 /// <summary>
 ///     Turns an unhandled exception into the crash artifacts TazUO leaves behind: an HTML crash log, a
 ///     <c>Logs/crash.txt</c> entry and, when a webhook is configured, an upload of the same text.
-///     Instances are throwaway - the only per-instance state is <see cref="WebHook"/>.
+///     Instances are throwaway - the only per-instance state is <see cref="WebHook" />.
 /// </summary>
 public class CrashReporter
 {
     /// <summary>
-    ///     Endpoint <see cref="SendMessage"/> posts the crash text to as a multipart file upload.
+    ///     Endpoint <see cref="SendMessage" /> posts the crash text to as a multipart file upload.
     ///     Empty (the default) disables uploading.
     /// </summary>
     public string WebHook { get; set; } = @"";
@@ -29,8 +28,9 @@ public class CrashReporter
     private static readonly Lazy<string> _installId = new(ResolveInstallId, LazyThreadSafetyMode.ExecutionAndPublication);
 
     /// <summary>
-    ///     Uploads <paramref name="msgSend"/> to <see cref="WebHook"/> as <c>log.txt</c>, blocking until the
-    ///     POST completes. Does nothing if no webhook is set.
+    ///     Uploads <paramref name="msgSend" /> to <see cref="WebHook" /> as <c>log.txt</c>, blocking until the
+    ///     POST completes. Does nothing if no webhook is set, or if the player has turned crash reporting off
+    ///     via <see cref="GlobalSettingsSave.SendCrashReports" />.
     /// </summary>
     /// <remarks>
     ///     No-op in DEBUG builds so local crashes are never reported upstream.
@@ -41,8 +41,7 @@ public class CrashReporter
 #if DEBUG
         return;
 #endif
-
-        if (string.IsNullOrEmpty(WebHook))
+        if (string.IsNullOrEmpty(WebHook) || !IsReportingEnabled())
             return;
 
         // ReSharper disable once ShortLivedHttpClient - Usually done on client death so no point in keeping instance alive
@@ -55,14 +54,14 @@ public class CrashReporter
     }
 
     /// <summary>
-    ///     Handles an <see cref="AppDomain.UnhandledException"/>: builds the crash report header (build, runtime,
+    ///     Handles an <see cref="AppDomain.UnhandledException" />: builds the crash report header (build, runtime,
     ///     OS, thread, install ID, client version), writes the HTML log and <c>Logs/crash.txt</c>, and uploads the
-    ///     report unless <see cref="CrashSuggestedFix"/> recognised the exception as a known user-side problem.
+    ///     report unless <see cref="CrashSuggestedFix" /> recognised the exception as a known user-side problem.
     /// </summary>
     /// <remarks>
     ///     Runs while the process is already dying, so it must not throw and must not depend on game state.
     /// </remarks>
-    /// <param name="e">Event args from <see cref="AppDomain.UnhandledException"/>.</param>
+    /// <param name="e">Event args from <see cref="AppDomain.UnhandledException" />.</param>
     public static void ReportAppDomainException(UnhandledExceptionEventArgs e)
     {
         var sb = new StringBuilder();
@@ -72,10 +71,8 @@ public class CrashReporter
         sb.Append($"[TazUO [STANDARD_BUILD] - {CUOEnviroment.Version} - {DateTime.Now}]");
 #endif
         sb.Append($" [{RuntimeInformation.FrameworkDescription}] [{RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})]");
-
         sb.Append($" [{Thread.CurrentThread.Name}]");
         sb.Append($" [InstallID - {GetUniqueInstallId()}]");
-
 
         if (Settings.GlobalSettings != null)
             sb.Append($"[{Settings.GlobalSettings.ClientVersion}]");
@@ -90,7 +87,7 @@ public class CrashReporter
         HtmlCrashLogGen.Generate(sb.ToString(), additional_notes: suggestedFix.NotNullNotEmpty() ? suggestedFix : string.Empty);
 
 #if !DEBUG
-        if (!suggestedFix.NotNullNotEmpty())
+        if (!suggestedFix.NotNullNotEmpty() && IsReportingEnabled())
             new CrashReporter().SendMessage(sb.ToString());
 #endif
 
@@ -108,8 +105,14 @@ public class CrashReporter
     }
 
     /// <summary>
+    ///     Whether the player has left crash-report uploading on. Defaults to enabled when global settings are
+    ///     unavailable, which is the case when the crash happens before or after their lifetime.
+    /// </summary>
+    public static bool IsReportingEnabled() => ProfileManager.GlobalSettings?.SendCrashReports ?? true;
+
+    /// <summary>
     ///     Returns this installation's anonymous identifier, used to group crash reports coming from the same client.
-    ///     The value is a random GUID stored in <c>Data/installid</c>; it holds no hardware, account or network
+    ///     The value is a random GUID stored in <c>Data/installid</c>; it holds no hardware, account, or network
     ///     information. Generated and written on first use, read back on every later call.
     /// </summary>
     /// <remarks>

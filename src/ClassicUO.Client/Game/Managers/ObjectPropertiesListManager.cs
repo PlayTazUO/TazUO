@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
@@ -117,9 +116,14 @@ namespace ClassicUO.Game.Managers
         /// Checks whether the item, given by serial, has the given <see cref="ClilocValues"/>
         /// </summary>
         /// <param name="serial">The serial of the item to check</param>
-        /// <param name="requireAll">Whether all values must be found</param>
+        /// <param name="requireAll">Whether all values must be found, rather than any one of them</param>
         /// <param name="values">The values to look for</param>
-        /// <returns><see langword="true"/> if the item has the given <see cref="ClilocValues"/>, <see langword="false"/> otherwise</returns>
+        /// <returns>
+        /// <see langword="true"/> if the item has the given <see cref="ClilocValues"/>, <see langword="false"/> otherwise.
+        /// An item whose property list has not been received yet matches nothing, so <paramref name="requireAll"/>
+        /// decides the result exactly as it does for an item with an empty list. An empty <paramref name="values"/>
+        /// likewise yields <paramref name="requireAll"/>: everything in an empty set is present, nothing in it is.
+        /// </returns>
         public bool MatchClilocs(uint serial, bool requireAll, params ClilocValues[] values)
         {
             if (serial == 0 || values == null)
@@ -129,7 +133,17 @@ namespace ClassicUO.Game.Managers
 
             foreach (ClilocValues value in values)
             {
-                bool found = clilocs.Any(cliloc => cliloc == (int)value);
+                bool found = false;
+
+                foreach (int cliloc in clilocs)
+                {
+                    if (cliloc != (int)value)
+                        continue;
+
+                    found = true;
+                    break;
+                }
+
                 if (found != requireAll)
                     return found;
             }
