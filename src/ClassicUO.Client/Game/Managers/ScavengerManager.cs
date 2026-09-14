@@ -76,7 +76,7 @@ namespace ClassicUO.Game.Managers
         /// <summary>Clilocs that mark an item as house decor the player cannot pick up.</summary>
         private static readonly ClilocValues[] _lockedDownClilocs = [ClilocValues.LockedDown, ClilocValues.LockedDownAndSecured];
 
-        private readonly HashSet<uint> _quickContainsLookup = [];
+        private readonly HashSet<uint> _inLootQueue = [];
         private readonly HashSet<uint> _recentlyLooted = [];
         private readonly PriorityQueue<(uint item, ScavengerEntry entry), ScavengerPriority> _lootItems = new();
         private ScavengerData _data = new();
@@ -119,13 +119,17 @@ namespace ClassicUO.Game.Managers
             if (item == null)
                 return;
 
-            // Runs ahead of the spam filter: a rejected item must not burn a slot in _recentlyLooted,
-            // which is reserved for items actually queued for pickup.
-            if (ShouldSkipAsLockedDown(item))
+            // A spam-filter of sorts, don't retry the item if it's been processed recently
+            if (!_recentlyLooted.Add(item.Serial))
                 return;
 
-            // Spam filter, then mark the item as "in progress"
-            if (!_recentlyLooted.Add(item.Serial) || !_quickContainsLookup.Add(item.Serial))
+            LockdownState lockdown = GetLockdownState(item);
+
+            if (lockdown == LockdownState.LockedDown)
+                return;
+
+            // Mark the item as "in progress"
+            if (!_inLootQueue.Add(item.Serial))
                 return;
 
             if (entry != null)
@@ -136,25 +140,27 @@ namespace ClassicUO.Game.Managers
         }
 
         /// <summary>
-        /// Whether the item must be left alone because it is locked down or secured inside a house.
+        /// Classifies an item against the locked-down/secured clilocs so the caller can tell a proven verdict
+        /// apart from one the client could not reach.
         /// </summary>
         /// <remarks>
-        /// Only proof skips an item: the property list must have arrived and must carry one of the clilocs.
-        /// An item still awaiting its list is treated as normal loot, so the scavenger keeps working against
-        /// servers that never answer an OPL request. The <see cref="ObjectPropertiesListManager.Contains"/>
-        /// probe queues that request as a side effect, so an item the server refuses to hand over is
-        /// recognised and skipped once it comes back around after the retry delay.
+        /// Only proof yields <see cref="LockdownState.LockedDown"/>: the property list must have arrived and
+        /// must carry one of the clilocs. The <see cref="ObjectPropertiesListManager.Contains"/> probe queues
+        /// that request as a side effect, so an <see cref="LockdownState.Unknown"/> item becomes judgeable
+        /// once the server answers.
         /// </remarks>
-        private bool ShouldSkipAsLockedDown(Item item)
+        private LockdownState GetLockdownState(Item item)
         {
             if (!(ProfileManager.CurrentProfile?.ScavengerSkipLockedDown ?? true))
-                return false;
+                return LockdownState.NotLockedDown;
 
             // This here is a double dict lookup. Not too terrible but can be reduced to one if performance is deemed inadequate.
             if (!_world.OPL.Contains(item.Serial))
-                return false;
+                return LockdownState.Unknown;
 
-            return _world.OPL.MatchClilocs(item.Serial, false, _lockedDownClilocs);
+            return _world.OPL.MatchClilocs(item.Serial, false, _lockedDownClilocs)
+                ? LockdownState.LockedDown
+                : LockdownState.NotLockedDown;
         }
 
         /// <summary>
@@ -162,7 +168,7 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private void CheckAndLoot(Item i)
         {
-            if (!_loaded || i == null || _quickContainsLookup.Contains(i.Serial))
+            if (!_loaded || i == null || _inLootQueue.Contains(i.Serial))
                 return;
 
             ScavengerEntry entry = IsOnLootList(i);
@@ -362,7 +368,7 @@ namespace ClassicUO.Game.Managers
             (uint item, ScavengerEntry entry) = _lootItems.Dequeue();
             if (item == 0) return;
 
-            _quickContainsLookup.Remove(item);
+            _inLootQueue.Remove(item);
 
             Item moveItem = _world.Items.Get(item);
 
@@ -478,7 +484,7 @@ namespace ClassicUO.Game.Managers
         public void ClearActiveLootQueue()
         {
             while (_lootItems.TryDequeue(out _, out _));
-            _quickContainsLookup.Clear();
+            _inLootQueue.Clear();
         }
 
         private void ImportEntries(List<ScavengerEntry> entries, string source)
@@ -550,6 +556,22 @@ namespace ClassicUO.Game.Managers
         }
 
         public enum ScavengerPriority { Low = 0, Normal = 1, High = 2 }
+
+        /// <summary>
+        /// Verdict of the locked-down check for a single item. <see cref="Unknown"/> is distinct from
+        /// <see cref="NotLockedDown"/> so a missing property list is not mistaken for a clean one.
+        /// </summary>
+        private enum LockdownState
+        {
+            /// <summary>The check is off, or the property list arrived without a locked-down cliloc.</summary>
+            NotLockedDown,
+
+            /// <summary>No property list yet, so the item cannot be judged until the server answers.</summary>
+            Unknown,
+
+            /// <summary>The property list proves the item is locked down or secured.</summary>
+            LockedDown
+        }
 
         /// <summary>
         /// A named collection of scavenger entries. Users can create multiple lists and quickly
