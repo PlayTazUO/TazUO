@@ -113,6 +113,9 @@ namespace ClassicUO.Game.UI.Controls
 
     public object Tooltip { get; private set; }
 
+    /// <summary>Optional line drawn above <see cref="Tooltip"/>, e.g. a counter cell's keybind. Ignored when there is no tooltip.</summary>
+    public string TooltipPrefix { get; set; }
+
     public bool HasTooltip => /*World.ClientFlags.TooltipsEnabled &&*/ Tooltip != null;
 
     public virtual bool AcceptKeyboardInput

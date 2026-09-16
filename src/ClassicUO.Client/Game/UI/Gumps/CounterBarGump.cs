@@ -746,8 +746,12 @@ namespace ClassicUO.Game.UI.Gumps
 
                 int index = _gump.IndexOf(this);
                 HotkeyBinding binding = index >= 0 ? CounterBarHotkeysManager.GetBinding(index) : null;
+                bool hasBinding = binding is { IsEmpty: false };
 
-                if (ProfileManager.CurrentProfile.CounterBarShowHotkeys && binding is { IsEmpty: false })
+                // The keybind heads the cell's tooltip regardless of the on-cell label toggle.
+                TooltipPrefix = hasBinding ? $"[ {binding.Describe()} ]" : null;
+
+                if (ProfileManager.CurrentProfile.CounterBarShowHotkeys && hasBinding)
                 {
                     _hotkeyLabel.Text = binding.Describe();
                     _hotkeyLabel.X = Math.Max(0, (Width - _hotkeyLabel.Width) / 2);

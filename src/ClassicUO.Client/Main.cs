@@ -50,58 +50,12 @@ namespace ClassicUO
             CUOEnviroment.GameThread = Thread.CurrentThread;
             CUOEnviroment.GameThread.Name = "TUO_MAIN_THREAD";
 
-            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-            {
-                var sb = new StringBuilder();
-#if DEV_BUILD || DEBUG
-                sb.Append($"[TazUO - DEV (DEBUG: {CUOEnviroment.Debug}) - {CUOEnviroment.Version} - {DateTime.Now}]");
-#else
-                sb.Append($"[TazUO [STANDARD_BUILD] - {CUOEnviroment.Version} - {DateTime.Now}]");
-#endif
-                sb.Append($" [{RuntimeInformation.FrameworkDescription}] [{RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})]");
-
-                sb.Append($" [{Thread.CurrentThread.Name}]");
-
-
-                if (Settings.GlobalSettings != null)
-                    sb.Append($"[{Settings.GlobalSettings.ClientVersion}]");
-
-                sb.AppendLine();
-
-                sb.AppendFormat("Exception:\n{0}\n", e.ExceptionObject);
-                sb.AppendLine();
-
-                string suggestedFix = CrashSuggestedFix.Get(e.ExceptionObject);
-
-                HtmlCrashLogGen.Generate(sb.ToString(), additional_notes: suggestedFix.NotNullNotEmpty() ? suggestedFix : string.Empty);
-
-#if !DEBUG
-                if (!suggestedFix.NotNullNotEmpty())
-                    new CrashReporter().SendMessage(sb.ToString());
-#endif
-
-
-                if (suggestedFix != null)
-                    sb.AppendLine(suggestedFix);
-
-                Log.Panic(e.ExceptionObject.ToString());
-                string path = Path.Combine(CUOEnviroment.ExecutablePath, "Logs");
-
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-
-                using (var crashfile = new LogFile(path, "crash.txt"))
-                {
-                    crashfile.Write(sb.ToString());
-                }
-            };
+            AppDomain.CurrentDomain.UnhandledException += (_, e) => CrashReporter.ReportAppDomainException(e);
 
             ReadSettingsFromArgs(args);
 
             if (CUOEnviroment.IsHighDPI)
-            {
                 Environment.SetEnvironmentVariable("FNA_GRAPHICS_ENABLE_HIGHDPI", "1");
-            }
 
             // NOTE: this is a workaroud to fix d3d11 on windows 11 + scale windows
             Environment.SetEnvironmentVariable("FNA3D_D3D11_FORCE_BITBLT", "1");
@@ -123,7 +77,6 @@ namespace ClassicUO
 
             Settings.GlobalSettings = ConfigurationResolver.Load(globalSettingsPath, SettingsJsonContext.RealDefault.Settings);
             ProfileManager.LoadGlobalSettings();
-            ZLib.SetForceManagedZlib(ProfileManager.GlobalSettings.ManagedZlib); //Must be after global settings are loaded
 
             // still invalid, cannot load settings
             if (Settings.GlobalSettings == null)
@@ -538,11 +491,6 @@ namespace ClassicUO
                             CUOEnviroment.NoServerPing = true;
 
                             break;
-
-                        case "zlib":
-                            EnableZlibCommandLineOverride();
-
-                            break;
                     }
                 } catch(Exception e)
                 {
@@ -551,39 +499,6 @@ namespace ClassicUO
                 }
             }
         }
-
-        /// <summary>
-        /// Honors the <c>-zlib</c> command-line argument (force the managed zlib backend).
-        /// A stale or mismatched <c>ClassicUO.Utility.dll</c> - for example after a partial
-        /// update - can be missing the newer ZLib entry points, which otherwise crashes
-        /// startup with a <see cref="MissingMethodException"/>. Because such an exception is
-        /// raised when the method that *contains* the unresolved call is JIT-compiled, each
-        /// entry point lives in its own tiny method so the guarded calls below can catch the
-        /// failure and fall back instead of taking the whole client down.
-        /// </summary>
-        private static void EnableZlibCommandLineOverride()
-        {
-            try
-            {
-                InvokeZlibSetCommandLineOverride();
-                return;
-            }
-            catch (MissingMethodException) { }
-
-            try
-            {
-                InvokeZlibForceManaged();
-                Log.Warn("Enabled managed zlib via the legacy entry point; ClassicUO.Utility.dll appears to be out of date.");
-                return;
-            }
-            catch (MissingMethodException) { }
-
-            Log.Warn("Could not honor the -zlib argument: ClassicUO.Utility.dll is out of date. Enable managed zlib from the Options menu (login screen) instead, or reinstall TazUO so all files are updated together.");
-        }
-
-        private static void InvokeZlibSetCommandLineOverride() => ZLib.SetCommandLineOverride();
-
-        private static void InvokeZlibForceManaged() => ZLib.SetForceManagedZlib(true);
 
         private static void CopyRequiredLibs()
         {

@@ -9,6 +9,31 @@ using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Network.PacketHandlers;
 
+/// <summary>
+///     Reason byte the server sends with a rejected item move (packet 0x27).
+///     <see cref="EmptyMessageOnClient" /> and anything above it produce no client-side message.
+/// </summary>
+internal enum RejectMoveItemReason : byte
+{
+    /// <summary>The item cannot be lifted at all.</summary>
+    CannotLiftItem = 0,
+
+    /// <summary>The item is too far away to reach.</summary>
+    OutOfRange = 1,
+
+    /// <summary>Line of sight to the item is blocked.</summary>
+    OutOfSight = 2,
+
+    /// <summary>The item belongs to someone else.</summary>
+    BelongsToAnother = 3,
+
+    /// <summary>Something is already being held on the cursor.</summary>
+    AlreadyHoldingSomething = 4,
+
+    /// <summary>Rejected without a reason to display; the client shows nothing.</summary>
+    EmptyMessageOnClient = 5
+}
+
 internal static class DenyMoveItem
 {
     public static void Receive(World world, ref StackDataReader p)
@@ -118,17 +143,13 @@ internal static class DenyMoveItem
         else
             Log.Warn("There was a problem with ItemHold object. It was cleared before :|");
 
-        //var result = World.Items.Get(ItemHold.Serial);
+        // Actually RejectMoveItemReason
+        byte rejectReason = p.ReadUInt8();
 
-        //if (result != null && !result.IsDestroyed)
-        //    result.AllowedToDraw = true;
-
-        byte code = p.ReadUInt8();
-
-        if (code < 5)
+        if (rejectReason < 5)
             world.MessageManager.HandleMessage(
                 null,
-                ServerErrorMessages.GetError(p[0], code),
+                ServerErrorMessages.GetError(p[0], rejectReason),
                 string.Empty,
                 0x03b2,
                 MessageType.System,

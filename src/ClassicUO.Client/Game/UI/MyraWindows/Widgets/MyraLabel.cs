@@ -89,24 +89,32 @@ public class MyraLabel : Label
     /// <returns>The label, centred in its cell.</returns>
     public static MyraLabel Symbol(string glyph, int size = SymbolFontSize, Color? color = null)
     {
-        // The symbol font's ascent leaves more room above a glyph than below it, so every one of
-        // them sits high in its line box unless nudged down. Proportional to the size, since the gap
-        // scales with it.
-        var label = new MyraLabel(glyph, size)
-        {
-            Font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, size),
-            Wrap = false,
-            SingleLine = true,
-            TextAlign = TextHorizontalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Top = Math.Max(1, size / 12)
-        };
+        var label = new MyraLabel(glyph, size);
+        label.ApplySymbolStyle(size, color);
+        return label;
+    }
+
+    /// <summary>
+    /// Switches this label over to the symbol font and centres it, so a subclass can be a glyph without
+    /// going through <see cref="Symbol" />. Overwrites the font the constructor picked.
+    /// </summary>
+    /// <param name="size">Point size; also what the vertical nudge is derived from.</param>
+    /// <param name="color">Optional colour; the label's own when omitted.</param>
+    protected void ApplySymbolStyle(int size, Color? color = null)
+    {
+        Font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, size);
+        Wrap = false;
+        SingleLine = true;
+        TextAlign = TextHorizontalAlignment.Center;
+        HorizontalAlignment = HorizontalAlignment.Center;
+        VerticalAlignment = VerticalAlignment.Center;
+
+        // The symbol font's ascent leaves more room above a glyph than below it, so every one of them
+        // sits high in its line box unless nudged down. Proportional to the size, since the gap scales.
+        Top = Math.Max(1, size / 12);
 
         if (color != null)
-            label.TextColor = color.Value;
-
-        return label;
+            TextColor = color.Value;
     }
 
     public enum TextStyle

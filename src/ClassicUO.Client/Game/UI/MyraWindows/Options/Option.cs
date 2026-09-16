@@ -42,6 +42,33 @@ internal static class Option
         new(() => MyraCheckButton.CreateWithCallback(value, onValueChanged, label, tooltip), search ?? new SearchMetadata(label));
 
     /// <summary>
+    /// Creates a checkbox entry with a warning chip beside it - a glyph whose tooltip spells out a caveat
+    /// the setting carries. For a limit worth flagging at a glance, where a dialog would be too loud and a
+    /// line of body text too permanent.
+    /// </summary>
+    /// <param name="label">The checkbox label text</param>
+    /// <param name="backingProperty">Accessor for the underlying boolean value</param>
+    /// <param name="warning">Text shown when the chip is hovered</param>
+    /// <param name="tooltip">Optional tooltip text on the checkbox itself</param>
+    /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
+    /// <returns>An <see cref="OptionEntry"/> wrapping the checkbox and its chip</returns>
+    public static OptionEntry CheckboxWithWarningChip(
+        string label,
+        Accessor<bool> backingProperty,
+        string warning,
+        string? tooltip = null,
+        SearchMetadata? search = null) =>
+        new(() =>
+        {
+            var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+
+            row.Widgets.Add(MyraCheckButton.CreatePropBoundCheckButton(backingProperty, label, tooltip));
+            row.Widgets.Add(new WarningChip(warning));
+
+            return row;
+        }, search ?? new SearchMetadata(label));
+
+    /// <summary>
     /// Creates a checkbox entry bound to a <see cref="bool"/> property that displays a confirmation
     /// warning dialog whenever the user enables it. Declining the dialog reverts the checkbox back to
     /// its unchecked state.

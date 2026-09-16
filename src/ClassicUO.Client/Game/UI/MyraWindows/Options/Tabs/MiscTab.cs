@@ -18,13 +18,15 @@ public static class MiscTab
     internal static IOptionSource GetContent() => GetPages();
 
     private static OptionPageGroup GetPages() => new(
-        new SearchMetadata(Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")],
-            Tags: [TazLang.Get("mog_kw_misc")]),
+        new SearchMetadata(
+            Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")],
+            Tags: [TazLang.Get("mog_kw_misc")]
+        ),
         GetPage1,
         GetPage2,
         GetPage3,
         GetExperimentalSection
-    );
+    ) { MinWidth = 600, MinHeight = 300 };
 
     private static OptionFragment GetPage1()
     {
@@ -152,16 +154,13 @@ public static class MiscTab
                 TazLang.Get("mog_misctab_enableautoresynconhangdetectiontooltip"),
                 new SearchMetadata(TazLang.Get("mog_misctab_enableautoresynconhangdetection"), Keywords: [TazLang.Get("mog_kw_resync"), TazLang.Get("mog_kw_hang")])
             ),
-            Option.Checkbox(
-                TazLang.Get("mog_misctab_usemanagedzlib"),
-                ZLib.ManagedZlibForced,
-                newValue =>
-                {
-                    ProfileManager.GlobalSettings.ManagedZlib = newValue;
-                    ZLib.SetForceManagedZlib(newValue);
-                },
-                TazLang.Get("mog_misctab_usemanagedzlibtooltip"),
-                new SearchMetadata(TazLang.Get("mog_misctab_usemanagedzlib"), Keywords: [TazLang.Get("mog_kw_zlib"), TazLang.Get("mog_kw_managed")])
+            Option.CheckboxWithWarningChip(
+                TazLang.Get("mog_misctab_sendcrashreports"),
+                new Accessor<bool>(() => ProfileManager.GlobalSettings.SendCrashReports),
+                TazLang.Get("mog_misctab_sendcrashreportswarning"),
+                TazLang.Get("mog_misctab_sendcrashreportstooltip"),
+                new SearchMetadata(TazLang.Get("mog_misctab_sendcrashreports"),
+                    Keywords: [TazLang.Get("mog_kw_crash"), TazLang.Get("mog_kw_report"), TazLang.Get("mog_kw_privacy")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_tazuo_enableasyncmaploading"),
@@ -192,7 +191,9 @@ public static class MiscTab
                     [TazLang.Get("mog_kw_house"), TazLang.Get("mog_kw_transparency")]))
             )
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"),
-            Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]));
+            Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")],
+            Tags: [TazLang.Get("mog_kw_misc")])
+        );
     }
 
     private static OptionFragment GetExperimentalSection()

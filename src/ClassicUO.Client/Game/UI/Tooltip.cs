@@ -38,6 +38,9 @@ namespace ClassicUO.Game.UI
 
         public string Text { get; protected set; }
 
+        /// <summary>Optional line drawn above the tooltip body, e.g. the hovered counter cell's keybind. Set by the drawer each frame.</summary>
+        public string Prefix { get; set; }
+
         public bool IsEmpty => Text == null;
 
         public uint Serial
@@ -102,6 +105,9 @@ namespace ClassicUO.Game.UI
                 }
 
                 string finalString = Managers.ToolTipOverrideData.ResolveTooltipText(_world, Serial, _textHTML, out _borderHueOverride);
+
+                if (!string.IsNullOrEmpty(Prefix))
+                    finalString = Prefix + "\n" + finalString;
 
                 if (_item?.CustomName.NotNullNotEmpty() == true) //Add custom item name
                     finalString = $"[{_item.CustomName}]\n" + finalString;
