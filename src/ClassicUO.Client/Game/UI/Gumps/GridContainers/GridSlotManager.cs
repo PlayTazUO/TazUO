@@ -199,6 +199,12 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 if (entry.Slot < 0 || entry.Slot >= _gridSlots.Count)
                     continue;
 
+                // Only non-locked items are placed after this pass, so an occupied cell here means two
+                // locked items were saved to the same slot. First come first served: leave this one for
+                // the free-slot pass below, which re-homes it (and its save entry) without double stacking.
+                if (_gridSlots[entry.Slot].SlotItem != null)
+                    continue;
+
                 _gridSlots[entry.Slot].SetGridItem(item);
                 _gridSlots[entry.Slot].ItemGridLocked = true;
                 AddItemSlot(item.Serial, entry.Slot);

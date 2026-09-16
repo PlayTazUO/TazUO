@@ -4,9 +4,10 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 9/15/26
-* Confirm with user when saving shared configs between clients that are mismatched which one to keep
-* Counter bar cells now show the hotkey in the tooltip
-* Healthbar collector now supports anchoring together and expanding width in addition to height
+* ***Misc:*** Confirm with user when saving shared configs between clients that are mismatched which one to keep
+* ***Feature:*** Counter bar cells now show the hotkey in the tooltip
+* ***Feature:*** Healthbar collector now supports anchoring together and expanding width in addition to height
+* ***Fix:*** Fixed grid container items locked to the same slot double stacking - the first item keeps the slot and the second is moved to the first empty slot
 
 ## 9/13/26
 * ***Feature:*** Added a "Skip locked-down items" option to the Scavenger agent tab (on by default) so locked down or secured house decorations are no longer picked up - [P.R 1079](https://github.com/PlayTazUO/TazUO/pull/1079) ([yuval-po](https://github.com/yuval-po))
