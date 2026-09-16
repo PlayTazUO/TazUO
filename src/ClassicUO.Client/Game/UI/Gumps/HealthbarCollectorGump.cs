@@ -16,13 +16,22 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ClassicUO.Game.UI.Gumps
 {
-    public class HealthbarCollectorGump : Gump
+    public class HealthbarCollectorGump : AnchorableGump
     {
         private readonly World _world;
-        private const int WIDTH = 120;
+        private const int DEFAULT_WIDTH = 120;
+        private const int MIN_WIDTH = 120;
         private const int MIN_HEIGHT = 70;
         private const int TOP_SECTION_HEIGHT = 50;
         private const int BORDER_WIDTH = 2;
+        private const int SCROLLBAR_WIDTH = 12;
+        private const int RESIZE_HANDLE_SIZE = 16;
+
+        /// <summary>Width available to the scroll area / healthbar container.</summary>
+        private int InnerWidth => Width - BORDER_WIDTH * 2 - 4;
+
+        /// <summary>Width of a compact healthbar row, leaving room for the scrollbar.</summary>
+        private int BarWidth => InnerWidth - SCROLLBAR_WIDTH;
 
         private AlphaBlendControl _background;
         private NiceButton _notorietiesButton;
@@ -43,14 +52,27 @@ namespace ClassicUO.Game.UI.Gumps
         public HealthbarCollectorGump(World world) : base(world, 0, 0)
         {
             _world = world;
-            Width = WIDTH;
+            Width = DEFAULT_WIDTH;
             Height = 300;
 
+            AnchorType = ANCHOR_TYPE.HEALTHBAR_COLLECTOR;
             CanMove = true;
             CanCloseWithRightClick = true;
             Build();
             EventSink.NotorietyFlagChanged += EventSinkOnNotorietyFlagChanged;
             EventSink.MobileCreated += EventSinkOnMobileCreated;
+        }
+
+        public override int GroupMatrixWidth
+        {
+            get => Width;
+            protected set { }
+        }
+
+        public override int GroupMatrixHeight
+        {
+            get => Height;
+            protected set { }
         }
 
         private void EventSinkOnMobileCreated(object sender, Mobile mob)
@@ -113,7 +135,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_sortButton);
 
             // Create border color picker
-            _borderColorBox = new ClickableColorBox(_world, WIDTH - 22, 28, 16, 16, _borderHue, true)
+            _borderColorBox = new ClickableColorBox(_world, Width - 22, 28, 16, 16, _borderHue, true)
             {
                 AcceptMouseInput = true
             };
@@ -121,20 +143,59 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_borderColorBox);
 
             // Create scroll area with VBoxContainer
-            _container = new VBoxContainer(WIDTH - BORDER_WIDTH * 2 - 4, 2, 2);
+            _container = new VBoxContainer(InnerWidth, 2, 2);
 
             _scrollArea = new ModernScrollArea(
                 BORDER_WIDTH + 2,
                 TOP_SECTION_HEIGHT,
-                WIDTH - BORDER_WIDTH * 2 - 4,
+                InnerWidth,
                 Height - TOP_SECTION_HEIGHT - BORDER_WIDTH - 20
             );
             _scrollArea.Add(_container);
             Add(_scrollArea);
 
-            // Add resize handle at bottom
-            _resizeHandle = new ResizeHandle(WIDTH / 2 - 8, Height - 18);
+            // Add resize handle at the bottom-right corner
+            _resizeHandle = new ResizeHandle(this, Width - RESIZE_HANDLE_SIZE - 2, Height - RESIZE_HANDLE_SIZE - 2);
             Add(_resizeHandle);
+        }
+
+        /// <summary>
+        /// Resizes the gump and repositions every layout element to fit the new bounds.
+        /// Width is clamped to <see cref="MIN_WIDTH"/> and height to <see cref="MIN_HEIGHT"/>.
+        /// </summary>
+        /// <param name="width">Requested width in logical pixels.</param>
+        /// <param name="height">Requested height in logical pixels.</param>
+        public void SetSize(int width, int height)
+        {
+            if (width < MIN_WIDTH) width = MIN_WIDTH;
+            if (height < MIN_HEIGHT) height = MIN_HEIGHT;
+
+            Width = width;
+            Height = height;
+
+            if (_background != null)
+            {
+                _background.Width = width;
+                _background.Height = height;
+            }
+
+            if (_borderColorBox != null) _borderColorBox.X = width - 22;
+
+            if (_container != null) _container.Width = InnerWidth;
+
+            if (_scrollArea != null)
+            {
+                _scrollArea.UpdateWidth(InnerWidth);
+                _scrollArea.UpdateHeight(height - TOP_SECTION_HEIGHT - BORDER_WIDTH - 20);
+            }
+
+            if (_resizeHandle != null)
+            {
+                _resizeHandle.X = width - RESIZE_HANDLE_SIZE - 2;
+                _resizeHandle.Y = height - RESIZE_HANDLE_SIZE - 2;
+            }
+
+            foreach (CompactHealthBar bar in _healthbars.Values) bar.SetWidth(BarWidth);
         }
 
         private void OnBorderHueChanged(object sender, ushort hue)
@@ -325,6 +386,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             // Create compact healthbar
             var compactBar = new CompactHealthBar(World, mobile.Serial, this);
+            compactBar.SetWidth(BarWidth);
             _healthbars[mobile.Serial] = compactBar;
             _container.Add(compactBar);
         }
@@ -338,26 +400,11 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        private void SetHeight(int height)
-        {
-            Height = height;
-
-            _background?.Height = Height;
-
-            _scrollArea?.UpdateHeight(Height - TOP_SECTION_HEIGHT - BORDER_WIDTH - 20);
-        }
-
         public override void PreDraw()
         {
             base.PreDraw();
 
-            if (_resizeHandle != null && _resizeHandle.IsDragging)
-            {
-                int newHeight = _resizeHandle.Y + 18;
-                if (newHeight >= MIN_HEIGHT) SetHeight(newHeight);
-            }
-
-            if(_sortRequested)
+            if (_sortRequested)
                 SortHealthbarsByDistance();
         }
 
@@ -418,6 +465,7 @@ namespace ClassicUO.Game.UI.Gumps
             writer.WriteAttributeString("filterParty", _filterParty.ToString());
             writer.WriteAttributeString("filterPets", _filterPets.ToString());
 
+            writer.WriteAttributeString("width", Width.ToString());
             writer.WriteAttributeString("height", Height.ToString());
         }
 
@@ -457,13 +505,10 @@ namespace ClassicUO.Game.UI.Gumps
             if (bool.TryParse(xml.GetAttribute("filterPets"), out bool filterPets))
                 _filterPets = filterPets;
 
-            // Restore height
-            if (int.TryParse(xml.GetAttribute("height"), out int height))
-            {
-                SetHeight(height);
-                _resizeHandle.X = WIDTH / 2 - 8;
-                _resizeHandle.Y = Height - 18;
-            }
+            // Restore size
+            int width = int.TryParse(xml.GetAttribute("width"), out int w) ? w : Width;
+            int height = int.TryParse(xml.GetAttribute("height"), out int h) ? h : Height;
+            SetSize(width, height);
 
             // Rebuild healthbar list based on restored notorieties
             RebuildHealthbarList();
@@ -483,16 +528,19 @@ namespace ClassicUO.Game.UI.Gumps
 
         private class ResizeHandle : Control
         {
+            private readonly HealthbarCollectorGump _owner;
             private bool _isDragging;
-            private int _dragStartY;
-            private int _startY;
+            private Point _dragStart;
+            private int _startWidth;
+            private int _startHeight;
 
-            public ResizeHandle(int x, int y)
+            public ResizeHandle(HealthbarCollectorGump owner, int x, int y)
             {
+                _owner = owner;
                 X = x;
                 Y = y;
-                Width = 16;
-                Height = 16;
+                Width = RESIZE_HANDLE_SIZE;
+                Height = RESIZE_HANDLE_SIZE;
                 CanMove = false;
             }
 
@@ -505,8 +553,9 @@ namespace ClassicUO.Game.UI.Gumps
                 if (button == MouseButtonType.Left)
                 {
                     _isDragging = true;
-                    _dragStartY = Mouse.Position.Y;
-                    _startY = Y;
+                    _dragStart = Mouse.Position;
+                    _startWidth = _owner.Width;
+                    _startHeight = _owner.Height;
                 }
             }
 
@@ -521,28 +570,23 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (_isDragging)
                 {
-                    int deltaY = Mouse.Position.Y - _dragStartY;
-                    int newY = _startY + deltaY;
+                    int deltaX = Mouse.Position.X - _dragStart.X;
+                    int deltaY = Mouse.Position.Y - _dragStart.Y;
 
-                    // Calculate the minimum Y position based on MIN_HEIGHT
-                    int minY = MIN_HEIGHT - 18;
-
-                    // Clamp Y to valid range
-                    if (newY < minY) newY = minY;
-
-                    Y = newY;
+                    _owner.SetSize(_startWidth + deltaX, _startHeight + deltaY);
                 }
             }
 
             public override bool Draw(UltimaBatcher2D batcher, int x, int y)
             {
-                // Draw resize handle (horizontal lines)
+                // Draw a diagonal grip of squares in the bottom-right corner.
                 Vector3 hueVector = ShaderHueTranslator.GetHueVector(0, false, 0.5f);
+                Texture2D texture = SolidColorTextureCache.GetTexture(Color.White);
 
                 for (int i = 0; i < 3; i++)
                     batcher.Draw(
-                        SolidColorTextureCache.GetTexture(Color.White),
-                        new Rectangle(x, y + i * 4, Width, 2),
+                        texture,
+                        new Rectangle(x + Width - 4 - i * 5, y + Height - 4 - i * 5, 4, 4),
                         hueVector
                     );
 
@@ -552,14 +596,14 @@ namespace ClassicUO.Game.UI.Gumps
 
         private class CompactHealthBar : Control
         {
-            private const int BAR_WIDTH = 100;
             private const int BAR_HEIGHT = 16;
             private readonly World _world;
             private readonly HealthbarCollectorGump _parent;
             private readonly Label _nameLabel, _percentLabel;
-            private readonly HealthBarLine _hpBar;
+            private readonly HealthBarLine _hpBackground, _hpBar;
             private readonly Mobile _mobile;
             private readonly Button _buttonHeal1,  _buttonHeal2;
+            private int _barWidth = 100;
             private int _lastPercent;
             public int Distance;
 
@@ -573,7 +617,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _parent = parent;
                 Serial = serial;
 
-                Width = 100;
+                Width = _barWidth;
                 Height = 30;
                 CanMove = true;
 
@@ -594,17 +638,17 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     X = 0,
                     Y = 0,
-                    Width = BAR_WIDTH
+                    Width = _barWidth
                 };
                 SetName();
                 Add(_nameLabel);
 
                 // HP background (red/gray bar)
-                var hpBackground = new HealthBarLine(0, 16, BAR_WIDTH, BAR_HEIGHT, Color.DarkRed);
-                Add(hpBackground);
+                _hpBackground = new HealthBarLine(0, 16, _barWidth, BAR_HEIGHT, Color.DarkRed);
+                Add(_hpBackground);
 
                 // HP foreground (blue bar)
-                _hpBar = new HealthBarLine(0, 16, BAR_WIDTH, BAR_HEIGHT, Color.DodgerBlue);
+                _hpBar = new HealthBarLine(0, 16, _barWidth, BAR_HEIGHT, Color.DodgerBlue);
                 Add(_hpBar);
 
                 _percentLabel = new Label(string.Empty, true, 0, font: 1, style: FontStyle.BlackBorder)
@@ -616,14 +660,14 @@ namespace ClassicUO.Game.UI.Gumps
                 Add(_buttonHeal1 = new Button(0, 0x0938, 0x093A, 0x0938)
                 {
                     ButtonAction = ButtonAction.Activate,
-                    X = BAR_WIDTH - 30,
+                    X = _barWidth - 30,
                     Y = 14
                 });
 
                 Add(_buttonHeal2 = new Button(1, 0x0939, 0x093A, 0x0939)
                 {
                     ButtonAction = ButtonAction.Activate,
-                    X = BAR_WIDTH - 15,
+                    X = _barWidth - 15,
                     Y = 14
 
                 });
@@ -631,6 +675,32 @@ namespace ClassicUO.Game.UI.Gumps
                 CheckQuickHealButtons();
 
                 WantUpdateSize = false;
+            }
+
+            /// <summary>
+            /// Stretches the bar to <paramref name="width"/> pixels, keeping the heal buttons and
+            /// name label pinned to the new right edge.
+            /// </summary>
+            /// <param name="width">New bar width in logical pixels; clamped to a minimum of 1.</param>
+            public void SetWidth(int width)
+            {
+                if (width < 1) width = 1;
+
+                _barWidth = width;
+                Width = width;
+
+                if (_nameLabel != null) _nameLabel.Width = width;
+
+                if (_hpBackground != null)
+                {
+                    _hpBackground.Width = width;
+                    _hpBackground.BarWidth = width;
+                }
+
+                if (_hpBar != null) _hpBar.Width = width;
+
+                if (_buttonHeal1 != null) _buttonHeal1.X = width - 30;
+                if (_buttonHeal2 != null) _buttonHeal2.X = width - 15;
             }
 
             private void CheckQuickHealButtons()
@@ -673,14 +743,14 @@ namespace ClassicUO.Game.UI.Gumps
                 // Update HP bar width
                 if (_mobile.HitsMax > 0)
                 {
-                    int hpWidth = CalculatePercents(_mobile.HitsMax, _mobile.Hits, BAR_WIDTH);
-                    _hpBar.BarWidth = hpWidth;
+                    int percent = CalculatePercents(_mobile.HitsMax, _mobile.Hits, 100);
+                    _hpBar.BarWidth = _barWidth * percent / 100;
 
-                    if (hpWidth > 0 && _lastPercent != hpWidth)
+                    if (_lastPercent != percent)
                     {
-                        _lastPercent = hpWidth;
+                        _lastPercent = percent;
 
-                        _percentLabel.Text = _lastPercent < 100 ? hpWidth.ToString() + "%" : string.Empty;
+                        _percentLabel.Text = percent < 100 ? percent.ToString() + "%" : string.Empty;
 
                         CheckQuickHealButtons();
                     }
