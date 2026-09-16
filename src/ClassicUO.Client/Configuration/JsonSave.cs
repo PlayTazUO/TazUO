@@ -126,6 +126,12 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     private string? _fingerprintPath;
 
     /// <summary>
+    ///     How two file paths are compared: case-insensitively on Windows, whose filesystem folds
+    ///     case, and case-sensitively on Unix, where differently-cased names are different files.
+    /// </summary>
+    private static StringComparison PathComparison => CUOEnviroment.IsUnix ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+    /// <summary>
     ///     Loads the save for type <typeparamref name="T" /> from <see cref="FilePath" />. If the main file is
     ///     missing or unreadable the backups are tried in order; if they all fail a fresh instance is created,
     ///     and written to disk unless <see cref="PersistFreshDefaults" /> says otherwise. A file written by a
@@ -154,25 +160,23 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     ///     Like <see cref="Save" />, but writes to an explicit path rather than <see cref="FilePath" />.
     ///     A path other than the one this instance loaded (a Save-As) is written unconditionally.
     /// </summary>
-    protected void SaveTo(string filePath) => SaveTo(filePath, false);
+    protected void SaveTo(string filePath) => SaveChecked(filePath);
 
     /// <summary>
     ///     Writes this instance to <paramref name="filePath"/>, first checking that the file has not
     ///     changed on disk since this instance loaded or last wrote it. On a change the write is
     ///     withheld and the user is asked which copy to keep - see
-    ///     <see cref="JsonSaveConflictHandler"/>. <paramref name="overwriteExternal"/> skips that
-    ///     check for the user's "keep this client's version" answer.
+    ///     <see cref="JsonSaveConflictHandler"/>.
     /// </summary>
     /// <param name="filePath">The file to write.</param>
-    /// <param name="overwriteExternal">Whether to write over an externally changed file.</param>
-    private void SaveTo(string filePath, bool overwriteExternal)
+    private void SaveChecked(string filePath)
     {
         bool conflicted = false;
         DateTime diskModifiedUtc = default;
 
         using (AcquireLock(filePath))
         {
-            if (!overwriteExternal && HasExternalChange(filePath, out FileFingerprint disk))
+            if (HasExternalChange(filePath, out FileFingerprint disk))
             {
                 conflicted = true;
                 diskModifiedUtc = disk.LastWriteUtc;
@@ -210,7 +214,7 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     {
         disk = default;
 
-        if (_fingerprint is not { } fingerprint || !string.Equals(filePath, _fingerprintPath, StringComparison.OrdinalIgnoreCase))
+        if (_fingerprint is not { } fingerprint || !string.Equals(filePath, _fingerprintPath, PathComparison))
             return false;
 
         disk = FileFingerprint.Capture(filePath);
@@ -226,6 +230,10 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     /// <param name="diskModifiedUtc">When the on-disk file was last written.</param>
     private void RaiseConflict(string filePath, DateTime diskModifiedUtc)
     {
+        // The disk state the user is being asked about. The prompt can stay open a while, so a
+        // change made meanwhile must be told apart from the one the question was raised over.
+        FileFingerprint promptTimeDisk = FileFingerprint.Capture(filePath);
+
         var conflict = new JsonSaveConflict(
             filePath,
             diskModifiedUtc,
@@ -233,7 +241,7 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
             {
                 if (overwriteLocal)
                 {
-                    SaveTo(filePath, true);
+                    OverwritePromptedFile(filePath, promptTimeDisk);
                     return;
                 }
 
@@ -245,6 +253,39 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
             Log.Warn($"JSON save '{filePath}' changed on disk since it was loaded; keeping the disk version.");
             OnKeptDiskVersion();
         }
+    }
+
+    /// <summary>
+    ///     Writes this instance over the conflicted file after the user answered "keep this client's
+    ///     version". Re-checks the file against the state the prompt was raised over: a change made
+    ///     while the prompt was open was never shown to the user, so it is not clobbered - the
+    ///     conflict is raised anew against the newer state instead.
+    /// </summary>
+    /// <param name="filePath">The conflicted file to write.</param>
+    /// <param name="promptTimeDisk">The disk state at the moment the prompt was raised.</param>
+    private void OverwritePromptedFile(string filePath, FileFingerprint promptTimeDisk)
+    {
+        bool conflicted = false;
+        DateTime diskModifiedUtc = default;
+
+        using (AcquireLock(filePath))
+        {
+            FileFingerprint disk = FileFingerprint.Capture(filePath);
+
+            if (disk.DiffersFrom(promptTimeDisk))
+            {
+                conflicted = true;
+                diskModifiedUtc = disk.LastWriteUtc;
+            }
+            else
+            {
+                SaveCore(filePath);
+                CaptureFingerprint(filePath);
+            }
+        }
+
+        if (conflicted)
+            RaiseConflict(filePath, diskModifiedUtc);
     }
 
     /// <summary>
@@ -645,10 +686,10 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
                 using var stream = File.OpenRead(filePath);
                 return new FileFingerprint(true, SHA256.HashData(stream), info.LastWriteTimeUtc);
             }
-            catch (IOException)
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
-                // The read raced a delete or an exclusive lock. Report it as missing so the caller
-                // treats an uncertain state as changed rather than as unchanged.
+                // The read raced a delete, an exclusive lock, or a revoked permission. Report it as
+                // missing so the caller treats an uncertain state as changed rather than as unchanged.
                 return new FileFingerprint(false, null, default);
             }
         }
