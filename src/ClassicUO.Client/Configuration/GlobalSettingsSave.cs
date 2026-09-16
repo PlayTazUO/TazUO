@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Game;
-using ClassicUO.Utility.Platforms;
 
 namespace ClassicUO.Configuration
 {
@@ -71,7 +70,6 @@ namespace ClassicUO.Configuration
         /// Only applies when there is only 1 server available
         /// </summary>
         public bool SkipServerSelection { get; set => SetProperty(ref field, value); } = true;
-        public bool ManagedZlib { get; set => SetProperty(ref field, value); } = !PlatformHelper.IsWindows;
         public float GlobalScale { get; set => SetProperty(ref field, value); } = 1f;
 
         /// <summary>Web map journal panel width. Machine-wide.</summary>

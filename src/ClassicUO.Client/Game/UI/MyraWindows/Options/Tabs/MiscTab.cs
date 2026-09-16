@@ -163,17 +163,6 @@ public static class MiscTab
                     Keywords: [TazLang.Get("mog_kw_crash"), TazLang.Get("mog_kw_report"), TazLang.Get("mog_kw_privacy")])
             ),
             Option.Checkbox(
-                TazLang.Get("mog_misctab_usemanagedzlib"),
-                ZLib.ManagedZlibForced,
-                newValue =>
-                {
-                    ProfileManager.GlobalSettings.ManagedZlib = newValue;
-                    ZLib.SetForceManagedZlib(newValue);
-                },
-                TazLang.Get("mog_misctab_usemanagedzlibtooltip"),
-                new SearchMetadata(TazLang.Get("mog_misctab_usemanagedzlib"), Keywords: [TazLang.Get("mog_kw_zlib"), TazLang.Get("mog_kw_managed")])
-            ),
-            Option.Checkbox(
                 TazLang.Get("mog_tazuo_enableasyncmaploading"),
                 profile.EnableASyncMapLoading,
                 newValue =>
