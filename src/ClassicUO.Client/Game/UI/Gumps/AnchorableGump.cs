@@ -15,7 +15,8 @@ namespace ClassicUO.Game.UI.Gumps
         NONE,
         SPELL,
         HEALTHBAR,
-        DISABLED
+        DISABLED,
+        HEALTHBAR_COLLECTOR
     }
 
     public abstract class AnchorableGump : Gump
