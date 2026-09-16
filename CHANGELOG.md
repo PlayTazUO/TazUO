@@ -4,6 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 9/15/26
+* Confirm with user when saving shared configs between clients that are mismatched which one to keep
 * Counter bar cells now show the hotkey in the tooltip
 * Healthbar collector now supports anchoring together and expanding width in addition to height
 

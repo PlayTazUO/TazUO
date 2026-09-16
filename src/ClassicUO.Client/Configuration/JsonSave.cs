@@ -114,6 +114,24 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     private bool _savesSuppressed;
 
     /// <summary>
+    ///     The last-known identity of the file behind <see cref="_fingerprintPath"/>, captured after
+    ///     every load and successful save. A later save whose file no longer matches this saw an
+    ///     external change and asks before overwriting it.
+    /// </summary>
+    private FileFingerprint? _fingerprint;
+    /// <summary>
+    ///     The path <see cref="_fingerprint"/> describes. A Save-As to another path is not compared
+    ///     against it.
+    /// </summary>
+    private string? _fingerprintPath;
+
+    /// <summary>
+    ///     How two file paths are compared: case-insensitively on Windows, whose filesystem folds
+    ///     case, and case-sensitively on Unix, where differently-cased names are different files.
+    /// </summary>
+    private static StringComparison PathComparison => CUOEnviroment.IsUnix ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+    /// <summary>
     ///     Loads the save for type <typeparamref name="T" /> from <see cref="FilePath" />. If the main file is
     ///     missing or unreadable the backups are tried in order; if they all fail a fresh instance is created,
     ///     and written to disk unless <see cref="PersistFreshDefaults" /> says otherwise. A file written by a
@@ -140,12 +158,142 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
 
     /// <summary>
     ///     Like <see cref="Save" />, but writes to an explicit path rather than <see cref="FilePath" />.
+    ///     A path other than the one this instance loaded (a Save-As) is written unconditionally.
     /// </summary>
-    protected void SaveTo(string filePath)
+    protected void SaveTo(string filePath) => SaveChecked(filePath);
+
+    /// <summary>
+    ///     Writes this instance to <paramref name="filePath"/>, first checking that the file has not
+    ///     changed on disk since this instance loaded or last wrote it. On a change the write is
+    ///     withheld and the user is asked which copy to keep - see
+    ///     <see cref="JsonSaveConflictHandler"/>.
+    /// </summary>
+    /// <param name="filePath">The file to write.</param>
+    private void SaveChecked(string filePath)
     {
+        bool conflicted = false;
+        DateTime diskModifiedUtc = default;
+
         using (AcquireLock(filePath))
-            SaveCore(filePath);
+        {
+            if (HasExternalChange(filePath, out FileFingerprint disk))
+            {
+                conflicted = true;
+                diskModifiedUtc = disk.LastWriteUtc;
+            }
+            else
+            {
+                SaveCore(filePath);
+                CaptureFingerprint(filePath);
+            }
+        }
+
+        if (conflicted)
+            RaiseConflict(filePath, diskModifiedUtc);
     }
+
+    /// <summary>
+    ///     Remembers the current file identity so a later external change can be told apart from our
+    ///     own writes. Called after every load and successful save.
+    /// </summary>
+    /// <param name="filePath">The file to fingerprint.</param>
+    private void CaptureFingerprint(string filePath)
+    {
+        _fingerprintPath = filePath;
+        _fingerprint = FileFingerprint.Capture(filePath);
+    }
+
+    /// <summary>
+    ///     Whether the file changed since <see cref="CaptureFingerprint"/> last ran, judged by content
+    ///     so a rewrite that leaves the bytes identical is not a conflict. False for a path this
+    ///     instance never loaded, so a Save-As is never mistaken for a conflict.
+    /// </summary>
+    /// <param name="filePath">The file being saved to.</param>
+    /// <param name="disk">The file's identity now, for the caller's conflict message.</param>
+    private bool HasExternalChange(string filePath, out FileFingerprint disk)
+    {
+        disk = default;
+
+        if (_fingerprint is not { } fingerprint || !string.Equals(filePath, _fingerprintPath, PathComparison))
+            return false;
+
+        disk = FileFingerprint.Capture(filePath);
+
+        return fingerprint.DiffersFrom(disk);
+    }
+
+    /// <summary>
+    ///     Withholds the write and asks the user which copy to keep. The on-disk version wins when
+    ///     there is no prompt (headless, or before the UI is up).
+    /// </summary>
+    /// <param name="filePath">The conflicted file.</param>
+    /// <param name="diskModifiedUtc">When the on-disk file was last written.</param>
+    private void RaiseConflict(string filePath, DateTime diskModifiedUtc)
+    {
+        // The disk state the user is being asked about. The prompt can stay open a while, so a
+        // change made meanwhile must be told apart from the one the question was raised over.
+        FileFingerprint promptTimeDisk = FileFingerprint.Capture(filePath);
+
+        var conflict = new JsonSaveConflict(
+            filePath,
+            diskModifiedUtc,
+            overwriteLocal =>
+            {
+                if (overwriteLocal)
+                {
+                    OverwritePromptedFile(filePath, promptTimeDisk);
+                    return;
+                }
+
+                OnKeptDiskVersion();
+            });
+
+        if (!JsonSaveConflictHandler.Request(conflict))
+        {
+            Log.Warn($"JSON save '{filePath}' changed on disk since it was loaded; keeping the disk version.");
+            OnKeptDiskVersion();
+        }
+    }
+
+    /// <summary>
+    ///     Writes this instance over the conflicted file after the user answered "keep this client's
+    ///     version". Re-checks the file against the state the prompt was raised over: a change made
+    ///     while the prompt was open was never shown to the user, so it is not clobbered - the
+    ///     conflict is raised anew against the newer state instead.
+    /// </summary>
+    /// <param name="filePath">The conflicted file to write.</param>
+    /// <param name="promptTimeDisk">The disk state at the moment the prompt was raised.</param>
+    private void OverwritePromptedFile(string filePath, FileFingerprint promptTimeDisk)
+    {
+        bool conflicted = false;
+        DateTime diskModifiedUtc = default;
+
+        using (AcquireLock(filePath))
+        {
+            FileFingerprint disk = FileFingerprint.Capture(filePath);
+
+            if (disk.DiffersFrom(promptTimeDisk))
+            {
+                conflicted = true;
+                diskModifiedUtc = disk.LastWriteUtc;
+            }
+            else
+            {
+                SaveCore(filePath);
+                CaptureFingerprint(filePath);
+            }
+        }
+
+        if (conflicted)
+            RaiseConflict(filePath, diskModifiedUtc);
+    }
+
+    /// <summary>
+    ///     Invoked when a save was withheld because the file on disk changed and the disk version was
+    ///     kept - either by the user or because no prompt was available. Override to reload the disk
+    ///     content into this instance so it stops diverging from the file.
+    /// </summary>
+    protected virtual void OnKeptDiskVersion() { }
 
     /// <summary>
     ///     Reads <paramref name="filePath" /> into a fresh instance, optionally binding the instance to
@@ -164,6 +312,8 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
 
         if (pinSource)
             result.SourcePath = filePath;
+
+        result.CaptureFingerprint(filePath);
 
         return result;
     }
@@ -515,6 +665,42 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
     ///     than one client - so every scope is protected with a named mutex keyed on the file path.
     /// </summary>
     private CrossProcessLock AcquireLock(string? filePath = null) => new CrossProcessLock(filePath ?? FilePath);
+
+    /// <summary>
+    ///     A file's content at one moment, used to detect that another process created, deleted or
+    ///     changed the file since this instance last touched it. Judged by SHA-256 rather than
+    ///     timestamps so a rewrite that leaves the bytes identical is not mistaken for a change.
+    /// </summary>
+    private readonly record struct FileFingerprint(bool Exists, byte[]? Sha256, DateTime LastWriteUtc)
+    {
+        /// <summary>Reads the current identity of <paramref name="filePath"/>, missing file included.</summary>
+        public static FileFingerprint Capture(string filePath)
+        {
+            var info = new FileInfo(filePath);
+
+            if (!info.Exists)
+                return new FileFingerprint(false, null, default);
+
+            try
+            {
+                using var stream = File.OpenRead(filePath);
+                return new FileFingerprint(true, SHA256.HashData(stream), info.LastWriteTimeUtc);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // The read raced a delete, an exclusive lock, or a revoked permission. Report it as
+                // missing so the caller treats an uncertain state as changed rather than as unchanged.
+                return new FileFingerprint(false, null, default);
+            }
+        }
+
+        /// <summary>Whether <paramref name="other"/> describes a different file state.</summary>
+        public bool DiffersFrom(FileFingerprint other) =>
+            Exists != other.Exists || !Equals(Sha256, other.Sha256);
+
+        private static bool Equals(byte[]? left, byte[]? right) =>
+            left == null ? right == null : right != null && left.AsSpan().SequenceEqual(right);
+    }
 
     /// <summary>
     ///     Why one candidate file did not yield an instance, which decides whether another is worth trying.
