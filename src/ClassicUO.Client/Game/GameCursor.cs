@@ -530,6 +530,9 @@ namespace ClassicUO.Game
 
         private void DrawToolTip(UltimaBatcher2D batcher, Point position)
         {
+            // A control may prepend a line (e.g. a counter cell's keybind) to whatever tooltip it shows.
+            _tooltip.Prefix = (UIManager.MouseOverControl as Control)?.TooltipPrefix;
+
             if (Client.Game.Scene is GameScene gs)
             {
                 if (
