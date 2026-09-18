@@ -907,10 +907,13 @@ namespace ClassicUO.Game.GameObjects
                             int diffY = (spriteInfo.UV.Height + spriteInfo.Center.Y) - mountOffset;
 
                             int value = Math.Max(1, diffY);
-                            int count = Math.Max((spriteInfo.UV.Height / value) + 1, 2);
 
                             rect.Height = Math.Min(value, rect.Height);
                             int remains = spriteInfo.UV.Height - rect.Height;
+
+                            // Only two bands ever have pixels; the old estimate added iterations
+                            // that drew zero-area quads every frame (worst on tall flying frames).
+                            int count = remains > 0 ? 2 : 1;
 
                             // Depth step between vertical slices of the character. Lower values
                             // reduce how far the feet are pushed forward in the depth buffer, so
