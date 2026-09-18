@@ -3,6 +3,10 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/18/26
+* ***Fix:*** Fixed a crash on shutdown when the voice recognition Vosk assembly could not be resolved during disposal - the error is now logged and the client unloads cleanly
+* ***Fix:*** Fixed a crash on shutdown when the web map server's `System.Net.HttpListener` assembly could not be resolved - the error is now logged and the client unloads cleanly
+
 ## 9/17/26
 * ***Feature:*** Added a "Show server prompts in a popup window" option to the Options chat tab, so server prompts (like naming a rune) can be toggled between the popup and chat input without using the checkbox inside the popup itself
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
@@ -329,6 +330,23 @@ namespace ClassicUO.Game.Managers
         }
 
         public void Dispose()
+        {
+            try
+            {
+                DisposeCore();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[VoiceRecognition] Error during dispose: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Isolated so that a failure to resolve the Vosk assembly at JIT time surfaces as a
+        /// catchable exception in <see cref="Dispose"/> instead of crashing during unload.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void DisposeCore()
         {
             if (!_initialized) return;
 
