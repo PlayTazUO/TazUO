@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/17/26
+* ***Feature:*** Added a "Show server prompts in a popup window" option to the Options chat tab, so server prompts (like naming a rune) can be toggled between the popup and chat input without using the checkbox inside the popup itself
+
 ## 9/15/26
 * ***Misc:*** Confirm with user when saving shared configs between clients that are mismatched which one to keep
 * ***Feature:*** Counter bar cells now show the hotkey in the tooltip
