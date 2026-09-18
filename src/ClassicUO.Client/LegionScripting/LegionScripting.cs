@@ -574,7 +574,20 @@ namespace ClassicUO.LegionScripting
             ExceptionOperations eo = script.PythonEngine?.GetService<ExceptionOperations>();
             if (eo != null)
             {
-                string formattedEx = eo.FormatException(e);
+                string formattedEx;
+
+                try
+                {
+                    formattedEx = eo.FormatException(e);
+                }
+                catch (Exception formatEx) when (formatEx is not (ThreadInterruptedException or ThreadAbortException))
+                {
+                    // IronPython's formatter can itself fail (e.g. a missing System.Diagnostics.StackTrace
+                    // assembly). Fall back to the raw exception so a script error never crashes the client.
+                    Log.Error($"Failed to format script exception: {formatEx.Message}");
+                    formattedEx = e.ToString();
+                }
+
                 Log.Warn(formattedEx);
 
                 Regex exParserRx = RegexHelper.GetRegex("File \"(?<filepath>.+?)\", line (?<lineno>\\d+)", RegexOptions.Compiled | RegexOptions.Multiline);
