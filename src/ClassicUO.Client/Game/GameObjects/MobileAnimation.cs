@@ -1038,6 +1038,11 @@ namespace ClassicUO.Game.GameObjects
                 isRun = step.Run;
             }
 
+            // Evaluated once: this method runs once per rendered equipment layer per frame,
+            // and each property read walks the version/flags/profile chain.
+            bool isGargoyle = mobile.IsGargoyle;
+            bool isFlyingGargoyle = isGargoyle && mobile.IsFlyingAnimationEnabled;
+
             switch (type)
             {
                 case AnimationGroupsType.Animal:
@@ -1152,7 +1157,7 @@ namespace ClassicUO.Game.GameObjects
                                     result = 25;
                                 }
                             }
-                            else if (mobile.IsGargoyle && mobile.IsFlyingAnimationEnabled) // TODO: what's up when it is dead?
+                            else if (isFlyingGargoyle) // TODO: what's up when it is dead?
                             {
                                 if (mobile.InWarMode)
                                 {
@@ -1253,7 +1258,7 @@ namespace ClassicUO.Game.GameObjects
                                                     }
                                                 }
                                             }
-                                            else if (mobile.IsGargoyle && mobile.IsFlyingAnimationEnabled)
+                                            else if (isFlyingGargoyle)
                                             {
                                                 result = 64;
                                             }
@@ -1290,7 +1295,7 @@ namespace ClassicUO.Game.GameObjects
                         if ((flags & AnimationFlags.UseUopAnimation) != 0)
                         {
                             // i'm not sure here if it's necessary the isgargoyle
-                            if (mobile.IsGargoyle && mobile.IsFlyingAnimationEnabled)
+                            if (isFlyingGargoyle)
                             {
                                 if (isRun)
                                 {
@@ -1323,7 +1328,7 @@ namespace ClassicUO.Game.GameObjects
                                         {
                                             result = 2;
 
-                                            if (mobile.IsGargoyle)
+                                            if (isGargoyle)
                                             {
                                                 hand2 = mobile.FindItemByLayer(Layer.OneHanded);
                                             }
@@ -1365,7 +1370,7 @@ namespace ClassicUO.Game.GameObjects
 
                                 if (hand2Graphic < 0x0240 || hand2Graphic > 0x03E1)
                                 {
-                                    if (mobile.IsGargoyle && mobile.IsFlyingAnimationEnabled)
+                                    if (isFlyingGargoyle)
                                     {
                                         if (isRun)
                                         {
@@ -1394,7 +1399,7 @@ namespace ClassicUO.Game.GameObjects
                                     {
                                         if (HAND2_BASE_ANIMID[i] == hand2Graphic)
                                         {
-                                            if (mobile.IsGargoyle && mobile.IsFlyingAnimationEnabled)
+                                            if (isFlyingGargoyle)
                                             {
                                                 if (isRun)
                                                 {
@@ -1423,7 +1428,7 @@ namespace ClassicUO.Game.GameObjects
                                 }
                             }
                         }
-                        else if (mobile.IsGargoyle && mobile.IsFlyingAnimationEnabled)
+                        else if (isFlyingGargoyle)
                         {
                             result = 62;
                         }

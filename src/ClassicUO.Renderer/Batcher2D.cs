@@ -997,6 +997,13 @@ namespace ClassicUO.Renderer
             float layerDepth
         )
         {
+            // An empty source rectangle draws nothing; bail before the vertex work. Zero-dimension
+            // slices reach here from callers that subdivide sprites (e.g. mobile depth bands).
+            if (sourceRectangle.HasValue && (sourceRectangle.Value.Width == 0 || sourceRectangle.Value.Height == 0))
+            {
+                return;
+            }
+
             float sourceX, sourceY, sourceW, sourceH;
             float destW = scale;
             float destH = scale;
