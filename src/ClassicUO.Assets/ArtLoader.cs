@@ -14,6 +14,10 @@ namespace ClassicUO.Assets
         public const int MAX_LAND_DATA_INDEX_COUNT = 0x4000;
         public const int MAX_STATIC_DATA_INDEX_COUNT = 0x14000;
 
+        // Upper bound for a static art entry's dimensions; anything larger is corrupt data, and bounding
+        // it keeps the width * height pixel buffer from overflowing.
+        private const int MAX_ART_DIMENSION = 4096;
+
         public ArtLoader(UOFileManager fileManager) : base(fileManager)
         {
         }
@@ -121,6 +125,16 @@ namespace ClassicUO.Assets
             uint flags = file.ReadUInt32();
             width = file.ReadInt16();
             height = file.ReadInt16();
+
+            // Reject corrupt dimensions: a negative value overflows the array length and an oversized one
+            // allocates an enormous buffer. Also require enough bytes for the per-row offset table.
+            if (width <= 0 || height <= 0 || width > MAX_ART_DIMENSION || height > MAX_ART_DIMENSION || entry.Length < height * 2)
+            {
+                width = 0;
+                height = 0;
+
+                return Array.Empty<uint>();
+            }
 
             byte[] buf = new byte[entry.Length];
             file.Read(buf);
