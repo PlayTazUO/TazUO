@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -49,6 +50,24 @@ namespace ClassicUO.Game.Managers
 
         public bool Start(int port = 8088)
         {
+            try
+            {
+                return StartCore(port);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to start Map Web Server: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Isolated so that a failure to resolve the System.Net.HttpListener assembly at JIT
+        /// time surfaces as a catchable exception in <see cref="Start"/> rather than crashing.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private bool StartCore(int port)
+        {
             if (_isRunning)
                 return false;
 
@@ -79,6 +98,23 @@ namespace ClassicUO.Game.Managers
         }
 
         public void Stop()
+        {
+            try
+            {
+                StopCore();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error stopping Map Web Server: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Isolated so that a failure to resolve the System.Net.HttpListener assembly at JIT
+        /// time surfaces as a catchable exception in <see cref="Stop"/> rather than crashing.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void StopCore()
         {
             if (!_isRunning)
                 return;

@@ -1136,6 +1136,22 @@ namespace ClassicUO.Configuration
         {
             string gumpsXmlPath = Path.Combine(path, "gumps.xml");
 
+            try
+            {
+                WriteGumpsXml(world, gumpsXmlPath);
+            }
+            catch (Exception e)
+            {
+                // Never let a gump save failure crash the client on its way out.
+                Log.Error($"Failed to save gumps '{gumpsXmlPath}': {e.Message}");
+                return;
+            }
+
+            world.SkillsGroupManager.Save();
+        }
+
+        private static void WriteGumpsXml(World world, string gumpsXmlPath)
+        {
             using (var xml = new XmlTextWriter(gumpsXmlPath, Encoding.UTF8)
             {
                 Formatting = Formatting.Indented,
@@ -1224,9 +1240,6 @@ namespace ClassicUO.Configuration
                 xml.WriteEndElement();
                 xml.WriteEndDocument();
             }
-
-
-            world.SkillsGroupManager.Save();
         }
 
         private static void SaveItemsGumpRecursive(Item parent, XmlTextWriter xml, LinkedList<Gump> list)

@@ -3,6 +3,15 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/18/26
+* ***Feature:*** Added a "Log History" option to the login screen's options menu
+* ***Fix:*** Fixed the log history window showing two overlapping scrollbars when resized small - the text area now fills the window's remaining space and is the only scroll region
+* ***Fix:*** Fixed a crash on shutdown when the voice recognition Vosk assembly could not be resolved during disposal - the error is now logged and the client unloads cleanly
+* ***Fix:*** Fixed a crash on shutdown when the web map server's `System.Net.HttpListener` assembly could not be resolved - the error is now logged and the client unloads cleanly
+* ***Fix:*** Fixed a client crash when drawing a corrupt or invalid static art entry with negative or oversized dimensions (the `width * height` pixel buffer overflowed) - the entry is now ignored instead
+* ***Fix:*** Fixed a crash on shutdown when `gumps.xml` could not be written because another process (antivirus, cloud sync, a second client) was holding it - the failure is now logged instead of crashing
+* ***Fix:*** Fixed a client crash when a Legion script error could not be formatted by IronPython because a runtime assembly (`System.Diagnostics.StackTrace`) was missing - the error is now logged and the raw exception shown instead
+
 ## 9/17/26
 * ***Feature:*** Added a "Show server prompts in a popup window" option to the Options chat tab, so server prompts (like naming a rune) can be toggled between the popup and chat input without using the checkbox inside the popup itself
 
