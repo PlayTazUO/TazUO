@@ -4,6 +4,7 @@ using System.Text;
 using ClassicUO.Assets;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.Controls.ResizableComponents;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
@@ -27,6 +28,10 @@ namespace ClassicUO.Game.UI.MyraWindows
         private const int PageSize = 50;
         private const int ScrollEdgeTolerance = 4;
 
+        private const int DEFAULT_WIDTH = 700;
+        private const int DEFAULT_HEIGHT = 550;
+        private const int MIN_TEXT_HEIGHT = 120;
+
         // Severity types shown as filter toggles. Panic is logged through Error, so
         // it shares the Error toggle and is not listed separately.
         private static readonly LogTypes[] _filterableTypes =
@@ -37,6 +42,7 @@ namespace ClassicUO.Game.UI.MyraWindows
         private readonly MyraInputBox _textBox;
         private readonly ScrollViewer _scrollViewer;
         private readonly MyraLabel _statusLabel;
+        private readonly VerticalStackPanel _root;
         private uint _lastUpdate;
         private long _lastRevision = -1;
 
@@ -63,6 +69,14 @@ namespace ClassicUO.Game.UI.MyraWindows
 
         public LogHistoryWindow() : base("Log History")
         {
+            // The text area is the only thing that scrolls. Disable the window's own content scroller
+            // and give the window a size so the area can be fit to the remaining space below.
+            _rootWindow.Props.Resize.ScrollerMode = ScrollViewerMode.None;
+            _rootWindow.Props.Resize.MinWidth = 320;
+            _rootWindow.Props.Resize.MinHeight = 260;
+            _rootWindow.Width = DEFAULT_WIDTH;
+            _rootWindow.Height = DEFAULT_HEIGHT;
+
             var buttons = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
             buttons.Widgets.Add(new MyraButton("Copy Output", CopyToClipboard));
             buttons.Widgets.Add(new MyraButton("Refresh", ResetToLatest));
@@ -107,27 +121,48 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             _scrollViewer = new ScrollViewer
             {
-                MinWidth = 550,
-                MinHeight = 350,
-                MaxWidth = 900,
-                MaxHeight = 600,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
                 Content = _textBox,
             };
 
-            var root = new VerticalStackPanel
+            _root = new VerticalStackPanel
             {
                 Spacing = MyraStyle.STANDARD_SPACING,
                 Padding = new Thickness(4),
             };
-            root.Widgets.Add(buttons);
-            root.Widgets.Add(filters);
-            root.Widgets.Add(_statusLabel);
-            root.Widgets.Add(_scrollViewer);
+            _root.Widgets.Add(buttons);
+            _root.Widgets.Add(filters);
+            _root.Widgets.Add(_statusLabel);
+            _root.Widgets.Add(_scrollViewer);
 
-            SetRootContent(root);
+            SetRootContent(_root);
+
+            _rootWindow.Resized += (_, _) => FitTextAreaToWindow();
+            FitTextAreaToWindow();
             CenterInViewPort();
 
             ResetToLatest();
+        }
+
+        /// <summary>
+        /// Sizes the text area to the window's remaining height so the content always fits and only
+        /// the text area scrolls. The chrome (buttons, filters, status) is measured with the text
+        /// area collapsed, then the area takes whatever is left.
+        /// </summary>
+        private void FitTextAreaToWindow()
+        {
+            _scrollViewer.Height = 0;
+            _rootWindow.UpdateArrange();
+
+            // Bounds rather than the window's own Height, which includes the title bar.
+            int clientHeight = _root.Bounds.Height;
+            int chrome = _root.Measure(new Point(_rootWindow.Width ?? DEFAULT_WIDTH, 2000)).Y;
+
+            if (clientHeight <= 0)
+                clientHeight = _rootWindow.Height ?? DEFAULT_HEIGHT;
+
+            _scrollViewer.Height = Math.Max(MIN_TEXT_HEIGHT, clientHeight - chrome);
+            _root.InvalidateMeasure();
         }
 
         private bool IsTypeEnabled(LogTypes type)
