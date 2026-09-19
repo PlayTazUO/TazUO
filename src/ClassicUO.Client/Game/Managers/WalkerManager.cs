@@ -15,6 +15,7 @@ namespace ClassicUO.Game.Managers
         public bool Running;
         public bool NoRotation;
         public long Timer;
+        public ushort WalkTime;
         public ushort X, Y;
         public sbyte Z;
     }
@@ -87,9 +88,29 @@ namespace ClassicUO.Game.Managers
 
         public void DenyWalk(byte sequence, int x, int y, sbyte z)
         {
+            int walkTime = 0;
+
+            for (int i = 0; i < StepsCount; i++)
+            {
+                if (StepInfos[i].Sequence == sequence)
+                {
+                    walkTime = StepInfos[i].WalkTime;
+
+                    break;
+                }
+            }
+
             _player.ClearSteps();
 
             Reset();
+
+            // A denied step must not become a free retry: keep the same gap the step
+            // would have enforced had it succeeded, so a client/server passability
+            // desync can't turn a held move key into one request per frame.
+            if (walkTime > 0)
+            {
+                LastStepRequestTime = Time.Ticks + walkTime;
+            }
 
             if (x != -1)
             {

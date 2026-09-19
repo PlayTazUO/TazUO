@@ -882,6 +882,7 @@ namespace ClassicUO.Game.GameObjects
                 step.OldDirection = (byte)(oldDirection & Direction.Mask);
                 step.Direction = (byte)direction;
                 step.Timer = Time.Ticks;
+                step.WalkTime = walkTime;
                 step.X = (ushort)x;
                 step.Y = (ushort)y;
                 step.Z = z;
@@ -1067,6 +1068,7 @@ namespace ClassicUO.Game.GameObjects
             step.OldDirection = (byte)(oldDirection & Direction.Mask);
             step.Direction = (byte)direction;
             step.Timer = Time.Ticks;
+            step.WalkTime = walkTime;
             step.X = (ushort)x;
             step.Y = (ushort)y;
             step.Z = z;
