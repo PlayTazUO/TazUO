@@ -8,6 +8,8 @@ internal static class MovePlayer
 {
     public static void Receive(World world, ref StackDataReader p)
     {
+        WalkDiagnostics.OnMovePlayerReceived();
+
         if (!world.InGame)
             return;
 

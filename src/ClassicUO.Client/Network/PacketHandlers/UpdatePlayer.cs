@@ -8,6 +8,8 @@ internal static class UpdatePlayer
 {
     public static void Receive(World world, ref StackDataReader p)
     {
+        WalkDiagnostics.OnUpdatePlayerReceived();
+
         if (world.Player == null)
             return;
 

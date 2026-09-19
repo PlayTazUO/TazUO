@@ -17,6 +17,7 @@ namespace ClassicUO.Game.UI.Gumps
         private static Point _last_position = new Point(-1, -1);
 
         private uint _ping, _deltaBytesReceived, _deltaBytesSent;
+        private long _gateAhead;
         private uint _time_to_update;
         private readonly AlphaBlendControl _trans;
         private string _cacheText = string.Empty;
@@ -50,6 +51,8 @@ namespace ClassicUO.Game.UI.Gumps
             LayerOrder = UILayer.Over;
 
             WantUpdateSize = false;
+
+            WalkDiagnostics.Reset();
         }
 
         public override GumpType GumpType => GumpType.NetStats;
@@ -76,14 +79,17 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 _time_to_update = Time.Ticks + 100;
 
+                WalkDiagnostics.Update();
+
                 if (AsyncNetClient.Socket.IsConnected)
                 {
                     _ping = AsyncNetClient.Socket.Statistics.Ping;
                     _deltaBytesReceived = AsyncNetClient.Socket.Statistics.DeltaBytesReceived;
                     _deltaBytesSent = AsyncNetClient.Socket.Statistics.DeltaBytesSent;
+                    _gateAhead = World.Player != null ? World.Player.Walker.LastStepRequestTime - Time.Ticks : 0;
                 }
 
-                Span<char> span = stackalloc char[128];
+                Span<char> span = stackalloc char[256];
                 var sb = new ValueStringBuilder(span);
 
                 if (IsMinimized)
@@ -93,6 +99,7 @@ namespace ClassicUO.Game.UI.Gumps
                 else
                 {
                     sb.Append($"Ping: {_ping} ms\n{"In:"} {NetStatistics.GetSizeAdaptive(_deltaBytesReceived),-6} {"Out:"} {NetStatistics.GetSizeAdaptive(_deltaBytesSent),-6}");
+                    sb.Append($"\nWk {WalkDiagnostics.DeltaWalkRequests} Dn {WalkDiagnostics.DeltaDenyMatched}/{WalkDiagnostics.DeltaDenyReset} Rs {WalkDiagnostics.DeltaResyncs} Up {WalkDiagnostics.DeltaUpdatePlayerPackets} Mv {WalkDiagnostics.DeltaMovePlayerPackets} A {_gateAhead}");
                 }
 
                 _cacheText = sb.ToString();

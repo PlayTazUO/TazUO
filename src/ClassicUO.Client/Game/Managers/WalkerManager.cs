@@ -89,15 +89,26 @@ namespace ClassicUO.Game.Managers
         public void DenyWalk(byte sequence, int x, int y, sbyte z)
         {
             int walkTime = 0;
+            bool matched = false;
 
             for (int i = 0; i < StepsCount; i++)
             {
                 if (StepInfos[i].Sequence == sequence)
                 {
                     walkTime = StepInfos[i].WalkTime;
+                    matched = true;
 
                     break;
                 }
+            }
+
+            if (matched)
+            {
+                WalkDiagnostics.OnDenyMatched();
+            }
+            else
+            {
+                WalkDiagnostics.OnDenyReset();
             }
 
             _player.ClearSteps();
@@ -176,6 +187,7 @@ namespace ClassicUO.Game.Managers
             {
                 if (!ResendPacketResync)
                 {
+                    WalkDiagnostics.OnResyncSent();
                     AsyncNetClient.Socket.Send_Resync();
                     ResendPacketResync = true;
                 }

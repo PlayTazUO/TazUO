@@ -902,7 +902,11 @@ namespace ClassicUO.Game.GameObjects
                     }
                 );
 
-                AsyncNetClient.Socket.Send_WalkRequest(direction, Walker.WalkSequence, run, Walker.FastWalkStack.GetValue());
+                WalkDiagnostics.OnWalkRequestSent();
+
+            WalkDiagnostics.OnWalkRequestSent();
+
+            AsyncNetClient.Socket.Send_WalkRequest(direction, Walker.WalkSequence, run, Walker.FastWalkStack.GetValue());
 
                 if (Walker.WalkSequence == 0xFF)
                 {
