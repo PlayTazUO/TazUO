@@ -44,7 +44,14 @@ namespace ClassicUO.Network
         /// <summary>Latest <c>LastStepRequestTime - Time.Ticks</c> in ms; negative means the gate is open.</summary>
         public static long GateAheadMs { get; set; }
 
-        public static void OnWalkRequestSent() => WalkRequests++;
+        /// <summary>Step delay used by the last sent request, in ms. Equals the turn delay for pure turns.</summary>
+        public static ushort LastWalkTimeMs { get; private set; }
+
+        public static void OnWalkRequestSent(ushort walkTime)
+        {
+            WalkRequests++;
+            LastWalkTimeMs = walkTime;
+        }
         public static void OnDenyMatched() => DenyMatched++;
         public static void OnDenyReset() => DenyReset++;
         public static void OnResyncSent() => Resyncs++;
@@ -63,6 +70,7 @@ namespace ClassicUO.Network
             WalkRequests = DenyMatched = DenyReset = Resyncs = UpdatePlayerPackets = MovePlayerPackets = 0;
             DeltaWalkRequests = DeltaDenyMatched = DeltaDenyReset = DeltaResyncs = DeltaUpdatePlayerPackets = DeltaMovePlayerPackets = 0;
             GateAheadMs = 0;
+            LastWalkTimeMs = 0;
         }
 
         public static void Update()

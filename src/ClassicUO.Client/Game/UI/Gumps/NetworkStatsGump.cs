@@ -99,7 +99,7 @@ namespace ClassicUO.Game.UI.Gumps
                 else
                 {
                     sb.Append($"Ping: {_ping} ms\n{"In:"} {NetStatistics.GetSizeAdaptive(_deltaBytesReceived),-6} {"Out:"} {NetStatistics.GetSizeAdaptive(_deltaBytesSent),-6}");
-                    sb.Append($"\nWk {WalkDiagnostics.DeltaWalkRequests} Dn {WalkDiagnostics.DeltaDenyMatched}/{WalkDiagnostics.DeltaDenyReset} Rs {WalkDiagnostics.DeltaResyncs} Up {WalkDiagnostics.DeltaUpdatePlayerPackets} Mv {WalkDiagnostics.DeltaMovePlayerPackets} A {_gateAhead}");
+                    sb.Append($"\nWk {WalkDiagnostics.DeltaWalkRequests} T {WalkDiagnostics.LastWalkTimeMs} Dn {WalkDiagnostics.DeltaDenyMatched}/{WalkDiagnostics.DeltaDenyReset} Rs {WalkDiagnostics.DeltaResyncs} Up {WalkDiagnostics.DeltaUpdatePlayerPackets} Mv {WalkDiagnostics.DeltaMovePlayerPackets} A {_gateAhead}");
                 }
 
                 _cacheText = sb.ToString();
