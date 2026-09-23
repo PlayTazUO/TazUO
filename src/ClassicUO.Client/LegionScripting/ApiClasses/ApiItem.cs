@@ -85,10 +85,27 @@ public class ApiItem : ApiEntity
         Item item = GetItem();
         if (item == null) return null;
 
-        Gump result = MainThreadQueue.InvokeOnMainThread(() => UIManager.GetGump(item.Serial));
+        Gump result = MainThreadQueue.InvokeOnMainThread(() => FindContainerGump(item.Serial));
 
-        if (result is GridContainer || result is ContainerGump || result is GridLootGump)
-            return new ApiUiBaseControl(result);
+        return result != null ? new ApiUiBaseControl(result) : null;
+    }
+
+    /// <summary>
+    /// Finds the open container window for <paramref name="serial"/>, skipping other gumps that share
+    /// its serial. UIManager.GetGump(serial) returns the first gump of any type with that LocalSerial,
+    /// and a ground item's NameOverheadGump carries the item's serial too, so it can be found instead
+    /// of the container window. Must run on the main thread.
+    /// </summary>
+    /// <param name="serial">The container item's serial.</param>
+    /// <returns>The GridContainer, ContainerGump or GridLootGump for the item, or null if none is open.</returns>
+    private static Gump FindContainerGump(uint serial)
+    {
+        for (var node = UIManager.Gumps.Last; node != null; node = node.Previous)
+        {
+            if (node.Value is Gump gump && !gump.IsDisposed && gump.LocalSerial == serial &&
+                (gump is GridContainer || gump is ContainerGump || gump is GridLootGump))
+                return gump;
+        }
 
         return null;
     }

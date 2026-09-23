@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/22/26
+* ***Fix:*** Fixed the Legion Script `GetContainerGump()` returning nothing for an open container on the ground when its name overhead was showing - it now finds the container window
+
 ## 9/18/26
 * ***Feature:*** Added a "Log History" option to the login screen's options menu
 * ***Fix:*** Fixed the log history window showing two overlapping scrollbars when resized small - the text area now fills the window's remaining space and is the only scroll region
