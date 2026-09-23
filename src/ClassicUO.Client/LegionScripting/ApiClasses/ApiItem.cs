@@ -85,10 +85,22 @@ public class ApiItem : ApiEntity
         Item item = GetItem();
         if (item == null) return null;
 
-        Gump result = MainThreadQueue.InvokeOnMainThread(() => UIManager.GetGump(item.Serial));
+        Gump result = MainThreadQueue.InvokeOnMainThread(() => FindContainerGump(item.Serial));
 
-        if (result is GridContainer || result is ContainerGump || result is GridLootGump)
-            return new ApiUiBaseControl(result);
+        return result != null ? new ApiUiBaseControl(result) : null;
+    }
+
+    // UIManager.GetGump(serial) returns the topmost gump of any type with that LocalSerial. An item on
+    // the ground also has a NameOverheadGump with its serial, which can sit above the container
+    // window, so walk the list and take the topmost gump that is a container window.
+    private static Gump FindContainerGump(uint serial)
+    {
+        for (var node = UIManager.Gumps.Last; node != null; node = node.Previous)
+        {
+            if (node.Value is Gump gump && !gump.IsDisposed && gump.LocalSerial == serial &&
+                (gump is GridContainer || gump is ContainerGump || gump is GridLootGump))
+                return gump;
+        }
 
         return null;
     }
