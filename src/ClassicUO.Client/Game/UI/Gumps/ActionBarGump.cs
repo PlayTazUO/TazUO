@@ -26,6 +26,13 @@ namespace ClassicUO.Game.UI.Gumps
         /// <summary>Height of the title strip that shows the bar's name above the cells.</summary>
         private const int HEADER_HEIGHT = 16;
 
+        // Layout bounds shared by the constructor, SetLayout and Restore, so no path can build an
+        // oversized grid (e.g. from malformed saved values).
+        private const int MIN_CELL_SIZE = 30;
+        private const int MAX_CELL_SIZE = 80;
+        private const int MIN_DIMENSION = 1;
+        private const int MAX_DIMENSION = 30;
+
         /// <summary>Prefix shared by every cell hotkey id of every action bar (the bar id follows).</summary>
         private const string HotkeyIdPrefix = "actionbar:";
 
@@ -60,20 +67,9 @@ namespace ClassicUO.Game.UI.Gumps
             X = x;
             Y = y;
 
-            if (rectSize < 30)
-                rectSize = 30;
-            else if (rectSize > 80)
-                rectSize = 80;
-
-            if (rows < 1)
-                rows = 1;
-
-            if (columns < 1)
-                columns = 1;
-
-            _rows = rows;
-            _columns = columns;
-            _rectSize = rectSize;
+            _rows = ClampDimension(rows);
+            _columns = ClampDimension(columns);
+            _rectSize = ClampCellSize(rectSize);
             _name = NormalizeName(name);
             _barId = GetNextBarId();
 
@@ -155,6 +151,10 @@ namespace ClassicUO.Game.UI.Gumps
         private static string NormalizeName(string name) =>
             string.IsNullOrWhiteSpace(name) ? TazLang.Get("actionbar_defaultname", "Action Bar") : name.Trim();
 
+        private static int ClampCellSize(int size) => Math.Clamp(size, MIN_CELL_SIZE, MAX_CELL_SIZE);
+
+        private static int ClampDimension(int value) => Math.Clamp(value, MIN_DIMENSION, MAX_DIMENSION);
+
         /// <summary>Returns an id greater than every open bar's id, so new bars never collide.</summary>
         private static int GetNextBarId()
         {
@@ -205,7 +205,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _nameLabel.X = Math.Max(0, (Width - _nameLabel.Width) / 2);
         }
 
-        /// <summary>Renames the bar and refreshes its header.</summary>
+        /// <summary>Renames the bar, refreshes its header and updates its hotkeys' display names.</summary>
         public void SetName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -218,6 +218,11 @@ namespace ClassicUO.Game.UI.Gumps
                 _nameLabel.Text = _name;
                 CenterNameLabel();
             }
+
+            // Keep the central hotkey list's labels in sync with the new name.
+            foreach (HotKeyEntry entry in HotKeys.AllRegistered().ToArray())
+                if (entry.Id.StartsWith(HotkeyPrefix, StringComparison.Ordinal) && int.TryParse(entry.Id.AsSpan(HotkeyPrefix.Length), out int index))
+                    entry.Name = HotkeyDisplayName(index);
         }
 
         public void AddRow() => SetLayout(_rectSize, _rows + 1, _columns);
@@ -230,20 +235,9 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void SetLayout(int size, int rows, int columns)
         {
-            if (rows > 30)
-                rows = 30;
-            else if (rows < 1)
-                rows = 1;
-
-            if (columns > 30)
-                columns = 30;
-            else if (columns < 1)
-                columns = 1;
-
-            if (size < 30)
-                size = 30;
-            else if (size > 80)
-                size = 80;
+            rows = ClampDimension(rows);
+            columns = ClampDimension(columns);
+            size = ClampCellSize(size);
 
             if (_rectSize == size && _rows == rows && _columns == columns)
                 return;
@@ -409,9 +403,9 @@ namespace ClassicUO.Game.UI.Gumps
             // so a binding cleared in a previous session can't linger on the restored bar.
             ClearBarHotkeys();
 
-            _rows = int.Parse(xml.GetAttribute("rows"));
-            _columns = int.Parse(xml.GetAttribute("columns"));
-            _rectSize = int.Parse(xml.GetAttribute("rectsize"));
+            _rows = ClampDimension(int.Parse(xml.GetAttribute("rows")));
+            _columns = ClampDimension(int.Parse(xml.GetAttribute("columns")));
+            _rectSize = ClampCellSize(int.Parse(xml.GetAttribute("rectsize")));
 
             BuildGump();
 
@@ -432,12 +426,17 @@ namespace ClassicUO.Game.UI.Gumps
                         {
                             items[index]?.SetSlot(slot);
                         }
+                        else if (
+                            ushort.TryParse(controlXml.GetAttribute("graphic"), out ushort graphic)
+                            && ushort.TryParse(controlXml.GetAttribute("hue"), out ushort hue)
+                        )
+                        {
+                            items[index]?.SetGraphic(graphic, hue);
+                        }
                         else
                         {
-                            items[index]?.SetGraphic(
-                                ushort.Parse(controlXml.GetAttribute("graphic")),
-                                ushort.Parse(controlXml.GetAttribute("hue"))
-                            );
+                            // Leave the cell empty rather than aborting the whole bar's restore.
+                            Log.Error($"Malformed action bar cell at index {index}; leaving it empty.");
                         }
 
                         HotkeyBinding hotkey = BarXml.ReadHotkey(controlXml);

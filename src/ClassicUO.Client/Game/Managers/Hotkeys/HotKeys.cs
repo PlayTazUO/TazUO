@@ -243,19 +243,24 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
         /// <summary>
         /// Fires <see cref="HotKeyEntry.OnPressed"/> for every entry whose binding matches the button
-        /// that just went down. Gated the same way as the keyboard path (world must own input, hotkeys
-        /// not globally suppressed) so a button can't fire while it is being bound in the capture box
+        /// that just went down. Gated the same way as the keyboard path (world must own input; globally
+        /// suppressed entries skipped) so a button can't fire while it is being bound in the capture box
         /// or while a window/textbox has focus.
         /// </summary>
         private static void DispatchButton(Func<HotkeyBinding, bool> isKind)
         {
-            if (!WorldHasInputFocus() || GloballyDisabled)
+            if (!WorldHasInputFocus())
                 return;
 
             // Snapshot so an OnPressed callback that (un)registers a hotkey can't invalidate the enumerator.
             foreach (HotKeyEntry entry in _entries.Values.ToArray())
             {
                 if (!entry.Registered || !entry.Enabled || entry.OnPressed == null)
+                    continue;
+
+                // Same exemption as the keyboard path: an IgnoresGlobalDisable entry keeps firing when
+                // hotkeys are globally suppressed, the rest are skipped.
+                if (GloballyDisabled && !entry.IgnoresGlobalDisable)
                     continue;
 
                 HotkeyBinding b = entry.Binding;

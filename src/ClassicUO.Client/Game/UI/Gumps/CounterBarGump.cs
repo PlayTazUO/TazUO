@@ -309,7 +309,12 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            HotKeyEntry entry = HotKeys.Register(id, HotkeyDisplayName(index), new HotkeyBinding(), HotkeyCategory, () => GetCounterItem(index)?.ActivateFromHotkey());
+            HotKeyEntry entry = HotKeys.Register(id, HotkeyDisplayName(index), new HotkeyBinding(), HotkeyCategory, () =>
+            {
+                // The gump is kept around while counters are toggled off, so only fire when visible.
+                if (!IsDisposed && IsEnabled && IsVisible)
+                    GetCounterItem(index)?.ActivateFromHotkey();
+            });
             entry.Binding = binding.Clone();
         }
 
