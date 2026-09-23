@@ -115,8 +115,11 @@ public sealed partial class LocationGoWindow : MyraControl
         if (!match.Success)
             return false;
 
-        point.X = int.Parse(match.Groups["X"].Value);
-        point.Y = int.Parse(match.Groups["Y"].Value);
+        if (!int.TryParse(match.Groups["X"].Value, out int x) || !int.TryParse(match.Groups["Y"].Value, out int y))
+            return false;
+
+        point.X = x;
+        point.Y = y;
         return true;
     }
 
