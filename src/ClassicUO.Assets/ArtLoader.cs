@@ -127,8 +127,9 @@ namespace ClassicUO.Assets
             height = file.ReadInt16();
 
             // Reject corrupt dimensions: a negative value overflows the array length and an oversized one
-            // allocates an enormous buffer. Also require enough bytes for the per-row offset table.
-            if (width <= 0 || height <= 0 || width > MAX_ART_DIMENSION || height > MAX_ART_DIMENSION || entry.Length < height * 2)
+            // allocates an enormous buffer. Also require enough bytes after the 8-byte header for the
+            // per-row offset table plus at least one run header.
+            if (width <= 0 || height <= 0 || width > MAX_ART_DIMENSION || height > MAX_ART_DIMENSION || entry.Length < height * 2 + 4)
             {
                 width = 0;
                 height = 0;
@@ -143,6 +144,7 @@ namespace ClassicUO.Assets
 
             fixed (byte* startPtr = buf)
             {
+                byte* end = startPtr + entry.Length;
                 ushort* lineoffsets = (ushort*)startPtr;
                 byte* datastart = (byte*)startPtr + height * 2;
                 int x = 0;
@@ -151,6 +153,13 @@ namespace ClassicUO.Assets
 
                 while (y < height)
                 {
+                    // A run header is two ushorts; bail out if the offset table points past the buffer
+                    // or the remaining bytes cannot hold it.
+                    if ((byte*)ptr + 4 > end)
+                    {
+                        break;
+                    }
+
                     ushort xoffs = *ptr++;
                     ushort run = *ptr++;
 
@@ -161,8 +170,19 @@ namespace ClassicUO.Assets
 
                     if (xoffs + run != 0)
                     {
+                        if ((byte*)ptr + run * 2 > end)
+                        {
+                            break;
+                        }
+
                         x += xoffs;
                         int pos = y * width + x;
+
+                        // The run must fit inside the pixel buffer before pixels are written into it.
+                        if (pos + run > data.Length)
+                        {
+                            break;
+                        }
 
                         for (int j = 0; j < run; ++j, ++pos)
                         {
@@ -180,7 +200,21 @@ namespace ClassicUO.Assets
                     {
                         x = 0;
                         ++y;
-                        ptr = (ushort*)(datastart + lineoffsets[y] * 2);
+
+                        if (y >= height)
+                        {
+                            break;
+                        }
+
+                        // Validate the next row's offset before adopting it as the run pointer.
+                        ushort nextOffset = lineoffsets[y];
+
+                        if ((byte*)(datastart + nextOffset * 2) + 4 > end)
+                        {
+                            break;
+                        }
+
+                        ptr = (ushort*)(datastart + nextOffset * 2);
                     }
                 }
             }

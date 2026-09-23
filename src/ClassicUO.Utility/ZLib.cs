@@ -38,6 +38,14 @@ namespace ClassicUO.Utility
 
         public static ZLibError Decompress(IntPtr source, int sourceLength, int offset, IntPtr dest, int length)
         {
+            // Reject malformed inputs before constructing the unmanaged stream: a null source or a
+            // non-positive remaining byte count would otherwise wrap a pointer/length pair that
+            // cannot be read.
+            if (source == IntPtr.Zero || offset < 0 || sourceLength - offset <= 0 || length < 0)
+            {
+                return ZLibError.DataError;
+            }
+
             try
             {
                 return ZLibManaged.Decompress(source, sourceLength, offset, dest, length);

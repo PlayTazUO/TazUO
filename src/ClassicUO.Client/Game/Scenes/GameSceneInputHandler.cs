@@ -1613,7 +1613,9 @@ namespace ClassicUO.Game.Scenes
 
         internal override void OnKeyUp(SDL.SDL_KeyboardEvent e)
         {
-            if (!_world.InGame)
+            // The profile is unloaded while the scene tears down, but SDL keeps pumping key events
+            // back into this scene; bail before the profile is dereferenced below.
+            if (!_world.InGame || ProfileManager.CurrentProfile == null)
             {
                 return;
             }
