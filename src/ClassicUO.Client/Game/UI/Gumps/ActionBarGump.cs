@@ -403,9 +403,11 @@ namespace ClassicUO.Game.UI.Gumps
             // so a binding cleared in a previous session can't linger on the restored bar.
             ClearBarHotkeys();
 
-            _rows = ClampDimension(int.Parse(xml.GetAttribute("rows")));
-            _columns = ClampDimension(int.Parse(xml.GetAttribute("columns")));
-            _rectSize = ClampCellSize(int.Parse(xml.GetAttribute("rectsize")));
+            // Tolerate missing/invalid layout attributes so a malformed bar still restores (clamped)
+            // instead of throwing and being dropped by Profile.ReadGumps.
+            _rows = int.TryParse(xml.GetAttribute("rows"), out int rows) ? ClampDimension(rows) : MIN_DIMENSION;
+            _columns = int.TryParse(xml.GetAttribute("columns"), out int columns) ? ClampDimension(columns) : MIN_DIMENSION;
+            _rectSize = int.TryParse(xml.GetAttribute("rectsize"), out int rectSize) ? ClampCellSize(rectSize) : MIN_CELL_SIZE;
 
             BuildGump();
 
