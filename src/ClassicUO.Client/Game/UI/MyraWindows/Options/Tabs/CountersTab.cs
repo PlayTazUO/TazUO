@@ -66,8 +66,69 @@ public static class CountersTab
             ),
             GetAbbreviationGroup(),
             GetHighlightGroup(),
-            GetLayoutGroup()
+            GetLayoutGroup(),
+            Option.Button(
+                TazLang.Get("mog_counters_converttoactionbar", "Convert to Action Bar"),
+                ConvertToActionBar,
+                search: new SearchMetadata(
+                    TazLang.Get("mog_counters_converttoactionbar", "Convert to Action Bar"),
+                    Keywords: [TazLang.Get("mog_kw_counter"), TazLang.Get("mog_kw_actionbar")]
+                )
+            )
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_counters_enablecounters"), Tags: [TazLang.Get("mog_kw_counter"), TazLang.Get("mog_kw_reagent")], Keywords: [TazLang.Get("mog_kw_counter")]));
+    }
+
+    /// <summary>
+    /// Replaces the single counter bar with a named action bar, carrying over its layout, every cell
+    /// (action or item counter) and its hotkeys, then removes the counter bar so only one remains.
+    /// </summary>
+    private static void ConvertToActionBar()
+    {
+        CounterBarGump counter = UIManager.GetGump<CounterBarGump>();
+
+        if (counter == null)
+            return;
+
+        Profile profile = ProfileManager.CurrentProfile;
+
+        int rows = counter.Rows;
+        int columns = counter.Columns;
+
+        var bar = new ActionBarGump(
+            World.Instance,
+            counter.X,
+            counter.Y,
+            counter.RectSize,
+            rows,
+            columns,
+            TazLang.Get("actionbar_defaultname", "Action Bar")
+        );
+
+        int cells = rows * columns;
+
+        for (int i = 0; i < cells; i++)
+        {
+            CounterBarGump.CounterItem source = counter.GetCounterItem(i);
+            ActionBarGump.ActionItem target = bar.GetActionItem(i);
+
+            if (source == null || target == null)
+                continue;
+
+            if (source.HasAction)
+                target.SetSlot(source.Slot);
+            else
+                target.SetGraphic(source.Graphic, source.Hue);
+
+            var binding = counter.GetCellHotkey(i);
+            if (binding is { IsEmpty: false })
+                bar.SetCellHotkey(i, binding);
+        }
+
+        bar.RefreshHotkeyLabels();
+        UIManager.Add(bar);
+
+        profile.CounterBarEnabled = false;
+        counter.Dispose();
     }
 
     private static OptionFragment GetAbbreviationGroup()
