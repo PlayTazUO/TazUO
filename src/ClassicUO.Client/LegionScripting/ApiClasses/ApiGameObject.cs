@@ -1,4 +1,5 @@
 using ClassicUO.Assets;
+using ClassicUO.Game;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;

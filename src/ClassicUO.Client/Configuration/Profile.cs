@@ -817,6 +817,10 @@ namespace ClassicUO.Configuration
         public bool ControllerEnabled { get; set => SetProperty(ref field, value); } = true;
         public bool EnableScavenger { get; set => SetProperty(ref field, value); } = true;
         public string ScavengerSelectedListUid { get; set => SetProperty(ref field, value); } = "";
+        /// <summary>
+        /// Determines whether the Scavanger Agent will attempt to ignore locked-down/secured items
+        /// </summary>
+        public bool ScavengerSkipLockedDown { get; set => SetProperty(ref field, value); } = true;
         public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
         public bool NearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
         public bool SpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
@@ -990,7 +994,7 @@ namespace ClassicUO.Configuration
                 ProfileManager.GlobalSettings.UseCircleOfTransparency = UseCircleOfTransparency;
                 ProfileManager.GlobalSettings.CircleOfTransparencyRadius = CircleOfTransparencyRadius;
                 ProfileManager.GlobalSettings.CircleOfTransparencyType = CircleOfTransparencyType;
-                
+
                 ProfileMigrationVersion = 7;
             }
 
@@ -1132,6 +1136,22 @@ namespace ClassicUO.Configuration
         {
             string gumpsXmlPath = Path.Combine(path, "gumps.xml");
 
+            try
+            {
+                WriteGumpsXml(world, gumpsXmlPath);
+            }
+            catch (Exception e)
+            {
+                // Never let a gump save failure crash the client on its way out.
+                Log.Error($"Failed to save gumps '{gumpsXmlPath}': {e.Message}");
+                return;
+            }
+
+            world.SkillsGroupManager.Save();
+        }
+
+        private static void WriteGumpsXml(World world, string gumpsXmlPath)
+        {
             using (var xml = new XmlTextWriter(gumpsXmlPath, Encoding.UTF8)
             {
                 Formatting = Formatting.Indented,
@@ -1220,9 +1240,6 @@ namespace ClassicUO.Configuration
                 xml.WriteEndElement();
                 xml.WriteEndDocument();
             }
-
-
-            world.SkillsGroupManager.Save();
         }
 
         private static void SaveItemsGumpRecursive(Item parent, XmlTextWriter xml, LinkedList<Gump> list)
@@ -1659,6 +1676,9 @@ namespace ClassicUO.Configuration
                                         break;
                                     case GumpType.PaperDoll:
                                         gump = new ModernPaperdoll(world, world.Player.Serial);
+                                        break;
+                                    case GumpType.HealthBarCollector:
+                                        gump = new HealthbarCollectorGump(world);
                                         break;
                                 }
 

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json.Serialization.Metadata;
 using ClassicUO.Game;
-using ClassicUO.Utility.Platforms;
 
 namespace ClassicUO.Configuration
 {
@@ -71,7 +70,6 @@ namespace ClassicUO.Configuration
         /// Only applies when there is only 1 server available
         /// </summary>
         public bool SkipServerSelection { get; set => SetProperty(ref field, value); } = true;
-        public bool ManagedZlib { get; set => SetProperty(ref field, value); } = !PlatformHelper.IsWindows;
         public float GlobalScale { get; set => SetProperty(ref field, value); } = 1f;
 
         /// <summary>Web map journal panel width. Machine-wide.</summary>
@@ -106,6 +104,14 @@ namespace ClassicUO.Configuration
 
         /// <summary>UI language code used for TazLang strings. Defaults to <c>"EN"</c>.</summary>
         public string UILanguage { get; set => SetProperty(ref field, value); } = "EN";
+
+        /// <summary>
+        /// When true, an unhandled exception uploads its crash report to the configured webhook. The report
+        /// carries the exception, build/OS details and an anonymous install ID (see
+        /// <see cref="Game.Managers.CrashReporter"/>). Local crash artifacts are written either way.
+        /// Global rather than per-profile because a crash can happen before any profile is loaded.
+        /// </summary>
+        public bool SendCrashReports { get; set => SetProperty(ref field, value); } = true;
 
 
         

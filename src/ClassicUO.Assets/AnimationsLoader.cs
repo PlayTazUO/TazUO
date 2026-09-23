@@ -1257,7 +1257,9 @@ namespace ClassicUO.Assets
             {
                 dbufPooled = ArrayPool<byte>.Shared.Rent((int)index.UncompressedSize); //new byte[(int)index.UncompressedSize];
                 dbuf = dbufPooled;
-                ZLib.ZLibError result = ZLib.Decompress(buf, dbufPooled);
+                ZLib.ZLibError result = ZLib.Decompress(
+                    buf.AsSpan(0, (int)index.Size),
+                    dbufPooled.AsSpan(0, (int)index.UncompressedSize));
                 if (result != ZLib.ZLibError.Ok)
                 {
                     Log.Error($"error reading uop animation. AnimID: {animID} | Group: {animGroup} | Dir: {direction} | FileIndex: {fileIndex}");

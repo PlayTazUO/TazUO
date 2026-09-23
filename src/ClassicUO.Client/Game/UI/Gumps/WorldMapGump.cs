@@ -62,7 +62,7 @@ public class WorldMapGump : ResizableGump
     // source icon file on disk. Used by the web map so it can serve the original icon file by its
     // path instead of streaming rendered GPU textures.
     public static readonly Dictionary<string, string> _markerIconPaths = new Dictionary<string, string>();
-    private static readonly float[] _zooms = new float[10] { 0.125f, 0.25f, 0.5f, 0.75f, 1f, 1.5f, 2f, 4f, 6f, 8f };
+    private static readonly float[] _zooms = new float[11] { 0.125f, 0.25f, 0.5f, 0.75f, 1f, 1.5f, 2f, 4f, 6f, 8f, 10f };
     private static readonly Color _semiTransparentWhiteForGrid = new Color(255, 255, 255, 56);
     private static Point _last_position = new Point(100, 100);
     private static Texture2D _mapTexture;

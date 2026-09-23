@@ -123,6 +123,7 @@ namespace ClassicUO
         protected override void Initialize() //Called during Game.Run() in FNA
         {
             MainThreadQueue.Load();
+            JsonSaveConflictDialog.Register();
 
             if (GraphicManager.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
             {
@@ -291,19 +292,11 @@ namespace ClassicUO
         protected override void UnloadContent()
         {
             ItemDatabaseManager.Instance.Dispose();
-            SDL_GetWindowBordersSize(Window.Handle, out int top, out int left, out _, out _);
-
-            Settings.GlobalSettings.WindowPosition = new Point(
-                Math.Max(0, Window.ClientBounds.X - left),
-                Math.Max(0, Window.ClientBounds.Y - top)
-            );
 
             Audio?.StopMusic();
             Audio?.StopSounds();
             Audio?.StopAmbientSound();
             VoiceRecognitionManager.Instance.Dispose();
-            Settings.GlobalSettings.Save();
-            ProfileManager.SaveGlobalSettings();
 
             if (_pluginsInitialized)
                 Plugin.OnClosing();
@@ -1303,6 +1296,19 @@ namespace ClassicUO
         protected override void OnExiting(object sender, EventArgs args)
         {
             Scene?.Dispose();
+
+            // These used to be written while the graphics device tore down. Write them here instead,
+            // with the window still up, so a save conflict can be answered - the SDL prompt blocks
+            // until it is, without needing the game loop kept alive.
+            SDL_GetWindowBordersSize(Window.Handle, out int top, out int left, out _, out _);
+
+            Settings.GlobalSettings.WindowPosition = new Point(
+                Math.Max(0, Window.ClientBounds.X - left),
+                Math.Max(0, Window.ClientBounds.Y - top)
+            );
+
+            Settings.GlobalSettings.Save();
+            ProfileManager.SaveGlobalSettings();
 
             base.OnExiting(sender, args);
         }

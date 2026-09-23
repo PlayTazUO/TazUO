@@ -28,6 +28,22 @@ class ApiEntity(ApiGameObject):
         """
         pass
 
+    def Target(self) -> None:
+        """
+         Attempts to target this entity. Only has any effect while the client is waiting for a target selection.
+        
+        """
+        pass
+
+    def TargetRel(self, xOffset: "int", yOffset: "int", tilesOnly: "bool" = True) -> None:
+        """
+         Attempts to target the spot at an offset from this entity's position, resolving it the same way a
+         click would: the topmost visible object there is targeted, whether that is an entity, a static/multi,
+         or land. Only has any effect while the client is waiting for a target selection.
+        
+        """
+        pass
+
 class ApiGameObject:
     ""
     Impassible: bool = None
@@ -2344,6 +2360,18 @@ def TargetSelf() -> None:
     """
     pass
 
+def TargetRel(xOffset: "int", yOffset: "int", tilesOnly: "bool" = True) -> None:
+    """
+     Target the spot at an offset from your position, resolving it the same way a click would:
+     the topmost visible object there is targeted, whether that is an entity, a static/multi, or land.
+     Example:
+     ```py
+     API.TargetRel(1, 1)
+     ```
+    
+    """
+    pass
+
 def TargetLandRel(xOffset: "int", yOffset: "int") -> None:
     """
      Target a land tile relative to your position.
@@ -2356,10 +2384,10 @@ def TargetLandRel(xOffset: "int", yOffset: "int") -> None:
     """
     pass
 
-def TargetTileRel(xOffset: "int", yOffset: "int", graphic: "int" = 1337) -> None:
+def TargetTileRel(xOffset: "int", yOffset: "int", graphic: "int" = 1337, tilesOnly: "bool" = True) -> None:
     """
-     Target a tile relative to your location.
-     If this doesn't work, try TargetLandRel instead.'
+     Target the highest visible object at a tile relative to your location, skipping land.
+     Resolves the spot the same way <see cref="TargetRel"/> does, but never falls back to land.
      Example:
      ```py
      API.TargetTileRel(1, 1)
@@ -2394,6 +2422,20 @@ def CancelTarget() -> None:
      if API.WaitForTarget():
        API.CancelTarget()
        API.SysMsg("Targeting cancelled, april fools made you target something!")
+     ```
+    
+    """
+    pass
+
+def SetLastTarget(serial: "int | None" = None, x: "int | None" = None, y: "int | None" = None, z: "int | None" = None, graphic: "int | None" = None) -> None:
+    """
+     Override the client's last target. Pass a serial for an entity, or a location (x/y/z)
+     for a land tile. Include graphic to mark the location as a static instead.
+     Example:
+     ```py
+     API.SetLastTarget(serial=0x12345678)
+     API.SetLastTarget(x=1243, y=1337, z=0)
+     API.SetLastTarget(x=1243, y=1337, z=0, graphic=0x1)
      ```
     
     """

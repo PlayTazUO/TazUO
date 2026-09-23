@@ -15,32 +15,42 @@ namespace ClassicUO.Configuration
         /// Returns the localized string for <paramref name="key"/>, or
         /// <paramref name="fallback"/> if the key is not found.
         /// </summary>
-        public static string Get(string key, string fallback = "")
-            => _strings.TryGetValue(key, out string v) ? v : fallback;
+        public static string Get(string key, string fallback = "") => _strings.GetValueOrDefault(key, fallback);
 
         /// <summary>
-        /// Returns the localized string for <paramref name="key"/> with formatted values.
+        /// Returns the localized string for <paramref name="key"/> with formatted values, or an empty
+        /// string if the key is not found. Prefer the overload taking a fallback template.
         /// </summary>
-        public static string Get(string key, string[] replace)
-        {
-            if(!_strings.TryGetValue(key, out string v))
-                return string.Empty;
+        public static string Get(string key, string[] replace) => Format(key, _strings.TryGetValue(key, out string v) ? v : string.Empty, replace);
 
+        /// <summary>
+        /// Returns the localized string for <paramref name="key"/> with formatted values, falling back to
+        /// <paramref name="fallback"/> when the key is not found. The fallback is a template too, so it
+        /// carries the same <c>{0}</c> placeholders as the localized string.
+        /// </summary>
+        public static string GetEx(string key, string fallback, string[] replace) => Format(key, _strings.GetValueOrDefault(key, fallback), replace);
+
+        /// <summary>
+        /// Applies <paramref name="replace"/> to <paramref name="template"/>, returning the unformatted
+        /// template if it is malformed. <paramref name="key"/> is only used to name the offender in the log.
+        /// </summary>
+        private static string Format(string key, string template, string[] replace)
+        {
             try
             {
-                return string.Format(v, replace);
+                return string.Format(template, replace);
             }
             catch (FormatException ex)
             {
                 // A malformed localization template (stray braces or a placeholder
                 // index beyond the supplied args) must never crash the client.
                 Log.Warn($"TazLang: invalid format string for key '{key}': {ex.Message}");
-                return v;
+                return template;
             }
         }
 
         /// <summary>
-        /// Loads language strings from <c>Data/language.{langCode}.ini</c> into <see cref="Get"/>.
+        /// Loads language strings from <c>Data/language.{langCode}.ini</c> into <see cref="Get(string, string)"/>.
         /// Falls back to <c>language.EN.ini</c> if the requested file does not exist.
         /// Creates <c>Data/language.EN.ini</c> from the embedded resource on first run.
         /// Missing keys are auto-appended from the embedded EN resource when the version is stale.

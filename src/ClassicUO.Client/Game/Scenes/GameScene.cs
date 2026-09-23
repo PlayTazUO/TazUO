@@ -180,7 +180,6 @@ namespace ClassicUO.Game.Scenes
 
             _filterMode = (PostProcessingType)ProfileManager.CurrentProfile.PostProcessingType;
         }
-        private long _nextProfileSave = Time.Ticks + 1000*60*60;
 
         public bool UpdateDrawPosition { get; set; }
         public bool DisconnectionRequested { get; set; }
@@ -1107,12 +1106,6 @@ namespace ClassicUO.Game.Scenes
             Profiler.ExitContext("Movement");
 
             _world.Macros.Update();
-
-            if (Time.Ticks > _nextProfileSave)
-            {
-                ProfileManager.CurrentProfile.Save(_world, ProfileManager.ProfilePath);
-                _nextProfileSave = Time.Ticks + 1000*60*60;
-            }
 
             if (!UIManager.IsMouseOverWorld)
             {

@@ -53,6 +53,12 @@ internal static class SpeechTab
                     TazLang.Get("mog_chattab_speech_stripchatusernameid"),
                     new Accessor<bool>(() => profile.StripChatUsernameId),
                     search: new SearchMetadata(TazLang.Get("mog_chattab_speech_stripchatusernameid"))
+                ),
+                Option.Checkbox(
+                    TazLang.Get("mog_chattab_speech_serverpromptpopup"),
+                    new Accessor<bool>(() => profile.UsePromptPopup),
+                    TazLang.Get("mog_chattab_speech_serverpromptpopup_tooltip"),
+                    new SearchMetadata(TazLang.Get("mog_chattab_speech_serverpromptpopup"), Keywords: [TazLang.Get("mog_kw_chat"), TazLang.Get("mog_kw_name")])
                 )
             ),
             GetActivationSection(),
