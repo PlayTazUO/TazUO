@@ -90,9 +90,14 @@ public class ApiItem : ApiEntity
         return result != null ? new ApiUiBaseControl(result) : null;
     }
 
-    // UIManager.GetGump(serial) returns the topmost gump of any type with that LocalSerial. An item on
-    // the ground also has a NameOverheadGump with its serial, which can sit above the container
-    // window, so walk the list and take the topmost gump that is a container window.
+    /// <summary>
+    /// Finds the open container window for <paramref name="serial"/>, skipping other gumps that share
+    /// its serial. UIManager.GetGump(serial) returns the first gump of any type with that LocalSerial,
+    /// and a ground item's NameOverheadGump carries the item's serial too, so it can be found instead
+    /// of the container window. Must run on the main thread.
+    /// </summary>
+    /// <param name="serial">The container item's serial.</param>
+    /// <returns>The GridContainer, ContainerGump or GridLootGump for the item, or null if none is open.</returns>
     private static Gump FindContainerGump(uint serial)
     {
         for (var node = UIManager.Gumps.Last; node != null; node = node.Previous)
