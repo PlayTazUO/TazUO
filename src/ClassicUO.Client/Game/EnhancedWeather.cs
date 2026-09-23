@@ -743,7 +743,11 @@ namespace ClassicUO.Game
 
             if (newScaledCount != ScaledCount)
             {
-                CurrentCount = (byte)Math.Min(byte.MaxValue, CurrentCount * newScaledCount / ScaledCount);
+                // ScaledCount is zero when the weather has no effects configured (Count 0); there is
+                // nothing to scale from, so just adopt the new target instead of dividing by zero.
+                CurrentCount = ScaledCount == 0
+                    ? newScaledCount
+                    : (byte)Math.Min(byte.MaxValue, CurrentCount * newScaledCount / ScaledCount);
                 ScaledCount = newScaledCount;
             }
 
