@@ -115,7 +115,7 @@ public class ApiEntity : ApiGameObject
 
             for (GameObject obj = World.Instance.Map.GetTile(x, y); obj != null; obj = obj.TNext)
             {
-                if (obj.AlphaHue != 0 && (!tilesOnly || obj is not Entity))
+                if (obj.AlphaHue != 0 && obj is not GameEffect && (!tilesOnly || obj is not Entity))
                     top = obj;
             }
 

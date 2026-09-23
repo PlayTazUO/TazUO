@@ -73,8 +73,15 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
             Load();
         }
 
+        // Cast starts and failures mutate the same casting state, so they must be applied in the
+        // order the server sent them: a start handed off to a worker thread (the previous Task.Run)
+        // could land after the failure for that same cast and re-apply its freeze. Both transitions
+        // go through the main-thread FIFO queue, keeping them serialized on the main thread.
+        private static void DispatchCastTransition(Action transition) =>
+            MainThreadQueue.EnqueueAction(transition);
+
         private void OnRawMessageReceived(object sender, MessageEventArgs e) =>
-            Task.Run(() =>
+            DispatchCastTransition(() =>
             {
                 if (loaded && e.Parent != null && ReferenceEquals(e.Parent, World.Player))
                     if (spellRangePowerWordCache.TryGetValue(e.Text.Trim(), out SpellRangeInfo spell))
@@ -83,14 +90,17 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
 
         public void OnClilocReceived(int cliloc)
         {
-            if (stopAtClilocs.Contains(cliloc))
+            if (!stopAtClilocs.Contains(cliloc))
+                return;
+
+            DispatchCastTransition(() =>
             {
                 // Record the failure regardless of our isCasting flag: a damage packet may have
                 // already cleared isCasting before this disrupt cliloc arrives (packet ordering),
                 // and consumers still need to know the cast just failed.
                 LastCastFailedTick = ClassicUO.Time.Ticks;
                 if (isCasting) ClearCasting();
-            }
+            });
         }
 
         private void SetCasting(SpellRangeInfo spell)

@@ -4,7 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 9/23/26
-* ***Misc:*** Updated compact horiztonal status bar style by rearranging a few items and adding a few colors to mor easily distinguish important values
+* ***Misc:*** Updated compact horizontal status bar style by rearranging a few items and adding a few colors to more easily distinguish important values
 * ***Fix:*** Fixed a client crash in the "Enter Location" window when typing coordinates larger than an `int` could hold (the parsed X/Y overflowed) - oversized numbers are now treated as invalid input instead
 * ***Fix:*** Fixed a client crash when the weather system rescaled its effects after the window size changed while the weather had no effects configured (a divide-by-zero on the previous scaled count)
 * ***Fix:*** Fixed a client crash on shutdown when the save-conflict prompt appeared while the current profile had already been unloaded - key input arriving through the prompt no longer dereferences the missing profile
