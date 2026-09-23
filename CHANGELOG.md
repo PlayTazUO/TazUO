@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/23/36
+* ***Misc:*** Updated compact horiztonal status bar style by rearranging a few items and adding a few colors to mor easily distinguish important values
+
 ## 9/22/26
 * ***Fix:*** Fixed the Legion Script `GetContainerGump()` returning nothing for an open container on the ground when its name overhead was showing - it now finds the container window
 
