@@ -4,6 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 9/23/26
+* ***Fix:*** Fixed the overhead spell format not applying to Chivalry spells - their mantras arrive as localized cliloc messages rather than `MessageType.Spell`, so they are now treated as spells for formatting/hue
 * ***Misc:*** Updated compact horizontal status bar style by rearranging a few items and adding a few colors to more easily distinguish important values
 * ***Fix:*** Fixed a client crash in the "Enter Location" window when typing coordinates larger than an `int` could hold (the parsed X/Y overflowed) - oversized numbers are now treated as invalid input instead
 * ***Fix:*** Fixed a client crash when the weather system rescaled its effects after the window size changed while the weather had no effects configured (a divide-by-zero on the previous scaled count)
