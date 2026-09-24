@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Processes;
-using ClassicUO.Game.UI.Gumps.SpellBar;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
@@ -93,34 +93,8 @@ public static class GeneralTabContent
                 if (b) World.Instance?.Weather.Reset();
             }, TazLang.Get("assistant_disableweather"), TazLang.Get("assistant_disableweather_tooltip")));
 
-        var healLabel = new MyraLabel(SpellDefinition.FullIndexGetSpell(profile.QuickHealSpell)?.Name ??
-                                      profile.QuickHealSpell.ToString(), MyraLabel.TextStyle.P) { Tooltip = TazLang.Get("assistant_quickspelltooltip") };
-
-        rightSide.Widgets.Add(new MyraButton(TazLang.Get("assistant_setquickhealspell"), () =>
-        {
-            UIManager.Add(new SpellQuickSearch(World.Instance, 0, 0, s =>
-            {
-                if (s != null)
-                {
-                    healLabel.Text = s.Name;
-                    profile.QuickHealSpell = s.ID;
-                }
-            }, true).CenterInViewPort());
-        }).PlaceBefore(healLabel));
-
-        var cureLabel = new MyraLabel(SpellDefinition.FullIndexGetSpell(profile.QuickCureSpell)?.Name ??
-                                      profile.QuickCureSpell.ToString(), MyraLabel.TextStyle.P) { Tooltip = TazLang.Get("assistant_quickspelltooltip") };
-        rightSide.Widgets.Add(new MyraButton(TazLang.Get("assistant_setquickcurespell"), () =>
-        {
-            UIManager.Add(new SpellQuickSearch(World.Instance, 0, 0, s =>
-            {
-                if (s != null)
-                {
-                    cureLabel.Text = s.Name;
-                    profile.QuickCureSpell = s.ID;
-                }
-            }, true).CenterInViewPort());
-        }).PlaceBefore(cureLabel));
+        rightSide.Widgets.Add(BuildQuickActionCombo(TazLang.Get("assistant_quickhealspell", "Quick heal"), profile.QuickHealAction, a => profile.QuickHealAction = a));
+        rightSide.Widgets.Add(BuildQuickActionCombo(TazLang.Get("assistant_quickcurespell", "Quick cure"), profile.QuickCureAction, a => profile.QuickCureAction = a));
 
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.SingleClickMobileSetsLastTarget,
             b => {
@@ -128,5 +102,33 @@ public static class GeneralTabContent
             }, TazLang.Get("assistant_singleclicklasttarg")));
 
         return mainContent;
+    }
+
+    private static Widget BuildQuickActionCombo(string label, HealthBarQuickAction current, Action<HealthBarQuickAction> onChanged)
+    {
+        var combo = new ComboView
+        {
+            MinWidth = 200,
+            VerticalAlignment = VerticalAlignment.Center,
+            Tooltip = TazLang.Get("assistant_quickspelltooltip")
+        };
+
+        HealthBarQuickAction[] actions = (HealthBarQuickAction[])Enum.GetValues(typeof(HealthBarQuickAction));
+
+        for (int i = 0; i < actions.Length; i++)
+        {
+            combo.ListView.Widgets.Add(new Label { Text = actions[i].GetDisplayName() });
+
+            if (actions[i] == current)
+                combo.ListView.SelectedIndex = i;
+        }
+
+        combo.ListView.SelectedIndexChanged += (_, _) =>
+        {
+            if (combo.ListView.SelectedIndex is int index)
+                onChanged(actions[index]);
+        };
+
+        return new MyraLabel(label, MyraLabel.TextStyle.P).PlaceBefore(combo);
     }
 }

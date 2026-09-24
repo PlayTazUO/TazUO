@@ -1,4 +1,5 @@
 using ClassicUO.Common;
+using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 
@@ -70,6 +71,8 @@ public static class HealthBarsTab
         string healCureAllLabel = TazLang.Get("healthbar_healcureall", "Show heal/cure buttons on all health bars (except invulnerable)");
         string healCureFriendsLabel = TazLang.Get("healthbar_healcurefriends", "Show heal/cure buttons on friends list health bars");
         string healCurePetsLabel = TazLang.Get("healthbar_healcurepets", "Show heal/cure buttons on pet health bars");
+        string quickHealActionLabel = TazLang.Get("healthbar_quickhealaction", "Quick heal action");
+        string quickCureActionLabel = TazLang.Get("healthbar_quickcureaction", "Quick cure action");
 
         return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = TazLang.Get("healthbars_floating_section") },
@@ -100,6 +103,18 @@ public static class HealthBarsTab
                 healCurePetsLabel,
                 new Accessor<bool>(() => profile.ShowHealCureButtonsPets),
                 search: new SearchMetadata(healCurePetsLabel, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_heal")])
+            ),
+            Option.LComboBox(
+                quickHealActionLabel,
+                new Accessor<HealthBarQuickAction>(() => profile.QuickHealAction),
+                "healthbar_quickaction_",
+                search: new SearchMetadata(quickHealActionLabel, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_heal")])
+            ),
+            Option.LComboBox(
+                quickCureActionLabel,
+                new Accessor<HealthBarQuickAction>(() => profile.QuickCureAction),
+                "healthbar_quickaction_",
+                search: new SearchMetadata(quickCureActionLabel, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_cure")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_general_savehpbars"),
