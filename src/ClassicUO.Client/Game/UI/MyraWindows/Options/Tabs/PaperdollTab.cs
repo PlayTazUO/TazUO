@@ -12,15 +12,32 @@ public class PaperdollTab
     internal static IOptionSource GetContent()
     {
         return OptionsUi.Vertical(
-            Option.Checkbox(
-                TazLang.Get("mog_tazuo_swapequippedonpaperdolldrop"),
-                new Accessor<bool>(() => ProfileManager.GlobalSettings.SwapEquippedOnPaperdollDrop),
-                TazLang.Get("mog_tazuo_swapequippedonpaperdolldroptooltip"),
-                new SearchMetadata(
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(
+                    new Accessor<bool>(() => ProfileManager.GlobalSettings.SwapEquippedOnPaperdollDrop),
                     TazLang.Get("mog_tazuo_swapequippedonpaperdolldrop"),
-                    Keywords: [TazLang.Get("mog_kw_paperdoll"), TazLang.Get("mog_kw_equipment"), TazLang.Get("mog_kw_item"), TazLang.Get("mog_kw_drop")]
+                    TazLang.Get("mog_tazuo_swapequippedonpaperdolldroptooltip")
+                ),
+                Option.Checkbox(
+                    TazLang.Get("mog_tazuo_swapequippedonpaperdolldropkr"),
+                    new Accessor<bool>(
+                        () => ProfileManager.ServerSettings?.UseKrEquipSwap ?? false,
+                        value =>
+                        {
+                            if (ProfileManager.ServerSettings != null)
+                                ProfileManager.ServerSettings.UseKrEquipSwap = value;
+                        }
+                    ),
+                    TazLang.Get("mog_tazuo_swapequippedonpaperdolldropkrtooltip"),
+                    new SearchMetadata(
+                        TazLang.Get("mog_tazuo_swapequippedonpaperdolldropkr"),
+                        Keywords: [TazLang.Get("mog_kw_paperdoll"), TazLang.Get("mog_kw_equipment"), TazLang.Get("mog_kw_item"), TazLang.Get("mog_kw_drop")]
+                    )
                 )
-            ),
+            ).WithSearch(new SearchMetadata(
+                TazLang.Get("mog_tazuo_swapequippedonpaperdolldrop"),
+                Keywords: [TazLang.Get("mog_kw_paperdoll"), TazLang.Get("mog_kw_equipment"), TazLang.Get("mog_kw_item"), TazLang.Get("mog_kw_drop")]
+            )),
             GetModernPaperdollSection()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_buttonpaperdoll"), [TazLang.Get("mog_kw_paperdoll"), TazLang.Get("mog_kw_character"), TazLang.Get("mog_kw_equipment")]));
     }

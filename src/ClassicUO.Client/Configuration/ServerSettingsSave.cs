@@ -20,5 +20,12 @@ namespace ClassicUO.Configuration
 
         /// <summary>When enabled, corpses that have already been opened are not auto-opened again.</summary>
         public bool DoNotReopenCorpses { get; set => SetProperty(ref field, value); } = false;
+
+        /// <summary>
+        /// When true, swapping an equipped item on paperdoll drop uses the KR equip macro packet
+        /// (0xEC) instead of the queue-based pickup/drop sequence. Faster, but the server must
+        /// support the packet. Per-server because support varies by shard.
+        /// </summary>
+        public bool UseKrEquipSwap { get; set => SetProperty(ref field, value); }
     }
 }
