@@ -589,6 +589,16 @@ namespace ClassicUO.Game.UI.Gumps
 
                                     Client.Game.UO.GameCursor.ItemHold.Clear();
                                 }
+                                else if (ProfileManager.GlobalSettings.SwapEquippedOnPaperdollDrop)
+                                {
+                                    GameActions.QueueEquipSwap(
+                                        World,
+                                        LocalSerial != World.Player ? container : World.Player,
+                                        (Layer)Client.Game.UO.GameCursor.ItemHold.ItemData.Layer,
+                                        equipment.Serial
+                                    );
+                                    Mouse.CancelDoubleClick = true;
+                                }
                             }
                         }
                     }

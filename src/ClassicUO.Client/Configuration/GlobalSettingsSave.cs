@@ -33,6 +33,12 @@ namespace ClassicUO.Configuration
         /// while dragging it over the world.
         /// </summary>
         public bool ShowDragItemPreview { get; set => SetProperty(ref field, value); } = true;
+
+        /// <summary>
+        /// When true, dropping a wearable onto a paperdoll layer that already holds an item queues
+        /// unequipping the existing item and then equipping the dropped one, instead of doing nothing.
+        /// </summary>
+        public bool SwapEquippedOnPaperdollDrop { get; set => SetProperty(ref field, value); } = true;
         public bool UseCircleOfTransparency { get; set => SetProperty(ref field, value); }
         public int CircleOfTransparencyRadius { get; set => SetProperty(ref field, value); } = Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS / 2;
         public int CircleOfTransparencyType { get; set => SetProperty(ref field, value); } // 0 = normal, 1 = like original client
