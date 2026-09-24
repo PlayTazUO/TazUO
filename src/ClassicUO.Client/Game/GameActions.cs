@@ -1039,6 +1039,41 @@ internal static class GameActions
         }
     }
 
+    /// <summary>
+    /// Queues unequipping the item occupying <paramref name="layer"/> to the player's backpack, then
+    /// equipping the currently held item into that layer on <paramref name="container"/>. Used by the
+    /// paperdolls when a wearable is dropped onto an already-occupied layer.
+    /// </summary>
+    internal static void QueueEquipSwap(World world, uint container, Layer layer, uint existingSerial)
+    {
+        Item backpack = world.Player?.Backpack;
+        uint heldSerial = Client.Game.UO.GameCursor.ItemHold.Serial;
+
+        // Can't make room without somewhere to put the existing item.
+        if (backpack == null)
+            return;
+
+        // With manual moves off the held item already sits on the server's cursor, which would make
+        // the queued unequip's pickup fail. Drop it into the backpack to free the cursor; the queued
+        // equip then picks it back up. With manual moves on the pickup is deferred to the queue, so
+        // there is no server cursor to clear.
+        if (ProfileManager.CurrentProfile.QueueManualItemMoves)
+            Client.Game.UO.GameCursor.ItemHold.Clear();
+        else
+            DropItem(heldSerial, 0xFFFF, 0xFFFF, 0, backpack.Serial);
+
+        if (existingSerial != 0)
+            ObjectActionQueue.Instance.Enqueue(
+                new MoveRequest(existingSerial, backpack.Serial).ToObjectActionQueueItem(),
+                ActionPriority.UnequipItem
+            );
+
+        ObjectActionQueue.Instance.Enqueue(
+            new MoveRequest(heldSerial, container, layer: layer, moveType: MoveType.Equip).ToObjectActionQueueItem(),
+            ActionPriority.EquipItem
+        );
+    }
+
     internal static void ReplyGump(World world, uint local, uint server, int button, uint[] switches = null, Tuple<ushort, string>[] entries = null)
     {
         ScriptRecorder.Instance.RecordReplyGump(server, button, switches, entries);
