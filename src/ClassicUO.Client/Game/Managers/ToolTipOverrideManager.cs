@@ -196,6 +196,11 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        /// <summary>Formats item properties and appends the matching rule legend when enabled.</summary>
+        /// <param name="itemPropertiesData">The properties to display.</param>
+        /// <param name="borderHue">Receives the first border hue supplied by a tooltip override, or -1.</param>
+        /// <param name="compareTo">Item serial used for comparison, or <see cref="uint.MinValue"/> for none.</param>
+        /// <returns>The formatted tooltip, or null when property data is unavailable.</returns>
         private static string BuildTooltip(ItemPropertiesData itemPropertiesData, out int borderHue, uint compareTo = uint.MinValue)
         {
             borderHue = -1;
@@ -352,6 +357,11 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        /// <summary>Builds the tooltip for an item, optionally comparing it with another item.</summary>
+        /// <param name="world">The world containing the item.</param>
+        /// <param name="serial">The item serial.</param>
+        /// <param name="compareTo">Item serial used for comparison, or <see cref="uint.MinValue"/> for none.</param>
+        /// <returns>The formatted tooltip, or null when property data is unavailable.</returns>
         public static string ProcessTooltipText(World world, uint serial, uint compareTo = uint.MinValue)
             => ProcessTooltipText(world, serial, out _, compareTo);
 

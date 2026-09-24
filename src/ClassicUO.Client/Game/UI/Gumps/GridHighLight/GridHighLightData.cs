@@ -254,6 +254,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             hasQueuedItems = true;
         }
 
+        /// <summary>Checks queued items with available OPL data and stores every matching rule color.</summary>
+        /// <param name="World">The world containing queued items.</param>
         public static void ProcessQueue(World World)
         {
             if (!hasQueuedItems)
@@ -338,6 +340,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             }
         }
 
+        /// <summary>Gets a rule by index, creating and saving a new rule when the index is invalid.</summary>
+        /// <param name="index">The configured rule index.</param>
+        /// <returns>The existing or newly created rule.</returns>
         public static GridHighlightData GetGridHighlightData(int index)
         {
             List<GridHighlightSetupEntry> list = GridHighlightsConfig.Current.Highlights;
@@ -354,6 +359,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return data;
         }
 
+        /// <summary>Clears cached highlight results and queues eligible items for matching again.</summary>
         public static void RecheckMatchStatus()
         {
             AllConfigs = null; // Reset configs

@@ -1062,6 +1062,11 @@ public class GridItem : Control
         UIManager.Add(multipleToolTipGump);
     }
 
+    /// <summary>Draws the item, its primary highlight border, and any additional rule markers.</summary>
+    /// <param name="batcher">The renderer for this frame.</param>
+    /// <param name="x">The item's horizontal drawing position.</param>
+    /// <param name="y">The item's vertical drawing position.</param>
+    /// <returns>Whether the item was drawn.</returns>
     public override bool Draw(UltimaBatcher2D batcher, int x, int y)
     {
         if (!_shouldDraw || IsDisposed) return false;

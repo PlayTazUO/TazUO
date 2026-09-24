@@ -33,6 +33,7 @@ namespace ClassicUO.Game.GameObjects
 
         public bool MatchesHighlightData;
         public Color HighlightColor = Color.White;
+        /// <summary>Colors of all matching grid highlight rules in configured order.</summary>
         public Color[] HighlightColors = Array.Empty<Color>();
         public string HighlightName = string.Empty;
         public bool ShouldAutoLoot;
