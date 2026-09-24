@@ -308,12 +308,16 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
         T result;
 
         using (instance.AcquireLock(filePath))
+        {
             result = instance.LoadCore(filePath);
+
+            // Captured while the lock is still held so a concurrent writer cannot slip in between the
+            // load and the fingerprint read.
+            result.CaptureFingerprint(filePath);
+        }
 
         if (pinSource)
             result.SourcePath = filePath;
-
-        result.CaptureFingerprint(filePath);
 
         return result;
     }

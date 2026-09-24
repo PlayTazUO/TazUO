@@ -40,27 +40,19 @@ namespace ClassicUO.Game.UI.Gumps
             };
             Add(background);
 
-            var buffButton = new Button((int)ButtonType.BuffIcon, BUFF_BUTTON_NORMAL, BUFF_BUTTON_PRESSED, BUFF_BUTTON_PRESSED)
-            {
-                X = PADDING,
-                Y = PADDING,
-                ButtonAction = ButtonAction.Activate
-            };
-            Add(buffButton);
-
             (MobileStats, string, string, int)[][] columns = new[]
             {
                 new[]
                 {
                     (MobileStats.Strength, "STR", "strength", VALUE_HUE),
-                    (MobileStats.Dexterity, "DEX", "dexterity", VALUE_HUE),
-                    (MobileStats.Intelligence, "INT", "intelligence", VALUE_HUE),
+                    (MobileStats.Dexterity, "DEX", "dexterity", 63),
+                    (MobileStats.Intelligence, "INT", "intelligence", 93),
                 },
                 new[]
                 {
                     (MobileStats.HealthCurrent, "HP", "hit_points", VALUE_HUE),
-                    (MobileStats.ManaCurrent, "MP", "mana", VALUE_HUE),
-                    (MobileStats.StaminaCurrent, "SP", "stamina", VALUE_HUE),
+                    (MobileStats.StaminaCurrent, "SP", "stamina", 63),
+                    (MobileStats.ManaCurrent, "MP", "mana", 93),
                 },
                 new[]
                 {
@@ -96,7 +88,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             };
 
-            int top = PADDING + buffButton.Height + ROW_GAP;
+            int top = PADDING;
             var columnLabels = new List<TextBox>[columns.Length];
             int tallestColumn = top;
 
@@ -137,6 +129,14 @@ namespace ClassicUO.Game.UI.Gumps
             background.Width = Width;
             background.Height = Height;
             WantUpdateSize = false;
+
+            var buffButton = new Button((int)ButtonType.BuffIcon, BUFF_BUTTON_NORMAL, BUFF_BUTTON_PRESSED, BUFF_BUTTON_PRESSED)
+            {
+                X = PADDING,
+                ButtonAction = ButtonAction.Activate
+            };
+            buffButton.Y = Height - buffButton.Height - PADDING;
+            Add(buffButton);
 
             EventSink.PlayerStatsUpdated += OnPlayerStatsUpdated;
         }

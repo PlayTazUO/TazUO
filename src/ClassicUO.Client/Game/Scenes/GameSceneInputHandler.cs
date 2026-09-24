@@ -1352,6 +1352,14 @@ namespace ClassicUO.Game.Scenes
 
         internal override void OnKeyDown(SDL.SDL_KeyboardEvent e)
         {
+            // The profile is unloaded while the scene tears down, but the SDL save-conflict prompt shown
+            // during the final settings save keeps pumping key events back into this scene. Nothing here
+            // is actionable without a profile, so bail rather than dereference it.
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return;
+            }
+
             var key = (SDL.SDL_Keycode)e.key;
 
             if (key == SDL.SDL_Keycode.SDLK_TAB && e.repeat)
@@ -1605,7 +1613,9 @@ namespace ClassicUO.Game.Scenes
 
         internal override void OnKeyUp(SDL.SDL_KeyboardEvent e)
         {
-            if (!_world.InGame)
+            // The profile is unloaded while the scene tears down, but SDL keeps pumping key events
+            // back into this scene; bail before the profile is dereferenced below.
+            if (!_world.InGame || ProfileManager.CurrentProfile == null)
             {
                 return;
             }

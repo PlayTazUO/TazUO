@@ -94,14 +94,6 @@ public sealed partial class Profile
         public partial int OldMinGumpMoveDistance { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.QUICK_HEAL_SPELL, 29)]
-        public partial int OldQuickHealSpell { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.QUICK_CURE_SPELL, 11)]
-        public partial int OldQuickCureSpell { get; set; }
-
-        [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_PORT, 8088)]
         public partial int OldWebMapServerPort { get; set; }
 

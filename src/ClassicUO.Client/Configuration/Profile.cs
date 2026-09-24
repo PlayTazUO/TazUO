@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Common.Enums;
 using ClassicUO.Configuration.Json;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
@@ -896,8 +897,8 @@ namespace ClassicUO.Configuration
         public bool EnablePetScaling { get; set; }
         public bool AutoUnequipForActions { get; set; }
         public int MinGumpMoveDistance { get; set; } = 5;
-        public int QuickHealSpell { get; set; } = 29;
-        public int QuickCureSpell { get; set; } = 11;
+        public HealthBarQuickAction QuickHealAction { get; set; } = HealthBarQuickAction.Heal;
+        public HealthBarQuickAction QuickCureAction { get; set; } = HealthBarQuickAction.Cure;
         [JsonConverter(typeof(Point2Converter))] public Point CoprseContainerPosition { get; set => SetProperty(ref field, value); } = new Point(100, 100);
 
 
@@ -981,8 +982,6 @@ namespace ClassicUO.Configuration
                 EnablePetScaling = OldEnablePetScaling;
                 AutoUnequipForActions = OldAutoUnequipForActions;
                 MinGumpMoveDistance = OldMinGumpMoveDistance;
-                QuickHealSpell = OldQuickHealSpell;
-                QuickCureSpell = OldQuickCureSpell;
                 WebMapServerPort = OldWebMapServerPort;
                 WebMapAutoStart = OldWebMapAutoStart;
 

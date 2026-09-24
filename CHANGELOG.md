@@ -3,6 +3,19 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/23/26
+* ***Feature:*** Added bandaging option to quick heal/cure buttons along with an internal rework of how it works
+* ***Feature:*** Added a "Swap equipped items on paperdoll drop" option (on by default) - dropping a wearable onto a paperdoll slot that already holds an item now unequips the existing item and equips the dropped one instead of doing nothing
+* ***Feature:*** Added a "Use KR equip packet for swaps" sub-option (off by default, per-server) - when enabled, paperdoll equip swaps use the KR equip macro packet (0xEC) the dress agent uses instead of the queue-based pickup/drop sequence
+* ***Fix:*** Fixed the overhead spell format not applying to Chivalry spells - their mantras arrive as localized cliloc messages rather than `MessageType.Spell`, so they are now treated as spells for formatting/hue
+* ***Misc:*** Updated compact horizontal status bar style by rearranging a few items and adding a few colors to more easily distinguish important values
+* ***Fix:*** Fixed a client crash in the "Enter Location" window when typing coordinates larger than an `int` could hold (the parsed X/Y overflowed) - oversized numbers are now treated as invalid input instead
+* ***Fix:*** Fixed a client crash when the weather system rescaled its effects after the window size changed while the weather had no effects configured (a divide-by-zero on the previous scaled count)
+* ***Fix:*** Fixed a client crash on shutdown when the save-conflict prompt appeared while the current profile had already been unloaded - key input arriving through the prompt no longer dereferences the missing profile
+
+## 9/22/26
+* ***Fix:*** Fixed the Legion Script `GetContainerGump()` returning nothing for an open container on the ground when its name overhead was showing - it now finds the container window
+
 ## 9/18/26
 * ***Feature:*** Added a "Log History" option to the login screen's options menu
 * ***Fix:*** Fixed the log history window showing two overlapping scrollbars when resized small - the text area now fills the window's remaining space and is the only scroll region

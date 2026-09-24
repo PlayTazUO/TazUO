@@ -2668,7 +2668,7 @@ namespace ClassicUO.LegionScripting
                 GameObject top = null;
                 for (GameObject obj = World.Map.GetTile(x, y); obj != null; obj = obj.TNext)
                 {
-                    if (obj.AlphaHue != 0 && (!tilesOnly || obj is not Entity))
+                    if (obj.AlphaHue != 0 && obj is not GameEffect && (!tilesOnly || obj is not Entity))
                         top = obj;
                 }
 
@@ -2744,7 +2744,7 @@ namespace ClassicUO.LegionScripting
 
                     for (GameObject obj = World.Map.GetTile(x, y); obj != null; obj = obj.TNext)
                     {
-                        if (obj is not Land && obj.AlphaHue != 0 && (!tilesOnly || obj is not Entity))
+                        if (obj is not Land && obj is not GameEffect && obj.AlphaHue != 0 && (!tilesOnly || obj is not Entity))
                             top = obj;
                     }
 
@@ -2837,6 +2837,8 @@ namespace ClassicUO.LegionScripting
                         info.SetLand(x.Value, y.Value, (sbyte)z.Value);
                     }
                 }
+
+                World.TargetManager.SyncLastTargetReplay();
             }
         );
 
