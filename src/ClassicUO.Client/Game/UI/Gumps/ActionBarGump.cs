@@ -9,7 +9,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows;
-using ClassicUO.Input;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.UI.Gumps
@@ -327,14 +326,6 @@ namespace ClassicUO.Game.UI.Gumps
         {
             foreach (ActionItem item in GetControls<ActionItem>())
                 item.UpdateHotkeyLabel();
-        }
-
-        public override void OnMouseUp(int x, int y, MouseButtonType button)
-        {
-            base.OnMouseUp(x, y, button);
-
-            if (button == MouseButtonType.Left && Keyboard.Alt && Keyboard.Ctrl)
-                IsLocked = !IsLocked;
         }
 
         public override void Save(XmlTextWriter writer)
