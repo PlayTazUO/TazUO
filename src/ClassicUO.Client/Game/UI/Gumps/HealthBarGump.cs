@@ -535,7 +535,7 @@ namespace ClassicUO.Game.UI.Gumps
         private readonly LineCHB[] _border = new LineCHB[4];
 
         private LineCHB _hpLineRed, _manaLineRed, _stamLineRed, _outline;
-        private Button _buttonHeal1, _buttonHeal2;
+        private HealthBarQuickButton _quickHealButton, _quickCureButton;
 
 
         private bool _oldWarMode, _normalHits, _poisoned, _yellowHits;
@@ -565,7 +565,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             _background = null;
             _hpLineRed = _manaLineRed = _stamLineRed = null;
-            _buttonHeal1 = _buttonHeal2 = null;
+            _quickHealButton = _quickCureButton = null;
 
             if (_textBox != null)
             {
@@ -687,9 +687,9 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                     }
 
-                    if (_buttonHeal1 != null && _buttonHeal2 != null)
+                    if (_quickHealButton != null && _quickCureButton != null)
                     {
-                        _buttonHeal1.IsVisible = _buttonHeal2.IsVisible = false;
+                        _quickHealButton.IsVisible = _quickCureButton.IsVisible = false;
                     }
 
                     if (_bars[0] != null)
@@ -789,9 +789,9 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                     }
 
-                    if (_buttonHeal1 != null && _buttonHeal2 != null && ShouldShowHealButtons(entity))
+                    if (_quickHealButton != null && _quickCureButton != null && ShouldShowHealButtons(entity))
                     {
-                        _buttonHeal1.IsVisible = _buttonHeal2.IsVisible = true;
+                        _quickHealButton.IsVisible = _quickCureButton.IsVisible = true;
                     }
 
                     _bars[0].IsVisible = true;
@@ -1435,27 +1435,8 @@ namespace ClassicUO.Game.UI.Gumps
                     // Add healing buttons for pets and, when enabled, other mobiles
                     if (ShouldShowHealButtons(entity))
                     {
-                        Add(_buttonHeal1 = new Button(
-                            (int)ButtonParty.Heal1,
-                            0x0938,
-                            0x093A,
-                            0x0938)
-                        {
-                            ButtonAction = ButtonAction.Activate,
-                            X = 0,
-                            Y = 18
-                        });
-
-                        Add(_buttonHeal2 = new Button(
-                            (int)ButtonParty.Heal2,
-                            0x0939,
-                            0x093A,
-                            0x0939)
-                        {
-                            ButtonAction = ButtonAction.Activate,
-                            X = 0,
-                            Y = 27
-                        });
+                        Add(_quickHealButton = new HealthBarQuickButton(_world, LocalSerial, HealthBarQuickButton.Slot.Heal, 0, 18));
+                        Add(_quickCureButton = new HealthBarQuickButton(_world, LocalSerial, HealthBarQuickButton.Slot.Cure, 0, 27));
                     }
 
                     Add
@@ -1504,29 +1485,6 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
             }
-        }
-
-        public override void OnButtonClick(int buttonID)
-        {
-            switch ((ButtonParty)buttonID)
-            {
-                case ButtonParty.Heal1:
-                    GameActions.QuickHeal(_world, LocalSerial);
-                    break;
-
-                case ButtonParty.Heal2:
-                    GameActions.QuickCure(_world, LocalSerial);
-                    break;
-            }
-
-            Mouse.CancelDoubleClick = true;
-            Mouse.LastLeftButtonClickTime = 0;
-        }
-
-        private enum ButtonParty
-        {
-            Heal1,
-            Heal2
         }
 
         public override bool Contains(int x, int y) => true;
@@ -1624,7 +1582,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private readonly GumpPicWithWidth[] _bars = new GumpPicWithWidth[3];
 
-        private Button _buttonHeal1, _buttonHeal2;
+        private HealthBarQuickButton _quickHealButton, _quickCureButton;
         private int _oldHits, _oldStam, _oldMana;
 
         private bool _oldWarMode, _normalHits, _poisoned, _yellowHits;
@@ -1665,7 +1623,7 @@ namespace ClassicUO.Game.UI.Gumps
             _yellowHits = false;
 
             _background = _hpLineRed = _manaLineRed = _stamLineRed = null;
-            _buttonHeal1 = _buttonHeal2 = null;
+            _quickHealButton = _quickCureButton = null;
 
             if (_textBox != null)
             {
@@ -1749,9 +1707,9 @@ namespace ClassicUO.Game.UI.Gumps
                     );
                 }
 
-                Add(_buttonHeal1 = new Button((int)ButtonParty.Heal1, 0x0938, 0x093A, 0x0938) { ButtonAction = ButtonAction.Activate, X = 0, Y = 20 });
+                Add(_quickHealButton = new HealthBarQuickButton(_world, LocalSerial, HealthBarQuickButton.Slot.Heal, 0, 20));
 
-                Add(_buttonHeal2 = new Button((int)ButtonParty.Heal2, 0x0939, 0x093A, 0x0939) { ButtonAction = ButtonAction.Activate, X = 0, Y = 33 });
+                Add(_quickCureButton = new HealthBarQuickButton(_world, LocalSerial, HealthBarQuickButton.Slot.Cure, 0, 33));
 
                 Add(_hpLineRed = new GumpPic(18, 20, Settings.Line_Red_Party, 0));
                 Add(_manaLineRed = new GumpPic(18, 33, Settings.Line_Red_Party, 0));
@@ -1887,27 +1845,8 @@ namespace ClassicUO.Game.UI.Gumps
                     // Add healing buttons for pets and, when enabled, other mobiles
                     if (ShouldShowHealButtons(entity))
                     {
-                        Add(_buttonHeal1 = new Button(
-                            (int)ButtonParty.Heal1,
-                            0x0938,
-                            0x093A,
-                            0x0938)
-                        {
-                            ButtonAction = ButtonAction.Activate,
-                            X = 0,
-                            Y = 20
-                        });
-
-                        Add(_buttonHeal2 = new Button(
-                            (int)ButtonParty.Heal2,
-                            0x0939,
-                            0x093A,
-                            0x0939)
-                        {
-                            ButtonAction = ButtonAction.Activate,
-                            X = 0,
-                            Y = 33
-                        });
+                        Add(_quickHealButton = new HealthBarQuickButton(_world, LocalSerial, HealthBarQuickButton.Slot.Heal, 0, 20));
+                        Add(_quickCureButton = new HealthBarQuickButton(_world, LocalSerial, HealthBarQuickButton.Slot.Cure, 0, 33));
                     }
 
                     Add
@@ -2018,9 +1957,9 @@ namespace ClassicUO.Game.UI.Gumps
                             _textBox.Hue = textColor;
                         }
 
-                        if (_buttonHeal1 != null && _buttonHeal2 != null)
+                        if (_quickHealButton != null && _quickCureButton != null)
                         {
-                            _buttonHeal1.IsVisible = _buttonHeal2.IsVisible = false;
+                            _quickHealButton.IsVisible = _quickCureButton.IsVisible = false;
                         }
 
                         if (_bars.Length >= 2 && _bars[1] != null)
@@ -2119,9 +2058,9 @@ namespace ClassicUO.Game.UI.Gumps
 
                     if (inparty)
                     {
-                        if (_buttonHeal1 != null && _buttonHeal2 != null)
+                        if (_quickHealButton != null && _quickCureButton != null)
                         {
-                            _buttonHeal1.IsVisible = _buttonHeal2.IsVisible = true;
+                            _quickHealButton.IsVisible = _quickCureButton.IsVisible = true;
                         }
 
                         if (_bars.Length >= 2 && _bars[1] != null)
@@ -2131,9 +2070,9 @@ namespace ClassicUO.Game.UI.Gumps
                             _bars[2].IsVisible = true;
                         }
                     }
-                    else if (_buttonHeal1 != null && _buttonHeal2 != null && ShouldShowHealButtons(entity))
+                    else if (_quickHealButton != null && _quickCureButton != null && ShouldShowHealButtons(entity))
                     {
-                        _buttonHeal1.IsVisible = _buttonHeal2.IsVisible = true;
+                        _quickHealButton.IsVisible = _quickCureButton.IsVisible = true;
                     }
                     _bars[0].IsVisible = true;
                 }
@@ -2270,29 +2209,6 @@ namespace ClassicUO.Game.UI.Gumps
                     _manaLineRed.Hue = _stamLineRed.Hue = hitsColor;
                 }
             }
-        }
-
-        public override void OnButtonClick(int buttonID)
-        {
-            switch ((ButtonParty)buttonID)
-            {
-                case ButtonParty.Heal1:
-                    GameActions.QuickHeal(_world, LocalSerial);
-                    break;
-
-                case ButtonParty.Heal2:
-                    GameActions.QuickCure(_world, LocalSerial);
-                    break;
-            }
-
-            Mouse.CancelDoubleClick = true;
-            Mouse.LastLeftButtonClickTime = 0;
-        }
-
-        private enum ButtonParty
-        {
-            Heal1,
-            Heal2
         }
 
         private static class Settings

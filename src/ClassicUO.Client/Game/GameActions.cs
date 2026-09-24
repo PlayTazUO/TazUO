@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 using System;
+using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
@@ -1166,18 +1167,58 @@ internal static class GameActions
         }
     }
 
-    internal static void QuickHeal(World world, uint target)
+    internal static void QuickHeal(World world, uint target) =>
+        QuickAction(world, target, ProfileManager.CurrentProfile.QuickHealAction);
+
+    internal static void QuickCure(World world, uint target) =>
+        QuickAction(world, target, ProfileManager.CurrentProfile.QuickCureAction);
+
+    /// <summary>
+    /// Performs the configured quick heal/cure <paramref name="action"/> on <paramref name="target"/>.
+    /// Bandages are applied via <see cref="UseBandageOnTarget"/>; spells are cast and the target is
+    /// auto-selected once the server sends the target cursor (see the party heal timer consumed by the
+    /// target cursor handler).
+    /// </summary>
+    internal static void QuickAction(World world, uint target, HealthBarQuickAction action)
     {
-        CastSpell(ProfileManager.CurrentProfile.QuickHealSpell);
+        if (action == HealthBarQuickAction.Bandage)
+        {
+            UseBandageOnTarget(world, target);
+
+            return;
+        }
+
+        CastSpell(action.GetSpellId());
         world.Party.PartyHealTimer = Time.Ticks + 50;
         world.Party.PartyHealTarget = target;
     }
 
-    internal static void QuickCure(World world, uint target)
+    /// <summary>
+    /// Applies a bandage to <paramref name="target"/> using the same server-compatibility path as the
+    /// bandage agent: servers that support the target-object packet get a single packet, while older
+    /// servers require double-clicking the bandage and then auto-targeting. The bandage graphic and
+    /// target type come from the bandage agent profile settings.
+    /// </summary>
+    /// <returns><see langword="false"/> when no bandage matching the configured graphic is available.</returns>
+    internal static bool UseBandageOnTarget(World world, uint target)
     {
-        CastSpell(ProfileManager.CurrentProfile.QuickCureSpell);
-        world.Party.PartyHealTimer = Time.Ticks + 50;
-        world.Party.PartyHealTarget = target;
+        Profile profile = ProfileManager.CurrentProfile;
+        ushort graphic = profile?.BandageAgentGraphic ?? 0x0E21;
+
+        Item bandage = world.Player?.FindItemByGraphic(graphic) ?? world.Player?.FindBandage(graphic);
+
+        if (bandage == null)
+            return false;
+
+        if (profile?.BandageAgentUseNewPacket ?? true)
+            Socket.Send_TargetSelectedObject(bandage.Serial, target);
+        else
+        {
+            TargetManager.SetAutoTarget(target, profile?.BandageAgentTargetType ?? TargetType.Beneficial);
+            DoubleClick(world, bandage.Serial);
+        }
+
+        return true;
     }
 
     internal static void CastSpell(int index)

@@ -602,7 +602,7 @@ namespace ClassicUO.Game.UI.Gumps
             private readonly Label _nameLabel, _percentLabel;
             private readonly HealthBarLine _hpBackground, _hpBar;
             private readonly Mobile _mobile;
-            private readonly Button _buttonHeal1,  _buttonHeal2;
+            private readonly HealthBarQuickButton _quickHealButton, _quickCureButton;
             private int _barWidth = 100;
             private int _lastPercent;
             public int Distance;
@@ -657,20 +657,8 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(_percentLabel);
 
-                Add(_buttonHeal1 = new Button(0, 0x0938, 0x093A, 0x0938)
-                {
-                    ButtonAction = ButtonAction.Activate,
-                    X = _barWidth - 30,
-                    Y = 14
-                });
-
-                Add(_buttonHeal2 = new Button(1, 0x0939, 0x093A, 0x0939)
-                {
-                    ButtonAction = ButtonAction.Activate,
-                    X = _barWidth - 15,
-                    Y = 14
-
-                });
+                Add(_quickHealButton = new HealthBarQuickButton(_world, Serial, HealthBarQuickButton.Slot.Heal, _barWidth - 30, 14));
+                Add(_quickCureButton = new HealthBarQuickButton(_world, Serial, HealthBarQuickButton.Slot.Cure, _barWidth - 15, 14));
 
                 CheckQuickHealButtons();
 
@@ -699,8 +687,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (_hpBar != null) _hpBar.Width = width;
 
-                if (_buttonHeal1 != null) _buttonHeal1.X = width - 30;
-                if (_buttonHeal2 != null) _buttonHeal2.X = width - 15;
+                if (_quickHealButton != null) _quickHealButton.X = width - 30;
+                if (_quickCureButton != null) _quickCureButton.X = width - 15;
             }
 
             private void CheckQuickHealButtons()
@@ -712,8 +700,8 @@ namespace ClassicUO.Game.UI.Gumps
                                    and not NotorietyFlag.Criminal
                                    and not NotorietyFlag.Gray) || _mobile.IsRenamable);
 
-                _buttonHeal1.IsVisible = visible;
-                _buttonHeal2.IsVisible = visible;
+                _quickHealButton.IsVisible = visible;
+                _quickCureButton.IsVisible = visible;
             }
 
             private void SetName()
@@ -827,23 +815,6 @@ namespace ClassicUO.Game.UI.Gumps
                     return true;
                 }
                 return false;
-            }
-
-            public override void OnButtonClick(int buttonID)
-            {
-                switch (buttonID)
-                {
-                    case 0:
-                        GameActions.QuickHeal(_world, Serial);
-                        break;
-
-                    case 1:
-                        GameActions.QuickCure(_world, Serial);
-                        break;
-                }
-
-                Mouse.CancelDoubleClick = true;
-                Mouse.LastLeftButtonClickTime = 0;
             }
 
             private static int CalculatePercents(int max, int current, int maxValue)
