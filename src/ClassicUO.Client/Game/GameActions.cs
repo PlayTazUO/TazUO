@@ -1063,6 +1063,15 @@ internal static class GameActions
         else
             DropItem(heldSerial, 0xFFFF, 0xFFFF, 0, backpack.Serial);
 
+        // The KR equip macro equips items the server already holds in a container, so it can only run
+        // once the held item has been dropped into the backpack above. It replaces whatever occupies
+        // the target layer server-side, so no separate unequip request is needed.
+        if (ProfileManager.ServerSettings?.UseKrEquipSwap == true)
+        {
+            Socket.Send_EquipMacroKR(stackalloc uint[] { heldSerial });
+            return;
+        }
+
         if (existingSerial != 0)
             ObjectActionQueue.Instance.Enqueue(
                 new MoveRequest(existingSerial, backpack.Serial).ToObjectActionQueueItem(),

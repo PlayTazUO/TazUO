@@ -4,7 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 9/23/26
+* ***Feature:*** Added bandaging option to quick heal/cure buttons along with an internal rework of how it works
 * ***Feature:*** Added a "Swap equipped items on paperdoll drop" option (on by default) - dropping a wearable onto a paperdoll slot that already holds an item now unequips the existing item and equips the dropped one instead of doing nothing
+* ***Feature:*** Added a "Use KR equip packet for swaps" sub-option (off by default, per-server) - when enabled, paperdoll equip swaps use the KR equip macro packet (0xEC) the dress agent uses instead of the queue-based pickup/drop sequence
 * ***Fix:*** Fixed the overhead spell format not applying to Chivalry spells - their mantras arrive as localized cliloc messages rather than `MessageType.Spell`, so they are now treated as spells for formatting/hue
 * ***Misc:*** Updated compact horizontal status bar style by rearranging a few items and adding a few colors to more easily distinguish important values
 * ***Fix:*** Fixed a client crash in the "Enter Location" window when typing coordinates larger than an `int` could hold (the parsed X/Y overflowed) - oversized numbers are now treated as invalid input instead
