@@ -233,6 +233,12 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void RemoveColumn() => SetLayout(_rectSize, _rows, _columns - 1);
 
+        /// <summary>Current square cell size, in pixels.</summary>
+        public int CellSize => _rectSize;
+
+        /// <summary>Applies a new cell size, clamped to the supported range; grid dimensions are unchanged.</summary>
+        public void SetCellSize(int size) => SetLayout(size, _rows, _columns);
+
         public void SetLayout(int size, int rows, int columns)
         {
             rows = ClampDimension(rows);
@@ -382,6 +388,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
+                BarXml.WriteCellColor(writer, control.CellColor);
                 BarXml.WriteHotkey(writer, GetCellHotkey(index));
 
                 writer.WriteEndElement();
@@ -441,6 +448,8 @@ namespace ClassicUO.Game.UI.Gumps
                             Log.Error($"Malformed action bar cell at index {index}; leaving it empty.");
                         }
 
+                        items[index]?.SetCellColor(BarXml.ReadCellColor(controlXml));
+
                         HotkeyBinding hotkey = BarXml.ReadHotkey(controlXml);
                         if (hotkey != null && !hotkey.IsEmpty)
                             SetCellHotkey(index, hotkey);
@@ -483,10 +492,31 @@ namespace ClassicUO.Game.UI.Gumps
                 sizeMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_addcolumn", "Add column"), _gump.AddColumn));
                 sizeMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_removerow", "Remove row"), _gump.RemoveRow));
                 sizeMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_removecolumn", "Remove column"), _gump.RemoveColumn));
-                ContextMenu.Add(sizeMenu);
+                sizeMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_setcellsize", "Set Cell Size"), SetCellSize));
 
-                ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_rename", "Rename action bar"), Rename));
-                ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_delete", "Delete action bar"), () => _gump.Dispose()));
+                // Bar-management entries fold into the shared Options submenu, ahead of Set hotkey.
+                OptionsMenu.Items.Insert(0, sizeMenu);
+                OptionsMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_rename", "Rename action bar"), Rename));
+                OptionsMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_delete", "Delete action bar"), () => _gump.Dispose()));
+            }
+
+            private void SetCellSize()
+            {
+                new PromptPopupWindow(
+                    TazLang.Get("actionbar_setcellsize", "Set Cell Size"),
+                    TazLang.Get("actionbar_setcellsizeprompt", "New cell size:"),
+                    OnCellSizeEntered,
+                    TazLang.Get("spellbar_save", "Save"),
+                    TazLang.Get("uicommons_cancel", "Cancel"),
+                    null,
+                    _gump.CellSize.ToString()
+                );
+            }
+
+            private void OnCellSizeEntered(string text)
+            {
+                if (int.TryParse(text, out int size))
+                    _gump.SetCellSize(size);
             }
 
             private void Rename()

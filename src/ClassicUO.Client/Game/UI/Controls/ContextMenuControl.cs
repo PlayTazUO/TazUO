@@ -98,6 +98,9 @@ namespace ClassicUO.Game.UI.Controls
         public string Text;
         public bool HasSegments => SegmentAction != null && SegmentLabels != null && SegmentLabels.Length > 0;
 
+        /// <summary>When false, the entry is omitted from the menu; lets a caller hide an entry whose action does not currently apply.</summary>
+        public bool IsVisible = true;
+
         /// <summary>When non-zero, the entry renders an art icon of this graphic to the left of its text.</summary>
         public ushort ArtGraphic;
 
@@ -139,12 +142,15 @@ namespace ClassicUO.Game.UI.Controls
 
             for (int i = 0; i < list.Count; i++)
             {
-                var item = new ContextMenuItem(this, list[i], _scale);
-
-                if (i > 0)
+                if (!list[i].IsVisible)
                 {
-                    item.Y = y;
+                    continue;
                 }
+
+                var item = new ContextMenuItem(this, list[i], _scale)
+                {
+                    Y = y
+                };
 
                 if (_background.Width < item.Width)
                 {

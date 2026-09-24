@@ -60,9 +60,17 @@ namespace ClassicUO.Game.UI.Gumps
         private readonly Label _hotkeyLabel;
 
         private CounterBarSlot _slot = CounterBarSlot.Empty();
+        private readonly ContextMenuItemEntry _useEntry;
         private ContextMenuItemEntry _macroMenu;
         private ContextMenuItemEntry _scriptMenu;
         private ContextMenuItemEntry _dressAgentMenu;
+
+        /// <summary>Shared bar-management submenu; a derived cell host may add its own entries to it.</summary>
+        protected ContextMenuItemEntry OptionsMenu;
+
+        // Checkable Options entries paired with the setting they reflect, so their checkmarks can be
+        // re-synced whenever the menu opens (the value may have changed in the options window).
+        private readonly List<(ContextMenuItemEntry Entry, Func<bool> Get)> _optionToggles = new();
 
         public BarCell(IBarCellHost host, int x, int y, int w, int h)
         {
@@ -92,8 +100,9 @@ namespace ClassicUO.Game.UI.Gumps
             });
 
             ContextMenu = new ContextMenuControl(_gump);
-            ContextMenu.Add(TazLang.Get("use_object"), Use);
-            ContextMenu.Add(TazLang.Get("remove"), RemoveItem);
+            _useEntry = new ContextMenuItemEntry(TazLang.Get("use_object"), Use);
+            ContextMenu.Add(_useEntry);
+            ContextMenu.Add(TazLang.Get("counterbar_clearcell", "Clear cell"), RemoveItem);
             ContextMenu.Add(TazLang.Get("spellbar_setspell"), GenSpellList());
             ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_quicksetspell"), QuickSetSpell));
 
@@ -118,12 +127,64 @@ namespace ClassicUO.Game.UI.Gumps
             GenDressAgentList(_dressAgentMenu);
             ContextMenu.Add(_dressAgentMenu);
 
-            ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("counterbar_sethotkey"), SetHotkey));
+            OptionsMenu = new ContextMenuItemEntry(TazLang.Get("options", "Options"));
+            OptionsMenu.Add(new ContextMenuItemEntry(TazLang.Get("counterbar_sethotkey"), SetHotkey));
+            OptionsMenu.Add(new ContextMenuItemEntry(
+                TazLang.Get("counterbar_setcellcolor", "Set Cell Color"),
+                () => RGBColorPickerGump.Open(CellColor, SetCellColor)));
+
+            Profile profile = ProfileManager.CurrentProfile;
+            AddOptionToggle(TazLang.Get("mog_counters_showhotkeys"), () => profile.CounterBarShowHotkeys, b => profile.CounterBarShowHotkeys = b, RefreshAllHotkeyLabels);
+            AddOptionToggle(TazLang.Get("mog_counters_disableitemscaling"), () => profile.CounterBarDisableItemScaling, b => profile.CounterBarDisableItemScaling = b);
+            AddOptionToggle(TazLang.Get("mog_counters_disableiconscaling"), () => profile.CounterBarDisableIconScaling, b => profile.CounterBarDisableIconScaling = b);
+            AddOptionToggle(TazLang.Get("mog_counters_abbreviatedvalues"), () => profile.CounterBarDisplayAbbreviatedAmount, b => profile.CounterBarDisplayAbbreviatedAmount = b);
+            AddOptionToggle(TazLang.Get("mog_counters_highlightitemsonuse"), () => profile.CounterBarHighlightOnUse, b => profile.CounterBarHighlightOnUse = b);
+            AddOptionToggle(TazLang.Get("mog_counters_highlightredwhenamountislow"), () => profile.CounterBarHighlightOnAmount, b => profile.CounterBarHighlightOnAmount = b);
+
+            ContextMenu.Add(OptionsMenu);
+        }
+
+        /// <summary>
+        /// Adds a checkable Options entry bound to a profile setting, so the setting can be toggled
+        /// from a cell. Invoking it flips the setting and runs <paramref name="onChanged"/> (if any).
+        /// </summary>
+        private void AddOptionToggle(string text, Func<bool> get, Action<bool> set, Action onChanged = null)
+        {
+            var entry = new ContextMenuItemEntry(text, () => { set(!get()); onChanged?.Invoke(); }, canBeSelected: true, defaultValue: get());
+            _optionToggles.Add((entry, get));
+            OptionsMenu.Add(entry);
+        }
+
+        /// <summary>Refreshes the keybind labels on every open counter/action bar after the toggle changed.</summary>
+        private static void RefreshAllHotkeyLabels()
+        {
+            foreach (IGui gui in UIManager.Gumps)
+            {
+                switch (gui)
+                {
+                    case CounterBarGump counter:
+                        counter.RefreshHotkeyLabels();
+                        break;
+
+                    case ActionBarGump action:
+                        action.RefreshHotkeyLabels();
+                        break;
+                }
+            }
         }
 
         public ushort Graphic { get; private set; }
 
         public ushort Hue { get; private set; }
+
+        /// <summary>Color of the cell's border; the default is the gray outline used by every bar.</summary>
+        public static readonly Color DefaultCellColor = Color.Gray;
+
+        /// <summary>Border color for this cell; defaults to <see cref="DefaultCellColor"/>.</summary>
+        public Color CellColor { get; private set; } = DefaultCellColor;
+
+        /// <summary>Sets this cell's border color (see <see cref="CellColor"/>).</summary>
+        public void SetCellColor(Color color) => CellColor = color;
 
         /// <summary>The action assigned to this cell, or an empty slot for a plain item counter.</summary>
         public CounterBarSlot Slot => _slot;
@@ -225,6 +286,19 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (item != null)
                 GameActions.DoubleClick(_gump.World, item);
+        }
+
+        /// <summary>
+        /// True when the cell has an item counter for an item that is currently in the player's
+        /// backpack, i.e. there is a real object to use. Action cells and absent items return false.
+        /// </summary>
+        private bool HasUsableObject()
+        {
+            if (Graphic == 0)
+                return false;
+
+            Item backpack = _gump.World.Player?.Backpack;
+            return backpack != null && backpack.FindItem(Graphic, Hue) != null;
         }
 
         /// <summary>Opens the shared hotkey capture window to bind (or clear) a hotkey that triggers this cell.</summary>
@@ -394,6 +468,14 @@ namespace ClassicUO.Game.UI.Gumps
                 GenMacroList(_macroMenu);
                 GenScriptList(_scriptMenu);
                 GenDressAgentList(_dressAgentMenu);
+
+                // Only offer Use Object when the cell counts an item that is actually present; an
+                // action cell or a missing item has nothing to use.
+                _useEntry.IsVisible = HasUsableObject();
+
+                // Re-sync the Options checkmarks with the profile, in case they were changed elsewhere.
+                foreach ((ContextMenuItemEntry entry, Func<bool> get) in _optionToggles)
+                    entry.IsSelected = get();
             }
 
             if (button == MouseButtonType.Left)
@@ -444,9 +526,9 @@ namespace ClassicUO.Game.UI.Gumps
             return true;
         }
 
-        public override void Update()
+        public override void PreDraw()
         {
-            base.Update();
+            base.PreDraw();
 
             if (Parent != null && Parent.IsEnabled && _time < Time.Ticks)
             {
@@ -544,7 +626,7 @@ namespace ClassicUO.Game.UI.Gumps
                     && _amount < ProfileManager.CurrentProfile.CounterBarHighlightAmount
                     && Graphic != 0
                         ? Color.Red
-                        : Color.Gray
+                        : CellColor
             );
 
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);

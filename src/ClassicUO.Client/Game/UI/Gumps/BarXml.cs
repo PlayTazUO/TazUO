@@ -9,6 +9,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Input;
 using ClassicUO.Utility.Logging;
+using Microsoft.Xna.Framework;
 using SDL3;
 
 namespace ClassicUO.Game.UI.Gumps
@@ -34,6 +35,23 @@ namespace ClassicUO.Game.UI.Gumps
             writer.WriteAttributeString("hkwheelup", binding.WheelUp.ToString());
             if (binding.ControllerButtons is { Length: > 0 } buttons)
                 writer.WriteAttributeString("hkcontroller", string.Join(",", buttons.Select(b => ((int)b).ToString())));
+        }
+
+        /// <summary>Writes a cell's border color as a packed RGBA value, writing nothing when it is the default.</summary>
+        public static void WriteCellColor(XmlTextWriter writer, Color color)
+        {
+            if (color == BarCell.DefaultCellColor)
+                return;
+
+            writer.WriteAttributeString("cellcolor", color.PackedValue.ToString());
+        }
+
+        /// <summary>Rebuilds a cell's border color from its saved attribute, defaulting to gray when absent or invalid.</summary>
+        public static Color ReadCellColor(XmlElement cellXml)
+        {
+            return cellXml.HasAttribute("cellcolor") && uint.TryParse(cellXml.GetAttribute("cellcolor"), out uint packed)
+                ? new Color { PackedValue = packed }
+                : BarCell.DefaultCellColor;
         }
 
         /// <summary>Rebuilds a cell's <see cref="HotkeyBinding"/> from its saved attributes; tolerant of missing/partial data.</summary>

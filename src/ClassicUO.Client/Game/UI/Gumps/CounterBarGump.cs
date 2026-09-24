@@ -388,6 +388,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
+                BarXml.WriteCellColor(writer, control.CellColor);
                 BarXml.WriteHotkey(writer, GetCellHotkey(index));
 
                 writer.WriteEndElement();
@@ -432,6 +433,8 @@ namespace ClassicUO.Game.UI.Gumps
                                 ushort.Parse(controlXml.GetAttribute("hue"))
                             );
                         }
+
+                        items[index]?.SetCellColor(BarXml.ReadCellColor(controlXml));
 
                         // Re-register the saved hotkey with the central system (XML is the source of truth).
                         HotkeyBinding hotkey = BarXml.ReadHotkey(controlXml);
