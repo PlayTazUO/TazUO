@@ -33,6 +33,7 @@ namespace ClassicUO.Game.GameObjects
 
         public bool MatchesHighlightData;
         public Color HighlightColor = Color.White;
+        public Color[] HighlightColors = Array.Empty<Color>();
         public string HighlightName = string.Empty;
         public bool ShouldAutoLoot;
         public bool HighlightChecked;

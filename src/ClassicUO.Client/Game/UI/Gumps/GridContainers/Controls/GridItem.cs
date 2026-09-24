@@ -609,6 +609,41 @@ public class GridItem : Control
         batcher.Draw(borderTexture, new Rectangle(bx, by + innerHeight - bsize, innerWidth, bsize), borderHueVec);
     }
 
+    /// <summary>Draws a color marker for each matching rule after the primary border rule.</summary>
+    /// <param name="batcher">The renderer for the current item cell.</param>
+    /// <param name="cellBounds">Bounds of the item cell.</param>
+    /// <param name="highlightColors">Match colors in rule order, starting with the primary color.</param>
+    internal static void DrawAdditionalHighlightMarkers(
+        UltimaBatcher2D batcher,
+        Rectangle cellBounds,
+        IReadOnlyList<Color> highlightColors
+    )
+    {
+        if (highlightColors == null || highlightColors.Count <= 1)
+            return;
+
+        const int markerSize = 5;
+        const int gap = 1;
+        int availableWidth = Math.Max(0, cellBounds.Width - 4);
+        int columns = Math.Max(1, (availableWidth + gap) / (markerSize + gap));
+        var hueVector = new Vector3(1, 0, 1);
+
+        for (int i = 1; i < highlightColors.Count; i++)
+        {
+            int index = i - 1;
+            int x = cellBounds.X + 2 + index % columns * (markerSize + gap);
+            int y = cellBounds.Y + 2 + index / columns * (markerSize + gap);
+            if (y + markerSize > cellBounds.Bottom)
+                break;
+
+            batcher.Draw(
+                SolidColorTextureCache.GetTexture(highlightColors[i]),
+                new Rectangle(x, y, markerSize, markerSize),
+                hueVector
+            );
+        }
+    }
+
     private LowContrastCacheKey CreateLowContrastCacheKey()
     {
         ushort backgroundHue = _profile.Grid_UseContainerHue && _container != null
@@ -1138,6 +1173,9 @@ public class GridItem : Control
         }
 
         batcher.Draw(_texture, destination, source, hueVector);
+
+        if (_item.MatchesHighlightData && !_gridContainer.HighlightsDisabledForContainer)
+            DrawAdditionalHighlightMarkers(batcher, itemCellBounds, _item.HighlightColors);
 
         _count?.Draw(batcher, x + _count.X, y + _count.Y);
 

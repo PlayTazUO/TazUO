@@ -562,6 +562,12 @@ namespace ClassicUO.Game.UI
                     new Rectangle(bx, by + ITEM_SIZE - 11, ITEM_SIZE - 12, 1),
                     borderHueVec
                     );
+
+                GridItem.DrawAdditionalHighlightMarkers(
+                    batcher,
+                    new Rectangle(x, y, ITEM_SIZE, ITEM_SIZE),
+                    currentItem.HighlightColors
+                );
             }
 
             return true;
