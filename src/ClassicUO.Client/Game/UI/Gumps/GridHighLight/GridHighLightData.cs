@@ -194,7 +194,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         private static readonly List<uint> _reusableRequeueItems = new();
         private bool _cacheValid = false;
 
-        private GridHighlightData(GridHighlightSetupEntry entry)
+        /// <summary>Wraps a configured rule for matching and display.</summary>
+        /// <param name="entry">The rule entry to wrap.</param>
+        internal GridHighlightData(GridHighlightSetupEntry entry)
         {
             _entry = entry;
         }
@@ -252,6 +254,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             hasQueuedItems = true;
         }
 
+        /// <summary>Checks queued items with available OPL data and stores every matching rule color.</summary>
+        /// <param name="World">The world containing queued items.</param>
         public static void ProcessQueue(World World)
         {
             if (!hasQueuedItems)
@@ -297,22 +301,29 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             foreach (ItemPropertiesData data in _reusableItemData)
             {
                 data.item.HighlightChecked = true;
-                GridHighlightData bestMatch = GetBestMatch(data);
-                if (bestMatch != null)
+                GridHighlightData[] matches = GetMatches(data);
+                if (matches.Length > 0)
                 {
+                    GridHighlightData bestMatch = matches[0];
                     data.item.MatchesHighlightData = true;
                     data.item.HighlightColor = bestMatch.HighlightColor;
+                    data.item.HighlightColors = matches.Select(match => match.HighlightColor).ToArray();
                     data.item.HighlightName = bestMatch.Name;
 
-                    if (bestMatch.LootOnMatch)
+                    GridHighlightData lootMatch = GetAutoLootMatch(matches);
+                    if (lootMatch != null)
                     {
                         Item root = World.Items.Get(data.item.RootContainer);
                         if (root != null && root.IsCorpse)
                         {
-                            AutoLootManager.Instance.LootItem(data.item, bestMatch.GetLootEntry());
+                            AutoLootManager.Instance.LootItem(data.item, lootMatch.GetLootEntry());
                             data.item.ShouldAutoLoot = true;
                         }
                     }
+                }
+                else
+                {
+                    data.item.HighlightColors = Array.Empty<Color>();
                 }
             }
 
@@ -329,6 +340,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             }
         }
 
+        /// <summary>Gets a rule by index, creating and saving a new rule when the index is invalid.</summary>
+        /// <param name="index">The configured rule index.</param>
+        /// <returns>The existing or newly created rule.</returns>
         public static GridHighlightData GetGridHighlightData(int index)
         {
             List<GridHighlightSetupEntry> list = GridHighlightsConfig.Current.Highlights;
@@ -345,6 +359,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return data;
         }
 
+        /// <summary>Clears cached highlight results and queues eligible items for matching again.</summary>
         public static void RecheckMatchStatus()
         {
             AllConfigs = null; // Reset configs
@@ -363,6 +378,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 item.MatchesHighlightData = false;
                 item.HighlightName = null;
                 item.HighlightColor = Color.Transparent;
+                item.HighlightColors = Array.Empty<Color>();
                 item.ShouldAutoLoot = false;
                 item.HighlightChecked = false;
 
@@ -639,70 +655,24 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return true;
         }
 
-        public static GridHighlightData GetBestMatch(ItemPropertiesData itemData)
-        {
-            GridHighlightData best = null;
-            double bestScore = -1;
+        /// <summary>Returns enabled rules that match an item in configuration order.</summary>
+        /// <param name="itemData">The parsed item properties.</param>
+        /// <returns>All matching rules, or an empty array for a missing item.</returns>
+        public static GridHighlightData[] GetMatches(ItemPropertiesData itemData) =>
+            itemData == null
+                ? Array.Empty<GridHighlightData>()
+                : AllConfigs.Where(config => config.Enabled && config.IsMatch(itemData)).ToArray();
 
-            foreach (GridHighlightData config in AllConfigs)
-            {
-                // Disabled configs highlight nothing and never trigger auto loot
-                if (!config.Enabled)
-                    continue;
+        /// <summary>The first matching rule supplies the primary highlight color.</summary>
+        /// <param name="itemData">The parsed item properties.</param>
+        /// <returns>The first matching rule, if one exists.</returns>
+        public static GridHighlightData GetBestMatch(ItemPropertiesData itemData) => GetMatches(itemData).FirstOrDefault();
 
-                if (!config.IsMatch(itemData))
-                    continue;
-
-                double score = 0;
-                int totalRules = config.Properties.Count;
-                int matchedRules = 0;
-
-                foreach (ItemPropertiesData.SinglePropertyData prop in itemData.singlePropertyData)
-                {
-                    foreach (GridHighlightProperty rule in config.Properties)
-                    {
-                        string nProp = config.Normalize(prop.Name);
-                        string nRule = config.Normalize(rule.Name);
-
-                        if (nProp.Equals(nRule, StringComparison.OrdinalIgnoreCase))
-                        {
-                            double delta = prop.FirstValue >= rule.MinValue + 5 ? 3.0 : 2.0;
-                            score += delta;
-                            matchedRules++;
-                        }
-                        else if (nProp.Contains(nRule, StringComparison.OrdinalIgnoreCase) ||
-                                 config.Normalize(prop.OriginalString).Contains(nRule, StringComparison.OrdinalIgnoreCase))
-                        {
-                            score += 1.0;
-                            matchedRules++;
-                        }
-                    }
-                }
-
-                if (totalRules > 0)
-                {
-                    score /= totalRules;
-                }
-
-                int requiredCount = config.Properties.Count(p => !p.IsOptional);
-                if (requiredCount > 0)
-                {
-                    double bonus = (double)matchedRules / requiredCount * 0.2;
-                    score += bonus;
-                }
-
-                double specificity = (1.0 - (config.Properties.Count(p => p.IsOptional) / (double)Math.Max(1, totalRules))) * 0.1;
-                score += specificity;
-
-                if (best == null || score > bestScore)
-                {
-                    best = config;
-                    bestScore = score;
-                }
-            }
-
-            return best;
-        }
+        /// <summary>Finds the first matching rule that requests auto loot.</summary>
+        /// <param name="matches">Matching rules in configuration order.</param>
+        /// <returns>The first loot rule, if one exists.</returns>
+        internal static GridHighlightData GetAutoLootMatch(IEnumerable<GridHighlightData> matches) =>
+            matches?.FirstOrDefault(match => match.LootOnMatch);
 
         private bool IsMatchingCount(int count, int minPropertyCount, int maxPropertyCount)
         {
