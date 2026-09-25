@@ -32,6 +32,7 @@ public class GridItem : Control
     private static bool _altDragActive;
     private bool _selectHighlight;
     private bool _isListLayout;
+    private int _listPreferredHeight = GridContainer.LIST_ROW_HEIGHT;
 
     public bool ItemGridLocked { get; set; }
     public bool Highlight { get; set; }
@@ -82,7 +83,7 @@ public class GridItem : Control
 
         _listLabel = new Label(string.Empty, true, 43, ishtml: true)
         {
-            X = GridContainer.LIST_ICON_SIZE + 4,
+            X = GridContainer.LIST_ICON_SIZE + GridContainer.LIST_CELL_PADDING,
             AcceptMouseInput = false,
             IsVisible = false
         };
@@ -149,31 +150,45 @@ public class GridItem : Control
     {
         _isListLayout = true;
         Width = width;
-        Height = GridContainer.LIST_ROW_HEIGHT;
         _background.Width = width;
-        _background.Height = Height;
-        _listLabel.X = GridContainer.LIST_ICON_SIZE + 4;
+        _listLabel.X = GridContainer.LIST_ICON_SIZE + GridContainer.LIST_CELL_PADDING;
         _listLabel.IsVisible = _item != null;
         RefreshListName();
+        SetListRowHeight(_listPreferredHeight);
+    }
+
+    public void SetListRowHeight(int height)
+    {
+        Height = height;
+        _background.Height = height;
+        _listLabel.Y = Math.Max(0, (height - _listLabel.Height) >> 1);
         RepositionCount();
     }
 
     private void RepositionCount()
     {
         if (_count != null)
-            _count.Y = Height - _count.Height;
+            _count.Y = (_isListLayout ? GridContainer.LIST_ICON_SIZE : Height) - _count.Height;
     }
 
-    public void RefreshListName()
+    public bool RefreshListName()
     {
         if (!_isListLayout || _item == null)
-            return;
+            return false;
 
         string name = _item.GetNormalizedName(_item.ItemData.IsStackable && _item.Amount > 1);
-        int widthChars = Math.Max(8, (Width - GridContainer.LIST_ICON_SIZE - 8) / 7);
-        _listLabel.Text = name.Truncate(Math.Min(GridContainer.LIST_NAME_MAX_CHARS, widthChars));
-        _listLabel.Y = Math.Max(0, (Height - _listLabel.Height) >> 1);
+        // RenderedText adds four pixels to the requested wrap width for its texture.
+        // Reserve those pixels as well so the label keeps its right padding.
+        _listLabel.MaxWidth = Math.Max(1, Width - _listLabel.X - GridContainer.LIST_CELL_PADDING - 4);
+        _listLabel.Text = name;
+        int preferredHeight = Math.Max(GridContainer.LIST_ROW_HEIGHT, _listLabel.Height + GridContainer.LIST_CELL_PADDING * 2);
+        bool heightChanged = preferredHeight != _listPreferredHeight;
+        _listPreferredHeight = preferredHeight;
+        if (heightChanged)
+            SetListRowHeight(preferredHeight);
+
         _listLabel.IsVisible = true;
+        return heightChanged;
     }
 
     /// <summary>

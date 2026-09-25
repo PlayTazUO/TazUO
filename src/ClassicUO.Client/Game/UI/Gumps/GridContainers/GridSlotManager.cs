@@ -409,20 +409,35 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 int columns = Math.Max(1, rowWidth / LIST_COLUMN_WIDTH);
                 int columnWidth = columns > 1 ? rowWidth / columns : rowWidth;
                 int itemWidth = Math.Max(0, columnWidth - (columns > 1 ? LIST_COLUMN_GAP : 0));
-                int visibleIndex = 0;
+                var rowSlots = new GridItem[columns];
+                int column = 0;
+                int rowY = 0;
+                int rowHeight = 0;
 
                 foreach (KeyValuePair<int, GridItem> slot in _gridSlots)
                 {
                     if (!slot.Value.IsVisible || slot.Value.SlotItem == null)
                         continue;
 
-                    int column = visibleIndex % columns;
-                    int row = visibleIndex / columns;
-                    slot.Value.X = column * columnWidth;
-                    slot.Value.Y = row * LIST_ROW_HEIGHT;
                     slot.Value.ResizeList(itemWidth);
-                    visibleIndex++;
+                    slot.Value.X = column * columnWidth;
+                    slot.Value.Y = rowY;
+                    rowSlots[column++] = slot.Value;
+                    rowHeight = Math.Max(rowHeight, slot.Value.Height);
+
+                    if (column == columns)
+                    {
+                        foreach (GridItem rowSlot in rowSlots)
+                            rowSlot.SetListRowHeight(rowHeight);
+
+                        rowY += rowHeight;
+                        rowHeight = 0;
+                        column = 0;
+                    }
                 }
+
+                for (int i = 0; i < column; i++)
+                    rowSlots[i].SetListRowHeight(rowHeight);
 
                 return;
             }
