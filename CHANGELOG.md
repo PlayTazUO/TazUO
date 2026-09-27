@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/27/26
+* ***Fix:*** Fixed the grid container context menu's "Select by name" sub-menu rendering item names as plain text - embedded HTML formatting is now interpreted
+
 ## 9/23/26
 * ***Feature:*** Added bandaging option to quick heal/cure buttons along with an internal rework of how it works
 * ***Feature:*** Added a "Swap equipped items on paperdoll drop" option (on by default) - dropping a wearable onto a paperdoll slot that already holds an item now unequips the existing item and equips the dropped one instead of doing nothing
