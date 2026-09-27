@@ -32,6 +32,7 @@ public class GridItem : Control
     private static bool _altDragActive;
     private bool _selectHighlight;
     private bool _isListLayout;
+    private int _listPreferredHeight = GridContainer.LIST_ROW_HEIGHT;
 
     public bool ItemGridLocked { get; set; }
     public bool Highlight { get; set; }
@@ -82,7 +83,7 @@ public class GridItem : Control
 
         _listLabel = new Label(string.Empty, true, 43, ishtml: true)
         {
-            X = GridContainer.LIST_ICON_SIZE + 4,
+            X = GridContainer.LIST_ICON_SIZE + GridContainer.LIST_CELL_PADDING,
             AcceptMouseInput = false,
             IsVisible = false
         };
@@ -149,31 +150,45 @@ public class GridItem : Control
     {
         _isListLayout = true;
         Width = width;
-        Height = GridContainer.LIST_ROW_HEIGHT;
         _background.Width = width;
-        _background.Height = Height;
-        _listLabel.X = GridContainer.LIST_ICON_SIZE + 4;
+        _listLabel.X = GridContainer.LIST_ICON_SIZE + GridContainer.LIST_CELL_PADDING;
         _listLabel.IsVisible = _item != null;
         RefreshListName();
+        SetListRowHeight(_listPreferredHeight);
+    }
+
+    public void SetListRowHeight(int height)
+    {
+        Height = height;
+        _background.Height = height;
+        _listLabel.Y = Math.Max(0, (height - _listLabel.Height) >> 1);
         RepositionCount();
     }
 
     private void RepositionCount()
     {
         if (_count != null)
-            _count.Y = Height - _count.Height;
+            _count.Y = (_isListLayout ? GridContainer.LIST_ICON_SIZE : Height) - _count.Height;
     }
 
-    public void RefreshListName()
+    public bool RefreshListName()
     {
         if (!_isListLayout || _item == null)
-            return;
+            return false;
 
         string name = _item.GetNormalizedName(_item.ItemData.IsStackable && _item.Amount > 1);
-        int widthChars = Math.Max(8, (Width - GridContainer.LIST_ICON_SIZE - 8) / 7);
-        _listLabel.Text = name.Truncate(Math.Min(GridContainer.LIST_NAME_MAX_CHARS, widthChars));
-        _listLabel.Y = Math.Max(0, (Height - _listLabel.Height) >> 1);
+        // RenderedText adds four pixels to the requested wrap width for its texture.
+        // Reserve those pixels as well so the label keeps its right padding.
+        _listLabel.MaxWidth = Math.Max(1, Width - _listLabel.X - GridContainer.LIST_CELL_PADDING - 4);
+        _listLabel.Text = name;
+        int preferredHeight = Math.Max(GridContainer.LIST_ROW_HEIGHT, _listLabel.Height + GridContainer.LIST_CELL_PADDING * 2);
+        bool heightChanged = preferredHeight != _listPreferredHeight;
+        _listPreferredHeight = preferredHeight;
+        if (heightChanged)
+            SetListRowHeight(preferredHeight);
+
         _listLabel.IsVisible = true;
+        return heightChanged;
     }
 
     /// <summary>
@@ -609,6 +624,41 @@ public class GridItem : Control
         batcher.Draw(borderTexture, new Rectangle(bx, by + innerHeight - bsize, innerWidth, bsize), borderHueVec);
     }
 
+    /// <summary>Draws a color marker for each matching rule after the primary border rule.</summary>
+    /// <param name="batcher">The renderer for the current item cell.</param>
+    /// <param name="cellBounds">Bounds of the item cell.</param>
+    /// <param name="highlightColors">Match colors in rule order, starting with the primary color.</param>
+    internal static void DrawAdditionalHighlightMarkers(
+        UltimaBatcher2D batcher,
+        Rectangle cellBounds,
+        IReadOnlyList<Color> highlightColors
+    )
+    {
+        if (highlightColors == null || highlightColors.Count <= 1)
+            return;
+
+        const int markerSize = 5;
+        const int gap = 1;
+        int availableWidth = Math.Max(0, cellBounds.Width - 4);
+        int columns = Math.Max(1, (availableWidth + gap) / (markerSize + gap));
+        var hueVector = new Vector3(1, 0, 1);
+
+        for (int i = 1; i < highlightColors.Count; i++)
+        {
+            int index = i - 1;
+            int x = cellBounds.X + 2 + index % columns * (markerSize + gap);
+            int y = cellBounds.Y + 2 + index / columns * (markerSize + gap);
+            if (y + markerSize > cellBounds.Bottom)
+                break;
+
+            batcher.Draw(
+                SolidColorTextureCache.GetTexture(highlightColors[i]),
+                new Rectangle(x, y, markerSize, markerSize),
+                hueVector
+            );
+        }
+    }
+
     private LowContrastCacheKey CreateLowContrastCacheKey()
     {
         ushort backgroundHue = _profile.Grid_UseContainerHue && _container != null
@@ -1027,6 +1077,11 @@ public class GridItem : Control
         UIManager.Add(multipleToolTipGump);
     }
 
+    /// <summary>Draws the item, its primary highlight border, and any additional rule markers.</summary>
+    /// <param name="batcher">The renderer for this frame.</param>
+    /// <param name="x">The item's horizontal drawing position.</param>
+    /// <param name="y">The item's vertical drawing position.</param>
+    /// <returns>Whether the item was drawn.</returns>
     public override bool Draw(UltimaBatcher2D batcher, int x, int y)
     {
         if (!_shouldDraw || IsDisposed) return false;
@@ -1138,6 +1193,9 @@ public class GridItem : Control
         }
 
         batcher.Draw(_texture, destination, source, hueVector);
+
+        if (_item.MatchesHighlightData && !_gridContainer.HighlightsDisabledForContainer)
+            DrawAdditionalHighlightMarkers(batcher, itemCellBounds, _item.HighlightColors);
 
         _count?.Draw(batcher, x + _count.X, y + _count.Y);
 
