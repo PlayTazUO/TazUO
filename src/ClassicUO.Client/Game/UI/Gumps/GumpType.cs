@@ -38,6 +38,7 @@ namespace ClassicUO.Game.UI.Gumps
         MenuGump,
         TextEntryDialogGump,
         HealthBarCollector,
-        OldJournal
+        OldJournal,
+        ActionBar
     }
 }

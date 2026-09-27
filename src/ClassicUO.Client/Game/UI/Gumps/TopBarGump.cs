@@ -273,6 +273,19 @@ namespace ClassicUO.Game.UI.Gumps
 
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_polls", "Polls"), MyraWindows.PollsWindow.Show));
 
+            var actionBarsMenu = new ContextMenuItemEntry(TazLang.Get("topbargump_actionbars", "Action Bars"));
+            actionBarsMenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_addactionbar", "Add action bar"), () =>
+            {
+                new PromptPopupWindow(
+                    TazLang.Get("actionbar_newtitle", "New action bar"),
+                    TazLang.Get("actionbar_newmessage", "Name for the new action bar:"),
+                    name => ActionBarGump.Create(world, name),
+                    TazLang.Get("uicommons_create", "Create"),
+                    TazLang.Get("uicommons_cancel", "Cancel")
+                );
+            }));
+            moreMenu.ContextMenu.Add(actionBarsMenu);
+
             var submenu = new ContextMenuItemEntry(TazLang.Get("topbargump_tools", "Tools"));
             submenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_spellquickcast", "Spell quick cast"), () => { UIManager.Add(new SpellQuickSearch(World, 200, 200, (sp) => {if (sp != null) GameActions.CastSpell(sp.ID);})); }));
             submenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_openboatcontrol", "Open boat control"), () => { UIManager.Add(new BoatControl(World) { X = 200, Y = 200 }); }));

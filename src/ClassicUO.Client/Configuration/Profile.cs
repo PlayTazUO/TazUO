@@ -1379,6 +1379,11 @@ namespace ClassicUO.Configuration
 
                                     break;
 
+                                case GumpType.ActionBar:
+                                    gump = new ActionBarGump(world);
+
+                                    break;
+
                                 case GumpType.HealthBar:
                                     if (CustomBarsToggled)
                                     {

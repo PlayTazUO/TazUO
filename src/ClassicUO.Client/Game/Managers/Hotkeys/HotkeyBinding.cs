@@ -48,6 +48,12 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
         public bool IsEmpty => !HasController && !HasMouseButton && !WheelScroll && !HasKey && !HasModifiers;
 
+        /// <summary>
+        /// True when the central dispatcher can fire this binding: a key (keyboard dispatch) or a
+        /// mouse/controller button (button dispatch). Wheel and modifier-only bindings can't be fired.
+        /// </summary>
+        public bool IsTriggerable => HasKey || HasMouseButton || HasController;
+
         public void Clear()
         {
             Key = SDL.SDL_Keycode.SDLK_UNKNOWN;
