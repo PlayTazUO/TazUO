@@ -377,6 +377,14 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseDown(MouseButtonType button)
         {
+            // Profile is unloaded as the scene tears down, but the SDL save-conflict prompt shown during the
+            // final settings save keeps pumping mouse events back in. Nothing here is actionable without a
+            // profile, so bail rather than dereference it.
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return false;
+            }
+
             switch (button)
             {
                 case MouseButtonType.Left:
@@ -394,6 +402,11 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseUp(MouseButtonType button)
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return false;
+            }
+
             switch (button)
             {
                 case MouseButtonType.Left:
@@ -411,6 +424,11 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseDoubleClick(MouseButtonType button)
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return false;
+            }
+
             switch (button)
             {
                 case MouseButtonType.Left:
@@ -1194,6 +1212,11 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseWheel(bool up)
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return false;
+            }
+
             if (HotKeys.IsPressed(HotKeyRegistrar.ItemDragLockId) && Client.Game.UO.GameCursor.ItemHold.Enabled)
             {
                 if (!up && !Client.Game.UO.GameCursor.ItemHold.IsFixedPosition)
@@ -1258,6 +1281,11 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseDragging()
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return false;
+            }
+
             if (!UIManager.IsMouseOverWorld)
             {
                 return false;

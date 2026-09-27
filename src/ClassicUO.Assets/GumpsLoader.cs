@@ -183,6 +183,13 @@ namespace ClassicUO.Assets
                         rbga = HuesHelper.Color16To32(value) | 0xFF_00_00_00;
                     }
 
+                    // Corrupt or malformed RLE data can describe a run past the end of the decoded
+                    // size. Bail out instead of throwing so a single bad entry can't crash the client.
+                    if (pixelIndex < 0 || run <= 0 || (long)pixelIndex + run > pixels.Length)
+                    {
+                        break;
+                    }
+
                     pixels.Slice(pixelIndex, run).Fill(rbga);
                     pixelIndex += run;
                 }
