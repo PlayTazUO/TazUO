@@ -4,6 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 9/27/26
+* ***Feature:*** Added new Action Bars
 * ***Fix:*** Fixed the grid container context menu's "Select by name" sub-menu rendering item names as plain text - embedded HTML formatting is now interpreted
 
 ## 9/23/26
