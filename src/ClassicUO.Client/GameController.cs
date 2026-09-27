@@ -117,6 +117,7 @@ namespace ClassicUO
         public event EventHandler<float> ScaleChanged;
 
         private readonly List<(uint, Action)> _queuedActions = new();
+        private bool _isExiting;
 
         public void EnqueueAction(uint time, Action action) => _queuedActions.Add((Time.Ticks + time, action));
 
@@ -870,6 +871,13 @@ namespace ClassicUO
                 return false;
             }
 
+            // Events pumped while exiting (e.g. by the native save-conflict prompt) must reach SDL - and
+            // that prompt - untouched, but they must not be dispatched into the tearing-down game.
+            if (_isExiting)
+            {
+                return true;
+            }
+
             switch ((SDL_EventType)sdlEvent->type)
             {
                 case SDL_EventType.SDL_EVENT_AUDIO_DEVICE_ADDED:
@@ -1295,6 +1303,11 @@ namespace ClassicUO
 
         protected override void OnExiting(object sender, EventArgs args)
         {
+            // The settings save below can raise a save conflict whose native SDL prompt pumps events back
+            // through the filter. Stop dispatching them to the scene now: it is being torn down, the
+            // profile may already be unloaded, and game input is no longer actionable.
+            _isExiting = true;
+
             Scene?.Dispose();
 
             // These used to be written while the graphics device tore down. Write them here instead,
