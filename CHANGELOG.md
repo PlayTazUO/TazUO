@@ -6,6 +6,7 @@ All notable changes to TazUO will be recorded here.
 ## 9/27/26
 * ***Feature:*** Added new Action Bars
 * ***Fix:*** Fixed the grid container context menu's "Select by name" sub-menu rendering item names as plain text - embedded HTML formatting is now interpreted
+* ***Fix:*** Fixed a client crash when drawing a game effect created while no profile was loaded (the effect's captured profile was null) - it now falls back to the default preview profile
 
 ## 9/23/26
 * ***Feature:*** Added bandaging option to quick heal/cure buttons along with an internal rework of how it works
