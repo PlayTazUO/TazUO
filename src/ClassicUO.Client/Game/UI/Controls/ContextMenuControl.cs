@@ -101,6 +101,9 @@ namespace ClassicUO.Game.UI.Controls
         /// <summary>When non-zero, the entry renders an art icon of this graphic to the left of its text.</summary>
         public ushort ArtGraphic;
 
+        /// <summary>When true, <see cref="Text"/> is rendered as HTML (color and font tags are interpreted).</summary>
+        public bool IsHtml;
+
         public void Add(ContextMenuItemEntry subEntry) => Items.Add(subEntry);
     }
 
@@ -458,7 +461,8 @@ namespace ClassicUO.Game.UI.Controls
                     true,
                     0xFFFF,
                     0,
-                    style: FontStyle.BlackBorder
+                    style: FontStyle.BlackBorder,
+                    ishtml: entry.IsHtml
                 )
                 {
                     X = 25

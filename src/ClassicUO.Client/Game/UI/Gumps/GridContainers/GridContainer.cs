@@ -885,7 +885,10 @@ public partial class GridContainer : ResizableGump
 
             foreach (string name in names.Values.OrderBy(n => n))
             {
-                parent.Add(new ContextMenuItemEntry(name, () => SelectItemsForMultiMove(item => string.Equals(name, item.GetNormalizedName(false), StringComparison.OrdinalIgnoreCase))));
+                parent.Add(new ContextMenuItemEntry(name, () => SelectItemsForMultiMove(item => string.Equals(name, item.GetNormalizedName(false), StringComparison.OrdinalIgnoreCase)))
+                {
+                    IsHtml = true
+                });
             }
         }
 
