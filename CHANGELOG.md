@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 
 ## 9/28/26
 * ***Feature:*** Added "Set Rows" and "Set Columns" options to the Action Bar cell context menu's Size submenu, so you can type an exact row or column count
+* ***Feature:*** The improved buff bar's names and timers now use TrueType fonts instead of the classic bitmap font, with a selectable font and size under Options > Fonts (defaults to avadonian)
 * ***Fix:*** Fixed Action Bar cells sliding to a new position when adding or removing a column - every cell below the first row shifted because the grid is stored row-major. Cells now keep their visual position
 
 ## 9/27/26

@@ -63,6 +63,11 @@ public static class FontsTab
                     TazLang.Get("mog_chattab_fonttab_optionsfont"),
                     new Accessor<string>(() => profile.OptionsFont),
                     new Accessor<int>(() => profile.OptionsFontSize)
+                ),
+                CreateFontSelectorFragment(
+                    TazLang.Get("mog_chattab_fonttab_buffbarfont"),
+                    new Accessor<string>(() => ProfileManager.GlobalSettings.BuffBarFont),
+                    new Accessor<int>(() => ProfileManager.GlobalSettings.BuffBarFontSize)
                 )
             )
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_chattab_fonttab_fontslabel"), Keywords: [TazLang.Get("mog_kw_font"), TazLang.Get("mog_kw_text"), TazLang.Get("mog_kw_style")], Tags: [TazLang.Get("mog_kw_font"), TazLang.Get("mog_kw_style")]));
