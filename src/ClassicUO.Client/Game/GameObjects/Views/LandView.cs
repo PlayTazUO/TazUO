@@ -49,7 +49,7 @@ namespace ClassicUO.Game.GameObjects
                 SpellVisualRangeManager.Instance.LastCursorTileLoc = new Vector2(X, Y);
             }
 
-            if (SpellVisualRangeManager.Instance.IsTargetingAfterCasting())
+            if (SpellVisualRangeManager.Instance.ShouldShowSpellIndicators())
             {
                 hue = SpellVisualRangeManager.Instance.ProcessHueForTile(hue, this);
             }

@@ -7,6 +7,7 @@ All notable changes to TazUO will be recorded here.
 * ***Feature:*** Added "Set Rows" and "Set Columns" options to the Action Bar cell context menu's Size submenu, so you can type an exact row or column count
 * ***Feature:*** The improved buff bar's names and timers now use TrueType fonts instead of the classic bitmap font, with a selectable font and size under Options > Fonts (defaults to avadonian)
 * ***Fix:*** Fixed Action Bar cells sliding to a new position when adding or removing a column - every cell below the first row shifted because the grid is stored row-major. Cells now keep their visual position
+* ***Fix:*** Fixed the spell cursor indicator (including the line for linear spells like Wall of Stone) vanishing as soon as the target cursor appeared - the cast was being cleared in the network gap before the cursor arrived, so the indicator now shows until the cursor closes or the cast is cleared, and no longer requires "Show Range During Cast"
 
 ## 9/27/26
 * ***Feature:*** Added new Action Bars
