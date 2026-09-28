@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json.Serialization.Metadata;
+using ClassicUO.Assets;
 using ClassicUO.Game;
 
 namespace ClassicUO.Configuration
@@ -77,6 +78,12 @@ namespace ClassicUO.Configuration
         /// </summary>
         public bool SkipServerSelection { get; set => SetProperty(ref field, value); } = true;
         public float GlobalScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        /// <summary>TrueType font used for the names and timers on the improved buff bar.</summary>
+        public string BuffBarFont { get; set => SetProperty(ref field, value); } = EmbeddedFontNames.AVADONIAN;
+
+        /// <summary>TrueType font size used for the names and timers on the improved buff bar.</summary>
+        public int BuffBarFontSize { get; set => SetProperty(ref field, value); } = 14;
 
         /// <summary>Web map journal panel width. Machine-wide.</summary>
         public int WebMapJournalWidth { get; set => SetProperty(ref field, value); } = 400;
