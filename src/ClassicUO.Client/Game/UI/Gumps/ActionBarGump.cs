@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using ClassicUO.Configuration;
@@ -10,6 +11,7 @@ using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Utility.Logging;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -235,8 +237,20 @@ namespace ClassicUO.Game.UI.Gumps
         /// <summary>Current square cell size, in pixels.</summary>
         public int CellSize => _rectSize;
 
+        /// <summary>Current number of cell rows.</summary>
+        public int Rows => _rows;
+
+        /// <summary>Current number of cell columns.</summary>
+        public int Columns => _columns;
+
         /// <summary>Applies a new cell size, clamped to the supported range; grid dimensions are unchanged.</summary>
         public void SetCellSize(int size) => SetLayout(size, _rows, _columns);
+
+        /// <summary>Applies a new row count, clamped to the supported range; other layout is unchanged.</summary>
+        public void SetRows(int rows) => SetLayout(_rectSize, rows, _columns);
+
+        /// <summary>Applies a new column count, clamped to the supported range; other layout is unchanged.</summary>
+        public void SetColumns(int columns) => SetLayout(_rectSize, _rows, columns);
 
         public void SetLayout(int size, int rows, int columns)
         {
@@ -247,10 +261,55 @@ namespace ClassicUO.Game.UI.Gumps
             if (_rectSize == size && _rows == rows && _columns == columns)
                 return;
 
+            // Cells are stored row-major, so changing the column count shifts the flat index of every
+            // row but the first. Capture each cell by grid position first and re-apply it afterwards,
+            // keeping cells where the user sees them rather than sliding them along the row order.
+            bool remap = _columns != columns;
+            Dictionary<(int Row, int Column), CellState> snapshot = remap ? CaptureCells() : null;
+
             _rectSize = size;
             _rows = rows;
             _columns = columns;
             ApplyLayout();
+
+            if (remap)
+                RestoreCells(snapshot);
+        }
+
+        /// <summary>Snapshots every cell's content keyed by its current (row, column) grid position.</summary>
+        private Dictionary<(int Row, int Column), CellState> CaptureCells()
+        {
+            ActionItem[] items = GetControls<ActionItem>();
+            var snapshot = new Dictionary<(int Row, int Column), CellState>(items.Length);
+
+            for (int index = 0; index < items.Length; index++)
+                snapshot[(index / _columns, index % _columns)] = new CellState(items[index], GetCellHotkey(index));
+
+            return snapshot;
+        }
+
+        /// <summary>Re-applies a <see cref="CaptureCells"/> snapshot to the new grid by grid position.</summary>
+        private void RestoreCells(Dictionary<(int Row, int Column), CellState> snapshot)
+        {
+            ActionItem[] items = GetControls<ActionItem>();
+
+            for (int index = 0; index < items.Length; index++)
+            {
+                if (snapshot.TryGetValue((index / _columns, index % _columns), out CellState state))
+                {
+                    state.ApplyTo(items[index]);
+                    SetCellHotkey(index, state.Hotkey);
+                }
+                else
+                {
+                    // No cell previously occupied this position (e.g. a freshly added column).
+                    items[index].RemoveItem();
+                    items[index].SetCellColor(BarCell.DefaultCellColor);
+                    ClearCellHotkey(index);
+                }
+            }
+
+            RefreshHotkeyLabels();
         }
 
         private void ApplyLayout()
@@ -469,6 +528,41 @@ namespace ClassicUO.Game.UI.Gumps
             base.Dispose();
         }
 
+        /// <summary>Snapshot of one cell's content, so it can be re-applied to a new grid position.</summary>
+        private readonly struct CellState
+        {
+            private readonly ushort _graphic;
+            private readonly ushort _hue;
+            private readonly CounterBarSlot _slot;
+            private readonly Color _cellColor;
+
+            public CellState(BarCell cell, HotkeyBinding hotkey)
+            {
+                _graphic = cell.Graphic;
+                _hue = cell.Hue;
+                _slot = cell.Slot;
+                _cellColor = cell.CellColor;
+                Hotkey = hotkey;
+            }
+
+            public HotkeyBinding Hotkey { get; }
+
+            public void ApplyTo(BarCell cell)
+            {
+                if (_slot is { IsEmpty: false })
+                    cell.SetSlot(_slot);
+                else if (_graphic != 0)
+                {
+                    cell.RemoveItem();
+                    cell.SetGraphic(_graphic, _hue);
+                }
+                else
+                    cell.RemoveItem();
+
+                cell.SetCellColor(_cellColor);
+            }
+        }
+
         /// <summary>An action-bar cell: a plain item counter or an action, with bar-management entries added to its context menu.</summary>
         public class ActionItem : BarCell
         {
@@ -484,6 +578,8 @@ namespace ClassicUO.Game.UI.Gumps
                 sizeMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_removerow", "Remove row"), _gump.RemoveRow));
                 sizeMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_removecolumn", "Remove column"), _gump.RemoveColumn));
                 sizeMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_setcellsize", "Set Cell Size"), SetCellSize));
+                sizeMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_setrows", "Set Rows"), SetRows));
+                sizeMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_setcolumns", "Set Columns"), SetColumns));
 
                 // Bar-management entries fold into the shared Options submenu, ahead of Set hotkey.
                 OptionsMenu.Items.Insert(0, sizeMenu);
@@ -508,6 +604,40 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (int.TryParse(text, out int size))
                     _gump.SetCellSize(size);
+            }
+
+            private void SetRows()
+            {
+                new PromptPopupWindow(
+                    TazLang.Get("actionbar_setrows", "Set Rows"),
+                    TazLang.Get("actionbar_setrowsprompt", "New row count:"),
+                    text =>
+                    {
+                        if (int.TryParse(text, out int rows))
+                            _gump.SetRows(rows);
+                    },
+                    TazLang.Get("spellbar_save", "Save"),
+                    TazLang.Get("uicommons_cancel", "Cancel"),
+                    null,
+                    _gump.Rows.ToString()
+                );
+            }
+
+            private void SetColumns()
+            {
+                new PromptPopupWindow(
+                    TazLang.Get("actionbar_setcolumns", "Set Columns"),
+                    TazLang.Get("actionbar_setcolumnsprompt", "New column count:"),
+                    text =>
+                    {
+                        if (int.TryParse(text, out int columns))
+                            _gump.SetColumns(columns);
+                    },
+                    TazLang.Get("spellbar_save", "Save"),
+                    TazLang.Get("uicommons_cancel", "Cancel"),
+                    null,
+                    _gump.Columns.ToString()
+                );
             }
 
             private void Rename()

@@ -3,6 +3,10 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 9/28/26
+* ***Feature:*** Added "Set Rows" and "Set Columns" options to the Action Bar cell context menu's Size submenu, so you can type an exact row or column count
+* ***Fix:*** Fixed Action Bar cells sliding to a new position when adding or removing a column - every cell below the first row shifted because the grid is stored row-major. Cells now keep their visual position
+
 ## 9/27/26
 * ***Feature:*** Added new Action Bars
 * ***Fix:*** Fixed the grid container context menu's "Select by name" sub-menu rendering item names as plain text - embedded HTML formatting is now interpreted
