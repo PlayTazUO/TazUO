@@ -118,5 +118,6 @@ public enum MacroType
     ToggleSellAgent,
     SetZoomLevel,
     LootHoveredItem,
-    PrivateSay
+    PrivateSay,
+    ToggleScavenging
 }

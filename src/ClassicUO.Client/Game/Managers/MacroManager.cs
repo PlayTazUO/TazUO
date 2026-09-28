@@ -2526,8 +2526,17 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.ToggleAutoLoot:
-                    ProfileManager.CurrentProfile.EnableAutoLoot = !ProfileManager.CurrentProfile.EnableAutoLoot;
-                    if (!ProfileManager.CurrentProfile.EnableAutoLoot) AutoLootManager.Instance.ClearActiveLootQueue();
+                    bool newLootStatus = !ProfileManager.CurrentProfile.EnableAutoLoot;
+                    ProfileManager.CurrentProfile.EnableAutoLoot = newLootStatus;
+                    if (!newLootStatus) AutoLootManager.Instance.ClearActiveLootQueue();
+                    GameActions.Print($"Auto loot {(newLootStatus ? "enabled" : "disabled")}.", newLootStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
+                    break;
+
+                case MacroType.ToggleScavenging:
+                    bool newScavengerStatus = !ProfileManager.CurrentProfile.EnableScavenger;
+                    ProfileManager.CurrentProfile.EnableScavenger = newScavengerStatus;
+                    if (!newScavengerStatus) ScavengerManager.Instance.ClearActiveLootQueue();
+                    GameActions.Print($"Scavenging {(newScavengerStatus ? "enabled" : "disabled")}.", newScavengerStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
                     break;
 
                 case MacroType.SetLastTarget:
