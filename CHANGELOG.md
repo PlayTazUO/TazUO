@@ -12,6 +12,7 @@ All notable changes to TazUO will be recorded here.
 * ***Feature:*** Added a cursor-following debug overlay when `-debug` mode is enabled - it identifies what is under the cursor (world objects, items, land, statics, and gumps/controls), shows a sprite preview where one exists, and reports the button ID when hovering a server gump button
 * ***Fix:*** Adjusted rider heights on several mounts: raised on the Clydesdale and elemental horses, lowered on the Manticore and True Britannian Horse
 * ***Fix:*** Applied `verdata.mul` animation patches (FileID 6) - animations shipped only as verdata patches (custom mounts, creatures, clothing on some shards) now render and animate instead of being invisible
+* ***Feature:*** Added support for a plain-text `Clilocs.txt` in the client folder to add or override cliloc strings (one per line: `number` then whitespace then text, `#` for comments)
 
 ## 9/27/26
 * ***Feature:*** Added new Action Bars
