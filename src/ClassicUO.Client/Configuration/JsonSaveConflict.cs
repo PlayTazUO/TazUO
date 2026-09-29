@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 
 namespace ClassicUO.Configuration;
 
@@ -13,10 +14,11 @@ public sealed class JsonSaveConflict
 {
     private readonly Action<bool> _resolve;
 
-    internal JsonSaveConflict(string filePath, DateTime diskModifiedUtc, Action<bool> resolve)
+    internal JsonSaveConflict(string filePath, DateTime diskModifiedUtc, IReadOnlyList<JsonValueChange> changes, Action<bool> resolve)
     {
         FilePath = filePath;
         DiskModifiedUtc = diskModifiedUtc;
+        Changes = changes;
         _resolve = resolve;
     }
 
@@ -25,6 +27,13 @@ public sealed class JsonSaveConflict
 
     /// <summary>When the on-disk file was last written, for the prompt's message.</summary>
     public DateTime DiskModifiedUtc { get; }
+
+    /// <summary>
+    ///     What differs between the on-disk file and this client's version, so the prompt can show
+    ///     the user what is at stake. Empty when the two could not be compared - the question is
+    ///     still answerable without it.
+    /// </summary>
+    public IReadOnlyList<JsonValueChange> Changes { get; }
 
     /// <summary>
     ///     Answers the conflict. <c>true</c> overwrites the disk file with this instance's version,

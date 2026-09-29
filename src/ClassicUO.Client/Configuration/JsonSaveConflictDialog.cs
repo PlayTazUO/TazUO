@@ -30,16 +30,9 @@ public static class JsonSaveConflictDialog
     private static unsafe bool Ask(JsonSaveConflict conflict)
     {
         string title = TazLang.Get("json_save_conflict_title", "File changed on disk");
-        string message = string.Format(
-            TazLang.Get(
-                "json_save_conflict_message",
-                "The file \"{0}\" was changed on disk after this client loaded it.\n\n"
-                + "Keep this client's version, or the version on disk?"
-            ),
-            Path.GetFileName(conflict.FilePath)
-        );
-        string keepDisk = TazLang.Get("json_save_conflict_keep_disk", "Keep disk version");
-        string keepMine = TazLang.Get("json_save_conflict_keep_mine", "Keep this client's version");
+        string message = BuildMessage(conflict);
+        string keepDisk = TazLang.Get("json_save_conflict_keep_disk_btn", "Keep disk");
+        string keepMine = TazLang.Get("json_save_conflict_keep_mine_btn", "Keep mine");
 
         byte[] titleUtf8 = Encoding.UTF8.GetBytes(title + '\0');
         byte[] messageUtf8 = Encoding.UTF8.GetBytes(message + '\0');
@@ -86,4 +79,81 @@ public static class JsonSaveConflictDialog
         // The box could not be shown; keep the disk version rather than risk a silent clobber.
         return false;
     }
+
+    /// <summary>Most changes listed before the rest are summarised as a count.</summary>
+    private const int MAX_CHANGES_SHOWN = 10;
+
+    /// <summary>Longest a single change line may be, so a deep path cannot widen the box.</summary>
+    private const int MAX_CHANGE_LINE_LENGTH = 100;
+
+    /// <summary>
+    ///     Total characters the listed changes may occupy. Together with the line and count caps
+    ///     this keeps the box within the screen, which native message boxes cannot scroll.
+    /// </summary>
+    private const int MAX_CHANGE_BLOCK_LENGTH = 1000;
+
+    /// <summary>Builds the prompt text, listing what differs so the choice is an informed one.</summary>
+    private static string BuildMessage(JsonSaveConflict conflict)
+    {
+        var builder = new StringBuilder();
+
+        builder.Append(
+            string.Format(
+                TazLang.Get(
+                    "json_save_conflict_intro",
+                    "The file \"{0}\" was changed on disk after this client loaded it."
+                ),
+                Path.GetFileName(conflict.FilePath)
+            )
+        );
+
+        if (conflict.Changes.Count > 0)
+        {
+            builder.Append("\n\n");
+            builder.Append(TazLang.Get("json_save_conflict_changes_header", "Changes (disk -> this client):"));
+
+            int listed = 0;
+            int blockLength = 0;
+
+            while (listed < conflict.Changes.Count && listed < MAX_CHANGES_SHOWN)
+            {
+                string line = Truncate(FormatChange(conflict.Changes[listed]), MAX_CHANGE_LINE_LENGTH);
+
+                if (blockLength + line.Length > MAX_CHANGE_BLOCK_LENGTH)
+                    break;
+
+                builder.Append('\n');
+                builder.Append(line);
+                blockLength += line.Length;
+                listed++;
+            }
+
+            int omitted = conflict.Changes.Count - listed;
+
+            if (omitted > 0)
+            {
+                builder.Append('\n');
+                builder.Append(
+                    string.Format(TazLang.Get("json_save_conflict_more_changes", "... and {0} more"), omitted)
+                );
+            }
+        }
+
+        builder.Append("\n\n");
+        builder.Append(TazLang.Get("json_save_conflict_question", "Keep this client's version, or the version on disk?"));
+
+        return builder.ToString();
+    }
+
+    /// <summary>Renders one change as a single line; symbols keep the list language-neutral.</summary>
+    private static string FormatChange(JsonValueChange change) => change.Kind switch
+    {
+        JsonChangeKind.Added => $"+ {change.Path} = {change.LocalValue}",
+        JsonChangeKind.Removed => $"- {change.Path} = {change.DiskValue}",
+        _ => $"~ {change.Path}: {change.DiskValue} -> {change.LocalValue}"
+    };
+
+    /// <summary>Cuts a line down to <paramref name="maxLength" /> so one long entry cannot widen the box.</summary>
+    private static string Truncate(string text, int maxLength) =>
+        text.Length <= maxLength ? text : string.Concat(text.AsSpan(0, maxLength - 1), "…");
 }
