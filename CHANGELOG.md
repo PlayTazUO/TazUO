@@ -10,6 +10,11 @@ All notable changes to TazUO will be recorded here.
 * ***Fix:*** Fixed Action Bar cells sliding to a new position when adding or removing a column - every cell below the first row shifted because the grid is stored row-major. Cells now keep their visual position
 * ***Fix:*** Fixed the spell cursor indicator (including the line for linear spells like Wall of Stone) vanishing as soon as the target cursor appeared - the cast was being cleared in the network gap before the cursor arrived, so the indicator now shows until the cursor closes or the cast is cleared, and no longer requires "Show Range During Cast"
 * ***Feature:*** Added a cursor-following debug overlay when `-debug` mode is enabled - it identifies what is under the cursor (world objects, items, land, statics, and gumps/controls), shows a sprite preview where one exists, and reports the button ID when hovering a server gump button
+* ***Fix:*** Adjusted rider heights on several mounts: raised on the Clydesdale and elemental horses, lowered on the Manticore and True Britannian Horse
+* ***Fix:*** Applied `verdata.mul` animation patches (FileID 6) - animations shipped only as verdata patches (custom mounts, creatures, clothing on some shards) now render and animate instead of being invisible
+* ***Feature:*** Added support for a plain-text `Clilocs.txt` in the client folder to add or override cliloc strings (one per line: `number` then whitespace then text, `#` for comments)
+* ***Feature:*** Added support for loose art, gump and sound files - place static art in `Art/Statics/<id>.art`, land tiles in `Art/Land/<id>.art`, and gumps in `Gumps/<id>.gump`, or 22050 Hz mono 16-bit WAVs in `Sounds/<id>.wav`, to add or override the client's assets without repacking the archives
+* ***Fix:*** Fixed server map patches (0xBF 0x18) reading the land and static patch counts in the wrong order - they arrive statics-first, so land patches were silently discarded on shards that patch ground tiles
 
 ## 9/27/26
 * ***Feature:*** Added new Action Bars
