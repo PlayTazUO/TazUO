@@ -11,6 +11,7 @@ All notable changes to TazUO will be recorded here.
 * ***Fix:*** Fixed the spell cursor indicator (including the line for linear spells like Wall of Stone) vanishing as soon as the target cursor appeared - the cast was being cleared in the network gap before the cursor arrived, so the indicator now shows until the cursor closes or the cast is cleared, and no longer requires "Show Range During Cast"
 * ***Feature:*** Added a cursor-following debug overlay when `-debug` mode is enabled - it identifies what is under the cursor (world objects, items, land, statics, and gumps/controls), shows a sprite preview where one exists, and reports the button ID when hovering a server gump button
 * ***Fix:*** Adjusted rider heights on several mounts: raised on the Clydesdale and elemental horses, lowered on the Manticore and True Britannian Horse
+* ***Fix:*** Applied `verdata.mul` animation patches (FileID 6) - animations shipped only as verdata patches (custom mounts, creatures, clothing on some shards) now render and animate instead of being invisible
 
 ## 9/27/26
 * ***Feature:*** Added new Action Bars
