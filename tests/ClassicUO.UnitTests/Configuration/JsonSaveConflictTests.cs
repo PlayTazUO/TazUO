@@ -102,6 +102,23 @@ public class JsonSaveConflictTests : IDisposable
         File.ReadAllText(FilePath).Should().Contain("theirs");
     }
 
+    [Fact]
+    public void A_Changed_File_Reports_What_Differs()
+    {
+        LoadCurrent();
+        MigratingSave save = MigratingSave.LoadFromPath(FilePath);
+        JsonSaveConflict raised = null;
+        JsonSaveConflictHandler.Prompt = conflict => raised = conflict;
+
+        RewriteExternally("theirs");
+        save.Salutation = "mine";
+        save.Save();
+
+        raised.Should().NotBeNull();
+        raised.Changes.Should().ContainSingle()
+            .Which.Should().Be(new JsonValueChange("$.salutation", JsonChangeKind.Changed, "\"theirs\"", "\"mine\""));
+    }
+
     private string FilePath => Path.Combine(_directory, MigratingSave.TestFileName);
 
     private void LoadCurrent()

@@ -233,10 +233,12 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
         // The disk state the user is being asked about. The prompt can stay open a while, so a
         // change made meanwhile must be told apart from the one the question was raised over.
         FileFingerprint promptTimeDisk = FileFingerprint.Capture(filePath);
+        IReadOnlyList<JsonValueChange> changes = DescribeChanges(filePath);
 
         var conflict = new JsonSaveConflict(
             filePath,
             diskModifiedUtc,
+            changes,
             overwriteLocal =>
             {
                 if (overwriteLocal)
@@ -252,6 +254,40 @@ public abstract class JsonSave<T> where T : JsonSave<T>, INotifyPropertyChanged,
         {
             Log.Warn($"JSON save '{filePath}' changed on disk since it was loaded; keeping the disk version.");
             OnKeptDiskVersion();
+        }
+    }
+
+    /// <summary>
+    ///     Lists what differs between the file on disk and this instance, for the conflict prompt.
+    ///     Best effort: an unreadable, unmigratable, or malformed disk file yields no list rather than
+    ///     blocking the question, which is answerable without one.
+    /// </summary>
+    /// <param name="filePath">The conflicted file to compare against.</param>
+    private IReadOnlyList<JsonValueChange> DescribeChanges(string filePath)
+    {
+        try
+        {
+            if (!File.Exists(filePath))
+                return Array.Empty<JsonValueChange>();
+
+            ConfigMigrationPipeline<JsonObject>? pipeline = MigrationPipeline;
+            string localJson = JsonSerializer.Serialize((T)this, TypeInfo);
+            string diskJson = File.ReadAllText(filePath);
+
+            // Both sides are brought to the current shape and version first, so a migrated disk
+            // file does not read as a pile of renamed fields.
+            if (pipeline != null)
+            {
+                localJson = pipeline.Stamp(localJson);
+                diskJson = pipeline.Migrate(diskJson).Text;
+            }
+
+            return JsonDiff.Compare(JsonNode.Parse(diskJson), JsonNode.Parse(localJson));
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"Could not describe the changes in conflicted JSON save '{filePath}': {e.Message}");
+            return Array.Empty<JsonValueChange>();
         }
     }
 
