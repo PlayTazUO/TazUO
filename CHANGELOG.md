@@ -14,6 +14,7 @@ All notable changes to TazUO will be recorded here.
 * ***Fix:*** Applied `verdata.mul` animation patches (FileID 6) - animations shipped only as verdata patches (custom mounts, creatures, clothing on some shards) now render and animate instead of being invisible
 * ***Feature:*** Added support for a plain-text `Clilocs.txt` in the client folder to add or override cliloc strings (one per line: `number` then whitespace then text, `#` for comments)
 * ***Feature:*** Added support for loose art, gump and sound files - place static art in `Art/Statics/<id>.art`, land tiles in `Art/Land/<id>.art`, and gumps in `Gumps/<id>.gump`, or 22050 Hz mono 16-bit WAVs in `Sounds/<id>.wav`, to add or override the client's assets without repacking the archives
+* ***Fix:*** Fixed server map patches (0xBF 0x18) reading the land and static patch counts in the wrong order - they arrive statics-first, so land patches were silently discarded on shards that patch ground tiles
 
 ## 9/27/26
 * ***Feature:*** Added new Action Bars
