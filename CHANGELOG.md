@@ -13,6 +13,7 @@ All notable changes to TazUO will be recorded here.
 * ***Fix:*** Adjusted rider heights on several mounts: raised on the Clydesdale and elemental horses, lowered on the Manticore and True Britannian Horse
 * ***Fix:*** Applied `verdata.mul` animation patches (FileID 6) - animations shipped only as verdata patches (custom mounts, creatures, clothing on some shards) now render and animate instead of being invisible
 * ***Feature:*** Added support for a plain-text `Clilocs.txt` in the client folder to add or override cliloc strings (one per line: `number` then whitespace then text, `#` for comments)
+* ***Feature:*** Added support for loose art and gump files - place static art in `Art/Statics/<id>.art`, land tiles in `Art/Land/<id>.art`, and gumps in `Gumps/<id>.gump` to add or override the client's art without repacking the archives
 
 ## 9/27/26
 * ***Feature:*** Added new Action Bars
