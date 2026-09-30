@@ -66,6 +66,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Game\Managers\DefaultSpellIndicatorConfig.json" />
     <EmbeddedResource Include="Configuration\language.ini" />
+    <!-- FNA loads TazUO.png at startup and SDL maps it to the macOS Dock icon. -->
+    <None Update="TazUO.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
