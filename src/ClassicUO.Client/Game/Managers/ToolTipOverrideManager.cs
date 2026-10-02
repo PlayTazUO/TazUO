@@ -216,10 +216,18 @@ namespace ClassicUO.Game.Managers
             {
                 if (MatchItemName(itemPropertiesData.Name, overrideData.SearchText))
                 {
-                    sb.AppendLine(string.Format(
-                        overrideData.FormattedText,
-                        itemPropertiesData.Name, "", "", "", "", ""
-                    ));
+                    try
+                    {
+                        sb.AppendLine(string.Format(
+                            overrideData.FormattedText,
+                            itemPropertiesData.Name, "", "", "", "", ""
+                        ));
+                    }
+                    catch
+                    {
+                        GameActions.Print(World.Instance, $"Invalid format string in tooltip override: {overrideData.FormattedText}", Constants.HUE_ERROR);
+                        sb.AppendLine(itemPropertiesData.Name);
+                    }
 
                     // The first matching rule that sets a border hue wins for the whole tooltip.
                     if (borderHue < 0 && overrideData.HasBorderHue)
@@ -235,11 +243,22 @@ namespace ClassicUO.Game.Managers
                 if(string.IsNullOrEmpty(itemPropertiesData.Name))
                     itemPropertiesData.Name = "";
 
-                sb.AppendLine(
-                    ProfileManager.CurrentProfile == null
-                        ? $"/c[yellow]{itemPropertiesData.Name}"
-                        : string.Format(ProfileManager.CurrentProfile.TooltipHeaderFormat, itemPropertiesData.Name)
-                );
+                if (ProfileManager.CurrentProfile == null)
+                {
+                    sb.AppendLine($"/c[yellow]{itemPropertiesData.Name}");
+                }
+                else
+                {
+                    try
+                    {
+                        sb.AppendLine(string.Format(ProfileManager.CurrentProfile.TooltipHeaderFormat, itemPropertiesData.Name));
+                    }
+                    catch
+                    {
+                        GameActions.Print(World.Instance, $"Invalid format string in tooltip header format: {ProfileManager.CurrentProfile.TooltipHeaderFormat}", Constants.HUE_ERROR);
+                        sb.AppendLine(itemPropertiesData.Name);
+                    }
+                }
             }
 
             bool highlightProperties = ProfileManager.CurrentProfile is { GridHighlightProperties: true };
