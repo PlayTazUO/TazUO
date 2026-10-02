@@ -3741,11 +3741,55 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.Indent();
 
+            CheckboxWithLabel updateOneLastAttack = null!;
+            CheckboxWithLabel stackLastAttack = null!;
+            CheckboxWithLabel anchorLastAttack = null!;
+
             content.AddToRight
             (
-                c = new CheckboxWithLabel(TazLang.Get("mog_tazuo_updateonebaraslastattack"), 0, profile.UseOneHPBarForLastAttack,
-                    (b) => { profile.UseOneHPBarForLastAttack = b; }), true, page
+                updateOneLastAttack = new CheckboxWithLabel(TazLang.Get("mog_tazuo_updateonebaraslastattack"), 0, profile.UseOneHPBarForLastAttack,
+                    (b) =>
+                    {
+                        profile.UseOneHPBarForLastAttack = b;
+
+                        if (b)
+                        {
+                            profile.StackHealthBarsForLastAttack = false;
+                            stackLastAttack.IsChecked = false;
+                        }
+                    }), true, page
             );
+
+            content.AddToRight
+            (
+                stackLastAttack = new CheckboxWithLabel(TazLang.Get("mog_tazuo_stackhealthbarsforlastattack"), 0, profile.StackHealthBarsForLastAttack,
+                    (b) =>
+                    {
+                        profile.StackHealthBarsForLastAttack = b;
+
+                        if (b)
+                        {
+                            profile.UseOneHPBarForLastAttack = false;
+                            updateOneLastAttack.IsChecked = false;
+                        }
+
+                        anchorLastAttack.IsEnabled = b;
+
+                        if (!b)
+                        {
+                            profile.AnchorHealthBarsForLastAttack = false;
+                            anchorLastAttack.IsChecked = false;
+                        }
+                    }), true, page
+            );
+
+            content.AddToRight
+            (
+                anchorLastAttack = new CheckboxWithLabel(TazLang.Get("mog_tazuo_anchorhealthbarsforlastattack"), 0, profile.AnchorHealthBarsForLastAttack,
+                    (b) => { profile.AnchorHealthBarsForLastAttack = b; }), true, page
+            );
+
+            anchorLastAttack.IsEnabled = profile.StackHealthBarsForLastAttack;
 
             content.RemoveIndent();
             content.BlankLine();

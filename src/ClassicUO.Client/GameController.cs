@@ -258,6 +258,10 @@ namespace ClassicUO
             UIManager.World = UO.World;
 
             SetScene(new LoginScene(UO.World));
+
+            Console.WriteLine("|--------------------------------------------------------------|");
+            Console.WriteLine("                             READY");
+            Console.WriteLine("|--------------------------------------------------------------|");
 #endif
         }
 
