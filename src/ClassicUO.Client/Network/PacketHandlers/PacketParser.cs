@@ -156,7 +156,7 @@ internal sealed class PacketParser
                 bool measureProcessing = PacketLogger.Default?.Enabled == true;
                 long processingStart = measureProcessing ? Stopwatch.GetTimestamp() : 0;
 
-                string profilerCtx = $"PACKET {packetId}";
+                string profilerCtx = $"Packet 0x{packetId:X2}";
                 Profiler.EnterContext(profilerCtx);
                 if (!allowPlugins || Plugin.ProcessRecvPacket(packetBuffer, ref packetLength))
                 {
