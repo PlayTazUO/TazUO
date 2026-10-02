@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/2/26
+* ***Feature:*** The system chat message width is now adjustable under Options > Chat > Speech (defaults to the previous 320px), controlling how wide messages get before wrapping
+
 ## 9/28/26
 * ***Feature:*** Added a "Toggle Scavenging" macro, and both it and "Toggle Auto Loot" now report when they enable or disable
 * ***Feature:*** Added "Set Rows" and "Set Columns" options to the Action Bar cell context menu's Size submenu, so you can type an exact row or column count

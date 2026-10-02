@@ -68,6 +68,11 @@ namespace ClassicUO.Configuration
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); }
 
         /// <summary>
+        /// Maximum width in pixels of a system chat message line before it wraps. Machine-wide.
+        /// </summary>
+        public int SystemChatMaxWidth { get; set => SetProperty(ref field, value); } = 320;
+
+        /// <summary>
         /// When true, world map markers render at full visibility on every zoom level instead of
         /// degrading to a small dot (or disappearing) when zoomed out past their ZoomIndex.
         /// </summary>
