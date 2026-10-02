@@ -7,6 +7,7 @@ All notable changes to TazUO will be recorded here.
 * ***Feature:*** The system chat message width is now adjustable under Options > Chat > Speech (defaults to the previous 320px), controlling how wide messages get before wrapping
 * ***Feature:*** Added a "Stack health bars" option to the last attack health bars, so automatically opened bars are offset instead of opening on top of each other. It is mutually exclusive with "Update one bar as last attack", and gains an "Anchor health bars" sub-option to keep the stacked bars anchored together
 * ***Misc:*** Moved the last attack health bar options into their own section under Options > Health Bars
+* ***Fix:*** Fixed the nameplate mini-settings gump ignoring right-click to close after logging back in with "Stay active" enabled - the closeable state was only synced while toggling the checkbox during the session, so it is now seeded from the saved "Stay active" setting when the gump opens
 
 ## 9/28/26
 * ***Feature:*** Added a "Toggle Scavenging" macro, and both it and "Toggle Auto Loot" now report when they enable or disable
