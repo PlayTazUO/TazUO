@@ -895,6 +895,11 @@ namespace ClassicUO.Configuration
         public bool DisableAutolootCorpseRetry { get; set; } = false;
         public bool DisableWeather { get; set; }
         public bool EnablePetScaling { get; set; }
+        public bool AutoUnequipForSpellCasting { get; set; }
+        public bool AutoUnequipForPotions { get; set; }
+
+        // Retained only for the one-time split into AutoUnequipForSpellCasting/AutoUnequipForPotions. Do not use in new code.
+        [Obsolete("Remove after 10/02/27")]
         public bool AutoUnequipForActions { get; set; }
         public int MinGumpMoveDistance { get; set; } = 5;
         public HealthBarQuickAction QuickHealAction { get; set; } = HealthBarQuickAction.Heal;
@@ -980,7 +985,9 @@ namespace ClassicUO.Configuration
                 DisableAutolootCorpseRetry = OldDisableAutolootCorpseRetry;
                 DisableWeather = OldDisableWeather;
                 EnablePetScaling = OldEnablePetScaling;
+#pragma warning disable CS0618
                 AutoUnequipForActions = OldAutoUnequipForActions;
+#pragma warning restore CS0618
                 MinGumpMoveDistance = OldMinGumpMoveDistance;
                 WebMapServerPort = OldWebMapServerPort;
                 WebMapAutoStart = OldWebMapAutoStart;
@@ -1071,6 +1078,24 @@ namespace ClassicUO.Configuration
 
                 ProfileMigrationVersion = 13;
             }
+
+            // Splits the old single "unequip for actions" toggle, which governed both spell casts and potion
+            // drinking, so a profile that had it on keeps both halves on (and one that had it off, both off).
+            //
+            // Deliberately not gated on ProfileMigrationVersion: that counter is Global while both the JSON
+            // field and its SQL predecessor are per-character, so a gate would migrate whichever character logs
+            // in first and silently drop the setting for every other one. The legacy SQL value is read directly
+            // here for the same reason - the version-6 step above only copies it for that first character.
+            // Both sources are consumed, which is what makes this step idempotent in place of a version gate.
+#pragma warning disable CS0618
+            if (AutoUnequipForActions || OldAutoUnequipForActions)
+            {
+                AutoUnequipForSpellCasting = true;
+                AutoUnequipForPotions = true;
+                AutoUnequipForActions = false;
+                OldAutoUnequipForActions = false;
+            }
+#pragma warning restore CS0618
 
             try //Cleanup old backups from previous save system
             {

@@ -10,10 +10,8 @@ public static class MobilesTab
     /// <summary>Returns the tab group containing highlighting, hue, and health bar sub-tabs</summary>
     internal static IOptionSource GetContent() => GetTabs();
 
-    private static OptionTabGroup GetTabs()
-    {
-
-        return new OptionTabGroup()
+    private static OptionTabGroup GetTabs() =>
+        new OptionTabGroup()
             .AddTab(
                 TazLang.Get("mog_mobilestab_highlighting_label"),
                 GetHighlightingSection,
@@ -34,23 +32,12 @@ public static class MobilesTab
                 GetMiscSection,
                 new SearchMetadata(TazLang.Get("mog_mobilestab_misc_label"), Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous")])
             );
-    }
 
     private static IOptionSource GetMiscSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
 
         return OptionsUi.Vertical(
-            Option.Checkbox(
-                TazLang.Get("mog_mobilestab_highlighting_incomingmobiles"),
-                new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
-                search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_incomingmobiles"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_mobile")])
-            ),
-            Option.Checkbox(
-                TazLang.Get("mog_mobilestab_highlighting_incomingcorpses"),
-                new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
-                search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_incomingcorpses"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_corpse")])
-            ),
             GetCorpseOpeningSection(),
             GetPlayerVisibilitySection()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_mobilestab_misc_label"), Tags: [TazLang.Get("mog_kw_misc")]));

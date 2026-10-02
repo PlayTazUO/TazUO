@@ -4,7 +4,6 @@ using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
-using ClassicUO.Game.Managers;
 using ClassicUO.Game.Processes;
 using Myra.Graphics2D.UI;
 
@@ -60,8 +59,6 @@ public static class GeneralTabContent
 
 
         //Right side
-        rightSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_turndelay"), out _, v => ProfileManager.ServerSettings.TurnDelay = (ushort)v, 0, 150, ProfileManager.ServerSettings.TurnDelay));
-
         rightSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_objectdelay"), out LabeledHorizontalSlider obDelaySlider,
             v => profile.MoveMultiObjectDelay = (int)v, 0, 3000, profile.MoveMultiObjectDelay));
 
@@ -84,8 +81,17 @@ public static class GeneralTabContent
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.AutoOpenOwnCorpse,
             b => profile.AutoOpenOwnCorpse = b, TazLang.Get("assistant_autoopenowncorpse"), TazLang.Get("assistant_autoopenowncorpse_tooltip")));
 
-        rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.AutoUnequipForActions,
-            b => profile.AutoUnequipForActions = b, TazLang.Get("assistant_autounequipforactions"), TazLang.Get("assistant_autounequipforactions_tooltip")));
+        rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.AutoUnequipForSpellCasting,
+            b => profile.AutoUnequipForSpellCasting = b,
+            TazLang.Get("assistant_autounequipforspellcasting"),
+            TazLang.Get("assistant_autounequipforspellcasting_tooltip"))
+        );
+
+        rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.AutoUnequipForPotions,
+            b => profile.AutoUnequipForPotions = b,
+            TazLang.Get("assistant_autounequipforpotions"),
+            TazLang.Get("assistant_autounequipforpotions_tooltip"))
+        );
 
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.DisableWeather,
             b => {
@@ -113,7 +119,7 @@ public static class GeneralTabContent
             Tooltip = TazLang.Get("assistant_quickspelltooltip")
         };
 
-        HealthBarQuickAction[] actions = (HealthBarQuickAction[])Enum.GetValues(typeof(HealthBarQuickAction));
+        HealthBarQuickAction[] actions = Enum.GetValues<HealthBarQuickAction>();
 
         for (int i = 0; i < actions.Length; i++)
         {
