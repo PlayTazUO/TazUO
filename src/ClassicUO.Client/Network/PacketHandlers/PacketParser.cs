@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using ClassicUO.Game;
 using ClassicUO.IO;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Network.PacketHandlers;
@@ -151,20 +152,24 @@ internal sealed class PacketParser
 
                 _ = stream.Dequeue(packetBuffer, 0, packetLength);
 
-                Stopwatch processingWatch = null;
-                if (PacketLogger.Default?.Enabled == true)
-                    processingWatch = Stopwatch.StartNew();
+                // Timestamp rather than a Stopwatch instance: this runs per packet, and only the delta is needed.
+                bool measureProcessing = PacketLogger.Default?.Enabled == true;
+                long processingStart = measureProcessing ? Stopwatch.GetTimestamp() : 0;
 
+                string profilerCtx = $"PACKET {packetId}";
+                Profiler.EnterContext(profilerCtx);
                 if (!allowPlugins || Plugin.ProcessRecvPacket(packetBuffer, ref packetLength))
                 {
                     AnalyzePacket(world, packetBuffer.AsSpan(0, packetLength), offset);
                     ++packetsCount;
                 }
+                Profiler.ExitContext(profilerCtx);
 
+                // Note - this will *not* catch a packet that crashes the game - this is an extremely unusual case
                 PacketLogger.Default?.Log(
                     packetBuffer.AsSpan(0, packetLength),
                     false,
-                    processingWatch?.ElapsedMilliseconds
+                    measureProcessing ? Stopwatch.GetElapsedTime(processingStart).TotalMilliseconds : null
                 );
             }
         }

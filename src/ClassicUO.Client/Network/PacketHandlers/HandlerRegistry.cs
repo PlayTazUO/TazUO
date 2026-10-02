@@ -8,6 +8,13 @@ public delegate void PacketHandler(World world, ref StackDataReader reader);
 
 public static class PacketHandlerRegistry
 {
+    /// <summary>
+    ///     The received-packet handler table: ID, handler, and the handler type's name for diagnostics.
+    /// </summary>
+    /// <returns>
+    ///     A freshly built list, so callers should cache it rather than re-enumerate per packet. IDs are unique,
+    ///     but names are not - several IDs share one handler (e.g. 0x16/0x17).
+    /// </returns>
     public static IReadOnlyList<(uint Id, PacketHandler Handler, string PacketName)> GetHandlers() =>
     [
         (0x1B, EnterWorld.Receive, nameof(EnterWorld)),
@@ -121,7 +128,7 @@ public static class PacketHandlerRegistry
         (0xF5, DisplayMap.Receive, nameof(DisplayMap)),
         (0xF6, BoatMoving.Receive, nameof(BoatMoving)),
         (0xF7, PacketList.Receive, nameof(PacketList)),
-        (EnhancedPacketHandler.EPID, EnhancedPacketHandler.Handle, nameof(EnhancedPacketHandler)), //For handling custom packe, nameof(EnhancedPacketHandlerts
+        (EnhancedPacketHandler.EPID, EnhancedPacketHandler.Handle, nameof(EnhancedPacketHandler)), //For handling custom packets
 
         // login
         (0xA8, ServerListReceived.Receive, nameof(ServerListReceived)),
