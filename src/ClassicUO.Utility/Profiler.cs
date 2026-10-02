@@ -109,7 +109,7 @@ namespace ClassicUO.Utility
         {
             if (!Enabled)
                 return;
-            EnterContext($"${PACKET_CONTEXT_PREFIX} 0x{id:X2}");
+            EnterContext($"{PACKET_CONTEXT_PREFIX} 0x{id:X2}");
         }
 
         /// <summary>
@@ -125,7 +125,7 @@ namespace ClassicUO.Utility
         {
             if (!Enabled)
                 return;
-            ExitContext($"${PACKET_CONTEXT_PREFIX} 0x{id:X2}");
+            ExitContext($"{PACKET_CONTEXT_PREFIX} 0x{id:X2}");
         }
 
         //[Conditional("DEBUG")]
