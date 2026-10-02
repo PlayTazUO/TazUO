@@ -784,6 +784,8 @@ namespace ClassicUO.Configuration
         public Point SkillProgressBarPosition { get; set => SetProperty(ref field, value); } = Point.Zero;
         public bool ForceResyncOnHang { get; set => SetProperty(ref field, value); } = false;
         public bool UseOneHPBarForLastAttack { get; set => SetProperty(ref field, value); } = true;
+        public bool StackHealthBarsForLastAttack { get; set => SetProperty(ref field, value); } = false;
+        public bool AnchorHealthBarsForLastAttack { get; set => SetProperty(ref field, value); } = false;
         public bool DisableMouseInteractionOverheadText { get; set => SetProperty(ref field, value); } = false;
         public bool HiddenLayersEnabled { get; set => SetProperty(ref field, value); } = false;
         public List<int> HiddenLayers { get; set => SetProperty(ref field, value); } = new List<int>();
