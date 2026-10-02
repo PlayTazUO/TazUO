@@ -96,6 +96,15 @@ namespace ClassicUO.Utility
             m_Context.Add(new ContextAndTick(contextName, _timer.ElapsedTicks));
         }
 
+        /// <summary>
+        ///     Enters into a 'packet' context
+        /// </summary>
+        /// <remarks>
+        ///     This is used to track the time spent processing a packet (generally an incoming one).
+        ///     It differs from <see cref="EnterContext" /> in that it performs string allocation/interpolation only when
+        ///     necessary, allow hot-path callers to maintain performance.
+        /// </remarks>
+        /// <param name="id">The packet's ID</param>
         public static void EnterPacketContext(byte id)
         {
             if (!Enabled)
@@ -103,6 +112,15 @@ namespace ClassicUO.Utility
             EnterContext($"${PACKET_CONTEXT_PREFIX} 0x{id:X2}");
         }
 
+        /// <summary>
+        ///     Exits from a 'packet' context
+        /// </summary>
+        /// <remarks>
+        ///     This is used to track the time spent processing a packet (generally an incoming one).
+        ///     It differs from <see cref="EnterContext" /> in that it performs string allocation/interpolation only when
+        ///     necessary, allow hot-path callers to maintain performance.
+        /// </remarks>
+        /// <param name="id">The packet's ID</param>
         public static void ExitPacketContext(byte id)
         {
             if (!Enabled)
