@@ -61,6 +61,13 @@ internal static class SpeechTab
                     new SearchMetadata(TazLang.Get("mog_chattab_speech_serverpromptpopup"), Keywords: [TazLang.Get("mog_kw_chat"), TazLang.Get("mog_kw_name")])
                 )
             ),
+            Option.Slider(
+                TazLang.Get("mog_chattab_speech_systemchatwidth"),
+                100,
+                1000,
+                new Accessor<int>(() => ProfileManager.GlobalSettings.SystemChatMaxWidth),
+                search: new SearchMetadata(TazLang.Get("mog_chattab_speech_systemchatwidth"), Keywords: [TazLang.Get("mog_kw_chat")])
+            ),
             GetActivationSection(),
             GetOverheadDisplaySection(),
             OptionsUi.Horizontal(

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using ClassicUO.Configuration;
@@ -191,6 +192,52 @@ namespace ClassicUO.Game.UI.Gumps
 
             X = newX;
             Y = newY;
+        }
+
+        /// <summary>
+        /// Moves this gump to the first free slot at or below <paramref name="start"/>, stepping
+        /// down past any gump in <paramref name="others"/> it would overlap and wrapping into a new
+        /// column when it reaches the viewport edge. When <paramref name="anchor"/> is set and this
+        /// gump is <see cref="AnchorableGump"/>, it is also attached to the gump it lands beside.
+        /// </summary>
+        /// <param name="others">The gumps already on screen that this one should avoid.</param>
+        /// <param name="start">The preferred position, reused as the column/row origin when wrapping.</param>
+        /// <param name="anchor">Whether to anchor to the gump this one comes to rest beside.</param>
+        public void StackBelowExisting(IEnumerable<Gump> others, Point start, bool anchor = false)
+        {
+            int offset = anchor ? 0 : 2;
+            Location = start;
+
+            foreach (
+                Gump existing in others
+                    .Where(g => g != this && !g.IsDisposed)
+                    .OrderBy(g => g.ScreenCoordinateX)
+                    .ThenBy(g => g.ScreenCoordinateY)
+            )
+            {
+                if (!existing.Bounds.Intersects(Bounds))
+                {
+                    continue;
+                }
+
+                Y = existing.Bounds.Bottom + offset;
+
+                if (Y >= Client.Game.Scene.Camera.Bounds.Bottom - 100)
+                {
+                    Y = start.Y;
+                    X = existing.Bounds.Right + offset;
+                }
+
+                if (X >= Client.Game.Scene.Camera.Bounds.Right - 100)
+                {
+                    X = start.X;
+                }
+
+                if (anchor && this is AnchorableGump anchorable)
+                {
+                    anchorable.TryAttacheToExist();
+                }
+            }
         }
 
         public virtual void Restore(XmlElement xml)
