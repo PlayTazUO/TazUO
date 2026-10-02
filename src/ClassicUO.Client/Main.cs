@@ -458,7 +458,7 @@ namespace ClassicUO
                                         : val.Trim();
 
                                     if (byte.TryParse(hex, NumberStyles.HexNumber, null, out byte res2))
-                                        PacketLogger.Default.LogPacketID.Add(res2);
+                                        PacketLogger.Default.LogPacketId.Add(res2);
                                 }
                             }
 

@@ -30,7 +30,7 @@ internal sealed class PacketParser
 
     public PacketParser()
     {
-        foreach ((uint id, PacketHandler handler) in PacketHandlerRegistry.GetHandlers())
+        foreach ((uint id, PacketHandler handler, _) in PacketHandlerRegistry.GetHandlers())
             AddHandler(id, handler, false);
     }
 
@@ -52,15 +52,9 @@ internal sealed class PacketParser
     /// Parses up to <paramref name="maxPackets"/> packets from the main buffer, stopping early once <paramref name="deadlineTicks"/> is reached.
     /// Leftover bytes remain buffered for the next call, so a single huge message can span frames without a hitch.
     /// </summary>
-    public int ParseAvailablePackets(World world, int maxPackets, long deadlineTicks)
-    {
-        return ParsePackets(world, _buffer, true, maxPackets, deadlineTicks);
-    }
+    public int ParseAvailablePackets(World world, int maxPackets, long deadlineTicks) => ParsePackets(world, _buffer, true, maxPackets, deadlineTicks);
 
-    public int ParsePluginsPackets(World world)
-    {
-        return ParsePackets(world, _pluginsBuffer, false, int.MaxValue, long.MaxValue);
-    }
+    public int ParsePluginsPackets(World world) => ParsePackets(world, _pluginsBuffer, false, int.MaxValue, long.MaxValue);
 
     /// <summary>True when packets parsed earlier frames are still waiting in the main buffer.</summary>
     public bool HasBufferedData => _buffer.Length > 0;
@@ -124,47 +118,54 @@ internal sealed class PacketParser
                     !GetPacketInfo(
                         stream,
                         stream.Length,
-                        out byte packetID,
+                        out byte packetId,
                         out int offset,
-                        out int packetlength
+                        out int packetLength
                     )
                 )
                 {
                     Log.Warn(
-                        $"Invalid ID: {packetID:X2} | off: {offset} | len: {packetlength} | stream.pos: {stream.Length}"
+                        $"Invalid ID: {packetId:X2} | off: {offset} | len: {packetLength} | stream.pos: {stream.Length}"
                     );
 
                     break;
                 }
 
-                if (stream.Length < packetlength)
+                if (stream.Length < packetLength)
                 {
                     Log.Warn(
-                        $"Need more data ID: {packetID:X2} | off: {offset} | len: {packetlength} | stream.pos: {stream.Length}"
+                        $"Need more data ID: {packetId:X2} | off: {offset} | len: {packetLength} | stream.pos: {stream.Length}"
                     );
 
                     // need more data
                     break;
                 }
 
-                while (packetlength > packetBuffer.Length)
+                while (packetLength > packetBuffer.Length)
                 {
                     int newSize = packetBuffer.Length * 2;
                     Log.Warn(
-                        $"PacketHandler buffer resize from {packetBuffer.Length} to {newSize} for packet length {packetlength} (may cause spike)");
+                        $"PacketHandler buffer resize from {packetBuffer.Length} to {newSize} for packet length {packetLength} (may cause spike)");
                     Array.Resize(ref packetBuffer, newSize);
                 }
 
-                _ = stream.Dequeue(packetBuffer, 0, packetlength);
+                _ = stream.Dequeue(packetBuffer, 0, packetLength);
 
-                PacketLogger.Default?.Log(packetBuffer.AsSpan(0, packetlength), false);
+                Stopwatch processingWatch = null;
+                if (PacketLogger.Default?.Enabled == true)
+                    processingWatch = Stopwatch.StartNew();
 
-                if (!allowPlugins || Plugin.ProcessRecvPacket(packetBuffer, ref packetlength))
+                if (!allowPlugins || Plugin.ProcessRecvPacket(packetBuffer, ref packetLength))
                 {
-                    AnalyzePacket(world, packetBuffer.AsSpan(0, packetlength), offset);
-
+                    AnalyzePacket(world, packetBuffer.AsSpan(0, packetLength), offset);
                     ++packetsCount;
                 }
+
+                PacketLogger.Default?.Log(
+                    packetBuffer.AsSpan(0, packetLength),
+                    false,
+                    processingWatch?.ElapsedMilliseconds
+                );
             }
         }
 
