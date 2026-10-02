@@ -9,6 +9,8 @@ namespace ClassicUO.Utility
 {
     public static class Profiler
     {
+        private const string PACKET_CONTEXT_PREFIX = "Packet";
+
         public const int ProfileTimeCount = 60;
         public const double SpikeThresholdMultiplier = 3.0;
         public const double MinimumTimeForSpikeDetection = 2.0;
@@ -86,25 +88,55 @@ namespace ClassicUO.Utility
         }
 
         //[Conditional("DEBUG")]
-        public static void EnterContext(string context_name)
+        public static void EnterContext(string contextName)
         {
             if (!Enabled)
-            {
                 return;
-            }
 
-            m_Context.Add(new ContextAndTick(context_name, _timer.ElapsedTicks));
+            m_Context.Add(new ContextAndTick(contextName, _timer.ElapsedTicks));
+        }
+
+        /// <summary>
+        ///     Enters into a 'packet' context
+        /// </summary>
+        /// <remarks>
+        ///     This is used to track the time spent processing a packet (generally an incoming one).
+        ///     It differs from <see cref="EnterContext" /> in that it performs string allocation/interpolation only when
+        ///     necessary, allow hot-path callers to maintain performance.
+        /// </remarks>
+        /// <param name="id">The packet's ID</param>
+        public static void EnterPacketContext(byte id)
+        {
+            if (!Enabled)
+                return;
+            EnterContext($"{PACKET_CONTEXT_PREFIX} 0x{id:X2}");
+        }
+
+        /// <summary>
+        ///     Exits from a 'packet' context
+        /// </summary>
+        /// <remarks>
+        ///     This is used to track the time spent processing a packet (generally an incoming one).
+        ///     It differs from <see cref="EnterContext" /> in that it performs string allocation/interpolation only when
+        ///     necessary, allow hot-path callers to maintain performance.
+        /// </remarks>
+        /// <param name="id">The packet's ID</param>
+        public static void ExitPacketContext(byte id)
+        {
+            if (!Enabled)
+                return;
+            ExitContext($"{PACKET_CONTEXT_PREFIX} 0x{id:X2}");
         }
 
         //[Conditional("DEBUG")]
-        public static void ExitContext(string context_name, bool errorNotInContext = false)
+        public static void ExitContext(string contextName, bool errorNotInContext = false)
         {
             if (!Enabled)
             {
                 return;
             }
 
-            if (m_Context.Count == 0 || m_Context[m_Context.Count - 1].Name != context_name)
+            if (m_Context.Count == 0 || m_Context[m_Context.Count - 1].Name != contextName)
             {
                 if(errorNotInContext)
                     Log.Error("Profiler.ExitProfiledContext: context_name does not match current context.");
@@ -127,14 +159,10 @@ namespace ClassicUO.Utility
         public static bool InContext(string context_name)
         {
             if (!Enabled)
-            {
                 return false;
-            }
 
             if (m_Context.Count == 0)
-            {
                 return false;
-            }
 
             return m_Context[m_Context.Count - 1].Name == context_name;
         }
