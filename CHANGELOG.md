@@ -3,6 +3,12 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+# 10/03/26
+* ***Misc:*** Split the "Auto unequp for actions" setting into separate settings for spells and potions - [P.R 1112](https://github.com/PlayTazUO/TazUO/pull/1112) ([yuval-po](https://github.com/yuval-po))
+* ***Fix:*** Removed duplicated "Turn delay", "Show incoming mobiles" and "Show incoming corpses" settings - [P.R 1112](https://github.com/PlayTazUO/TazUO/pull/1112) ([yuval-po](https://github.com/yuval-po))
+* ***Misc:*** Added per-packet tracking to profiler - [P.R 1112](https://github.com/PlayTazUO/TazUO/pull/1112) ([yuval-po](https://github.com/yuval-po))
+* ***Misc:*** Improved packet logger with additional debug information - [P.R 1112](https://github.com/PlayTazUO/TazUO/pull/1112) ([yuval-po](https://github.com/yuval-po))
+
 ## 10/2/26
 * ***Feature:*** The system chat message width is now adjustable under Options > Chat > Speech (defaults to the previous 320px), controlling how wide messages get before wrapping
 * ***Feature:*** Added a "Stack health bars" option to the last attack health bars, so automatically opened bars are offset instead of opening on top of each other. It is mutually exclusive with "Update one bar as last attack", and gains an "Anchor health bars" sub-option to keep the stacked bars anchored together
