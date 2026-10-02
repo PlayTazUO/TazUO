@@ -914,13 +914,13 @@ namespace ClassicUO.Game.UI.Gumps
         {
             private uint _createdTime;
             private TextBox textBox;
-            private static TextBox.RTLOptions TextBoxOptions = new() { Width = 320, StrokeEffect = true };
             private string text;
             private int count = 1;
             public ChatLineTime(string text, byte font, bool isunicode, ushort hue)
             {
                 this.text = text;
-                textBox = TextBox.GetOne(text, ProfileManager.CurrentProfile.GameWindowSideChatFont, ProfileManager.CurrentProfile.GameWindowSideChatFontSize, hue, TextBoxOptions);
+                var options = new TextBox.RTLOptions { Width = ProfileManager.GlobalSettings.SystemChatMaxWidth, StrokeEffect = true };
+                textBox = TextBox.GetOne(text, ProfileManager.CurrentProfile.GameWindowSideChatFont, ProfileManager.CurrentProfile.GameWindowSideChatFontSize, hue, options);
                 _createdTime = Time.Ticks + Constants.TIME_DISPLAY_SYSTEM_MESSAGE_TEXT;
             }
 
