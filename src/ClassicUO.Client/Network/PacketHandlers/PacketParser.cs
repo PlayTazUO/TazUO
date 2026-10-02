@@ -156,16 +156,20 @@ internal sealed class PacketParser
                 bool measureProcessing = PacketLogger.Default?.Enabled == true;
                 long processingStart = measureProcessing ? Stopwatch.GetTimestamp() : 0;
 
-                string profilerCtx = $"Packet 0x{packetId:X2}";
-                Profiler.EnterContext(profilerCtx);
+                // A specialized profiler overload to avoid string heap allocations in hot path
+                Profiler.EnterPacketContext(packetId);
                 if (!allowPlugins || Plugin.ProcessRecvPacket(packetBuffer, ref packetLength))
                 {
                     AnalyzePacket(world, packetBuffer.AsSpan(0, packetLength), offset);
                     ++packetsCount;
                 }
-                Profiler.ExitContext(profilerCtx);
+                Profiler.ExitPacketContext(packetId);
 
-                // Note - this will *not* catch a packet that crashes the game - this is an extremely unusual case
+                // Note - this will *not* catch a packet that crashes the game - this is an extremely unusual case.
+                // Additionally, if a plugin misbehaves, it may also corrupt the packet buffer, so this may be suboptimal.
+                //
+                // That said, processing time is important to log, and since the logger can be called from multiple threads, it's better to keep a packet's metadata in one call
+                // rather than composing it by appending processing time later.
                 PacketLogger.Default?.Log(
                     packetBuffer.AsSpan(0, packetLength),
                     false,
