@@ -733,17 +733,31 @@ public partial class GridContainer : ResizableGump
             {
                 new PromptPopupWindow(TazLang.Get("gridcontainer_rename_title", "Rename Container"), TazLang.Get("gridcontainer_rename_desc", "Type in a custom name for this container."), s =>
                 {
-                    _gridContainerEntry?.CustomName = s;
-                    UpdateContainerNameLabel();
+                    SetCustomName(s);
                 }, TazLang.Get("gridcontainer_save", "Save"), TazLang.Get("gridcontainer_reset", "Reset"), () =>
                 {
-                    _gridContainerEntry?.CustomName = null;
-                    UpdateContainerNameLabel();
+                    SetCustomName(null);
                 }, GetContainerName(true));
             }));
 
             return control;
         }
+
+#nullable enable
+        private void SetCustomName(string? name)
+        {
+            _gridContainerEntry?.CustomName = name;
+
+            Item cont = Container;
+
+            if (cont != null){
+                cont?.CustomName = name;
+                ItemDatabaseManager.Instance.AddOrUpdateItem(cont, World.Instance);
+            }
+
+            UpdateContainerNameLabel();
+        }
+    #nullable disable
 
         private ContextMenuControl GenSortContextMenu()
         {
