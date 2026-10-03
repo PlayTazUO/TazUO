@@ -194,7 +194,17 @@ namespace ClassicUO.Network
         private bool _isCompressionEnabled;
         private readonly AsyncSocketWrapper _socket;
         private uint? _localIP;
-        private readonly CircularBuffer _sendStream;
+
+        // Outgoing packets are queued as owned, pooled buffers and drained by SendLoopAsync.
+        // A ConcurrentQueue (rather than a ring/lock) lets Send run from any thread while the
+        // loop sends, and lets ClearSendQueue run safely from the connection control paths.
+        private readonly ConcurrentQueue<OutgoingPacket> _sendQueue = new();
+
+        // Data-available signal for _sendQueue, capped at 1. Send releases it once per enqueue
+        // only when it is not already set, so the loop wakes on the first packet of a burst and
+        // then drains everything queued. Extra releases are swallowed by the max count.
+        private readonly SemaphoreSlim _sendSignal = new(0, 1);
+
         private readonly ConcurrentQueue<byte[]> _incomingMessages = new();
         private Task _networkTask;
         private CancellationTokenSource _cancellationTokenSource = new();
@@ -209,7 +219,6 @@ namespace ClassicUO.Network
         public AsyncNetClient()
         {
             Statistics = new NetStatistics(this);
-            _sendStream = new CircularBuffer();
 
             _socket = new AsyncSocketWrapper(this);
 
@@ -280,7 +289,7 @@ namespace ClassicUO.Network
 
         public async Task<bool> Connect(string ip, ushort port, CancellationToken cancellationToken = new ())
         {
-            _sendStream.Clear();
+            ClearSendQueue();
             _huffman.Reset();
             Statistics.Reset();
 
@@ -289,7 +298,7 @@ namespace ClassicUO.Network
             if (success)
             {
                 _cancellationTokenSource = new CancellationTokenSource();
-                _networkTask = Task.Run(() => NetworkLoopAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
+                _networkTask = Task.Run(() => SendLoopAsync(_cancellationTokenSource.Token), _cancellationTokenSource.Token);
             }
             else
             {
@@ -326,44 +335,59 @@ namespace ClassicUO.Network
 
             _socket.Disconnect();
             _huffman.Reset();
-            _sendStream.Clear();
+            ClearSendQueue();
         }
 
         public void EnableCompression()
         {
             _isCompressionEnabled = true;
             _huffman.Reset();
-            _sendStream.Clear();
+            ClearSendQueue();
         }
 
-        private async Task NetworkLoopAsync(CancellationToken cancellationToken)
+        /// <summary>
+        ///     Drains the outgoing queue until cancelled or disconnected. Blocks on
+        ///     <see cref="_sendSignal"/> instead of polling, so a queued packet is written
+        ///     as soon as it is enqueued rather than on the next timer tick.
+        /// </summary>
+        private async Task SendLoopAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested && IsConnected)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    // Process outgoing data
-                    await ProcessSendAsync(cancellationToken);
-
-                    // Update statistics
-                    Statistics.Update();
-
-                    // Small delay to prevent excessive CPU usage
-                    await Task.Delay(1, cancellationToken);
+                    await _sendSignal.WaitAsync(cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
-                    await Disconnect();
-                    Disconnected?.Invoke(this, SocketError.Success);
                     break;
                 }
-                catch (Exception ex)
+
+                // Drain every packet queued up to this point before waiting again.
+                while (_sendQueue.TryDequeue(out OutgoingPacket packet))
                 {
-                    await Disconnect();
-                    Log.Error($"Network loop error: {ex}");
-                    Disconnected?.Invoke(this, SocketError.SocketError);
-                    break;
+                    try
+                    {
+                        await _socket.SendAsync(packet.Buffer, 0, packet.Length, cancellationToken);
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(packet.Buffer);
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        ///     Discards every queued outgoing packet, returning its pooled buffer. Safe to call
+        ///     while <see cref="SendLoopAsync"/> is running: <see cref="ConcurrentQueue{T}"/> hands
+        ///     each item to exactly one reader.
+        /// </summary>
+        private void ClearSendQueue()
+        {
+            while (_sendQueue.TryDequeue(out OutgoingPacket packet))
+            {
+                ArrayPool<byte>.Shared.Return(packet.Buffer);
             }
         }
 
@@ -422,9 +446,27 @@ namespace ClassicUO.Network
                 EncryptionHelper.Instance?.Encrypt(!_isCompressionEnabled, message, message, message.Length);
             }
 
-            lock (_sendStream)
+            // The caller's span is transient (often a reused StackDataWriter buffer), so copy the
+            // packet into an owned pooled buffer before it is queued. There is deliberately no fixed
+            // 4 KiB chunk here: that cap dated to the old synchronous send path and may have existed
+            // for server-side framing reasons. If a server turns out to require it, cap the bytes
+            // written per _socket.SendAsync inside SendLoopAsync and re-add the split here.
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(message.Length);
+            message.CopyTo(buffer);
+            _sendQueue.Enqueue(new OutgoingPacket(buffer, message.Length));
+
+            // Wake the send loop if it is idle. The signal is capped at 1, so only the first packet
+            // of a burst releases it; the drain loop picks up the rest. The count check keeps the
+            // common "already awake" path exception-free, with the catch covering the race.
+            if (_sendSignal.CurrentCount == 0)
             {
-                _sendStream.Enqueue(message);
+                try
+                {
+                    _sendSignal.Release();
+                }
+                catch (SemaphoreFullException)
+                {
+                }
             }
 
             Statistics.TotalBytesSent += (uint)message.Length;
@@ -437,41 +479,6 @@ namespace ClassicUO.Network
                 return;
 
             EncryptionHelper.Instance?.Decrypt(buffer, buffer, buffer.Length);
-        }
-
-        private async Task ProcessSendAsync(CancellationToken cancellationToken)
-        {
-            if (!IsConnected)
-                return;
-
-            byte[] sendingBuffer = null;
-            int bytesToSend = 0;
-
-            try
-            {
-                lock (_sendStream)
-                {
-                    if (_sendStream.Length > 0)
-                    {
-                        sendingBuffer = ArrayPool<byte>.Shared.Rent(4096); //= new byte[4096];
-
-                        int size = Math.Min(sendingBuffer.Length, _sendStream.Length);
-
-                        bytesToSend = _sendStream.Dequeue(sendingBuffer, 0, size);
-                    }
-                }
-
-                if (bytesToSend > 0 && sendingBuffer != null)
-                {
-                    await _socket.SendAsync(sendingBuffer, 0, bytesToSend, cancellationToken);
-                    ArrayPool<byte>.Shared.Return(sendingBuffer);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error in ProcessSendAsync: {ex}");
-                Disconnected?.Invoke(this, SocketError.SocketError);
-            }
         }
 
         private Span<byte> DecompressBuffer(Span<byte> buffer)
@@ -500,7 +507,19 @@ namespace ClassicUO.Network
                 _networkTask?.Wait(5000);
             }
             catch { }
+            ClearSendQueue();
             _socket?.Dispose();
+        }
+
+        /// <summary>
+        ///     One queued outgoing packet: a pooled buffer plus the number of valid bytes in it.
+        ///     Ownership of <see cref="Buffer"/> passes to <see cref="_sendQueue"/> on enqueue and is
+        ///     returned to <see cref="ArrayPool{T}.Shared"/> once sent or discarded.
+        /// </summary>
+        private readonly struct OutgoingPacket(byte[] buffer, int length)
+        {
+            public readonly byte[] Buffer = buffer;
+            public readonly int Length = length;
         }
     }
 }
