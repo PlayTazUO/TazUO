@@ -176,14 +176,16 @@ namespace ClassicUO.Game.UI
             int z_width = _textBox.Width + 8;
             int z_height = _textBox.Height + 8;
 
-            // Placement works off the drawn size, not the text size: the background is scaled by the
-            // display zoom while the text is not, and a flipped box anchors its far edge - so sizing
-            // the flip from the unscaled text would leave the box covering the cursor it flipped away from.
             int bgWidth = (int)(z_width * zoom);
             int bgHeight = (int)(z_height * zoom);
 
-            x = ResolveAxis(x, 0, 0, bgWidth, ScaleHelper.LogicalWindowWidth);
-            y = ResolveAxis(y, CURSOR_OFFSET_BELOW, CURSOR_OFFSET_ABOVE, bgHeight, ScaleHelper.LogicalWindowHeight);
+            // A flip anchors the box's far edge, so placement must bound whatever reaches furthest:
+            // the background scales with zoom and the text does not, so either can be the larger.
+            int placementWidth = Math.Max(bgWidth, _textBox.Width);
+            int placementHeight = Math.Max(bgHeight, _textBox.Height);
+
+            x = ResolveAxis(x, 0, 0, placementWidth, ScaleHelper.LogicalWindowWidth);
+            y = ResolveAxis(y, CURSOR_OFFSET_BELOW, CURSOR_OFFSET_ABOVE, placementHeight, ScaleHelper.LogicalWindowHeight);
 
             int bgX = x - 4;
             int bgY = y - BACKGROUND_TOP_PADDING;
