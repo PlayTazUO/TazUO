@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Text;
 using ClassicUO.Game;
 using ClassicUO.IO;
@@ -35,15 +36,18 @@ internal static class OpenCompressedGump
             return;
         }
 
-        byte[]
-            layoutBuffer =
-                new byte[layoutDecompressedLen]; //System.Buffers.ArrayPool<byte>.Shared.Rent(layoutDecompressedLen);
         string layout = null;
+        byte[] layoutBuffer = ArrayPool<byte>.Shared.Rent(layoutDecompressedLen);
 
         try
         {
-            ZLib.Decompress(p.Buffer.Slice(p.Position, (int)layoutCompressedLen),
-                layoutBuffer.AsSpan(0, layoutDecompressedLen));
+            if (ZLib.Decompress(p.Buffer.Slice(p.Position, (int)layoutCompressedLen),
+                    layoutBuffer.AsSpan(0, layoutDecompressedLen)) != ZLib.ZLibError.Ok)
+            {
+                Log.Error("Failed to decompress gump layout.");
+                return;
+            }
+
             layout = Encoding.UTF8.GetString(layoutBuffer.AsSpan(0, layoutDecompressedLen));
         }
         catch (Exception ex)
@@ -51,10 +55,10 @@ internal static class OpenCompressedGump
             Log.Error($"Failed to decompress or decode gump layout: {ex.Message}");
             return;
         }
-        // finally
-        // {
-        //     System.Buffers.ArrayPool<byte>.Shared.Return(layoutBuffer);
-        // }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(layoutBuffer);
+        }
 
         p.Skip((int)layoutCompressedLen);
 
@@ -95,40 +99,44 @@ internal static class OpenCompressedGump
                 }
 
                 lines = new string[linesNum];
+                byte[] linesBuffer = ArrayPool<byte>.Shared.Rent(linesDecompressedLen);
 
-                byte[]
-                    linesBuffer =
-                        new byte[linesDecompressedLen]; //System.Buffers.ArrayPool<byte>.Shared.Rent(linesDecompressedLen);
-
-                ZLib.Decompress(p.Buffer.Slice(p.Position, (int)linesCompressedLen),
-                    linesBuffer.AsSpan(0, linesDecompressedLen));
-                p.Skip((int)linesCompressedLen);
-
-                var reader = new StackDataReader(linesBuffer.AsSpan(0, linesDecompressedLen));
-
-                for (int i = 0; i < linesNum; ++i)
+                try
                 {
-                    int remaining = reader.Remaining;
-
-                    if (remaining >= 2)
+                    if (ZLib.Decompress(p.Buffer.Slice(p.Position, (int)linesCompressedLen),
+                            linesBuffer.AsSpan(0, linesDecompressedLen)) != ZLib.ZLibError.Ok)
                     {
-                        int length = reader.ReadUInt16BE();
+                        Log.Error("Failed to decompress gump lines.");
+                        return;
+                    }
 
-                        if (length > 0)
-                            lines[i] = reader.ReadUnicodeBE(length);
+                    p.Skip((int)linesCompressedLen);
+
+                    var reader = new StackDataReader(linesBuffer.AsSpan(0, linesDecompressedLen));
+
+                    for (int i = 0; i < linesNum; ++i)
+                    {
+                        int remaining = reader.Remaining;
+
+                        if (remaining >= 2)
+                        {
+                            int length = reader.ReadUInt16BE();
+
+                            if (length > 0)
+                                lines[i] = reader.ReadUnicodeBEFixed(length);
+                            else
+                                lines[i] = string.Empty;
+                        }
                         else
                             lines[i] = string.Empty;
                     }
-                    else
-                        lines[i] = string.Empty;
+
+                    reader.Release();
                 }
-
-                reader.Release();
-
-                // finally
-                // {
-                //     System.Buffers.ArrayPool<byte>.Shared.Return(linesBuffer);
-                // }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(linesBuffer);
+                }
             }
 
             if (string.IsNullOrEmpty(layout))

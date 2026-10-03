@@ -27,7 +27,7 @@ internal static class OpenGump
             int length = p.ReadUInt16BE();
 
             if (length > 0)
-                lines[i] = p.ReadUnicodeBE(length);
+                lines[i] = p.ReadUnicodeBEFixed(length);
             else
                 lines[i] = string.Empty;
         }
