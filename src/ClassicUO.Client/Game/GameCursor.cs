@@ -574,7 +574,7 @@ namespace ClassicUO.Game
                             _tooltip.SetGameObject(item);
                         }
 
-                        _tooltip.Draw(batcher, position.X, position.Y + 24);
+                        _tooltip.Draw(batcher, position.X, position.Y);
 
                         return;
                     }
@@ -591,7 +591,7 @@ namespace ClassicUO.Game
                                 _tooltip.SetGameObject(serial);
                             }
 
-                            _tooltip.Draw(batcher, position.X, position.Y + 24);
+                            _tooltip.Draw(batcher, position.X, position.Y);
 
                             return;
                         }
@@ -618,7 +618,7 @@ namespace ClassicUO.Game
                         _tooltip.SetText(text);
                     }
 
-                    _tooltip.Draw(batcher, position.X, position.Y + 24);
+                    _tooltip.Draw(batcher, position.X, position.Y);
                 }
                 else if (UIManager.MouseOverControl.Tooltip is Control c)
                 {
