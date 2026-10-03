@@ -381,6 +381,16 @@ namespace ClassicUO.IO
 
         public string ReadUnicodeBE(int length, bool safe = false) => ReadString(Encoding.BigEndianUnicode, length, 2, safe);
 
+        /// <summary>
+        ///     Reads an exact-length UTF-16BE string without scanning for a NUL terminator.
+        /// </summary>
+        /// <remarks>
+        ///     For protocol fields whose length prefix is authoritative (e.g. gump text lines), the
+        ///     null scan performed by <see cref="ReadUnicodeBE(int,bool)"/> is a redundant pass over
+        ///     the data. Do not use this where the field may be NUL-padded.
+        /// </remarks>
+        public string ReadUnicodeBEFixed(int length, bool safe = false) => ReadString(Encoding.BigEndianUnicode, length, 2, safe, false);
+
         public string ReadUnicodeLE(bool safe = false) => ReadString(Encoding.Unicode, -1, 2, safe);
 
         public string ReadUnicodeLE(int length, bool safe = false) => ReadString(Encoding.Unicode, length, 2, safe);
@@ -390,7 +400,7 @@ namespace ClassicUO.IO
         public string ReadUTF8(int length, bool safe = false) => ReadString(Encoding.UTF8, length, 1, safe);
 
         // from modernuo <3
-        private string ReadString(Encoding encoding, int length, int sizeT, bool safe)
+        private string ReadString(Encoding encoding, int length, int sizeT, bool safe, bool scanForNull = true)
         {
             if (length == 0 || Position + sizeT > Length)
             {
@@ -417,15 +427,10 @@ namespace ClassicUO.IO
 
             ReadOnlySpan<byte> slice = _data.Slice(Position, size);
 
-            int index = GetIndexOfZero(slice, sizeT);
+            int index = scanForNull ? GetIndexOfZero(slice, sizeT) : -1;
             size = index < 0 ? size : index;
 
-            string result;
-
-            fixed (byte* ptr = slice)
-            {
-                result = encoding.GetString(ptr, size);
-            }
+            string result = encoding.GetString(slice.Slice(0, size));
 
             if (safe)
             {

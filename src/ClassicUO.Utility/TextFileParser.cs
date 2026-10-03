@@ -14,7 +14,6 @@ namespace ClassicUO.Utility
         private readonly StringBuilder _sb = new StringBuilder();
         private int _Size;
         private string _string;
-        private bool _trim;
 
         public TextFileParser(string str, char[] delimiters, char[] comments, char[] quotes)
         {
@@ -135,11 +134,15 @@ namespace ClassicUO.Utility
 
         public List<string> ReadTokens(bool trim = true)
         {
-            _trim = trim;
             var result = new List<string>();
+            ReadTokens(result, trim);
+            return result;
+        }
 
+        public void ReadTokens(List<string> output, bool trim = true)
+        {
             if (_string == null || _pos >= _Size)
-                return result;
+                return;
 
             GetEOL(); // sets _eol to the end of the current line
             SkipToData();
@@ -165,7 +168,7 @@ namespace ClassicUO.Utility
                         token = token.Trim();
 
                     if (!string.IsNullOrEmpty(token))
-                        result.Add(token);
+                        output.Add(token);
 
                     _sb.Clear();
                 }
@@ -174,29 +177,34 @@ namespace ClassicUO.Utility
             }
 
             _pos = _eol + 1; // move to next line
-            return result;
         }
 
         public List<string> GetTokens(string str, bool trim = true)
         {
+            var result = new List<string>();
+            GetTokens(str, result, trim);
+            return result;
+        }
+
+        /// <summary>
+        ///     Tokenizes <paramref name="str"/> into <paramref name="output"/> rather than allocating a
+        ///     fresh list, so a hot caller can reuse one list across calls.
+        /// </summary>
+        public void GetTokens(string str, List<string> output, bool trim = true)
+        {
             if (str == null)
             {
-                return new List<string>();
+                return;
             }
 
             _string = str;
             _Size = str.Length;
             _pos = 0;
 
-            var result = new List<string>();
-
             while (_pos < _Size)
             {
-                List<string> lineTokens = ReadTokens(trim);
-                result.AddRange(lineTokens);
+                ReadTokens(output, trim);
             }
-
-            return result;
         }
 
     }
