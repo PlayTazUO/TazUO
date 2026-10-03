@@ -26,11 +26,30 @@ namespace ClassicUO.Game.Managers
 {
     public sealed class MacroManager : LinkedObject
     {
+        /// <summary>
+        /// How long after a trigger <see cref="IsActive"/> keeps reporting active, however fast the
+        /// macro actually finished.
+        /// </summary>
+        /// <remarks>
+        /// Every trigger site calls <see cref="SetMacroToExecute"/> and then <see cref="Update"/> back
+        /// to back, and Update drains the whole action chain in one call unless something yields, so a
+        /// macro without a wait, loop or target wait is over before the caller returns - zero frames.
+        /// Without a floor, "active" would be invisible for most macros and a 2-3 frame blink for the
+        /// quick-yielding rest. Long enough to read as a button press, short enough not to lag a
+        /// double-tap.
+        /// </remarks>
+        private const long ACTIVE_MIN_HOLD_MS = 180;
+
         private readonly uint[] _itemsInHand = new uint[2];
         private MacroObject _lastMacro;
         private MacroObject _currentMacroHead; // head node of the macro currently executing (for toggle-stop)
         private long _nextTimer;
         private readonly World _world;
+
+        /// <summary>Head node of the last macro triggered, and when. Retained past the end of execution
+        /// to serve <see cref="ACTIVE_MIN_HOLD_MS"/>; cleared by an explicit stop.</summary>
+        private MacroObject _lastTriggeredHead;
+        private long _lastTriggeredAt;
 
         private readonly byte[] _skillTable =
         [
@@ -586,7 +605,30 @@ namespace ClassicUO.Game.Managers
 
             _lastMacro = macro;
             _currentMacroHead = macro;
+
+            _lastTriggeredHead = macro;
+            _lastTriggeredAt = Time.Ticks;
         }
+
+        /// <summary>
+        /// Whether a macro should be presented as running - for a button that changes appearance while
+        /// its macro executes.
+        /// </summary>
+        /// <remarks>
+        /// Stays true for <see cref="ACTIVE_MIN_HOLD_MS"/> after a trigger even once execution has
+        /// ended, so the state is actually visible; see that constant for why. A toggle-stop clears it
+        /// at once rather than holding, so pressing a running loop off looks immediate.
+        /// <para>
+        /// Two reference compares and a subtract. Safe to call per frame per button; it reads state the
+        /// trigger already recorded and never drives execution.
+        /// </para>
+        /// </remarks>
+        /// <param name="head">Head node of the macro's action chain, i.e. <c>macro.Items as MacroObject</c>.</param>
+        /// <returns>False for a null head, which no macro can be running under.</returns>
+        public bool IsActive(MacroObject head) =>
+            head != null
+            && (_currentMacroHead == head
+                || (_lastTriggeredHead == head && Time.Ticks - _lastTriggeredAt < ACTIVE_MIN_HOLD_MS));
 
         private static bool MacroContainsLoop(MacroObject macro)
         {
@@ -617,6 +659,9 @@ namespace ClassicUO.Game.Managers
 
             _lastMacro = null;
             _currentMacroHead = null;
+
+            // Dropped rather than left to expire: stopping a running loop should read as immediate.
+            _lastTriggeredHead = null;
         }
 
         public void Update()
@@ -2894,8 +2939,30 @@ namespace ClassicUO.Game.Managers
         }
 
         public bool HideLabel = false;
+
+        /// <summary>Hue of the button at rest. 0 draws it unhued.</summary>
         public ushort Hue = 0x00;
+
+        /// <summary>Gump graphic of the button at rest. Null draws a bare plate.</summary>
         public ushort? Graphic = null;
+
+        /// <summary>
+        /// Hue of the button while the macro is running. Null means "same as <see cref="Hue"/>".
+        /// </summary>
+        /// <remarks>
+        /// Nullable where <see cref="Hue"/> is not, because 0 is a real value here - the unhued
+        /// appearance - and so cannot double as "unset". Null is what leaves a macro that predates the
+        /// two-state appearance looking the same in both states, which is why it needs no migration.
+        /// </remarks>
+        public ushort? ActiveHue = null;
+
+        /// <summary>
+        /// Gump graphic of the button while the macro is running. Null means "same as
+        /// <see cref="Graphic"/>", so a macro that has never been given one simply does not change
+        /// appearance - which is what every macro saved before this field existed wants.
+        /// </summary>
+        public ushort? ActiveGraphic = null;
+
         private byte _scale = 100;
         public byte Scale
         {
@@ -2906,6 +2973,16 @@ namespace ClassicUO.Game.Managers
                 else _scale = value;
             }
         }
+
+        /// <summary>Which graphic the button shows in a given run state.</summary>
+        /// <param name="isActive">Whether the macro is currently running.</param>
+        /// <returns>The graphic to draw, or null for a bare plate.</returns>
+        public ushort? GraphicFor(bool isActive) => isActive ? ActiveGraphic ?? Graphic : Graphic;
+
+        /// <summary>Which hue the button shows in a given run state.</summary>
+        /// <param name="isActive">Whether the macro is currently running.</param>
+        /// <returns>The hue to draw with; 0 for unhued.</returns>
+        public ushort HueFor(bool isActive) => isActive ? ActiveHue ?? Hue : Hue;
 
         public bool Equals(Macro other)
         {
@@ -2954,7 +3031,9 @@ namespace ClassicUO.Game.Managers
             writer.WriteAttributeString("shift", Shift.ToString());
             writer.WriteAttributeString("hidelabel", HideLabel.ToString());
             writer.WriteAttributeString("hue", Hue.ToString());
+            writer.WriteAttributeString("activehue", ActiveHue.HasValue ? ActiveHue.ToString() : string.Empty);
             writer.WriteAttributeString("graphic", Graphic.HasValue ? Graphic.ToString() : string.Empty);
+            writer.WriteAttributeString("activegraphic", ActiveGraphic.HasValue ? ActiveGraphic.ToString() : string.Empty);
             writer.WriteAttributeString("scale", Scale.ToString());
             writer.WriteAttributeString("journaltriggers", JournalTriggers ?? string.Empty);
 
@@ -3024,6 +3103,18 @@ namespace ClassicUO.Game.Managers
             if (ushort.TryParse(xml.GetAttribute("graphic"), out ushort graphic))
             {
                 Graphic = graphic;
+            }
+
+            // Missing (saved before these fields existed) and empty both leave these null, which means
+            // "same as the resting value" - so an older macro keeps one appearance, no migration needed.
+            if (ushort.TryParse(xml.GetAttribute("activegraphic"), out ushort activeGraphic))
+            {
+                ActiveGraphic = activeGraphic;
+            }
+
+            if (ushort.TryParse(xml.GetAttribute("activehue"), out ushort activeHue))
+            {
+                ActiveHue = activeHue;
             }
 
             if (xml.HasAttribute("journaltriggers"))

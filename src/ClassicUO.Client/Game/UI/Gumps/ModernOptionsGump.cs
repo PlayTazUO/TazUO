@@ -5665,41 +5665,19 @@ namespace ClassicUO.Game.UI.Gumps
                         break;
 
                     case (int)buttonsOption.OpenButtonEditor:
-                        UIManager.Gumps.OfType<MacroButtonEditorGump>().FirstOrDefault()?.Dispose();
-                        OpenMacroButtonEditor(Macro, null);
+                        OpenMacroButtonEditor(Macro);
 
                         break;
                 }
             }
 
-            private void OpenMacroButtonEditor(Macro macro, Vector2? position = null)
+            /// <summary>Opens the button editor alongside the options window, so neither covers the other.</summary>
+            private void OpenMacroButtonEditor(Macro macro)
             {
-                MacroButtonEditorGump btnEditorGump = UIManager.GetGump<MacroButtonEditorGump>();
+                Gump opt = UIManager.GetGump<ModernOptionsGump>();
+                Vector2? position = opt == null ? null : new Vector2(opt.X + opt.Width + 5, opt.Y);
 
-                if (btnEditorGump == null)
-                {
-                    int posX = (ScaleHelper.LogicalWindowWidth >> 1) - 300;
-                    int posY = (ScaleHelper.LogicalWindowHeight >> 1) - 250;
-                    Gump opt = UIManager.GetGump<ModernOptionsGump>();
-
-                    if (opt != null)
-                    {
-                        posX = opt.X + opt.Width + 5;
-                        posY = opt.Y;
-                    }
-
-                    if (position.HasValue)
-                    {
-                        posX = (int)position.Value.X;
-                        posY = (int)position.Value.Y;
-                    }
-
-                    btnEditorGump = new MacroButtonEditorGump(world, macro, posX, posY);
-                    UIManager.Add(btnEditorGump);
-                }
-
-                btnEditorGump.SetInScreen();
-                btnEditorGump.BringOnTop();
+                MacroButtonEditorWindow.Show(macro, position);
             }
 
             private class MacroEntry : Control

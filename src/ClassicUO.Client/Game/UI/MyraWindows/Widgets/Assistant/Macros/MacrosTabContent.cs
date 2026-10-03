@@ -636,17 +636,6 @@ public static class MacrosTabContent
         return root;
     }
 
-    /// <summary>Opens (or brings to front) the macro button editor for the given macro.</summary>
-    private static void OpenMacroButtonEditor(Macro macro)
-    {
-        MacroButtonEditorGump? existing = UIManager.Gumps.OfType<MacroButtonEditorGump>().FirstOrDefault();
-        existing?.Dispose();
-
-        var btnEditorGump = new MacroButtonEditorGump(World.Instance, macro, 0, 0);
-        btnEditorGump.CenterXInViewPort();
-        btnEditorGump.CenterYInViewPort();
-        UIManager.Add(btnEditorGump);
-        btnEditorGump.SetInScreen();
-        btnEditorGump.BringOnTop();
-    }
+    /// <summary>Opens the macro button editor for the given macro, replacing one already open.</summary>
+    private static void OpenMacroButtonEditor(Macro macro) => MacroButtonEditorWindow.Show(macro);
 }

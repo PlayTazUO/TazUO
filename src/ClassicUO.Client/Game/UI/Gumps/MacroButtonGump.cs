@@ -17,6 +17,23 @@ namespace ClassicUO.Game.UI.Gumps
         private Texture2D backgroundTexture;
         private Vector3 hueVector;
         private ushort? _graphic;
+
+        /// <summary>
+        ///     Graphic drawn while the macro is running, already resolved through
+        ///     <see cref="Macro.GraphicFor" /> so it equals <see cref="_graphic" /> when the macro has no
+        ///     separate active graphic.
+        /// </summary>
+        /// <remarks>
+        ///     Kept out of the <see cref="Graphic" /> setter deliberately: that setter resizes the gump and
+        ///     its anchor-group cells, which must not happen per frame. The button therefore keeps the
+        ///     resting graphic's size and stretches the active one into it, so switching state never moves
+        ///     the button or reflows the group it is anchored in.
+        /// </remarks>
+        private ushort? _activeGraphic;
+
+        /// <summary>Draw tint for the running state, resolved through <see cref="Macro.HueFor" />.</summary>
+        private Vector3 _activeHueVector;
+
         private ushort _hue;
         private float _scale;
         private bool _hideLabel;
@@ -61,8 +78,17 @@ namespace ClassicUO.Game.UI.Gumps
                 Graphic = value.Graphic;
                 Hue = value.Hue;
                 HideLabel = value.HideLabel;
+                _activeGraphic = value.GraphicFor(true);
+                _activeHueVector = ShaderHueTranslator.GetHueVector(value.HueFor(true));
             }
         }
+
+        /// <summary>
+        ///     Head of the macro's action chain, which is what <see cref="MacroManager.IsActive" />
+        ///     identifies a run by.
+        /// </summary>
+        /// <remarks>Read live rather than cached: editing the macro's actions can replace the head node.</remarks>
+        private MacroObject ActionHead => _macr?.Items as MacroObject;
         public bool IsPartialHue { get; set; }
         public ushort Hue
         {
@@ -187,6 +213,12 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (!IsVisible) return false;
 
+            // Resolved per frame rather than cached on a state change: nothing signals the macro
+            // starting or stopping, and the test is two reference compares.
+            bool isActive = World.Macros.IsActive(ActionHead);
+            ushort? graphic = isActive ? _activeGraphic : Graphic;
+            Vector3 stateHueVector = isActive ? _activeHueVector : hueVector;
+
             batcher.Draw
             (
                 backgroundTexture,
@@ -197,13 +229,12 @@ namespace ClassicUO.Game.UI.Gumps
                     Width,
                     Height
                 ),
-                hueVector
+                stateHueVector
             );
 
-            if (Graphic.HasValue)
+            if (graphic.HasValue)
             {
-                //var texture = GumpsLoader.Instance.GetGumpTexture(, out Rectangle bounds);
-                ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(Graphic.Value);
+                ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(graphic.Value);
                 if (texture.Texture != null)
                 {
                     var rect = new Rectangle(x, y, Width, Height);
@@ -212,7 +243,7 @@ namespace ClassicUO.Game.UI.Gumps
                         texture.Texture,
                         rect,
                         texture.UV,
-                        hueVector
+                        stateHueVector
                     );
                 }
             }
@@ -225,7 +256,7 @@ namespace ClassicUO.Game.UI.Gumps
                         y,
                         Width,
                         Height,
-                        hueVector
+                        stateHueVector
                     );
             }
 
