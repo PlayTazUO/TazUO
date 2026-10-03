@@ -711,6 +711,56 @@ namespace ClassicUO.Game.Scenes
 
         public bool ASyncMapLoading = ProfileManager.CurrentProfile.EnableASyncMapLoading;
 
+        private const int STATIC_PRELOAD_CHUNK_MARGIN = 2;
+
+        /// <summary>
+        /// Loads the chunks forming a ring <see cref="STATIC_PRELOAD_CHUNK_MARGIN"/> chunks wide
+        /// just outside the viewport.
+        /// </summary>
+        /// <remarks>
+        /// Statics are drawn from their base tile, so a chunk must be resident before that
+        /// tile scrolls into view or the art pops in at the screen edge. Preloading the ring
+        /// gives the async load a full chunk of lead time; the render loop still only walks
+        /// the viewport chunks, so no extra objects are added to the render list.
+        /// </remarks>
+        private void PreloadStaticChunkMargin(Map.Map map)
+        {
+            int viewMinChunkX = (int)_minTile.X >> 3;
+            int viewMinChunkY = (int)_minTile.Y >> 3;
+            int viewMaxChunkX = (int)_maxTile.X >> 3;
+            int viewMaxChunkY = (int)_maxTile.Y >> 3;
+
+            int preloadMinChunkX = Math.Max(0, viewMinChunkX - STATIC_PRELOAD_CHUNK_MARGIN);
+            int preloadMinChunkY = Math.Max(0, viewMinChunkY - STATIC_PRELOAD_CHUNK_MARGIN);
+            int preloadMaxChunkX = viewMaxChunkX + STATIC_PRELOAD_CHUNK_MARGIN;
+            int preloadMaxChunkY = viewMaxChunkY + STATIC_PRELOAD_CHUNK_MARGIN;
+
+            for (int chunkX = preloadMinChunkX; chunkX <= preloadMaxChunkX; chunkX++)
+            {
+                for (int chunkY = preloadMinChunkY; chunkY <= preloadMaxChunkY; chunkY++)
+                {
+                    if (
+                        chunkX >= viewMinChunkX
+                        && chunkX <= viewMaxChunkX
+                        && chunkY >= viewMinChunkY
+                        && chunkY <= viewMaxChunkY
+                    )
+                    {
+                        continue;
+                    }
+
+                    if (ASyncMapLoading)
+                    {
+                        map.PreloadChunk2(chunkX, chunkY);
+                    }
+                    else
+                    {
+                        map.GetChunk2(chunkX, chunkY);
+                    }
+                }
+            }
+        }
+
         private void FillGameObjectList()
         {
             _renderListStatics.Clear();
@@ -834,6 +884,8 @@ namespace ClassicUO.Game.Scenes
 
             int totalChunksX = maxChunkX - minChunkX + 1;
             int totalChunksY = maxChunkY - minChunkY + 1;
+
+            PreloadStaticChunkMargin(map);
 
             for (int chunkXIdx = 0; chunkXIdx < totalChunksX; chunkXIdx++)
             {

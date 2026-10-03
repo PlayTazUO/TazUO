@@ -32,6 +32,12 @@ namespace ClassicUO.Game.Scenes
             new TreeUnion(0x0D8C, 0x0D90)
         };
 
+        // Art sprites are anchored at their base tile and extend upward by (art height - this offset),
+        // matching the y -= index.Height positioning in DrawStaticAnimated. Horizontally the art is
+        // centered on the tile, so it extends (art width / 2 - this offset) past the base on both sides.
+        private const int SPRITE_BASE_OFFSET_PIXELS = 44;
+        private const int SPRITE_CENTER_OFFSET_PIXELS = 22;
+
         private sbyte _maxGroundZ;
         private int _maxZ;
         private Vector2 _minPixel,
@@ -563,6 +569,68 @@ namespace ClassicUO.Game.Scenes
             return result;
         }
 
+        /// <summary>
+        /// Tests whether a statics/multi sprite is fully below the viewport bottom.
+        /// </summary>
+        /// <remarks>
+        /// These sprites are anchored at their base tile and grow upward (see
+        /// <c>DrawStaticAnimated</c>), so comparing only the base Y culls tall art such as trees
+        /// whose canopy is still on screen, making it pop in at the bottom edge while the camera
+        /// scrolls. The sprite height is added back before culling. The top edge needs no such
+        /// allowance: art above the top extent stays above the top.
+        /// </remarks>
+        /// <param name="screenY">Sprite base Y in viewport space.</param>
+        /// <param name="graphic">Graphic id whose art height defines the upward extent.</param>
+        /// <returns>True when no part of the sprite can be visible.</returns>
+        private bool IsBelowViewportBottom(int screenY, ushort graphic)
+        {
+            if (screenY <= _maxPixel.Y)
+            {
+                return false;
+            }
+
+            ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+
+            if (artInfo.Texture == null)
+            {
+                return true;
+            }
+
+            return screenY + SPRITE_BASE_OFFSET_PIXELS - artInfo.UV.Height > _maxPixel.Y;
+        }
+
+        /// <summary>
+        /// Tests whether a statics/multi sprite is fully outside the viewport left or right.
+        /// </summary>
+        /// <remarks>
+        /// These sprites are centered on their base tile (see <c>DrawStaticAnimated</c>), so a base
+        /// X just past either horizontal edge can still have more than half the art on screen.
+        /// Using the base X alone culls it and makes the art pop in from the side. The art width is
+        /// applied before culling; the sprite is kept while any column of it remains visible.
+        /// </remarks>
+        /// <param name="screenX">Sprite base X in viewport space.</param>
+        /// <param name="graphic">Graphic id whose art width defines the horizontal extent.</param>
+        /// <returns>True when no part of the sprite can be visible.</returns>
+        private bool IsSpriteOutsideHorizontally(int screenX, ushort graphic)
+        {
+            if (screenX >= _minPixel.X && screenX <= _maxPixel.X)
+            {
+                return false;
+            }
+
+            ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+
+            if (artInfo.Texture == null)
+            {
+                return true;
+            }
+
+            int width = artInfo.UV.Width;
+            int left = screenX + SPRITE_CENTER_OFFSET_PIXELS - (width >> 1);
+
+            return left + width < _minPixel.X || left > _maxPixel.X;
+        }
+
         private static byte CalculateObjectHeight(ref int maxObjectZ, ref StaticTiles itemData)
         {
             if (
@@ -861,7 +929,14 @@ namespace ClassicUO.Game.Scenes
 
                 if (screenX < _minPixel.X || screenX > _maxPixel.X)
                 {
-                    break;
+                    // Static/Multi sprites can be wider than their base tile, so part of them may
+                    // still be on screen; they get an exact, width-aware test in their case handlers.
+                    // Not a break: the tile list head is usually a Land, and breaking on its base X
+                    // would skip a wider static sharing the same tile.
+                    if (obj is not Static && obj is not Multi)
+                    {
+                        continue;
+                    }
                 }
 
                 int screenY = obj.RealScreenPosition.Y;
@@ -952,7 +1027,11 @@ namespace ClassicUO.Game.Scenes
                                 return itemData.Height != 0 && maxObjectZ - maxZ < height;
                             }
 
-                            if (screenY < _minPixel.Y || screenY > _maxPixel.Y)
+                            if (
+                                screenY < _minPixel.Y
+                                || IsBelowViewportBottom(screenY, obj.Graphic)
+                                || IsSpriteOutsideHorizontally(screenX, obj.Graphic)
+                            )
                             {
                                 continue;
                             }
@@ -1038,7 +1117,11 @@ namespace ClassicUO.Game.Scenes
                                 return itemData.Height != 0 && maxObjectZ - maxZ < height;
                             }
 
-                            if (screenY < _minPixel.Y || screenY > _maxPixel.Y)
+                            if (
+                                screenY < _minPixel.Y
+                                || IsBelowViewportBottom(screenY, obj.Graphic)
+                                || IsSpriteOutsideHorizontally(screenX, obj.Graphic)
+                            )
                             {
                                 continue;
                             }
