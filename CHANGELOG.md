@@ -10,6 +10,7 @@ All notable changes to TazUO will be recorded here.
 * ***Misc:*** Improved packet logger with additional debug information - [P.R 1112](https://github.com/PlayTazUO/TazUO/pull/1112) ([yuval-po](https://github.com/yuval-po))
 * ***Misc:*** Reduced the work and memory allocated when opening server gumps - compressed gump decompression now reuses pooled buffers, gump text lines skip a redundant NUL scan, and layout parsing no longer allocates a token list per command or rebuilds each command with string joins
 * ***Misc:*** Reworked outgoing network sends to be event-driven instead of polling every millisecond, so a queued packet is written immediately rather than on the next tick. This also removes the send-path lock that could contend with the game thread and the 4 KiB send chunking left over from the old synchronous path
+* ***Misc:*** Reduced rendering spikes when entering new areas: UOP animation data compressed with the BWT codec now decompresses several times faster (the decoder no longer builds and sorts a 65K-entry table, and its large shifts use a bulk move instead of byte-at-a-time), and animation reads reuse a pooled buffer instead of allocating per load
 
 ## 10/2/26
 * ***Feature:*** The system chat message width is now adjustable under Options > Chat > Speech (defaults to the previous 320px), controlling how wide messages get before wrapping
