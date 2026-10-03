@@ -176,13 +176,22 @@ namespace ClassicUO.Game.UI
             int z_width = _textBox.Width + 8;
             int z_height = _textBox.Height + 8;
 
-            x = ResolveAxis(x, 0, 0, z_width, ScaleHelper.LogicalWindowWidth);
-            y = ResolveAxis(y, CURSOR_OFFSET_BELOW, CURSOR_OFFSET_ABOVE, z_height, ScaleHelper.LogicalWindowHeight);
+            // Placement works off the drawn size, not the text size: the background is scaled by the
+            // display zoom while the text is not, and a flipped box anchors its far edge - so sizing
+            // the flip from the unscaled text would leave the box covering the cursor it flipped away from.
+            int bgWidth = (int)(z_width * zoom);
+            int bgHeight = (int)(z_height * zoom);
 
-            X = x - 4;
-            Y = y - BACKGROUND_TOP_PADDING;
-            Width = (int)(z_width * zoom) + 1;
-            Height = (int)(z_height * zoom) + 1;
+            x = ResolveAxis(x, 0, 0, bgWidth, ScaleHelper.LogicalWindowWidth);
+            y = ResolveAxis(y, CURSOR_OFFSET_BELOW, CURSOR_OFFSET_ABOVE, bgHeight, ScaleHelper.LogicalWindowHeight);
+
+            int bgX = x - 4;
+            int bgY = y - BACKGROUND_TOP_PADDING;
+
+            X = bgX;
+            Y = bgY;
+            Width = bgWidth + 1;
+            Height = bgHeight + 1;
 
             Vector3 hue_vec = ShaderHueTranslator.GetHueVector(1, false, alpha);
 
@@ -192,22 +201,11 @@ namespace ClassicUO.Game.UI
             batcher.Draw
             (
                 SolidColorTextureCache.GetTexture(Color.White),
-                new Rectangle
-                (
-                    x - 4,
-                    y - BACKGROUND_TOP_PADDING,
-                    (int)(z_width * zoom),
-                    (int)(z_height * zoom)
-                ),
+                new Rectangle(bgX, bgY, bgWidth, bgHeight),
                 hue_vec
             );
 
             Texture2D borderTexture = SolidColorTextureCache.GetTexture(Color.Gray);
-
-            int bgX = x - 4;
-            int bgY = y - BACKGROUND_TOP_PADDING;
-            int bgWidth = (int)(z_width * zoom);
-            int bgHeight = (int)(z_height * zoom);
 
             // A matched tooltip override draws a colored accent border on the left and top edges only.
             if (_borderHueOverride >= 0)
