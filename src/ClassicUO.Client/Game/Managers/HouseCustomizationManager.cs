@@ -39,6 +39,18 @@ namespace ClassicUO.Game.Managers
         public readonly List<CustomHouseRoofCategory> Roofs = new List<CustomHouseRoofCategory>();
         public readonly List<CustomHousePlaceInfo> ObjectsInfo = new List<CustomHousePlaceInfo>();
 
+        // The component tables above are immutable once parsed, so graphic lookups are memoized.
+        // GenerateFloorPlace and the customization gump classify every component, and an uncached
+        // lookup linearly scans the whole table (including misses), which dominates house load time.
+        private readonly Dictionary<ushort, (int, int)> _wallLookup = new Dictionary<ushort, (int, int)>();
+        private readonly Dictionary<ushort, (int, int)> _floorLookup = new Dictionary<ushort, (int, int)>();
+        private readonly Dictionary<ushort, (int, int)> _doorLookup = new Dictionary<ushort, (int, int)>();
+        private readonly Dictionary<ushort, (int, int)> _miscLookup = new Dictionary<ushort, (int, int)>();
+        private readonly Dictionary<ushort, (int, int)> _stairLookup = new Dictionary<ushort, (int, int)>();
+        private readonly Dictionary<ushort, (int, int)> _teleportLookup = new Dictionary<ushort, (int, int)>();
+        private readonly Dictionary<ushort, (int, int)> _roofLookup = new Dictionary<ushort, (int, int)>();
+        private readonly Dictionary<ushort, (int, int)> _placeInfoLookup = new Dictionary<ushort, (int, int)>();
+
         private readonly World _world;
         private Rectangle _bounds;
 
@@ -176,7 +188,7 @@ namespace ClassicUO.Game.Managers
                     //continue;
                 }
 
-                (int floorCheck1, int floorCheck2) = SeekGraphicInCustomHouseObjectList(Floors, item.Graphic);
+                (int floorCheck1, int floorCheck2) = SeekFloor(item.Graphic);
 
                 CUSTOM_HOUSE_MULTI_OBJECT_FLAGS state = item.State;
 
@@ -198,7 +210,7 @@ namespace ClassicUO.Game.Managers
                 else
                 {
                     // Identify other component types (stairs, roofs, fixtures)
-                    (int stairCheck1, int stairCheck2) = SeekGraphicInCustomHouseObjectList(Stairs, item.Graphic);
+                    (int stairCheck1, int stairCheck2) = SeekStair(item.Graphic);
 
                     if (stairCheck1 != -1 && stairCheck2 != -1)
                     {
@@ -206,7 +218,7 @@ namespace ClassicUO.Game.Managers
                     }
                     else
                     {
-                        (int roofCheck1, int roofCheck2) = SeekGraphicInCustomHouseObjectListWithCategory<CustomHouseRoof, CustomHouseRoofCategory>(Roofs, item.Graphic);
+                        (int roofCheck1, int roofCheck2) = SeekRoof(item.Graphic);
 
                         if (roofCheck1 != -1 && roofCheck2 != -1)
                         {
@@ -214,11 +226,11 @@ namespace ClassicUO.Game.Managers
                         }
                         else
                         {
-                            (int fixtureCheck1, int fixtureCheck2) = SeekGraphicInCustomHouseObjectList(Doors, item.Graphic);
+                            (int fixtureCheck1, int fixtureCheck2) = SeekDoor(item.Graphic);
 
                             if (fixtureCheck1 == -1 || fixtureCheck2 == -1)
                             {
-                                (fixtureCheck1, fixtureCheck2) = SeekGraphicInCustomHouseObjectList(Teleports, item.Graphic);
+                                (fixtureCheck1, fixtureCheck2) = SeekTeleport(item.Graphic);
 
                                 if (fixtureCheck1 != -1 && fixtureCheck2 != -1)
                                 {
@@ -263,7 +275,7 @@ namespace ClassicUO.Game.Managers
             {
                 for (int y = StartPos.Y + 1; y < EndPos.Y; y++)
                 {
-                    IEnumerable<Multi> multi = house.Components.Where(s => s.X == x && s.Y == y);
+                    IEnumerable<Multi> multi = house.GetMultiAt(x, y);
 
                     if (multi == null)
                     {
@@ -1248,7 +1260,7 @@ namespace ClassicUO.Game.Managers
                     return false;
                 }
 
-                (int res1, int res2) = SeekGraphicInCustomHouseObjectList(Stairs, SelectedGraphic);
+                (int res1, int res2) = SeekStair(SelectedGraphic);
 
                 if (res1 == -1 || res2 == -1 || res1 >= Stairs.Count)
                 {
@@ -1328,13 +1340,13 @@ namespace ClassicUO.Game.Managers
             else
             {
                 // Check if building a door or teleport (fixtures)
-                (int fixCheck1, int fixCheck2) = SeekGraphicInCustomHouseObjectList(Doors, SelectedGraphic);
+                (int fixCheck1, int fixCheck2) = SeekDoor(SelectedGraphic);
 
                 bool isFixture = false;
 
                 if (fixCheck1 == -1 || fixCheck2 == -1)
                 {
-                    (fixCheck1, fixCheck2) = SeekGraphicInCustomHouseObjectList(Teleports, SelectedGraphic);
+                    (fixCheck1, fixCheck2) = SeekTeleport(SelectedGraphic);
 
                     isFixture = fixCheck1 != -1 && fixCheck2 != -1;
 
@@ -1512,27 +1524,27 @@ namespace ClassicUO.Game.Managers
         /// <returns>A tuple containing the category index and item index (or page index).</returns>
         public (int, int) ExistsInList(ref CUSTOM_HOUSE_GUMP_STATE state, ushort graphic)
         {
-            (int res1, int res2) = SeekGraphicInCustomHouseObjectListWithCategory<CustomHouseWall, CustomHouseWallCategory>(Walls, graphic);
+            (int res1, int res2) = SeekWall(graphic);
 
             if (res1 == -1 || res2 == -1)
             {
-                (res1, res2) = SeekGraphicInCustomHouseObjectList(Floors, graphic);
+                (res1, res2) = SeekFloor(graphic);
 
                 if (res1 == -1 || res2 == -1)
                 {
-                    (res1, res2) = SeekGraphicInCustomHouseObjectList(Doors, graphic);
+                    (res1, res2) = SeekDoor(graphic);
 
                     if (res1 == -1 || res2 == -1)
                     {
-                        (res1, res2) = SeekGraphicInCustomHouseObjectListWithCategory<CustomHouseMisc, CustomHouseMiscCategory>(Miscs, graphic);
+                        (res1, res2) = SeekMisc(graphic);
 
                         if (res1 == -1 || res2 == -1)
                         {
-                            (res1, res2) = SeekGraphicInCustomHouseObjectList(Stairs, graphic);
+                            (res1, res2) = SeekStair(graphic);
 
                             if (res1 == -1 || res2 == -1)
                             {
-                                (res1, res2) = SeekGraphicInCustomHouseObjectListWithCategory<CustomHouseRoof, CustomHouseRoofCategory>(Roofs, graphic);
+                                (res1, res2) = SeekRoof(graphic);
 
                                 if (res1 != -1 && res2 != -1)
                                 {
@@ -1546,7 +1558,7 @@ namespace ClassicUO.Game.Managers
                         }
                         else
                         {
-                            (int res_1, int res_2) = SeekGraphicInCustomHouseObjectList(Teleports, graphic);
+                            (int res_1, int res_2) = SeekTeleport(graphic);
 
                             if (res_1 != -1 && res_2 != -1)
                             {
@@ -1594,7 +1606,7 @@ namespace ClassicUO.Game.Managers
                 return false;
             }
 
-            (int infoCheck1, int infoCheck2) = SeekGraphicInCustomHouseObjectList(ObjectsInfo, graphic);
+            (int infoCheck1, int infoCheck2) = SeekPlaceInfo(graphic);
 
             if (infoCheck1 != -1 && infoCheck2 != -1)
             {
@@ -1729,7 +1741,7 @@ namespace ClassicUO.Game.Managers
             }
 
 
-            (int infoCheck1, int infoCheck2) = SeekGraphicInCustomHouseObjectList(ObjectsInfo, item.Graphic);
+            (int infoCheck1, int infoCheck2) = SeekPlaceInfo(item.Graphic);
 
             if (infoCheck1 != -1 && infoCheck2 != -1)
             {
@@ -2004,7 +2016,7 @@ namespace ClassicUO.Game.Managers
 
                 if (item.IsCustom && (item.State & (CUSTOM_HOUSE_MULTI_OBJECT_FLAGS.CHMOF_FLOOR | CUSTOM_HOUSE_MULTI_OBJECT_FLAGS.CHMOF_STAIR | CUSTOM_HOUSE_MULTI_OBJECT_FLAGS.CHMOF_ROOF | CUSTOM_HOUSE_MULTI_OBJECT_FLAGS.CHMOF_FIXTURE)) == 0 && item.Z >= minZ && item.Z < maxZ)
                 {
-                    (int info1, int info2) = SeekGraphicInCustomHouseObjectList(ObjectsInfo, item.Graphic);
+                    (int info1, int info2) = SeekPlaceInfo(item.Graphic);
 
                     if (info1 != -1 && info2 != -1)
                     {
@@ -2205,6 +2217,58 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+
+        private (int, int) SeekWall(ushort graphic) =>
+            SeekCachedWithCategory<CustomHouseWall, CustomHouseWallCategory>(_wallLookup, Walls, graphic);
+
+        private (int, int) SeekFloor(ushort graphic) =>
+            SeekCached(_floorLookup, Floors, graphic);
+
+        private (int, int) SeekDoor(ushort graphic) =>
+            SeekCached(_doorLookup, Doors, graphic);
+
+        private (int, int) SeekMisc(ushort graphic) =>
+            SeekCachedWithCategory<CustomHouseMisc, CustomHouseMiscCategory>(_miscLookup, Miscs, graphic);
+
+        private (int, int) SeekStair(ushort graphic) =>
+            SeekCached(_stairLookup, Stairs, graphic);
+
+        private (int, int) SeekTeleport(ushort graphic) =>
+            SeekCached(_teleportLookup, Teleports, graphic);
+
+        private (int, int) SeekRoof(ushort graphic) =>
+            SeekCachedWithCategory<CustomHouseRoof, CustomHouseRoofCategory>(_roofLookup, Roofs, graphic);
+
+        private (int, int) SeekPlaceInfo(ushort graphic) =>
+            SeekCached(_placeInfoLookup, ObjectsInfo, graphic);
+
+        /// <summary>
+        /// Memoizes a flat-table seek (including misses) so repeated per-component classification stays O(1).
+        /// </summary>
+        private static (int, int) SeekCached<T>(Dictionary<ushort, (int, int)> cache, List<T> list, ushort graphic) where T : CustomHouseObject
+        {
+            if (cache.TryGetValue(graphic, out (int, int) result))
+                return result;
+
+            result = SeekGraphicInCustomHouseObjectList(list, graphic);
+            cache[graphic] = result;
+
+            return result;
+        }
+
+        /// <summary>
+        /// Memoizes a categorized-table seek (including misses) so repeated per-component classification stays O(1).
+        /// </summary>
+        private static (int, int) SeekCachedWithCategory<T, U>(Dictionary<ushort, (int, int)> cache, List<U> list, ushort graphic) where T : CustomHouseObject where U : CustomHouseObjectCategory<T>
+        {
+            if (cache.TryGetValue(graphic, out (int, int) result))
+                return result;
+
+            result = SeekGraphicInCustomHouseObjectListWithCategory<T, U>(list, graphic);
+            cache[graphic] = result;
+
+            return result;
+        }
 
         /// <summary>
         /// Seeks a graphic in a list of custom house object categories.
