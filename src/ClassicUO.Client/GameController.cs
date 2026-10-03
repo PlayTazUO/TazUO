@@ -202,6 +202,10 @@ namespace ClassicUO
 
             AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)packetsProcessed;
 
+            // The send loop is event-driven and no longer ticks on its own, so refresh the
+            // throughput deltas from the frame loop (Update is internally gated to 500 ms).
+            AsyncNetClient.Socket.Statistics.Update();
+
             // Plugin packets are buffered separately and would sit unprocessed
             // if no network packets arrived this frame, so always drain them.
             PacketParser.Instance.ParsePluginsPackets(Client.Game.UO.World);
