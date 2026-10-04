@@ -1,6 +1,7 @@
 using System;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs.VisualEffects;
@@ -229,11 +230,7 @@ public static class VideoTab
                 }),
                 search: new SearchMetadata(TazLang.Get("mog_videotab_zoom_defaultzoom"), Keywords: [TazLang.Get("mog_kw_zoom")])
             ),
-            Option.Checkbox(
-                TazLang.Get("mog_videotab_zoom_zoomwheel"),
-                new Accessor<bool>(() => profile.EnableMousewheelScaleZoom),
-                search: new SearchMetadata(TazLang.Get("mog_videotab_zoom_zoomwheel"), Keywords: [TazLang.Get("mog_kw_wheel")])
-            ),
+            GetMouseWheelZoomSetting(),
             Option.Checkbox(
                 TazLang.Get("mog_videotab_zoom_returndefaultzoom"),
                 new Accessor<bool>(() => profile.RestoreScaleAfterUnpressCtrl),
@@ -244,6 +241,39 @@ public static class VideoTab
                 new Accessor<bool>(() => profile.OverheadsScaleWithZoom),
                 search: new SearchMetadata(TazLang.Get("mog_videotab_zoom_overheadsscale"), Keywords: [TazLang.Get("mog_kw_zoom"), TazLang.Get("mog_kw_scale")])
             )
+        );
+    }
+
+    private static OptionEntry GetMouseWheelZoomSetting()
+    {
+        HotKeyEntry zoomHotkeyModifier = HotKeys.Get(HotKeyRegistrar.ZoomScrollId);
+        string label, tooltip;
+
+        if (zoomHotkeyModifier?.Enabled ?? false)
+        {
+            string hotkeyBindingStr = zoomHotkeyModifier.Binding.Describe();
+            label = TazLang.GetEx(
+                "mog_videotab_zoom_zoomwheel_hotkey",
+                "Enable mousewheel zoom when holding {0}",
+                [hotkeyBindingStr]
+            );
+            tooltip = TazLang.GetEx(
+                "mog_videotab_zoom_zoomwheel_hotkey_tooltip",
+                "When holding the {0} key, use the mouse wheel to zoom in/out",
+                [hotkeyBindingStr]
+            );
+        }
+        else
+        {
+            label = TazLang.Get("mog_videotab_zoom_zoomwheel_no_hotkey");
+            tooltip = TazLang.Get("mog_videotab_zoom_zoomwheel_no_hotkey_tooltip");
+        }
+
+        return Option.Checkbox(
+            label,
+            new Accessor<bool>(() => ProfileManager.CurrentProfile.EnableMousewheelScaleZoom),
+            tooltip,
+            new SearchMetadata(TazLang.Get("mog_videotab_zoom_zoomwheel"), Keywords: [TazLang.Get("mog_kw_wheel")])
         );
     }
 

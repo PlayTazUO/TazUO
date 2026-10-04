@@ -6,7 +6,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using ClassicUO.Game.UI.MyraWindows.Widgets.ArtTexture;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
@@ -18,17 +17,14 @@ namespace ClassicUO.Game.UI.MyraWindows;
 ///     graphic — with a live preview of the result.
 /// </summary>
 /// <remarks>
-///     Edits are written straight onto the macro so the preview can show them, but only reach disk when
-///     the user saves. Open through <see cref="Show" />, which keeps a single editor across call sites.
+///     Edits are written straight onto the live macro, which is what lets the preview - and the real
+///     button already on screen - show them as they happen. Closing therefore has to put back what was
+///     there on open, or "close without saving" would still have changed the macro for the session.
+///     Open through <see cref="Show" />, which keeps a single editor across call sites.
 /// </remarks>
 public sealed class MacroButtonEditorWindow : MyraControl
 {
     #region Private members
-
-    /// <summary>Hue swatch graphic. The dye tub every hue picker in the UI uses.</summary>
-    private const ushort SWATCH_GRAPHIC = 0x0FAB;
-
-    private const int SWATCH_SIZE = 20;
 
     /// <summary>Scale bounds, in percent, matching what the macro itself accepts.</summary>
     private const int MIN_SCALE = 10;
@@ -43,11 +39,27 @@ public sealed class MacroButtonEditorWindow : MyraControl
 
     private const int SLIDER_WIDTH = 180;
 
-    /// <summary>Indent of the setting rows under their section heading.</summary>
-    private const int ROW_INDENT = 20;
+    /// <summary>Inset of the setting rows within their section, kept equal on both sides so the
+    /// right-pinned controls do not sit flush against the border.</summary>
+    private const int ROW_INSET = 20;
 
     private readonly Macro _macro;
     private readonly MacroButtonPreview _preview;
+
+    /// <summary>
+    ///     The appearance the macro reverts to when the window closes: what it had on open, or what the
+    ///     last <see cref="Save" /> committed.
+    /// </summary>
+    private MacroButtonAppearance _committed;
+
+    /// <summary>Guards the revert, which several independent close paths all have to reach.</summary>
+    private bool _closed;
+
+    /// <summary>
+    ///     The active hue's selector, held so the inactive hue can keep it in step while it is set to
+    ///     follow - otherwise it would sit showing a hue the button no longer uses.
+    /// </summary>
+    private HueSelector _activeHueSelector = null!;
 
     /// <summary>Names which state the preview is showing; kept in step with it, clicks included.</summary>
     private readonly MyraLabel _previewStateLabel = new(string.Empty, MyraLabel.TextStyle.P)
@@ -63,9 +75,15 @@ public sealed class MacroButtonEditorWindow : MyraControl
         : base(TazLang.Get("macrobtneditor_title", "Macro Button Editor"))
     {
         _macro = macro;
+        _committed = MacroButtonAppearance.Capture(macro);
+
         _preview = new MacroButtonPreview(macro);
         _preview.ShowActiveStateChanged += (_, _) => SyncPreviewStateLabel();
         SyncPreviewStateLabel();
+
+        // The title-bar close goes straight to the base's dispose flag without passing through
+        // Dispose(), so the revert needs this hook as well as the override.
+        _rootWindow.Closed += (_, _) => Revert();
 
         Build();
         CenterInViewPort();
@@ -100,8 +118,10 @@ public sealed class MacroButtonEditorWindow : MyraControl
     }
 
     /// <inheritdoc />
+    /// <remarks>Reverts anything the user did not save; see the type's remarks.</remarks>
     public override void Dispose()
     {
+        Revert();
         _preview.Dispose();
         base.Dispose();
     }
@@ -136,13 +156,16 @@ public sealed class MacroButtonEditorWindow : MyraControl
         {
             Spacing = MyraStyle.STANDARD_SPACING,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            Padding = new Thickness(ROW_INDENT, 0, 0, 0)
+            Padding = new Thickness(ROW_INSET, 0, ROW_INSET, 0)
         };
+
+        // Built before the inactive row, whose handler reaches for this one's selector.
+        Widget activeHue = BuildActiveHueRow();
 
         rows.Widgets.Add(BuildHideLabelToggle());
         rows.Widgets.Add(BuildScaleSlider());
         rows.Widgets.Add(BuildInactiveHueRow());
-        rows.Widgets.Add(BuildActiveHueRow());
+        rows.Widgets.Add(activeHue);
         rows.Widgets.Add(BuildInactiveGraphicPicker());
         rows.Widgets.Add(BuildActiveGraphicPicker());
 
@@ -170,7 +193,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
 
     private Widget BuildScaleSlider()
     {
-        LabeledHorizontalSlider slider = LabeledHorizontalSlider.CreateSliderWithCallback(
+        var slider = LabeledHorizontalSlider.CreateSliderWithCallback(
             MIN_SCALE,
             MAX_SCALE,
             _macro.Scale,
@@ -196,91 +219,77 @@ public sealed class MacroButtonEditorWindow : MyraControl
             control
         );
 
-    private Widget BuildInactiveHueRow() =>
-        BuildHueRow(
-            TazLang.Get("macrobtneditor_inactivehue", "Inactive hue"),
-            TazLang.Get("macrobtneditor_inactivehue_tooltip", "Hue of the button at rest."),
-            () => _macro.Hue,
-            hue => _macro.Hue = hue,
-            inherit: null
-        );
-
-    /// <remarks>
-    ///     Carries a reset, which the resting row does not need: this hue is nullable, and clicking a
-    ///     swatch can only ever set a value, never clear one back to "inherit the resting hue".
-    /// </remarks>
-    private Widget BuildActiveHueRow() =>
-        BuildHueRow(
-            TazLang.Get("macrobtneditor_activehue", "Active hue"),
-            TazLang.Get("macrobtneditor_activehue_tooltip",
-                "Hue of the button while the macro is running."),
-            () => _macro.HueFor(true),
-            hue => _macro.ActiveHue = hue,
-            inherit: () => _macro.ActiveHue = null
-        );
-
-    /// <summary>
-    ///     Swatch that opens the shared color picker, mirroring the hue rows in the options panels.
-    /// </summary>
-    /// <param name="read">Reads the hue to display; re-read after <paramref name="inherit" /> runs.</param>
-    /// <param name="write">Commits a picked hue.</param>
-    /// <param name="inherit">
-    ///     Clears the field back to following another hue, or null for a field that is never unset.
-    /// </param>
-    private Widget BuildHueRow(
-        string label,
-        string tooltip,
-        Func<ushort> read,
-        Action<ushort> write,
-        Action? inherit
-    )
+    private Widget BuildInactiveHueRow()
     {
-        var swatch = new MyraArtTexture(SWATCH_GRAPHIC, read(), SWATCH_SIZE)
+        var selector = new HueSelector(_macro.Hue);
+
+        selector.HueChanged += (_, hue) =>
         {
-            Tooltip = HueTooltip(tooltip, read())
-        };
+            _macro.Hue = hue;
 
-        swatch.TouchUp += (_, _) =>
-        {
-            if (!swatch.Enabled)
-                return;
+            // Mirrored rather than left stale: a disabled selector still reads as the active hue, and
+            // showing the old value there is exactly the ambiguity the radio exists to remove.
+            if (!_macro.ActiveHue.HasValue)
+                _activeHueSelector.Hue = hue;
 
-            UIManager.GetGump<ModernColorPicker>()?.Dispose();
-            UIManager.Add(new ModernColorPicker(World.Instance, hue =>
-            {
-                write(hue);
-                swatch.SetColorByHue(hue);
-                swatch.Tooltip = HueTooltip(tooltip, hue);
-                _preview.Refresh();
-            }, isClickable: true));
-        };
-
-        if (inherit == null)
-            return Row(label, swatch, tooltip);
-
-        var controls = new HorizontalStackPanel
-        {
-            Spacing = MyraStyle.STANDARD_SPACING,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
-        controls.Widgets.Add(swatch);
-        controls.Widgets.Add(new MyraButton(TazLang.Get("macrobtneditor_hue_inherit", "Same"), () =>
-        {
-            inherit();
-            swatch.SetColorByHue(read());
-            swatch.Tooltip = HueTooltip(tooltip, read());
             _preview.Refresh();
-        })
-        {
-            Tooltip = TazLang.Get("macrobtneditor_hue_inherit_tooltip", "Use the inactive hue.")
-        });
+        };
 
-        return Row(label, controls, tooltip);
+        return Row(
+            TazLang.Get("macrobtneditor_inactivehue", "Inactive hue"),
+            selector,
+            TazLang.Get("macrobtneditor_inactivehue_tooltip", "Hue of the button at rest.")
+        );
     }
 
-    private static string HueTooltip(string tooltip, ushort hue) =>
-        $"{tooltip}\n{TazLang.GetEx("macrobtneditor_hue_current", "Current hue: {0}", [hue.ToString()])}";
+    /// <summary>
+    ///     Active hue as an explicit choice between following the inactive hue and setting its own.
+    /// </summary>
+    /// <remarks>
+    ///     A bare swatch could not express this field: null means "follow the inactive hue", and a
+    ///     swatch showing the followed value is indistinguishable from one deliberately set to it -
+    ///     worse still at hue 0, where "unset" and "no hue" look identical. The radio says which it is,
+    ///     and clicking a swatch can only ever set a value, never clear one back to following.
+    /// </remarks>
+    private Widget BuildActiveHueRow()
+    {
+        var selector = new HueSelector(_macro.HueFor(true));
+        _activeHueSelector = selector;
+
+        selector.HueChanged += (_, hue) =>
+        {
+            _macro.ActiveHue = hue;
+            _preview.Refresh();
+        };
+
+        var group = new RadioGroup<bool>(
+            TazLang.Get("macrobtneditor_activehue", "Active hue"),
+            _macro.ActiveHue.HasValue,
+            new RadioOption<bool>(
+                false,
+                TazLang.Get("macrobtneditor_activehue_inherit", "Same as inactive"),
+                TazLang.Get("macrobtneditor_activehue_inherit_tooltip",
+                    "The button keeps its inactive hue while the macro runs.")
+            ),
+            new RadioOption<bool>(
+                true,
+                TazLang.Get("macrobtneditor_activehue_custom", "Custom"),
+                TazLang.Get("macrobtneditor_activehue_custom_tooltip",
+                    "Give the button its own hue while the macro runs."),
+                Row(TazLang.Get("macrobtneditor_activehue_hue", "Hue"), selector, tooltip: null)
+            )
+        );
+
+        group.SelectionChanged += (_, custom) =>
+        {
+            // The selector keeps showing the followed hue while on "same as inactive", so switching to
+            // Custom adopts what is already on screen rather than snapping to something unseen.
+            _macro.ActiveHue = custom ? selector.Hue : null;
+            _preview.Refresh();
+        };
+
+        return group;
+    }
 
     /// <summary>
     ///     Gump graphic of the button at rest. "(None)" stores a null graphic, which the button draws
@@ -383,24 +392,95 @@ public sealed class MacroButtonEditorWindow : MyraControl
             HorizontalAlignment = HorizontalAlignment.Right
         };
 
-        row.Widgets.Add(new MyraButton(TazLang.Get("macrobtneditor_save", "Save"), Save));
-        row.Widgets.Add(new MyraButton(TazLang.Get("uicommons_close", "Close"), () => _disposeRequested = true));
+        row.Widgets.Add(new MyraButton(TazLang.Get("macrobtneditor_save", "Save"), Save)
+        {
+            Tooltip = TazLang.Get("macrobtneditor_save_tooltip", "Keep these changes and write them to disk.")
+        });
+
+        // Dispose() rather than the base's flag, so the revert runs.
+        row.Widgets.Add(new MyraButton(TazLang.Get("uicommons_close", "Close"), Dispose)
+        {
+            Tooltip = TazLang.Get("macrobtneditor_close_tooltip", "Discard any changes made since the last save.")
+        });
 
         return row;
     }
 
     /// <summary>
-    ///     Persists the macro list and re-reads the macro into any button already on screen, which caches
-    ///     the appearance fields rather than reading them per frame.
+    ///     Commits the current appearance, persists the macro list, and re-reads the macro into any
+    ///     button already on screen, which caches the appearance fields rather than reading them per frame.
     /// </summary>
     private void Save()
     {
-        World.Instance.Macros.Save();
+        _committed = MacroButtonAppearance.Capture(_macro);
 
+        World.Instance.Macros.Save();
+        RefreshLiveButtons();
+    }
+
+    /// <summary>
+    ///     Puts back the last committed appearance. Idempotent, since several close paths reach it.
+    /// </summary>
+    private void Revert()
+    {
+        if (_closed)
+            return;
+
+        _closed = true;
+
+        if (_committed.Matches(_macro))
+            return;
+
+        _committed.ApplyTo(_macro);
+        RefreshLiveButtons();
+    }
+
+    /// <summary>Re-reads the macro into every button showing it, which caches its appearance.</summary>
+    private void RefreshLiveButtons()
+    {
         foreach (MacroButtonGump button in UIManager.Gumps.OfType<MacroButtonGump>().ToList())
         {
             if (button.TheMacro == _macro)
                 button.TheMacro = _macro;
+        }
+    }
+
+    #endregion
+
+    #region Nested types
+
+    /// <summary>
+    ///     A snapshot of everything this editor can change about a macro's button, so an unsaved session
+    ///     can be undone. Holds no reference to the macro it came from.
+    /// </summary>
+    private readonly record struct MacroButtonAppearance(
+        bool HideLabel,
+        byte Scale,
+        ushort Hue,
+        ushort? ActiveHue,
+        ushort? Graphic,
+        ushort? ActiveGraphic
+    )
+    {
+        public static MacroButtonAppearance Capture(Macro macro) => new(
+            macro.HideLabel,
+            macro.Scale,
+            macro.Hue,
+            macro.ActiveHue,
+            macro.Graphic,
+            macro.ActiveGraphic
+        );
+
+        public bool Matches(Macro macro) => this == Capture(macro);
+
+        public void ApplyTo(Macro macro)
+        {
+            macro.HideLabel = HideLabel;
+            macro.Scale = Scale;
+            macro.Hue = Hue;
+            macro.ActiveHue = ActiveHue;
+            macro.Graphic = Graphic;
+            macro.ActiveGraphic = ActiveGraphic;
         }
     }
 
