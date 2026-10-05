@@ -2961,7 +2961,18 @@ namespace ClassicUO.Game.Managers
         /// <see cref="Graphic"/>", so a macro that has never been given one simply does not change
         /// appearance - which is what every macro saved before this field existed wants.
         /// </summary>
-        public ushort? ActiveGraphic = null;
+        /// <remarks>
+        /// Signed, and wider than <see cref="Graphic"/>, because this field has three states where that
+        /// one has two: inherit (null), draw nothing (<see cref="ACTIVE_GRAPHIC_NONE"/>), or draw a
+        /// graphic. Folding the first two together would make "no graphic while running" unsayable.
+        /// </remarks>
+        public int? ActiveGraphic = null;
+
+        /// <summary>
+        /// Value of <see cref="ActiveGraphic"/> meaning the running button draws no graphic at all,
+        /// as opposed to null's "whatever <see cref="Graphic"/> is".
+        /// </summary>
+        public const int ACTIVE_GRAPHIC_NONE = -1;
 
         private byte _scale = 100;
         public byte Scale
@@ -2977,7 +2988,13 @@ namespace ClassicUO.Game.Managers
         /// <summary>Which graphic the button shows in a given run state.</summary>
         /// <param name="isActive">Whether the macro is currently running.</param>
         /// <returns>The graphic to draw, or null for a bare plate.</returns>
-        public ushort? GraphicFor(bool isActive) => isActive ? ActiveGraphic ?? Graphic : Graphic;
+        public ushort? GraphicFor(bool isActive)
+        {
+            if (!isActive || ActiveGraphic is not { } active)
+                return Graphic;
+
+            return active < 0 ? null : (ushort)active;
+        }
 
         /// <summary>Which hue the button shows in a given run state.</summary>
         /// <param name="isActive">Whether the macro is currently running.</param>
@@ -3107,7 +3124,7 @@ namespace ClassicUO.Game.Managers
 
             // Missing (saved before these fields existed) and empty both leave these null, which means
             // "same as the resting value" - so an older macro keeps one appearance, no migration needed.
-            if (ushort.TryParse(xml.GetAttribute("activegraphic"), out ushort activeGraphic))
+            if (int.TryParse(xml.GetAttribute("activegraphic"), out int activeGraphic))
             {
                 ActiveGraphic = activeGraphic;
             }

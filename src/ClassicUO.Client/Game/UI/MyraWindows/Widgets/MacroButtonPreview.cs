@@ -48,8 +48,13 @@ public sealed class MacroButtonPreview : Panel, IDisposable
 
     private static readonly Color PlateGray = new(30, 30, 30);
 
+    /// <summary>The macro being mirrored. Read on every refresh, never written to.</summary>
     private readonly Macro _macro;
+
+    /// <summary>The gump graphic, stretched over the plate.</summary>
     private readonly OverlayImage _graphicImage;
+
+    /// <summary>The macro name, centred over the graphic.</summary>
     private readonly OverlayLabel _nameLabel;
 
     /// <summary>The hue bake currently on display, if any. Owned here; released with the widget or its placement.</summary>
@@ -58,6 +63,7 @@ public sealed class MacroButtonPreview : Panel, IDisposable
     /// <summary>Unscaled size the button derives its dimensions from: the graphic's, or the default plate's.</summary>
     private Point _sourceSize = new(PLATE_WIDTH, PLATE_HEIGHT);
 
+    /// <summary>Which of the macro's two appearances is on display.</summary>
     private bool _showActiveState;
 
     #endregion
@@ -245,6 +251,7 @@ public sealed class MacroButtonPreview : Panel, IDisposable
         return sprite.Texture == null ? new Point(PLATE_WIDTH, PLATE_HEIGHT) : new Point(sprite.UV.Width, sprite.UV.Height);
     }
 
+    /// <summary>Drops the hue bake and the image pointing at it. Idempotent.</summary>
     private void ReleaseBake()
     {
         if (_baked == null)
@@ -283,12 +290,14 @@ public sealed class MacroButtonPreview : Panel, IDisposable
     /// <summary>The plate's graphic, which must not swallow the click that flips the previewed state.</summary>
     private sealed class OverlayImage : Image
     {
+        /// <inheritdoc />
         public override bool InputFallsThrough(Point localPos) => true;
     }
 
     /// <summary>The macro name, which must not swallow the click that flips the previewed state.</summary>
     private sealed class OverlayLabel(string text) : MyraLabel(text, TextStyle.P)
     {
+        /// <inheritdoc />
         public override bool InputFallsThrough(Point localPos) => true;
     }
 

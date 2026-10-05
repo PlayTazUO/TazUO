@@ -2,9 +2,6 @@
 
 using System;
 using ClassicUO.Configuration;
-using ClassicUO.Game.Managers;
-using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Game.UI.MyraWindows.Widgets.ArtTexture;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -40,10 +37,13 @@ public sealed class HueSelector : HorizontalStackPanel
 
     #region Private members
 
-    /// <summary>The dye tub every hue picker in the UI uses for its swatch.</summary>
-    private const ushort SWATCH_GRAPHIC = 0x0FAB;
+    /// <summary>Gap between the swatch and the index field.</summary>
+    private const int SWATCH_INPUT_SPACING = 8;
 
-    private readonly MyraArtTexture _swatch;
+    /// <summary>The clickable swatch, which owns the colour picker itself.</summary>
+    private readonly HueSwatch _swatch;
+
+    /// <summary>The hue index, for reaching a value the picker's grid does not offer.</summary>
     private readonly IntegerInputBox _numberInput;
 
     private ushort _hue;
@@ -55,6 +55,7 @@ public sealed class HueSelector : HorizontalStackPanel
 
     #region Ctor
 
+    /// <summary>Builds a swatch and number field, both showing the one hue.</summary>
     /// <param name="hue">The hue to start on. 0 is unhued.</param>
     /// <param name="swatchSize">Maximum pixel size of the swatch.</param>
     /// <param name="inputWidth">Width of the number field.</param>
@@ -62,15 +63,13 @@ public sealed class HueSelector : HorizontalStackPanel
     {
         _hue = hue;
 
-        Spacing = MyraStyle.STANDARD_SPACING;
+        // Wider than the shared spacing: the swatch is a picture and the field is a box, and butted
+        // together they read as one control rather than two.
+        Spacing = SWATCH_INPUT_SPACING;
         VerticalAlignment = VerticalAlignment.Center;
 
-        _swatch = new MyraArtTexture(SWATCH_GRAPHIC, hue, swatchSize)
-        {
-            Tooltip = TazLang.Get("hueselector_swatch_tooltip", "Click to pick a hue.")
-        };
-
-        _swatch.TouchUp += (_, _) => OpenPicker();
+        _swatch = new HueSwatch(hue, swatchSize);
+        _swatch.HueChanged += (_, picked) => Apply(picked, raise: true, moveNumberInput: true);
 
         _numberInput = new IntegerInputBox
         {
@@ -78,7 +77,7 @@ public sealed class HueSelector : HorizontalStackPanel
             MaxValue = ushort.MaxValue,
             Width = inputWidth,
             Value = hue,
-            Tooltip = TazLang.Get("hueselector_input_tooltip", "Hue index, 0 - 65535. 0 is unhued.")
+            Tooltip = TazLang.Get("hueselector_input_tooltip", "Hue index, 0 - 65535. 0 is unhued")
         };
 
         _numberInput.ValueChanged += (_, args) =>
@@ -90,27 +89,15 @@ public sealed class HueSelector : HorizontalStackPanel
             Apply((ushort)Math.Clamp(args.NewValue, 0, ushort.MaxValue), raise: true, moveNumberInput: false);
         };
 
-        Widgets.Add(_swatch);
+        // Index first, matching GumpGraphicPicker's number-then-chooser order, so the two picker
+        // types scan the same way down a column of settings.
         Widgets.Add(_numberInput);
+        Widgets.Add(_swatch);
     }
 
     #endregion
 
     #region Private methods
-
-    private void OpenPicker()
-    {
-        // Enabled is propagated down by Myra, so this also covers the whole selector being gated off.
-        if (!_swatch.Enabled)
-            return;
-
-        UIManager.GetGump<ModernColorPicker>()?.Dispose();
-        UIManager.Add(new ModernColorPicker(
-            World.Instance,
-            picked => Apply(picked, raise: true, moveNumberInput: true),
-            isClickable: true
-        ));
-    }
 
     /// <summary>
     ///     Commits a hue to both inputs.
@@ -124,7 +111,7 @@ public sealed class HueSelector : HorizontalStackPanel
     private void Apply(ushort hue, bool raise, bool moveNumberInput)
     {
         _hue = hue;
-        _swatch.SetColorByHue(hue);
+        _swatch.SetHue(hue);
 
         if (moveNumberInput)
         {

@@ -5,6 +5,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.MyraWindows.Theme;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
@@ -28,6 +29,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
 
     /// <summary>Scale bounds, in percent, matching what the macro itself accepts.</summary>
     private const int MIN_SCALE = 10;
+
     private const int MAX_SCALE = 200;
 
     /// <summary>Keeps the preview box from resizing under the controls as the button grows and shrinks.</summary>
@@ -35,15 +37,32 @@ public sealed class MacroButtonEditorWindow : MyraControl
 
     /// <summary>Widths of the graphic picker's two halves: the number field and the searchable list.</summary>
     private const int GRAPHIC_NUMBER_WIDTH = 110;
-    private const int GRAPHIC_LIST_WIDTH = 180;
+
+    private const int GRAPHIC_LIST_WIDTH = 130;
 
     private const int SLIDER_WIDTH = 180;
 
-    /// <summary>Inset of the setting rows within their section, kept equal on both sides so the
-    /// right-pinned controls do not sit flush against the border.</summary>
+    /// <summary>
+    ///     Inset of the setting rows within their section, kept equal on both sides so the
+    ///     right-pinned controls do not sit flush against the border.
+    /// </summary>
     private const int ROW_INSET = 20;
 
+    /// <summary>
+    ///     Gap between setting rows. Wider than the shared spacing, which packs rows of mixed
+    ///     heights - sliders, swatches, radio groups - too tightly to scan.
+    /// </summary>
+    private const int ROW_SPACING = 10;
+
+    /// <summary>Gap between the window's sections.</summary>
+    private const int SECTION_SPACING = 8;
+
+    /// <summary>Gap between the settings grid's columns: the override gate, the caption, the controls.</summary>
+    private const int COLUMN_SPACING = 8;
+
+    /// <summary>The macro being edited. Written to live, and rolled back on close unless saved.</summary>
     private readonly Macro _macro;
+
     private readonly MacroButtonPreview _preview;
 
     /// <summary>
@@ -61,18 +80,29 @@ public sealed class MacroButtonEditorWindow : MyraControl
     /// </summary>
     private HueSelector _activeHueSelector = null!;
 
+    /// <summary>
+    ///     The active graphic's picker, held for the same reason as <see cref="_activeHueSelector" /> and
+    ///     so its gate can adopt whatever it currently shows.
+    /// </summary>
+    private GumpGraphicPicker _activeGraphicPicker = null!;
+
+    /// <summary>Set while the inactive graphic is moving the active picker, so the echo is not read as an edit.</summary>
+    private bool _mirroringActiveGraphic;
+
     /// <summary>Names which state the preview is showing; kept in step with it, clicks included.</summary>
-    private readonly MyraLabel _previewStateLabel = new(string.Empty, MyraLabel.TextStyle.P)
-    {
-        HorizontalAlignment = HorizontalAlignment.Center
-    };
+    private readonly MyraLabel _previewStateLabel = new(string.Empty, MyraLabel.TextStyle.P) { HorizontalAlignment = HorizontalAlignment.Center };
 
     #endregion
 
     #region Ctor
 
+    /// <summary>
+    ///     Opens an editor over a macro. Private because <see cref="Show" /> owns the single-instance
+    ///     rule and the placement.
+    /// </summary>
+    /// <param name="macro">The macro whose button is being edited. Edited in place; see the type's remarks.</param>
     private MacroButtonEditorWindow(Macro macro)
-        : base(TazLang.Get("macrobtneditor_title", "Macro Button Editor"))
+        : base(TazLang.GetEx("macrobtneditor_titlefor", "Macro Button Editor - {0}", [macro.Name]))
     {
         _macro = macro;
         _committed = MacroButtonAppearance.Capture(macro);
@@ -102,10 +132,8 @@ public sealed class MacroButtonEditorWindow : MyraControl
     public static void Show(Macro macro, Vector2? position = null)
     {
         foreach (IGui gump in UIManager.Gumps.ToList())
-        {
-            if (gump is MacroButtonEditorWindow existing && !existing.IsDisposed)
+            if (gump is MacroButtonEditorWindow { IsDisposed: false } existing)
                 existing.Dispose();
-        }
 
         var window = new MacroButtonEditorWindow(macro);
         UIManager.Add(window);
@@ -130,13 +158,10 @@ public sealed class MacroButtonEditorWindow : MyraControl
 
     #region Private methods
 
+    /// <summary>Assembles the window: the settings, the preview, and the save/close row.</summary>
     private void Build()
     {
-        var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, MinWidth = 350 };
-
-        root.Widgets.Add(new MyraLabel(
-            TazLang.GetEx("macrobtneditor_header", "Editor for {0}", [_macro.Name]),
-            MyraLabel.TextStyle.H3));
+        var root = new VerticalStackPanel { Spacing = SECTION_SPACING, MinWidth = 350 };
 
         root.Widgets.Add(BuildAppearanceSection());
         root.Widgets.Add(BuildPreviewSection());
@@ -145,40 +170,124 @@ public sealed class MacroButtonEditorWindow : MyraControl
         SetRootContent(root);
     }
 
+    /// <summary>Builds the settings section: every property of the button's two states.</summary>
     /// <remarks>
-    ///     A StackPanel, not a WrapPanel: the rows are a fixed vertical sequence, and they stretch so
-    ///     every control lines up on the right edge. A vertical WrapPanel would answer an over-tall
-    ///     child by starting a second column instead.
+    ///     A grid, so the three columns - the override gate, the caption, the controls - line up down
+    ///     the section whatever the rows contain. Sized to its contents rather than stretched, which
+    ///     keeps the controls beside their captions instead of flung at the window's right edge when
+    ///     the user widens it.
     /// </remarks>
+    /// <returns>The section, ready to add to the window root.</returns>
     private VisualContainer BuildAppearanceSection()
     {
-        var rows = new VerticalStackPanel
+        var rows = new Grid
         {
-            Spacing = MyraStyle.STANDARD_SPACING,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            Padding = new Thickness(ROW_INSET, 0, ROW_INSET, 0)
+            ColumnSpacing = COLUMN_SPACING,
+            RowSpacing = ROW_SPACING,
+            Padding = new Thickness(ROW_INSET, 0, ROW_INSET, 0),
+            ColumnsProportions =
+            {
+                new Proportion(ProportionType.Auto),
+                new Proportion(ProportionType.Auto),
+                new Proportion(ProportionType.Auto)
+            }
         };
 
-        // Built before the inactive row, whose handler reaches for this one's selector.
-        Widget activeHue = BuildActiveHueRow();
+        // Built before the inactive rows, whose handlers reach for these.
+        Widget activeHue = BuildActiveHueControls();
+        Widget activeGraphic = BuildActiveGraphicControls();
 
-        rows.Widgets.Add(BuildHideLabelToggle());
-        rows.Widgets.Add(BuildScaleSlider());
-        rows.Widgets.Add(BuildInactiveHueRow());
-        rows.Widgets.Add(activeHue);
-        rows.Widgets.Add(BuildInactiveGraphicPicker());
-        rows.Widgets.Add(BuildActiveGraphicPicker());
+        AddFullWidthRow(rows, BuildHideLabelToggle());
+        AddRow(rows, null, TazLang.Get("macrobtneditor_scale", "Scale"), null, BuildScaleSlider());
+
+        AddRow(
+            rows,
+            null,
+            TazLang.Get("macrobtneditor_inactivehue", "Inactive hue"),
+            TazLang.Get("macrobtneditor_inactivehue_tooltip", "Hue of the button at rest"),
+            BuildInactiveHueControls()
+        );
+
+        AddRow(rows, BuildActiveHueGate(activeHue), TazLang.Get("macrobtneditor_activehue", "Active hue"),
+            TazLang.Get("macrobtneditor_activehue_tooltip",
+                "Hue of the button while the macro is running.\nUnticked, it keeps the inactive hue."),
+            activeHue);
+
+        AddRow(
+            rows,
+            null,
+            TazLang.Get("macrobtneditor_inactivegraphic", "Inactive graphic"),
+            TazLang.Get("macrobtneditor_inactivegraphic_gatetooltip",
+                "Gump graphic of the button at rest. Default draws no graphic"),
+            BuildInactiveGraphicControls()
+        );
+
+        AddRow(rows, BuildActiveGraphicGate(activeGraphic), TazLang.Get("macrobtneditor_activegraphic", "Active graphic"),
+            TazLang.Get("macrobtneditor_activegraphic_gatetooltip",
+                "Gump graphic shown while the macro is running.\nUnticked, it keeps the inactive graphic."),
+            activeGraphic);
 
         return new VisualContainer(
             new VisualContainerProps { LabelText = TazLang.Get("macrobtneditor_appearance", "Appearance") },
             rows
-        )
-        {
-            Margin = new Thickness(0, 10, 0, 0),
-            HorizontalAlignment = HorizontalAlignment.Stretch
-        };
+        ) { Margin = new Thickness(0, 10, 0, 0), HorizontalAlignment = HorizontalAlignment.Stretch };
     }
 
+    /// <summary>
+    ///     Places one setting across the grid's three columns, remembering the caption so a gate can dim
+    ///     it along with the controls it governs.
+    /// </summary>
+    /// <param name="grid">The section grid.</param>
+    /// <param name="gate">The override toggle, or null for a setting that is always in force.</param>
+    /// <param name="label">The caption.</param>
+    /// <param name="tooltip">Tooltip shared by the caption and the gate.</param>
+    /// <param name="controls">The setting's controls.</param>
+    private static void AddRow(Grid grid, GateToggle? gate, string label, string? tooltip, Widget controls)
+    {
+        int row = grid.RowsProportions.Count;
+        grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
+
+        var caption = new MyraLabel(label, MyraLabel.TextStyle.P) { Tooltip = tooltip };
+
+        if (gate != null)
+        {
+            gate.CheckBox.Tooltip = tooltip;
+            Place(grid, gate.CheckBox, row, 0);
+            gate.Bind(caption);
+        }
+
+        Place(grid, caption, row, 1);
+        Place(grid, controls, row, 2);
+    }
+
+    /// <summary>Places a widget that owns the whole row, such as a standalone toggle.</summary>
+    /// <param name="grid">The section grid.</param>
+    /// <param name="widget">The widget to place.</param>
+    private static void AddFullWidthRow(Grid grid, Widget widget)
+    {
+        int row = grid.RowsProportions.Count;
+        grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
+
+        Place(grid, widget, row, 0);
+        Grid.SetColumnSpan(widget, 3);
+    }
+
+    /// <summary>Puts a widget in one grid cell, centred so mixed-height rows sit on a common line.</summary>
+    /// <param name="grid">The section grid.</param>
+    /// <param name="widget">The widget to place.</param>
+    /// <param name="row">Target row.</param>
+    /// <param name="column">Target column.</param>
+    private static void Place(Grid grid, Widget widget, int row, int column)
+    {
+        widget.VerticalAlignment = VerticalAlignment.Center;
+
+        Grid.SetRow(widget, row);
+        Grid.SetColumn(widget, column);
+        grid.Widgets.Add(widget);
+    }
+
+    /// <summary>Toggle for whether the button draws the macro's name over its graphic.</summary>
+    /// <returns>The check button, already bound to the macro.</returns>
     private MyraCheckButton BuildHideLabelToggle() =>
         MyraCheckButton.CreateWithCallback(
             _macro.HideLabel,
@@ -188,9 +297,11 @@ public sealed class MacroButtonEditorWindow : MyraControl
                 _preview.Refresh();
             },
             TazLang.Get("macrobtneditor_hidelabel", "Hide Label"),
-            TazLang.Get("macrobtneditor_hidelabel_tooltip", "Hide the macro's name on the button.")
+            TazLang.Get("macrobtneditor_hidelabel_tooltip", "Hide the macro's name on the button")
         );
 
+    /// <summary>Slider for the button's size, as a percentage of the graphic's native size.</summary>
+    /// <returns>The slider.</returns>
     private Widget BuildScaleSlider()
     {
         var slider = LabeledHorizontalSlider.CreateSliderWithCallback(
@@ -209,17 +320,12 @@ public sealed class MacroButtonEditorWindow : MyraControl
 
         slider.Width = SLIDER_WIDTH;
 
-        return Row(TazLang.Get("macrobtneditor_scale", "Scale"), slider, tooltip: null);
+        return slider;
     }
 
-    /// <summary>Pairs a row label with its control, the control pinned to the section's right edge.</summary>
-    private static Widget Row(string label, Widget control, string? tooltip) =>
-        new SpaceBetweenRow(
-            new MyraLabel(label, MyraLabel.TextStyle.P) { Tooltip = tooltip },
-            control
-        );
-
-    private Widget BuildInactiveHueRow()
+    /// <summary>Hue of the button at rest, which the active hue falls back to while its gate is off.</summary>
+    /// <returns>The selector.</returns>
+    private Widget BuildInactiveHueControls()
     {
         var selector = new HueSelector(_macro.Hue);
 
@@ -228,30 +334,19 @@ public sealed class MacroButtonEditorWindow : MyraControl
             _macro.Hue = hue;
 
             // Mirrored rather than left stale: a disabled selector still reads as the active hue, and
-            // showing the old value there is exactly the ambiguity the radio exists to remove.
+            // showing a value the button no longer uses is exactly what the gate exists to clarify.
             if (!_macro.ActiveHue.HasValue)
                 _activeHueSelector.Hue = hue;
 
             _preview.Refresh();
         };
 
-        return Row(
-            TazLang.Get("macrobtneditor_inactivehue", "Inactive hue"),
-            selector,
-            TazLang.Get("macrobtneditor_inactivehue_tooltip", "Hue of the button at rest.")
-        );
+        return selector;
     }
 
-    /// <summary>
-    ///     Active hue as an explicit choice between following the inactive hue and setting its own.
-    /// </summary>
-    /// <remarks>
-    ///     A bare swatch could not express this field: null means "follow the inactive hue", and a
-    ///     swatch showing the followed value is indistinguishable from one deliberately set to it -
-    ///     worse still at hue 0, where "unset" and "no hue" look identical. The radio says which it is,
-    ///     and clicking a swatch can only ever set a value, never clear one back to following.
-    /// </remarks>
-    private Widget BuildActiveHueRow()
+    /// <summary>Hue of the button while the macro runs, in force only while its gate is ticked.</summary>
+    /// <returns>The selector.</returns>
+    private Widget BuildActiveHueControls()
     {
         var selector = new HueSelector(_macro.HueFor(true));
         _activeHueSelector = selector;
@@ -262,81 +357,133 @@ public sealed class MacroButtonEditorWindow : MyraControl
             _preview.Refresh();
         };
 
-        var group = new RadioGroup<bool>(
-            TazLang.Get("macrobtneditor_activehue", "Active hue"),
-            _macro.ActiveHue.HasValue,
-            new RadioOption<bool>(
-                false,
-                TazLang.Get("macrobtneditor_activehue_inherit", "Same as inactive"),
-                TazLang.Get("macrobtneditor_activehue_inherit_tooltip",
-                    "The button keeps its inactive hue while the macro runs.")
-            ),
-            new RadioOption<bool>(
-                true,
-                TazLang.Get("macrobtneditor_activehue_custom", "Custom"),
-                TazLang.Get("macrobtneditor_activehue_custom_tooltip",
-                    "Give the button its own hue while the macro runs."),
-                Row(TazLang.Get("macrobtneditor_activehue_hue", "Hue"), selector, tooltip: null)
-            )
-        );
-
-        group.SelectionChanged += (_, custom) =>
-        {
-            // The selector keeps showing the followed hue while on "same as inactive", so switching to
-            // Custom adopts what is already on screen rather than snapping to something unseen.
-            _macro.ActiveHue = custom ? selector.Hue : null;
-            _preview.Refresh();
-        };
-
-        return group;
+        return selector;
     }
 
     /// <summary>
-    ///     Gump graphic of the button at rest. "(None)" stores a null graphic, which the button draws
-    ///     as a bare plate.
+    ///     The active hue's override gate. Ticking it adopts whatever the selector already shows, which
+    ///     is the inherited hue, so the button does not jump to a colour the user never saw.
     /// </summary>
-    private Widget BuildInactiveGraphicPicker() =>
-        BuildGraphicRow(
-            TazLang.Get("macrobtneditor_inactivegraphic", "Inactive graphic"),
+    /// <param name="controls">The selector the gate governs.</param>
+    /// <returns>The gate.</returns>
+    private GateToggle BuildActiveHueGate(Widget controls) =>
+        new(_macro.ActiveHue.HasValue, controls, isOn =>
+        {
+            _macro.ActiveHue = isOn ? _activeHueSelector.Hue : null;
+            _preview.Refresh();
+        });
+
+    /// <summary>Gump graphic of the button at rest. Its Default entry means the button draws a bare plate.</summary>
+    /// <remarks>
+    ///     Carries the sizing warning, since this is the graphic the size is taken from.
+    /// </remarks>
+    /// <returns>The picker, with its warning chip.</returns>
+    private Widget BuildInactiveGraphicControls()
+    {
+        var picker = BuildGraphicPicker(
             _macro.Graphic,
-            TazLang.Get("macrobtneditor_inactivegraphic_tooltip",
-                "Gump graphic of the button at rest. Select (None) for no graphic."),
-            graphic =>
-            {
-                _macro.Graphic = graphic;
-                _preview.Refresh();
-            },
-            noneLabel: null
+            TazLang.Get("macrobtneditor_inactivegraphic_gatetooltip",
+                "Gump graphic of the button at rest. Default draws no graphic")
         );
+
+        picker.GraphicChanged += (_, graphic) =>
+        {
+            _macro.Graphic = graphic;
+
+            if (!_macro.ActiveGraphic.HasValue)
+                MirrorToActiveGraphic(graphic);
+
+            _preview.Refresh();
+        };
+
+        var row = new HorizontalStackPanel
+        {
+            Spacing = MyraStyle.STANDARD_SPACING,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        row.Widgets.Add(picker);
+        row.Widgets.Add(new WarningChip(TazLang.Get("macrobtneditor_sizewarning",
+            "This graphic alone sets the button's size, together with Scale.\nThe active graphic is stretched to fit it, so the button never resizes while the macro runs.")));
+
+        return row;
+    }
 
     /// <summary>
-    ///     Gump graphic shown while the macro runs. "(None)" leaves it matching the resting graphic, so
-    ///     the button does not change while running.
+    ///     Gump graphic of the button while the macro runs, in force only while its gate is ticked.
     /// </summary>
-    private Widget BuildActiveGraphicPicker() =>
-        BuildGraphicRow(
-            TazLang.Get("macrobtneditor_activegraphic", "Active graphic"),
-            _macro.ActiveGraphic,
-            TazLang.Get("macrobtneditor_activegraphic_tooltip",
-                "Gump graphic shown while the macro is running.\nSelect (Same as inactive) to keep the inactive graphic."),
-            graphic =>
-            {
-                _macro.ActiveGraphic = graphic;
-                _preview.Refresh();
-            },
-            TazLang.Get("macrobtneditor_activegraphic_same", "(Same as inactive)")
+    /// <remarks>
+    ///     Its Default entry means "draw nothing while running", which is not what the gate means -
+    ///     unticking the gate inherits the inactive graphic instead. The two are stored apart; see
+    ///     <see cref="Macro.ACTIVE_GRAPHIC_NONE" />.
+    /// </remarks>
+    /// <returns>The picker.</returns>
+    private Widget BuildActiveGraphicControls()
+    {
+        GumpGraphicPicker picker = BuildGraphicPicker(
+            _macro.GraphicFor(true),
+            TazLang.Get("macrobtneditor_activegraphic_gatetooltip",
+                "Gump graphic shown while the macro is running.\nUnticked, it keeps the inactive graphic.")
         );
 
-    /// <param name="noneLabel">What this field's null entry is called; null for the picker's default.</param>
-    private Widget BuildGraphicRow(
-        string label,
-        ushort? graphic,
-        string tooltip,
-        Action<ushort?> onChanged,
-        string? noneLabel
-    )
+        _activeGraphicPicker = picker;
+
+        picker.GraphicChanged += (_, graphic) =>
+        {
+            // Mirroring moves this picker while the gate is off; committing then would switch the gate
+            // on behind the user's back.
+            if (_mirroringActiveGraphic || !_macro.ActiveGraphic.HasValue)
+                return;
+
+            _macro.ActiveGraphic = ToActiveGraphic(graphic);
+            _preview.Refresh();
+        };
+
+        return picker;
+    }
+
+    /// <summary>
+    ///     The active graphic's override gate. Ticking it adopts whatever the picker already shows.
+    /// </summary>
+    /// <param name="controls">The picker the gate governs.</param>
+    /// <returns>The gate.</returns>
+    private GateToggle BuildActiveGraphicGate(Widget controls) =>
+        new(_macro.ActiveGraphic.HasValue, controls, isOn =>
+        {
+            _macro.ActiveGraphic = isOn ? ToActiveGraphic(_activeGraphicPicker.Graphic) : null;
+            _preview.Refresh();
+        });
+
+    /// <summary>Moves the active picker without letting its change handler treat that as an edit.</summary>
+    /// <param name="graphic">The graphic to show.</param>
+    private void MirrorToActiveGraphic(ushort? graphic)
     {
-        var picker = new GumpGraphicPicker(graphic, noneLabel)
+        _mirroringActiveGraphic = true;
+
+        try
+        {
+            _activeGraphicPicker.Graphic = graphic;
+        }
+        finally
+        {
+            _mirroringActiveGraphic = false;
+        }
+    }
+
+    /// <summary>
+    ///     Maps what the picker reports onto the active graphic's storage, where null is already spoken
+    ///     for by the gate.
+    /// </summary>
+    /// <param name="graphic">The picker's graphic, null for its Default entry.</param>
+    /// <returns>The value to store.</returns>
+    private static int ToActiveGraphic(ushort? graphic) => graphic ?? Macro.ACTIVE_GRAPHIC_NONE;
+
+    /// <summary>Builds a gump-graphic picker sized for this window's control column.</summary>
+    /// <param name="graphic">The graphic to start on.</param>
+    /// <param name="tooltip">Tooltip for the number field.</param>
+    /// <returns>The picker.</returns>
+    private static GumpGraphicPicker BuildGraphicPicker(ushort? graphic, string tooltip) =>
+        new(graphic)
         {
             NumberInput =
             {
@@ -351,24 +498,12 @@ public sealed class MacroButtonEditorWindow : MyraControl
             }
         };
 
-        picker.GraphicChanged += (_, value) => onChanged(value);
-
-        return Row(label, picker, tooltip);
-    }
-
-    private Widget BuildPreviewSection() =>
-        new VisualContainer(
-            new VisualContainerProps
-            {
-                LabelText = TazLang.Get("macrobtneditor_preview", "Preview"),
-                LabelHorizontalAlignment = HorizontalAlignment.Center
-            },
-            new Panel
-            {
-                MinHeight = PREVIEW_MIN_HEIGHT,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                Widgets = { _preview }
-            },
+    /// <summary>Builds the preview box and the line naming which state it is showing.</summary>
+    /// <returns>The section, ready to add to the window root.</returns>
+    private VisualContainer BuildPreviewSection() =>
+        new(
+            new VisualContainerProps { LabelText = TazLang.Get("macrobtneditor_preview", "Preview"), LabelHorizontalAlignment = HorizontalAlignment.Center },
+            new Panel { MinHeight = PREVIEW_MIN_HEIGHT, HorizontalAlignment = HorizontalAlignment.Stretch, Widgets = { _preview } },
             _previewStateLabel
         );
 
@@ -384,23 +519,21 @@ public sealed class MacroButtonEditorWindow : MyraControl
             ? TazLang.Get("macrobtneditor_previewstate_active", "Active - click to toggle")
             : TazLang.Get("macrobtneditor_previewstate_inactive", "Inactive - click to toggle");
 
-    private Widget BuildButtonRow()
+    /// <summary>Builds the save/close row. Close discards, so the two are not interchangeable.</summary>
+    /// <returns>The row, right-aligned.</returns>
+    private HorizontalStackPanel BuildButtonRow()
     {
-        var row = new HorizontalStackPanel
-        {
-            Spacing = MyraStyle.STANDARD_SPACING,
-            HorizontalAlignment = HorizontalAlignment.Right
-        };
+        var row = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, HorizontalAlignment = HorizontalAlignment.Right };
 
         row.Widgets.Add(new MyraButton(TazLang.Get("macrobtneditor_save", "Save"), Save)
         {
-            Tooltip = TazLang.Get("macrobtneditor_save_tooltip", "Keep these changes and write them to disk.")
+            Tooltip = TazLang.Get("macrobtneditor_save_tooltip", "Keep these changes and write them to disk")
         });
 
         // Dispose() rather than the base's flag, so the revert runs.
         row.Widgets.Add(new MyraButton(TazLang.Get("uicommons_close", "Close"), Dispose)
         {
-            Tooltip = TazLang.Get("macrobtneditor_close_tooltip", "Discard any changes made since the last save.")
+            Tooltip = TazLang.Get("macrobtneditor_close_tooltip", "Discard any changes made since the last save")
         });
 
         return row;
@@ -439,15 +572,75 @@ public sealed class MacroButtonEditorWindow : MyraControl
     private void RefreshLiveButtons()
     {
         foreach (MacroButtonGump button in UIManager.Gumps.OfType<MacroButtonGump>().ToList())
-        {
             if (button.TheMacro == _macro)
                 button.TheMacro = _macro;
-        }
     }
 
     #endregion
 
     #region Nested types
+
+    /// <summary>
+    ///     The tick box that decides whether one "active" setting overrides its resting counterpart,
+    ///     together with the dimming that tells the user which way it is set.
+    /// </summary>
+    /// <remarks>
+    ///     Greying the caption as well as the controls is the whole point: a selector showing an
+    ///     inherited value is indistinguishable from one deliberately set to the same value, and at hue
+    ///     0 "unset" and "no hue" look identical.
+    /// </remarks>
+    private sealed class GateToggle
+    {
+        /// <summary>The tick box, for the caller to place.</summary>
+        public MyraCheckButton CheckBox { get; }
+
+        /// <summary>What the gate enables and disables.</summary>
+        private readonly Widget _controls;
+
+        /// <summary>The row's caption, once bound. Dimmed along with the controls.</summary>
+        private MyraLabel? _caption;
+
+        /// <summary>The caption's colour while in force, captured before the first dim overwrites it.</summary>
+        private Color _captionColor;
+
+        /// <summary>Builds a gate over one setting's controls.</summary>
+        /// <param name="isOn">Whether the override starts in force.</param>
+        /// <param name="controls">The controls to enable and disable.</param>
+        /// <param name="onChanged">Invoked with the new state so the caller can commit it.</param>
+        public GateToggle(bool isOn, Widget controls, Action<bool> onChanged)
+        {
+            _controls = controls;
+
+            CheckBox = MyraCheckButton.CreateWithCallback(isOn, state =>
+            {
+                onChanged(state);
+                Apply(state);
+            });
+
+            Apply(isOn);
+        }
+
+        /// <summary>Adopts the caption this gate governs, so it can be dimmed with the controls.</summary>
+        /// <param name="caption">The row's caption.</param>
+        public void Bind(MyraLabel caption)
+        {
+            // Captured before the first dim overwrites it, exactly as RadioGroup does.
+            _caption = caption;
+            _captionColor = caption.TextColor;
+
+            Apply(CheckBox.IsChecked);
+        }
+
+        /// <summary>Brings the controls and caption in line with the gate.</summary>
+        /// <param name="isOn">Whether the override is in force.</param>
+        private void Apply(bool isOn)
+        {
+            _controls.Enabled = isOn;
+
+            if (_caption != null)
+                _caption.TextColor = isOn ? _captionColor : MyraTheme.Current.DisabledText;
+        }
+    }
 
     /// <summary>
     ///     A snapshot of everything this editor can change about a macro's button, so an unsaved session
@@ -459,9 +652,12 @@ public sealed class MacroButtonEditorWindow : MyraControl
         ushort Hue,
         ushort? ActiveHue,
         ushort? Graphic,
-        ushort? ActiveGraphic
+        int? ActiveGraphic
     )
     {
+        /// <summary>Takes a snapshot of a macro's current button appearance.</summary>
+        /// <param name="macro">The macro to read. Not retained.</param>
+        /// <returns>The snapshot.</returns>
         public static MacroButtonAppearance Capture(Macro macro) => new(
             macro.HideLabel,
             macro.Scale,
@@ -471,8 +667,13 @@ public sealed class MacroButtonEditorWindow : MyraControl
             macro.ActiveGraphic
         );
 
+        /// <summary>Whether a macro's appearance is already what this snapshot holds.</summary>
+        /// <param name="macro">The macro to compare against.</param>
+        /// <returns>True when applying this snapshot would change nothing.</returns>
         public bool Matches(Macro macro) => this == Capture(macro);
 
+        /// <summary>Writes this snapshot back over a macro's appearance.</summary>
+        /// <param name="macro">The macro to restore.</param>
         public void ApplyTo(Macro macro)
         {
             macro.HideLabel = HideLabel;

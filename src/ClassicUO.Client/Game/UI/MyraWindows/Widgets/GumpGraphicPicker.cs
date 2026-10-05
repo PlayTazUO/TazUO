@@ -29,8 +29,9 @@ public sealed class GumpGraphicPicker : IndexedComboPicker
     #region Public constants
 
     /// <summary>
-    ///     Value standing for a null graphic, offered as the list's first entry. What null means is the
-    ///     caller's business - see the <c>noneLabel</c> ctor parameter.
+    ///     Value standing for a null graphic, offered as the list's first entry and accepted by the
+    ///     number field. What null means is the caller's business - see the <c>noneLabel</c> ctor
+    ///     parameter.
     /// </summary>
     public const int NO_GRAPHIC = -1;
 
@@ -56,6 +57,7 @@ public sealed class GumpGraphicPicker : IndexedComboPicker
 
     #region Ctor
 
+    /// <summary>Builds a picker over the gump graphics the client's archive holds.</summary>
     /// <param name="graphic">The graphic to start on, or null to start on <see cref="NO_GRAPHIC"/>.</param>
     /// <param name="noneLabel">
     ///     What to call the null entry, where "none" is not what null means for the caller's field - e.g.
@@ -74,9 +76,11 @@ public sealed class GumpGraphicPicker : IndexedComboPicker
     private static List<(int Value, string Label)> Catalog => _catalog ??= BuildCatalog();
 
     /// <summary>Prepends the caller's null entry to the shared catalog, lazily so the catalog is not copied.</summary>
+    /// <param name="noneLabel">What to call the null entry; null for the default wording.</param>
+    /// <returns>The entries for the name list, in display order.</returns>
     private static IEnumerable<(int Value, string Label)> Entries(string? noneLabel)
     {
-        yield return (NO_GRAPHIC, noneLabel ?? TazLang.Get("gumppicker_none", "(None)"));
+        yield return (NO_GRAPHIC, noneLabel ?? TazLang.Get("gumppicker_default", "Default"));
 
         foreach ((int value, string label) in Catalog)
             yield return (value, label);
@@ -106,6 +110,9 @@ public sealed class GumpGraphicPicker : IndexedComboPicker
         return entries;
     }
 
+    /// <summary>Maps a picker value onto the nullable graphic the macro stores.</summary>
+    /// <param name="value">The picker's value; <see cref="NO_GRAPHIC" /> or below means null.</param>
+    /// <returns>The graphic, or null.</returns>
     private static ushort? ToGraphic(int value) => value < 0 ? null : (ushort)value;
 
     #endregion

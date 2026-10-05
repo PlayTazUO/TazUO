@@ -1,9 +1,11 @@
+using System;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.MyraWindows.Theme;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.TextureAtlases;
@@ -39,6 +41,28 @@ public static class MyraStyle
     private static TextureRegion _skillUpButton;
     private static TextureRegion _skillDownButton;
     private static TextureRegion _skillLockBtn;
+
+    /// <summary>
+    /// The generated radio marks, owned here because nothing else can dispose them: they are rebuilt
+    /// whenever the style is, which happens on every profile load and font-size change.
+    /// </summary>
+    private static Texture2D[] _radioMarks = [];
+
+    /// <summary>
+    /// Radio mark size for the default font size, matching the check box art it sits beside. Scaled
+    /// from there so the mark keeps step with the text rather than shrinking against it.
+    /// </summary>
+    private const int RADIO_MARK_SIZE_AT_DEFAULT_FONT = 17;
+    private const int DEFAULT_UI_FONT_SIZE = 16;
+    private const int RADIO_MARK_MIN_SIZE = 10;
+
+    /// <summary>
+    /// Ceiling on the generated mark. Drawing is quadratic in the size, so the three faces together
+    /// cost roughly 9ms at this size against well under a millisecond at the default - affordable
+    /// because it is paid only on a style rebuild, but not worth letting grow unbounded. The three
+    /// textures also sit in GPU memory for the session: 4 bytes a texel, so 48KiB at this size.
+    /// </summary>
+    private const int RADIO_MARK_MAX_SIZE = 64;
 
     public static void SetDefault()
     {
@@ -133,6 +157,8 @@ public static class MyraStyle
         cbStyle.ImageStyle.PressedImage = new TextureRegion(ModernUIConstants.ModernUICheckBoxChecked);
         cbStyle.ImageStyle.Image = new TextureRegion(ModernUIConstants.ModernUICheckBoxUnChecked);
         cbStyle.ImageStyle.Background = null;
+
+        ApplyRadioStyle();
 
         TextBoxStyle inputStyle = Stylesheet.Current.TextBoxStyle;
         inputStyle.Background = new SolidBrush(new Color(21, 21, 21, 75));
@@ -256,6 +282,45 @@ public static class MyraStyle
     {
         if (style != null)
             style.DisabledTextColor ??= palette.DisabledText;
+    }
+
+
+    /// <summary>
+    /// Builds the radio button style. Left on Myra's default this draws a bare tick that reads as a
+    /// bullet point, saying nothing about the options being exclusive.
+    /// </summary>
+    /// <remarks>
+    /// The marks are generated at the current font's size rather than loaded as art, so they stay
+    /// crisp at any UI scale; see <see cref="RadioMark" />. Textures from a previous call are disposed
+    /// here, after the new ones exist, so the stylesheet is never pointing at a dead texture.
+    /// </remarks>
+    private static void ApplyRadioStyle()
+    {
+        ImageTextButtonStyle rbStyle = Stylesheet.Current.RadioButtonStyle;
+
+        if (rbStyle?.ImageStyle == null || Client.Game?.GraphicsDevice == null)
+            return;
+
+        int size = Math.Clamp(
+            (int)MathF.Round(RADIO_MARK_SIZE_AT_DEFAULT_FONT * (UiFontSize / (float)DEFAULT_UI_FONT_SIZE)),
+            RADIO_MARK_MIN_SIZE,
+            RADIO_MARK_MAX_SIZE
+        );
+
+        Texture2D off = RadioMark.Create(Client.Game.GraphicsDevice, size, RadioMarkState.Off);
+        Texture2D over = RadioMark.Create(Client.Game.GraphicsDevice, size, RadioMarkState.Over);
+        Texture2D on = RadioMark.Create(Client.Game.GraphicsDevice, size, RadioMarkState.On);
+
+        rbStyle.ImageStyle.Image = new TextureRegion(off);
+        rbStyle.ImageStyle.OverImage = new TextureRegion(over);
+        rbStyle.ImageStyle.PressedImage = new TextureRegion(on);
+        rbStyle.ImageStyle.Background = null;
+        rbStyle.LabelStyle.Font = _uiFont;
+
+        foreach (Texture2D previous in _radioMarks)
+            previous.Dispose();
+
+        _radioMarks = [off, over, on];
     }
 
     /// <summary>
