@@ -2938,7 +2938,17 @@ namespace ClassicUO.Game.Managers
             ControllerButtons = binding.ControllerButtons;
         }
 
-        public bool HideLabel = false;
+        /// <summary>
+        /// Text the button shows at rest. Null falls back to <see cref="Name"/>, so a button keeps
+        /// following the macro's name unless deliberately given its own; empty hides the label.
+        /// </summary>
+        public string Label = null;
+
+        /// <summary>
+        /// Text the button shows while the macro is running. Null means "same as <see cref="Label"/>";
+        /// empty hides the label.
+        /// </summary>
+        public string ActiveLabel = null;
 
         /// <summary>Hue of the button at rest. 0 draws it unhued.</summary>
         public ushort Hue = 0x00;
@@ -3001,6 +3011,37 @@ namespace ClassicUO.Game.Managers
         /// <returns>The hue to draw with; 0 for unhued.</returns>
         public ushort HueFor(bool isActive) => isActive ? ActiveHue ?? Hue : Hue;
 
+        /// <summary>
+        /// Reads the button's label texts, carrying a macro saved before they existed over from the
+        /// "hidelabel" flag they replaced.
+        /// </summary>
+        /// <remarks>
+        /// The old flag only said whether to draw <see cref="Name"/>, so it maps exactly: hidden
+        /// becomes an empty label, and shown becomes null, which still follows the name through a
+        /// later rename just as it always did.
+        /// </remarks>
+        /// <param name="xml">The macro element being read.</param>
+        private void ReadLabels(XmlElement xml)
+        {
+            if (xml.HasAttribute("label"))
+                Label = xml.GetAttribute("label");
+            else if (bool.TryParse(xml.GetAttribute("hidelabel"), out bool hidden) && hidden)
+                Label = string.Empty;
+
+            if (xml.HasAttribute("activelabel"))
+                ActiveLabel = xml.GetAttribute("activelabel");
+        }
+
+        /// <summary>Which text the button shows in a given run state.</summary>
+        /// <remarks>
+        /// Each level falls through to the one above it when unset: the running text to the resting
+        /// text, and the resting text to the macro's own name. Empty is a value, not "unset", and is
+        /// what hides the label.
+        /// </remarks>
+        /// <param name="isActive">Whether the macro is currently running.</param>
+        /// <returns>The text to draw, or empty for a button that shows no label.</returns>
+        public string LabelFor(bool isActive) => (isActive ? ActiveLabel ?? Label : Label) ?? Name;
+
         public bool Equals(Macro other)
         {
             if (other == null)
@@ -3046,7 +3087,18 @@ namespace ClassicUO.Game.Managers
             writer.WriteAttributeString("alt", Alt.ToString());
             writer.WriteAttributeString("ctrl", Ctrl.ToString());
             writer.WriteAttributeString("shift", Shift.ToString());
-            writer.WriteAttributeString("hidelabel", HideLabel.ToString());
+            // Written only when set: an absent attribute is how null - "follow the macro's name" -
+            // is told apart from an empty one, which hides the label.
+            if (Label != null)
+            {
+                writer.WriteAttributeString("label", Label);
+            }
+
+            if (ActiveLabel != null)
+            {
+                writer.WriteAttributeString("activelabel", ActiveLabel);
+            }
+
             writer.WriteAttributeString("hue", Hue.ToString());
             writer.WriteAttributeString("activehue", ActiveHue.HasValue ? ActiveHue.ToString() : string.Empty);
             writer.WriteAttributeString("graphic", Graphic.HasValue ? Graphic.ToString() : string.Empty);
@@ -3111,7 +3163,7 @@ namespace ClassicUO.Game.Managers
             Alt = bool.Parse(xml.GetAttribute("alt"));
             Ctrl = bool.Parse(xml.GetAttribute("ctrl"));
             Shift = bool.Parse(xml.GetAttribute("shift"));
-            bool.TryParse(xml.GetAttribute("hidelabel"), out HideLabel);
+            ReadLabels(xml);
             ushort.TryParse(xml.GetAttribute("hue"), out Hue);
             if (byte.TryParse(xml.GetAttribute("scale"), out byte savedScale))
             {

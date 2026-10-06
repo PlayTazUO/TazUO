@@ -87,7 +87,7 @@ public sealed class MacroButtonPreview : Panel, IDisposable
             VerticalAlignment = VerticalAlignment.Stretch
         };
 
-        _nameLabel = new OverlayLabel(macro.Name)
+        _nameLabel = new OverlayLabel(macro.LabelFor(false))
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Center,
@@ -144,8 +144,11 @@ public sealed class MacroButtonPreview : Panel, IDisposable
         Border = hasGraphic ? null : new SolidBrush(Color.Gray);
         BorderThickness = hasGraphic ? new Thickness(0) : new Thickness(1);
 
-        _nameLabel.Text = _macro.Name;
-        _nameLabel.Visible = !_macro.HideLabel;
+        // Empty is how the macro says "no label", matching what the live button draws.
+        string label = _macro.LabelFor(_showActiveState);
+
+        _nameLabel.Text = label;
+        _nameLabel.Visible = !string.IsNullOrEmpty(label);
         _nameLabel.TextColor = HueShade(LABEL_HUE, LABEL_SHADE);
     }
 

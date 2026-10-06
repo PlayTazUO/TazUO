@@ -36,18 +36,20 @@ namespace ClassicUO.Game.UI.Gumps
 
         private ushort _hue;
         private float _scale;
-        private bool _hideLabel;
         private Macro _macr;
-        private readonly int DEFAULT_WIDTH = 88;
-        private readonly int DEFAULT_HEIGHT = 44;
+        private readonly int _defaultWidth = 88;
+        private readonly int _defaultHeight = 44;
         private RenderedText _gText;
+
+        /// <summary>The label drawn while the macro is running, which may differ in text from <see cref="_gText" />.</summary>
+        private RenderedText _gTextActive;
 
         public MacroButtonGump(World world, Macro macro, int x, int y) : this(world)
         {
             X = x;
             Y = y;
-            Width = DEFAULT_WIDTH;
-            Height = DEFAULT_HEIGHT;
+            Width = _defaultWidth;
+            Height = _defaultHeight;
             TheMacro = macro;
 
             BuildGump();
@@ -77,7 +79,6 @@ namespace ClassicUO.Game.UI.Gumps
                 Scale = value.Scale;
                 Graphic = value.Graphic;
                 Hue = value.Hue;
-                HideLabel = value.HideLabel;
                 _activeGraphic = value.GraphicFor(true);
                 _activeHueVector = ShaderHueTranslator.GetHueVector(value.HueFor(true));
             }
@@ -96,14 +97,6 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 _hue = value;
                 hueVector = ShaderHueTranslator.GetHueVector(value);
-            }
-        }
-        public bool HideLabel
-        {
-            get => _hideLabel;
-            set
-            {
-                _hideLabel = value;
             }
         }
         public new float Scale
@@ -129,7 +122,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 _graphic = value;
                 float factor = Scale / 100F;
-                var _bounds = new Rectangle(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+                var _bounds = new Rectangle(0, 0, _defaultWidth, _defaultHeight);
 
                 if (value.HasValue)
                 {
@@ -147,19 +140,53 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
+        /// <summary>
+        ///     Builds the backing plate and both label renderings, one per run state.
+        /// </summary>
+        /// <remarks>
+        ///     Reached again from <see cref="Restore" />, so the previous renderings are returned to the
+        ///     pool first; they are pooled objects, and dropping them leaks one per restore.
+        /// </remarks>
         private void BuildGump()
         {
             backgroundTexture = SolidColorTextureCache.GetTexture(new Color(30, 30, 30));
-            _gText = RenderedText.Create
-           (
-               TheMacro.Name,
-               0x03b2,
-               255,
-               true,
-               FontStyle.BlackBorder,
-               TEXT_ALIGN_TYPE.TS_CENTER,
-               Width
-           );
+
+            DestroyLabels();
+
+            _gText = CreateLabel(TheMacro.LabelFor(false));
+            _gTextActive = CreateLabel(TheMacro.LabelFor(true));
+        }
+
+        /// <summary>Renders one of the button's labels.</summary>
+        /// <param name="text">The text to render. Empty renders nothing, which is how a hidden label is drawn.</param>
+        /// <returns>The rendering.</returns>
+        private RenderedText CreateLabel(string text) => RenderedText.Create
+        (
+            text ?? string.Empty,
+            0x03b2,
+            255,
+            true,
+            FontStyle.BlackBorder,
+            TEXT_ALIGN_TYPE.TS_CENTER,
+            Width
+        );
+
+        /// <inheritdoc />
+        /// <remarks>Hands the pooled label renderings back; nothing else reclaims them.</remarks>
+        public override void Dispose()
+        {
+            DestroyLabels();
+            base.Dispose();
+        }
+
+        /// <summary>Returns both label renderings to the pool. Idempotent.</summary>
+        private void DestroyLabels()
+        {
+            _gText?.Destroy();
+            _gTextActive?.Destroy();
+
+            _gText = null;
+            _gTextActive = null;
         }
 
         protected override void OnMouseEnter(int x, int y)
@@ -260,10 +287,13 @@ namespace ClassicUO.Game.UI.Gumps
                     );
             }
 
-            if (!HideLabel && _gText != null)
+            // An empty label renders nothing, so "hidden" needs no branch of its own here.
+            RenderedText label = isActive ? _gTextActive : _gText;
+
+            if (label != null)
             {
-                _gText.Hue = (ushort)(MouseIsOver ? 53 : 0x03b2);
-                _gText.Draw(batcher, x, y + ((Height >> 1) - (_gText.Height >> 1)), Alpha);
+                label.Hue = (ushort)(MouseIsOver ? 53 : 0x03b2);
+                label.Draw(batcher, x, y + ((Height >> 1) - (label.Height >> 1)), Alpha);
             }
 
 
