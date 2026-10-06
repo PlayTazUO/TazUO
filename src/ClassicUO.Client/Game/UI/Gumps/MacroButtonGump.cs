@@ -44,6 +44,16 @@ namespace ClassicUO.Game.UI.Gumps
         /// <summary>The label drawn while the macro is running, which may differ in text from <see cref="_gText" />.</summary>
         private RenderedText _gTextActive;
 
+        /// <summary>Hue the label takes while the pointer is over the button, whatever hue it is set to.</summary>
+        private const ushort LABEL_HOVER_HUE = 53;
+
+        /// <summary>Label hue and opacity per run state, resolved from the macro when it is handed over.</summary>
+        private ushort _labelHue = Macro.DEFAULT_LABEL_HUE;
+
+        private ushort _activeLabelHue = Macro.DEFAULT_LABEL_HUE;
+        private float _labelOpacity = 1f;
+        private float _activeLabelOpacity = 1f;
+
         public MacroButtonGump(World world, Macro macro, int x, int y) : this(world)
         {
             X = x;
@@ -79,6 +89,10 @@ namespace ClassicUO.Game.UI.Gumps
                 Scale = value.Scale;
                 Graphic = value.Graphic;
                 Hue = value.Hue;
+                _labelHue = value.LabelHueFor(false);
+                _activeLabelHue = value.LabelHueFor(true);
+                _labelOpacity = value.LabelOpacityFor(false) / (float)Macro.FULL_OPACITY;
+                _activeLabelOpacity = value.LabelOpacityFor(true) / (float)Macro.FULL_OPACITY;
                 _activeGraphic = value.GraphicFor(true);
                 _activeHueVector = ShaderHueTranslator.GetHueVector(value.HueFor(true));
             }
@@ -158,12 +172,14 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
         /// <summary>Renders one of the button's labels.</summary>
+        /// <remarks>The hue here is only a starting value; <see cref="Draw" /> sets it per frame from
+        /// the macro, or from the hover hue.</remarks>
         /// <param name="text">The text to render. Empty renders nothing, which is how a hidden label is drawn.</param>
         /// <returns>The rendering.</returns>
         private RenderedText CreateLabel(string text) => RenderedText.Create
         (
             text ?? string.Empty,
-            0x03b2,
+            Macro.DEFAULT_LABEL_HUE,
             255,
             true,
             FontStyle.BlackBorder,
@@ -292,8 +308,14 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (label != null)
             {
-                label.Hue = (ushort)(MouseIsOver ? 53 : 0x03b2);
-                label.Draw(batcher, x, y + ((Height >> 1) - (label.Height >> 1)), Alpha);
+                // Hovering overrides whatever hue the macro chose, so the button still answers the
+                // pointer however its label is coloured.
+                label.Hue = MouseIsOver ? LABEL_HOVER_HUE : (isActive ? _activeLabelHue : _labelHue);
+
+                // Multiplied, not replaced: the gump's own alpha is the whole button fading.
+                float labelAlpha = Alpha * (isActive ? _activeLabelOpacity : _labelOpacity);
+
+                label.Draw(batcher, x, y + ((Height >> 1) - (label.Height >> 1)), labelAlpha);
             }
 
 

@@ -42,8 +42,7 @@ public sealed class MacroButtonPreview : Panel, IDisposable
     /// <summary>Hue shade the plate's gray resolves to — <c>MacroButtonGump</c> fills it with Color(30, 30, 30).</summary>
     private const ushort PLATE_SHADE = 30 >> 3;
 
-    /// <summary>Hue and shade <c>MacroButtonGump</c> renders the macro name in.</summary>
-    private const ushort LABEL_HUE = 0x03B2;
+    /// <summary>Shade of its hue the label is drawn at; the brightest, as the font renderer does.</summary>
     private const ushort LABEL_SHADE = 31;
 
     private static readonly Color PlateGray = new(30, 30, 30);
@@ -149,7 +148,7 @@ public sealed class MacroButtonPreview : Panel, IDisposable
 
         _nameLabel.Text = label;
         _nameLabel.Visible = !string.IsNullOrEmpty(label);
-        _nameLabel.TextColor = HueShade(LABEL_HUE, LABEL_SHADE);
+        _nameLabel.TextColor = LabelColor();
     }
 
     /// <summary>Resizes to the macro's current scale without re-baking. Safe to call per slider tick.</summary>
@@ -278,6 +277,32 @@ public sealed class MacroButtonPreview : Panel, IDisposable
         StaticTiles[] staticData = Client.Game.UO.FileManager.TileData.StaticData;
 
         return graphic < staticData.Length && staticData[graphic].IsPartialHue;
+    }
+
+    /// <summary>
+    ///     The label's colour for the state being shown, hue and opacity together.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Hue 0 is the font's own colour rather than a ramp lookup, which at 0 would resolve to
+    ///         black - the live button draws unhued text there, not black text.
+    ///     </para>
+    ///     <para>
+    ///         Premultiplied, because Myra draws through <c>BlendState.AlphaBlend</c>, which in FNA is
+    ///         <c>src One, dst InverseSourceAlpha</c>. Setting the alpha without scaling the channels to
+    ///         match leaves the blend at <c>src + dst</c> as alpha falls, so the text brightens into the
+    ///         plate instead of fading - the opposite of what the setting says.
+    ///     </para>
+    /// </remarks>
+    /// <returns>The colour, with the macro's opacity premultiplied into it.</returns>
+    private Color LabelColor()
+    {
+        ushort hue = _macro.LabelHueFor(_showActiveState);
+        Color color = hue == 0 ? Color.White : HueShade(hue, LABEL_SHADE);
+
+        float opacity = Math.Clamp(_macro.LabelOpacityFor(_showActiveState) / (float)Macro.FULL_OPACITY, 0f, 1f);
+
+        return Color.FromNonPremultiplied(color.R, color.G, color.B, (int)(255 * opacity));
     }
 
     /// <summary>Resolves one shade of a UO hue to a drawable color.</summary>

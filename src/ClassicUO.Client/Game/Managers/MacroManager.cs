@@ -2950,6 +2950,30 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         public string ActiveLabel = null;
 
+        /// <summary>Hue the label is drawn in at rest.</summary>
+        public ushort LabelHue = DEFAULT_LABEL_HUE;
+
+        /// <summary>
+        /// Hue the label is drawn in while the macro is running. Null means "same as
+        /// <see cref="LabelHue"/>".
+        /// </summary>
+        public ushort? ActiveLabelHue = null;
+
+        /// <summary>Opacity of the label at rest, as a percentage.</summary>
+        public byte LabelOpacity = FULL_OPACITY;
+
+        /// <summary>
+        /// Opacity of the label while the macro is running, as a percentage. Null means "same as
+        /// <see cref="LabelOpacity"/>".
+        /// </summary>
+        public byte? ActiveLabelOpacity = null;
+
+        /// <summary>Hue a button label is drawn in unless given another, as it always was.</summary>
+        public const ushort DEFAULT_LABEL_HUE = 0x03B2;
+
+        /// <summary>Fully opaque, the percentage a label is drawn at unless given another.</summary>
+        public const byte FULL_OPACITY = 100;
+
         /// <summary>Hue of the button at rest. 0 draws it unhued.</summary>
         public ushort Hue = 0x00;
 
@@ -3042,6 +3066,16 @@ namespace ClassicUO.Game.Managers
         /// <returns>The text to draw, or empty for a button that shows no label.</returns>
         public string LabelFor(bool isActive) => (isActive ? ActiveLabel ?? Label : Label) ?? Name;
 
+        /// <summary>Which hue the label is drawn in for a given run state.</summary>
+        /// <param name="isActive">Whether the macro is currently running.</param>
+        /// <returns>The hue to draw the label in.</returns>
+        public ushort LabelHueFor(bool isActive) => isActive ? ActiveLabelHue ?? LabelHue : LabelHue;
+
+        /// <summary>Which opacity the label is drawn at for a given run state.</summary>
+        /// <param name="isActive">Whether the macro is currently running.</param>
+        /// <returns>The opacity as a percentage, 0 to <see cref="FULL_OPACITY"/>.</returns>
+        public byte LabelOpacityFor(bool isActive) => isActive ? ActiveLabelOpacity ?? LabelOpacity : LabelOpacity;
+
         public bool Equals(Macro other)
         {
             if (other == null)
@@ -3099,6 +3133,10 @@ namespace ClassicUO.Game.Managers
                 writer.WriteAttributeString("activelabel", ActiveLabel);
             }
 
+            writer.WriteAttributeString("labelhue", LabelHue.ToString());
+            writer.WriteAttributeString("activelabelhue", ActiveLabelHue.HasValue ? ActiveLabelHue.ToString() : string.Empty);
+            writer.WriteAttributeString("labelopacity", LabelOpacity.ToString());
+            writer.WriteAttributeString("activelabelopacity", ActiveLabelOpacity.HasValue ? ActiveLabelOpacity.ToString() : string.Empty);
             writer.WriteAttributeString("hue", Hue.ToString());
             writer.WriteAttributeString("activehue", ActiveHue.HasValue ? ActiveHue.ToString() : string.Empty);
             writer.WriteAttributeString("graphic", Graphic.HasValue ? Graphic.ToString() : string.Empty);
@@ -3164,6 +3202,29 @@ namespace ClassicUO.Game.Managers
             Ctrl = bool.Parse(xml.GetAttribute("ctrl"));
             Shift = bool.Parse(xml.GetAttribute("shift"));
             ReadLabels(xml);
+
+            // Parsed into locals and only then assigned: TryParse writes its out parameter even when it
+            // fails, so reading straight into the field would zero the default on a macro saved before
+            // these existed - a black label at zero opacity.
+            if (ushort.TryParse(xml.GetAttribute("labelhue"), out ushort labelHue))
+            {
+                LabelHue = labelHue;
+            }
+
+            if (byte.TryParse(xml.GetAttribute("labelopacity"), out byte labelOpacity))
+            {
+                LabelOpacity = labelOpacity;
+            }
+
+            if (ushort.TryParse(xml.GetAttribute("activelabelhue"), out ushort activeLabelHue))
+            {
+                ActiveLabelHue = activeLabelHue;
+            }
+
+            if (byte.TryParse(xml.GetAttribute("activelabelopacity"), out byte activeLabelOpacity))
+            {
+                ActiveLabelOpacity = activeLabelOpacity;
+            }
             ushort.TryParse(xml.GetAttribute("hue"), out Hue);
             if (byte.TryParse(xml.GetAttribute("scale"), out byte savedScale))
             {
