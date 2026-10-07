@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: BSD-2-Clause
-
 using System;
 using System.Xml;
 using ClassicUO.Assets;
@@ -12,10 +10,10 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ClassicUO.Game.UI.Gumps
 {
-    public class MacroButtonGump : AnchorableGump
+    public sealed class MacroButtonGump : AnchorableGump
     {
-        private Texture2D backgroundTexture;
-        private Vector3 hueVector;
+        private Texture2D _backgroundTexture;
+        private Vector3 _hueVector;
         private ushort? _graphic;
 
         /// <summary>
@@ -34,18 +32,22 @@ namespace ClassicUO.Game.UI.Gumps
         /// <summary>Draw tint for the running state, resolved through <see cref="Macro.HueFor" />.</summary>
         private Vector3 _activeHueVector;
 
-        private ushort _hue;
-        private float _scale;
         private Macro _macr;
-        private readonly int _defaultWidth = 88;
-        private readonly int _defaultHeight = 44;
+        private const int DEFAULT_WIDTH = 88;
+        private const int DEFAULT_HEIGHT = 44;
         private RenderedText _gText;
 
         /// <summary>The label drawn while the macro is running, which may differ in text from <see cref="_gText" />.</summary>
         private RenderedText _gTextActive;
 
         /// <summary>Hue the label takes while the pointer is over the button, whatever hue it is set to.</summary>
-        private const ushort LABEL_HOVER_HUE = 53;
+        /// <remarks>Public so the editor's preview can mirror the hover without restating the value.</remarks>
+        public const ushort LabelHoverHue = 53;
+
+        /// <summary>The backing plate, at rest and under the pointer. Hued at draw time.</summary>
+        public static readonly Color PlateColor = new(30, 30, 30);
+
+        public static readonly Color PlateHoverColor = Color.DimGray;
 
         /// <summary>Label hue and opacity per run state, resolved from the macro when it is handed over.</summary>
         private ushort _labelHue = Macro.DEFAULT_LABEL_HUE;
@@ -58,8 +60,8 @@ namespace ClassicUO.Game.UI.Gumps
         {
             X = x;
             Y = y;
-            Width = _defaultWidth;
-            Height = _defaultHeight;
+            Width = DEFAULT_WIDTH;
+            Height = DEFAULT_HEIGHT;
             TheMacro = macro;
 
             BuildGump();
@@ -105,20 +107,23 @@ namespace ClassicUO.Game.UI.Gumps
         /// <remarks>Read live rather than cached: editing the macro's actions can replace the head node.</remarks>
         private MacroObject ActionHead => _macr?.Items as MacroObject;
         public bool IsPartialHue { get; set; }
+
         public ushort Hue
         {
-            get => _hue; set
-            {
-                _hue = value;
-                hueVector = ShaderHueTranslator.GetHueVector(value);
-            }
-        }
-        public new float Scale
-        {
-            get => _scale;
+            get;
             set
             {
-                _scale = value;
+                field = value;
+                _hueVector = ShaderHueTranslator.GetHueVector(value);
+            }
+        }
+
+        public new float Scale
+        {
+            get;
+            set
+            {
+                field = value;
 
                 float factor = value / 100F;
 
@@ -129,6 +134,7 @@ namespace ClassicUO.Game.UI.Gumps
                 WidthMultiplier = 1;
             }
         }
+
         public ushort? Graphic
         {
             get => _graphic;
@@ -136,17 +142,17 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 _graphic = value;
                 float factor = Scale / 100F;
-                var _bounds = new Rectangle(0, 0, _defaultWidth, _defaultHeight);
+                var bounds = new Rectangle(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
                 if (value.HasValue)
                 {
                     ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(value.Value);
-                    _bounds = texture.UV;
-                    IsPartialHue = texture.Texture == null ? false : Client.Game.UO.FileManager.TileData.StaticData[value.Value].IsPartialHue;
+                    bounds = texture.UV;
+                    IsPartialHue = texture.Texture != null && Client.Game.UO.FileManager.TileData.StaticData[value.Value].IsPartialHue;
                 }
 
-                Width = (int)(_bounds.Width * factor);
-                Height = (int)(_bounds.Height * factor);
+                Width = (int)(bounds.Width * factor);
+                Height = (int)(bounds.Height * factor);
 
                 GroupMatrixHeight = Height;
                 GroupMatrixWidth = Width;
@@ -163,7 +169,7 @@ namespace ClassicUO.Game.UI.Gumps
         /// </remarks>
         private void BuildGump()
         {
-            backgroundTexture = SolidColorTextureCache.GetTexture(new Color(30, 30, 30));
+            _backgroundTexture = SolidColorTextureCache.GetTexture(PlateColor);
 
             DestroyLabels();
 
@@ -207,13 +213,13 @@ namespace ClassicUO.Game.UI.Gumps
 
         protected override void OnMouseEnter(int x, int y)
         {
-            backgroundTexture = SolidColorTextureCache.GetTexture(Color.DimGray);
+            _backgroundTexture = SolidColorTextureCache.GetTexture(PlateHoverColor);
             base.OnMouseEnter(x, y);
         }
 
         protected override void OnMouseExit(int x, int y)
         {
-            backgroundTexture = SolidColorTextureCache.GetTexture(new Color(30, 30, 30));
+            _backgroundTexture = SolidColorTextureCache.GetTexture(PlateColor);
             base.OnMouseExit(x, y);
         }
 
@@ -260,11 +266,11 @@ namespace ClassicUO.Game.UI.Gumps
             // starting or stopping, and the test is two reference compares.
             bool isActive = World.Macros.IsActive(ActionHead);
             ushort? graphic = isActive ? _activeGraphic : Graphic;
-            Vector3 stateHueVector = isActive ? _activeHueVector : hueVector;
+            Vector3 stateHueVector = isActive ? _activeHueVector : _hueVector;
 
             batcher.Draw
             (
-                backgroundTexture,
+                _backgroundTexture,
                 new Rectangle
                 (
                     x,
@@ -309,8 +315,8 @@ namespace ClassicUO.Game.UI.Gumps
             if (label != null)
             {
                 // Hovering overrides whatever hue the macro chose, so the button still answers the
-                // pointer however its label is coloured.
-                label.Hue = MouseIsOver ? LABEL_HOVER_HUE : (isActive ? _activeLabelHue : _labelHue);
+                // pointer, however, its label is colored.
+                label.Hue = MouseIsOver ? LabelHoverHue : (isActive ? _activeLabelHue : _labelHue);
 
                 // Multiplied, not replaced: the gump's own alpha is the whole button fading.
                 float labelAlpha = Alpha * (isActive ? _activeLabelOpacity : _labelOpacity);
@@ -326,17 +332,14 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void Save(XmlTextWriter writer)
         {
-            if (TheMacro != null)
-            {
-                // hack to give macro buttons a unique id for use in anchor groups
-                int macroid = World.Macros.GetAllMacros().IndexOf(TheMacro);
+            if (TheMacro == null)
+                return;
 
-                LocalSerial = (uint)macroid + 1000;
-
-                base.Save(writer);
-
-                writer.WriteAttributeString("name", TheMacro.Name);
-            }
+            // hack to give macro buttons a unique id for use in anchor groups
+            int macroId = World.Macros.GetAllMacros().IndexOf(TheMacro);
+            LocalSerial = (uint)macroId + 1000;
+            base.Save(writer);
+            writer.WriteAttributeString("name", TheMacro.Name);
         }
 
         public override void Restore(XmlElement xml)

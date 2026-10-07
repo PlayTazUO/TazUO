@@ -39,13 +39,10 @@ public sealed class MacroButtonPreview : Panel, IDisposable
     private const int PLATE_WIDTH = 88;
     private const int PLATE_HEIGHT = 44;
 
-    /// <summary>Hue shade the plate's gray resolves to — <c>MacroButtonGump</c> fills it with Color(30, 30, 30).</summary>
-    private const ushort PLATE_SHADE = 30 >> 3;
 
     /// <summary>Shade of its hue the label is drawn at; the brightest, as the font renderer does.</summary>
     private const ushort LABEL_SHADE = 31;
 
-    private static readonly Color PlateGray = new(30, 30, 30);
 
     /// <summary>The macro being mirrored. Read on every refresh, never written to.</summary>
     private readonly Macro _macro;
@@ -64,6 +61,9 @@ public sealed class MacroButtonPreview : Panel, IDisposable
 
     /// <summary>Which of the macro's two appearances is on display.</summary>
     private bool _showActiveState;
+
+    /// <summary>Whether the pointer is over the preview, which the live button answers by lifting its plate and label.</summary>
+    private bool _isHovered;
 
     #endregion
 
@@ -100,6 +100,11 @@ public sealed class MacroButtonPreview : Panel, IDisposable
         // face is the one gesture that needs no label.
         TouchUp += (_, _) => ShowActiveState = !ShowActiveState;
 
+        // Hover changes only the plate and the label hue, so it takes the light path - re-baking the
+        // graphic every time the pointer crossed the preview would be wasted work.
+        MouseEntered += (_, _) => SetHovered(true);
+        MouseLeft += (_, _) => SetHovered(false);
+
         Refresh();
     }
 
@@ -134,11 +139,23 @@ public sealed class MacroButtonPreview : Panel, IDisposable
     {
         RefreshGraphic();
         RefreshScale();
+        RefreshSurface();
+    }
 
+    /// <summary>
+    ///     Repaints the plate and the label - everything but the graphic, which is the only part a bake
+    ///     stands behind.
+    /// </summary>
+    private void RefreshSurface()
+    {
+        Color plate = _isHovered ? Gumps.MacroButtonGump.PlateHoverColor : Gumps.MacroButtonGump.PlateColor;
         ushort hue = _macro.HueFor(_showActiveState);
-        Background = new SolidBrush(hue == 0 ? PlateGray : HueShade(hue, PLATE_SHADE));
 
-        // Without a graphic the live button outlines the plate rather than filling it; mirror that.
+        // The live button hues its plate rather than swapping colors, and the shader reads the gray's
+        // own level as the shade to hue it to - so the lighter hover plate lands further up the ramp.
+        Background = new SolidBrush(hue == 0 ? plate : HueShade(hue, (ushort)(plate.R >> 3)));
+
+        // Without a graphic, the live button outlines the plate rather than filling it; mirror that.
         bool hasGraphic = _macro.GraphicFor(_showActiveState).HasValue;
         Border = hasGraphic ? null : new SolidBrush(Color.Gray);
         BorderThickness = hasGraphic ? new Thickness(0) : new Thickness(1);
@@ -151,6 +168,17 @@ public sealed class MacroButtonPreview : Panel, IDisposable
         _nameLabel.TextColor = LabelColor();
     }
 
+    /// <summary>Takes the pointer in or out, repainting only what hover actually changes.</summary>
+    /// <param name="isHovered">Whether the pointer is now over the preview.</param>
+    private void SetHovered(bool isHovered)
+    {
+        if (_isHovered == isHovered)
+            return;
+
+        _isHovered = isHovered;
+        RefreshSurface();
+    }
+
     /// <summary>Resizes to the macro's current scale without re-baking. Safe to call per slider tick.</summary>
     public void RefreshScale()
     {
@@ -161,11 +189,7 @@ public sealed class MacroButtonPreview : Panel, IDisposable
     }
 
     /// <summary>Gives up the hue bake. Idempotent; the widget still draws the unhued graphic after.</summary>
-    public void Dispose()
-    {
-        ReleaseBake();
-        GC.SuppressFinalize(this);
-    }
+    public void Dispose() => ReleaseBake();
 
     #endregion
 
@@ -186,7 +210,7 @@ public sealed class MacroButtonPreview : Panel, IDisposable
 
     /// <summary>
     ///     Repoints the graphic at whatever the macro's current graphic and hue call for, baking a hued
-    ///     texture when one is needed and this widget is placed.
+    ///     texture when one is needed, and this widget is placed.
     /// </summary>
     private void RefreshGraphic()
     {
@@ -280,11 +304,11 @@ public sealed class MacroButtonPreview : Panel, IDisposable
     }
 
     /// <summary>
-    ///     The label's colour for the state being shown, hue and opacity together.
+    ///     The label's color for the state being shown, hue and opacity together.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         Hue 0 is the font's own colour rather than a ramp lookup, which at 0 would resolve to
+    ///         Hue 0 is the font's own color rather than a ramp lookup, which at 0 would resolve to
     ///         black - the live button draws unhued text there, not black text.
     ///     </para>
     ///     <para>
@@ -294,10 +318,10 @@ public sealed class MacroButtonPreview : Panel, IDisposable
     ///         plate instead of fading - the opposite of what the setting says.
     ///     </para>
     /// </remarks>
-    /// <returns>The colour, with the macro's opacity premultiplied into it.</returns>
+    /// <returns>The color, with the macro's opacity premultiplied into it.</returns>
     private Color LabelColor()
     {
-        ushort hue = _macro.LabelHueFor(_showActiveState);
+        ushort hue = _isHovered ? Gumps.MacroButtonGump.LabelHoverHue : _macro.LabelHueFor(_showActiveState);
         Color color = hue == 0 ? Color.White : HueShade(hue, LABEL_SHADE);
 
         float opacity = Math.Clamp(_macro.LabelOpacityFor(_showActiveState) / (float)Macro.FULL_OPACITY, 0f, 1f);
