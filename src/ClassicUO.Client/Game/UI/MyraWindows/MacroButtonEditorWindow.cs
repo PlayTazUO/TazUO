@@ -35,6 +35,9 @@ public sealed class MacroButtonEditorWindow : MyraControl
 
     private const int MAX_SCALE = 200;
 
+    /// <summary>Scale a button starts at, and the one <see cref="Reset" /> puts it back to.</summary>
+    private const byte DEFAULT_SCALE = 100;
+
     /// <summary>Keeps the preview box from resizing under the controls as the button grows and shrinks.</summary>
     private const int PREVIEW_MIN_HEIGHT = 120;
 
@@ -84,7 +87,8 @@ public sealed class MacroButtonEditorWindow : MyraControl
     /// <summary>The macro being edited. Written to live, and rolled back on close unless saved.</summary>
     private readonly Macro _macro;
 
-    private readonly MacroButtonPreview _preview;
+    /// <summary>Rebuilt by <see cref="RebuildContent" />, so not readonly.</summary>
+    private MacroButtonPreview _preview = null!;
 
     /// <summary>
     ///     The appearance the macro reverts to when the window closes: what it had on open, or what the
@@ -113,11 +117,17 @@ public sealed class MacroButtonEditorWindow : MyraControl
     /// </summary>
     private GumpGraphicPicker _activeGraphicPicker = null!;
 
+    /// <summary>
+    ///     The active label's box, kept in step with the resting one while it is set to follow, so
+    ///     ticking its gate adopts the text the user is actually looking at.
+    /// </summary>
+    private MyraInputBox? _activeLabelInput;
+
     /// <summary>Set while the inactive graphic is moving the active picker, so the echo is not read as an edit.</summary>
     private bool _mirroringActiveGraphic;
 
     /// <summary>Names which state the preview is showing; kept in step with it, clicks included.</summary>
-    private readonly MyraLabel _previewStateLabel = new(string.Empty, MyraLabel.TextStyle.P) { HorizontalAlignment = HorizontalAlignment.Center };
+    private MyraLabel _previewStateLabel = null!;
 
     #endregion
 
@@ -134,9 +144,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
         _macro = macro;
         _committed = MacroButtonAppearance.Capture(macro);
 
-        _preview = new MacroButtonPreview(macro);
-        _preview.ShowActiveStateChanged += (_, _) => SyncPreviewStateLabel();
-        SyncPreviewStateLabel();
+        CreatePreview();
 
         // The title-bar close goes straight to the base's dispose flag without passing through
         // Dispose(), so the revert needs this hook as well as the override.
@@ -176,6 +184,11 @@ public sealed class MacroButtonEditorWindow : MyraControl
     /// <remarks>Reverts anything the user did not save; see the type's remarks.</remarks>
     public override void Dispose()
     {
+        // The hue swatches open a classic gump that is not parented to this window, so it outlives the
+        // close unless shut here - and a pick landing after the revert would write an edit back onto the
+        // macro with nothing left to undo it.
+        UIManager.GetGump<ModernColorPicker>()?.Dispose();
+
         Revert();
         _preview.Dispose();
         base.Dispose();
@@ -184,6 +197,21 @@ public sealed class MacroButtonEditorWindow : MyraControl
     #endregion
 
     #region Private methods
+
+    /// <summary>Builds the preview and the caption naming the state it shows, replacing any already built.</summary>
+    private void CreatePreview()
+    {
+        _preview?.Dispose();
+
+        _preview = new MacroButtonPreview(_macro);
+        _preview.ShowActiveStateChanged += (_, _) => SyncPreviewStateLabel();
+
+        // Rebuilt alongside the preview rather than reused: a Myra widget belongs to one parent, and a
+        // rebuild hands both of these to a new one.
+        _previewStateLabel = new MyraLabel(string.Empty, MyraLabel.TextStyle.P) { HorizontalAlignment = HorizontalAlignment.Center };
+
+        SyncPreviewStateLabel();
+    }
 
     /// <summary>Assembles the window: the settings, the preview, and the save/close row.</summary>
     private void Build()
@@ -337,16 +365,24 @@ public sealed class MacroButtonEditorWindow : MyraControl
 
         var input = new MyraInputBox { Text = _macro.LabelFor(isActive), Width = LABEL_INPUT_WIDTH, Tooltip = tooltip };
 
+        if (isActive)
+            _activeLabelInput = input;
+
         input.TextChangedByUser += (_, _) =>
         {
             SetLabel(isActive, input.Text ?? string.Empty);
-            _preview.Refresh();
+            MirrorInheritedLabel();
+            _preview.RefreshSurface();
         };
 
+        // Ticking adopts the text inherited from the level above, which the mirroring keeps this box
+        // showing while the gate is off - so the button never takes a label the user has not seen.
         var gate = new GateToggle(CustomLabel(isActive) != null, input, isOn =>
         {
-            SetLabel(isActive, isOn ? input.Text ?? string.Empty : null);
-            _preview.Refresh();
+            SetLabel(isActive, isOn ? _macro.LabelFor(isActive) : null);
+            input.Text = _macro.LabelFor(isActive);
+            MirrorInheritedLabel();
+            _preview.RefreshSurface();
         });
 
         gate.CheckBox.Tooltip = tooltip;
@@ -379,10 +415,14 @@ public sealed class MacroButtonEditorWindow : MyraControl
             inputWidth: HUE_INPUT_WIDTH
         );
 
+        // Only the button's hue is baked into the preview's graphic; the label's is drawn straight, so
+        // it takes the path that does not re-bake. Both of these fire per keystroke in the index field.
+        Action refresh = isLabel ? _preview.RefreshSurface : _preview.Refresh;
+
         selector.HueChanged += (_, hue) =>
         {
             SetHue(target, isActive, hue);
-            _preview.Refresh();
+            refresh();
         };
 
         MyraLabel caption = Caption(
@@ -404,7 +444,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
         var gate = new GateToggle(HasHueOverride(target), selector, isOn =>
         {
             SetActiveHue(target, isOn ? selector.Hue : null);
-            _preview.Refresh();
+            refresh();
         });
 
         gate.CheckBox.Tooltip = tooltip;
@@ -437,7 +477,9 @@ public sealed class MacroButtonEditorWindow : MyraControl
                         _activeOpacitySlider.Value = value;
                 }
 
-                _preview.Refresh();
+                // Opacity is applied to the label as it is drawn, so the graphic's bake still stands -
+                // and this fires on every pixel of a slider drag.
+                _preview.RefreshSurface();
             }
         );
 
@@ -453,7 +495,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
         var gate = new GateToggle(_macro.ActiveLabelOpacity.HasValue, slider, isOn =>
         {
             _macro.ActiveLabelOpacity = isOn ? (byte)slider.Value : null;
-            _preview.Refresh();
+            _preview.RefreshSurface();
         });
 
         gate.CheckBox.Tooltip = tooltip;
@@ -582,6 +624,20 @@ public sealed class MacroButtonEditorWindow : MyraControl
     /// <returns>The stored text, or null.</returns>
     private string? CustomLabel(bool isActive) => isActive ? _macro.ActiveLabel : _macro.Label;
 
+    /// <summary>
+    ///     Shows the resting label in the running state's box while that state inherits it.
+    /// </summary>
+    /// <remarks>
+    ///     A disabled box still reads as the running label, so leaving it stale would both misreport the
+    ///     button and give its gate the wrong text to adopt. Programmatic, so it raises no
+    ///     <c>TextChangedByUser</c> and cannot be mistaken for an edit.
+    /// </remarks>
+    private void MirrorInheritedLabel()
+    {
+        if (_macro.ActiveLabel == null && _activeLabelInput != null)
+            _activeLabelInput.Text = _macro.LabelFor(true);
+    }
+
     /// <summary>Stores one state's label text.</summary>
     /// <param name="isActive">Which state to write.</param>
     /// <param name="text">The text, empty to hide the label, or null to go back to inheriting.</param>
@@ -695,6 +751,11 @@ public sealed class MacroButtonEditorWindow : MyraControl
     {
         var row = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, HorizontalAlignment = HorizontalAlignment.Right };
 
+        row.Widgets.Add(new MyraButton(TazLang.Get("macrobtneditor_reset", "Reset"), Reset)
+        {
+            Tooltip = TazLang.Get("macrobtneditor_reset_tooltip", "Put every setting back to its default.\nClose still discards it, like any other change")
+        });
+
         row.Widgets.Add(new MyraButton(TazLang.Get("macrobtneditor_save", "Save"), Save)
         {
             Tooltip = TazLang.Get("macrobtneditor_save_closetooltip", "Keep these changes, write them to disk and close")
@@ -725,6 +786,35 @@ public sealed class MacroButtonEditorWindow : MyraControl
         World.Instance.Macros.Save();
         RefreshLiveButtons();
         Dispose();
+    }
+
+    /// <summary>
+    ///     Puts the button back to how an untouched macro looks. An edit like any other: it is not
+    ///     written to disk until <see cref="Save" />, and <see cref="Revert" /> undoes it.
+    /// </summary>
+    private void Reset()
+    {
+        MacroButtonAppearance.Defaults.ApplyTo(_macro);
+        RebuildContent();
+    }
+
+    /// <summary>
+    ///     Throws the window's controls away and builds them again from the macro.
+    /// </summary>
+    /// <remarks>
+    ///     Cheaper than a setter per control, and the only way the gates' dimming and the inherited
+    ///     values the pickers show stay consistent after the macro changes wholesale. The cached
+    ///     running-state widgets are dropped first; <see cref="Build" /> hands back new ones.
+    /// </remarks>
+    private void RebuildContent()
+    {
+        _activeHueSelector = null;
+        _activeLabelHueSelector = null;
+        _activeOpacitySlider = null;
+        _activeLabelInput = null;
+
+        CreatePreview();
+        Build();
     }
 
     /// <summary>
@@ -851,8 +941,8 @@ public sealed class MacroButtonEditorWindow : MyraControl
     ///     can be undone. Holds no reference to the macro it came from.
     /// </summary>
     private readonly record struct MacroButtonAppearance(
-        string Label,
-        string ActiveLabel,
+        string? Label,
+        string? ActiveLabel,
         ushort LabelHue,
         ushort? ActiveLabelHue,
         byte LabelOpacity,
@@ -864,6 +954,24 @@ public sealed class MacroButtonEditorWindow : MyraControl
         int? ActiveGraphic
     )
     {
+        /// <summary>
+        ///     How a macro that has never been through this editor looks: its own name as the label, at
+        ///     the default hue and full opacity, over a bare plate, with no separate running appearance.
+        /// </summary>
+        public static readonly MacroButtonAppearance Defaults = new(
+            null,
+            null,
+            Macro.DEFAULT_LABEL_HUE,
+            null,
+            Macro.FULL_OPACITY,
+            null,
+            DEFAULT_SCALE,
+            0,
+            null,
+            null,
+            null
+        );
+
         /// <summary>Takes a snapshot of a macro's current button appearance.</summary>
         /// <param name="macro">The macro to read. Not retained.</param>
         /// <returns>The snapshot.</returns>

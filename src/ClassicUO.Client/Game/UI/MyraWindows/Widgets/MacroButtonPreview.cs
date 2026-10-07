@@ -62,7 +62,7 @@ public sealed class MacroButtonPreview : Panel, IDisposable
     /// <summary>Which of the macro's two appearances is on display.</summary>
     private bool _showActiveState;
 
-    /// <summary>Whether the pointer is over the preview, which the live button answers by lifting its plate and label.</summary>
+    /// <summary>Whether the pointer is over the preview, which the live button answers by lifting its plate.</summary>
     private bool _isHovered;
 
     #endregion
@@ -100,8 +100,8 @@ public sealed class MacroButtonPreview : Panel, IDisposable
         // face is the one gesture that needs no label.
         TouchUp += (_, _) => ShowActiveState = !ShowActiveState;
 
-        // Hover changes only the plate and the label hue, so it takes the light path - re-baking the
-        // graphic every time the pointer crossed the preview would be wasted work.
+        // Hover changes only the plate, so it takes the light path - re-baking the graphic every time
+        // the pointer crossed the preview would be wasted work.
         MouseEntered += (_, _) => SetHovered(true);
         MouseLeft += (_, _) => SetHovered(false);
 
@@ -144,9 +144,10 @@ public sealed class MacroButtonPreview : Panel, IDisposable
 
     /// <summary>
     ///     Repaints the plate and the label - everything but the graphic, which is the only part a bake
-    ///     stands behind.
+    ///     stands behind. The path for label and opacity edits, which fire per keystroke and per slider
+    ///     tick and must not re-bake.
     /// </summary>
-    private void RefreshSurface()
+    public void RefreshSurface()
     {
         Color plate = _isHovered ? Gumps.MacroButtonGump.PlateHoverColor : Gumps.MacroButtonGump.PlateColor;
         ushort hue = _macro.HueFor(_showActiveState);
@@ -321,7 +322,7 @@ public sealed class MacroButtonPreview : Panel, IDisposable
     /// <returns>The color, with the macro's opacity premultiplied into it.</returns>
     private Color LabelColor()
     {
-        ushort hue = _isHovered ? Gumps.MacroButtonGump.LabelHoverHue : _macro.LabelHueFor(_showActiveState);
+        ushort hue = _macro.LabelHueFor(_showActiveState);
         Color color = hue == 0 ? Color.White : HueShade(hue, LABEL_SHADE);
 
         float opacity = Math.Clamp(_macro.LabelOpacityFor(_showActiveState) / (float)Macro.FULL_OPACITY, 0f, 1f);

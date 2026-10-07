@@ -222,6 +222,12 @@ public static class MyraStyle
     /// <c>Enabled = false</c> visible, and it costs nothing at draw time.
     /// </para>
     /// <para>
+    /// Worse than merely identical wherever a style defines a hover brush: the disabled branch is
+    /// skipped entirely when <c>DisabledBackground</c> is null, and the next one tested is the hover
+    /// brush - which <c>IsMouseInside</c> reports regardless of <c>Enabled</c>. A dead control then
+    /// lights up under the pointer, looking live while refusing every input.
+    /// </para>
+    /// <para>
     /// Runs last, so a style that sets its own disabled brush above keeps it. Every style and
     /// sub-style is null-checked: the default stylesheet leaves several of them unset - the tree's
     /// label style among them - and this runs during content load, where a null reference is a
@@ -251,6 +257,16 @@ public static class MyraStyle
         {
             textBoxStyle.DisabledBackground ??= disabledFill;
             textBoxStyle.DisabledTextColor ??= palette.DisabledText;
+        }
+
+        if (sheet.HorizontalSliderStyle is { } sliderStyle)
+        {
+            sliderStyle.DisabledBackground ??= disabledFill;
+
+            // The knob's fill sits on its image rather than on the button around it, so a disabled
+            // brush on the button alone would never be the one drawn.
+            if (sliderStyle.KnobStyle?.ImageStyle is { } knobImage)
+                knobImage.DisabledBackground ??= disabledFill;
         }
 
         if (sheet.TreeStyle is { } treeStyle)

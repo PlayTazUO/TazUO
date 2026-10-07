@@ -40,10 +40,6 @@ namespace ClassicUO.Game.UI.Gumps
         /// <summary>The label drawn while the macro is running, which may differ in text from <see cref="_gText" />.</summary>
         private RenderedText _gTextActive;
 
-        /// <summary>Hue the label takes while the pointer is over the button, whatever hue it is set to.</summary>
-        /// <remarks>Public so the editor's preview can mirror the hover without restating the value.</remarks>
-        public const ushort LabelHoverHue = 53;
-
         /// <summary>The backing plate, at rest and under the pointer. Hued at draw time.</summary>
         public static readonly Color PlateColor = new(30, 30, 30);
 
@@ -63,12 +59,11 @@ namespace ClassicUO.Game.UI.Gumps
             Width = DEFAULT_WIDTH;
             Height = DEFAULT_HEIGHT;
             TheMacro = macro;
-
-            BuildGump();
         }
 
         public MacroButtonGump(World world) : base(world,0, 0)
         {
+            _backgroundTexture = SolidColorTextureCache.GetTexture(PlateColor);
             CanMove = true;
             AcceptMouseInput = true;
             CanCloseWithRightClick = true;
@@ -88,6 +83,15 @@ namespace ClassicUO.Game.UI.Gumps
             set
             {
                 _macr = value;
+
+                // A button whose macro was deleted keeps its size and plate and simply draws no label.
+                // Save() already declines to persist one, so it lasts the session and no longer.
+                if (value == null)
+                {
+                    DestroyLabels();
+                    return;
+                }
+
                 Scale = value.Scale;
                 Graphic = value.Graphic;
                 Hue = value.Hue;
@@ -97,6 +101,11 @@ namespace ClassicUO.Game.UI.Gumps
                 _activeLabelOpacity = value.LabelOpacityFor(true) / (float)Macro.FULL_OPACITY;
                 _activeGraphic = value.GraphicFor(true);
                 _activeHueVector = ShaderHueTranslator.GetHueVector(value.HueFor(true));
+
+                // Last, because the renderings bake the label text and the width it wraps at, both of
+                // which the assignments above settle. Re-handing the macro is how an edit reaches a
+                // button already on screen, so the labels have to be rebuilt here, not only at build.
+                RebuildLabels();
             }
         }
 
@@ -161,16 +170,14 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
         /// <summary>
-        ///     Builds the backing plate and both label renderings, one per run state.
+        ///     Renders both labels, one per run state.
         /// </summary>
         /// <remarks>
-        ///     Reached again from <see cref="Restore" />, so the previous renderings are returned to the
-        ///     pool first; they are pooled objects, and dropping them leaks one per restore.
+        ///     Reached on every macro assignment, so the previous renderings are returned to the pool
+        ///     first; they are pooled objects, and dropping them leaks one per rebuild.
         /// </remarks>
-        private void BuildGump()
+        private void RebuildLabels()
         {
-            _backgroundTexture = SolidColorTextureCache.GetTexture(PlateColor);
-
             DestroyLabels();
 
             _gText = CreateLabel(TheMacro.LabelFor(false));
@@ -179,7 +186,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         /// <summary>Renders one of the button's labels.</summary>
         /// <remarks>The hue here is only a starting value; <see cref="Draw" /> sets it per frame from
-        /// the macro, or from the hover hue.</remarks>
+        /// the macro.</remarks>
         /// <param name="text">The text to render. Empty renders nothing, which is how a hidden label is drawn.</param>
         /// <returns>The rendering.</returns>
         private RenderedText CreateLabel(string text) => RenderedText.Create
@@ -314,9 +321,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (label != null)
             {
-                // Hovering overrides whatever hue the macro chose, so the button still answers the
-                // pointer, however, its label is colored.
-                label.Hue = MouseIsOver ? LabelHoverHue : (isActive ? _activeLabelHue : _labelHue);
+                // Hover is answered by the plate alone. The label hue is a setting now, and overriding
+                // it under the pointer both contradicts the setting and hides what was chosen.
+                label.Hue = isActive ? _activeLabelHue : _labelHue;
 
                 // Multiplied, not replaced: the gump's own alpha is the whole button fading.
                 float labelAlpha = Alpha * (isActive ? _activeLabelOpacity : _labelOpacity);
@@ -351,7 +358,6 @@ namespace ClassicUO.Game.UI.Gumps
             if (macro != null)
             {
                 TheMacro = macro;
-                BuildGump();
             }
         }
     }

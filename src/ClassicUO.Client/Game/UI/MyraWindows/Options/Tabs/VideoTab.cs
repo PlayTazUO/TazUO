@@ -273,7 +273,10 @@ public static class VideoTab
             label,
             new Accessor<bool>(() => ProfileManager.CurrentProfile.EnableMousewheelScaleZoom),
             tooltip,
-            new SearchMetadata(TazLang.Get("mog_videotab_zoom_zoomwheel"), Keywords: [TazLang.Get("mog_kw_wheel")])
+            new SearchMetadata(
+                TazLang.Get("mog_videotab_zoom_zoomwheel_no_hotkey"),
+                Keywords: [TazLang.Get("mog_kw_wheel")]
+            )
         );
     }
 
