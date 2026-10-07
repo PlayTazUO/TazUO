@@ -3,7 +3,14 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/7/26
+* ***Legion:*** Added `API.RequestHotkey(prompt, timeout)` to pop up the in-game hotkey capture window and return the chosen key combination as a string, ready to pass straight to `API.OnHotKey()` or `API.IsKeyPressed()` (for example `"CTRL+SHIFT+F1"`); only keyboard bindings are accepted, and it returns an empty string if the window is cancelled or the timeout elapses
+* ***Fix:*** Relative UO data directory paths are now resolved against the client install directory instead of the process working directory, so a relative `ultimaonlinedirectory` (or `-uopath`) works the same however the client is launched. The value is still saved as-is, so relative paths stay relative in `settings.json`
+* ***Fix:*** Reduced stutter when entering new areas - static art is now decoded ahead of time on the main thread within a small per-frame budget, instead of all at once the first time each graphic is drawn
+
 ## 10/03/26
+* ***Fix:*** Fixed trees and other statics popping in at the screen edges while walking - viewport culling now accounts for the full art size (art is centered horizontally and grows upward from its base tile) instead of culling on the base tile alone, and map chunks are preloaded just beyond the viewport so statics are resident before they scroll into view
+* ***Feature:*** Changing a containers (local) custom name will now also show in it's tooltip
 * ***Misc:*** Adjusted tooltip rendering behavior when near the edge of the screen - [P.R 1118](https://github.com/PlayTazUO/TazUO/pull/1118) ([yuval-po](https://github.com/yuval-po)) 
 * ***Misc:*** Split the "Auto unequp for actions" setting into separate settings for spells and potions - [P.R 1112](https://github.com/PlayTazUO/TazUO/pull/1112) ([yuval-po](https://github.com/yuval-po))
 * ***Fix:*** Removed duplicated "Turn delay", "Show incoming mobiles" and "Show incoming corpses" settings - [P.R 1112](https://github.com/PlayTazUO/TazUO/pull/1112) ([yuval-po](https://github.com/yuval-po))

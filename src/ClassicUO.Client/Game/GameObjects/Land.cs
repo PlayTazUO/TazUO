@@ -30,6 +30,7 @@ namespace ClassicUO.Game.GameObjects
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => ref Client.Game.UO.FileManager.TileData.LandData[Graphic];
         }
+        public new ushort OriginalGraphic { get; private set; }
         public sbyte AverageZ;
         public bool IsStretched;
         public sbyte MinZ;
@@ -42,6 +43,7 @@ namespace ClassicUO.Game.GameObjects
         {
             var land = new Land(world); // _pool.GetOne();
             land.AlphaHue = 0xFF;
+            land.OriginalGraphic = graphic;
             land.Graphic = graphic;
             land.IsStretched = land.TileData.TexID == 0 && land.TileData.IsWet;
             land.AllowedToDraw = graphic > 2;

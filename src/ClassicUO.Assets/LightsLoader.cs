@@ -17,6 +17,16 @@ namespace ClassicUO.Assets
 
         public UOFileMul File => _file;
 
+        /// <summary>
+        /// Largest width/height across every light entry, without decoding any pixels.
+        /// </summary>
+        /// <remarks>
+        /// A light halo is drawn centered on its source and reaches well past the source art, so
+        /// viewport culling needs the largest possible halo to keep a source until its glow has
+        /// fully left the screen. The index carries the dimensions, so this is free to compute.
+        /// </remarks>
+        public int MaxLightDimension { get; private set; }
+
         public override void Load()
         {
             string path = FileManager.GetUOFilePath("light.mul");
@@ -27,6 +37,25 @@ namespace ClassicUO.Assets
 
             _file = new UOFileMul(path, pathidx);
             _file.FillEntries();
+
+            int maxDimension = 0;
+
+            for (int i = 0; i < _file.Entries.Length; i++)
+            {
+                ref UOFileIndex entry = ref _file.Entries[i];
+
+                if (entry.Width > maxDimension)
+                {
+                    maxDimension = entry.Width;
+                }
+
+                if (entry.Height > maxDimension)
+                {
+                    maxDimension = entry.Height;
+                }
+            }
+
+            MaxLightDimension = maxDimension;
         }
 
         public LightInfo GetLight(uint idx)

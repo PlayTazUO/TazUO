@@ -18,7 +18,7 @@ public static class CililocsTabContent
     {
         var root = new VerticalStackPanel { Spacing = 6 };
 
-        string uoDir = Settings.GlobalSettings.UltimaOnlineDirectory;
+        string uoDir = Settings.GlobalSettings.ResolvedUltimaOnlineDirectory;
         var loadedEntries = new Dictionary<int, string>();
         var filteredResults = new List<KeyValuePair<int, string>>();
         int currentPage = 0;

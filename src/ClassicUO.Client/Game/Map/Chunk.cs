@@ -129,6 +129,10 @@ namespace ClassicUO.Game.Map
                     {
                         if (sb.Color != 0 && sb.Color != 0xFFFF)
                         {
+                            // This loop can run on the async chunk worker, so only queue the index here;
+                            // Art.WarmQueued decodes and uploads it on the main thread.
+                            Client.Game.UO.Arts.EnqueueWarm((uint)(sb.Color + 0x4000));
+
                             int pos = (sb.Y << 3) + sb.X;
 
                             if (pos >= 64)

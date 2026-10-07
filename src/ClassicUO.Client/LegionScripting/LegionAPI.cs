@@ -12,11 +12,13 @@ using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.LegionScripting.ApiClasses;
 using ClassicUO.Network;
 using ClassicUO.Utility;
@@ -529,6 +531,80 @@ namespace ClassicUO.LegionScripting
         /// <param name="key">Key combination to check, e.g. "CTRL+SHIFT+F1".</param>
         /// <returns>True if the combination is currently pressed, false otherwise.</returns>
         public bool IsKeyPressed(string key) => OnMain(() => CUOKeyboard.IsKeyPressed(key));
+
+        /// <summary>
+        /// Shows the in-game hotkey capture window and waits for the player to pick a key combination.
+        /// The returned string matches what `OnHotKey` and `IsKeyPressed` accept, so it can be passed
+        /// straight to them, e.g. "CTRL+SHIFT+F1" or "A".
+        /// Only keyboard bindings are returned; mouse, wheel, controller and modifier-only captures are
+        /// rejected. Blocks until the player saves a key or closes the window (or the timeout elapses).
+        /// Example:
+        /// ```py
+        /// key = API.RequestHotkey()
+        /// if key:
+        ///   API.OnHotKey(key, on_pressed)
+        /// ```
+        /// </summary>
+        /// <param name="prompt">Optional message shown above the capture box.</param>
+        /// <param name="timeout">Maximum number of seconds to wait for the player to choose a hotkey.</param>
+        /// <returns>
+        /// The captured key combination, or an empty string if the player cancelled, closed the window
+        /// or the timeout elapsed.
+        /// </returns>
+        public string RequestHotkey(string prompt = "Press a hotkey", double timeout = 30)
+        {
+            var gate = new object();
+            string captured = null;
+
+            HotkeyCaptureWindow window = OnMain(() => new HotkeyCaptureWindow(
+                prompt,
+                existing: null,
+                onSaved: binding =>
+                {
+                    lock (gate)
+                        captured = BindingToKeyString(binding);
+                },
+                capturesMouseEvents: false,
+                bindingValidator: binding => binding.HasKey
+            ));
+
+            DateTime expire = DateTime.Now.AddSeconds(timeout);
+
+            while (DateTime.Now < expire && !StopRequested && !window.IsDisposed)
+            {
+                lock (gate)
+                    if (captured != null)
+                        return captured;
+
+                Thread.Sleep(5);
+            }
+
+            if (!window.IsDisposed)
+                OnMain(() => window.Dispose());
+
+            lock (gate)
+                return captured ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Converts a captured keyboard binding to the canonical key-string format used by the string
+        /// based hotkey APIs, e.g. "CTRL+SHIFT+F1". Returns an empty string for non-keyboard bindings.
+        /// </summary>
+        private static string BindingToKeyString(HotkeyBinding binding)
+        {
+            if (binding?.HasKey != true)
+                return string.Empty;
+
+            var parts = new List<string>();
+            if (binding.Ctrl) parts.Add("CTRL");
+            if (binding.Shift) parts.Add("SHIFT");
+            if (binding.Alt) parts.Add("ALT");
+
+            string keyName = binding.Key.ToString();
+            parts.Add(keyName.StartsWith("SDLK_", StringComparison.Ordinal) ? keyName.Substring(5) : keyName);
+
+            return string.Join("+", parts);
+        }
 
         /// <summary>
         /// Schedules a callback to be invoked after a specified delay.
