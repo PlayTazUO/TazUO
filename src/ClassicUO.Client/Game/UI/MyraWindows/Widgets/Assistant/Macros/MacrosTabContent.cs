@@ -170,7 +170,7 @@ public static class MacrosTabContent
 
             macroButtonRow.Widgets.Add(new MyraButton(TazLang.Get("macrostab_buttoneditor"), () =>
             {
-                OpenMacroButtonEditor(macro);
+                MacroButtonEditorWindow.Show(macro);
             }) { Tooltip = TazLang.Get("macrostab_buttoneditor_tooltip") });
 
             editorPanel.Widgets.Add(macroButtonRow);
@@ -635,7 +635,4 @@ public static class MacrosTabContent
         root.Widgets.Add(mainArea);
         return root;
     }
-
-    /// <summary>Opens the macro button editor for the given macro, replacing one already open.</summary>
-    private static void OpenMacroButtonEditor(Macro macro) => MacroButtonEditorWindow.Show(macro);
 }

@@ -10,6 +10,15 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ClassicUO.Game.UI.Gumps
 {
+    /// <summary>
+    ///     A macro's standalone on-screen button, drawn with one of two appearances depending on whether
+    ///     the macro is running.
+    /// </summary>
+    /// <remarks>
+    ///     The macro's appearance is cached when it is handed over rather than read per frame, so an edit
+    ///     reaches this button only by assigning <see cref="TheMacro" /> again. Only the run state itself
+    ///     is polled, since nothing signals a macro starting or stopping.
+    /// </remarks>
     public sealed class MacroButtonGump : AnchorableGump
     {
         private Texture2D _backgroundTexture;
@@ -40,9 +49,10 @@ namespace ClassicUO.Game.UI.Gumps
         /// <summary>The label drawn while the macro is running, which may differ in text from <see cref="_gText" />.</summary>
         private RenderedText _gTextActive;
 
-        /// <summary>The backing plate, at rest and under the pointer. Hued at draw time.</summary>
+        /// <summary>The backing plate at rest. Hued at draw time.</summary>
         public static readonly Color PlateColor = new(30, 30, 30);
 
+        /// <summary>The backing plate under the pointer, which is the button's whole hover response.</summary>
         public static readonly Color PlateHoverColor = Color.DimGray;
 
         /// <summary>Label hue and opacity per run state, resolved from the macro when it is handed over.</summary>

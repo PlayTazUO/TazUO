@@ -244,6 +244,11 @@ public static class VideoTab
         );
     }
 
+    /// <summary>
+    ///     The mousewheel zoom toggle, whose label and tooltip name the key the zoom modifier is bound
+    ///     to. The binding is read as the entry is built, so a rebind shows once the tab is reopened.
+    /// </summary>
+    /// <returns>The entry.</returns>
     private static OptionEntry GetMouseWheelZoomSetting()
     {
         HotKeyEntry zoomHotkeyModifier = HotKeys.Get(HotKeyRegistrar.ZoomScrollId);

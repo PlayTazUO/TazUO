@@ -28,7 +28,6 @@ public static class ModernUIConstants
     public static Texture2D ModernUICheckBoxChecked { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("TUOUICheckBoxChecked.png", out Texture2D texture); return texture; } }
     public static Texture2D ModernUICheckBoxUnChecked { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("TUOUICheckBoxUnChecked.png", out Texture2D texture); return texture; } }
 
-
     public static Texture2D ModernUISkillUp { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("upicon.png", out Texture2D texture); return texture; } }
     public static Texture2D ModernUISkillDown { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("downicon.png", out Texture2D texture); return texture; } }
     public static Texture2D ModernUISkillLock { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("lockicon.png", out Texture2D texture); return texture; } }

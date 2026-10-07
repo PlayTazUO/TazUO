@@ -14,6 +14,10 @@ namespace ClassicUO.Renderer.Gumps
 
         public GumpsLoader GetGumpsLoader => _gumpsLoader;
 
+        /// <summary>Builds the gump sprite cache and its atlas.</summary>
+        /// <param name="gumpsLoader">Source of gump pixels; its entry count fixes the cache's size.</param>
+        /// <param name="huesLoader">Hue tables, needed only by <see cref="GetHuedGumpPixels" />.</param>
+        /// <param name="device">Device the atlas is allocated on.</param>
         public Gump(GumpsLoader gumpsLoader, HuesLoader huesLoader, GraphicsDevice device)
         {
             _gumpsLoader = gumpsLoader;
