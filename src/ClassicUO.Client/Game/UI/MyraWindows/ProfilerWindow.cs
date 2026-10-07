@@ -211,20 +211,26 @@ namespace ClassicUO.Game.UI.MyraWindows
         {
             _dataPanel.Widgets.Clear();
 
-            if (!Profiler.Enabled)
-            {
-                _dataPanel.Widgets.Add(new MyraLabel("Profiler is disabled. Click 'Enable Profiler' to start.", MyraLabel.TextStyle.P));
-                return;
-            }
-
             var data = Profiler.AllFrameData
                 .OrderByDescending(pd => pd.AverageTime)
                 .ToList();
 
             if (data.Count == 0)
             {
-                _dataPanel.Widgets.Add(new MyraLabel("No data collected yet — play the game to populate.", MyraLabel.TextStyle.P));
+                _dataPanel.Widgets.Add(new MyraLabel(
+                    Profiler.Enabled
+                        ? "No data collected yet — play the game to populate."
+                        : "Profiler is disabled. Click 'Enable Profiler' to start.",
+                    MyraLabel.TextStyle.P
+                ));
                 return;
+            }
+
+            // Keep the last captured snapshot on screen after the profiler is stopped so the
+            // numbers can still be read; the data is only replaced when a new run resets it.
+            if (!Profiler.Enabled)
+            {
+                _dataPanel.Widgets.Add(new MyraLabel("Profiler is disabled — showing the last captured data.", MyraLabel.TextStyle.P));
             }
 
             double totalAvg = data.Sum(pd => pd.AverageTime);
