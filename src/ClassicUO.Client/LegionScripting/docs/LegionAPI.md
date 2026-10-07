@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `10/3/26`.*
+*This was generated on `10/7/26`.*
 
 ## Properties
 ### `Events`
@@ -253,6 +253,32 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `key` | `string` | ❌ No | Key combination to check, e.g. "CTRL+SHIFT+F1". |
 
 **Return Type:** `bool`
+
+---
+
+### RequestHotkey
+`(prompt, timeout)`
+ Shows the in-game hotkey capture window and waits for the player to pick a key combination.
+ The returned string matches what `OnHotKey` and `IsKeyPressed` accept, so it can be passed
+ straight to them, e.g. "CTRL+SHIFT+F1" or "A".
+ Only keyboard bindings are returned; mouse, wheel, controller and modifier-only captures are
+ rejected. Blocks until the player saves a key or closes the window (or the timeout elapses).
+ Example:
+ ```py
+ key = API.RequestHotkey()
+ if key:
+   API.OnHotKey(key, on_pressed)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `prompt` | `string` | ✅ Yes | Optional message shown above the capture box. |
+| `timeout` | `double` | ✅ Yes | Maximum number of seconds to wait for the player to choose a hotkey. |
+
+**Return Type:** `string`
 
 ---
 

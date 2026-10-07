@@ -541,9 +541,8 @@ public static class AutoLootAgentTabContent
             importCharPanel.Visible = !importCharPanel.Visible;
         }) { Tooltip = "Import autoloot configuration from another character." });
 
-        var addRow = new HorizontalStackPanel { Spacing = 6 };
-        addRow.Widgets.Add(new MyraButton("Add Manual Entry", () => addEntryPanel.Visible = !addEntryPanel.Visible));
-        addRow.Widgets.Add(new MyraButton("Add from Target", () =>
+        actionRow.Widgets.Add(new MyraButton("Add Manual Entry", () => addEntryPanel.Visible = !addEntryPanel.Visible));
+        actionRow.Widgets.Add(new MyraButton("Add from Target", () =>
         {
             World.Instance.TargetManager.SetTargeting(targeted =>
             {
@@ -556,7 +555,6 @@ public static class AutoLootAgentTabContent
         }) { Tooltip = "Target an item to add it to the loot list." });
 
         root.Widgets.Add(actionRow);
-        root.Widgets.Add(addRow);
         root.Widgets.Add(addEntryPanel);
         root.Widgets.Add(importCharPanel);
         root.Widgets.Add(new ScrollViewer { MaxHeight = 300, Content = entriesPanel });
