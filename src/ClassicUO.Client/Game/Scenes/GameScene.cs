@@ -812,6 +812,11 @@ namespace ClassicUO.Game.Scenes
                 return;
             }
 
+            // Spend a small, bounded slice of main-thread time decoding static art queued by chunk
+            // loads, before the render lists are built, so newly seen statics do not all decode
+            // synchronously in a single draw.
+            Client.Game.UO.Arts.WarmQueued();
+
             _alphaChanged = _alphaTimer < Time.Ticks;
 
             if (_alphaChanged)
