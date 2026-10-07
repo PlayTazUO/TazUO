@@ -138,6 +138,7 @@ namespace ClassicUO.Game.UI.Controls
             AddCheckbox(TazLang.Get("nameoverhead_yourself", "Yourself"), NameOverheadOptions.Self, 150, y);
             y += 22;
             AddCheckbox(TazLang.Get("nameoverhead_excludeyourself", "Exclude yourself"), NameOverheadOptions.ExcludeSelf, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_warmode", "Warmode"), NameOverheadOptions.Warmode, 150, y);
             y += 28;
 
             AddLabel(TazLang.Get("nameoverhead_mobilesbynotoriety", "Mobiles by notoriety"), 75, y, true);

@@ -60,6 +60,9 @@ namespace ClassicUO.Game.Managers
         Moveable = 1 << 20,
         Immoveable = 1 << 21,
 
+        // Mobiles cont.
+        Warmode = 1 << 22,
+
         AllItems = Containers | Gold | Stackable | LockedDown | Moveable | Immoveable | Other,
         AllMobiles = Humanoid | Monster | OwnFollowers | Self,
         MobilesAndCorpses = AllMobiles | MonsterCorpses | HumanoidCorpses,
@@ -201,6 +204,9 @@ namespace ClassicUO.Game.Managers
                 return true;
 
             if (ActiveOverheadOptions.HasFlag(NameOverheadOptions.OwnFollowers) && mobile.IsRenamable && mobile.NotorietyFlag != NotorietyFlag.Invulnerable && mobile.NotorietyFlag != NotorietyFlag.Enemy)
+                return true;
+
+            if (ActiveOverheadOptions.HasFlag(NameOverheadOptions.Warmode) && mobile.InWarMode)
                 return true;
 
             // Mobile notorieties

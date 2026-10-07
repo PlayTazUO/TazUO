@@ -6011,6 +6011,8 @@ namespace ClassicUO.Game.UI.Gumps
                     PositionHelper.LAST_Y);
 
                 PositionHelper.PositionControl(AddCheckbox("Exclude yourself", NameOverheadOptions.ExcludeSelf));
+                PositionHelper.PositionExact(AddCheckbox("Warmode", NameOverheadOptions.Warmode), rightPosX,
+                    PositionHelper.LAST_Y);
 
 
                 PositionHelper.BlankLine();
