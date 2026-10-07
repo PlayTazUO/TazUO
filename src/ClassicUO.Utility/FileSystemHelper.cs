@@ -7,6 +7,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using ClassicUO.Utility.Logging;
+using ClassicUO.Utility.Platforms;
 
 namespace ClassicUO.Utility
 {
@@ -59,6 +60,40 @@ namespace ClassicUO.Utility
             }
 
             return text;
+        }
+
+        /// <summary>
+        ///     Tests whether <paramref name="path"/> is <paramref name="directory"/> itself or a location nested inside it.
+        ///     Relative segments such as <c>..</c> are resolved first, so a path that escapes the directory is not
+        ///     reported as contained. Comparison is case-insensitive on Windows, case-sensitive elsewhere.
+        /// </summary>
+        /// <param name="path">The path to test.</param>
+        /// <param name="directory">The directory <paramref name="path"/> may live under.</param>
+        /// <returns><see langword="true"/> when the path is the directory or one of its descendants; otherwise <see langword="false"/>.</returns>
+        public static bool IsPathWithin(string path, string directory)
+        {
+            if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(directory))
+                return false;
+
+            string fullPath;
+            string fullDirectory;
+
+            try
+            {
+                fullPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+                fullDirectory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory));
+            }
+            catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                return false;
+            }
+
+            StringComparison comparison = PlatformHelper.IsWindows
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+
+            return fullPath.Equals(fullDirectory, comparison)
+                   || fullPath.StartsWith(fullDirectory + Path.DirectorySeparatorChar, comparison);
         }
 
         public static void EnsureFileExists(string path)
