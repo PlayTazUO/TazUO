@@ -41,8 +41,9 @@ internal static class OpenCompressedGump
 
         try
         {
-            if (ZLib.Decompress(p.Buffer.Slice(p.Position, (int)layoutCompressedLen),
-                    layoutBuffer.AsSpan(0, layoutDecompressedLen)) != ZLib.ZLibError.Ok)
+            ZLib.ZLibError res = ZLib.Decompress(p.Buffer.Slice(p.Position, (int)layoutCompressedLen),
+                    layoutBuffer.AsSpan(0, layoutDecompressedLen));
+            if (res != ZLib.ZLibError.Ok && res != ZLib.ZLibError.BufferError)
             {
                 Log.Error("Failed to decompress gump layout.");
                 return;
