@@ -399,7 +399,7 @@ namespace ClassicUO.Network
             }
         }
 
-        private static string GetUOFilePath() => Settings.GlobalSettings.UltimaOnlineDirectory;
+        private static string GetUOFilePath() => Settings.GlobalSettings.ResolvedUltimaOnlineDirectory;
 
         private static void SetWindowTitle(string str) => Client.Game.SetWindowTitle(str);
 

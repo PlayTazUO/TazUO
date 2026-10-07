@@ -121,7 +121,7 @@ namespace ClassicUO
 
             uint flags = 0;
 
-            if (!Directory.Exists(Settings.GlobalSettings.UltimaOnlineDirectory) || !File.Exists(Path.Combine(Settings.GlobalSettings.UltimaOnlineDirectory, "tiledata.mul")))
+            if (!Directory.Exists(Settings.GlobalSettings.ResolvedUltimaOnlineDirectory) || !File.Exists(Path.Combine(Settings.GlobalSettings.ResolvedUltimaOnlineDirectory, "tiledata.mul")))
             {
                 flags |= INVALID_UO_DIRECTORY;
             }
@@ -133,7 +133,7 @@ namespace ClassicUO
                 Log.Warn($"Client version [{clientVersionText}] is invalid, let's try to read the client.exe");
 
                 // mmm something bad happened, try to load from client.exe [windows only]
-                if (!ClientVersionHelper.TryParseFromFile(Path.Combine(Settings.GlobalSettings.UltimaOnlineDirectory, "client.exe"), out clientVersionText) || !ClientVersionHelper.IsClientVersionValid(clientVersionText, out clientVersion))
+                if (!ClientVersionHelper.TryParseFromFile(Path.Combine(Settings.GlobalSettings.ResolvedUltimaOnlineDirectory, "client.exe"), out clientVersionText) || !ClientVersionHelper.IsClientVersionValid(clientVersionText, out clientVersion))
                 {
                     Log.Error("Invalid client version: " + clientVersionText);
 

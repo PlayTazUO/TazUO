@@ -57,6 +57,25 @@ namespace ClassicUO.Configuration
 
         [JsonPropertyName("ultimaonlinedirectory")] public string UltimaOnlineDirectory { get; set; } = "";
 
+        /// <summary>
+        ///     Gets <see cref="UltimaOnlineDirectory"/> as an absolute path, resolving a relative value against
+        ///     <see cref="CUOEnviroment.ExecutablePath"/> rather than the process working directory so file lookups
+        ///     behave the same however the client was launched. The raw value is left untouched for serialization.
+        /// </summary>
+        [JsonIgnore]
+        public string ResolvedUltimaOnlineDirectory
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(UltimaOnlineDirectory))
+                    return CUOEnviroment.ExecutablePath;
+
+                return Path.IsPathRooted(UltimaOnlineDirectory)
+                    ? UltimaOnlineDirectory
+                    : Path.Combine(CUOEnviroment.ExecutablePath, UltimaOnlineDirectory);
+            }
+        }
+
         [JsonPropertyName("profilespath")] public string ProfilesPath { get; set; } = string.Empty;
 
         [JsonPropertyName("clientversion")] public string ClientVersion { get; set; } = string.Empty;
@@ -176,7 +195,7 @@ namespace ClassicUO.Configuration
             if (_eventineIPs.Contains(IP))
             {
                 CustomServer = CustomServers.Eventine;
-                CustomServerSettings.GetCustomAnimPath = () => Path.Combine(Path.GetFullPath(UltimaOnlineDirectory), "Anims" );
+                CustomServerSettings.GetCustomAnimPath = () => Path.Combine(ResolvedUltimaOnlineDirectory, "Anims" );
                 return;
             }
         }
