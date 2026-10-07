@@ -274,7 +274,7 @@ namespace ClassicUO
                 return;
 
             nint pluginPathPtr = Marshal.StringToHGlobalAnsi(pluginPath);
-            nint uoAssetsPtr = Marshal.StringToHGlobalAnsi(Settings.GlobalSettings.UltimaOnlineDirectory);
+            nint uoAssetsPtr = Marshal.StringToHGlobalAnsi(Settings.GlobalSettings.ResolvedUltimaOnlineDirectory);
 
             _loadPlugin
             (

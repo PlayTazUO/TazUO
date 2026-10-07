@@ -110,7 +110,7 @@ namespace ClassicUO
             // set localize string like tooltips, hints, etc. for every usage.
             Game.UI.MyraWindows.Widgets.Search.SearchableComboBoxLocalization.Install();
 
-            string clientPath = Settings.GlobalSettings.UltimaOnlineDirectory;
+            string clientPath = Settings.GlobalSettings.ResolvedUltimaOnlineDirectory;
             Log.Trace($"Ultima Online installation folder: {clientPath}");
 
             Log.Trace("Loading files...");
