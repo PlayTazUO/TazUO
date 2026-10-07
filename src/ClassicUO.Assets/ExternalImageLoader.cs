@@ -11,7 +11,7 @@ namespace ClassicUO.Assets
 {
     public class ExternalImageLoader
     {
-        private const string IMAGES_FOLDER = "ExternalImages", GUMP_EXTERNAL_FOLDER = "gumps", ART_EXTERNAL_FOLDER = "art";
+        private const string IMAGES_FOLDER = "ExternalImages", GUMP_EXTERNAL_FOLDER = "gumps", ART_EXTERNAL_FOLDER = "art", LAND_EXTERNAL_FOLDER = "land";
 
         private string exePath;
         private string _uoDirectory;
@@ -136,6 +136,15 @@ namespace ClassicUO.Assets
             return new GumpInfo();
         }
 
+        /// <summary>
+        /// Loads an external override for a static or land art graphic.
+        /// </summary>
+        /// <remarks>
+        /// Both kinds share <c>art_availableFilePaths</c> and <c>art_textureCache</c>: land graphics
+        /// are keyed by their raw index (below 0x4000) and statics by index + 0x4000, so the two
+        /// ranges never overlap.
+        /// </remarks>
+        /// <param name="graphic">Art index: the graphic for land, or graphic + 0x4000 for a static.</param>
         public ArtInfo LoadArtTexture(uint graphic)
         {
             if (!art_availableFilePaths.TryGetValue(graphic, out string fullImagePath))
@@ -317,6 +326,30 @@ namespace ClassicUO.Assets
             {
                 Directory.CreateDirectory(artPath);
             }
+
+            string landPath = Path.Combine(exePath, IMAGES_FOLDER, LAND_EXTERNAL_FOLDER);
+
+            if (Directory.Exists(landPath))
+            {
+                string[] files = FindImageFiles(landPath);
+
+                for (int i = 0; i < files.Length; i++)
+                {
+                    string fname = Path.GetFileName(files[i]);
+                    string baseName = Path.GetFileNameWithoutExtension(fname);
+
+                    // Land graphics sit below 0x4000 in the art index, so they are keyed by their
+                    // raw id rather than the static offset.
+                    if (TryParseId(baseName, out uint landId))
+                    {
+                        art_availableFilePaths[landId] = files[i];
+                    }
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory(landPath);
+            }
         }
 
         public void LoadResourceAssets(GumpsLoader gumps)
@@ -421,6 +454,11 @@ namespace ClassicUO.Assets
                                 RegisterArtFromBytes(graphicId, bytes);
                         }
                     }
+                    else if (folder.Equals(LAND_EXTERNAL_FOLDER, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (TryParseId(baseName, out uint landId) && !art_textureCache.ContainsKey(landId))
+                            RegisterArtFromBytes(landId, bytes);
+                    }
                 }
             }
         }
@@ -517,6 +555,11 @@ namespace ClassicUO.Assets
                         {
                             if (TryParseId(baseName, out uint fileId))
                                 RegisterArtFromBytes(fileId + 0x4000, bytes);
+                        }
+                        else if (folder.Equals(LAND_EXTERNAL_FOLDER, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryParseId(baseName, out uint landId))
+                                RegisterArtFromBytes(landId, bytes);
                         }
                     }
                 }
