@@ -1298,6 +1298,23 @@ def IsKeyPressed(key: "str") -> "bool":
     """
     pass
 
+def RequestHotkey(prompt: "str" = "Press a hotkey", timeout: "float" = 30) -> "str":
+    """
+     Shows the in-game hotkey capture window and waits for the player to pick a key combination.
+     The returned string matches what `OnHotKey` and `IsKeyPressed` accept, so it can be passed
+     straight to them, e.g. "CTRL+SHIFT+F1" or "A".
+     Only keyboard bindings are returned; mouse, wheel, controller and modifier-only captures are
+     rejected. Blocks until the player saves a key or closes the window (or the timeout elapses).
+     Example:
+     ```py
+     key = API.RequestHotkey()
+     if key:
+       API.OnHotKey(key, on_pressed)
+     ```
+    
+    """
+    pass
+
 def ScheduleTimedCallback(delayMs: "int", callback: "Any", timesToRepeat: "int" = -1) -> "int":
     """
      Schedules a callback to be invoked after a specified delay.
