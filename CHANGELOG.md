@@ -4,6 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 10/7/26
+* ***Feature:*** Added a "Warmode" filter to the nameplate options, so only mobiles in war mode (`Mobile.InWarMode`) can be shown
 * ***Legion:*** Added `API.RequestHotkey(prompt, timeout)` to pop up the in-game hotkey capture window and return the chosen key combination as a string, ready to pass straight to `API.OnHotKey()` or `API.IsKeyPressed()` (for example `"CTRL+SHIFT+F1"`); only keyboard bindings are accepted, and it returns an empty string if the window is cancelled or the timeout elapses
 * ***Fix:*** Relative UO data directory paths are now resolved against the client install directory instead of the process working directory, so a relative `ultimaonlinedirectory` (or `-uopath`) works the same however the client is launched. The value is still saved as-is, so relative paths stay relative in `settings.json`
 * ***Fix:*** Reduced stutter when entering new areas - static art is now decoded ahead of time on the main thread within a small per-frame budget, instead of all at once the first time each graphic is drawn
