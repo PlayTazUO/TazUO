@@ -515,6 +515,7 @@ public class OptionsWindow : MyraControl
     {
         ScreenOverlayManager.Instance.ClearPreview();
         base.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     #region Static Methods

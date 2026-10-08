@@ -190,19 +190,22 @@ namespace ClassicUO.Game.UI.Gumps
         {
             DestroyLabels();
 
-            _gText = CreateLabel(TheMacro.LabelFor(false));
-            _gTextActive = CreateLabel(TheMacro.LabelFor(true));
+            _gText = CreateLabel(TheMacro.LabelFor(false), _labelHue);
+            _gTextActive = CreateLabel(TheMacro.LabelFor(true), _activeLabelHue);
         }
 
         /// <summary>Renders one of the button's labels.</summary>
-        /// <remarks>The hue here is only a starting value; <see cref="Draw" /> sets it per frame from
-        /// the macro.</remarks>
         /// <param name="text">The text to render. Empty renders nothing, which is how a hidden label is drawn.</param>
+        /// <param name="hue">
+        ///     The label's hue, baked into the rendering. A unicode <see cref="RenderedText" /> colours
+        ///     its glyphs as it generates them and ignores its <c>Hue</c> afterwards, so changing the
+        ///     hue means rebuilding, not assigning.
+        /// </param>
         /// <returns>The rendering.</returns>
-        private RenderedText CreateLabel(string text) => RenderedText.Create
+        private RenderedText CreateLabel(string text, ushort hue) => RenderedText.Create
         (
             text ?? string.Empty,
-            Macro.DEFAULT_LABEL_HUE,
+            hue,
             255,
             true,
             FontStyle.BlackBorder,
@@ -331,9 +334,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (label != null)
             {
-                // Hover is answered by the plate alone. The label hue is a setting now, and overriding
-                // it under the pointer both contradicts the setting and hides what was chosen.
-                label.Hue = isActive ? _activeLabelHue : _labelHue;
+                // Hue is already in the rendering; see CreateLabel. Hover is answered by the plate
+                // alone, since recolouring the label under the pointer would hide the hue that is set.
 
                 // Multiplied, not replaced: the gump's own alpha is the whole button fading.
                 float labelAlpha = Alpha * (isActive ? _activeLabelOpacity : _labelOpacity);

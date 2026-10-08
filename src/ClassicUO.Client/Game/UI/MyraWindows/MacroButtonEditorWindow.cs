@@ -196,6 +196,9 @@ public sealed class MacroButtonEditorWindow : MyraControl
     /// <summary>Builds the preview and the caption naming the state it shows, replacing any already built.</summary>
     private void CreatePreview()
     {
+        // Some null monkey-business - the conditional check IS needed, just outsmarts IDE static analysis.
+        //
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
         _preview?.Dispose();
 
         _preview = new MacroButtonPreview(_macro);
@@ -303,7 +306,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
     /// </remarks>
     /// <param name="isActive">Which state this column edits.</param>
     /// <returns>The column.</returns>
-    private Widget BuildStateColumn(bool isActive)
+    private Grid BuildStateColumn(bool isActive)
     {
         var grid = new Grid { ColumnSpacing = COLUMN_SPACING, RowSpacing = ROW_SPACING, ColumnsProportions = { Auto(), Auto(), Auto() } };
 
@@ -337,10 +340,10 @@ public sealed class MacroButtonEditorWindow : MyraControl
         if (setting.Gate != null)
         {
             Place(grid, setting.Gate.CheckBox, row, 0);
-            setting.Gate.Bind(setting.Caption);
+            setting.Gate.Bind(setting.SettingCaption);
         }
 
-        Place(grid, setting.Caption, row, 1);
+        Place(grid, setting.SettingCaption, row, 1);
         Place(grid, setting.Controls, row, 2);
     }
 
@@ -378,9 +381,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
             input.Text = _macro.LabelFor(isActive);
             MirrorInheritedLabel();
             _preview.RefreshSurface();
-        });
-
-        gate.CheckBox.Tooltip = tooltip;
+        }) { CheckBox = { Tooltip = tooltip } };
 
         return new SettingRow(
             gate,
@@ -440,9 +441,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
         {
             SetActiveHue(target, isOn ? selector.Hue : null);
             refresh();
-        });
-
-        gate.CheckBox.Tooltip = tooltip;
+        }) { CheckBox = { Tooltip = tooltip } };
 
         return new SettingRow(gate, caption, selector);
     }
@@ -491,9 +490,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
         {
             _macro.ActiveLabelOpacity = isOn ? (byte)slider.Value : null;
             _preview.RefreshSurface();
-        });
-
-        gate.CheckBox.Tooltip = tooltip;
+        }) { CheckBox = { Tooltip = tooltip } };
 
         return new SettingRow(gate, caption, slider);
     }
@@ -519,7 +516,6 @@ public sealed class MacroButtonEditorWindow : MyraControl
         if (isActive)
         {
             SetActiveHue(target, hue);
-
             return;
         }
 
@@ -607,9 +603,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
         {
             _macro.ActiveGraphic = isOn ? ToActiveGraphic(picker.Graphic) : null;
             _preview.Refresh();
-        });
-
-        gate.CheckBox.Tooltip = tooltip;
+        }) { CheckBox = { Tooltip = tooltip } };
 
         return new SettingRow(gate, Caption("macrobtneditor_graphic", "Graphic", tooltip), picker);
     }
@@ -853,9 +847,9 @@ public sealed class MacroButtonEditorWindow : MyraControl
 
     /// <summary>One setting's three cells, before they are placed into a column.</summary>
     /// <param name="Gate">The override toggle, or null for a setting that is always in force.</param>
-    /// <param name="Caption">The row's caption.</param>
+    /// <param name="SettingCaption">The row's caption.</param>
     /// <param name="Controls">The setting's controls.</param>
-    private sealed record SettingRow(GateToggle? Gate, MyraLabel Caption, Widget Controls);
+    private sealed record SettingRow(GateToggle? Gate, MyraLabel SettingCaption, Widget Controls);
 
     /// <summary>A rule across the window, separating one band of settings from the next.</summary>
     private sealed class HorizontalSeparator : Panel
