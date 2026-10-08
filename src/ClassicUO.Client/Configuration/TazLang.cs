@@ -15,7 +15,7 @@ namespace ClassicUO.Configuration
         /// Returns the localized string for <paramref name="key"/>, or
         /// <paramref name="fallback"/> if the key is not found.
         /// </summary>
-        public static string Get(string key, string fallback = "") => _strings.GetValueOrDefault(key, fallback);
+        public static string Get(string key, string fallback = "??") => _strings.GetValueOrDefault(key, fallback);
 
         /// <summary>
         /// Returns the localized string for <paramref name="key"/> with formatted values, or an empty

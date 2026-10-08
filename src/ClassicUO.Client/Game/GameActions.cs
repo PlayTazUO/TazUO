@@ -164,14 +164,10 @@ internal static class GameActions
     }
 
     /// <summary>
-    /// Closes a currently opened settings window.
-    /// Note that this method attempts to close only the setting window currently defined as 'in-use' by the <see cref="Profile.UseNewOptionsWindow"/> property
+    /// Closes the currently opened settings window.
     /// </summary>
     /// <returns>False if no settings are open</returns>
-    internal static bool CloseSettings() =>
-        ProfileManager.CurrentProfile?.UseNewOptionsWindow == false
-            ? CloseSingletonGump<ModernOptionsGump>()
-            : CloseSingletonGump<NewOptionsWindow>();
+    internal static bool CloseSettings() => CloseSingletonGump<NewOptionsWindow>();
 
     private static bool CloseSingletonGump<TGump>() where TGump : class, IGui
     {
@@ -183,17 +179,10 @@ internal static class GameActions
         return true;
     }
 
-    internal static void OpenSettings(World world, int page = 0)
-    {
-        // Default to new window if unset
-        if (ProfileManager.CurrentProfile?.UseNewOptionsWindow == false)
-            ShowLegacyOptionsGump(world, page);
-        else
-            ShowNewOptionsGump();
-    }
+    internal static void OpenSettings(World world, int page = 0) => ShowNewOptionsGump();
 
     /// <summary>
-    /// Creates or opens the new options window
+    /// Creates or opens the options window
     /// </summary>
     public static void ShowNewOptionsGump()
     {
@@ -202,30 +191,6 @@ internal static class GameActions
             UIManager.Add(new NewOptionsWindow());
         else
             existing.BringOnTop();
-    }
-
-    /// <summary>
-    /// Creates or opens the legacy options window
-    /// </summary>
-    /// <param name="world">The world instance the gump belongs to</param>
-    /// <param name="page">The specific page to open</param>
-    public static void ShowLegacyOptionsGump(World world, int page = 0)
-    {
-        ModernOptionsGump opt = UIManager.GetGump<ModernOptionsGump>();
-
-        if (opt == null)
-        {
-            var optionsGump = new ModernOptionsGump(world);
-
-            UIManager.Add(optionsGump);
-            optionsGump.ChangePage(page);
-            optionsGump.SetInScreen();
-        }
-        else
-        {
-            opt.SetInScreen();
-            opt.BringOnTop();
-        }
     }
 
     internal static void OpenStatusBar(World world)

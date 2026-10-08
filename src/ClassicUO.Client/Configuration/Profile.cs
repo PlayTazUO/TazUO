@@ -678,7 +678,6 @@ namespace ClassicUO.Configuration
         public string NamePlateFont { get; set => SetProperty(ref field, value); } = "avadonian";
         public int NamePlateFontSize { get; set => SetProperty(ref field, value); } = 20;
 
-        public bool UseNewOptionsWindow { get; set => SetProperty(ref field, value); } = true;
         public string OptionsFont
         {
             get; set
