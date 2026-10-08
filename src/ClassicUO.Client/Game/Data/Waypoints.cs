@@ -4,6 +4,7 @@ namespace ClassicUO.Game.Data
 {
     public enum WaypointsType : ushort
     {
+        None = 0x00,
         Corpse = 0x01,
         PartyMember = 0x02,
         RallyPoint = 0x03,

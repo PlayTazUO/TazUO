@@ -14,13 +14,14 @@ namespace ClassicUO.Game.Managers
     {
         private static Dictionary<uint, string> _mobileNameCache = new();
 
-        public WMapEntity(uint serial)
+        public WMapEntity(uint serial, WaypointsType waypointType = WaypointsType.None)
         {
             Serial = serial;
+            WaypointType = waypointType;
 
             Mobile mob = Client.Game.UO.World.Mobiles.Get(serial);
 
-            if (mob != null)
+            if (mob != null && waypointType == WaypointsType.None)
                 GetName();
         }
 
@@ -29,6 +30,7 @@ namespace ClassicUO.Game.Managers
         public string Name;
         public readonly uint Serial;
         public int X, Y, HP, Map;
+        public WaypointsType WaypointType;
 
         public string GetName()
         {
@@ -92,21 +94,25 @@ namespace ClassicUO.Game.Managers
             int map,
             bool isguild,
             string name = null,
-            bool from_packet = false
+            bool from_packet = false,
+            WaypointsType type = WaypointsType.None
         )
         {
-            if (from_packet)
+            if (type == WaypointsType.None)
             {
-                _lastPacketRecv = Time.Ticks + 10000;
-            }
-            else if (_lastPacketRecv < Time.Ticks)
-            {
-                return;
-            }
+                if (from_packet)
+                {
+                    _lastPacketRecv = Time.Ticks + 10000;
+                }
+                else if (_lastPacketRecv < Time.Ticks)
+                {
+                    return;
+                }
 
-            if (!Enabled)
-            {
-                return;
+                if (!Enabled)
+                {
+                    return;
+                }
             }
 
             if (string.IsNullOrEmpty(name))
@@ -121,7 +127,7 @@ namespace ClassicUO.Game.Managers
 
             if (!Entities.TryGetValue(serial, out WMapEntity entity) || entity == null)
             {
-                entity = new WMapEntity(serial)
+                entity = new WMapEntity(serial, type)
                 {
                     X = x, Y = y, HP = hp, Map = map,
                     LastUpdate = Time.Ticks + 1000,
@@ -139,6 +145,7 @@ namespace ClassicUO.Game.Managers
                 entity.Map = map;
                 entity.IsGuild = isguild;
                 entity.LastUpdate = Time.Ticks + 1000;
+                entity.WaypointType = type;
 
                 if (string.IsNullOrEmpty(entity.Name) && !string.IsNullOrEmpty(name))
                 {
@@ -182,6 +189,11 @@ namespace ClassicUO.Game.Managers
 
             foreach (WMapEntity entity in Entities.Values)
             {
+                if (entity.WaypointType != WaypointsType.None)
+                {
+                    continue;
+                }
+
                 if (entity.LastUpdate < ticks)
                 {
                     _toRemove.Add(entity);
