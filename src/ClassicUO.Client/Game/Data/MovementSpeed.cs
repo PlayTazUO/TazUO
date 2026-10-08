@@ -11,6 +11,9 @@ namespace ClassicUO.Game.Data
         public const int STEP_DELAY_RUN = 200;
         public const int STEP_DELAY_WALK = 400;
 
+        // Floor for a measured server cadence; below this a step reads as a teleport.
+        public const int STEP_DELAY_MIN = 50;
+
         public static int TimeToCompleteMovement(bool run, bool mounted)
         {
             if (mounted)
