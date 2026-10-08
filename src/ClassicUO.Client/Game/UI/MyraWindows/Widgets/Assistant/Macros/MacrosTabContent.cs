@@ -15,7 +15,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Macros;
 
 public static class MacrosTabContent
 {
-    private static readonly HashSet<MacroType> _filteredMacroTypes = [MacroType.INVALID];
+    private static readonly HashSet<MacroType> _filteredMacroTypes = [MacroType.INVALID, MacroType.REMOVED, MacroType.REMOVED2, MacroType.REMOVED3];
 
     /// <summary>Macro types whose sub-type dropdown is a list of available gumps (shared sub-type range).</summary>
     private static readonly HashSet<MacroType> _gumpListMacroTypes = [MacroType.Open, MacroType.Close, MacroType.Minimize, MacroType.Maximize, MacroType.ToggleGump];

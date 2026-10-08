@@ -17,7 +17,7 @@ public static class HudTabContent
         var regularFlags = new List<HideHudFlags>();
         foreach (HideHudFlags flag in Enum.GetValues(typeof(HideHudFlags)))
         {
-            if (flag == HideHudFlags.None || flag == HideHudFlags.All) continue;
+            if (flag == HideHudFlags.None || flag == HideHudFlags.All || flag == HideHudFlags.REMOVED) continue;
             regularFlags.Add(flag);
         }
 
@@ -80,7 +80,6 @@ public static class HudTabContent
         HideHudFlags.Containers => "Traditional container windows",
         HideHudFlags.Healthbars => "Health bar windows",
         HideHudFlags.StatusBar => "Character status windows",
-        HideHudFlags.SpellBar => "Spell bar windows",
         HideHudFlags.Journal => "Journal/chat windows",
         HideHudFlags.XMLGumps => "Server-sent XML gump windows",
         HideHudFlags.NearbyCorpseLoot => "Nearby corpse loot windows",

@@ -1239,14 +1239,9 @@ namespace ClassicUO
                     }
                     else if (sdlEvent->gbutton.button == (byte)SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_START && UO.World.InGame)
                     {
-                        Gump g = UIManager.GetGump<ModernOptionsGump>();
-                        if (g == null)
+                        if (!GameActions.CloseSettings())
                         {
-                            UIManager.Add(new ModernOptionsGump(UIManager.World));
-                        }
-                        else
-                        {
-                            g.Dispose();
+                            GameActions.ShowNewOptionsGump();
                         }
                     }
                     break;

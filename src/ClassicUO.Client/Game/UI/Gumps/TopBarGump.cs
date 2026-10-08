@@ -11,7 +11,6 @@ using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.Game.UI.MyraWindows;
 
 namespace ClassicUO.Game.UI.Gumps

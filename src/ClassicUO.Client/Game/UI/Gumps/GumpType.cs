@@ -34,7 +34,7 @@ namespace ClassicUO.Game.UI.Gumps
         DurabilityGump = 6465,
         GridContainer = 8787,
         NearbyCorpseLoot,
-        SpellBar,
+        REMOVED,
         MenuGump,
         TextEntryDialogGump,
         HealthBarCollector,
