@@ -9,6 +9,9 @@ All notable changes to TazUO will be recorded here.
 * ***Misc:*** Removed the spell bar system - the Spell Bar gump, its manager, presets, and the Assistant > General > Spell Bar tab. The "Spell bar windows" Hide-HUD entry and the spell bar row macros are gone too (their macro IDs stay reserved so saved macros still load). The shared spell quick-search widget remains for the top bar and the action/counter bar context menu
 * ***Misc:*** Removed 253 stale entries from `language.ini` left behind by removed or renamed features, and added `tools/check_language_keys.py` to report (and `--prune`) unreferenced keys going forward
 * ***Misc:*** Removed the legacy SQL profile settings and their one-time migration shim (`SqlProfile.cs`) now that settings live in JSON again, along with the now-unused SQL settings source generator and its attribute. The photosensitivity-warning acknowledgement is kept as a regular profile setting
+* ***Feature:*** Action bars now have a per-bar "Hide label" option in their cell context menu; hiding the label collapses the header so the cells sit flush with the top
+* ***Feature:*** The network status gump now shows total packets sent and received on their own line, abbreviated with k/m/b suffixes once large
+* ***Fix:*** The in-game ping now falls back to an ICMP ping when a server does not answer the protocol ping packet, and stops trying for the rest of the session (showing "Ping: N/A") if ICMP fails too
 
 ## 10/7/26
 * ***Feature:*** Added a "Warmode" filter to the nameplate options, so only mobiles in war mode (`Mobile.InWarMode`) can be shown

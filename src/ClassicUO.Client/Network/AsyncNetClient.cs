@@ -23,6 +23,7 @@ namespace ClassicUO.Network
         private Task _receiveTask;
         public bool IsConnected => _socket?.Client?.Connected ?? false;
         public EndPoint LocalEndPoint => _socket?.Client?.LocalEndPoint;
+        public EndPoint RemoteEndPoint => _socket?.Client?.RemoteEndPoint;
 
         public event EventHandler OnConnected, OnDisconnected;
         public event EventHandler<SocketError> OnError;
@@ -215,6 +216,13 @@ namespace ClassicUO.Network
         public static AsyncNetClient Socket { get; set; } = new AsyncNetClient();
         public bool IsConnected => _socket != null && _socket.IsConnected;
         public NetStatistics Statistics { get; }
+
+        /// <summary>
+        ///     Remote endpoint of the active game connection, or <c>null</c> when disconnected.
+        ///     Needed to derive the IP for ICMP fallback pings, since the 0x73 packet ping may be
+        ///     unanswered by some servers.
+        /// </summary>
+        public EndPoint RemoteEndPoint => _socket?.RemoteEndPoint;
 
         public AsyncNetClient()
         {

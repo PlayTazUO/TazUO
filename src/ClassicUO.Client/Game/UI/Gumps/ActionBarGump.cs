@@ -48,6 +48,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private string _name;
         private int _barId;
+        private bool _showLabel = true;
 
         /// <summary>Restore constructor: state is filled in by <see cref="Restore"/>.</summary>
         public ActionBarGump(World world) : base(world, 0, 0)
@@ -94,6 +95,12 @@ namespace ClassicUO.Game.UI.Gumps
 
         /// <summary>Stable per-bar id used to namespace this bar's hotkeys across save/restore.</summary>
         private int BarId => _barId;
+
+        /// <summary>Height of the title strip, or zero when the name label is hidden so the cells sit flush to the top.</summary>
+        private int HeaderHeight => _showLabel ? HEADER_HEIGHT : 0;
+
+        /// <summary>Whether the bar's name label is shown in its header strip.</summary>
+        public bool ShowLabel => _showLabel;
 
         private string HotkeyPrefix => $"{HotkeyIdPrefix}{_barId}:";
 
@@ -176,12 +183,15 @@ namespace ClassicUO.Game.UI.Gumps
             AcceptKeyboardInput = false;
             WantUpdateSize = false;
             Width = _rectSize * _columns + 1;
-            Height = HEADER_HEIGHT + _rectSize * _rows + 1;
+            Height = HeaderHeight + _rectSize * _rows + 1;
 
             Add(_background = new AlphaBlendControl(0.7f) { Width = Width, Height = Height });
 
-            Add(_nameLabel = new Label(_name, true, 0x35, 0, 1, FontStyle.BlackBorder) { Y = 1 });
-            CenterNameLabel();
+            if (_showLabel)
+            {
+                Add(_nameLabel = new Label(_name, true, 0x35, 0, 1, FontStyle.BlackBorder) { Y = 1 });
+                CenterNameLabel();
+            }
 
             for (int row = 0; row < _rows; row++)
             {
@@ -191,7 +201,7 @@ namespace ClassicUO.Game.UI.Gumps
                         new ActionItem(
                             this,
                             col * _rectSize + 2,
-                            HEADER_HEIGHT + row * _rectSize + 2,
+                            HeaderHeight + row * _rectSize + 2,
                             _rectSize - 4,
                             _rectSize - 4
                         )
@@ -315,7 +325,7 @@ namespace ClassicUO.Game.UI.Gumps
         private void ApplyLayout()
         {
             Width = _rectSize * _columns + 1;
-            Height = HEADER_HEIGHT + _rectSize * _rows + 1;
+            Height = HeaderHeight + _rectSize * _rows + 1;
 
             _background.Width = Width;
             _background.Height = Height;
@@ -337,7 +347,7 @@ namespace ClassicUO.Game.UI.Gumps
                 int row = index / _columns;
                 int col = index % _columns;
                 int x = col * _rectSize + 2;
-                int y = HEADER_HEIGHT + row * _rectSize + 2;
+                int y = HeaderHeight + row * _rectSize + 2;
 
                 if (index < items.Length)
                 {
@@ -356,6 +366,39 @@ namespace ClassicUO.Game.UI.Gumps
 
             RefreshHotkeyLabels();
             SetInScreen();
+        }
+
+        /// <summary>Toggles the bar's name label, collapsing or expanding the header strip and re-laying out its cells.</summary>
+        public void ToggleLabel() => SetLabelVisible(!_showLabel);
+
+        /// <summary>
+        /// Shows or hides the name label and re-lays out the bar so the header strip is either
+        /// <see cref="HEADER_HEIGHT"/> tall or fully collapsed. Cell content is preserved.
+        /// </summary>
+        private void SetLabelVisible(bool visible)
+        {
+            if (_showLabel == visible)
+                return;
+
+            _showLabel = visible;
+
+            if (_showLabel)
+            {
+                if (_nameLabel == null)
+                    Add(_nameLabel = new Label(_name, true, 0x35, 0, 1, FontStyle.BlackBorder) { Y = 1 });
+            }
+            else if (_nameLabel != null)
+            {
+                _nameLabel.Parent = null;
+                _nameLabel.Dispose();
+                _nameLabel = null;
+            }
+
+            ApplyLayout();
+
+            // Every cell's menu carries its own toggle entry, so refresh them all to reflect the new state.
+            foreach (ActionItem item in GetControls<ActionItem>())
+                item.RefreshLabelToggleText();
         }
 
         public ActionItem GetActionItem(int index)
@@ -396,6 +439,7 @@ namespace ClassicUO.Game.UI.Gumps
             writer.WriteAttributeString("rows", _rows.ToString());
             writer.WriteAttributeString("columns", _columns.ToString());
             writer.WriteAttributeString("rectsize", _rectSize.ToString());
+            writer.WriteAttributeString("showlabel", _showLabel.ToString());
 
             ActionItem[] controls = GetControls<ActionItem>();
 
@@ -465,6 +509,9 @@ namespace ClassicUO.Game.UI.Gumps
             _rows = int.TryParse(xml.GetAttribute("rows"), out int rows) ? ClampDimension(rows) : MIN_DIMENSION;
             _columns = int.TryParse(xml.GetAttribute("columns"), out int columns) ? ClampDimension(columns) : MIN_DIMENSION;
             _rectSize = int.TryParse(xml.GetAttribute("rectsize"), out int rectSize) ? ClampCellSize(rectSize) : MIN_CELL_SIZE;
+
+            // Missing attribute keeps the label visible (matching the pre-option default).
+            _showLabel = !xml.HasAttribute("showlabel") || (bool.TryParse(xml.GetAttribute("showlabel"), out bool showLabel) && showLabel);
 
             BuildGump();
 
@@ -567,6 +614,7 @@ namespace ClassicUO.Game.UI.Gumps
         public class ActionItem : BarCell
         {
             private readonly ActionBarGump _gump;
+            private readonly ContextMenuItemEntry _labelToggle;
 
             public ActionItem(ActionBarGump gump, int x, int y, int w, int h) : base(gump, x, y, w, h)
             {
@@ -583,9 +631,18 @@ namespace ClassicUO.Game.UI.Gumps
 
                 // Bar-management entries fold into the shared Options submenu, ahead of Set hotkey.
                 OptionsMenu.Items.Insert(0, sizeMenu);
+                _labelToggle = new ContextMenuItemEntry(LabelToggleText(), _gump.ToggleLabel);
+                OptionsMenu.Add(_labelToggle);
                 OptionsMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_rename", "Rename action bar"), Rename));
                 OptionsMenu.Add(new ContextMenuItemEntry(TazLang.Get("actionbar_delete", "Delete action bar"), () => _gump.Dispose()));
             }
+
+            /// <summary>Refreshes the toggle entry's text to match the bar's current label visibility.</summary>
+            public void RefreshLabelToggleText() => _labelToggle.Text = LabelToggleText();
+
+            private string LabelToggleText() => _gump.ShowLabel
+                ? TazLang.Get("actionbar_hidelabel", "Hide label")
+                : TazLang.Get("actionbar_showlabel", "Show label");
 
             private void SetCellSize()
             {
