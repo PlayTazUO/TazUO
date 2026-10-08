@@ -28,6 +28,9 @@ namespace ClassicUO.Configuration
         /// <paramref name="fallback"/> when the key is not found. The fallback is a template too, so it
         /// carries the same <c>{0}</c> placeholders as the localized string.
         /// </summary>
+        /// <remarks>
+        /// This overload is named differently to avoid ambiguity when providing nulls (since the file is not currently #nullable enable)
+        /// </remarks>
         public static string GetEx(string key, string fallback, string[] replace) => Format(key, _strings.GetValueOrDefault(key, fallback), replace);
 
         /// <summary>

@@ -1232,9 +1232,9 @@ namespace ClassicUO.Configuration
                                     gump = new MacroButtonGump(world);
 
                                     break;
+                                // The button editor is a Myra window now and is not persisted; a saved
+                                // entry from an older client is dropped rather than restored empty.
                                 case GumpType.MacroButtonEditor:
-                                    gump = new MacroButtonEditorGump(world);
-
                                     break;
 
                                 case GumpType.MiniMap:

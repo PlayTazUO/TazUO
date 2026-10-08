@@ -1,3 +1,4 @@
+using System;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
@@ -39,6 +40,35 @@ public static class MyraStyle
     private static TextureRegion _skillUpButton;
     private static TextureRegion _skillDownButton;
     private static TextureRegion _skillLockBtn;
+
+    /// <summary>
+    /// The generated radio marks, held as swappable images so a restyle can resize them in place - see
+    /// <see cref="SwappableImage" /> for why handing the stylesheet new ones does not work. Built on
+    /// the first <see cref="ApplyRadioStyle" /> and kept for the session.
+    /// </summary>
+    private static SwappableImage _radioMarkOff, _radioMarkOver, _radioMarkOn;
+
+    /// <summary>
+    /// Size the radio marks were generated at, so a restyle that does not change it is a no-op.
+    /// 0 until the first <see cref="ApplyRadioStyle" />.
+    /// </summary>
+    private static int _radioMarkSize;
+
+    /// <summary>
+    /// Radio mark size for the default font size, matching the check box art it sits beside. Scaled
+    /// from there so the mark keeps step with the text rather than shrinking against it.
+    /// </summary>
+    private const int RADIO_MARK_SIZE_AT_DEFAULT_FONT = 17;
+    private const int DEFAULT_UI_FONT_SIZE = 16;
+    private const int RADIO_MARK_MIN_SIZE = 10;
+
+    /// <summary>
+    /// Ceiling on the generated mark. Drawing is quadratic in the size, so the three faces together
+    /// cost roughly 9ms at this size against well under a millisecond at the default - affordable
+    /// because it is paid only on a style rebuild, but not worth letting grow unbounded. The three
+    /// textures also sit in GPU memory for the session: 4 bytes a texel, so 48KiB at this size.
+    /// </summary>
+    private const int RADIO_MARK_MAX_SIZE = 64;
 
     public static void SetDefault()
     {
@@ -134,6 +164,8 @@ public static class MyraStyle
         cbStyle.ImageStyle.Image = new TextureRegion(ModernUIConstants.ModernUICheckBoxUnChecked);
         cbStyle.ImageStyle.Background = null;
 
+        ApplyRadioStyle();
+
         TextBoxStyle inputStyle = Stylesheet.Current.TextBoxStyle;
         inputStyle.Background = new SolidBrush(new Color(21, 21, 21, 75));
         inputStyle.Border = new SolidBrush(new Color(21, 21, 21, STANDARD_BORDER_ALPHA));
@@ -196,6 +228,12 @@ public static class MyraStyle
     /// <c>Enabled = false</c> visible, and it costs nothing at draw time.
     /// </para>
     /// <para>
+    /// Worse than merely identical wherever a style defines a hover brush: the disabled branch is
+    /// skipped entirely when <c>DisabledBackground</c> is null, and the next one tested is the hover
+    /// brush - which <c>IsMouseInside</c> reports regardless of <c>Enabled</c>. A dead control then
+    /// lights up under the pointer, looking live while refusing every input.
+    /// </para>
+    /// <para>
     /// Runs last, so a style that sets its own disabled brush above keeps it. Every style and
     /// sub-style is null-checked: the default stylesheet leaves several of them unset - the tree's
     /// label style among them - and this runs during content load, where a null reference is a
@@ -225,6 +263,16 @@ public static class MyraStyle
         {
             textBoxStyle.DisabledBackground ??= disabledFill;
             textBoxStyle.DisabledTextColor ??= palette.DisabledText;
+        }
+
+        if (sheet.HorizontalSliderStyle is { } sliderStyle)
+        {
+            sliderStyle.DisabledBackground ??= disabledFill;
+
+            // The knob's fill sits on its image rather than on the button around it, so a disabled
+            // brush on the button alone would never be the one drawn.
+            if (sliderStyle.KnobStyle?.ImageStyle is { } knobImage)
+                knobImage.DisabledBackground ??= disabledFill;
         }
 
         if (sheet.TreeStyle is { } treeStyle)
@@ -257,6 +305,65 @@ public static class MyraStyle
         if (style != null)
             style.DisabledTextColor ??= palette.DisabledText;
     }
+
+
+    /// <summary>
+    /// Builds the radio button style. Left on Myra's default this draws a bare tick that reads as a
+    /// bullet point, saying nothing about the options being exclusive.
+    /// </summary>
+    /// <remarks>
+    /// The marks are generated at the current font's size rather than loaded as art, so they stay
+    /// crisp at any UI scale; see <see cref="RadioMark" />. A resize reaches the radios already on
+    /// screen because the stylesheet holds <see cref="SwappableImage" />s, not the textures.
+    /// </remarks>
+    private static void ApplyRadioStyle()
+    {
+        ImageTextButtonStyle rbStyle = Stylesheet.Current.RadioButtonStyle;
+
+        if (rbStyle?.ImageStyle == null || Client.Game?.GraphicsDevice == null)
+            return;
+
+        rbStyle.ImageStyle.Background = null;
+        rbStyle.LabelStyle.Font = _uiFont;
+
+        int size = Math.Clamp(
+            (int)MathF.Round(RADIO_MARK_SIZE_AT_DEFAULT_FONT * (UiFontSize / (float)DEFAULT_UI_FONT_SIZE)),
+            RADIO_MARK_MIN_SIZE,
+            RADIO_MARK_MAX_SIZE
+        );
+
+        // A re-style for another reason - a font family change, a profile load - leaves the marks at the
+        // size they are already drawn at, so there is nothing to regenerate.
+        if (size == _radioMarkSize)
+            return;
+
+        _radioMarkSize = size;
+
+        if (_radioMarkOff == null)
+        {
+            _radioMarkOff = RadioMarkImage(RadioMarkState.Off);
+            _radioMarkOver = RadioMarkImage(RadioMarkState.Over);
+            _radioMarkOn = RadioMarkImage(RadioMarkState.On);
+
+            rbStyle.ImageStyle.Image = _radioMarkOff;
+            rbStyle.ImageStyle.OverImage = _radioMarkOver;
+            rbStyle.ImageStyle.PressedImage = _radioMarkOn;
+
+            return;
+        }
+
+        _radioMarkOff.Regenerate();
+        _radioMarkOver.Regenerate();
+        _radioMarkOn.Regenerate();
+    }
+
+    /// <summary>
+    /// A mark that redraws itself at whatever <see cref="_radioMarkSize" /> holds when asked, so a
+    /// resize does not have to reach the radios already built from it.
+    /// </summary>
+    /// <param name="state">Which of the mark's three looks to draw.</param>
+    private static SwappableImage RadioMarkImage(RadioMarkState state) =>
+        new(() => RadioMark.Create(Client.Game.GraphicsDevice, _radioMarkSize, state));
 
     /// <summary>
     /// Various properties that cannot be applied by default in Myra for grids.

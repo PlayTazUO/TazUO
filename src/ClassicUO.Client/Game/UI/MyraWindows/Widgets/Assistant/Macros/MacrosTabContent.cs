@@ -170,7 +170,7 @@ public static class MacrosTabContent
 
             macroButtonRow.Widgets.Add(new MyraButton(TazLang.Get("macrostab_buttoneditor"), () =>
             {
-                OpenMacroButtonEditor(macro);
+                MacroButtonEditorWindow.Show(macro);
             }) { Tooltip = TazLang.Get("macrostab_buttoneditor_tooltip") });
 
             editorPanel.Widgets.Add(macroButtonRow);
@@ -634,19 +634,5 @@ public static class MacrosTabContent
         root.Widgets.Add(toolbar);
         root.Widgets.Add(mainArea);
         return root;
-    }
-
-    /// <summary>Opens (or brings to front) the macro button editor for the given macro.</summary>
-    private static void OpenMacroButtonEditor(Macro macro)
-    {
-        MacroButtonEditorGump? existing = UIManager.Gumps.OfType<MacroButtonEditorGump>().FirstOrDefault();
-        existing?.Dispose();
-
-        var btnEditorGump = new MacroButtonEditorGump(World.Instance, macro, 0, 0);
-        btnEditorGump.CenterXInViewPort();
-        btnEditorGump.CenterYInViewPort();
-        UIManager.Add(btnEditorGump);
-        btnEditorGump.SetInScreen();
-        btnEditorGump.BringOnTop();
     }
 }

@@ -4,11 +4,8 @@
 using System;
 using System.Collections.Generic;
 using ClassicUO.Common;
-using ClassicUO.Game.Managers;
-using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using ClassicUO.Game.UI.MyraWindows.Widgets.ArtTexture;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
 
@@ -136,6 +133,7 @@ public static class OptionsFactory
     /// <param name="value">The initial slider value</param>
     /// <param name="onChange">Callback invoked with the new value whenever the slider moves</param>
     /// <param name="labelOnLeft">When <see langword="true"/>, the label is placed to the left of the slider</param>
+    /// <param name="decimalPlaces">The number of decimal places to display</param>
     /// <returns>An <see cref="OptionItem"/> wrapping the slider</returns>
     internal static OptionItem CreateSliderOption(
         string label,
@@ -216,12 +214,15 @@ public static class OptionsFactory
     /// <param name="backingProperty">Accessor for the underlying hue value</param>
     /// <returns>An <see cref="OptionItem"/> wrapping the hue picker</returns>
     internal static OptionItem PropBoundHuePicker(string? label, Accessor<ushort> backingProperty) =>
-        CreateHuePicker(label, backingProperty.Get(), backingProperty.Set, 20);
+        CreateHuePicker(label, backingProperty.Get(), backingProperty.Set, HueSwatch.DEFAULT_SIZE);
 
     /// <summary>
-    /// Creates an <see cref="OptionItem"/> containing a clickable hue-picker swatch that opens
-    /// a <see cref="ModernColorPicker"/> on touch
+    /// Creates an <see cref="OptionItem"/> wrapping a <see cref="HueSwatch"/>
     /// </summary>
+    /// <remarks>
+    /// The picker itself lives in <see cref="HueSwatch"/> so that it is reusable outside the options
+    /// panels; all this adds is the optional label and the <see cref="OptionItem"/> the tabs expect.
+    /// </remarks>
     /// <param name="label">Optional label; when non-empty it is placed to the right of the swatch</param>
     /// <param name="hue">The initially displayed hue</param>
     /// <param name="onChange">Callback invoked with the newly chosen hue</param>
@@ -230,28 +231,13 @@ public static class OptionsFactory
     internal static OptionItem CreateHuePicker(string? label, ushort hue, Action<ushort> onChange, int maxSize = 36) =>
         new(label ?? string.Empty, () =>
         {
-            var textureButton = new MyraArtTexture(0x0FAB, hue, maxSize) { Tooltip = $"Current hue: {hue}" };
-            textureButton.TouchUp += (_, _) =>
-            {
-                if (!textureButton.Enabled)
-                    return;
-
-                UIManager.GetGump<ModernColorPicker>()?.Dispose();
-                UIManager.Add(new ModernColorPicker(
-                    World.Instance,
-                    newHue =>
-                    {
-                        textureButton.SetColorByHue(newHue);
-                        onChange(newHue);
-                    },
-                    isClickable: true
-                ));
-            };
+            var swatch = new HueSwatch(hue, maxSize);
+            swatch.HueChanged += (_, picked) => onChange(picked);
 
             if (string.IsNullOrWhiteSpace(label))
-                return textureButton;
+                return swatch;
 
-            return textureButton.PlaceBefore(new MyraLabel(label, MyraLabel.TextStyle.P));
+            return swatch.PlaceBefore(new MyraLabel(label, MyraLabel.TextStyle.P));
         });
 
     /// <summary>
