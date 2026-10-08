@@ -92,7 +92,6 @@ search_entry("Language translations", "TazUO allows you to add additional langua
 search_entry("Python Scripting", "TazUO added built-in python scripting to the client.", "legion+scripting")
 entry("Client commands", "TazUO added a gump to show you available client commands. This can be opened from the top menu bar -> more -> Client Commands.", "https://tazuo.org/")
 entry("Damage numbers in your journal", "You can add dmg numbers to a journal tab(Right click the tab) to see damage numbers in the journal.", "https://tazuo.org/")
-search_entry("Spell bar", "TazUO added a spell bar to easily manage, store, and cast spells via hotkey or click.", "spellbar")
 entry("Quick Spell Cast Gump", "TazUO added a simple gump to easily search for and cast spells from. Top Menu -> More -> Tools -> Quick spell cast.", "https://tazuo.org/")
 search_entry("Auto Bandage", "TazUO added auto bandaging to keep you healed.", "auto+bandage")
 search_entry("Profile backups", "TazUO backs up your profiles 3 times, just in-case.", "profile+backups")

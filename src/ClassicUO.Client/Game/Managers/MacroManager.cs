@@ -16,7 +16,6 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using ClassicUO.Common.Enums;
-using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.LegionScripting;
 using static SDL3.SDL;
 using ClassicUO.Game.UI;
@@ -1328,29 +1327,6 @@ namespace ClassicUO.Game.Managers
                     if (!GameActions.CloseLegionScriptingGump())
                         GameActions.OpenLegionScriptingGump(_world);
 
-                    break;
-
-                case MacroType.SpellBarRowUp:
-                    SpellBar.Instance?.ChangeRow(true);
-
-                    break;
-
-                case MacroType.SpellBarRowDown:
-                    SpellBar.Instance?.ChangeRow(false);
-
-                    break;
-
-                case MacroType.SetSpellBarRow:
-                    string spellRow = ((MacroObjectString)macro).Text;
-
-                    if (int.TryParse(spellRow, out int row))
-                    {
-                        SpellBar.Instance?.SetRow(row);
-                    }
-                    else
-                    {
-                        GameActions.Print(_world, "That is not a valid row.", Constants.HUE_ERROR);
-                    }
                     break;
 
                 case MacroType.Dismount:
@@ -3147,7 +3123,6 @@ namespace ClassicUO.Game.Managers
                 case MacroType.ModifyUpdateRange:
                 case MacroType.RazorMacro:
                 case MacroType.UseCounterBar:
-                case MacroType.SetSpellBarRow:
                 case MacroType.ClientCommand:
                 case MacroType.UseType:
                 case MacroType.SetOrganizerSource:
@@ -3346,7 +3321,6 @@ namespace ClassicUO.Game.Managers
                 case MacroType.ModifyUpdateRange:
                 case MacroType.RazorMacro:
                 case MacroType.UseCounterBar:
-                case MacroType.SetSpellBarRow:
                 case MacroType.ClientCommand:
                 case MacroType.UseType:
                 case MacroType.SetOrganizerSource:

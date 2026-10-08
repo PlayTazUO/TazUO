@@ -24,7 +24,6 @@ using System.Runtime.CompilerServices;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
-using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.Game.UI.MyraWindows;
 
 namespace ClassicUO.Configuration
@@ -826,7 +825,6 @@ namespace ClassicUO.Configuration
         public bool ScavengerSkipLockedDown { get; set => SetProperty(ref field, value); } = true;
         public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
         public bool NearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
-        public bool SpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
         public byte ForcedHouseTransparency { get; set => SetProperty(ref field, value); } = 40;
         public ushort ForcedTransparencyHouseTileHue { get; set => SetProperty(ref field, value); } = 0;
         public bool ForceHouseTransparency { get; set => SetProperty(ref field, value); }
@@ -1386,7 +1384,6 @@ namespace ClassicUO.Configuration
 
                             switch (type)
                             {
-                                case GumpType.SpellBar: gump = new SpellBar(world); break;
                                 case GumpType.NearbyCorpseLoot: gump = new NearbyLootGump(world); break;
                                 case GumpType.Buff:
                                     if (ProfileManager.CurrentProfile.UseImprovedBuffBar)

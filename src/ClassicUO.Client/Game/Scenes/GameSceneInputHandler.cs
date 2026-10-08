@@ -1516,7 +1516,6 @@ namespace ClassicUO.Game.Scenes
 
             if (CanExecuteMacro())
             {
-                SpellBarManager.KeyPress(key, e.mod);
                 SelfHealManager.HandleKeyDown(key, e.mod, e.repeat);
                 ClassicUO.Game.Managers.Hotkeys.HotKeys.HandleKeyDown(key, e.mod, e.repeat);
 
@@ -1803,8 +1802,6 @@ namespace ClassicUO.Game.Scenes
 
             if (CanExecuteMacro())
             {
-                SpellBarManager.ControllerInput((SDL.SDL_GamepadButton)e.button);
-
                 Macro macro = _world.Macros.FindMacro((SDL.SDL_GamepadButton)e.button);
                 if (macro != null && macro.Items is MacroObject mac)
                 {
