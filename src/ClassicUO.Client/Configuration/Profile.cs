@@ -449,6 +449,7 @@ namespace ClassicUO.Configuration
         public bool WorldMapShowCoordinates { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowMouseCoordinates { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowCorpse { get; set => SetProperty(ref field, value); } = true;
+        public bool WorldMapShowResurrectionWaypoints { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowSextantCoordinates { get; set => SetProperty(ref field, value); } = false;
         public int WorldMapSextantBaseX { get; set => SetProperty(ref field, value); } = 1323;
         public int WorldMapSextantBaseY { get; set => SetProperty(ref field, value); } = 1624;

@@ -115,6 +115,7 @@ public class WorldMapGump : ResizableGump
     private bool _showPartyMembers = true;
     private bool _showPlayerBar = true;
     private bool _showPlayerName = true;
+    private bool _showResurrectionWaypoints = true;
     private int _zoomIndex = 4;
     private bool _showGridIfZoomed = true;
     private bool _allowPositionalTarget = false;
@@ -254,6 +255,7 @@ public class WorldMapGump : ResizableGump
         _showMouseCoordinates = ProfileManager.CurrentProfile.WorldMapShowMouseCoordinates;
         _showMobiles = ProfileManager.CurrentProfile.WorldMapShowMobiles;
         _showCorpse = ProfileManager.CurrentProfile.WorldMapShowCorpse;
+        _showResurrectionWaypoints = ProfileManager.CurrentProfile.WorldMapShowResurrectionWaypoints;
 
 
         _showPlayerName = ProfileManager.CurrentProfile.WorldMapShowPlayerName;
@@ -299,6 +301,7 @@ public class WorldMapGump : ResizableGump
         ProfileManager.CurrentProfile.WorldMapShowMouseCoordinates = _showMouseCoordinates;
         ProfileManager.CurrentProfile.WorldMapShowMobiles = _showMobiles;
         ProfileManager.CurrentProfile.WorldMapShowCorpse = _showCorpse;
+        ProfileManager.CurrentProfile.WorldMapShowResurrectionWaypoints = _showResurrectionWaypoints;
 
         ProfileManager.CurrentProfile.WorldMapShowPlayerName = _showPlayerName;
         ProfileManager.CurrentProfile.WorldMapShowPlayerBar = _showPlayerBar;
@@ -432,6 +435,8 @@ public class WorldMapGump : ResizableGump
         _options["show_party_healthbar"] = new ContextMenuItemEntry(TazLang.Get("show_group_healthbar"), () => { _showGroupBar = !_showGroupBar; SaveSettings(); }, true, _showGroupBar);
 
         _options["show_coordinates"] = new ContextMenuItemEntry(TazLang.Get("show_your_coordinates"), () => { _showCoordinates = !_showCoordinates; SaveSettings(); }, true, _showCoordinates);
+
+        _options["show_resurrection_waypoints"] = new ContextMenuItemEntry(TazLang.Get("show_resurrection_waypoints"), () => { _showResurrectionWaypoints = !_showResurrectionWaypoints; SaveSettings(); }, true, _showResurrectionWaypoints);
 
         _options["show_sextant_coordinates"] = new ContextMenuItemEntry(TazLang.Get("show_sextant_coordinates"), () => { _showSextantCoordinates = !_showSextantCoordinates; }, true, _showSextantCoordinates);
 
@@ -724,6 +729,7 @@ public class WorldMapGump : ResizableGump
         ContextMenu.Add(_options["show_mobiles"]);
         ContextMenu.Add(_options["show_multis"]);
         ContextMenu.Add(_options["show_coordinates"]);
+        ContextMenu.Add(_options["show_resurrection_waypoints"]);
         ContextMenu.Add(_options["show_sextant_coordinates"]);
         ContextMenu.Add(_options["sextant_base_coordinates"]);
         ContextMenu.Add(_options["show_mouse_coordinates"]);
@@ -2630,7 +2636,7 @@ public class WorldMapGump : ResizableGump
                     {
                         WMapEntity wme = World.WMapManager.GetEntity(mob);
 
-                        if (wme != null)
+                        if (wme != null && wme.IsGuild)
                         {
                             if (string.IsNullOrEmpty(wme.Name) && !string.IsNullOrEmpty(mob.Name))
                             {
@@ -2786,6 +2792,17 @@ public class WorldMapGump : ResizableGump
                 );
             }
 
+        }
+
+        if (_showResurrectionWaypoints)
+        {
+            foreach (WMapEntity wme in World.WMapManager.Entities.Values)
+            {
+                if (wme.WaypointType == WaypointsType.Resurrection)
+                {
+                    DrawWMEntity(batcher, wme, gX, gY, halfWidth, halfHeight, Zoom);
+                }
+            }
         }
 
         if (_world.Player.Pathfinder.AutoWalking && World.Player.Pathfinder.PathSize > 0)
@@ -3491,12 +3508,24 @@ public class WorldMapGump : ResizableGump
         float zoom
     )
     {
+        bool isWaypoint = entity.WaypointType != WaypointsType.None;
+
+        if (isWaypoint && entity.Map != _map.Index)
+        {
+            return;
+        }
+
         Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 
         ushort uohue;
         Color color;
 
-        if (entity.IsGuild)
+        if (isWaypoint)
+        {
+            uohue = 0x0035;
+            color = Color.Orange;
+        }
+        else if (entity.IsGuild)
         {
             uohue = 0x0044;
             color = Color.LimeGreen;
@@ -3507,7 +3536,7 @@ public class WorldMapGump : ResizableGump
             color = Color.Yellow;
         }
 
-        if (entity.Map != _map.Index)
+        if (!isWaypoint && entity.Map != _map.Index)
         {
             uohue = 992;
             color = Color.DarkGray;
@@ -3574,7 +3603,12 @@ public class WorldMapGump : ResizableGump
             hueVector
         );
 
-        if (_showGroupName)
+        bool hovered = Mouse.Position.X >= rot.X - DOT_SIZE_HALF - 2 && Mouse.Position.X <= rot.X + DOT_SIZE_HALF + 2 &&
+                       Mouse.Position.Y >= rot.Y - DOT_SIZE_HALF - 2 && Mouse.Position.Y <= rot.Y + DOT_SIZE_HALF + 2;
+
+        bool showName = isWaypoint ? hovered : _showGroupName;
+
+        if (showName)
         {
             string name = entity.Name ?? TazLang.Get("out_of_range");
             TextBox ttfBox = UseTtfFont ? GetTtfTextBox(name) : null;
@@ -3633,7 +3667,7 @@ public class WorldMapGump : ResizableGump
             }
         }
 
-        if (_showGroupBar)
+        if (_showGroupBar && !isWaypoint)
         {
             rot.Y += DOT_SIZE + 1;
             DrawHpBar(batcher, rot.X, rot.Y, entity.HP);

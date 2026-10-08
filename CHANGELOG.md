@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/8/26
+* ***Feature:*** Added a "Show resurrection waypoints" option to the world map, drawing server-sent healer waypoints as orange dots with their names on hover
+
 ## 10/7/26
 * ***Feature:*** Added a "Warmode" filter to the nameplate options, so only mobiles in war mode (`Mobile.InWarMode`) can be shown
 * ***Legion:*** Added `API.RequestHotkey(prompt, timeout)` to pop up the in-game hotkey capture window and return the chosen key combination as a string, ready to pass straight to `API.OnHotKey()` or `API.IsKeyPressed()` (for example `"CTRL+SHIFT+F1"`); only keyboard bindings are accepted, and it returns an empty string if the window is cancelled or the timeout elapses
