@@ -12,6 +12,8 @@ All notable changes to TazUO will be recorded here.
 * ***Feature:*** Action bars now have a per-bar "Hide label" option in their cell context menu; hiding the label collapses the header so the cells sit flush with the top
 * ***Feature:*** The network status gump now shows total packets sent and received on their own line, abbreviated with k/m/b suffixes once large
 * ***Fix:*** The in-game ping now falls back to an ICMP ping when a server does not answer the protocol ping packet, and stops trying for the rest of the session (showing "Ping: N/A") if ICMP fails too
+* ***Fix:*** Mobile movement now animates at the server's actual step cadence even when it is slower than the default, so mobs on custom speeds no longer stutter move-then-stall; facing-turns no longer cause the first move after them to dart, and cadences slower than a walk keep the normal step-then-stand look
+* ***Fix:*** Fixed animal bodies without a run animation sliding on their stand frames while moving - they now use the walk animation
 
 ## 10/7/26
 * ***Feature:*** Added a "Warmode" filter to the nameplate options, so only mobiles in war mode (`Mobile.InWarMode`) can be shown

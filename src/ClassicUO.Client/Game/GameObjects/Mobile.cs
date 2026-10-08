@@ -39,7 +39,8 @@ namespace ClassicUO.Game.GameObjects
         private bool _isSA_Poisoned;
         private long _lastAnimationIdleDelay;
         private bool _isAnimationForwardDirection;
-        private uint _lastEnqueueTime;
+        private uint _lastStepArrival;
+        private bool _turnSinceLastStep;
         private byte _animationGroup = 0xFF;
         private byte _animationInterval;
         private bool _animationRepeat;
@@ -109,6 +110,10 @@ namespace ClassicUO.Game.GameObjects
         public Item Backpack => FindItemByLayer(Layer.Backpack);
         public bool IsVisible { get; set; } = true;
         public Deque<Step> Steps { get; } = new Deque<Step>(Constants.MAX_STEP_COUNT);
+
+        // Interval (ms) between the last two position-changing step packets from the server; 0 = unknown.
+        public int StepInterval { get; private set; }
+
         public bool IsParalyzed => (Flags & Flags.Frozen) != 0;
         public bool IsYellowHits => (Flags & Flags.YellowBar) != 0;
         public bool IsPoisoned =>
@@ -300,7 +305,8 @@ namespace ClassicUO.Game.GameObjects
         {
             Steps.Clear();
             Offset = Vector3.Zero;
-            _lastEnqueueTime = 0;
+            _lastStepArrival = 0;
+            _turnSinceLastStep = false;
         }
 
         public bool EnqueueStep(int x, int y, sbyte z, Direction direction, bool run)
@@ -317,8 +323,6 @@ namespace ClassicUO.Game.GameObjects
                 return true;
             }
 
-            int timeDiff = _lastEnqueueTime == 0 ? MovementSpeed.TimeToCompleteMovement(run, IsMounted || IsFlying) : (int)(Time.Ticks - _lastEnqueueTime);
-
             if (Steps.Count == 0)
             {
                 if (!IsWalking)
@@ -329,10 +333,34 @@ namespace ClassicUO.Game.GameObjects
                 LastStepTime = Time.Ticks;
             }
 
-            _lastEnqueueTime = Time.Ticks;
-
             Direction moveDir = DirectionHelper.CalculateDirection(endX, endY, x, y);
-            var step = new Step();
+            var step = new Step { Arrival = Time.Ticks };
+
+            if (Serial != World.Player)
+            {
+                if (moveDir == Direction.NONE)
+                {
+                    // A facing-turn neither defines the cadence nor restarts the clock.
+                    _turnSinceLastStep = true;
+                }
+                else
+                {
+                    if (_lastStepArrival != 0)
+                    {
+                        int elapsed = (int)(Time.Ticks - _lastStepArrival);
+
+                        // A pair spanning a turn includes the turn latency, not just the
+                        // period: keep the last estimate unless the mobile actually paused.
+                        if (!_turnSinceLastStep || elapsed > MovementSpeed.STEP_DELAY_WALK)
+                        {
+                            StepInterval = elapsed;
+                        }
+                    }
+
+                    _lastStepArrival = Time.Ticks;
+                    _turnSinceLastStep = false;
+                }
+            }
 
             if (moveDir != Direction.NONE)
             {
@@ -343,7 +371,6 @@ namespace ClassicUO.Game.GameObjects
                     step.Z = endZ;
                     step.Direction = (byte)moveDir;
                     step.Run = run;
-                    step.TimeDiff = timeDiff;
                     Steps.AddToBack(step);
                 }
 
@@ -352,7 +379,6 @@ namespace ClassicUO.Game.GameObjects
                 step.Z = z;
                 step.Direction = (byte)moveDir;
                 step.Run = run;
-                step.TimeDiff = timeDiff;
                 Steps.AddToBack(step);
             }
 
@@ -363,7 +389,6 @@ namespace ClassicUO.Game.GameObjects
                 step.Z = z;
                 step.Direction = (byte)direction;
                 step.Run = run;
-                step.TimeDiff = timeDiff;
                 Steps.AddToBack(step);
             }
 
@@ -732,6 +757,33 @@ namespace ClassicUO.Game.GameObjects
             LastAnimationChangeTime = Time.Ticks + currentDelay;
         }
 
+        // Wait (ms) of the first real move queued behind the in-flight step, or -1 when
+        // there is no movement backlog. Facing-turns share a tile and do not count.
+        private int QueuedMoveWait()
+        {
+            int moves = 0;
+            int prevX = X;
+            int prevY = Y;
+
+            for (int i = 0; i < Steps.Count; i++)
+            {
+                Step s = Steps[i];
+
+                if (s.X != prevX || s.Y != prevY)
+                {
+                    if (++moves > 1)
+                    {
+                        return (int)(Time.Ticks - s.Arrival);
+                    }
+
+                    prevX = s.X;
+                    prevY = s.Y;
+                }
+            }
+
+            return -1;
+        }
+
         public void ProcessSteps(out byte dir, bool evalutate = false)
         {
             dir = (byte)Direction;
@@ -750,21 +802,30 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                     int delay = (int)Time.Ticks - (int)LastStepTime;
-                    int maxDelay;
 
-                    if (Serial == World.Player)
+                    bool actuallyMounted =
+                        IsMounted
+                        || SpeedMode == CharacterSpeedType.FastUnmount
+                        || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun
+                        || IsFlying;
+
+                    int backlogWait = Serial != World.Player && Steps.Count > 1 ? QueuedMoveWait() : -1;
+
+                    int stepTime = MovementSpeed.TimeToCompleteMovement(step.Run, actuallyMounted);
+
+                    // Drain at the server's cadence while it is renderable (up to a walk time
+                    // for the real mounted state); beyond that keep the nominal step-then-stand look.
+                    if (
+                        Serial != World.Player
+                        && StepInterval > 0
+                        && StepInterval <= MovementSpeed.TimeToCompleteMovement(false, actuallyMounted)
+                    )
                     {
-                        bool mounted =
-                            IsMounted
-                            || SpeedMode == CharacterSpeedType.FastUnmount
-                            || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun
-                            || IsFlying;
-                        maxDelay = MovementSpeed.TimeToCompleteMovement(step.Run, mounted) - (int)Client.Game.FrameDelay[1];
+                        // Shorten by the queued move's wait so it starts on time.
+                        stepTime = Math.Max(StepInterval - Math.Max(backlogWait, 0), MovementSpeed.STEP_DELAY_MIN);
                     }
-                    else
-                    {
-                        maxDelay = (step.TimeDiff > 0 ? step.TimeDiff : MovementSpeed.TimeToCompleteMovement(step.Run, IsMounted || IsFlying)) - (int)Client.Game.FrameDelay[1];
-                    }
+
+                    int maxDelay = Math.Max(stepTime - (int)Client.Game.FrameDelay[1], 1);
 
                     bool removeStep = delay >= maxDelay;
                     bool directionChange = false;
@@ -877,11 +938,6 @@ namespace ClassicUO.Game.GameObjects
                         if (Steps.Count != 0)
                         {
                             Steps.RemoveFromFront();
-                        }
-
-                        if (Steps.Count == 0)
-                        {
-                            _lastEnqueueTime = 0;
                         }
 
                         CalculateRandomIdleTime();
@@ -1170,7 +1226,7 @@ namespace ClassicUO.Game.GameObjects
             public sbyte Z;
             public byte Direction;
             public bool Run;
-            public int TimeDiff;
+            public uint Arrival;
         }
     }
 }
