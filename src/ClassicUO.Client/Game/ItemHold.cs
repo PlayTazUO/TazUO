@@ -55,7 +55,7 @@ namespace ClassicUO.Game
 
         public bool Dropped { get; set; }
         public bool UpdatedInWorld { get; set; }
-        public ref StaticTiles ItemData => ref Client.Game.UO.FileManager.TileData.StaticData[Graphic];
+        public ref StaticTiles ItemData => ref Client.Game.UO.FileManager.TileData.GetStaticTile(Graphic);
 
         public void Set(Item item, ushort amount, Point? offset = null)
         {

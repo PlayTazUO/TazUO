@@ -30,7 +30,7 @@ namespace ClassicUO.Game.GameObjects
         public ref StaticTiles ItemData
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => ref Client.Game.UO.FileManager.TileData.StaticData[Graphic];
+            get => ref Client.Game.UO.FileManager.TileData.GetStaticTile(Graphic);
         }
 
         public bool IsVegetation;

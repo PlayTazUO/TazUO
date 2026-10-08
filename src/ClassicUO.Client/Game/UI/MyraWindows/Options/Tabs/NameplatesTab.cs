@@ -286,6 +286,11 @@ public static class NameplatesTab
                 TazLang.Get("mog_nameplates_optionstab_yourself"),
                 new Accessor<NameOverheadOptions>(() => profile.NameOverheadOptionFlags),
                 NameOverheadOptions.Self
+            ),
+            OptionsFactory.CreatePropBoundBitFlagCheckBox(
+                TazLang.Get("mog_nameplates_optionstab_warmode"),
+                new Accessor<NameOverheadOptions>(() => profile.NameOverheadOptionFlags),
+                NameOverheadOptions.Warmode
             )
         );
 

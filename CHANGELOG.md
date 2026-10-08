@@ -3,7 +3,22 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/8/26
+* ***Feature:*** Added a "Show resurrection waypoints" option to the world map, drawing server-sent healer waypoints as orange dots with their names on hover
+* ***Misc:*** Removed the legacy options window (`ModernOptionsGump`) and its `old-options-window` and `optlink` commands - every settings entry point, including the gamepad Start button, now opens the current options window
+* ***Misc:*** Removed the spell bar system - the Spell Bar gump, its manager, presets, and the Assistant > General > Spell Bar tab. The "Spell bar windows" Hide-HUD entry and the spell bar row macros are gone too (their macro IDs stay reserved so saved macros still load). The shared spell quick-search widget remains for the top bar and the action/counter bar context menu
+* ***Misc:*** Removed 253 stale entries from `language.ini` left behind by removed or renamed features, and added `tools/check_language_keys.py` to report (and `--prune`) unreferenced keys going forward
+* ***Misc:*** Removed the legacy SQL profile settings and their one-time migration shim (`SqlProfile.cs`) now that settings live in JSON again, along with the now-unused SQL settings source generator and its attribute. The photosensitivity-warning acknowledgement is kept as a regular profile setting
+* ***Feature:*** Action bars now have a per-bar "Hide label" option in their cell context menu; hiding the label collapses the header so the cells sit flush with the top
+* ***Feature:*** The network status gump now shows total packets sent and received on their own line, abbreviated with k/m/b suffixes once large
+* ***Fix:*** The in-game ping now falls back to an ICMP ping when a server does not answer the protocol ping packet, and stops trying for the rest of the session (showing "Ping: N/A") if ICMP fails too
+* ***Fix:*** Mobile movement now animates at the server's actual step cadence even when it is slower than the default, so mobs on custom speeds no longer stutter move-then-stall; facing-turns no longer cause the first move after them to dart, and cadences slower than a walk keep the normal step-then-stand look
+* ***Fix:*** Fixed animal bodies without a run animation sliding on their stand frames while moving - they now use the walk animation
+* ***Fix:*** Fixed a client crash when a multi or item referenced a static graphic outside the loaded `tiledata.mul` range (custom or mismatched data files, or server-driven art) - `Static`, `Multi`, `Item` and `ItemHold` now fall back to an empty tile instead of throwing `IndexOutOfRangeException` while handling packets
+* ***Misc:*** The crash log now recognises more failures and offers targeted advice: missing or mismatched animation files (`anim*.mul`/`AnimationFrame*.uop`) and gump art (`gumpart.mul`/`gumpartLegacyMUL.uop`), a read-only install location (`Read-only file system`), startup with no video device, and FontStashSharp text-measurement faults caused by scripts building text off the main thread
+
 ## 10/7/26
+* ***Feature:*** Added a "Warmode" filter to the nameplate options, so only mobiles in war mode (`Mobile.InWarMode`) can be shown
 * ***Legion:*** Added `API.RequestHotkey(prompt, timeout)` to pop up the in-game hotkey capture window and return the chosen key combination as a string, ready to pass straight to `API.OnHotKey()` or `API.IsKeyPressed()` (for example `"CTRL+SHIFT+F1"`); only keyboard bindings are accepted, and it returns an empty string if the window is cancelled or the timeout elapses
 * ***Fix:*** Relative UO data directory paths are now resolved against the client install directory instead of the process working directory, so a relative `ultimaonlinedirectory` (or `-uopath`) works the same however the client is launched. The value is still saved as-is, so relative paths stay relative in `settings.json`
 * ***Fix:*** Reduced stutter when entering new areas - static art is now decoded ahead of time on the main thread within a small per-frame budget, instead of all at once the first time each graphic is drawn

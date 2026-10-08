@@ -157,7 +157,7 @@ namespace ClassicUO.Game.GameObjects
         }
 
         public ref StaticTiles ItemData =>
-            ref Client.Game.UO.FileManager.TileData.StaticData[IsMulti ? MultiGraphic : Graphic];
+            ref Client.Game.UO.FileManager.TileData.GetStaticTile(IsMulti ? MultiGraphic : Graphic);
 
         public bool IsLootable =>
             ItemData.Layer != (int)Layer.Hair

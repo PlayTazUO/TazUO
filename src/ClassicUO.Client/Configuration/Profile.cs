@@ -24,7 +24,6 @@ using System.Runtime.CompilerServices;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
-using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.Game.UI.MyraWindows;
 
 namespace ClassicUO.Configuration
@@ -449,6 +448,7 @@ namespace ClassicUO.Configuration
         public bool WorldMapShowCoordinates { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowMouseCoordinates { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowCorpse { get; set => SetProperty(ref field, value); } = true;
+        public bool WorldMapShowResurrectionWaypoints { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowSextantCoordinates { get; set => SetProperty(ref field, value); } = false;
         public int WorldMapSextantBaseX { get; set => SetProperty(ref field, value); } = 1323;
         public int WorldMapSextantBaseY { get; set => SetProperty(ref field, value); } = 1624;
@@ -677,7 +677,6 @@ namespace ClassicUO.Configuration
         public string NamePlateFont { get; set => SetProperty(ref field, value); } = "avadonian";
         public int NamePlateFontSize { get; set => SetProperty(ref field, value); } = 20;
 
-        public bool UseNewOptionsWindow { get; set => SetProperty(ref field, value); } = true;
         public string OptionsFont
         {
             get; set
@@ -826,7 +825,6 @@ namespace ClassicUO.Configuration
         public bool ScavengerSkipLockedDown { get; set => SetProperty(ref field, value); } = true;
         public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
         public bool NearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
-        public bool SpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
         public byte ForcedHouseTransparency { get; set => SetProperty(ref field, value); } = 40;
         public ushort ForcedTransparencyHouseTileHue { get; set => SetProperty(ref field, value); } = 0;
         public bool ForceHouseTransparency { get; set => SetProperty(ref field, value); }
@@ -873,6 +871,7 @@ namespace ClassicUO.Configuration
         public bool AutoSaveGumpPositions { get; set; }
         public bool StripChatUsernameId { get; set; }
         public bool OverheadsScaleWithZoom { get; set; } = true;
+        public bool ScreenDecorationsPseAcknowledged { get; set; }
         public string VotedPolls { get; set; }
         public AutoStatLockState AutoStatLockState { get; set => SetProperty(ref field, value); } = new();
         public string BandageAgentJournalMessages { get; set; } = "You apply the bandages;You finish applying;You heal what little;You have been cured;You failed to cure;Your fingers slip";
@@ -913,217 +912,9 @@ namespace ClassicUO.Configuration
 
         internal void AfterLoad()
         {
-            if (Client.Settings == null)
-            {
-                Log.Error("Warning, SQL settings failed to load!");
-                return;
-            }
-
-            Task<Dictionary<string, string>> globalTask = Client.Settings.GetAllAsync(SettingsScope.Global);
-            Task<Dictionary<string, string>> accountTask = Client.Settings.GetAllAsync(SettingsScope.Account);
-            Task<Dictionary<string, string>> serverTask = Client.Settings.GetAllAsync(SettingsScope.Server);
-            Task<Dictionary<string, string>> charTask = Client.Settings.GetAllAsync(SettingsScope.Char);
-
-            if (Task.WhenAll(globalTask, accountTask, serverTask, charTask).Wait(10000))
-            {
-                LoadGeneratedGlobalSqlSettings(globalTask.Result);
-                LoadGeneratedAccountSqlSettings(accountTask.Result);
-                LoadGeneratedServerSqlSettings(serverTask.Result);
-                LoadGeneratedCharSqlSettings(charTask.Result);
-
-                HandleMigration();
-            }
-            else
-            {
-                Log.Error("SQL settings failed to load within the timeout; using defaults.");
-            }
-
             MyraStyle.SetDefault(); //Also loaded here in case profile settings affect styling
 
             LastLoaded = DateTime.Now.ToUniversalTime().ToString();
-        }
-
-        private void HandleMigration()
-        {
-            if (ProfileMigrationVersion < 5) //4
-            {
-                ProfileMigrationVersion = 5;
-            }
-
-            if (ProfileMigrationVersion < 6)
-            {
-                CounterBarShowHotkeys = OldCounterBarShowHotkeys;
-                CounterBarDisableItemScaling = OldCounterBarDisableItemScaling;
-                CounterBarDisableIconScaling = OldCounterBarDisableIconScaling;
-                BandageAgentUseJournalTrigger = OldBandageAgentUseJournalTrigger;
-                BandageAgentJournalMessages = OldBandageAgentJournalMessages;
-                VotedPolls = OldVotedPolls;
-                OverheadsScaleWithZoom = OldOverheadsScaleWithZoom;
-                StripChatUsernameId = OldStripChatUsernameId;
-                AutoSaveGumpPositions = OldAutoSaveGumpPositions;
-                TreeToStumpsWithinRadius = OldTreeToStumpsWithinRadius;
-                CandleFlickerLights = OldCandleFlickerLights;
-
-                if (OldScriptManagerWindowSize.HasValue)
-                    ScriptManagerWindowSize = OldScriptManagerWindowSize.Value;
-
-                if (OldScriptManagerWindowPosition.HasValue)
-                    ScriptManagerWindowPosition = OldScriptManagerWindowPosition.Value;
-
-                QueueManualItemMoves = OldQueueManualItemMoves;
-                AutoOpenDoorsIfHidden = OldAutoOpenDoorsIfHidden;
-                QueueManualItemUses = OldQueueManualItemUses;
-                HueCorpseAfterAutoloot = OldHueCorpseAfterAutoloot;
-                AutoLootRetryDelay = OldAutoLootRetryDelay;
-                PathfindingZLevelDiff = OldPathfindingZLevelDiff;
-                PathfindingMaxNodes = OldPathfindingMaxNodes;
-                PathfindingMultiBuffer = OldPathfindingMultiBuffer;
-                WorldMapPathfindingMaxNodes = OldWorldMapPathfindingMaxNodes;
-                WorldMapPathfindingMaxRetries = OldWorldMapPathfindingMaxRetries;
-                WorldMapPathfindingTimeout = OldWorldMapPathfindingTimeout;
-                SingleClickMobileSetsLastTarget = OldSingleClickMobileSetsLastTarget;
-                OutlineMobilesNotoriety = OldOutlineMobilesNotoriety;
-                DisabledOverheadMessageTypes = OldDisabledOverheadMessageTypes;
-                DisableAutolootCorpseRetry = OldDisableAutolootCorpseRetry;
-                DisableWeather = OldDisableWeather;
-                EnablePetScaling = OldEnablePetScaling;
-#pragma warning disable CS0618
-                AutoUnequipForActions = OldAutoUnequipForActions;
-#pragma warning restore CS0618
-                MinGumpMoveDistance = OldMinGumpMoveDistance;
-                WebMapServerPort = OldWebMapServerPort;
-                WebMapAutoStart = OldWebMapAutoStart;
-
-                ProfileMigrationVersion = 6;
-            }
-
-            if (ProfileMigrationVersion < 7)
-            {
-                ProfileManager.GlobalSettings.UseCircleOfTransparency = UseCircleOfTransparency;
-                ProfileManager.GlobalSettings.CircleOfTransparencyRadius = CircleOfTransparencyRadius;
-                ProfileManager.GlobalSettings.CircleOfTransparencyType = CircleOfTransparencyType;
-
-                ProfileMigrationVersion = 7;
-            }
-
-            if (ProfileMigrationVersion < 8)
-            {
-                ProfileManager.GlobalSettings.EnableSound = EnableSound;
-                ProfileManager.GlobalSettings.SoundVolume = SoundVolume;
-                ProfileManager.GlobalSettings.EnableMusic = EnableMusic;
-                ProfileManager.GlobalSettings.MusicVolume = MusicVolume;
-                ProfileManager.GlobalSettings.EnableFootstepsSound = EnableFootstepsSound;
-                ProfileManager.GlobalSettings.EnableRainSound = EnableRainSound;
-                ProfileManager.GlobalSettings.EnableCombatMusic = EnableCombatMusic;
-                ProfileManager.GlobalSettings.ReproduceSoundsInBackground = ReproduceSoundsInBackground;
-
-                ProfileMigrationVersion = 8;
-            }
-
-            if (ProfileMigrationVersion < 9)
-            {
-                ProfileManager.GlobalSettings.EnableSound = EnableSound;
-                ProfileManager.GlobalSettings.SoundVolume = SoundVolume;
-                ProfileManager.GlobalSettings.EnableMusic = EnableMusic;
-                ProfileManager.GlobalSettings.MusicVolume = MusicVolume;
-                ProfileManager.GlobalSettings.EnableFootstepsSound = EnableFootstepsSound;
-                ProfileManager.GlobalSettings.EnableRainSound = EnableRainSound;
-                ProfileManager.GlobalSettings.EnableCombatMusic = EnableCombatMusic;
-                ProfileManager.GlobalSettings.ReproduceSoundsInBackground = ReproduceSoundsInBackground;
-
-                ProfileMigrationVersion = 9;
-            }
-
-            if (ProfileMigrationVersion < 10)
-            {
-                ProfileManager.GlobalSettings.UseWASDInsteadArrowKeys = UseWASDInsteadArrowKeys;
-                ProfileManager.GlobalSettings.SingleClickIconUse = CastSpellsByOneClick;
-                ProfileManager.ServerSettings.TurnDelay = TurnDelay;
-
-                ProfileMigrationVersion = 10;
-            }
-
-            if (ProfileMigrationVersion < 11)
-            {
-                ProfileManager.GlobalSettings.HideJournalTimestamp = HideJournalTimestamp;
-
-                ProfileMigrationVersion = 11;
-            }
-
-            if (ProfileMigrationVersion < 12)
-            {
-#pragma warning disable CS0618
-                if (UseOldStatusGump)
-                    StatusGumpStyle = StatusGumpStyle.Old;
-                else if (UseVerticalStatusGump)
-                    StatusGumpStyle = StatusGumpStyle.ModernVertical;
-#pragma warning restore CS0618
-
-                ProfileMigrationVersion = 12;
-            }
-
-            if (ProfileMigrationVersion < 13)
-            {
-#pragma warning disable CS0618
-                if (!string.IsNullOrWhiteSpace(OldAutoStatLockJson))
-                {
-                    try
-                    {
-                        AutoStatLockState = JsonSerializer.Deserialize(OldAutoStatLockJson, AutoStatLockStateContext.Default.AutoStatLockState) ?? new AutoStatLockState();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error($"Failed to migrate legacy auto stat lock state: {ex.Message}");
-                    }
-                }
-#pragma warning restore CS0618
-
-                ProfileMigrationVersion = 13;
-            }
-
-            // Splits the old single "unequip for actions" toggle, which governed both spell casts and potion
-            // drinking, so a profile that had it on keeps both halves on (and one that had it off, both off).
-            //
-            // Deliberately not gated on ProfileMigrationVersion: that counter is Global while both the JSON
-            // field and its SQL predecessor are per-character, so a gate would migrate whichever character logs
-            // in first and silently drop the setting for every other one. The legacy SQL value is read directly
-            // here for the same reason - the version-6 step above only copies it for that first character.
-            // Both sources are consumed, which is what makes this step idempotent in place of a version gate.
-#pragma warning disable CS0618
-            if (AutoUnequipForActions || OldAutoUnequipForActions)
-            {
-                AutoUnequipForSpellCasting = true;
-                AutoUnequipForPotions = true;
-                AutoUnequipForActions = false;
-                OldAutoUnequipForActions = false;
-            }
-#pragma warning restore CS0618
-
-            try //Cleanup old backups from previous save system
-            {
-                string dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Char);
-                foreach (string f in Directory.EnumerateFiles(dir, "*.backup*"))
-                {
-                    if (!f.Contains("grid_container"))
-                        File.Delete(f);
-                }
-
-                dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Char);
-                foreach (string f in Directory.EnumerateFiles(dir, "*.bak*"))
-                {
-                    if (!f.Contains("grid_container"))
-                        File.Delete(f);
-                }
-
-                dir = JsonSaveLocationHelper.GetScopeDirectory(SettingsScope.Server);
-                foreach (string f in Directory.EnumerateFiles(dir, "*.backup*"))
-                {
-                    if (!f.Contains("grid_container"))
-                        File.Delete(f);
-                }
-            }
-            catch
-            {}
         }
 
         internal void Save(World world, string path, bool saveGumps = true)
@@ -1386,7 +1177,6 @@ namespace ClassicUO.Configuration
 
                             switch (type)
                             {
-                                case GumpType.SpellBar: gump = new SpellBar(world); break;
                                 case GumpType.NearbyCorpseLoot: gump = new NearbyLootGump(world); break;
                                 case GumpType.Buff:
                                     if (ProfileManager.CurrentProfile.UseImprovedBuffBar)

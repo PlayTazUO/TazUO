@@ -12,6 +12,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.IO.Persistency;
 using ClassicUO.Renderer;
+using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -120,7 +121,7 @@ namespace ClassicUO.Game.UI.Gumps
                                         $"To update this type -syncfps", Constants.HUE_ERROR));
             }
 
-            if (Settings.GlobalSettings.ResolvedUltimaOnlineDirectory.StartsWith(CUOEnviroment.ExecutablePath))
+            if (FileSystemHelper.IsPathWithin(Settings.GlobalSettings.ResolvedUltimaOnlineDirectory, CUOEnviroment.ExecutablePath))
             {
                 _userNotifications ??= [];
                 _userNotifications.Add(("Warning: It looks like your UO folder is stored inside TazUO, this is discouraged as you may accidentally have your UO files deleted.", Constants.HUE_ERROR));
