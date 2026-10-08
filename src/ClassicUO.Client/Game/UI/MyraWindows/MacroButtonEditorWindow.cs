@@ -145,11 +145,6 @@ public sealed class MacroButtonEditorWindow : MyraControl
         _committed = MacroButtonAppearance.Capture(macro);
 
         CreatePreview();
-
-        // The title-bar close goes straight to the base's dispose flag without passing through
-        // Dispose(), so the revert needs this hook as well as the override.
-        _rootWindow.Closed += (_, _) => Revert();
-
         Build();
         CenterInViewPort();
     }
@@ -761,7 +756,7 @@ public sealed class MacroButtonEditorWindow : MyraControl
             Tooltip = TazLang.Get("macrobtneditor_save_closetooltip", "Keep these changes, write them to disk and close")
         });
 
-        // Dispose() rather than the base's flag, so the revert runs.
+        // Dispose() rather than the base's flag, so the revert runs now instead of next frame.
         row.Widgets.Add(new MyraButton(TazLang.Get("uicommons_close", "Close"), Dispose)
         {
             Tooltip = TazLang.Get("macrobtneditor_close_tooltip", "Discard any changes made since the last save")

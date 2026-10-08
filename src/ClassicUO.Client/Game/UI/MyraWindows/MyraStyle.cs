@@ -5,7 +5,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.MyraWindows.Theme;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.TextureAtlases;
@@ -43,10 +42,17 @@ public static class MyraStyle
     private static TextureRegion _skillLockBtn;
 
     /// <summary>
-    /// The generated radio marks, owned here because nothing else can dispose them: they are rebuilt
-    /// whenever the style is, which happens on every profile load and font-size change.
+    /// The generated radio marks, held as swappable images so a restyle can resize them in place - see
+    /// <see cref="SwappableImage" /> for why handing the stylesheet new ones does not work. Built on
+    /// the first <see cref="ApplyRadioStyle" /> and kept for the session.
     /// </summary>
-    private static Texture2D[] _radioMarks = [];
+    private static SwappableImage _radioMarkOff, _radioMarkOver, _radioMarkOn;
+
+    /// <summary>
+    /// Size the radio marks were generated at, so a restyle that does not change it is a no-op.
+    /// 0 until the first <see cref="ApplyRadioStyle" />.
+    /// </summary>
+    private static int _radioMarkSize;
 
     /// <summary>
     /// Radio mark size for the default font size, matching the check box art it sits beside. Scaled
@@ -307,8 +313,8 @@ public static class MyraStyle
     /// </summary>
     /// <remarks>
     /// The marks are generated at the current font's size rather than loaded as art, so they stay
-    /// crisp at any UI scale; see <see cref="RadioMark" />. Textures from a previous call are disposed
-    /// here, after the new ones exist, so the stylesheet is never pointing at a dead texture.
+    /// crisp at any UI scale; see <see cref="RadioMark" />. A resize reaches the radios already on
+    /// screen because the stylesheet holds <see cref="SwappableImage" />s, not the textures.
     /// </remarks>
     private static void ApplyRadioStyle()
     {
@@ -317,27 +323,47 @@ public static class MyraStyle
         if (rbStyle?.ImageStyle == null || Client.Game?.GraphicsDevice == null)
             return;
 
+        rbStyle.ImageStyle.Background = null;
+        rbStyle.LabelStyle.Font = _uiFont;
+
         int size = Math.Clamp(
             (int)MathF.Round(RADIO_MARK_SIZE_AT_DEFAULT_FONT * (UiFontSize / (float)DEFAULT_UI_FONT_SIZE)),
             RADIO_MARK_MIN_SIZE,
             RADIO_MARK_MAX_SIZE
         );
 
-        Texture2D off = RadioMark.Create(Client.Game.GraphicsDevice, size, RadioMarkState.Off);
-        Texture2D over = RadioMark.Create(Client.Game.GraphicsDevice, size, RadioMarkState.Over);
-        Texture2D on = RadioMark.Create(Client.Game.GraphicsDevice, size, RadioMarkState.On);
+        // A re-style for another reason - a font family change, a profile load - leaves the marks at the
+        // size they are already drawn at, so there is nothing to regenerate.
+        if (size == _radioMarkSize)
+            return;
 
-        rbStyle.ImageStyle.Image = new TextureRegion(off);
-        rbStyle.ImageStyle.OverImage = new TextureRegion(over);
-        rbStyle.ImageStyle.PressedImage = new TextureRegion(on);
-        rbStyle.ImageStyle.Background = null;
-        rbStyle.LabelStyle.Font = _uiFont;
+        _radioMarkSize = size;
 
-        foreach (Texture2D previous in _radioMarks)
-            previous.Dispose();
+        if (_radioMarkOff == null)
+        {
+            _radioMarkOff = RadioMarkImage(RadioMarkState.Off);
+            _radioMarkOver = RadioMarkImage(RadioMarkState.Over);
+            _radioMarkOn = RadioMarkImage(RadioMarkState.On);
 
-        _radioMarks = [off, over, on];
+            rbStyle.ImageStyle.Image = _radioMarkOff;
+            rbStyle.ImageStyle.OverImage = _radioMarkOver;
+            rbStyle.ImageStyle.PressedImage = _radioMarkOn;
+
+            return;
+        }
+
+        _radioMarkOff.Regenerate();
+        _radioMarkOver.Regenerate();
+        _radioMarkOn.Regenerate();
     }
+
+    /// <summary>
+    /// A mark that redraws itself at whatever <see cref="_radioMarkSize" /> holds when asked, so a
+    /// resize does not have to reach the radios already built from it.
+    /// </summary>
+    /// <param name="state">Which of the mark's three looks to draw.</param>
+    private static SwappableImage RadioMarkImage(RadioMarkState state) =>
+        new(() => RadioMark.Create(Client.Game.GraphicsDevice, _radioMarkSize, state));
 
     /// <summary>
     /// Various properties that cannot be applied by default in Myra for grids.

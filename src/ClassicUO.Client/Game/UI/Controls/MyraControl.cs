@@ -20,7 +20,7 @@ namespace ClassicUO.Game.UI.Controls;
 /// While we inherit many interface methods from Gump controls, many of them do not apply to Myra controls.
 /// It's a long process to be able to support two different types of windows/gumps in the same UIManager
 /// </summary>
-public class MyraControl : IGui
+public class MyraControl : IGui, IDisposable
 {
     #region Internal Controls
 
@@ -59,12 +59,18 @@ public class MyraControl : IGui
     #region Event Handlers
     //private void UIManagerOnTopMostChanged(object sender, EventArgs e) => _desktop.Opacity = UIManager.TopMostControl == this ? 1f : 0.8f;
 
+    /// <remarks>
+    ///     Goes through <see cref="Dispose" /> rather than setting the flag, so a title-bar close runs
+    ///     a subclass's teardown. <see cref="ExecuteDispose" /> is not virtual and would skip it.
+    /// </remarks>
     private void OnRootWindowOnClosed(object s, EventArgs a)
     {
-        if (IsDisposed)
+        // _disposeRequested as well as IsDisposed: a close already requested this frame has had its
+        // teardown run, and Dispose() overrides are not all safe to run twice.
+        if (IsDisposed || _disposeRequested)
             return;
 
-        _disposeRequested = true;
+        Dispose();
     }
 
     private void RootWindowOnSizeChanged(object sender = null, EventArgs e = null) => UpdateBoundsToContents(false);
@@ -263,9 +269,7 @@ public class MyraControl : IGui
         }
 
         while (_deferredActions.Count > 0)
-        {
             _deferredActions.Dequeue()?.Invoke();
-        }
     }
 
     public virtual void PreDraw()
