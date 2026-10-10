@@ -146,6 +146,7 @@ namespace ClassicUO.Network
                 // scoped settings can be resolved and loaded at this point.
                 ProfileManager.LoadServerSettings();
                 ProfileManager.LoadAccountSettings();
+                AsyncNetClient.PacketsTable.ApplyServerFormat(Settings.GlobalSettings.LegacyLoginPackets);
 
                 SetLoginStep(LoginSteps.LoginInToServer);
 
@@ -523,7 +524,7 @@ namespace ClassicUO.Network
             byte count = p.ReadUInt8();
             Cities = new CityInfo[count];
 
-            bool isNew = Client.Game.UO.Version >= ClientVersion.CV_70130;
+            bool isNew = Client.Game.UO.Version >= ClientVersion.CV_70130 && !AsyncNetClient.PacketsTable.LegacyLoginFormat;
 
             Vector2[] oldtowns =
             {

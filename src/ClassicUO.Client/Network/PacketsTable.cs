@@ -266,8 +266,18 @@ namespace ClassicUO.Network
             -1      // ff
         };
 
+        private readonly ClientVersion _version;
+
+        /// <summary>
+        /// True when the server uses the older login layouts (2-byte 0xB9 flags, 63-byte town entries),
+        /// regardless of the client version. Set on each server selection by <see cref="ApplyServerFormat"/>.
+        /// </summary>
+        public bool LegacyLoginFormat { get; private set; }
+
         public PacketsTable(ClientVersion version)
         {
+            _version = version;
+
             Log.Trace("Network calibration...");
 
             if (version >= ClientVersion.CV_500A)
@@ -335,14 +345,7 @@ namespace ClassicUO.Network
                 _packetsTable[0xF1] = -1;
             }
 
-            if (version >= ClientVersion.CV_60142)
-            {
-                _packetsTable[0xB9] = 0x05;
-            }
-            else
-            {
-                _packetsTable[0xB9] = 0x03;
-            }
+            ApplyServerFormat(false);
 
             if (version >= ClientVersion.CV_7000)
             {
@@ -394,6 +397,17 @@ namespace ClassicUO.Network
                 _packetsTable[0xD5] = 0x09;
                 _packetsTable[0xFD] = 2;
             }
+        }
+
+        /// <summary>
+        /// Sets the 0xB9 length for the server. Some shards send the old 3-byte layout even to newer clients,
+        /// and a 5-byte read there shifts every packet after it.
+        /// </summary>
+        /// <param name="legacy">True if the server uses the legacy login layouts.</param>
+        public void ApplyServerFormat(bool legacy)
+        {
+            LegacyLoginFormat = legacy;
+            _packetsTable[0xB9] = (short)(legacy || _version < ClientVersion.CV_60142 ? 0x03 : 0x05);
         }
 
         public short GetPacketLength(int id) => (short)(id >= 0xFF ? -1 : _packetsTable[id]);

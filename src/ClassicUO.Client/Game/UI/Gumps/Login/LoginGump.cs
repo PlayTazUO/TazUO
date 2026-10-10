@@ -540,6 +540,9 @@ namespace ClassicUO.Game.UI.Gumps.Login
             w.AddCheckbox(TazLang.Get("reconnect"), s.Reconnect, v => { s.Reconnect = v; s.Save(); },
                 TazLang.Get("autoreconnecttooltip"));
 
+            w.AddCheckbox(TazLang.Get("legacy_login_packets"), s.LegacyLoginPackets, v => { s.LegacyLoginPackets = v; s.Save(); },
+                TazLang.Get("legacy_login_packets_tooltip"));
+
             w.AddInput(TazLang.Get("reconnecttimeentry"), s.ReconnectTime.ToString(), v =>
             {
                 if (int.TryParse(v, out int time) && time >= 0)

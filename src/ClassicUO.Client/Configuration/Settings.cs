@@ -55,6 +55,11 @@ namespace ClassicUO.Configuration
          */
         [JsonPropertyName("ignore_relay_ip")] public bool IgnoreRelayIp { get; set; } = false;
 
+        /**
+         * Use the older login packet layouts (features packet, town list) for shards that still send them, whatever the client version.
+         */
+        [JsonPropertyName("legacy_login_packets")] public bool LegacyLoginPackets { get; set; } = false;
+
         [JsonPropertyName("ultimaonlinedirectory")] public string UltimaOnlineDirectory { get; set; } = "";
 
         [JsonPropertyName("profilespath")] public string ProfilesPath { get; set; } = string.Empty;
