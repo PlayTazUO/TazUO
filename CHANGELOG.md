@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 
 ## 10/10/26
 * ***Fix:*** Fixed getting stuck on "connecting" after picking a server on shards that still send the older login packets (features packet and town list). Turn on "Legacy login packets" in the launcher profile for that server
+* ***Fix:*** Fixed the client hanging on "connecting" after entering the world on those shards: the features packet sent in the world stream is the newer one, so the packet length switches back to the client-version value once login is done
 
 ## 9/23/26
 * ***Misc:*** Updated compact horizontal status bar style by rearranging a few items and adding a few colors to more easily distinguish important values

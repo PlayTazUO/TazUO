@@ -12,6 +12,10 @@ internal static class EnterWorld
 {
     public static void Receive(World world, ref StackDataReader p)
     {
+        // The login stream is finished, so the packet table goes back to the client-version layouts before the
+        // world burst is read. On legacy shards this features packet is longer than the login one.
+        AsyncNetClient.PacketsTable.RestoreWorldFormat();
+
         uint serial = p.ReadUInt32BE();
 
         world.CreatePlayer(serial);

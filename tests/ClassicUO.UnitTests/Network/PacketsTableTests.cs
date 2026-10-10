@@ -47,4 +47,16 @@ public class PacketsTableTests
     {
         new PacketsTable(Legacy6).GetPacketLength(0xB9).Should().Be(3);
     }
+
+    [Fact]
+    public void WorldEntryRestoresModernFeaturesPacket()
+    {
+        var table = new PacketsTable(Modern7);
+
+        table.ApplyServerFormat(true);
+        table.RestoreWorldFormat();
+
+        table.GetPacketLength(0xB9).Should().Be(5);
+        table.LegacyLoginFormat.Should().BeFalse();
+    }
 }

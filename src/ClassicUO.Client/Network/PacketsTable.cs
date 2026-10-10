@@ -410,6 +410,17 @@ namespace ClassicUO.Network
             _packetsTable[0xB9] = (short)(legacy || _version < ClientVersion.CV_60142 ? 0x03 : 0x05);
         }
 
+        /// <summary>
+        /// Restores the 0xB9 length to the client-version value once the login stream is done. Legacy shards
+        /// can send the old layout in the character list and the newer one after entering the world, so the
+        /// length has to switch back at the world entry, or every packet after it desyncs.
+        /// </summary>
+        public void RestoreWorldFormat()
+        {
+            LegacyLoginFormat = false;
+            _packetsTable[0xB9] = (short)(_version < ClientVersion.CV_60142 ? 0x03 : 0x05);
+        }
+
         public short GetPacketLength(int id) => (short)(id >= 0xFF ? -1 : _packetsTable[id]);
     }
 }
