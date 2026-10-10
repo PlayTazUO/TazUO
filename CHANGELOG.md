@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/10/26
+* ***Fix:*** Fixed getting stuck on "connecting" after picking a server on shards that still send the older login packets (features packet and town list). Turn on "Legacy login packets" in the launcher profile for that server
+
 ## 9/23/26
 * ***Misc:*** Updated compact horizontal status bar style by rearranging a few items and adding a few colors to more easily distinguish important values
 * ***Fix:*** Fixed a client crash in the "Enter Location" window when typing coordinates larger than an `int` could hold (the parsed X/Y overflowed) - oversized numbers are now treated as invalid input instead

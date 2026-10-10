@@ -12,7 +12,7 @@ internal static class EnableLockedFeatures
     {
         LockedFeatureFlags flags = 0;
 
-        if (Client.Game.UO.Version >= Utility.ClientVersion.CV_60142)
+        if (Client.Game.UO.Version >= Utility.ClientVersion.CV_60142 && !AsyncNetClient.PacketsTable.LegacyLoginFormat)
             flags = (LockedFeatureFlags)p.ReadUInt32BE();
         else
             flags = (LockedFeatureFlags)p.ReadUInt16BE();
