@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/10/26
+* ***Fix:*** Fixed double right-click pathfinding getting stuck walking toward the cursor instead of following the path to the clicked tile - after a double-click started a pathfind, the right-button state was left set, so each frame overrode the pathfinder with a cursor walk until another right-click. This only affected double-click; "Single click for pathfinding" was unaffected
+
 ## 10/8/26
 * ***Feature:*** Completely re-written the Macro Button Editor and added additional functionality - [P.R 1131](https://github.com/PlayTazUO/TazUO/pull/1131) ([yuval-po](https://github.com/yuval-po))
 * ***Fix:*** Fixed an issue in which some windows remained partially active after close - [P.R 1131](https://github.com/PlayTazUO/TazUO/pull/1131) ([yuval-po](https://github.com/yuval-po))
