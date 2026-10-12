@@ -87,6 +87,14 @@ public class QuickOptionsWindow : MyraControl
         return this;
     }
 
+    /// <summary>Appends a button that invokes <paramref name="onClick"/> when pressed.</summary>
+    public QuickOptionsWindow AddButton(string label, Action onClick)
+    {
+        _stack.Widgets.Add(new MyraButton(label, onClick));
+        Refresh();
+        return this;
+    }
+
     /// <summary>Appends a labeled dropdown that invokes <paramref name="onChange"/> when the selection changes.</summary>
     public QuickOptionsWindow AddDropdown(string label, string[] items, int selectedIndex, Action<int> onChange, string? tooltip = null)
     {

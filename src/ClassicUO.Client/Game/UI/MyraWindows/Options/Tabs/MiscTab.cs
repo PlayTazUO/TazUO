@@ -1,6 +1,7 @@
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.EnhancedMap;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -141,6 +142,14 @@ public static class MiscTab
                     UIManager.Add(new IgnoreManagerGump(World.Instance));
                 },
                 new SearchMetadata(TazLang.Get("mog_misctab_manageignorelistbuttonlabel"), Keywords: [TazLang.Get("mog_kw_ignore"), TazLang.Get("mog_kw_entity")])
+            ),
+            Option.Button(
+                TazLang.Get("enhancedmap_open_settings", "EnhancedMap settings"),
+                EnhancedMapManager.OpenSettingsWindow,
+                new SearchMetadata(
+                    TazLang.Get("enhancedmap_settings_title", "EnhancedMap"),
+                    Keywords: [TazLang.Get("mog_kw_misc"), "enhancedmap", "map", "shared", "tracker"]
+                )
             ),
             Option.UIntegerInput(
                 TazLang.Get("mog_misctab_sosgumpid"),
