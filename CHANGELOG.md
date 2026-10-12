@@ -3,6 +3,10 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/12/26
+* ***Feature:*** The equipment durability tracker can now watch any mobile, not just your own character - opening a mobile's paperdoll requests its equipment properties, and a durability tracker icon appears on that paperdoll once durability data is known. Clicking it opens the tracker, titled with the mobile's name
+* ***Misc:*** The pattern used to read durability from an item's tooltip is now the customizable `durability_regex` language key (the default still matches text like `Durability 45 / 255`), so servers using different wording can be supported without a client change
+
 ## 10/11/26
 * ***Feature:*** The network status gump now shows the last ping alongside the average in expanded view, as `avg (last)`
 * ***Feature:*** The profiler window's columns can now be sorted by clicking their headers, with a second click flipping the direction and an arrow marking the active column
