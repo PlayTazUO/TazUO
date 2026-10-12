@@ -183,8 +183,17 @@ internal sealed class EnhancedMapManager
             return;
         }
 
-        if (!_client.IsAlive && now - _lastConnect >= ReconnectDelayMs)
-            Connect(config);
+        if (!_client.IsAlive)
+        {
+            if (now - _lastConnect >= ReconnectDelayMs)
+                Connect(config);
+        }
+        else if (!_client.IsAccepted && now - _lastConnect >= ReconnectDelayMs)
+        {
+            // Alive but still not accepted: the login stalled past the reconnect window, so
+            // drop it. The next tick's reconnect check will start a fresh attempt.
+            _client.Disconnect();
+        }
 
         if (!_client.IsAccepted || !config.SendLocation)
             return;
@@ -267,7 +276,9 @@ internal sealed class EnhancedMapManager
         window.AddInput(
             TazLang.Get("enhancedmap_password", "Password"),
             config.Password,
-            value => config.Password = value
+            value => config.Password = value,
+            tooltip: TazLang.Get("enhancedmap_password_tooltip", "Stored unencrypted in your profile."),
+            isPassword: true
         );
 
         window.AddCheckbox(

@@ -18,23 +18,15 @@ internal sealed class EnhancedMapClient : IDisposable
     private const int ReceiveTimeoutMs = 500;
 
     private readonly object _sendLock = new();
-    private readonly List<byte> _received = new();
 
-    private volatile Socket _socket;
+    private Connection _connection;
     private Thread _thread;
-    private volatile bool _running;
-    private volatile bool _accepted;
-
-    private string _host = string.Empty;
-    private int _port;
-    private string _user = string.Empty;
-    private string _pass = string.Empty;
 
     /// <summary>True while a socket object exists, regardless of login state.</summary>
-    public bool IsAlive => _socket != null;
+    public bool IsAlive => _connection?.Socket != null;
 
     /// <summary>True once the server has accepted our login.</summary>
-    public bool IsAccepted => _accepted;
+    public bool IsAccepted => _connection?.Accepted == true;
 
     /// <summary>Raised on the receive thread for each reassembled frame (id, payload).</summary>
     public Action<byte, byte[]> OnFrame;
@@ -51,15 +43,10 @@ internal sealed class EnhancedMapClient : IDisposable
     {
         Disconnect();
 
-        _host = host;
-        _port = port;
-        _user = user ?? string.Empty;
-        _pass = pass ?? string.Empty;
-        _received.Clear();
-        _accepted = false;
-        _running = true;
+        var connection = new Connection(host, port, user ?? string.Empty, pass ?? string.Empty);
+        _connection = connection;
 
-        _thread = new Thread(Run)
+        _thread = new Thread(() => Run(connection))
         {
             IsBackground = true,
             Name = "EnhancedMap"
@@ -68,14 +55,14 @@ internal sealed class EnhancedMapClient : IDisposable
         _thread.Start();
     }
 
-    private void Run()
+    private void Run(Connection connection)
     {
         bool graceful = true;
         Socket socket = null;
 
         try
         {
-            IPAddress[] addresses = Dns.GetHostAddresses(_host);
+            IPAddress[] addresses = Dns.GetHostAddresses(connection.Host);
             IPAddress address = Array.Find(addresses, a => a.AddressFamily == AddressFamily.InterNetwork)
                                 ?? (addresses.Length > 0 ? addresses[0] : null);
 
@@ -85,25 +72,25 @@ internal sealed class EnhancedMapClient : IDisposable
                 return;
             }
 
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+            socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
             {
                 NoDelay = true,
                 ReceiveTimeout = ReceiveTimeoutMs
             };
 
-            socket.Connect(new IPEndPoint(address, _port));
+            socket.Connect(new IPEndPoint(address, connection.Port));
 
             // Disconnect() may have run while Connect was in flight; don't publish a dead socket.
-            if (!_running)
+            if (!connection.Running)
                 return;
 
-            _socket = socket;
+            connection.Socket = socket;
 
-            SendRaw(new EmPacketWriter(EnhancedMapProtocol.ProtocolRequest).U8(0).Build());
+            SendRaw(connection, new EmPacketWriter(EnhancedMapProtocol.ProtocolRequest).U8(0).Build());
 
             var buffer = new byte[8192];
 
-            while (_running)
+            while (connection.Running)
             {
                 int received;
 
@@ -131,19 +118,19 @@ internal sealed class EnhancedMapClient : IDisposable
                     break;
                 }
 
-                Reassemble(buffer.AsSpan(0, received));
+                Reassemble(connection, buffer.AsSpan(0, received));
             }
         }
         catch (Exception ex)
         {
             graceful = false;
-            Log.Info($"EnhancedMap: connection to {_host}:{_port} failed ({ex.Message})");
+            Log.Info($"EnhancedMap: connection to {connection.Host}:{connection.Port} failed ({ex.Message})");
         }
         finally
         {
-            _accepted = false;
-            _running = false;
-            _socket = null;
+            connection.Accepted = false;
+            connection.Running = false;
+            connection.Socket = null;
 
             try
             {
@@ -154,68 +141,73 @@ internal sealed class EnhancedMapClient : IDisposable
                 // Socket teardown failures are not actionable.
             }
 
-            OnDisconnected?.Invoke(graceful);
+            // Only the still-current connection reports its own disconnect; a superseded run
+            // must not tear down or notify for the newer connection.
+            if (Interlocked.CompareExchange(ref _connection, null, connection) == connection)
+                OnDisconnected?.Invoke(graceful);
         }
     }
 
-    private void Reassemble(ReadOnlySpan<byte> data)
+    private void Reassemble(Connection connection, ReadOnlySpan<byte> data)
     {
+        List<byte> received = connection.Received;
+
         foreach (byte b in data)
-            _received.Add(b);
+            received.Add(b);
 
         while (true)
         {
-            if (_received.Count < EnhancedMapProtocol.FrameHeaderSize)
+            if (received.Count < EnhancedMapProtocol.FrameHeaderSize)
                 return;
 
-            int id = _received[0];
-            int size = EnhancedMapProtocol.GetFrameLength(_received[1], _received[2]);
+            int id = received[0];
+            int size = EnhancedMapProtocol.GetFrameLength(received[1], received[2]);
 
             if (size < EnhancedMapProtocol.FrameHeaderSize)
             {
-                _received.Clear();
+                received.Clear();
                 return;
             }
 
-            if (_received.Count < size)
+            if (received.Count < size)
                 return;
 
             var payload = new byte[size - EnhancedMapProtocol.FrameHeaderSize];
-            _received.CopyTo(EnhancedMapProtocol.FrameHeaderSize, payload, 0, payload.Length);
-            _received.RemoveRange(0, size);
+            received.CopyTo(EnhancedMapProtocol.FrameHeaderSize, payload, 0, payload.Length);
+            received.RemoveRange(0, size);
 
-            HandleFrame((byte)id, payload);
+            HandleFrame(connection, (byte)id, payload);
         }
     }
 
-    private void HandleFrame(byte id, byte[] payload)
+    private void HandleFrame(Connection connection, byte id, byte[] payload)
     {
         switch (id)
         {
             case EnhancedMapProtocol.ProtocolRequest:
-                SendLogin();
+                SendLogin(connection);
                 break;
 
             case EnhancedMapProtocol.Login:
-                _accepted = payload.Length > 0 && payload[0] == 1;
-                if (!_accepted)
-                    _running = false;
+                connection.Accepted = payload.Length > 0 && payload[0] == 1;
+                if (!connection.Accepted)
+                    connection.Running = false;
                 break;
         }
 
         OnFrame?.Invoke(id, payload);
     }
 
-    private void SendLogin()
+    private void SendLogin(Connection connection)
     {
         byte[] frame = new EmPacketWriter(EnhancedMapProtocol.Login)
-            .U8((byte)EnhancedMapProtocol.Wire.GetByteCount(_user))
-            .U8((byte)EnhancedMapProtocol.Wire.GetByteCount(_pass))
-            .Ascii(_user)
-            .Ascii(_pass)
+            .U8((byte)EnhancedMapProtocol.Wire.GetByteCount(connection.User))
+            .U8((byte)EnhancedMapProtocol.Wire.GetByteCount(connection.Pass))
+            .Ascii(connection.User)
+            .Ascii(connection.Pass)
             .Build();
 
-        SendRaw(frame);
+        SendRaw(connection, frame);
     }
 
     /// <summary>Sends this client's player state (packet 0x25), if connected and accepted.</summary>
@@ -226,7 +218,9 @@ internal sealed class EnhancedMapClient : IDisposable
         byte flag, bool panic, uint color,
         string font, float fontSize, byte fontStyle)
     {
-        if (!IsAccepted)
+        Connection connection = _connection;
+
+        if (connection == null || !connection.Accepted)
             return;
 
         byte[] frame = new EmPacketWriter(EnhancedMapProtocol.PlayerData)
@@ -243,7 +237,7 @@ internal sealed class EnhancedMapClient : IDisposable
             .U8(fontStyle)
             .Build();
 
-        SendRaw(frame);
+        SendRaw(connection, frame);
     }
 
     /// <summary>Sends a one-shot alert marker at a world coordinate (packet 0x27).</summary>
@@ -251,15 +245,17 @@ internal sealed class EnhancedMapClient : IDisposable
     /// <param name="y">World Y, clamped to the protocol's ushort range by the caller.</param>
     public void SendAlert(ushort x, ushort y)
     {
-        if (!IsAccepted)
+        Connection connection = _connection;
+
+        if (connection == null || !connection.Accepted)
             return;
 
-        SendRaw(new EmPacketWriter(EnhancedMapProtocol.AlertAdvice).U16(x).U16(y).Build());
+        SendRaw(connection, new EmPacketWriter(EnhancedMapProtocol.AlertAdvice).U16(x).U16(y).Build());
     }
 
-    private void SendRaw(byte[] data)
+    private void SendRaw(Connection connection, byte[] data)
     {
-        Socket socket = _socket;
+        Socket socket = connection.Socket;
 
         if (socket == null)
             return;
@@ -282,7 +278,7 @@ internal sealed class EnhancedMapClient : IDisposable
             }
             catch (Exception)
             {
-                _running = false;
+                connection.Running = false;
             }
         }
     }
@@ -290,11 +286,17 @@ internal sealed class EnhancedMapClient : IDisposable
     /// <summary>Stops the receive loop and tears the socket down. Safe to call repeatedly.</summary>
     public void Disconnect()
     {
-        _running = false;
-        _accepted = false;
+        Connection connection = _connection;
+        _connection = null;
 
-        Socket socket = _socket;
-        _socket = null;
+        if (connection == null)
+            return;
+
+        connection.Running = false;
+        connection.Accepted = false;
+
+        Socket socket = connection.Socket;
+        connection.Socket = null;
 
         try
         {
@@ -316,4 +318,31 @@ internal sealed class EnhancedMapClient : IDisposable
     }
 
     public void Dispose() => Disconnect();
+
+    /// <summary>
+    /// State for a single connection attempt. Kept separate from the owning client so a receive
+    /// thread that has been superseded by a newer <see cref="Connect"/> cannot read or mutate the
+    /// newer connection, and cannot report its disconnect as the current one.
+    /// </summary>
+    private sealed class Connection
+    {
+        public Connection(string host, int port, string user, string pass)
+        {
+            Host = host;
+            Port = port;
+            User = user;
+            Pass = pass;
+        }
+
+        public string Host { get; }
+        public int Port { get; }
+        public string User { get; }
+        public string Pass { get; }
+
+        public volatile Socket Socket;
+        public volatile bool Running = true;
+        public volatile bool Accepted;
+
+        public readonly List<byte> Received = new();
+    }
 }

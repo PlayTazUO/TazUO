@@ -542,9 +542,9 @@ public class WorldMapGump : ResizableGump
     }
 
     /// <summary>
-    /// Prompts for the label to attach to a new EnhancedMap alert, then sends it at the player's
-    /// current position. The label is a local echo only: the server stamps the sender's account
-    /// name onto the alert it rebroadcasts to the room.
+    /// Prompts for the label to attach to a new EnhancedMap alert, then sends it at the last map
+    /// location the user right-clicked. The label is a local echo only: the server stamps the
+    /// sender's account name onto the alert it rebroadcasts to the room.
     /// </summary>
     private void PromptEnhancedMapAlert()
     {
