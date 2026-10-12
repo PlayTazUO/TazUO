@@ -142,6 +142,17 @@ public class MyraControl : IGui, IDisposable
     public bool AcceptMouseInput { get; set; } = true;
     public bool HandlesKeyboardFocus { get; set; }
     public bool IsDisposed { get; private set; } = false;
+
+    /// <summary>
+    /// Whether a close has been requested but its teardown has not run yet - the window is on its
+    /// way out while <see cref="IsDisposed"/> still reads false.
+    /// <para>
+    /// Teardown is deferred to the next <see cref="Update"/> so it cannot run inside the UI event
+    /// that asked for it. Anything deciding whether a control is still usable - reusing a cached
+    /// instance, say - has to test this as well, or it will act on one that disappears a frame later.
+    /// </para>
+    /// </summary>
+    public bool IsClosing => _disposeRequested;
     public bool IsVisible { get; set; } = true;
     public bool IsEnabled { get; set; } = true;
     public IGui RootParent { get; } = null;
@@ -372,6 +383,7 @@ public class MyraControl : IGui, IDisposable
             _rootWindow.LocationChanged -= DesktopWindowOnLocationChanged;
             _rootWindow.SizeChanged -= RootWindowOnSizeChanged;
             _rootWindow.ArrangeUpdated -= RootWindowOnSizeChanged;
+            _rootWindow.Dispose();
         }
 
         _desktop.Widgets.Clear();

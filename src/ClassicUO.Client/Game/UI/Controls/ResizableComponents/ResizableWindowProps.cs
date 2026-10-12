@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.ComponentModel;
 using ClassicUO.Common;
 using Microsoft.Xna.Framework;
@@ -15,16 +16,23 @@ public class ResizableWindowProps : MyraCommonProps
     /// <summary>
     ///     Gets or sets the resize behavior (enabled edges, size limits, and scrollbar mode) of the window.
     /// </summary>
+    /// <exception cref="ArgumentNullException">
+    ///     The assigned behavior is null. <see cref="ResizableWindow" /> reads this on every
+    ///     reconfigure with no fallback, so clearing it would leave the window unusable rather than
+    ///     un-resizable - disable resizing through <see cref="ResizeBehavior.Enabled" /> instead.
+    /// </exception>
     public ResizeBehavior Resize
     {
         get;
         set
         {
+            ArgumentNullException.ThrowIfNull(value);
+
             ResizeBehavior oldValue = field;
             if (SetField(ref field, value))
             {
-                oldValue?.PropertyChanged -= OnResizePropertyChanged;
-                field?.PropertyChanged += OnResizePropertyChanged;
+                oldValue.PropertyChanged -= OnResizePropertyChanged;
+                field.PropertyChanged += OnResizePropertyChanged;
             }
         }
     } = new();
@@ -44,7 +52,7 @@ public class ResizableWindowProps : MyraCommonProps
     /// </summary>
     public ResizableWindowProps()
     {
-        Resize?.PropertyChanged += OnResizePropertyChanged;
+        Resize.PropertyChanged += OnResizePropertyChanged;
     }
 
     /// <summary>

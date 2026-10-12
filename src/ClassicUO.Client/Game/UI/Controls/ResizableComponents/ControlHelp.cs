@@ -116,7 +116,7 @@ public class ControlHelp : Widget
     /// </summary>
     public void CloseModal()
     {
-        if (_helpModal is { IsDisposed: false })
+        if (_helpModal is { IsDisposed: false, IsClosing: false })
             _helpModal.Dispose();
 
         _helpModal = null;
@@ -162,8 +162,9 @@ public class ControlHelp : Widget
 
         // A dismissed modal is disposed, so a cached reference is only reusable while alive -
         // re-showing a disposed one would do nothing and leave the help button dead after the
-        // first dismissal.
-        if (_helpModal is { IsDisposed: false })
+        // first dismissal. IsClosing covers the frames where the dismissal is pending but
+        // IsDisposed has yet to flip, which would otherwise raise a modal about to vanish.
+        if (_helpModal is { IsDisposed: false, IsClosing: false })
         {
             if (ContentModalPlacementGetter != null)
             {

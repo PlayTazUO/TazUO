@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,7 +29,7 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Raised after the window's size has changed as a result of a drag-resize operation.
     /// </summary>
-    public event EventHandler<ResizeEventArgs> Resized;
+    public event EventHandler<ResizeEventArgs>? Resized;
 
     #endregion
 
@@ -84,7 +86,7 @@ public class ResizableWindow : Window, IDisposable
     ///     <see cref="ControlHelp" /> therefore belongs to one window - assigning the same instance to
     ///     a second window reparents it away from the first.
     /// </remarks>
-    public ControlHelp Help
+    public ControlHelp? Help
     {
         get => _helpButton;
 
@@ -130,10 +132,10 @@ public class ResizableWindow : Window, IDisposable
     private const int RESTORE_BTN_GLYPH_SIZE = 32;
 
     /// <summary>Stand-in for an unbounded measure - Myra has no "infinity" for one.</summary>
-    private static readonly Point UNBOUNDED_MEASURE = new(2000, 2000);
+    private static readonly Point _unboundedMeasure = new(2000, 2000);
 
     /// <summary>Tightens the title bar around the glyph buttons, which carry no padding of their own.</summary>
-    private static readonly Thickness TITLE_PANEL_PADDING = new(0, 1, 0, 3);
+    private static readonly Thickness _titlePanelPadding = new(0, 1, 0, 3);
 
     private ResizeEdges? _activeResizeEdge;
     private DragDirection _allowedDragDirections;
@@ -157,13 +159,13 @@ public class ResizableWindow : Window, IDisposable
 
     #region Components
 
-    private IconButton _minMaxButton;
+    private IconButton? _minMaxButton;
 
-    private IconButton _resetSizeButton;
+    private IconButton? _resetSizeButton;
 
-    private ControlHelp _helpButton;
+    private ControlHelp? _helpButton;
 
-    private Widget _content;
+    private Widget? _content;
 
     #endregion
 
@@ -175,14 +177,14 @@ public class ResizableWindow : Window, IDisposable
     ///     Initializes a new instance of the <see cref="ResizableWindow" /> class.
     /// </summary>
     /// <param name="props">Properties defining initial window state and resize behavior.</param>
-    public ResizableWindow(ResizableWindowProps props = null)
+    public ResizableWindow(ResizableWindowProps? props = null)
     {
         Props = props ?? new ResizableWindowProps();
         Props.PropertyChanged += OnPropsChanged;
 
         // Ahead of Configure, and only here: Configure re-runs on every property change, and
         // re-applying these would undo whatever a caller has since done to the title bar.
-        TitlePanel.Padding = TITLE_PANEL_PADDING;
+        TitlePanel.Padding = _titlePanelPadding;
         _titleLabel.VerticalAlignment = VerticalAlignment.Center;
 
         Configure(null);
@@ -284,7 +286,7 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Gets or sets the content of the window
     /// </summary>
-    public override Widget Content
+    public override Widget? Content
     {
         get => base.Content;
         set
@@ -400,7 +402,7 @@ public class ResizableWindow : Window, IDisposable
     ///     Configures the window UI components.
     /// </summary>
     /// <param name="e">An optional property changed event arguments, if the call was triggered by property changes</param>
-    private void Configure(PropertyChangedEventArgs e)
+    private void Configure(PropertyChangedEventArgs? e)
     {
         if (e == null || e.PropertyName == nameof(Props.InitialSizeStore))
         {
@@ -480,7 +482,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     private void RefreshTitlePanelMetrics()
     {
-        _titlePanelFullWidth = TitlePanel.Measure(UNBOUNDED_MEASURE).X;
+        _titlePanelFullWidth = TitlePanel.Measure(_unboundedMeasure).X;
         UpdateTitleLabelVisibility();
     }
 
@@ -495,7 +497,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="_1">Unused event arguments.</param>
-    private void OnMinMaxButtonClick(object _, EventArgs _1)
+    private void OnMinMaxButtonClick(object? _, EventArgs _1)
     {
         if (IsMinimized)
             Maximize();
@@ -509,7 +511,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="_1">Unused event arguments.</param>
-    private void OnResetSizeButtonClick(object _, EventArgs _1)
+    private void OnResetSizeButtonClick(object? _, EventArgs _1)
     {
         Width = null;
         Height = null;
@@ -775,7 +777,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="e">Unused mouse-moved event data.</param>
-    private void OnMouseMovedWhileInWindow(object _, MouseMovedEventArgs e)
+    private void OnMouseMovedWhileInWindow(object? _, MouseMovedEventArgs e)
     {
         // Resize is disabled when the window is minimized, so no need to even check the cursor position.
         if (!IsCurrentlyResizable)
@@ -799,7 +801,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="e">Unused mouse-moved event data.</param>
-    private void OnMouseMovedWhileResizing(object _, MouseMovedEventArgs e)
+    private void OnMouseMovedWhileResizing(object? _, MouseMovedEventArgs e)
     {
         if (!_activeResizeEdge.HasValue || !Mouse.LButtonPressed)
         {
@@ -856,12 +858,12 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="widget">The widget to measure. Null or hidden ones measure zero.</param>
     /// <returns>The width, in pixels.</returns>
-    private static int TrailingEdgeWidth(Widget widget)
+    private static int TrailingEdgeWidth(Widget? widget)
     {
         if (widget?.Visible != true)
             return 0;
 
-        return Math.Max(0, widget.Measure(UNBOUNDED_MEASURE).X - (widget.Margin.Right + widget.Padding.Right));
+        return Math.Max(0, widget.Measure(_unboundedMeasure).X - (widget.Margin.Right + widget.Padding.Right));
     }
 
     /// <summary>
@@ -911,7 +913,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="e">Event data indicating the new left-button press state.</param>
-    private void LeftClickChangedHandler(object _, MouseLeftButtonClickStateChangedEventArgs e)
+    private void LeftClickChangedHandler(object? _, MouseLeftButtonClickStateChangedEventArgs e)
     {
         if (!e.Current && _activeResizeEdge.HasValue)
             OnDragStop(null, EventArgs.Empty);
@@ -922,7 +924,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="_1">Unused event arguments.</param>
-    private void OnDragStop(object _, EventArgs _1)
+    private void OnDragStop(object? _, EventArgs _1)
     {
         _activeResizeEdge = null;
 
@@ -955,7 +957,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="sender">Unused event sender.</param>
     /// <param name="e">Event data identifying which property changed.</param>
-    private void OnPropsChanged(object sender, PropertyChangedEventArgs e) => Configure(e);
+    private void OnPropsChanged(object? sender, PropertyChangedEventArgs e) => Configure(e);
 
     #endregion
 }

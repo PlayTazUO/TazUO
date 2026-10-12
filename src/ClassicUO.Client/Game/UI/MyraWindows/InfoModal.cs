@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using Microsoft.Xna.Framework;
@@ -131,18 +132,29 @@ public class InfoModal : MyraControl
     ///     Both halves are needed, and for different reasons: the resize clamp bounds what a drag can
     ///     do, while the layout limits bound what the window sizes itself to when it measures its
     ///     content. Setting only the former leaves the initial, un-dragged dialog unbounded.
+    ///     <para>
+    ///         The two are written as an ordered pair, treating the minimum as the hard floor and
+    ///         lifting the ceiling to meet it where a caller has set them crossed. That is not
+    ///         cosmetic tidying: the drag path clamps through <see cref="Math.Clamp(int,int,int)" />,
+    ///         which throws when its bounds cross, and would do so on every mouse-move of a resize.
+    ///     </para>
     /// </remarks>
     private void ApplySizeLimits()
     {
-        _rootWindow.Props.Resize.MinWidth = MinSize.X;
-        _rootWindow.Props.Resize.MinHeight = MinSize.Y;
-        _rootWindow.Props.Resize.MaxWidth = MaxSize.X;
-        _rootWindow.Props.Resize.MaxHeight = MaxSize.Y;
+        int minWidth = Math.Max(0, MinSize.X);
+        int minHeight = Math.Max(0, MinSize.Y);
+        int maxWidth = Math.Max(minWidth, MaxSize.X);
+        int maxHeight = Math.Max(minHeight, MaxSize.Y);
 
-        _rootWindow.MinWidth = MinSize.X;
-        _rootWindow.MinHeight = MinSize.Y;
-        _rootWindow.MaxWidth = MaxSize.X;
-        _rootWindow.MaxHeight = MaxSize.Y;
+        _rootWindow.Props.Resize.MinWidth = minWidth;
+        _rootWindow.Props.Resize.MinHeight = minHeight;
+        _rootWindow.Props.Resize.MaxWidth = maxWidth;
+        _rootWindow.Props.Resize.MaxHeight = maxHeight;
+
+        _rootWindow.MinWidth = minWidth;
+        _rootWindow.MinHeight = minHeight;
+        _rootWindow.MaxWidth = maxWidth;
+        _rootWindow.MaxHeight = maxHeight;
     }
 
     /// <summary>
