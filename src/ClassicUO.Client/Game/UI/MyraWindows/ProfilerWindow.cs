@@ -18,6 +18,10 @@ namespace ClassicUO.Game.UI.MyraWindows
     {
         private const uint UPDATE_INTERVAL = 250;
 
+        private const int COLUMN_COUNT = 5;
+
+        private static readonly string[] ColumnLabels = { "Context", "Avg(ms)", "Peak(ms)", "Last(ms)", "% Total" };
+
         private readonly VerticalStackPanel _dataPanel;
         private readonly MyraButton _toggleButton;
         private readonly MyraLabel _statsLabel;
@@ -26,6 +30,17 @@ namespace ClassicUO.Game.UI.MyraWindows
 
         private int _sortColumn = 1;
         private bool _sortAscending;
+
+        // The grid, its header buttons and every cell label are built once and then only updated in
+        // place. Rebuilding them every tick was the source of the periodic hitch this window
+        // caused, since each MyraLabel clones a stylesheet on construction.
+        private readonly MyraGrid _grid;
+        private readonly MyraButton[] _headerButtons = new MyraButton[COLUMN_COUNT];
+        private readonly List<MyraLabel[]> _activeRows = new();
+        private readonly ObjectPool<MyraLabel[]> _rowPool;
+        private readonly MyraLabel _statusLabel;
+        private readonly Color _defaultTextColor;
+        private readonly List<Profiler.ProfileData> _sortBuffer = new();
 
         private readonly CancellationTokenSource _cpuCts = new();
         private static volatile float _cpuPercent;
@@ -57,6 +72,26 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             _statsLabel = new MyraLabel(GetStatsLabel(), MyraLabel.TextStyle.P);
             _queueLabel = new MyraLabel(GetQueueLabel(), MyraLabel.TextStyle.P);
+
+            _rowPool = new ObjectPool<MyraLabel[]>(CreateRow);
+            _defaultTextColor = new MyraLabel(string.Empty, MyraLabel.TextStyle.P).TextColor;
+
+            _grid = new MyraGrid();
+            Widget[] headers = _grid.SetupWithHeaders(
+                OnHeaderClicked,
+                GridColumnInfo.Fill(ColumnLabels[0]),
+                GridColumnInfo.Numeric(ColumnLabels[1]),
+                GridColumnInfo.Numeric(ColumnLabels[2]),
+                GridColumnInfo.Numeric(ColumnLabels[3]),
+                GridColumnInfo.Numeric(ColumnLabels[4])
+            );
+            for (int i = 0; i < COLUMN_COUNT; i++)
+                _headerButtons[i] = (MyraButton)headers[i];
+            ApplyHeaderLabels();
+
+            _statusLabel = new MyraLabel(string.Empty, MyraLabel.TextStyle.P);
+            _dataPanel.Widgets.Add(_statusLabel);
+            _dataPanel.Widgets.Add(_grid);
 
             var scrollViewer = new ScrollViewer
             {
@@ -228,97 +263,150 @@ namespace ClassicUO.Game.UI.MyraWindows
                 _sortAscending = column == 0;
             }
 
+            ApplyHeaderLabels();
             UpdateDisplay();
         }
 
-        /// <summary>Orders the current snapshot by the selected column and direction.</summary>
+        /// <summary>Redraws the header labels with the arrow marking the active sort column.</summary>
+        private void ApplyHeaderLabels()
+        {
+            for (int i = 0; i < _headerButtons.Length; i++)
+            {
+                string label = ColumnLabels[i];
+                if (_sortColumn == i)
+                    label += _sortAscending ? " ↑" : " ↓";
+
+                _headerButtons[i].Text = label;
+            }
+        }
+
+        /// <summary>Orders the current snapshot in place in <see cref="_sortBuffer" />.</summary>
+        /// <returns>The shared buffer, valid only until the next call.</returns>
         private List<Profiler.ProfileData> GetSortedData()
         {
-            List<Profiler.ProfileData> data = Profiler.AllFrameData.ToList();
+            _sortBuffer.Clear();
+            _sortBuffer.AddRange(Profiler.AllFrameData);
 
             Comparison<Profiler.ProfileData> comparison = _sortColumn switch
             {
-                0 => (a, b) => string.Compare(string.Join(" > ", a.Context), string.Join(" > ", b.Context), StringComparison.OrdinalIgnoreCase),
+                0 => (a, b) => CompareContext(a.Context, b.Context),
                 2 => (a, b) => a.PeakTime.CompareTo(b.PeakTime),
                 3 => (a, b) => a.LastTime.CompareTo(b.LastTime),
                 _ => (a, b) => a.AverageTime.CompareTo(b.AverageTime),
             };
 
-            data.Sort((a, b) => _sortAscending ? comparison(a, b) : comparison(b, a));
-            return data;
+            _sortBuffer.Sort((a, b) => _sortAscending ? comparison(a, b) : comparison(b, a));
+            return _sortBuffer;
+        }
+
+        /// <summary>
+        /// Orders two context paths lexicographically without joining them into a string, which the
+        /// display name does but which would allocate on every comparison of a sort.
+        /// </summary>
+        private static int CompareContext(string[] a, string[] b)
+        {
+            int length = Math.Min(a.Length, b.Length);
+            for (int i = 0; i < length; i++)
+            {
+                int cmp = string.Compare(a[i], b[i], StringComparison.OrdinalIgnoreCase);
+                if (cmp != 0)
+                    return cmp;
+            }
+
+            return a.Length.CompareTo(b.Length);
+        }
+
+        /// <summary>
+        /// Builds one row's worth of cell labels, right-aligning the numeric columns. Only ever
+        /// called by the pool when it has no idle row to hand out.
+        /// </summary>
+        private static MyraLabel[] CreateRow()
+        {
+            var row = new MyraLabel[COLUMN_COUNT];
+            row[0] = new MyraLabel(string.Empty, MyraLabel.TextStyle.P);
+            for (int i = 1; i < COLUMN_COUNT; i++)
+                row[i] = new MyraLabel(string.Empty, MyraLabel.TextStyle.P) { HorizontalAlignment = HorizontalAlignment.Right };
+
+            return row;
+        }
+
+        /// <summary>Appends a pooled row to the bottom of the grid.</summary>
+        private void AddRow()
+        {
+            MyraLabel[] row = _rowPool.Get();
+            int gridRow = _activeRows.Count + 1;
+
+            for (int c = 0; c < COLUMN_COUNT; c++)
+                _grid.AddWidget(row[c], gridRow, c);
+
+            _grid.AddRow();
+            _activeRows.Add(row);
+        }
+
+        /// <summary>Detaches the bottom row and returns its labels to the pool.</summary>
+        private void RemoveLastRow()
+        {
+            int last = _activeRows.Count - 1;
+            MyraLabel[] row = _activeRows[last];
+
+            for (int c = 0; c < COLUMN_COUNT; c++)
+                _grid.Widgets.Remove(row[c]);
+
+            if (_grid.RowsProportions.Count > 0)
+                _grid.RowsProportions.RemoveAt(_grid.RowsProportions.Count - 1);
+
+            _activeRows.RemoveAt(last);
+            _rowPool.Return(row);
         }
 
         private void UpdateDisplay()
         {
-            _dataPanel.Widgets.Clear();
-
             List<Profiler.ProfileData> data = GetSortedData();
 
             if (data.Count == 0)
             {
-                _dataPanel.Widgets.Add(new MyraLabel(
-                    Profiler.Enabled
-                        ? "No data collected yet — play the game to populate."
-                        : "Profiler is disabled. Click 'Enable Profiler' to start.",
-                    MyraLabel.TextStyle.P
-                ));
+                while (_activeRows.Count > 0)
+                    RemoveLastRow();
+
+                _grid.Visible = false;
+                _statusLabel.Visible = true;
+                _statusLabel.Text = Profiler.Enabled
+                    ? "No data collected yet — play the game to populate."
+                    : "Profiler is disabled. Click 'Enable Profiler' to start.";
                 return;
             }
 
+            _grid.Visible = true;
+
             // Keep the last captured snapshot on screen after the profiler is stopped so the
             // numbers can still be read; the data is only replaced when a new run resets it.
+            _statusLabel.Visible = !Profiler.Enabled;
             if (!Profiler.Enabled)
-            {
-                _dataPanel.Widgets.Add(new MyraLabel("Profiler is disabled — showing the last captured data.", MyraLabel.TextStyle.P));
-            }
+                _statusLabel.Text = "Profiler is disabled — showing the last captured data.";
 
             double totalAvg = data.Sum(pd => pd.AverageTime);
 
-            string Indicator(int column) => _sortColumn == column ? (_sortAscending ? " ↑" : " ↓") : "";
+            while (_activeRows.Count < data.Count)
+                AddRow();
 
-            var grid = new MyraGrid();
-            grid.SetupWithHeaders(
-                OnHeaderClicked,
-                GridColumnInfo.Fill("Context" + Indicator(0)),
-                GridColumnInfo.Numeric("Avg(ms)" + Indicator(1)),
-                GridColumnInfo.Numeric("Peak(ms)" + Indicator(2)),
-                GridColumnInfo.Numeric("Last(ms)" + Indicator(3)),
-                GridColumnInfo.Numeric("% Total" + Indicator(4))
-            );
+            while (_activeRows.Count > data.Count)
+                RemoveLastRow();
 
-            int row = 1;
-            foreach (Profiler.ProfileData pd in data)
+            for (int i = 0; i < data.Count; i++)
             {
-                string name = string.Join(" > ", pd.Context);
-                double pct = totalAvg > 0 ? 100.0 * pd.AverageTime / totalAvg : 0.0;
-                bool isSlow = pd.AverageTime > 8.0;
+                Profiler.ProfileData pd = data[i];
+                MyraLabel[] row = _activeRows[i];
+                Color color = pd.AverageTime > 8.0 ? Color.OrangeRed : _defaultTextColor;
 
-                grid.AddRow();
+                row[0].Text = string.Join(" > ", pd.Context);
+                row[1].Text = $"{pd.AverageTime:F2}";
+                row[2].Text = $"{pd.PeakTime:F2}";
+                row[3].Text = $"{pd.LastTime:F2}";
+                row[4].Text = totalAvg > 0 ? $"{100.0 * pd.AverageTime / totalAvg:F1}%" : "0.0%";
 
-                var nameLabel = new MyraLabel(name, MyraLabel.TextStyle.P);
-                if (isSlow) nameLabel.TextColor = Color.OrangeRed;
-                grid.AddWidget(nameLabel, row, 0);
-
-                var avgLabel = new MyraLabel($"{pd.AverageTime:F2}", MyraLabel.TextStyle.P) { HorizontalAlignment = HorizontalAlignment.Right };
-                if (isSlow) avgLabel.TextColor = Color.OrangeRed;
-                grid.AddWidget(avgLabel, row, 1);
-
-                var peakLabel = new MyraLabel($"{pd.PeakTime:F2}", MyraLabel.TextStyle.P) { HorizontalAlignment = HorizontalAlignment.Right };
-                if (isSlow) peakLabel.TextColor = Color.OrangeRed;
-                grid.AddWidget(peakLabel, row, 2);
-
-                var lastLabel = new MyraLabel($"{pd.LastTime:F2}", MyraLabel.TextStyle.P) { HorizontalAlignment = HorizontalAlignment.Right };
-                if (isSlow) lastLabel.TextColor = Color.OrangeRed;
-                grid.AddWidget(lastLabel, row, 3);
-
-                var pctLabel = new MyraLabel($"{pct:F1}%", MyraLabel.TextStyle.P) { HorizontalAlignment = HorizontalAlignment.Right };
-                if (isSlow) pctLabel.TextColor = Color.OrangeRed;
-                grid.AddWidget(pctLabel, row, 4);
-
-                row++;
+                for (int c = 0; c < COLUMN_COUNT; c++)
+                    row[c].TextColor = color;
             }
-
-            _dataPanel.Widgets.Add(grid);
         }
     }
 }

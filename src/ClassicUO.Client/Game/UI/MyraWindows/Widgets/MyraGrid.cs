@@ -57,7 +57,7 @@ public class MyraGrid : Grid
             SetColumnSpan(widget, colspan.Value);
     }
 
-    internal void SetupWithHeaders(params GridColumnInfo[] columns) => SetupWithHeaders(null, columns);
+    internal Widget[] SetupWithHeaders(params GridColumnInfo[] columns) => SetupWithHeaders(null, columns);
 
     /// <summary>
     /// Sets up the grid's columns and header row, optionally making each header a button that
@@ -67,7 +67,11 @@ public class MyraGrid : Grid
     /// Invoked with the clicked column's index. Null leaves headers as plain labels.
     /// </param>
     /// <param name="columns">Column definitions, left to right.</param>
-    internal void SetupWithHeaders(Action<int>? onHeaderClick, params GridColumnInfo[] columns)
+    /// <returns>
+    /// The header widgets in column order, so a caller that keeps the grid around can update
+    /// their labels in place instead of rebuilding the header row.
+    /// </returns>
+    internal Widget[] SetupWithHeaders(Action<int>? onHeaderClick, params GridColumnInfo[] columns)
     {
         MyraStyle.ApplyStandardGridStyling(this);
 
@@ -78,6 +82,7 @@ public class MyraGrid : Grid
                 : new Proportion(ProportionType.Auto));
         }
 
+        var headers = new Widget[columns.Length];
         for (int i = 0; i < columns.Length; i++)
         {
             GridColumnInfo col = columns[i];
@@ -97,8 +102,11 @@ public class MyraGrid : Grid
                     col.AlignRight ? MyraLabel.AlignMode.Right : MyraLabel.AlignMode.Left);
             }
 
+            headers[i] = header;
             AddWidget(header, 0, i);
         }
+
+        return headers;
     }
 }
 
