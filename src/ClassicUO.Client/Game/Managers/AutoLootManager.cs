@@ -200,7 +200,6 @@ namespace ClassicUO.Game.Managers
                     return entry;
 
             AutoLootEntries.Add(item);
-            Save();
 
             return item;
         }
@@ -274,11 +273,7 @@ namespace ClassicUO.Game.Managers
                 if (entries[i].Uid == uid)
                     removeAt = i;
 
-            if (removeAt > -1)
-            {
-                entries.RemoveAt(removeAt);
-                Save();
-            }
+            if (removeAt > -1) entries.RemoveAt(removeAt);
         }
 
         /// <summary>
