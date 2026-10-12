@@ -7,6 +7,7 @@ All notable changes to TazUO will be recorded here.
 * ***Feature:*** The network status gump now shows the last ping alongside the average in expanded view, as `avg (last)`
 * ***Feature:*** The profiler window's columns can now be sorted by clicking their headers, with a second click flipping the direction and an arrow marking the active column
 * ***Fix:*** Fixed a client crash on login/character change (`InvalidOperationException: Collection was modified`) when a gump's disposal added or removed other gumps while the UI was being cleared - `UIManager.Clear()` now disposes from a snapshot of the gump list
+* ***Fix:*** Fixed a client crash (`InvalidOperationException: ConcurrentOperationsNotSupported`) when voice recognition put recognized speech into the chat textbox - the audio-processing thread was writing to the UI directly, so the textbox measured text through FontStashSharp while the main thread was drawing. The text is now inserted on the main thread
 
 ## 10/10/26
 * ***Fix:*** Fixed double right-click pathfinding getting stuck walking toward the cursor instead of following the path to the clicked tile - after a double-click started a pathfind, the right-button state was left set, so each frame overrode the pathfinder with a cursor walk until another right-click. This only affected double-click; "Single click for pathfinding" was unaffected
