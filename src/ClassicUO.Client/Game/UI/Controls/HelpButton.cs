@@ -8,14 +8,14 @@ using ClassicUO.Utility.Platforms;
 using Myra.Events;
 using Myra.Graphics2D.UI;
 
-namespace ClassicUO.Game.UI.Controls.ResizableComponents;
+namespace ClassicUO.Game.UI.Controls;
 
 /// <summary>
 ///     A help button that, when pressed, either shows a widget in an <see cref="InfoModal" /> or
 ///     opens a URL in the player's browser, per the constructor used.
 ///     <para>
-///         Seated in a <see cref="ResizableWindow" />'s title bar through
-///         <see cref="ResizableWindow.Help" />, which owns it. The owner must call
+///         Seated in a <see cref="ResizableComponents.ResizableWindow" />'s title bar through
+///         <see cref="ResizableComponents.ResizableWindow.Help" />, which owns it. The owner must call
 ///         <see cref="CloseModal" /> when done: the modal is registered with <c>UIManager</c> in its
 ///         own right, so nothing else dismisses it.
 ///     </para>

@@ -1,5 +1,5 @@
 using System;
-using ClassicUO.Game.UI.Controls.ResizableComponents;
+using ClassicUO.Game.UI.Controls;
 using FluentAssertions;
 using Myra.Events;
 using Myra.Graphics2D.UI;

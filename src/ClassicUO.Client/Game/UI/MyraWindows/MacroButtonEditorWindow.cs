@@ -145,10 +145,6 @@ public sealed class MacroButtonEditorWindow : MyraControl
         _macro = macro;
         _committed = MacroButtonAppearance.Capture(macro);
 
-        var panel = new HorizontalStackPanel();
-        panel.Widgets.Add(new MyraLabel(TazLang.Get("macrobtneditor_title", "Macro Button Editor"), MyraLabel.TextStyle.H4));
-        _rootWindow.Help = new HelpButton(panel, "Potato");
-
         CreatePreview();
         Build();
         CenterInViewPort();
