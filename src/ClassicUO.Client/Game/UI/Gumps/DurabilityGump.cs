@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
@@ -18,6 +17,13 @@ namespace ClassicUO.Game.UI.Gumps
     {
         public uint Graphic { get; set; } = 5587;
 
+        /// <summary>
+        /// Serial of the mobile whose durability this icon tracks. Zero means the local player.
+        /// </summary>
+        public uint WatchSerial { get; set; }
+
+        private uint ResolvedWatchSerial => WatchSerial != 0 ? WatchSerial : (World.Player?.Serial ?? 0);
+
         public DurabilityGumpMinimized(World world) : base(world, 0, 0)
         {
             SetTooltip(TazLang.Get("durability_minimize_tooltip", "Open Equipment Durability Tracker"));
@@ -28,13 +34,13 @@ namespace ClassicUO.Game.UI.Gumps
             Height = 30;
         }
 
-        public override bool AcceptMouseInput => DurabilityManager.HasDurabilityData;
+        public override bool AcceptMouseInput => World.DurabilityManager.HasDurabilityData(ResolvedWatchSerial);
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
             ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(Graphic);
 
-            if (texture.Texture != null && DurabilityManager.HasDurabilityData)
+            if (texture.Texture != null && World.DurabilityManager.HasDurabilityData(ResolvedWatchSerial))
             {
                 var rect = new Rectangle(x, y, Width, Height);
                 batcher.Draw(texture.Texture, rect, texture.UV, ShaderHueTranslator.GetHueVector(0));
@@ -45,10 +51,10 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
-            if (button == MouseButtonType.Left && DurabilityManager.HasDurabilityData)
+            if (button == MouseButtonType.Left && World.DurabilityManager.HasDurabilityData(ResolvedWatchSerial))
             {
                 UIManager.GetGump<DurabilitysGump>()?.Dispose();
-                UIManager.Add(new DurabilitysGump(World));
+                UIManager.Add(new DurabilitysGump(World, ResolvedWatchSerial));
             }
         }
     }
@@ -68,13 +74,21 @@ namespace ClassicUO.Game.UI.Gumps
 
         private readonly Dictionary<string, ContextMenuItemEntry> _menuItems = new Dictionary<string, ContextMenuItemEntry>();
         private VBoxContainer _dataBox;
+        private Label _titleLabel;
         public override GumpType GumpType => GumpType.DurabilityGump;
 
-        public DurabilitysGump(World world) : base(world, lastX, lastY, lastWidth, lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, 200, 200)
+        /// <summary>
+        /// Serial of the mobile whose equipment this tracker displays. Zero means the local player.
+        /// </summary>
+        private uint ResolvedWatchSerial => LocalSerial != 0 ? LocalSerial : (World.Player?.Serial ?? 0);
+
+        public DurabilitysGump(World world, uint mobileSerial = 0) : base(world, lastX, lastY, lastWidth, lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, 200, 200)
         {
             LayerOrder = UILayer.Default;
             CanCloseWithRightClick = true;
             CanMove = true;
+
+            LocalSerial = mobileSerial;
 
             Width = lastWidth;
             Height = lastHeight;
@@ -113,11 +127,34 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildHeader()
         {
-            Label l = new (TazLang.Get("durability_title", "Equipment Durability"), true, 0xFF);
-            l.X = (Width >> 1) - (l.Width >> 1);
-            l.Y = (l.Height >> 1) >> 1;
+            _titleLabel = new Label(TazLang.Get("durability_title", "Equipment Durability"), true, 0xFF);
+            _titleLabel.X = (Width >> 1) - (_titleLabel.Width >> 1);
+            _titleLabel.Y = (_titleLabel.Height >> 1) >> 1;
 
-            Add(l);
+            Add(_titleLabel);
+        }
+
+        /// <summary>
+        /// Prefixes the header with the watched mobile's name when it is not the local player, so a
+        /// tracker opened for another mobile is self-explanatory.
+        /// </summary>
+        private void UpdateHeader(uint watchSerial)
+        {
+            string title = TazLang.Get("durability_title", "Equipment Durability");
+
+            if (World.Player == null || watchSerial != World.Player.Serial)
+            {
+                Mobile mobile = World.Mobiles.Get(watchSerial);
+
+                if (mobile != null && !string.IsNullOrWhiteSpace(mobile.Name))
+                    title = $"{mobile.Name} - {title}";
+            }
+
+            if (_titleLabel.Text != title)
+            {
+                _titleLabel.Text = title;
+                _titleLabel.X = (Width >> 1) - (_titleLabel.Width >> 1);
+            }
         }
 
         public override void Dispose()
@@ -132,16 +169,19 @@ namespace ClassicUO.Game.UI.Gumps
             _dataBox.Clear();
             Rectangle barBounds = Client.Game.UO.Gumps.GetGump((uint)DurabilityColors.RED).UV;
 
-            List<DurabiltyProp> items = World.DurabilityManager?.Durabilities ?? new List<DurabiltyProp>();
+            uint watchSerial = ResolvedWatchSerial;
+            UpdateHeader(watchSerial);
 
-            foreach (DurabiltyProp durability in items.OrderBy(d => d.Percentage))
+            List<DurabilityInfo> items = World.DurabilityManager?.GetDurabilities(watchSerial) ?? new List<DurabilityInfo>();
+
+            foreach (DurabilityInfo durability in items)
             {
-                if (durability.MaxDurabilty <= 0)
+                if (durability.Max <= 0)
                 {
                     continue;
                 }
 
-                Item item = World.Items.Get((uint)durability.Serial);
+                Item item = World.Items.Get(durability.Serial);
 
                 if (item == null)
                 {
@@ -176,11 +216,11 @@ namespace ClassicUO.Game.UI.Gumps
                     a.Add(new GumpPicTiled(0, red.Y, (int)Math.Floor(barBounds.Width * durability.Percentage), barBounds.Height, (ushort)statusGump));
                 }
 
-                int durWidth = Client.Game.UO.FileManager.Fonts.GetWidthUnicode(0, $"{durability.Durabilty} / {durability.MaxDurabilty}");
+                int durWidth = Client.Game.UO.FileManager.Fonts.GetWidthUnicode(0, $"{durability.Current} / {durability.Max}");
 
                 a.Add
                 (
-                    new Label($"{durability.Durabilty} / {durability.MaxDurabilty}", true, 0xFFFF)
+                    new Label($"{durability.Current} / {durability.Max}", true, 0xFFFF)
                     {
                         Y = red.Y - 2,
                         X = Width - 38 - durWidth

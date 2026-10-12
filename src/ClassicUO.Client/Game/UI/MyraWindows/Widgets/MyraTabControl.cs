@@ -8,16 +8,23 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 public class MyraTabControl : TabControl
 {
     private readonly List<Func<Widget>> _builders = new();
+    private readonly List<bool> _rebuildOnSelect = new();
 
     public MyraTabControl()
     {
         SelectedIndexChanged += OnTabSelected;
     }
 
-    public void AddTab(string name, Func<Widget> builder, string? tooltip = null)
+    /// <param name="rebuildOnSelect">
+    ///     Rebuild the page every time the tab is selected instead of caching it. Use for pages that
+    ///     mirror state changed elsewhere (e.g. agent lists the game can edit), so revisiting the tab
+    ///     shows what is current. Avoid where the page holds unsaved input state.
+    /// </param>
+    public void AddTab(string name, Func<Widget> builder, string? tooltip = null, bool rebuildOnSelect = false)
     {
         int index = _builders.Count;
         _builders.Add(builder);
+        _rebuildOnSelect.Add(rebuildOnSelect);
 
         var item = new TabItem(name) { Tag = index };
         Items.Add(item);
@@ -79,10 +86,12 @@ public class MyraTabControl : TabControl
 
     private void OnTabSelected(object? sender, EventArgs e)
     {
-        if (SelectedItem == null || SelectedItem.Content != null) return;
+        if (SelectedItem == null) return;
 
         if (SelectedItem.Tag is int idx && idx < _builders.Count)
         {
+            if (SelectedItem.Content != null && !_rebuildOnSelect[idx]) return;
+
             SelectedItem.Content = _builders[idx]();
         }
     }

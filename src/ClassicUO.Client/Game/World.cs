@@ -748,6 +748,7 @@ namespace ClassicUO.Game
             }
 
             OPL.Remove(serial);
+            DurabilityManager?.RemoveItem(serial);
             item.Destroy();
 
             if (forceRemove)
@@ -780,6 +781,7 @@ namespace ClassicUO.Game
             }
 
             OPL.Remove(serial);
+            DurabilityManager?.RemoveMobile(serial);
             mobile.Destroy();
 
             if (forceRemove)
@@ -1043,6 +1045,7 @@ namespace ClassicUO.Game
             _toRemove.Clear();
             CorpseManager.Clear();
             OPL.Clear();
+            DurabilityManager?.Clear();
             WMapManager.Clear();
             HouseManager?.Clear();
 

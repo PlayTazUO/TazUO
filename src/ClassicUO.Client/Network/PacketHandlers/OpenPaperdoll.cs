@@ -32,8 +32,6 @@ internal static class OpenPaperdoll
             }
             else
                 UIManager.Add(new ModernPaperdoll(world, mobile.Serial));
-
-            GameActions.RequestEquippedOPL(world);
         }
         else
         {
@@ -63,5 +61,9 @@ internal static class OpenPaperdoll
                 paperdoll.BringOnTop();
             }
         }
+
+        // Fetch the opened mobile's equipment properties so its durability can be tracked, even when
+        // it is not the local player.
+        GameActions.RequestEquippedOPL(world, mobile);
     }
 }

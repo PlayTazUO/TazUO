@@ -12,8 +12,6 @@ namespace ClassicUO.Utility
         private const string PACKET_CONTEXT_PREFIX = "Packet";
 
         public const int ProfileTimeCount = 60;
-        public const double SpikeThresholdMultiplier = 3.0;
-        public const double MinimumTimeForSpikeDetection = 2.0;
         private static readonly List<ContextAndTick> m_Context;
         private static readonly List<Tuple<string[], double>> m_ThisFrameData;
         private static readonly List<ProfileData> m_AllFrameData;
@@ -247,19 +245,6 @@ namespace ClassicUO.Utility
 
             public void AddNewHitLength(double time)
             {
-                if (m_LastIndex >= ProfileTimeCount && time >= MinimumTimeForSpikeDetection)
-                {
-                    double currentAverage = AverageTime;
-                    if (time > currentAverage * SpikeThresholdMultiplier)
-                    {
-                        string contextName = Context != null ? string.Join(":", Context) : "Unknown";
-                        if(time < 20)
-                            Log.Warn($"Performance spike detected in '{contextName}': {time:F2}ms (avg: {currentAverage:F2}ms, threshold: {currentAverage * SpikeThresholdMultiplier:F2}ms)");
-                        else
-                            Log.Error($"Major spike detected in '{contextName}': {time:F2}ms (avg: {currentAverage:F2}ms, threshold: {currentAverage * SpikeThresholdMultiplier:F2}ms)");
-                    }
-                }
-
                 m_LastTimes[m_LastIndex % ProfileTimeCount] = time;
                 m_LastIndex++;
                 if (time > m_PeakTime)

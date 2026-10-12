@@ -65,6 +65,9 @@ namespace ClassicUO.Network
 
         public uint LastPingReceived { get; private set; } = Time.Ticks;
 
+        /// <summary>Most recent latency sample, in ms; 0 until the first reply arrives. Unlike <see cref="Ping"/> this is not averaged.</summary>
+        public uint LastPing { get; private set; }
+
         /// <summary>Source currently backing <see cref="Ping"/>; <see cref="PingSource.Disabled"/> means N/A.</summary>
         public PingSource CurrentPingSource => _pingSource;
 
@@ -104,6 +107,7 @@ namespace ClassicUO.Network
             _pingSource = PingSource.Packet;
 
             _pings[idx % _pings.Length] = Time.Ticks - _startTickValue;
+            LastPing = _pings[idx % _pings.Length];
             _pingSourceStartTick = Time.Ticks;
             LastPingReceived = Time.Ticks;
         }
@@ -150,6 +154,7 @@ namespace ClassicUO.Network
                 if (icmpResult >= 0)
                 {
                     _pings[_pingIdx] = (uint)icmpResult;
+                    LastPing = _pings[_pingIdx];
                     _pingIdx = (byte)((_pingIdx + 1) % _pings.Length);
                     LastPingReceived = Time.Ticks;
                     _pingSourceStartTick = Time.Ticks;
@@ -183,6 +188,7 @@ namespace ClassicUO.Network
             _pingWindowStarted = false;
             _icmpResult = -1;
             _icmpSending = 0;
+            LastPing = 0;
             Array.Clear(_pings);
             DisposePinger();
 

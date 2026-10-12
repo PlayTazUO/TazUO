@@ -16,7 +16,7 @@ namespace ClassicUO.Game.UI.Gumps
     {
         private static Point _last_position = new Point(-1, -1);
 
-        private uint _ping, _deltaBytesReceived, _deltaBytesSent, _totalPacketsReceived, _totalPacketsSent;
+        private uint _ping, _lastPing, _deltaBytesReceived, _deltaBytesSent, _totalPacketsReceived, _totalPacketsSent;
         private bool _pingDisabled;
         private uint _time_to_update;
         private readonly AlphaBlendControl _trans;
@@ -80,6 +80,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (AsyncNetClient.Socket.IsConnected)
                 {
                     _ping = AsyncNetClient.Socket.Statistics.Ping;
+                    _lastPing = AsyncNetClient.Socket.Statistics.LastPing;
                     _pingDisabled = AsyncNetClient.Socket.Statistics.CurrentPingSource == PingSource.Disabled;
                     _deltaBytesReceived = AsyncNetClient.Socket.Statistics.DeltaBytesReceived;
                     _deltaBytesSent = AsyncNetClient.Socket.Statistics.DeltaBytesSent;
@@ -90,14 +91,14 @@ namespace ClassicUO.Game.UI.Gumps
                 Span<char> span = stackalloc char[128];
                 var sb = new ValueStringBuilder(span);
 
-                string pingText = _pingDisabled ? "Ping: N/A" : $"Ping: {_ping} ms";
-
                 if (IsMinimized)
                 {
-                    sb.Append(pingText);
+                    sb.Append(_pingDisabled ? "Ping: N/A" : $"Ping: {_ping} ms");
                 }
                 else
                 {
+                    string pingText = _pingDisabled ? "Ping: N/A" : $"Ping: {_ping} ms ({_lastPing})";
+
                     sb.Append($"{pingText}\n{"In:"} {NetStatistics.GetSizeAdaptive(_deltaBytesReceived),-6} {"Out:"} {NetStatistics.GetSizeAdaptive(_deltaBytesSent),-6}\nPkts In: {AbbreviateCount(_totalPacketsReceived)} Out: {AbbreviateCount(_totalPacketsSent)}");
                 }
 

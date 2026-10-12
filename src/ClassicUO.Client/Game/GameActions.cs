@@ -1463,11 +1463,22 @@ internal static class GameActions
             );
     }
 
-    public static void RequestEquippedOPL(World world)
+    public static void RequestEquippedOPL(World world) => RequestEquippedOPL(world, world.Player);
+
+    /// <summary>
+    ///     Requests the tooltip property lists of every item a mobile has equipped, so information
+    ///     derived from them (such as equipment durability) can be tracked for that mobile.
+    /// </summary>
+    /// <param name="world">The active world.</param>
+    /// <param name="mobile">The mobile whose equipment should be requested. No-op when <see langword="null" />.</param>
+    public static void RequestEquippedOPL(World world, Mobile mobile)
     {
+        if (mobile == null)
+            return;
+
         foreach (Layer layer in Enum.GetValues(typeof(Layer)))
         {
-            Item item = world.Player.FindItemByLayer(layer);
+            Item item = mobile.FindItemByLayer(layer);
             if(item == null) continue;
 
             world.OPL.Contains(item); //Requests data if we don't have it

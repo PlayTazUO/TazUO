@@ -10,6 +10,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.EnhancedMap;
 using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows;
@@ -71,6 +72,9 @@ public class WorldMapGump : ResizableGump
 
     private Point _center, _lastScroll, _scroll;
     private Point? _lastMousePosition = null;
+
+    /// <summary>World coordinate last right-clicked on the map; the target for EnhancedMap alerts.</summary>
+    private Point _lastAlertWorld;
     private bool _flipMap = true;
     private bool _freeView;
     private List<string> _hiddenMarkerFiles;
@@ -456,6 +460,30 @@ public class WorldMapGump : ResizableGump
 
         _options["open_web_map"] = new ContextMenuItemEntry("Open Web Map (Browser)", GameActions.OpenWorldMapWebWindow);
 
+        _options["enhanced_map"] = new ContextMenuItemEntry(TazLang.Get("enhancedmap_open_settings", "EnhancedMap settings"), EnhancedMapManager.OpenSettingsWindow);
+
+        if (EnhancedMapManager.Instance.CanSendAlert)
+        {
+            var sendAlert = new ContextMenuItemEntry(TazLang.Get("enhancedmap_send_alert", "Send Alert"));
+            sendAlert.Add(new ContextMenuItemEntry(TazLang.Get("enhancedmap_send_alert_custom", "New alert..."), () => PromptEnhancedMapAlert()));
+            sendAlert.Add(new ContextMenuItemEntry(""));
+
+            sendAlert.Add(new ContextMenuItemEntry(TazLang.Get("enhancedmap_alert_warning", "Warning"), () => SendEnhancedMapAlert(TazLang.Get("enhancedmap_alert_warning", "Warning"))));
+            sendAlert.Add(new ContextMenuItemEntry(TazLang.Get("enhancedmap_alert_danger", "Danger"), () => SendEnhancedMapAlert(TazLang.Get("enhancedmap_alert_danger", "Danger"))));
+            sendAlert.Add(new ContextMenuItemEntry(TazLang.Get("enhancedmap_alert_treasure", "Treasure"), () => SendEnhancedMapAlert(TazLang.Get("enhancedmap_alert_treasure", "Treasure"))));
+            sendAlert.Add(new ContextMenuItemEntry(TazLang.Get("enhancedmap_alert_meet_here", "Meet here"), () => SendEnhancedMapAlert(TazLang.Get("enhancedmap_alert_meet_here", "Meet here"))));
+
+            string lastAlert = EnhancedMapManager.Instance.LastAlertName;
+
+            if (!string.IsNullOrEmpty(lastAlert))
+            {
+                sendAlert.Add(new ContextMenuItemEntry(""));
+                sendAlert.Add(new ContextMenuItemEntry(lastAlert, () => SendEnhancedMapAlert(lastAlert)));
+            }
+
+            _options["send_alert"] = sendAlert;
+        }
+
         _options["auto_start_web_map"] = new ContextMenuItemEntry("Auto start web map", () =>
         {
             ProfileManager.CurrentProfile.WebMapAutoStart = !ProfileManager.CurrentProfile.WebMapAutoStart;
@@ -511,6 +539,50 @@ public class WorldMapGump : ResizableGump
             if (int.TryParse(v, out int y))
                 profile.WorldMapSextantBaseY = y;
         }, 100, inputFilter: MyraInputBox.DigitInputFilter);
+    }
+
+    /// <summary>
+    /// Prompts for the label to attach to a new EnhancedMap alert, then sends it at the last map
+    /// location the user right-clicked. The label is a local echo only: the server stamps the
+    /// sender's account name onto the alert it rebroadcasts to the room.
+    /// </summary>
+    private void PromptEnhancedMapAlert()
+    {
+        string title = TazLang.Get("enhancedmap_send_alert_title", "Send Alert");
+
+        QuickOptionsWindow existing = QuickOptionsWindow.GetExisting(title);
+        if (existing != null)
+        {
+            existing.CenterInScreen();
+            existing.BringOnTop();
+            return;
+        }
+
+        EnhancedMapManager manager = EnhancedMapManager.Instance;
+        string text = string.IsNullOrEmpty(manager.LastAlertName) ? World.Player?.Name ?? string.Empty : manager.LastAlertName;
+
+        var window = new QuickOptionsWindow(title);
+        window.AddInput(TazLang.Get("enhancedmap_send_alert_message", "Message"), text, value => text = value);
+        window.AddButton(TazLang.Get("enhancedmap_send_alert_send", "Send"), () =>
+        {
+            SendEnhancedMapAlert(text);
+            window.Dispose();
+        });
+    }
+
+    /// <summary>Sends an EnhancedMap alert at the last right-clicked map location and echoes it locally.</summary>
+    private void SendEnhancedMapAlert(string name)
+    {
+        EnhancedMapManager manager = EnhancedMapManager.Instance;
+
+        name = name?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(name))
+            name = World.Player?.Name ?? string.Empty;
+
+        manager.SendAlert(_lastAlertWorld.X, _lastAlertWorld.Y);
+        manager.AddLocalAlert(_lastAlertWorld.X, _lastAlertWorld.Y, name);
+        manager.LastAlertName = name;
     }
 
     public void GoToMarker(int x, int y, bool isManualType)
@@ -740,6 +812,11 @@ public class WorldMapGump : ResizableGump
         ContextMenu.Add("", null);
         ContextMenu.Add(_options["open_web_map"]);
         ContextMenu.Add(_options["auto_start_web_map"]);
+        ContextMenu.Add(_options["enhanced_map"]);
+
+        if (_options.TryGetValue("send_alert", out ContextMenuItemEntry sendAlert))
+            ContextMenu.Add(sendAlert);
+
         ContextMenu.Add(_options["reset_map_cache"]);
         ContextMenu.Add(_options["saveclose"]);
     }
@@ -2700,6 +2777,9 @@ public class WorldMapGump : ResizableGump
             }
         }
 
+        DrawEnhancedMapUsers(batcher, gX, gY, halfWidth, halfHeight, Zoom);
+        DrawEnhancedMapAlerts(batcher, gX, gY, halfWidth, halfHeight, Zoom);
+
         if (_showPartyMembers)
         {
             for (int i = 0; i < 10; i++)
@@ -3674,6 +3754,181 @@ public class WorldMapGump : ResizableGump
         }
     }
 
+    /// <summary>
+    /// Draws players sourced from the EnhancedMap service on the world map. They are not UO
+    /// entities, so they cannot flow through <see cref="WorldMapEntityManager"/>; the coordinate
+    /// transform mirrors <see cref="DrawWMEntity"/> instead.
+    /// </summary>
+    private void DrawEnhancedMapUsers(UltimaBatcher2D batcher, int x, int y, int width, int height, float zoom)
+    {
+        if (EnhancedMapManager.Config is not { Enabled: true } config)
+            return;
+
+        IReadOnlyDictionary<string, EnhancedMapRemoteUser> users = EnhancedMapManager.Instance.Users;
+
+        if (users.Count == 0)
+            return;
+
+        Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
+
+        const int DOT_SIZE = 4;
+        const int DOT_SIZE_HALF = DOT_SIZE >> 1;
+
+        foreach (EnhancedMapRemoteUser user in users.Values)
+        {
+            int sx = user.X - _center.X;
+            int sy = user.Y - _center.Y;
+
+            Point rot = RotatePoint(sx, sy, zoom, 1, _flipMap ? 45f : 0f);
+            AdjustPosition(rot.X, rot.Y, width - 4, height - 4, out rot.X, out rot.Y);
+            rot.X += x + width;
+            rot.Y += y + height;
+
+            Color color = user.Map != _map.Index ? Color.DarkGray
+                : user.IsDead ? Color.Gray
+                : user.Flag == EnhancedMapProtocol.FlagPoisoned ? Color.LimeGreen
+                : Color.Cyan;
+
+            batcher.Draw
+            (
+                SolidColorTextureCache.GetTexture(color),
+                new Rectangle(rot.X - DOT_SIZE_HALF, rot.Y - DOT_SIZE_HALF, DOT_SIZE, DOT_SIZE),
+                hueVector
+            );
+
+            int barsTop = rot.Y + DOT_SIZE_HALF + 1;
+
+            if (_showGroupName && !string.IsNullOrEmpty(user.Name))
+            {
+                Vector2 size = Fonts.Regular.MeasureString(user.Name);
+
+                if (rot.X + size.X / 2 > x + Width - 8)
+                    rot.X = x + Width - 8 - (int)(size.X / 2);
+                else if (rot.X - size.X / 2 < x)
+                    rot.X = x + (int)(size.X / 2);
+
+                hueVector = new Vector3(0, 1, 1);
+                batcher.DrawString(Fonts.Regular, user.Name, (int)(rot.X - size.X / 2) + 1, rot.Y + 1, hueVector);
+
+                hueVector = ShaderHueTranslator.GetHueVector(0);
+                batcher.DrawString(Fonts.Regular, user.Name, (int)(rot.X - size.X / 2), rot.Y, hueVector);
+
+                barsTop = rot.Y + (int)size.Y + 1;
+            }
+
+            if (config.ShowWorldMapBars)
+                DrawStatusBars(batcher, rot.X, barsTop, user);
+        }
+    }
+
+    /// <summary>
+    /// Draws EnhancedMap alerts on the world map, sharing the coordinate transform of
+    /// <see cref="DrawEnhancedMapUsers"/>. Alerts carry no facet, so they are drawn regardless of
+    /// the map being viewed.
+    /// </summary>
+    private void DrawEnhancedMapAlerts(UltimaBatcher2D batcher, int x, int y, int width, int height, float zoom)
+    {
+        if (EnhancedMapManager.Config is not { Enabled: true })
+            return;
+
+        IReadOnlyDictionary<string, EnhancedMapAlert> alerts = EnhancedMapManager.Instance.Alerts;
+
+        if (alerts.Count == 0)
+            return;
+
+        Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
+
+        const int DOT_SIZE = 6;
+        const int DOT_SIZE_HALF = DOT_SIZE >> 1;
+
+        foreach (EnhancedMapAlert alert in alerts.Values)
+        {
+            int sx = alert.X - _center.X;
+            int sy = alert.Y - _center.Y;
+
+            Point rot = RotatePoint(sx, sy, zoom, 1, _flipMap ? 45f : 0f);
+            AdjustPosition(rot.X, rot.Y, width - 4, height - 4, out rot.X, out rot.Y);
+            rot.X += x + width;
+            rot.Y += y + height;
+
+            batcher.Draw
+            (
+                SolidColorTextureCache.GetTexture(Color.Red),
+                new Rectangle(rot.X - DOT_SIZE_HALF, rot.Y - DOT_SIZE_HALF, DOT_SIZE, DOT_SIZE),
+                hueVector
+            );
+
+            if (string.IsNullOrEmpty(alert.Name))
+                continue;
+
+            Vector2 size = Fonts.Regular.MeasureString(alert.Name);
+
+            if (rot.X + size.X / 2 > x + Width - 8)
+                rot.X = x + Width - 8 - (int)(size.X / 2);
+            else if (rot.X - size.X / 2 < x)
+                rot.X = x + (int)(size.X / 2);
+
+            hueVector = new Vector3(0, 1, 1);
+            batcher.DrawString(Fonts.Regular, alert.Name, (int)(rot.X - size.X / 2) + 1, rot.Y + 1, hueVector);
+
+            hueVector = ShaderHueTranslator.GetHueVector(0);
+            batcher.DrawString(Fonts.Regular, alert.Name, (int)(rot.X - size.X / 2), rot.Y, hueVector);
+        }
+    }
+
+    /// <summary>
+    /// Draws the compact HP, stamina and mana bars for an EnhancedMap user, stacked and centred on
+    /// <paramref name="centerX"/> with the first bar's top at <paramref name="y"/>.
+    /// </summary>
+    private static void DrawStatusBars(UltimaBatcher2D batcher, int centerX, int y, EnhancedMapRemoteUser user)
+    {
+        const int BAR_WIDTH = 48;
+        const int BAR_HEIGHT = 4;
+        const int BAR_SPACING = 2;
+
+        int left = centerX - BAR_WIDTH / 2;
+        int step = BAR_HEIGHT + BAR_SPACING;
+
+        DrawStatusBar(batcher, left, y, BAR_WIDTH, BAR_HEIGHT, user.Hits, user.MaxHits, Color.Red);
+        DrawStatusBar(batcher, left, y + step, BAR_WIDTH, BAR_HEIGHT, user.Stamina, user.MaxStamina, Color.Yellow);
+        DrawStatusBar(batcher, left, y + step * 2, BAR_WIDTH, BAR_HEIGHT, user.Mana, user.MaxMana, Color.CornflowerBlue);
+    }
+
+    /// <summary>Draws one outlined stat bar, filling it proportionally to <paramref name="current"/> / <paramref name="max"/>.</summary>
+    private static void DrawStatusBar(UltimaBatcher2D batcher, int x, int y, int width, int height, int current, int max, Color color)
+    {
+        Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
+
+        batcher.Draw
+        (
+            SolidColorTextureCache.GetTexture(Color.Black),
+            new Rectangle(x - 1, y - 1, width + 2, height + 2),
+            hueVector
+        );
+
+        batcher.Draw
+        (
+            SolidColorTextureCache.GetTexture(Color.DimGray),
+            new Rectangle(x, y, width, height),
+            hueVector
+        );
+
+        if (max <= 0)
+            return;
+
+        int fill = (int)(width * Math.Clamp((float)current / max, 0f, 1f));
+
+        if (fill <= 0)
+            return;
+
+        batcher.Draw
+        (
+            SolidColorTextureCache.GetTexture(color),
+            new Rectangle(x, y, fill, height),
+            hueVector
+        );
+    }
+
     private void DrawHpBar(UltimaBatcher2D batcher, int x, int y, int hp)
     {
         Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
@@ -3753,6 +4008,14 @@ public class WorldMapGump : ResizableGump
         if (allowTarget && button == MouseButtonType.Left)
         {
             HandlePositionTarget();
+        }
+
+        if (button == MouseButtonType.Right && !Keyboard.Alt && !Keyboard.Shift && !Keyboard.Ctrl)
+        {
+            // Right-click opens the context menu (base shows it). Remember the clicked map
+            // location for EnhancedMap alerts and rebuild so the menu reflects current state.
+            CanvasToWorld(x, y, out _lastAlertWorld.X, out _lastAlertWorld.Y);
+            BuildContextMenu();
         }
 
         if (button == MouseButtonType.Left && !Keyboard.Alt)

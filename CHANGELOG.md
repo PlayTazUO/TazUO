@@ -3,6 +3,22 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/12/26
+* ***Feature:*** Added support for Enhanced Map protocol, this works for existing servers and will also work for TazUO's fork of a more modern EnhancedMap server
+* ***Feature:*** The equipment durability tracker can now watch any mobile, not just your own character - opening a mobile's paperdoll requests its equipment properties, and a durability tracker icon appears on that paperdoll once durability data is known. Clicking it opens the tracker, titled with the mobile's name
+* ***Misc:*** The pattern used to read durability from an item's tooltip is now the customizable `durability_regex` language key (the default still matches text like `Durability 45 / 255`), so servers using different wording can be supported without a client change
+* ***Fix:*** Fixed shift-clicking an item to add it to auto loot appearing to do nothing - the Auto Loot and Scavenger lists were built once and never refreshed, so the item only showed after the client was restarted. Those tabs now rebuild when revisited
+* ***Fix:*** Shift-clicking an item to add it to auto loot no longer claims success when the auto loot config failed to load; the client now reports that it is not ready instead
+
+## 10/11/26
+* ***Feature:*** The network status gump now shows the last ping alongside the average in expanded view, as `avg (last)`
+* ***Feature:*** The profiler window's columns can now be sorted by clicking their headers, with a second click flipping the direction and an arrow marking the active column
+* ***Fix:*** Fixed a client crash on login/character change (`InvalidOperationException: Collection was modified`) when a gump's disposal added or removed other gumps while the UI was being cleared - `UIManager.Clear()` now disposes from a snapshot of the gump list
+* ***Fix:*** Fixed a client crash (`InvalidOperationException: ConcurrentOperationsNotSupported`) when voice recognition put recognized speech into the chat textbox - the audio-processing thread was writing to the UI directly, so the textbox measured text through FontStashSharp while the main thread was drawing. The text is now inserted on the main thread
+
+## 10/10/26
+* ***Fix:*** Fixed double right-click pathfinding getting stuck walking toward the cursor instead of following the path to the clicked tile - after a double-click started a pathfind, the right-button state was left set, so each frame overrode the pathfinder with a cursor walk until another right-click. This only affected double-click; "Single click for pathfinding" was unaffected
+
 ## 10/8/26
 * ***Feature:*** Completely re-written the Macro Button Editor and added additional functionality - [P.R 1131](https://github.com/PlayTazUO/TazUO/pull/1131) ([yuval-po](https://github.com/yuval-po))
 * ***Fix:*** Fixed an issue in which some windows remained partially active after close - [P.R 1131](https://github.com/PlayTazUO/TazUO/pull/1131) ([yuval-po](https://github.com/yuval-po))
