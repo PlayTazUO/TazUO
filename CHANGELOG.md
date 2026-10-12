@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 
 ## 10/11/26
 * ***Feature:*** The network status gump now shows the last ping alongside the average in expanded view, as `avg (last)`
+* ***Feature:*** The profiler window's columns can now be sorted by clicking their headers, with a second click flipping the direction and an arrow marking the active column
 
 ## 10/10/26
 * ***Fix:*** Fixed double right-click pathfinding getting stuck walking toward the cursor instead of following the path to the clicked tile - after a double-click started a pathfind, the right-button state was left set, so each frame overrode the pathfinder with a cursor walk until another right-click. This only affected double-click; "Single click for pathfinding" was unaffected

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -22,6 +23,9 @@ namespace ClassicUO.Game.UI.MyraWindows
         private readonly MyraLabel _statsLabel;
         private readonly MyraLabel _queueLabel;
         private uint _lastUpdate;
+
+        private int _sortColumn = 1;
+        private bool _sortAscending;
 
         private readonly CancellationTokenSource _cpuCts = new();
         private static volatile float _cpuPercent;
@@ -207,13 +211,48 @@ namespace ClassicUO.Game.UI.MyraWindows
             _cpuCts.Dispose();
         }
 
+        /// <summary>
+        /// Flips the sort on a repeat click of the active column, otherwise switches to the clicked
+        /// one. Numeric columns default to descending so the slowest contexts stay at the top.
+        /// </summary>
+        /// <param name="column">Index of the clicked header, matching the column order on screen.</param>
+        private void OnHeaderClicked(int column)
+        {
+            if (_sortColumn == column)
+            {
+                _sortAscending = !_sortAscending;
+            }
+            else
+            {
+                _sortColumn = column;
+                _sortAscending = column == 0;
+            }
+
+            UpdateDisplay();
+        }
+
+        /// <summary>Orders the current snapshot by the selected column and direction.</summary>
+        private List<Profiler.ProfileData> GetSortedData()
+        {
+            List<Profiler.ProfileData> data = Profiler.AllFrameData.ToList();
+
+            Comparison<Profiler.ProfileData> comparison = _sortColumn switch
+            {
+                0 => (a, b) => string.Compare(string.Join(" > ", a.Context), string.Join(" > ", b.Context), StringComparison.OrdinalIgnoreCase),
+                2 => (a, b) => a.PeakTime.CompareTo(b.PeakTime),
+                3 => (a, b) => a.LastTime.CompareTo(b.LastTime),
+                _ => (a, b) => a.AverageTime.CompareTo(b.AverageTime),
+            };
+
+            data.Sort((a, b) => _sortAscending ? comparison(a, b) : comparison(b, a));
+            return data;
+        }
+
         private void UpdateDisplay()
         {
             _dataPanel.Widgets.Clear();
 
-            var data = Profiler.AllFrameData
-                .OrderByDescending(pd => pd.AverageTime)
-                .ToList();
+            List<Profiler.ProfileData> data = GetSortedData();
 
             if (data.Count == 0)
             {
@@ -235,13 +274,16 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             double totalAvg = data.Sum(pd => pd.AverageTime);
 
+            string Indicator(int column) => _sortColumn == column ? (_sortAscending ? " ↑" : " ↓") : "";
+
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Fill("Context"),
-                GridColumnInfo.Numeric("Avg(ms)"),
-                GridColumnInfo.Numeric("Peak(ms)"),
-                GridColumnInfo.Numeric("Last(ms)"),
-                GridColumnInfo.Numeric("% Total")
+                OnHeaderClicked,
+                GridColumnInfo.Fill("Context" + Indicator(0)),
+                GridColumnInfo.Numeric("Avg(ms)" + Indicator(1)),
+                GridColumnInfo.Numeric("Peak(ms)" + Indicator(2)),
+                GridColumnInfo.Numeric("Last(ms)" + Indicator(3)),
+                GridColumnInfo.Numeric("% Total" + Indicator(4))
             );
 
             int row = 1;
