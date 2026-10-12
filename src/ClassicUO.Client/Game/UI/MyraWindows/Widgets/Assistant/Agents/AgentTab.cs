@@ -8,8 +8,8 @@ public static class AgentTab
     public static Widget Build()
     {
         var tabs = new MyraTabControl();
-        tabs.AddTab(TazLang.Get("assistant_agent_tab_autoloot", "Auto Loot"), AutoLootAgentTabContent.Build);
-        tabs.AddTab(TazLang.Get("assistant_agent_tab_scavenger", "Scavenger"), ScavengerAgentTabContent.Build);
+        tabs.AddTab(TazLang.Get("assistant_agent_tab_autoloot", "Auto Loot"), AutoLootAgentTabContent.Build, rebuildOnSelect: true);
+        tabs.AddTab(TazLang.Get("assistant_agent_tab_scavenger", "Scavenger"), ScavengerAgentTabContent.Build, rebuildOnSelect: true);
         tabs.AddTab(TazLang.Get("assistant_agent_tab_dress", "Dress Agent"), DressAgentTabContent.Build);
         tabs.AddTab(TazLang.Get("assistant_agent_tab_autobuy", "Auto Buy"), AutoBuyAgentTabContent.Build);
         tabs.AddTab(TazLang.Get("assistant_agent_tab_autosell", "Auto Sell"), AutoSellAgentTabContent.Build);

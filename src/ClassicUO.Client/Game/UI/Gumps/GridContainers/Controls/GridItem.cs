@@ -413,8 +413,10 @@ public class GridItem : Control
 
     private void AddToAutoLoot()
     {
-        AutoLootManager.Instance.AddAutoLootEntry(_item.Graphic, _item.Hue, _item.Name);
-        GameActions.Print(_world, $"Added this item to auto loot.");
+        if (AutoLootManager.Instance.AddAutoLootEntry(_item.Graphic, _item.Hue, _item.Name) != null)
+            GameActions.Print(_world, "Added this item to auto loot.");
+        else
+            GameActions.Print(_world, "Auto loot is not ready yet, please try again.", Constants.HUE_ERROR);
     }
 
     // A plain left click on an item: quick-loot it if enabled, otherwise show its tooltip/single-click.
