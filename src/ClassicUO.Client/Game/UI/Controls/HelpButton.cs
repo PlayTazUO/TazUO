@@ -153,19 +153,28 @@ public class HelpButton : Widget
             return;
         }
 
-        // A dismissed modal cannot be shown again, and IsDisposed only flips a frame after the
-        // dismissal - so a pending one counts as gone too, or the button dies on first dismissal.
-        if (_helpModal is { IsDisposed: false, IsClosing: false })
+        switch (_helpModal)
         {
-            if (ModalProps.Placement?.Invoke() is { } placement)
-                _helpModal.SetPosition(placement.X, placement.Y);
+            // A modal mid-dismissal still holds the content widget until its deferred teardown runs.
+            // Handing that widget to a replacement would leave it in both widget trees, and the dying
+            // one nulls its desktop on the way out - killing the replacement with it. So the press is
+            // dropped; the next one finds a clean slate.
+            case { IsClosing: true }:
+                return;
+            // A dismissed modal cannot be shown again, so only a live one is worth raising.
+            case { IsDisposed: false }:
+            {
+                if (ModalProps.Placement?.Invoke() is { } placement)
+                    _helpModal.SetPosition(placement.X, placement.Y);
 
-            _helpModal.BringOnTop();
-            return;
+                _helpModal.BringOnTop();
+                return;
+            }
+            default:
+                _helpModal = new InfoModal(_contentModalTitle, _content, ModalProps);
+                _helpModal.Show();
+                break;
         }
-
-        _helpModal = new InfoModal(_contentModalTitle, _content, ModalProps);
-        _helpModal.Show();
     }
 
     #endregion
