@@ -69,8 +69,10 @@ namespace ClassicUO.Game.UI.Gumps
                 _name = m.Name;
                 _isDead = m.IsDead;
 
-                Children.Clear();
-                BuildGump();
+                // Rebuild the way both bars' UpdateContents() do: the old controls are disposed, not only removed.
+                // A control left to the garbage collector keeps its RenderedText textures -- FNA's GraphicsResource
+                // finalizer frees nothing -- so each new last-attack target leaked the name box's textures.
+                UpdateContents();
                 HasBeenBuilt = true;
             }
         }
