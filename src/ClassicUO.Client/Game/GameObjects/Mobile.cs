@@ -111,8 +111,111 @@ namespace ClassicUO.Game.GameObjects
         public bool IsVisible { get; set; } = true;
         public Deque<Step> Steps { get; } = new Deque<Step>(Constants.MAX_STEP_COUNT);
 
-        // Interval (ms) between the last two position-changing step packets from the server; 0 = unknown.
+        // Rolling median of the last few arrival intervals: one jittered or paused packet
+        // must not change the pace.
+        private unsafe struct CadenceWindow
+        {
+            public const int CAPACITY = 5;
+            private fixed ushort _samples[CAPACITY];
+            private byte _count;
+            private byte _head;
+
+            public int Median { get; private set; }
+            public int Count => _count;
+
+            public void Add(int sample)
+            {
+                fixed (ushort* ptr = _samples)
+                {
+                    ptr[_head] = (ushort)sample;
+
+                    if (++_head == CAPACITY) { _head = 0; }
+                    if (_count < CAPACITY) { _count++; }
+
+                    Span<ushort> span = stackalloc ushort[_count];
+                    new ReadOnlySpan<ushort>(ptr, _count).CopyTo(span);
+                    span.Sort();
+
+                    Median = span[(_count - 1) / 2];
+                }
+            }
+
+            public void Clear() => this = default;
+        }
+
+        // Learned server cadence (ms); 0 = unknown, render at the client's own table.
         public int StepInterval { get; private set; }
+        private CadenceWindow _cadence;
+        private byte _slowSamples;
+
+        public bool IsActuallyMounted =>
+            IsMounted
+            || SpeedMode == CharacterSpeedType.FastUnmount
+            || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun
+            || IsFlying;
+
+        private void ResetCadence()
+        {
+            StepInterval = 0;
+            _cadence.Clear();
+            _lastStepArrival = 0;
+            _turnSinceLastStep = false;
+            _slowSamples = 0;
+        }
+
+        private void SampleCadence(uint now)
+        {
+            if (_lastStepArrival == 0)
+            {
+                _lastStepArrival = now;
+                _turnSinceLastStep = false;
+                return;
+            }
+
+            int elapsed = (int)(now - _lastStepArrival);
+            _lastStepArrival = now;
+
+            bool spansTurn = _turnSinceLastStep;
+            _turnSinceLastStep = false;
+
+            // A pause longer than any stride: forget the cadence, the next run relearns it.
+            if (elapsed > MovementSpeed.STEP_PAUSE_MAX)
+            {
+                StepInterval = 0;
+                _cadence.Clear();
+                _slowSamples = 0;
+                return;
+            }
+
+            // Same-tick bursts and turn-spanning pairs (period + turn latency) are not strides.
+            if (elapsed < MovementSpeed.STEP_SAMPLE_MIN || spansTurn)
+            {
+                _slowSamples = 0;
+                return;
+            }
+
+            int median = _cadence.Median;
+
+            if (_cadence.Count > 0 && elapsed <= (int)(median * 0.70f))
+            {
+                // Faster arrivals cannot come from lag: a genuine speed-up, adopt at once.
+                _cadence.Clear();
+            }
+            else if (median > 0 && elapsed >= Math.Max((int)(median * 1.55f), median + 100))
+            {
+                // One slow arrival is a think pause; two in a row is a slower pace.
+                if (++_slowSamples < 2)
+                {
+                    return;
+                }
+
+                _cadence.Clear();
+            }
+
+            _slowSamples = 0;
+            _cadence.Add(elapsed);
+            StepInterval = _cadence.Median;
+        }
 
         public bool IsParalyzed => (Flags & Flags.Frozen) != 0;
         public bool IsYellowHits => (Flags & Flags.YellowBar) != 0;
@@ -305,8 +408,7 @@ namespace ClassicUO.Game.GameObjects
         {
             Steps.Clear();
             Offset = Vector3.Zero;
-            _lastStepArrival = 0;
-            _turnSinceLastStep = false;
+            ResetCadence();
         }
 
         public bool EnqueueStep(int x, int y, sbyte z, Direction direction, bool run)
@@ -345,20 +447,7 @@ namespace ClassicUO.Game.GameObjects
                 }
                 else
                 {
-                    if (_lastStepArrival != 0)
-                    {
-                        int elapsed = (int)(Time.Ticks - _lastStepArrival);
-
-                        // A pair spanning a turn includes the turn latency, not just the
-                        // period: keep the last estimate unless the mobile actually paused.
-                        if (!_turnSinceLastStep || elapsed > MovementSpeed.STEP_DELAY_WALK)
-                        {
-                            StepInterval = elapsed;
-                        }
-                    }
-
-                    _lastStepArrival = Time.Ticks;
-                    _turnSinceLastStep = false;
+                    SampleCadence(Time.Ticks);
                 }
             }
 
@@ -757,31 +846,23 @@ namespace ClassicUO.Game.GameObjects
             LastAnimationChangeTime = Time.Ticks + currentDelay;
         }
 
-        // Wait (ms) of the first real move queued behind the in-flight step, or -1 when
-        // there is no movement backlog. Facing-turns share a tile and do not count.
-        private int QueuedMoveWait()
+        // A real move waiting behind the in-flight step; facing-turns share a tile and do not count.
+        private bool HasMoveQueuedBehind()
         {
-            int moves = 0;
-            int prevX = X;
-            int prevY = Y;
+            int prevX = Steps[0].X;
+            int prevY = Steps[0].Y;
 
-            for (int i = 0; i < Steps.Count; i++)
+            for (int i = 1; i < Steps.Count; i++)
             {
                 Step s = Steps[i];
 
                 if (s.X != prevX || s.Y != prevY)
                 {
-                    if (++moves > 1)
-                    {
-                        return (int)(Time.Ticks - s.Arrival);
-                    }
-
-                    prevX = s.X;
-                    prevY = s.Y;
+                    return true;
                 }
             }
 
-            return -1;
+            return false;
         }
 
         public void ProcessSteps(out byte dir, bool evalutate = false)
@@ -802,30 +883,38 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                     int delay = (int)Time.Ticks - (int)LastStepTime;
+                    bool actuallyMounted = IsActuallyMounted;
+                    bool run = step.Run;
 
-                    bool actuallyMounted =
-                        IsMounted
-                        || SpeedMode == CharacterSpeedType.FastUnmount
-                        || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun
-                        || IsFlying;
-
-                    int backlogWait = Serial != World.Player && Steps.Count > 1 ? QueuedMoveWait() : -1;
-
-                    int stepTime = MovementSpeed.TimeToCompleteMovement(step.Run, actuallyMounted);
-
-                    // Drain at the server's cadence while it is renderable (up to a walk time
-                    // for the real mounted state); beyond that keep the nominal step-then-stand look.
-                    if (
-                        Serial != World.Player
-                        && StepInterval > 0
-                        && StepInterval <= MovementSpeed.TimeToCompleteMovement(false, actuallyMounted)
-                    )
+                    // The duration is fixed when the step reaches the front of the queue; a
+                    // later packet must never move an in-flight sprite.
+                    if (step.Duration == 0)
                     {
-                        // Shorten by the queued move's wait so it starts on time.
-                        stepTime = Math.Max(StepInterval - Math.Max(backlogWait, 0), MovementSpeed.STEP_DELAY_MIN);
+                        int nominal = MovementSpeed.TimeToCompleteMovement(run, actuallyMounted);
+
+                        if (Serial == World.Player || StepInterval <= 0)
+                        {
+                            step.Duration = nominal;
+                        }
+                        else
+                        {
+                            // Render at the server's pace up to the cap; slower paces keep the
+                            // step-then-stand look.
+                            int cap = (int)(MovementSpeed.TimeToCompleteMovement(false, actuallyMounted) * MovementSpeed.RENDER_CAP_WALK_MULTIPLIER);
+                            int cadence = Math.Min(StepInterval, cap);
+
+                            // On time means ending when the next packet is due: the cadence less
+                            // how late this step's clock started after its packet arrived (the
+                            // clock starts at arrival when the queue was empty, else at the previous
+                            // step's end). A move already queued behind it is a full period of
+                            // deficit. Never faster than double speed.
+                            int late = Math.Max((int)LastStepTime - (int)step.Arrival, 0);
+                            int deficit = late + (HasMoveQueuedBehind() ? cadence : 0);
+                            step.Duration = Math.Max(Math.Max(cadence - deficit, cadence / 2), MovementSpeed.STEP_DELAY_MIN);
+                        }
                     }
 
-                    int maxDelay = Math.Max(stepTime - (int)Client.Game.FrameDelay[1], 1);
+                    int maxDelay = Math.Max(step.Duration - (int)Client.Game.FrameDelay[1], 1);
 
                     bool removeStep = delay >= maxDelay;
                     bool directionChange = false;
@@ -944,6 +1033,7 @@ namespace ClassicUO.Game.GameObjects
 
                         if (directionChange)
                         {
+                            LastStepTime = Time.Ticks;
                             ProcessSteps(out dir, evalutate);
 
                             return;
@@ -1227,6 +1317,7 @@ namespace ClassicUO.Game.GameObjects
             public byte Direction;
             public bool Run;
             public uint Arrival;
+            public int Duration;
         }
     }
 }
