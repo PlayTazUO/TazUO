@@ -20,7 +20,7 @@ namespace ClassicUO.Game.UI.Controls.ResizableComponents;
 ///         own right, so nothing else dismisses it.
 ///     </para>
 /// </summary>
-public class ControlHelp : Widget
+public class HelpButton : Widget
 {
     #region Public accessors
 
@@ -51,7 +51,7 @@ public class ControlHelp : Widget
     /// <param name="content">The widget to show as the modal's body.</param>
     /// <param name="contentModalTitle">The modal's title, or null for a bare title bar.</param>
     /// <exception cref="ArgumentNullException">Either widget is null.</exception>
-    public ControlHelp(Widget helpButton, Widget content, string? contentModalTitle = null) : this(helpButton, content, contentModalTitle, null)
+    public HelpButton(Widget helpButton, Widget content, string? contentModalTitle = null) : this(helpButton, content, contentModalTitle, null)
     {
         ArgumentNullException.ThrowIfNull(content);
     }
@@ -62,7 +62,7 @@ public class ControlHelp : Widget
     /// <param name="content">The widget to show as the modal's body.</param>
     /// <param name="contentModalTitle">The modal's title, or null for a bare title bar.</param>
     /// <exception cref="ArgumentNullException"><paramref name="content" /> is null.</exception>
-    public ControlHelp(Widget content, string? contentModalTitle = null) : this(GetDefaultButtonWidget(), content, contentModalTitle, null)
+    public HelpButton(Widget content, string? contentModalTitle = null) : this(GetDefaultButtonWidget(), content, contentModalTitle, null)
     {
         ArgumentNullException.ThrowIfNull(content);
     }
@@ -75,7 +75,7 @@ public class ControlHelp : Widget
     /// <see cref="PlatformHelper.LaunchBrowser" /> logs the address as malformed before retrying it
     /// under https.</param>
     /// <exception cref="ArgumentNullException"><paramref name="url" /> is null.</exception>
-    public ControlHelp(string url) : this(GetDefaultButtonWidget(), null, null, url)
+    public HelpButton(string url) : this(GetDefaultButtonWidget(), null, null, url)
     {
         ArgumentNullException.ThrowIfNull(url);
     }
@@ -88,7 +88,7 @@ public class ControlHelp : Widget
     /// <param name="content">The modal body, or null for URL mode.</param>
     /// <param name="contentModalTitle">The modal's title. Meaningless in URL mode.</param>
     /// <param name="helpUrl">The address to open, or null for modal mode.</param>
-    private ControlHelp(Widget helpButton, Widget? content, string? contentModalTitle, string? helpUrl)
+    private HelpButton(Widget helpButton, Widget? content, string? contentModalTitle, string? helpUrl)
     {
         ArgumentNullException.ThrowIfNull(helpButton);
 

@@ -12,43 +12,43 @@ namespace ClassicUO.UnitTests.Game.UI;
 ///     glyph button, which loads a font and so needs a graphics device the test host has no reason to
 ///     stand up.
 /// </summary>
-public class ControlHelpTests
+public class HelpButtonTests
 {
     /// <summary>
     ///     The button is seated through <c>ChildrenLayout</c> rather than by adding it to a container, so
-    ///     losing that assignment would leave the help button measured and rendered as nothing - visibly
+    ///     losing that assignment would leave the helpButton button measured and rendered as nothing - visibly
     ///     an empty gap, with no error anywhere.
     /// </summary>
     [Fact]
     public void TheSuppliedButtonBecomesTheOnlyChild()
     {
         var button = new Widget();
-        var help = new ControlHelp(button, new Widget(), "Title");
+        var help = new HelpButton(button, new Widget(), "Title");
         help.GetChildren().Should().ContainSingle().Which.Should().BeSameAs(button);
     }
 
     [Fact]
     public void NullContentIsRejected()
     {
-        Action build = () => new ControlHelp(new Widget(), null, "Title");
+        Action build = () => new HelpButton(new Widget(), null, "Title");
         build.Should().Throw<ArgumentNullException>();
     }
 
     [Fact]
     public void NullButtonIsRejected()
     {
-        Action build = () => new ControlHelp(null, new Widget(), "Title");
+        Action build = () => new HelpButton(null, new Widget(), "Title");
         build.Should().Throw<ArgumentNullException>();
     }
 
     /// <summary>
-    ///     Every dialog setting is reachable from the help button, so a consumer that only holds
-    ///     the <see cref="ControlHelp" /> can still shape what it opens.
+    ///     Every dialog setting is reachable from the helpButton button, so a consumer that only holds
+    ///     the <see cref="HelpButton" /> can still shape what it opens.
     /// </summary>
     [Fact]
     public void TheModalConfigurationIsExposed()
     {
-        var help = new ControlHelp(new Widget(), new Widget());
+        var help = new HelpButton(new Widget(), new Widget());
         help.ModalProps.Should().NotBeNull();
     }
 
@@ -60,7 +60,7 @@ public class ControlHelpTests
     [Fact]
     public void ANonLeftPressDoesNotOpenTheHelp()
     {
-        var help = new ControlHelp(new Widget(), new Widget());
+        var help = new HelpButton(new Widget(), new Widget());
 
         foreach (var button in new[] { TouchButton.Right, TouchButton.Middle })
         {

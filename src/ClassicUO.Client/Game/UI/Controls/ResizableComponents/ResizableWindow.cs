@@ -82,10 +82,10 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <remarks>
     ///     Owned while assigned: replacing it, or closing the window, dismisses the outgoing one's
-    ///     modal. One <see cref="ControlHelp" /> per window - assigning the same instance twice
+    ///     modal. One <see cref="HelpButton" /> per window - assigning the same instance twice
     ///     reparents it away from the first.
     /// </remarks>
-    public ControlHelp? Help
+    public HelpButton? Help
     {
         get => _helpButton;
 
@@ -162,7 +162,7 @@ public class ResizableWindow : Window, IDisposable
 
     private IconButton? _resetSizeButton;
 
-    private ControlHelp? _helpButton;
+    private HelpButton? _helpButton;
 
     private Widget? _content;
 
@@ -430,24 +430,24 @@ public class ResizableWindow : Window, IDisposable
     }
 
     /// <summary>
-    ///     Seats a help widget in the title panel, to the left of the close button, replacing any
-    ///     help widget already there.
+    ///     Seats a helpButton widget in the title panel, to the left of the close button, replacing any
+    ///     helpButton widget already there.
     /// </summary>
-    /// <param name="help">The help widget to seat. Never null.</param>
+    /// <param name="helpButton">The helpButton widget to seat. Never null.</param>
     /// <remarks>
     ///     Myra's child collection takes the same widget twice without complaint, costing the stack
     ///     panel a second slot - so a widget already seated is left alone, and any other occupant goes
     ///     first.
     /// </remarks>
-    private void ConfigureHelpButton(ControlHelp help)
+    private void ConfigureHelpButton(HelpButton helpButton)
     {
-        Debug.Assert(help != null, "help is null - this indicates an unguarded call");
+        Debug.Assert(helpButton != null, "helpButton is null - this indicates an unguarded call");
 
-        if (ReferenceEquals(_helpButton, help))
+        if (ReferenceEquals(_helpButton, helpButton))
             return;
 
         RemoveHelpButton();
-        _helpButton = help;
+        _helpButton = helpButton;
 
         int closeButtonIdx = TitlePanel.Widgets.IndexOf(CloseButton);
         if (closeButtonIdx < 0)

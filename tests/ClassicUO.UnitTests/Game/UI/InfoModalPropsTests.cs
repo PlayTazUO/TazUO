@@ -92,7 +92,7 @@ public class InfoModalPropsTests
     }
 
     /// <summary>
-    ///     The close and minimize buttons are on by default; a help dialog with no way to
+    ///     The close and minimize buttons are on by default; a helpButton dialog with no way to
     ///     dismiss it but a right-click is the state this guards against.
     /// </summary>
     [Fact]
