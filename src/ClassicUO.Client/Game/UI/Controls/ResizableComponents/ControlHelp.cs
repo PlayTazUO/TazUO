@@ -5,22 +5,19 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility.Platforms;
-using Microsoft.Xna.Framework;
 using Myra.Events;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.Controls.ResizableComponents;
 
 /// <summary>
-///     A clickable help affordance: a glyph button that, when pressed, either shows a widget in an
-///     <see cref="InfoModal" /> or opens a URL in the player's browser, depending on which
-///     constructor built it.
+///     A help button that, when pressed, either shows a widget in an <see cref="InfoModal" /> or
+///     opens a URL in the player's browser, per the constructor used.
 ///     <para>
-///         Lives as a widget in a <see cref="ResizableWindow" />'s title bar, assigned through
-///         <see cref="ResizableWindow.Help" />, which owns it. Whoever owns one must call
-///         <see cref="CloseModal" /> when it goes out of use: the modal is a
-///         <see cref="MyraControl" /> registered with <c>UIManager</c> in its own right, so nothing
-///         else dismisses it.
+///         Seated in a <see cref="ResizableWindow" />'s title bar through
+///         <see cref="ResizableWindow.Help" />, which owns it. The owner must call
+///         <see cref="CloseModal" /> when done: the modal is registered with <c>UIManager</c> in its
+///         own right, so nothing else dismisses it.
 ///     </para>
 /// </summary>
 public class ControlHelp : Widget
@@ -28,13 +25,10 @@ public class ControlHelp : Widget
     #region Public accessors
 
     /// <summary>
-    ///     Where the help modal should be placed, in screen coordinates. Null centers it.
+    ///     Configuration handed to the help modal: its chrome, placement and size limits. Edit it to
+    ///     shape the dialog; ignored by help built in URL mode, which opens no dialog.
     /// </summary>
-    /// <remarks>
-    ///     Read on every press rather than once, so a window that wants its help beside itself stays
-    ///     correct after the window is moved.
-    /// </remarks>
-    public Func<Point>? ContentModalPlacementGetter { get; set; }
+    public InfoModalProps ModalProps { get; } = new();
 
     #endregion
 
@@ -110,9 +104,8 @@ public class ControlHelp : Widget
     #region Public methods
 
     /// <summary>
-    ///     Dismisses the help modal, if one is open. Must be called when the owning window goes
-    ///     away: the modal is registered with <c>UIManager</c> in its own right, so nothing else
-    ///     tears it down and it would outlive the control it documents.
+    ///     Dismisses the help modal, if one is open. Required on teardown - nothing else disposes it,
+    ///     so it would outlive the control it documents.
     /// </summary>
     public void CloseModal()
     {
@@ -141,15 +134,15 @@ public class ControlHelp : Widget
     #region Private methods
 
     /// <summary>
-    ///     The standard help button: a question mark, at the same size as the other title-bar glyphs.
+    ///     The standard help button: a question mark, sized with the other title-bar glyphs.
     /// </summary>
-    /// <returns>The button. Its own click handler is empty - the press is read on the parent
-    /// <see cref="ControlHelp" />, which covers the same area.</returns>
+    /// <returns>The button. Its click handler is empty - the press is read on the parent, which
+    /// covers the same area.</returns>
     private static IconButton GetDefaultButtonWidget() => new("❓", () => { }, TazLang.Get("uicommons_help_button"));
 
     /// <summary>
-    ///     Shows the help: the browser in URL mode, otherwise the modal - raising and repositioning
-    ///     the one already open rather than stacking a second copy.
+    ///     Shows the help: the browser in URL mode, otherwise the modal - raising the one already
+    ///     open rather than stacking a second.
     /// </summary>
     private void ShowHelp()
     {
@@ -160,24 +153,19 @@ public class ControlHelp : Widget
             return;
         }
 
-        // A dismissed modal is disposed, so a cached reference is only reusable while alive -
-        // re-showing a disposed one would do nothing and leave the help button dead after the
-        // first dismissal. IsClosing covers the frames where the dismissal is pending but
-        // IsDisposed has yet to flip, which would otherwise raise a modal about to vanish.
+        // A dismissed modal cannot be shown again, and IsDisposed only flips a frame after the
+        // dismissal - so a pending one counts as gone too, or the button dies on first dismissal.
         if (_helpModal is { IsDisposed: false, IsClosing: false })
         {
-            if (ContentModalPlacementGetter != null)
-            {
-                Point pos = ContentModalPlacementGetter();
-                _helpModal.SetPosition(pos.X, pos.Y);
-            }
+            if (ModalProps.Placement?.Invoke() is { } placement)
+                _helpModal.SetPosition(placement.X, placement.Y);
 
             _helpModal.BringOnTop();
             return;
         }
 
-        _helpModal = new InfoModal(_contentModalTitle, _content);
-        _helpModal.Show(ContentModalPlacementGetter?.Invoke());
+        _helpModal = new InfoModal(_contentModalTitle, _content, ModalProps);
+        _helpModal.Show();
     }
 
     #endregion

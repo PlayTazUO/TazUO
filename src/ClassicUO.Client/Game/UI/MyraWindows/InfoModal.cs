@@ -1,6 +1,6 @@
 #nullable enable
 
-using System;
+using System.ComponentModel;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using Microsoft.Xna.Framework;
@@ -9,15 +9,15 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows;
 
 /// <summary>
-///     A dialog that presents read-only content and is dismissed by right-clicking it. The window has
-///     no close button and cannot be minimized, but it is drag-resizable within
-///     <see cref="MinSize" />/<see cref="MaxSize" />, and its content scrolls once the body outgrows
-///     the frame.
+///     A dialog presenting read-only content, dismissed by right-clicking it or through its close
+///     button. Drag-resizable within the limits on <see cref="Props" />, which also decide whether
+///     the close and minimize buttons are offered; the body scrolls once it outgrows the frame.
 ///     <para>
 ///         Takes ownership of the content widget: it is attached to this window's desktop and detached
 ///         when the modal is disposed, so the same widget cannot back two live modals at once. A
 ///         dismissed modal is disposed and cannot be shown again - callers that re-open on demand must
-///         construct a new instance, checking <see cref="MyraControl.IsDisposed" /> on any cached one.
+///         construct a new instance, checking <see cref="MyraControl.IsDisposed" /> and
+///         <see cref="MyraControl.IsClosing" /> on any cached one.
 ///     </para>
 /// </summary>
 public class InfoModal : MyraControl
@@ -25,47 +25,9 @@ public class InfoModal : MyraControl
     #region Public accessors
 
     /// <summary>
-    ///     Smallest size the dialog may be dragged down to. Also its layout minimum, so a short body
-    ///     still produces a dialog wide enough to read a title in.
+    ///     Chrome, placement and size limits of this dialog. Edits apply immediately.
     /// </summary>
-    public Point MinSize
-    {
-        get;
-        set
-        {
-            field = value;
-            ApplySizeLimits();
-        }
-    } = new(DEFAULT_MIN_WIDTH, DEFAULT_MIN_HEIGHT);
-
-    /// <summary>
-    ///     Largest size the dialog may take. Load-bearing rather than cosmetic: the window sizes
-    ///     itself to its content, so without a ceiling a long help text yields a dialog taller than
-    ///     the screen, with the parts that would close it off-screen.
-    /// </summary>
-    public Point MaxSize
-    {
-        get;
-        set
-        {
-            field = value;
-            ApplySizeLimits();
-        }
-    } = new(DEFAULT_MAX_WIDTH, DEFAULT_MAX_HEIGHT);
-
-    #endregion
-
-    #region Private members
-
-    /// <summary>Wide enough for a title and a line of prose; taller than a single line so a short
-    /// body does not collapse into a strip.</summary>
-    private const int DEFAULT_MIN_WIDTH = 300;
-    private const int DEFAULT_MIN_HEIGHT = 120;
-
-    /// <summary>Fits within the smallest resolution the client is expected to run at, so the dialog
-    /// cannot grow past the viewport on any supported display.</summary>
-    private const int DEFAULT_MAX_WIDTH = 700;
-    private const int DEFAULT_MAX_HEIGHT = 600;
+    public InfoModalProps Props { get; }
 
     #endregion
 
@@ -73,8 +35,13 @@ public class InfoModal : MyraControl
 
     /// <param name="title">Window title bar text, or null for a bare title bar.</param>
     /// <param name="modalContent">Widget rendered as the dialog body.</param>
-    public InfoModal(string? title, Widget modalContent) : base(title)
+    /// <param name="props">Configuration to adopt, or null for the defaults. Held by reference, so
+    /// the caller may keep editing it.</param>
+    public InfoModal(string? title, Widget modalContent, InfoModalProps? props = null) : base(title)
     {
+        Props = props ?? new InfoModalProps();
+        Props.PropertyChanged += OnPropsChanged;
+
         ConfigureRootWindow();
         SetRootContent(GetContent(modalContent));
     }
@@ -84,18 +51,20 @@ public class InfoModal : MyraControl
     #region Public methods
 
     /// <summary>
-    ///     Registers the modal with <see cref="UIManager" /> and places it.
+    ///     Registers the modal with <see cref="UIManager" /> and places it per
+    ///     <see cref="InfoModalProps.Placement" />.
     /// </summary>
-    /// <param name="placement">Top-left corner, in screen coordinates. Null centers the dialog.</param>
     /// <remarks>
-    ///     Visibility of a <see cref="MyraControl" /> is owned by <see cref="UIManager" />, which drives
-    ///     its update and draw passes - Myra's own <c>Window.Show</c>/<c>ShowModal</c> must not be used
-    ///     here, as the root window is already this control's desktop root and showing it again appends a
-    ///     duplicate desktop entry. Call once per instance: a second call would duplicate the
-    ///     <see cref="UIManager" /> registration instead.
+    ///     <see cref="UIManager" /> owns a <see cref="MyraControl" />'s visibility and drives its
+    ///     update and draw passes. Myra's own <c>Window.Show</c>/<c>ShowModal</c> must not be used:
+    ///     the root window is already this control's desktop root, and showing it again appends a
+    ///     duplicate desktop entry. Call once per instance - a second call duplicates the
+    ///     <see cref="UIManager" /> registration.
     /// </remarks>
-    public void Show(Point? placement)
+    public void Show()
     {
+        Point? placement = Props.Placement?.Invoke();
+
         if (placement != null)
             SetPosition(placement.Value.X, placement.Value.Y);
         else
@@ -104,13 +73,23 @@ public class InfoModal : MyraControl
         UIManager.Add(this);
     }
 
+    /// <summary>
+    ///     Requests teardown, dropping this dialog's subscription to <see cref="Props" /> - which the
+    ///     caller may well outlive it and keep using.
+    /// </summary>
+    public override void Dispose()
+    {
+        Props.PropertyChanged -= OnPropsChanged;
+        base.Dispose();
+    }
+
     #endregion
 
     #region Private methods
 
     /// <summary>
-    ///     Applies modal-specific window settings: centered title, hidden close button, no minimize,
-    ///     and the size limits the dialog resizes within.
+    ///     Applies the settings that do not change with <see cref="Props" />: a centered title that
+    ///     stretches the bar's full width.
     /// </summary>
     private void ConfigureRootWindow()
     {
@@ -118,48 +97,45 @@ public class InfoModal : MyraControl
         _rootWindow.TitlePanel.VerticalAlignment = VerticalAlignment.Center;
         _rootWindow.TitleLabelAlignment = HorizontalAlignment.Center;
 
-        _rootWindow.CloseButton.Visible = false;
-        _rootWindow.Props.Minimizable = false;
+        Configure();
+    }
+
+    /// <summary>
+    ///     Brings the window in line with <see cref="Props" />.
+    /// </summary>
+    private void Configure()
+    {
+        _rootWindow.CloseButton.Visible = Props.Closable;
+        _rootWindow.Props.Minimizable = Props.Minimizable;
 
         ApplySizeLimits();
     }
 
     /// <summary>
-    ///     Pushes <see cref="MinSize" />/<see cref="MaxSize" /> onto both the drag-resize clamp and
-    ///     the window's own layout limits.
+    ///     Pushes the size limits onto both the drag-resize clamp and the window's own layout limits.
     /// </summary>
     /// <remarks>
-    ///     Both halves are needed, and for different reasons: the resize clamp bounds what a drag can
-    ///     do, while the layout limits bound what the window sizes itself to when it measures its
-    ///     content. Setting only the former leaves the initial, un-dragged dialog unbounded.
-    ///     <para>
-    ///         The two are written as an ordered pair, treating the minimum as the hard floor and
-    ///         lifting the ceiling to meet it where a caller has set them crossed. That is not
-    ///         cosmetic tidying: the drag path clamps through <see cref="Math.Clamp(int,int,int)" />,
-    ///         which throws when its bounds cross, and would do so on every mouse-move of a resize.
-    ///     </para>
+    ///     Both halves, for different reasons: the clamp bounds a drag, the layout limits bound what
+    ///     the window measures itself to. Only the former leaves the un-dragged dialog unbounded.
     /// </remarks>
     private void ApplySizeLimits()
     {
-        int minWidth = Math.Max(0, MinSize.X);
-        int minHeight = Math.Max(0, MinSize.Y);
-        int maxWidth = Math.Max(minWidth, MaxSize.X);
-        int maxHeight = Math.Max(minHeight, MaxSize.Y);
+        (Point min, Point max) = Props.GetOrderedSizeLimits();
 
-        _rootWindow.Props.Resize.MinWidth = minWidth;
-        _rootWindow.Props.Resize.MinHeight = minHeight;
-        _rootWindow.Props.Resize.MaxWidth = maxWidth;
-        _rootWindow.Props.Resize.MaxHeight = maxHeight;
+        _rootWindow.Props.Resize.MinWidth = min.X;
+        _rootWindow.Props.Resize.MinHeight = min.Y;
+        _rootWindow.Props.Resize.MaxWidth = max.X;
+        _rootWindow.Props.Resize.MaxHeight = max.Y;
 
-        _rootWindow.MinWidth = minWidth;
-        _rootWindow.MinHeight = minHeight;
-        _rootWindow.MaxWidth = maxWidth;
-        _rootWindow.MaxHeight = maxHeight;
+        _rootWindow.MinWidth = min.X;
+        _rootWindow.MinHeight = min.Y;
+        _rootWindow.MaxWidth = max.X;
+        _rootWindow.MaxHeight = max.Y;
     }
 
     /// <summary>
-    ///     Wraps the caller-supplied body widget in a stretching panel, so it fills the dialog's
-    ///     width rather than sitting at its natural size.
+    ///     Wraps the body widget in a stretching panel, so it fills the dialog's width rather than
+    ///     sitting at its natural size.
     /// </summary>
     /// <param name="modalContent">The body widget.</param>
     /// <returns>The panel to use as the window's content.</returns>
@@ -169,6 +145,11 @@ public class InfoModal : MyraControl
         content.Widgets.Add(modalContent);
         return content;
     }
+
+    /// <summary>Reconfigures the window when <see cref="Props" /> changes.</summary>
+    /// <param name="sender">Unused event sender.</param>
+    /// <param name="e">Unused event data - every property feeds the same reconfigure.</param>
+    private void OnPropsChanged(object? sender, PropertyChangedEventArgs e) => Configure();
 
     #endregion
 }

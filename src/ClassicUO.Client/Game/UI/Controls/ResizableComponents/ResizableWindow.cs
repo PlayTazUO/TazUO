@@ -81,10 +81,9 @@ public class ResizableWindow : Window, IDisposable
     ///     window that documents nothing.
     /// </summary>
     /// <remarks>
-    ///     The window owns the widget for as long as it is assigned: replacing it, or closing the
-    ///     window, dismisses whatever help modal the outgoing one had open. One
-    ///     <see cref="ControlHelp" /> therefore belongs to one window - assigning the same instance to
-    ///     a second window reparents it away from the first.
+    ///     Owned while assigned: replacing it, or closing the window, dismisses the outgoing one's
+    ///     modal. One <see cref="ControlHelp" /> per window - assigning the same instance twice
+    ///     reparents it away from the first.
     /// </remarks>
     public ControlHelp? Help
     {
@@ -436,9 +435,9 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="help">The help widget to seat. Never null.</param>
     /// <remarks>
-    ///     Myra's child collection takes the same widget twice without complaint, which costs the
-    ///     stack panel a second slot for it, so an incoming widget that is already seated is left
-    ///     alone and any other occupant is removed first.
+    ///     Myra's child collection takes the same widget twice without complaint, costing the stack
+    ///     panel a second slot - so a widget already seated is left alone, and any other occupant goes
+    ///     first.
     /// </remarks>
     private void ConfigureHelpButton(ControlHelp help)
     {
@@ -476,9 +475,8 @@ public class ResizableWindow : Window, IDisposable
     }
 
     /// <summary>
-    ///     Re-measures the title panel and re-evaluates whether the title label still fits. Needed
-    ///     whenever the panel's contents change, not just its text: the cached width is what decides
-    ///     the label's visibility.
+    ///     Re-measures the panel and re-tests whether the title label fits. Needed on any content
+    ///     change, not just text: the cached width is what decides the label's visibility.
     /// </summary>
     private void RefreshTitlePanelMetrics()
     {
@@ -852,9 +850,8 @@ public class ResizableWindow : Window, IDisposable
     }
 
     /// <summary>
-    ///     The width a title-bar widget occupies for the purpose of
-    ///     <see cref="UpdateTitleLabelVisibility" />, discounting the trailing gap the label is free
-    ///     to run into.
+    ///     Width a title-bar widget occupies for <see cref="UpdateTitleLabelVisibility" />, less the
+    ///     trailing gap the label may run into.
     /// </summary>
     /// <param name="widget">The widget to measure. Null or hidden ones measure zero.</param>
     /// <returns>The width, in pixels.</returns>
