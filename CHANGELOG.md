@@ -4,6 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 10/13/26
+* ***Fix:*** Fixed a client crash when a vendor's sell list contained the same item serial twice (`ArgumentException: Argument_AddingDuplicateWithKey`) - a duplicate entry now replaces the previous shop item instead of throwing
 * ***Feature:*** Added `API.CreateEffect(...)` to Legion scripting, allowing scripts to create and display local visual effects (spell animations, projectiles, explosions) in the game world
 * ***Legion:*** Added `API.Gumps.CreateGumpSlider(...)` to Legion scripting, creating a horizontal slider control with a readable/settable `Value`, `MinValue`/`MaxValue`, and an `OnValueChanged(callback)` hook
 * ***Legion:*** Fixed `API.MoveItemOffset()` and `API.QueueMoveItemOffset()` mishandling their `z` argument - an explicit `z` is now treated as an offset from the player (previously it was compared against the destination tile's absolute land/static z and could be silently overridden), and leaving `z` blank now drops at the ground/static z of the destination tile

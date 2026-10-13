@@ -438,7 +438,7 @@ description: ApiUiGump class documentation
 
 ---
 
-### CreateGumpSlider
+### CreateSlider
 `(width, min, max, value, x, y, showText)`
  Create a horizontal slider control. Read or update its value with `slider.Value` / `slider.SetValue(value)`.
  Example:
@@ -446,7 +446,7 @@ description: ApiUiGump class documentation
  gump = API.Gumps.CreateGump()
  gump.SetRect(100, 100, 300, 100)
 
- slider = API.Gumps.CreateGumpSlider(200, 0, 100, 50)
+ slider = API.Gumps.CreateSlider(200, 0, 100, 50)
  gump.Add(slider)
 
  API.Gumps.AddGump(gump)

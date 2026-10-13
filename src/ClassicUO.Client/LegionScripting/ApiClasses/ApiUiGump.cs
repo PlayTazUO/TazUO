@@ -441,7 +441,7 @@ public class ApiUiGump(LegionAPI api)
     /// gump = API.Gumps.CreateGump()
     /// gump.SetRect(100, 100, 300, 100)
     ///
-    /// slider = API.Gumps.CreateGumpSlider(200, 0, 100, 50)
+    /// slider = API.Gumps.CreateSlider(200, 0, 100, 50)
     /// gump.Add(slider)
     ///
     /// API.Gumps.AddGump(gump)
@@ -455,7 +455,7 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="y">Y position</param>
     /// <param name="showText">If true, displays the current value next to the slider</param>
     /// <returns>A slider control</returns>
-    public ApiUiSlider CreateGumpSlider
+    public ApiUiSlider CreateSlider
         (int width, int min = 0, int max = 100, int value = 0, int x = 0, int y = 0, bool showText = false) => OnMain(() =>
         {
             var slider = new HSliderBar(x, y, width, min, max, value, HSliderBarStyle.MetalWidgetRecessedBar, hasText: showText);

@@ -884,7 +884,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpSlider(self, width: "int", min: "int" = 0, max: "int" = 100, value: "int" = 0, x: "int" = 0, y: "int" = 0, showText: "bool" = False) -> "ApiUiSlider":
+    def CreateSlider(self, width: "int", min: "int" = 0, max: "int" = 100, value: "int" = 0, x: "int" = 0, y: "int" = 0, showText: "bool" = False) -> "ApiUiSlider":
         """
          Create a horizontal slider control. Read or update its value with `slider.Value` / `slider.SetValue(value)`.
          Example:
@@ -892,7 +892,7 @@ class ApiUiGump:
          gump = API.Gumps.CreateGump()
          gump.SetRect(100, 100, 300, 100)
         
-         slider = API.Gumps.CreateGumpSlider(200, 0, 100, 50)
+         slider = API.Gumps.CreateSlider(200, 0, 100, 50)
          gump.Add(slider)
         
          API.Gumps.AddGump(gump)
