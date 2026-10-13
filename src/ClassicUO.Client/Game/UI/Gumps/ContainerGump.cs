@@ -24,7 +24,6 @@ namespace ClassicUO.Game.UI.Gumps
         private int _eyeCorspeOffset;
         private GumpPic _eyeGumpPic;
         private GumpPicContainer _gumpPicContainer;
-        private readonly bool _hideIfEmpty;
         private readonly bool showGridToggle = false;
         private HitBox _hitBox;
         private bool _isMinimized;
@@ -597,7 +596,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             bool is_corpse = container.Graphic == 0x2006;
 
-            if (!container.IsEmpty && _hideIfEmpty && !IsVisible)
+            if (!container.IsEmpty && !IsVisible)
             {
                 IsVisible = true;
             }

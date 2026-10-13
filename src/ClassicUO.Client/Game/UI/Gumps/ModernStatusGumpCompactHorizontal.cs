@@ -30,15 +30,18 @@ namespace ClassicUO.Game.UI.Gumps
 
         private readonly TextBox[] _textLabels = new TextBox[(int)MobileStats.NumStats];
         private readonly string[] _formats = new string[(int)MobileStats.NumStats];
+        private readonly List<TextBox>[] _columnLabels;
+        private readonly AlphaBlendControl _background;
+        private readonly Button _buffButton;
 
         public StatusGumpCompactHorizontal(World world) : base(world)
         {
-            var background = new AlphaBlendControl(0.7f)
+            _background = new AlphaBlendControl(0.7f)
             {
                 AcceptMouseInput = true,
                 CanMove = true
             };
-            Add(background);
+            Add(_background);
 
             (MobileStats, string, string, int)[][] columns = new[]
             {
@@ -88,57 +91,65 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             };
 
-            int top = PADDING;
-            var columnLabels = new List<TextBox>[columns.Length];
-            int tallestColumn = top;
+            _columnLabels = new List<TextBox>[columns.Length];
 
             for (int i = 0; i < columns.Length; i++)
             {
-                int y = top;
-                columnLabels[i] = new List<TextBox>(columns[i].Length);
+                _columnLabels[i] = new List<TextBox>(columns[i].Length);
 
                 foreach ((MobileStats stat, string label, string tooltip, int valueHue) in columns[i])
                 {
-                    TextBox row = AddStatRow(stat, label, TazLang.Get(tooltip), valueHue);
-                    row.Y = y;
-                    columnLabels[i].Add(row);
-                    y += row.Height + ROW_GAP;
+                    _columnLabels[i].Add(AddStatRow(stat, label, TazLang.Get(tooltip), valueHue));
                 }
-
-                tallestColumn = Math.Max(tallestColumn, y);
             }
 
-            UpdateLabels();
-
-            int x = PADDING;
-            foreach (List<TextBox> labels in columnLabels)
-            {
-                int columnWidth = 0;
-
-                foreach (TextBox row in labels)
-                {
-                    row.X = x;
-                    columnWidth = Math.Max(columnWidth, row.MeasuredSize.X);
-                }
-
-                x += columnWidth + COLUMN_GAP;
-            }
-
-            Width = x - COLUMN_GAP + PADDING;
-            Height = tallestColumn + PADDING;
-            background.Width = Width;
-            background.Height = Height;
-            WantUpdateSize = false;
-
-            var buffButton = new Button((int)ButtonType.BuffIcon, BUFF_BUTTON_NORMAL, BUFF_BUTTON_PRESSED, BUFF_BUTTON_PRESSED)
+            _buffButton = new Button((int)ButtonType.BuffIcon, BUFF_BUTTON_NORMAL, BUFF_BUTTON_PRESSED, BUFF_BUTTON_PRESSED)
             {
                 X = PADDING,
                 ButtonAction = ButtonAction.Activate
             };
-            buffButton.Y = Height - buffButton.Height - PADDING;
-            Add(buffButton);
+            Add(_buffButton);
+
+            UpdateLabels();
+            UpdateLayout();
 
             EventSink.PlayerStatsUpdated += OnPlayerStatsUpdated;
+        }
+
+        /// <summary>
+        /// Sizes each column to its widest row and repositions every row, the background, and the
+        /// buff button. Runs after label text changes too: values delivered after login can be
+        /// wider than the ones present when the gump was built, which would otherwise let a
+        /// column run into the next.
+        /// </summary>
+        private void UpdateLayout()
+        {
+            int x = PADDING;
+            int tallestColumn = PADDING;
+
+            foreach (List<TextBox> labels in _columnLabels)
+            {
+                int columnWidth = 0;
+                int y = PADDING;
+
+                foreach (TextBox row in labels)
+                {
+                    row.X = x;
+                    row.Y = y;
+                    columnWidth = Math.Max(columnWidth, row.MeasuredSize.X);
+                    y += row.Height + ROW_GAP;
+                }
+
+                x += columnWidth + COLUMN_GAP;
+                tallestColumn = Math.Max(tallestColumn, y);
+            }
+
+            Width = x - COLUMN_GAP + PADDING;
+            Height = tallestColumn + PADDING;
+            _background.Width = Width;
+            _background.Height = Height;
+            _buffButton.Y = Height - _buffButton.Height - PADDING;
+            WantUpdateSize = false;
         }
 
         public override void Dispose()
@@ -158,7 +169,11 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        private void OnPlayerStatsUpdated(object sender, EventArgs e) => UpdateLabels();
+        private void OnPlayerStatsUpdated(object sender, EventArgs e)
+        {
+            UpdateLabels();
+            UpdateLayout();
+        }
 
         private void UpdateLabels()
         {

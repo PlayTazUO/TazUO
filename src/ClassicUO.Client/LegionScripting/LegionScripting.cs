@@ -391,10 +391,7 @@ namespace ClassicUO.LegionScripting
             LScriptSettings.GlobalAutoStartScripts.RemoveAll(script => LoadedScripts.All(s => s.FileName != script));
         }
 
-        private static void SaveScriptSettings()
-        {
-            LScriptSettings?.Save();
-        }
+        private static void SaveScriptSettings() => LScriptSettings?.Save();
 
         public static void Unload()
         {
