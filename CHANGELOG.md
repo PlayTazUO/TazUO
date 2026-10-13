@@ -9,6 +9,7 @@ All notable changes to TazUO will be recorded here.
 * ***Misc:*** The pattern used to read durability from an item's tooltip is now the customizable `durability_regex` language key (the default still matches text like `Durability 45 / 255`), so servers using different wording can be supported without a client change
 * ***Fix:*** Fixed shift-clicking an item to add it to auto loot appearing to do nothing - the Auto Loot and Scavenger lists were built once and never refreshed, so the item only showed after the client was restarted. Those tabs now rebuild when revisited
 * ***Fix:*** Shift-clicking an item to add it to auto loot no longer claims success when the auto loot config failed to load; the client now reports that it is not ready instead
+* ***Fix:*** The network status gump's ping no longer freezes at its last value when the connection stops receiving replies - the outstanding probe's age is reported once it exceeds the running average, so the figure climbs to show the stall
 
 ## 10/11/26
 * ***Feature:*** The network status gump now shows the last ping alongside the average in expanded view, as `avg (last)`

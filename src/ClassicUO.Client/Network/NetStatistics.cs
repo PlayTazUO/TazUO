@@ -32,6 +32,12 @@ namespace ClassicUO.Network
         private byte _pingIdx;
 
         private readonly uint[] _pings = new uint[5];
+
+        // Send time of the oldest probe still awaiting a reply, or 0 when none is outstanding. Any
+        // reply clears it. While it stays set its age keeps climbing, which is what lets Ping rise
+        // during a stall instead of freezing on the last good sample. Shared by both ping sources,
+        // which never overlap: switching source clears it.
+        private uint _pendingSinceTick;
         private uint _startTickValue, _statisticsTimer;
 
         private PingSource _pingSource = PingSource.Packet;
@@ -87,12 +93,11 @@ namespace ClassicUO.Network
                     }
                 }
 
-                if (count == 0)
-                {
-                    return 0;
-                }
+                uint average = count == 0 ? 0 : sum / count;
 
-                return sum / count;
+                // An unanswered probe means the average understates how long we have actually been
+                // waiting, so report the outstanding probe's age once it passes the average.
+                return Math.Max(average, _pendingSinceTick == 0 ? 0 : Time.Ticks - _pendingSinceTick);
             }
         }
 
@@ -103,8 +108,10 @@ namespace ClassicUO.Network
                 return;
             }
 
-            // A reply proves the packet path works, so it is (once again) the primary source.
+            // A reply proves the packet path works, so it is (once again) the primary source, and
+            // nothing is left outstanding.
             _pingSource = PingSource.Packet;
+            _pendingSinceTick = 0;
 
             _pings[idx % _pings.Length] = Time.Ticks - _startTickValue;
             LastPing = _pings[idx % _pings.Length];
@@ -135,12 +142,23 @@ namespace ClassicUO.Network
             {
                 if (Time.Ticks - _pingSourceStartTick >= FallbackWindowMs)
                 {
+                    // Abandon any packet probe still outstanding so its stale age does not pin the
+                    // displayed latency once ICMP takes over.
                     _pingSource = PingSource.Icmp;
                     _pingSourceStartTick = Time.Ticks;
+                    _pendingSinceTick = 0;
                 }
                 else
                 {
                     _startTickValue = Time.Ticks;
+
+                    // Only the first unanswered probe is stamped: repeated sends must not reset the
+                    // age, otherwise a stall would sawtooth instead of climbing.
+                    if (_pendingSinceTick == 0)
+                    {
+                        _pendingSinceTick = Time.Ticks;
+                    }
+
                     socket.Send_Ping(_pingIdx);
                     _pingIdx = (byte)((_pingIdx + 1) % _pings.Length);
                     return;
@@ -158,6 +176,7 @@ namespace ClassicUO.Network
                     _pingIdx = (byte)((_pingIdx + 1) % _pings.Length);
                     LastPingReceived = Time.Ticks;
                     _pingSourceStartTick = Time.Ticks;
+                    _pendingSinceTick = 0;
                 }
                 else if (Time.Ticks - _pingSourceStartTick >= FallbackWindowMs)
                 {
@@ -180,7 +199,6 @@ namespace ClassicUO.Network
 
         public void Reset()
         {
-            _startTickValue = 0;
             _statisticsTimer = 0;
             _pingIdx = 0;
             _pingSource = PingSource.Packet;
@@ -188,6 +206,7 @@ namespace ClassicUO.Network
             _pingWindowStarted = false;
             _icmpResult = -1;
             _icmpSending = 0;
+            _pendingSinceTick = 0;
             LastPing = 0;
             Array.Clear(_pings);
             DisposePinger();
@@ -247,6 +266,7 @@ namespace ClassicUO.Network
         {
             _pingSource = PingSource.Disabled;
             _icmpSending = 0;
+            _pendingSinceTick = 0;
             DisposePinger();
         }
 
@@ -269,6 +289,13 @@ namespace ClassicUO.Network
             try
             {
                 _pinger.SendAsync(address, 1000, _icmpBuffer, _icmpOptions, null);
+
+                // Only stamp the first unanswered probe: repeated attempts must not reset the age,
+                // otherwise a failing ICMP path would sawtooth instead of climbing.
+                if (_pendingSinceTick == 0)
+                {
+                    _pendingSinceTick = Time.Ticks;
+                }
             }
             catch
             {
