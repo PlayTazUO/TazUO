@@ -1629,7 +1629,7 @@ def MoveItem(serial: "int", destination: "int", amt: "int" = 0, x: "int" = 0xFFF
     """
     pass
 
-def QueueMoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z: "int" = 0, OSI: "bool" = False) -> None:
+def QueueMoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z: "int" = 1337, OSI: "bool" = False) -> None:
     """
      Move an item to the ground near you.
      Example:
@@ -1642,7 +1642,7 @@ def QueueMoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 
     """
     pass
 
-def MoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z: "int" = 0, OSI: "bool" = False) -> None:
+def MoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z: "int" = 1337, OSI: "bool" = False) -> None:
     """
      Move an item to the ground near you.
      Example:

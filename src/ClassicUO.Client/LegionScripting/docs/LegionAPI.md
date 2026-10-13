@@ -804,7 +804,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `amt` | `ushort` | ✅ Yes | 0 to grab entire stack |
 | `x` | `int` | ✅ Yes | Offset from your location |
 | `y` | `int` | ✅ Yes | Offset from your location |
-| `z` | `int` | ✅ Yes | Offset from your location. Leave blank in most cases |
+| `z` | `int` | ✅ Yes | Z offset from your location. Leave blank to auto-use the ground/static z at the destination tile |
 | `OSI` | `bool` | ✅ Yes | True if you are playing OSI |
 
 **Return Type:** `void` *(Does not return anything)*
@@ -831,7 +831,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `amt` | `int` | ✅ Yes | 0 to grab entire stack |
 | `x` | `int` | ✅ Yes | Offset from your location |
 | `y` | `int` | ✅ Yes | Offset from your location |
-| `z` | `int` | ✅ Yes | Offset from your location. Leave blank in most cases |
+| `z` | `int` | ✅ Yes | Z offset from your location. Leave blank to auto-use the ground/static z at the destination tile |
 | `OSI` | `bool` | ✅ Yes | True if you are playing OSI |
 
 **Return Type:** `void` *(Does not return anything)*
