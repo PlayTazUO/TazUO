@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/13/26
+* ***Feature:*** Added `API.CreateEffect(...)` to Legion scripting, allowing scripts to create and display local visual effects (spell animations, projectiles, explosions) in the game world
+
 ## 10/12/26
 * ***Feature:*** Added support for Enhanced Map protocol, this works for existing servers and will also work for TazUO's fork of a more modern EnhancedMap server
 * ***Feature:*** The equipment durability tracker can now watch any mobile, not just your own character - opening a mobile's paperdoll requests its equipment properties, and a durability tracker icon appears on that paperdoll once durability data is known. Clicking it opens the tracker, titled with the mobile's name

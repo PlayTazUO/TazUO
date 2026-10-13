@@ -839,7 +839,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpTTFLabel(self, text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "let", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
+    def CreateGumpTTFLabel(self, text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "left", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
         """
          Create a TTF label with advanced options.
          Example:
@@ -1250,6 +1250,22 @@ class PersistentVar:
     Account = 2
     Server = 3
     Global = 4
+
+class EffectType:
+    Moving = 1
+    Lightning = 1
+    FixedXYZ = 1
+    FixedFrom = 1
+
+class EffectBlendMode:
+    Normal = 1
+    Multiply = 1
+    Screen = 1
+    ScreenMore = 1
+    ScreenLess = 1
+    NormalHalfTransparent = 1
+    ShadowBlue = 1
+    ScreenRed = 1
 
 def ProcessCallbacks() -> None:
     """
@@ -2094,6 +2110,30 @@ def CooldownExists(name: "str") -> "bool":
      Example:
      ```py
      if API.CooldownExists("Healing"):
+     ```
+    
+    """
+    pass
+
+def CreateEffect(graphic: "int", type: "EffectType" = EffectType.FixedXYZ, source: "int" = 0, target: "int" = 0, hue: "int" = 0, sourceX: "int | None" = None, sourceY: "int | None" = None, sourceZ: "int | None" = None, targetX: "int | None" = None, targetY: "int | None" = None, targetZ: "int | None" = None, duration: "float" = 2, speed: "int" = 0, fixedDirection: "bool" = False, doesExplode: "bool" = False, blendMode: "EffectBlendMode" = EffectBlendMode.Normal) -> None:
+    """
+     Creates and displays a graphic effect in the world, the same kind the server sends for spells,
+     projectiles, explosions, etc. This is a purely local, visual effect - no packet is sent and only
+     you see it.
+     The type decides how it behaves: `EffectType.FixedXYZ` and
+     `EffectType.FixedFrom` stay in place, `EffectType.Moving` travels from
+     the source to the target, and `EffectType.Lightning` draws a bolt from the source.
+     Positions come from the source/target serials when given, otherwise from the coordinates, which
+     default to the player's position.
+     Example:
+     ```py
+     # A stationary animation on the tile next to the player, for 2 seconds
+     API.CreateEffect(0x373A, sourceX=API.Player.X + 1, sourceY=API.Player.Y, hue=0x0481)
+    
+     # A projectile fired from the player at the nearest murderer
+     mob = API.NearestMobile([API.Notoriety.Murderer], 8)
+     if mob:
+       API.CreateEffect(0x36D0, type=API.EffectType.Moving, source=API.Player, target=mob)
      ```
     
     """
@@ -3272,7 +3312,7 @@ def CreateGumpTextBox(text: "str" = "", width: "int" = 200, height: "int" = 30, 
     """
     pass
 
-def CreateGumpTTFLabel(text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "let", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
+def CreateGumpTTFLabel(text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "left", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
     """
      Use API.Gumps.CreateGumpTTFLabel instead.
     

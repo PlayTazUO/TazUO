@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `10/11/26`.*
+*This was generated on `10/13/26`.*
 
 ## Properties
 ### `Events`
@@ -184,6 +184,36 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 - `Account`
 - `Server`
 - `Global`
+
+### EffectType
+
+:::note[Description]
+ How a graphic effect created by `CreateEffect` behaves.
+
+:::
+
+**Values:**
+- `Moving`
+- `Lightning`
+- `FixedXYZ`
+- `FixedFrom`
+
+### EffectBlendMode
+
+:::note[Description]
+ Blend mode used when drawing a graphic effect. Mirrors the values the server sends.
+
+:::
+
+**Values:**
+- `Normal`
+- `Multiply`
+- `Screen`
+- `ScreenMore`
+- `ScreenLess`
+- `NormalHalfTransparent`
+- `ShadowBlue`
+- `ScreenRed`
 
 
 ## Methods
@@ -1583,6 +1613,53 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 | `name` | `string` | ❌ No | Name of the cooldown bar to check |
 
 **Return Type:** `bool`
+
+---
+
+### CreateEffect
+`(graphic, type, source, target, hue, sourceX, sourceY, sourceZ, targetX, targetY, targetZ, duration, speed, fixedDirection, doesExplode, blendMode)`
+ Creates and displays a graphic effect in the world, the same kind the server sends for spells,
+ projectiles, explosions, etc. This is a purely local, visual effect - no packet is sent and only
+ you see it.
+ The type decides how it behaves: `EffectType.FixedXYZ` and
+ `EffectType.FixedFrom` stay in place, `EffectType.Moving` travels from
+ the source to the target, and `EffectType.Lightning` draws a bolt from the source.
+ Positions come from the source/target serials when given, otherwise from the coordinates, which
+ default to the player's position.
+ Example:
+ ```py
+ # A stationary animation on the tile next to the player, for 2 seconds
+ API.CreateEffect(0x373A, sourceX=API.Player.X + 1, sourceY=API.Player.Y, hue=0x0481)
+
+ # A projectile fired from the player at the nearest murderer
+ mob = API.NearestMobile([API.Notoriety.Murderer], 8)
+ if mob:
+   API.CreateEffect(0x36D0, type=API.EffectType.Moving, source=API.Player, target=mob)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `graphic` | `ushort` | ❌ No | The animation/art graphic to draw. |
+| `type` | `EffectType` | ✅ Yes | How the effect behaves. Defaults to a stationary effect. |
+| `source` | `uint` | ✅ Yes | Serial of the source item/mobile. Takes priority over the source coordinates. |
+| `target` | `uint` | ✅ Yes | Serial of the target item/mobile. Takes priority over the target coordinates. |
+| `hue` | `ushort` | ✅ Yes | Hue to color the effect. 0 means no hue. |
+| `sourceX` | `int?` | ✅ Yes | Source X coordinate. Defaults to the player's X. |
+| `sourceY` | `int?` | ✅ Yes | Source Y coordinate. Defaults to the player's Y. |
+| `sourceZ` | `int?` | ✅ Yes | Source Z coordinate. Defaults to the player's Z. |
+| `targetX` | `int?` | ✅ Yes | Target X coordinate. Defaults to the source X. |
+| `targetY` | `int?` | ✅ Yes | Target Y coordinate. Defaults to the source Y. |
+| `targetZ` | `int?` | ✅ Yes | Target Z coordinate. Defaults to the source Z. |
+| `duration` | `double` | ✅ Yes | How long the effect lasts, in seconds. 0 or less makes it last until it leaves the area. |
+| `speed` | `byte` | ✅ Yes | Animation speed. 0 uses the default speed. |
+| `fixedDirection` | `bool` | ✅ Yes | Hold the effect's direction instead of rotating it to face the target. |
+| `doesExplode` | `bool` | ✅ Yes | Create an explosion at the target when a moving effect arrives. |
+| `blendMode` | `EffectBlendMode` | ✅ Yes | How the effect is blended over the world. |
+
+**Return Type:** `void` *(Does not return anything)*
 
 ---
 
