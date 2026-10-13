@@ -603,6 +603,7 @@ public static partial class GenDoc
             "ApiUiTtfTextInputField" => "ApiUiTtfTextInputField",
             "ApiUiTextBox" => "ApiUiTextBox",
             "ApiUiSimpleProgressBar" => "ApiUiSimpleProgressBar",
+            "ApiUiSlider" => "ApiUiSlider",
             "ApiUiGumpPic" => "ApiUiGumpPic",
             "ApiUiNineSliceGump" => "ApiUiNineSliceGump",
             "ApiUiCheckbox" => "ApiUiCheckbox",
