@@ -465,7 +465,13 @@ internal sealed class ScreenOverlayCompositor
         // the two stopped being the same number. Set to the arithmetic worst case so it only ever
         // bites if the cap is raised - overlays are optional decoration, and silently dropping one
         // to save a fraction of a millisecond is the worse trade.
-        ApplyBudget(_drawOrder, ConcurrencyCap() * OverlayLayerStack.MaxLayers);
+        //
+        // Both partitions are counted in, rather than sharing one budget: scripts sort above rules,
+        // so a shared budget would starve the rules out of it. Each source is already bounded
+        // upstream, which leaves this a safety net rather than a binding limit - the right shape
+        // for it. The preview is left out deliberately: it is the highest priority of all, so it is
+        // never the overlay this drops.
+        ApplyBudget(_drawOrder, (ConcurrencyCap() + ScreenOverlayManager.ScriptCap) * OverlayLayerStack.MaxLayers);
 
         _drawOrder.Reverse();
     }

@@ -1,9 +1,25 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using Lock = System.Threading.Lock;
 
 namespace ClassicUO.Game.ScreenDecorations.Shake;
+
+/// <summary>
+/// What raised a shake. Each source is capped on its own, so one of them looping cannot evict the
+/// other's shakes.
+/// </summary>
+internal enum ShakeSource
+{
+    /// <summary>A rule firing, or a preview of the look it raises.</summary>
+    Rule,
+
+    /// <summary>A Python script, via the scripting API.</summary>
+    Script
+}
 
 /// <summary>
 /// Trauma-model screen shake (Squirrel Eiserloh, GDC 2016). A CPU-side pixel offset applied to
@@ -11,8 +27,8 @@ namespace ClassicUO.Game.ScreenDecorations.Shake;
 /// rectangle exists; see <see cref="ClassicUO.GameController"/>'s render-target draw branch.
 /// <para>
 /// Two ways in: <see cref="AddTrauma"/> for an instant hit that decays on its own, and
-/// <see cref="Trauma(in ShakeRequest)"/> for a shake with a fixed duration and a shaped envelope.
-/// Both feed the same offset, so they can overlap.
+/// <see cref="Trauma(in ShakeRequest, ShakeSource, object)"/> for a shake with a fixed duration and
+/// a shaped envelope. Both feed the same offset, so they can overlap.
 /// </para>
 /// <para>
 /// Shakes are raised from wherever the event that caused them is handled - network, script or UI
@@ -98,6 +114,14 @@ internal sealed class ScreenShake
     /// the list must not grow without bound if something schedules one per frame.</summary>
     private const int MAX_ACTIVE_SHAKES = 8;
 
+    /// <summary>
+    /// How many of <see cref="MAX_ACTIVE_SHAKES"/> a script may hold. A sub-cap rather than a share
+    /// of the same number, because a script looping on <c>StartScreenShake</c> would otherwise
+    /// displace the shakes the player's own state is raising, and those are the ones that carry
+    /// information.
+    /// </summary>
+    private const int MAX_SCRIPT_SHAKES = 4;
+
     /// <summary>Walked between shakes so two of them never sample the noise in lockstep, which
     /// would read as one shake at twice the amplitude.</summary>
     private const float PHASE_STEP = 61.7f;
@@ -109,6 +133,13 @@ internal sealed class ScreenShake
     private readonly float[] _noiseY;
     private readonly List<ActiveShake> _active = [];
     private readonly Lock _sync = new();
+
+    /// <summary>
+    /// Handles the two accumulators hand out, shared between them so one id names exactly one shake
+    /// however it was scoped - a caller holding a handle does not know, and should not have to know,
+    /// which rectangle its shake ended up displacing.
+    /// </summary>
+    private static uint _nextId;
 
     private float _trauma;
     private float _time;
@@ -169,22 +200,98 @@ internal sealed class ScreenShake
     }
 
     /// <summary>
-    /// Schedules a shaped shake. Ignored if it would do nothing; if the cap is already reached
-    /// the quietest shake in flight is displaced, since it is the one least likely to be missed.
+    /// Schedules a shaped shake. Ignored if it would do nothing.
+    /// <para>
+    /// Caps are per source and a source never evicts another's shakes: once this source has filled
+    /// its own allowance the quietest of <em>its</em> shakes is displaced, since that is the one
+    /// least likely to be missed, and where the list is full of another source's the request is
+    /// simply dropped.
+    /// </para>
     /// </summary>
-    public void Trauma(in ShakeRequest request)
+    /// <param name="request">The envelope to schedule.</param>
+    /// <param name="source">What raised it, which decides the cap it counts against.</param>
+    /// <param name="owner">Opaque handle on whatever raised it, for <see cref="CancelByOwner"/>.
+    /// Only scripts need one.</param>
+    /// <returns>The shake's id, for <see cref="Cancel"/>, or 0 if nothing was scheduled.</returns>
+    public uint Trauma(in ShakeRequest request, ShakeSource source = ShakeSource.Rule, object? owner = null)
     {
         if (!Enabled || request.Duration <= TimeSpan.Zero || request.Intensity <= 0f)
-            return;
+            return 0;
+
+        uint id = Interlocked.Increment(ref _nextId);
 
         lock (_sync)
         {
-            var shake = new ActiveShake { Request = request, Phase = NextPhase() };
+            var shake = new ActiveShake
+            {
+                Id = id,
+                Request = request,
+                Phase = NextPhase(),
+                Source = source,
+                Owner = owner
+            };
 
-            if (_active.Count < MAX_ACTIVE_SHAKES)
-                _active.Add(shake);
-            else
-                _active[IndexOfQuietest()] = shake;
+            if (CountOf(source) >= CapOf(source) || _active.Count >= MAX_ACTIVE_SHAKES)
+            {
+                int quietest = IndexOfQuietest(source);
+
+                if (quietest < 0)
+                    return 0;
+
+                _active[quietest] = shake;
+
+                return id;
+            }
+
+            _active.Add(shake);
+        }
+
+        return id;
+    }
+
+    /// <summary>
+    /// Ends one shaped shake early.
+    /// </summary>
+    /// <param name="id">The id <see cref="Trauma(in ShakeRequest, ShakeSource, object)"/> returned.
+    /// Unknown, expired and displaced ids are ignored, as is 0.</param>
+    /// <returns>True if a shake was still running under that id.</returns>
+    public bool Cancel(uint id)
+    {
+        if (id == 0)
+            return false;
+
+        lock (_sync)
+        {
+            for (int i = 0; i < _active.Count; i++)
+            {
+                if (_active[i].Id != id)
+                    continue;
+
+                _active.RemoveAt(i);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Ends every shaped shake <paramref name="owner"/> raised. The teardown a script relies on: a
+    /// long shake outliving the script that asked for it has nothing left that could stop it.
+    /// </summary>
+    /// <param name="owner">The owner passed to <see cref="Trauma(in ShakeRequest, ShakeSource, object)"/>.</param>
+    public void CancelByOwner(object owner)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+
+        lock (_sync)
+        {
+            for (int i = _active.Count - 1; i >= 0; i--)
+            {
+                if (ReferenceEquals(_active[i].Owner, owner))
+                    _active.RemoveAt(i);
+            }
         }
     }
 
@@ -297,13 +404,22 @@ internal sealed class ScreenShake
         return _nextPhase;
     }
 
-    private int IndexOfQuietest()
+    /// <summary>
+    /// The faintest shake this source has in flight, which is the one a new request of the same
+    /// source displaces.
+    /// </summary>
+    /// <param name="source">Only this source's shakes are candidates.</param>
+    /// <returns>Its index, or -1 if the source has nothing running.</returns>
+    private int IndexOfQuietest(ShakeSource source)
     {
-        int quietest = 0;
+        int quietest = -1;
         float lowest = float.MaxValue;
 
         for (int i = 0; i < _active.Count; i++)
         {
+            if (_active[i].Source != source)
+                continue;
+
             float amplitude = ShakeEnvelope.Evaluate(_active[i].Request, _active[i].Elapsed);
 
             if (amplitude >= lowest)
@@ -315,6 +431,22 @@ internal sealed class ScreenShake
 
         return quietest;
     }
+
+    /// <summary>Caller holds <see cref="_sync"/>.</summary>
+    private int CountOf(ShakeSource source)
+    {
+        int count = 0;
+
+        foreach (ActiveShake shake in _active)
+        {
+            if (shake.Source == source)
+                count++;
+        }
+
+        return count;
+    }
+
+    private static int CapOf(ShakeSource source) => source == ShakeSource.Script ? MAX_SCRIPT_SHAKES : MAX_ACTIVE_SHAKES;
 
     private static float Sample(float[] table, float t)
     {
@@ -358,8 +490,17 @@ internal sealed class ScreenShake
 
     private struct ActiveShake
     {
+        /// <summary>Identity callers stop it by. Unique across both accumulators.</summary>
+        public uint Id;
+
         public ShakeRequest Request;
         public float Elapsed;
         public float Phase;
+
+        /// <summary>What raised it, and so which cap it counts against.</summary>
+        public ShakeSource Source;
+
+        /// <summary>Whatever raised it, for bulk cancellation. Null for everything but scripts.</summary>
+        public object? Owner;
     }
 }

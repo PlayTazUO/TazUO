@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
@@ -15,6 +16,8 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Game.Scenes;
+using ClassicUO.Game.ScreenDecorations.Manager;
+using ClassicUO.Game.ScreenDecorations.Shake;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
@@ -25,6 +28,8 @@ using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Control = ClassicUO.Game.UI.Controls.Control;
+// The settings class shares its name with its namespace, which shadows it here.
+using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.ScreenDecorations;
 using Label = ClassicUO.Game.UI.Controls.Label;
 using Lock = ClassicUO.Game.Data.Lock;
 using CUOKeyboard = ClassicUO.Input.Keyboard;
@@ -324,6 +329,14 @@ namespace ClassicUO.LegionScripting
             }
             _timedCallbacks.Clear();
 
+            // The leak guard for the visual effect API. An effect started with no duration, and any
+            // shake it fired, outlive the script by design - with the script gone there is nothing
+            // left that could take either down. Enqueued without the cancellation token, since by
+            // here the script is already cancelled and this still has to run.
+            MainThreadQueue.EnqueueAction(() => ScreenOverlayManager.Instance.StopScriptedByOwner(this));
+            ScreenShake.Viewport.CancelByOwner(this);
+            ScreenShake.Window.CancelByOwner(this);
+
             CancellationToken.Dispose();
         }
 
@@ -512,6 +525,115 @@ namespace ClassicUO.LegionScripting
             NormalHalfTransparent = 0x05,
             ShadowBlue = 0x06,
             ScreenRed = 0x07
+        }
+
+        /// <summary>
+        /// How a visual effect layer composites against what is already beneath it.
+        /// </summary>
+        public enum OverlayBlend
+        {
+            /// <summary>The layer covers what is behind it in proportion to its alpha.</summary>
+            Alpha = 0,
+
+            /// <summary>Brightens instead of covering, which is what a highlight pass wants.</summary>
+            Additive = 1
+        }
+
+        /// <summary>
+        /// Which packed channel of the shared noise texture a field reads.
+        /// </summary>
+        public enum NoiseChannel
+        {
+            /// <summary>Perlin fBm, base frequency 4. Soft billowy masses; the general-purpose choice.</summary>
+            Red = 0,
+
+            /// <summary>Perlin fBm, base frequency 8. Same character as `Red`, finer.</summary>
+            Green = 1,
+
+            /// <summary>Ridged fBm. Thin bright filaments - cracks and lightning, never fluid or gas.</summary>
+            Blue = 2,
+
+            /// <summary>Worley cell edges. Only right for shattering; on organic content it reads as a
+            /// microscope slide.</summary>
+            Alpha = 3
+        }
+
+        /// <summary>
+        /// Samples a distortion layer takes per pixel, which is its entire cost. A closed set because
+        /// each count is a separately compiled unrolled loop in the shader.
+        /// </summary>
+        public enum OverlaySampleTaps
+        {
+            /// <summary>Cheapest. Enough only for a small radius; wider blurs break into ghost copies.</summary>
+            Four = 4,
+
+            /// <summary>Enough for a subtle blur, or for radial, whose taps fall on a line.</summary>
+            Eight = 8,
+
+            /// <summary>The general-purpose disk count.</summary>
+            Twelve = 12,
+
+            /// <summary>Four times the cost of `Four`. Needed only at large radii.</summary>
+            Sixteen = 16
+        }
+
+        /// <summary>
+        /// How a shake's intensity travels across its whole duration, independently of its ramps.
+        /// </summary>
+        public enum ShakeGradient
+        {
+            /// <summary>Full intensity throughout.</summary>
+            Constant = 0,
+
+            /// <summary>Starts at full intensity and falls to nothing - an impact.</summary>
+            Decay = 1,
+
+            /// <summary>Builds from nothing to full intensity - something approaching.</summary>
+            Swell = 2,
+
+            /// <summary>Builds to full intensity at the midpoint, then falls away.</summary>
+            Pulse = 3
+        }
+
+        /// <summary>
+        /// Easing applied to a shake's ramps and gradient.
+        /// </summary>
+        public enum ShakeCurve
+        {
+            Linear = 0,
+
+            /// <summary>Smoothstep - eased at both ends, and the least mechanical of the four.</summary>
+            Smooth = 1,
+
+            /// <summary>Slow to build, fast to finish.</summary>
+            EaseIn = 2,
+
+            /// <summary>Fast to build, slow to finish.</summary>
+            EaseOut = 3
+        }
+
+        #endregion
+
+        #region Visual Effect Profile Ids
+
+        /// <summary>
+        /// Stable ids of the visual effect profiles shipped with the client, for
+        /// `StartVisualEffect`. These never change.
+        /// <para>
+        /// Ids rather than names because every shipped profile's name is localized and carries a
+        /// "(built-in)" suffix, so `StartVisualEffectByName` cannot reach any of them.
+        /// </para>
+        /// </summary>
+        public static class VisualEffectIds
+        {
+            public const string Poison = "1c419034-7c0f-4e65-a3af-81f27a1e0efa";
+            public const string Bleed = "0e778268-d89d-4538-80c6-621ca768a4b2";
+            public const string Fog = "7195989d-5c02-47b8-bcd9-b91aaaafaa99";
+            public const string Drunk = "271f1b8f-13b1-4a4a-acc4-a9784852398b";
+            public const string Concussion = "b7b6a46c-9899-4d6f-8493-cd22d695c0fb";
+            public const string TunnelVision = "b006e04f-3087-4ac7-bdbb-0c903d35792d";
+            public const string Death = "bd6cf532-4dc4-46d7-94eb-bc061ef041da";
+            public const string EarthquakeRumble = "7f67a87a-e30a-441b-9b5a-3a91da98d050";
         }
 
         #endregion
@@ -5170,6 +5292,347 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <returns>A Rectangle with X, Y, Width and Height of the game viewport in screen pixels, or an empty Rectangle if the game scene is not active.</returns>
         public Rectangle GetViewportBounds() => OnMain(() => Client.Game.GetScene<GameScene>()?.Camera.Bounds ?? Rectangle.Empty);
+
+        #endregion
+
+        #region Visual Effects
+
+        /// <summary>
+        /// Whether the user has full-screen visual effects switched on. They ship off, and a script
+        /// cannot override that - `StartVisualEffect` answers 0 while this is false.
+        /// Example:
+        /// ```py
+        /// if API.VisualEffectsEnabled:
+        ///   API.StartVisualEffect(API.VisualEffectIds.Poison, 3)
+        /// ```
+        /// </summary>
+        public bool VisualEffectsEnabled => DecorationSettings.Current.OverlaysActive;
+
+        /// <summary>
+        /// Whether the user has screen shake switched on. As with visual effects it ships off and a
+        /// script cannot override it - `StartScreenShake` answers 0 while this is false.
+        /// </summary>
+        public bool ScreenShakeEnabled => DecorationSettings.Current.ShakeActive;
+
+        /// <summary>
+        /// List the visual effect compositions this client knows about, shipped and user-authored.
+        /// Example:
+        /// ```py
+        /// for info in API.GetVisualEffectProfiles():
+        ///   API.SysMsg(f"{info.Name} -> {info.Id}")
+        /// ```
+        /// </summary>
+        /// <returns>The library, in the order the options list it.</returns>
+        public IList<ApiEffectProfileInfo> GetVisualEffectProfiles() => BubblingOnMain<IList<ApiEffectProfileInfo>>(() =>
+        {
+            var listed = new List<ApiEffectProfileInfo>();
+
+            foreach (EffectProfile profile in DecorationSettings.Current.Overlays.AllProfiles())
+            {
+                listed.Add(
+                    new ApiEffectProfileInfo
+                    {
+                        Id = profile.Id.ToString(),
+                        Name = profile.Name,
+                        IsBuiltIn = profile.IsBuiltIn
+                    }
+                );
+            }
+
+            return listed;
+        });
+
+        /// <summary>
+        /// Get an editable copy of one of the client's visual effect compositions, as a starting
+        /// point for a variation on it. The copy is yours - changing it does not touch the client's,
+        /// and there is no way to save it back.
+        /// Example:
+        /// ```py
+        /// effect = API.GetVisualEffectProfile(API.VisualEffectIds.Poison)
+        /// effect.Layers[0].Effect.Strength = 0.9
+        /// handle = API.StartVisualEffect(effect, 5)
+        /// ```
+        /// </summary>
+        /// <param name="id">The composition's id, from `GetVisualEffectProfiles` or `VisualEffectIds`.</param>
+        /// <returns>The copy.</returns>
+        public ApiEffectProfile GetVisualEffectProfile(string id) =>
+            BubblingOnMain(() => ApiEffectProfile.From(FindEffectProfileOrThrow(id)));
+
+        /// <summary>
+        /// Build an empty visual effect composition, to add layers to with `AddLayer`.
+        /// Example:
+        /// ```py
+        /// effect = API.NewVisualEffectProfile()
+        /// tint = API.NewTintLayer()
+        /// tint.R, tint.G, tint.B = 150, 0, 0
+        /// effect.AddLayer(tint)
+        /// handle = API.StartVisualEffect(effect, 4)
+        /// ```
+        /// </summary>
+        /// <returns>The composition, with the client's own fade timing and no layers.</returns>
+        public ApiEffectProfile NewVisualEffectProfile() => new();
+
+        /// <summary>
+        /// Build a colour layer, set to the client's defaults. The only technique that paints rather
+        /// than distorting, and so the only one that may sit anywhere in a stack.
+        /// </summary>
+        /// <returns>The layer.</returns>
+        public ApiTintLayer NewTintLayer() => new();
+
+        /// <summary>
+        /// Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
+        /// </summary>
+        /// <returns>The layer.</returns>
+        public ApiBlurLayer NewBlurLayer() => new();
+
+        /// <summary>
+        /// Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
+        /// focus, because the centre of the screen stays sharp however strong it is.
+        /// </summary>
+        /// <returns>The layer.</returns>
+        public ApiRadialBlurLayer NewRadialBlurLayer() => new();
+
+        /// <summary>
+        /// Build a chromatic split layer, set to the client's defaults. The cheapest technique by a
+        /// wide margin, so it is worth reaching for first when something needs to look wrong.
+        /// </summary>
+        /// <returns>The layer.</returns>
+        public ApiChromaticLayer NewChromaticLayer() => new();
+
+        /// <summary>
+        /// Build the shake a visual effect fires as it arrives, to hang on
+        /// `ApiEffectProfile.Shake`. For a shake on its own use `NewShakeConfig` instead.
+        /// </summary>
+        /// <returns>The shake, set to the client's defaults - an impact that decays.</returns>
+        public ApiShakeSpec NewShakeSpec() => new();
+
+        /// <summary>
+        /// Build a standalone screen shake, for `StartScreenShake`.
+        /// Example:
+        /// ```py
+        /// shake = API.NewShakeConfig()
+        /// shake.Seconds = 2.5
+        /// shake.Intensity = 0.8
+        /// shake.Gradient = API.ShakeGradient.Decay
+        /// API.StartScreenShake(shake)
+        /// ```
+        /// </summary>
+        /// <returns>The shake.</returns>
+        public ApiShakeConfig NewShakeConfig() => new();
+
+        /// <summary>
+        /// Build a per-axis value pair, for the visual effect knobs that take one.
+        /// </summary>
+        /// <param name="x">The X component.</param>
+        /// <param name="y">The Y component.</param>
+        /// <returns>The pair.</returns>
+        public ApiVector2 NewVector2(double x = 0, double y = 0) => new(x, y);
+
+        /// <summary>
+        /// Start one of the client's visual effect compositions by id.
+        /// <para>
+        /// A composition raised this way claims the look against the rulebase, so starting poison
+        /// while the player is poisoned shows one poison rather than two at doubled alpha.
+        /// </para>
+        /// <para>
+        /// Effects do not survive leaving the world: the handle goes stale and nothing comes back on
+        /// the next login. Stop them yourself, give them a duration, or let the script end - whatever
+        /// a script leaves running is dropped when it stops.
+        /// </para>
+        /// Example:
+        /// ```py
+        /// handle = API.StartVisualEffect(API.VisualEffectIds.Drunk, 10)
+        /// API.Pause(2)
+        /// API.StopVisualEffect(handle)
+        /// ```
+        /// </summary>
+        /// <param name="profileId">The composition's id, from `GetVisualEffectProfiles` or `VisualEffectIds`.</param>
+        /// <param name="seconds">How long to run for. Zero or less runs until stopped.</param>
+        /// <param name="intensity">Strength to draw at, 0-1. Scales the composition rather than replacing anything in it.</param>
+        /// <returns>A handle for `StopVisualEffect`, or 0 if the user has visual effects switched off.</returns>
+        public uint StartVisualEffect(string profileId, double seconds = 0, double intensity = 1.0) =>
+            BubblingOnMain(() =>
+            {
+                EffectProfile profile = FindEffectProfileOrThrow(profileId);
+
+                return ScreenOverlayManager.Instance.StartScripted(
+                    profile,
+                    profile.Id,
+                    (float)intensity,
+                    EffectDuration(seconds),
+                    this
+                );
+            });
+
+        /// <summary>
+        /// Start one of the user's own visual effect compositions by name.
+        /// <para>
+        /// User-authored compositions only. Every shipped one is named through the client's language
+        /// file and carries a "(built-in)" suffix, so no name here could reach them on a non-English
+        /// client - use `StartVisualEffect` with `VisualEffectIds` for those.
+        /// </para>
+        /// </summary>
+        /// <param name="name">The composition's name, matched ignoring case. Must match exactly one.</param>
+        /// <param name="seconds">How long to run for. Zero or less runs until stopped.</param>
+        /// <param name="intensity">Strength to draw at, 0-1.</param>
+        /// <returns>A handle for `StopVisualEffect`, or 0 if the user has visual effects switched off.</returns>
+        public uint StartVisualEffectByName(string name, double seconds = 0, double intensity = 1.0) =>
+            BubblingOnMain(() =>
+            {
+                EffectProfile profile = FindUserEffectProfileOrThrow(name);
+
+                return ScreenOverlayManager.Instance.StartScripted(
+                    profile,
+                    profile.Id,
+                    (float)intensity,
+                    EffectDuration(seconds),
+                    this
+                );
+            });
+
+        /// <summary>
+        /// Start a visual effect the script built itself.
+        /// <para>
+        /// Unlike the two by-name forms this claims nothing, because there is no library composition
+        /// behind it to claim - so two scripts starting identical hand-built effects do composite
+        /// together, at doubled strength. Editing `config` afterwards cannot reach the running
+        /// effect; start it again to change it.
+        /// </para>
+        /// </summary>
+        /// <param name="config">The composition to draw. Needs at least one and at most four layers.</param>
+        /// <param name="seconds">How long to run for. Zero or less runs until stopped.</param>
+        /// <param name="intensity">Strength to draw at, 0-1.</param>
+        /// <returns>A handle for `StopVisualEffect`, or 0 if the user has visual effects switched off.</returns>
+        public uint StartVisualEffect(ApiEffectProfile config, double seconds = 0, double intensity = 1.0)
+        {
+            ArgumentNullException.ThrowIfNull(config);
+
+            // Flattened before the hop, so a malformed composition faults on the script's own stack
+            // rather than from inside a queued main-thread action.
+            EffectProfile profile = config.ToInternal();
+
+            return BubblingOnMain(
+                () => ScreenOverlayManager.Instance.StartScripted(
+                    profile,
+                    Guid.Empty,
+                    (float)intensity,
+                    EffectDuration(seconds),
+                    this
+                )
+            );
+        }
+
+        /// <summary>
+        /// Stop one visual effect this script started. It fades out rather than cutting.
+        /// </summary>
+        /// <param name="handle">The handle a `StartVisualEffect` returned. Handles that already
+        /// lapsed, were stopped, or came back as 0 are ignored.</param>
+        public void StopVisualEffect(uint handle) => OnMain(() => ScreenOverlayManager.Instance.StopScripted(handle));
+
+        /// <summary>
+        /// Stop every visual effect this script started. Other scripts' effects, and the ones the
+        /// player's own state raises, are left alone.
+        /// </summary>
+        public void StopAllVisualEffects() => OnMain(() => ScreenOverlayManager.Instance.StopScriptedByOwner(this));
+
+        /// <summary>
+        /// Shake the screen, with no visual effect attached.
+        /// Example:
+        /// ```py
+        /// shake = API.NewShakeConfig()
+        /// shake.Seconds = 0.4
+        /// shake.Intensity = 1.0
+        /// API.StartScreenShake(shake)
+        /// ```
+        /// </summary>
+        /// <param name="config">The shake to run, from `NewShakeConfig`.</param>
+        /// <returns>A handle for `StopScreenShake`, or 0 if the user has screen shake switched off
+        /// or the script already holds its share of concurrent shakes.</returns>
+        public uint StartScreenShake(ApiShakeConfig config)
+        {
+            ArgumentNullException.ThrowIfNull(config);
+
+            // No main-thread hop: the shake accumulators take their own lock precisely so a shake
+            // can be raised from whichever thread handled whatever caused it.
+            return ScreenShake.For(config.FullScreen).Trauma(config.ToInternal(), ShakeSource.Script, this);
+        }
+
+        /// <summary>
+        /// Stop one screen shake this script started.
+        /// </summary>
+        /// <param name="handle">The handle `StartScreenShake` returned. Handles that already
+        /// finished, were stopped, or came back as 0 are ignored.</param>
+        public void StopScreenShake(uint handle)
+        {
+            // A handle does not say which rectangle its shake was moving, and a caller has no reason
+            // to care; the accumulator that does not hold it does nothing.
+            if (!ScreenShake.Viewport.Cancel(handle))
+                ScreenShake.Window.Cancel(handle);
+        }
+
+        /// <summary>
+        /// Stop every screen shake this script started, including the ones its visual effects fired
+        /// as they arrived.
+        /// </summary>
+        public void StopAllScreenShakes()
+        {
+            ScreenShake.Viewport.CancelByOwner(this);
+            ScreenShake.Window.CancelByOwner(this);
+        }
+
+        /// <summary>
+        /// The library composition behind an id. Main thread, like everything that reads the pools.
+        /// </summary>
+        /// <param name="id">The id as a script spelled it.</param>
+        /// <returns>The composition, shared by reference the way a rule's is - so a retune of it
+        /// reaches a running script effect too.</returns>
+        /// <exception cref="ArgumentException">The id is malformed or names nothing.</exception>
+        private static EffectProfile FindEffectProfileOrThrow(string id)
+        {
+            if (!Guid.TryParse(id, out Guid parsed))
+            {
+                throw new ArgumentException(
+                    $"'{id}' is not a visual effect profile id. See API.GetVisualEffectProfiles() and API.VisualEffectIds.",
+                    nameof(id)
+                );
+            }
+
+            return DecorationSettings.Current.Overlays.FindProfile(parsed)
+                   ?? throw new ArgumentException($"No visual effect profile has the id '{id}'.", nameof(id));
+        }
+
+        /// <summary>
+        /// The user's own composition with this name. Built-ins are excluded deliberately: their
+        /// names are localized, so matching one would work on an English client and nowhere else.
+        /// </summary>
+        /// <param name="name">The name as a script spelled it.</param>
+        /// <returns>The composition.</returns>
+        /// <exception cref="ArgumentException">Nothing matches, or more than one does.</exception>
+        private static EffectProfile FindUserEffectProfileOrThrow(string name)
+        {
+            var matches = DecorationSettings.Current.Overlays.Profiles
+                .Where(profile => string.Equals(profile.Name, name, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            return matches.Count switch
+            {
+                1 => matches[0],
+                0 => throw new ArgumentException(
+                    $"No user visual effect profile is named '{name}'. Built-in profile names are localized and must be started by ID; see API.VisualEffectIds.",
+                    nameof(name)
+                ),
+                _ => throw new ArgumentException(
+                    $"{matches.Count} visual effect profiles are named '{name}'; start it by ID instead.",
+                    nameof(name)
+                )
+            };
+        }
+
+        /// <summary>Script-supplied seconds as a span, where anything non-positive means no timeout.</summary>
+        /// <param name="seconds">What the script asked for.</param>
+        /// <returns>The span, or null to run until stopped.</returns>
+        private static TimeSpan? EffectDuration(double seconds) =>
+            seconds > 0 ? TimeSpan.FromSeconds(seconds) : null;
 
         #endregion
     }

@@ -1,0 +1,158 @@
+#nullable enable
+
+using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
+
+namespace ClassicUO.LegionScripting.ApiClasses;
+
+/// <summary>
+/// Breaks up a layer's shape boundary with its own noise field. Without it the effect terminates
+/// along a straight iso-line and reads as a rectangle, so anything organic wants `ReachAmount` well
+/// above 0.
+/// </summary>
+public class ApiJitterSpec
+{
+    #region Public accessors
+
+    /// <summary>
+    /// How far the boundary can move, as a fraction of the shape distance. Only extends inward, so
+    /// raising it raises average reach too - compensate with `ApiShapeSpec.Reach`.
+    /// </summary>
+    public double ReachAmount { get; set; }
+
+    /// <summary>
+    /// How much the same field stretches and compresses `ApiShapeSpec.Feather`. Without it a deep
+    /// run and a shallow one end just as abruptly.
+    /// </summary>
+    public double FeatherAmount { get; set; }
+
+    /// <summary>
+    /// Frequency of the displacement, and the knob most often set wrong. Must be coarser than
+    /// `ApiNoiseSpec.BaseScale` or the boundary buzzes at detail frequency, but X still has to cycle
+    /// several times across the screen or each edge gets one bulge and stays visibly rectangular.
+    /// </summary>
+    public ApiVector2? Scale { get; set; } = new();
+
+    /// <summary>
+    /// Texture-space velocity of the displacement field. Usually matched to the layer's own scroll
+    /// so the ragged edge travels with the effect rather than crawling across it.
+    /// </summary>
+    public ApiVector2? Scroll { get; set; } = new();
+
+    /// <summary>Which packed noise channel drives the boundary displacement.</summary>
+    public LegionAPI.NoiseChannel Channel { get; set; }
+
+    #endregion
+
+    #region Internal methods
+
+    internal static ApiJitterSpec From(in JitterSpec jitter) =>
+        new()
+        {
+            ReachAmount = jitter.ReachAmount,
+            FeatherAmount = jitter.FeatherAmount,
+            Scale = ApiVector2.From(jitter.Scale),
+            Scroll = ApiVector2.From(jitter.Scroll),
+            Channel = (LegionAPI.NoiseChannel)jitter.Channel
+        };
+
+    internal JitterSpec ToInternal() =>
+        new()
+        {
+            ReachAmount = (float)ReachAmount,
+            FeatherAmount = (float)FeatherAmount,
+            Scale = ApiOverlayGuard.Vector(Scale),
+            Scroll = ApiOverlayGuard.Vector(Scroll),
+            Channel = (Renderer.Effects.NoiseChannel)ApiOverlayGuard.Defined(Channel, nameof(Channel))
+        };
+
+    #endregion
+}
+
+/// <summary>
+/// Where on screen a layer lives: vignette or border shape, how far it extends, and how its boundary
+/// breaks up.
+/// </summary>
+public class ApiShapeSpec
+{
+    #region Public accessors
+
+    /// <summary>Centre of the radial falloff in screen uv. (0.5, 0.5) is the middle.</summary>
+    public ApiVector2? Center { get; set; } = new();
+
+    /// <summary>
+    /// Rate `Center` drifts at, in Hz per axis. Different X and Y give a wander instead of a
+    /// pendulum; zero on an axis holds it still.
+    /// </summary>
+    public ApiVector2? WobbleFreq { get; set; } = new();
+
+    /// <summary>Peak drift of `Center`, in screen uv. Kept small - this unsteadies the pivot rather
+    /// than sending it touring the screen.</summary>
+    public double WobbleAmp { get; set; }
+
+    /// <summary>How far in from the screen edge the effect extends. Larger is thicker.</summary>
+    public double Reach { get; set; }
+
+    /// <summary>Width of the fade behind the boundary. Wide thins the effect into haze; narrow gives
+    /// it a defined surface.</summary>
+    public double Feather { get; set; }
+
+    /// <summary>
+    /// 0 = radial vignette, 1 = border trim. Avoid values in between: the radial term is normalised
+    /// to screen width, so any blend lands mostly on the left and right edges. Use `CornerBias` for
+    /// corner weighting instead - it is per-axis and has no aspect bias.
+    /// </summary>
+    public double EdgeBlend { get; set; }
+
+    /// <summary>Corner weighting of the border trim, ignored when `EdgeBlend` is 0. Raising it
+    /// thickens and rounds the corners without favouring any one edge.</summary>
+    public double CornerBias { get; set; }
+
+    public ApiJitterSpec? Jitter { get; set; } = new();
+
+    /// <summary>Unit vector biasing the effect toward one side or corner.</summary>
+    public ApiVector2? FocusDir { get; set; } = new();
+
+    /// <summary>Higher values tighten the directional lobe.</summary>
+    public double FocusPower { get; set; }
+
+    /// <summary>0 = uniform all the way round, 1 = fully biased toward `FocusDir`.</summary>
+    public double FocusAmount { get; set; }
+
+    #endregion
+
+    #region Internal methods
+
+    internal static ApiShapeSpec From(in ShapeSpec shape) =>
+        new()
+        {
+            Center = ApiVector2.From(shape.Center),
+            WobbleFreq = ApiVector2.From(shape.WobbleFreq),
+            WobbleAmp = shape.WobbleAmp,
+            Reach = shape.Reach,
+            Feather = shape.Feather,
+            EdgeBlend = shape.EdgeBlend,
+            CornerBias = shape.CornerBias,
+            Jitter = ApiJitterSpec.From(shape.Jitter),
+            FocusDir = ApiVector2.From(shape.FocusDir),
+            FocusPower = shape.FocusPower,
+            FocusAmount = shape.FocusAmount
+        };
+
+    internal ShapeSpec ToInternal() =>
+        new()
+        {
+            Center = ApiOverlayGuard.Vector(Center),
+            WobbleFreq = ApiOverlayGuard.Vector(WobbleFreq),
+            WobbleAmp = (float)WobbleAmp,
+            Reach = (float)Reach,
+            Feather = (float)Feather,
+            EdgeBlend = (float)EdgeBlend,
+            CornerBias = (float)CornerBias,
+            Jitter = Jitter?.ToInternal() ?? default,
+            FocusDir = ApiOverlayGuard.Vector(FocusDir),
+            FocusPower = (float)FocusPower,
+            FocusAmount = (float)FocusAmount
+        };
+
+    #endregion
+}

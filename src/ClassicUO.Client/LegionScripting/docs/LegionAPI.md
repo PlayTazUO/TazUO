@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `10/13/26`.*
+*This was generated on `10/14/26`.*
 
 ## Properties
 ### `Events`
@@ -127,6 +127,27 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  The serial of the last item or mobile from the various findtype/mobile methods
 
 
+### `VisualEffectsEnabled`
+
+**Type:** `bool`
+
+ Whether the user has full-screen visual effects switched on. They ship off, and a script
+ cannot override that - `StartVisualEffect` answers 0 while this is false.
+ Example:
+ ```py
+ if API.VisualEffectsEnabled:
+   API.StartVisualEffect(API.VisualEffectIds.Poison, 3)
+ ```
+
+
+### `ScreenShakeEnabled`
+
+**Type:** `bool`
+
+ Whether the user has screen shake switched on. As with visual effects it ships off and a
+ script cannot override it - `StartScreenShake` answers 0 while this is false.
+
+
 
 ### `Profile`
 
@@ -214,6 +235,70 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 - `NormalHalfTransparent`
 - `ShadowBlue`
 - `ScreenRed`
+
+### OverlayBlend
+
+:::note[Description]
+ How a visual effect layer composites against what is already beneath it.
+
+:::
+
+**Values:**
+- `Alpha`
+- `Additive`
+
+### NoiseChannel
+
+:::note[Description]
+ Which packed channel of the shared noise texture a field reads.
+
+:::
+
+**Values:**
+- `Red`
+- `Green`
+- `Blue`
+- `Alpha`
+
+### OverlaySampleTaps
+
+:::note[Description]
+ Samples a distortion layer takes per pixel, which is its entire cost. A closed set because
+ each count is a separately compiled unrolled loop in the shader.
+
+:::
+
+**Values:**
+- `Four`
+- `Eight`
+- `Twelve`
+- `Sixteen`
+
+### ShakeGradient
+
+:::note[Description]
+ How a shake's intensity travels across its whole duration, independently of its ramps.
+
+:::
+
+**Values:**
+- `Constant`
+- `Decay`
+- `Swell`
+- `Pulse`
+
+### ShakeCurve
+
+:::note[Description]
+ Easing applied to a shake's ramps and gradient.
+
+:::
+
+**Values:**
+- `Linear`
+- `Smooth`
+- `EaseIn`
+- `EaseOut`
 
 
 ## Methods
@@ -4117,6 +4202,287 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 
 **Return Type:** `Rectangle`
+
+---
+
+### GetVisualEffectProfiles
+
+ List the visual effect compositions this client knows about, shipped and user-authored.
+ Example:
+ ```py
+ for info in API.GetVisualEffectProfiles():
+   API.SysMsg(f"{info.Name} -> {info.Id}")
+ ```
+
+
+**Return Type:** `IList<ApiEffectProfileInfo>`
+
+---
+
+### GetVisualEffectProfile
+`(id)`
+ Get an editable copy of one of the client's visual effect compositions, as a starting
+ point for a variation on it. The copy is yours - changing it does not touch the client's,
+ and there is no way to save it back.
+ Example:
+ ```py
+ effect = API.GetVisualEffectProfile(API.VisualEffectIds.Poison)
+ effect.Layers[0].Effect.Strength = 0.9
+ handle = API.StartVisualEffect(effect, 5)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | ❌ No | The composition's id, from `GetVisualEffectProfiles` or `VisualEffectIds`. |
+
+**Return Type:** `ApiEffectProfile`
+
+---
+
+### NewVisualEffectProfile
+
+ Build an empty visual effect composition, to add layers to with `AddLayer`.
+ Example:
+ ```py
+ effect = API.NewVisualEffectProfile()
+ tint = API.NewTintLayer()
+ tint.R, tint.G, tint.B = 150, 0, 0
+ effect.AddLayer(tint)
+ handle = API.StartVisualEffect(effect, 4)
+ ```
+
+
+**Return Type:** `ApiEffectProfile`
+
+---
+
+### NewTintLayer
+
+ Build a colour layer, set to the client's defaults. The only technique that paints rather
+ than distorting, and so the only one that may sit anywhere in a stack.
+
+
+**Return Type:** `ApiTintLayer`
+
+---
+
+### NewBlurLayer
+
+ Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
+
+
+**Return Type:** `ApiBlurLayer`
+
+---
+
+### NewRadialBlurLayer
+
+ Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
+ focus, because the centre of the screen stays sharp however strong it is.
+
+
+**Return Type:** `ApiRadialBlurLayer`
+
+---
+
+### NewChromaticLayer
+
+ Build a chromatic split layer, set to the client's defaults. The cheapest technique by a
+ wide margin, so it is worth reaching for first when something needs to look wrong.
+
+
+**Return Type:** `ApiChromaticLayer`
+
+---
+
+### NewShakeSpec
+
+ Build the shake a visual effect fires as it arrives, to hang on
+ `ApiEffectProfile.Shake`. For a shake on its own use `NewShakeConfig` instead.
+
+
+**Return Type:** `ApiShakeSpec`
+
+---
+
+### NewShakeConfig
+
+ Build a standalone screen shake, for `StartScreenShake`.
+ Example:
+ ```py
+ shake = API.NewShakeConfig()
+ shake.Seconds = 2.5
+ shake.Intensity = 0.8
+ shake.Gradient = API.ShakeGradient.Decay
+ API.StartScreenShake(shake)
+ ```
+
+
+**Return Type:** `ApiShakeConfig`
+
+---
+
+### NewVector2
+`(x, y)`
+ Build a per-axis value pair, for the visual effect knobs that take one.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x` | `double` | ✅ Yes | The X component. |
+| `y` | `double` | ✅ Yes | The Y component. |
+
+**Return Type:** `ApiVector2`
+
+---
+
+### StartVisualEffect
+`(profileId, seconds, intensity)`
+ Start one of the client's visual effect compositions by id.
+ <para>
+ A composition raised this way claims the look against the rulebase, so starting poison
+ while the player is poisoned shows one poison rather than two at doubled alpha.
+ </para>  <para>
+ Effects do not survive leaving the world: the handle goes stale and nothing comes back on
+ the next login. Stop them yourself, give them a duration, or let the script end - whatever
+ a script leaves running is dropped when it stops.
+ </para>  Example:
+ ```py
+ handle = API.StartVisualEffect(API.VisualEffectIds.Drunk, 10)
+ API.Pause(2)
+ API.StopVisualEffect(handle)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `profileId` | `string` | ❌ No | The composition's id, from `GetVisualEffectProfiles` or `VisualEffectIds`. |
+| `seconds` | `double` | ✅ Yes | How long to run for. Zero or less runs until stopped. |
+| `intensity` | `double` | ✅ Yes | Strength to draw at, 0-1. Scales the composition rather than replacing anything in it. |
+
+**Return Type:** `uint`
+
+---
+
+### StartVisualEffectByName
+`(name, seconds, intensity)`
+ Start one of the user's own visual effect compositions by name.
+ <para>
+ User-authored compositions only. Every shipped one is named through the client's language
+ file and carries a "(built-in)" suffix, so no name here could reach them on a non-English
+ client - use `StartVisualEffect` with `VisualEffectIds` for those.
+ </para> 
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | ❌ No | The composition's name, matched ignoring case. Must match exactly one. |
+| `seconds` | `double` | ✅ Yes | How long to run for. Zero or less runs until stopped. |
+| `intensity` | `double` | ✅ Yes | Strength to draw at, 0-1. |
+
+**Return Type:** `uint`
+
+---
+
+### StartVisualEffect
+`(config, seconds, intensity)`
+ Start a visual effect the script built itself.
+ <para>
+ Unlike the two by-name forms this claims nothing, because there is no library composition
+ behind it to claim - so two scripts starting identical hand-built effects do composite
+ together, at doubled strength. Editing `config` afterwards cannot reach the running
+ effect; start it again to change it.
+ </para> 
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `config` | `ApiEffectProfile` | ❌ No | The composition to draw. Needs at least one and at most four layers. |
+| `seconds` | `double` | ✅ Yes | How long to run for. Zero or less runs until stopped. |
+| `intensity` | `double` | ✅ Yes | Strength to draw at, 0-1. |
+
+**Return Type:** `uint`
+
+---
+
+### StopVisualEffect
+`(handle)`
+ Stop one visual effect this script started. It fades out rather than cutting.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `handle` | `uint` | ❌ No | The handle a `StartVisualEffect` returned. Handles that already<br>         lapsed, were stopped, or came back as 0 are ignored. |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### StopAllVisualEffects
+
+ Stop every visual effect this script started. Other scripts' effects, and the ones the
+ player's own state raises, are left alone.
+
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### StartScreenShake
+`(config)`
+ Shake the screen, with no visual effect attached.
+ Example:
+ ```py
+ shake = API.NewShakeConfig()
+ shake.Seconds = 0.4
+ shake.Intensity = 1.0
+ API.StartScreenShake(shake)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `config` | `ApiShakeConfig` | ❌ No | The shake to run, from `NewShakeConfig`. |
+
+**Return Type:** `uint`
+
+---
+
+### StopScreenShake
+`(handle)`
+ Stop one screen shake this script started.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `handle` | `uint` | ❌ No | The handle `StartScreenShake` returned. Handles that already<br>         finished, were stopped, or came back as 0 are ignored. |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### StopAllScreenShakes
+
+ Stop every screen shake this script started, including the ones its visual effects fired
+ as they arrived.
+
+
+**Return Type:** `void` *(Does not return anything)*
 
 ---
 

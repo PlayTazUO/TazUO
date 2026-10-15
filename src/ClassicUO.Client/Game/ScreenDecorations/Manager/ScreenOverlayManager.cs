@@ -35,8 +35,9 @@ namespace ClassicUO.Game.ScreenDecorations.Manager;
 /// </para>
 /// <para>
 /// Threading: callable from anywhere. Every mutator marshals itself to the main thread, so the state
-/// behind them is single-threaded without a lock in sight. <see cref="IsPreviewing"/> is the one
-/// exception - it returns a value, so it cannot be fire-and-forget - and stays main thread only.
+/// behind them is single-threaded without a lock in sight. The exceptions are the entry points that
+/// answer with something - <see cref="IsPreviewing"/> and the three <c>Scripted</c> methods - which
+/// cannot be fire-and-forget and so stay main thread only. Their callers hop for them.
 /// </para>
 /// </summary>
 internal sealed class ScreenOverlayManager
@@ -62,6 +63,24 @@ internal sealed class ScreenOverlayManager
 
     #endregion
 
+    #region Internal members
+
+    /// <summary>
+    /// How many effects scripts may hold between them. Separate from the user's
+    /// <see cref="OverlaySystemSettings.MaxConcurrent"/> rather than carved out of it: a script
+    /// raising effects must not silently shrink what the player's own state can show, and a user
+    /// lowering their cap to one must not take the scripting API away.
+    /// <para>
+    /// It is also the number the cost ceiling is derived from. With the user's cap at its maximum of
+    /// 8 and this at 4, the worst case is 12 overlays of
+    /// <see cref="OverlayLayerStack.MaxLayers"/> layers each - 48 full-screen shader passes in one
+    /// frame. Raising either number raises that product.
+    /// </para>
+    /// </summary>
+    internal const int ScriptCap = 4;
+
+    #endregion
+
     #region Private members
 
     /// <summary>
@@ -69,6 +88,13 @@ internal sealed class ScreenOverlayManager
     /// player happens to be poisoned shows the one that was asked for.
     /// </summary>
     private const int PREVIEW_PRIORITY = 100;
+
+    /// <summary>
+    /// Priority a script-raised overlay composites at. Above every rule, because a script asking
+    /// for an effect is acting for the player and should not lose to the player's own state, and
+    /// below a preview, because someone tuning a look needs to see the look they are tuning.
+    /// </summary>
+    private const int SCRIPT_PRIORITY = 50;
 
     /// <summary>
     /// Compositor slot the preview occupies. A fixed id rather than the previewed profile's, so
@@ -91,6 +117,13 @@ internal sealed class ScreenOverlayManager
     /// <summary>Effects already claimed this pass, so a lower rule cannot restate one. Reused so a
     /// pass allocates nothing.</summary>
     private readonly HashSet<Guid> _claimed = [];
+
+    /// <summary>
+    /// What scripts are asking for. Not persisted and not re-asserted across a world change:
+    /// <see cref="Reset"/> drops the lot, so a script holding a handle across a world exit finds it
+    /// stale and nothing comes back on the next world load.
+    /// </summary>
+    private readonly ScriptedOverlayRegistry _scripted = new();
 
     /// <summary>What this manager has asked the compositor for, and on what terms. Not the
     /// compositor's own set: that one still holds overlays part-way through their fade-out, which
@@ -354,6 +387,88 @@ internal sealed class ScreenOverlayManager
         Unwatch();
         TearDownWatching();
         SyncReconciler();
+    }
+
+    /// <summary>
+    /// Raises an effect on a script's behalf, for as long as the script wants it.
+    /// <para>
+    /// Main thread only, unlike the rest of this class's entry points: it answers with a handle, so
+    /// it cannot be fire-and-forget. The scripting API hops for it.
+    /// </para>
+    /// <para>
+    /// Takes effect on the next pass, through the same path as a rule, so it cannot leave the
+    /// compositor holding something this class has forgotten about. Dropped wholesale by
+    /// <see cref="Reset"/>, so a handle does not survive leaving the world.
+    /// </para>
+    /// </summary>
+    /// <param name="profile">The look to draw. Held by reference, so a library composition tracks
+    /// later edits the way a rule's does; pass a fresh instance for anything a script built.</param>
+    /// <param name="sourceProfileId">The library composition this came from, or
+    /// <see cref="Guid.Empty"/> for one the script built. A source is what claims the look against
+    /// the rules, so a script raising poison suppresses the rule that raises it.</param>
+    /// <param name="intensity">Strength to draw at; clamped to 0-1.</param>
+    /// <param name="duration">How long to run for, or null to run until stopped.</param>
+    /// <param name="owner">The script's API instance, for <see cref="StopScriptedByOwner"/>.</param>
+    /// <returns>The handle, or 0 if the user has overlays switched off - not an error, and
+    /// distinguishable without catching by asking the settings first.</returns>
+    /// <exception cref="InvalidOperationException">Scripts already hold
+    /// <see cref="ScriptCap"/> effects.</exception>
+    public uint StartScripted(
+        EffectProfile profile,
+        Guid sourceProfileId,
+        float intensity,
+        TimeSpan? duration,
+        object owner
+    )
+    {
+        AssertMainThread();
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(owner);
+
+        if (!DecorationSettings.Current.OverlaysActive)
+            return 0;
+
+        if (_scripted.Count >= ScriptCap)
+        {
+            throw new InvalidOperationException(
+                $"Scripts may hold at most {ScriptCap} visual effects at once, and all of them are in use."
+            );
+        }
+
+        DateTime? expiresAt = duration is { } span && span > TimeSpan.Zero ? DateTime.UtcNow + span : null;
+
+        uint handle = _scripted.Add(profile, sourceProfileId, MathHelper.Clamp(intensity, 0f, 1f), expiresAt, owner);
+
+        _scheduler.RequestPass();
+
+        return handle;
+    }
+
+    /// <summary>
+    /// Stops one script-raised effect, which fades out through the normal path.
+    /// </summary>
+    /// <param name="handle">The handle <see cref="StartScripted"/> returned. Unknown, lapsed and
+    /// already-stopped handles are ignored, as is 0.</param>
+    public void StopScripted(uint handle)
+    {
+        AssertMainThread();
+
+        if (_scripted.Remove(handle))
+            _scheduler.RequestPass();
+    }
+
+    /// <summary>
+    /// Stops everything one script raised. The leak guard: an effect asked for with no duration
+    /// would otherwise outlive the script, with nothing left that could take it down.
+    /// </summary>
+    /// <param name="owner">The script's API instance.</param>
+    public void StopScriptedByOwner(object owner)
+    {
+        AssertMainThread();
+        ArgumentNullException.ThrowIfNull(owner);
+
+        if (_scripted.RemoveByOwner(owner))
+            _scheduler.RequestPass();
     }
 
     #endregion
@@ -651,9 +766,11 @@ internal sealed class ScreenOverlayManager
 
         if (!wanted)
         {
-            // A preview cannot outlive the passes: with nothing reconciling, there would be no path
-            // back from it.
+            // Neither a preview nor a script's effect can outlive the passes: with nothing
+            // reconciling, there would be no path back from either. This is also what drops a
+            // script's effects on leaving the world, since Reset comes through here.
             _previewProfileId = null;
+            _scripted.Clear();
 
             // Dropped rather than hidden. Hiding only starts a fade, and fades advance inside the
             // compositor's draw, which stops with the system - so the stack would sit frozen at its
@@ -681,7 +798,12 @@ internal sealed class ScreenOverlayManager
 
         ExpireLapsedSignals(now);
         Resolve();
-        ApplyConcurrencyCap(_desired, _ranked, ScreenOverlayCompositor.ConcurrencyCap());
+
+        // Once per partition, so the two bounds are independent: a script holding its full
+        // allowance leaves the user's cap untouched, and the reverse.
+        ApplyConcurrencyCap(_desired, _ranked, ScreenOverlayCompositor.ConcurrencyCap(), DemandSource.Rule);
+        ApplyConcurrencyCap(_desired, _ranked, ScriptCap, DemandSource.Script);
+
         Reconcile();
 
         _scheduler.ScheduleExpiry(NextExpiry(now));
@@ -693,6 +815,8 @@ internal sealed class ScreenOverlayManager
     {
         foreach (WatchedRule watched in _ordered)
             watched.ExpireIfLapsed(now);
+
+        _scripted.RemoveLapsed(now);
     }
 
     /// <summary>
@@ -702,7 +826,7 @@ internal sealed class ScreenOverlayManager
     /// <returns>The frame clock reading to wake at.</returns>
     private uint? NextExpiry(DateTime now)
     {
-        DateTime? earliest = null;
+        DateTime? earliest = _scripted.NextExpiry();
 
         foreach (WatchedRule watched in _ordered)
         {
@@ -743,9 +867,11 @@ internal sealed class ScreenOverlayManager
         if (!settings.OverlaysActive)
             return;
 
-        // Before the rules, and claiming its look like one: previewing what a rule already shows
-        // would otherwise draw the stack twice at doubled alpha. Claiming first also lets it win.
+        // Strongest claimant first, each claiming its look the way a rule does: two sources raising
+        // one look would otherwise draw the stack twice at doubled alpha. Claiming in this order is
+        // also what decides which of them wins.
         AddPreview(settings);
+        AddScripted(_scripted.Entries, _claimed, _desired);
 
         SelectFirstMatches(_ordered, _claimed, _desired);
     }
@@ -765,19 +891,81 @@ internal sealed class ScreenOverlayManager
             return;
 
         _claimed.Add(preview.Id);
-        _desired[_previewSlot] = new RuleDemand(_previewSlot, preview, PREVIEW_PRIORITY, TriggerSignal.Default);
+
+        _desired[_previewSlot] = new RuleDemand(
+            _previewSlot,
+            preview,
+            PREVIEW_PRIORITY,
+            TriggerSignal.Default,
+            DemandSource.Preview
+        );
     }
 
     /// <summary>
-    /// Drops the weakest demands until no more than the user's cap remain. Applied here, not in the
-    /// compositor: only this class records what it asked for, and a drop it cannot see is never
-    /// re-asserted. Dropping here retires through the normal path, so it fades and returns when there
-    /// is room. Internal and static so the policy can be tested, like <see cref="SelectFirstMatches"/>.
+    /// Adds what scripts are asking for, and claims each look against the rules below.
+    /// <para>
+    /// A demand whose source look is already claimed is skipped entirely: a script raising poison
+    /// while a rule would also raise it means one poison, not two. Script-built compositions carry
+    /// no source and so neither claim nor are suppressed, which is why two identical hand-built ones
+    /// do composite together.
+    /// </para>
+    /// <para>
+    /// A skipped duplicate stays in the registry and is tried again next pass, so when the one that
+    /// claimed the look lapses the other takes over. That takeover arrives as a fresh onset - the
+    /// slot is a different one, so it fades in from zero and any onset shake re-fires. The blink is
+    /// accepted: the alternative is cross-wiring two slots' envelopes.
+    /// </para>
+    /// <para>
+    /// Internal and static for the same reason as <see cref="SelectFirstMatches"/>: it is the one
+    /// part of a scripted effect's handling that is a policy rather than plumbing.
+    /// </para>
+    /// </summary>
+    /// <param name="scripted">The live demands, oldest first - insertion order is what decides
+    /// which of two demands on one look draws.</param>
+    /// <param name="claimed">Already-claimed profile ids; added to as looks are claimed.</param>
+    /// <param name="desired">Filled with the winning demand per slot.</param>
+    internal static void AddScripted(
+        IReadOnlyList<ScriptedDemand> scripted,
+        HashSet<Guid> claimed,
+        Dictionary<Guid, RuleDemand> desired
+    )
+    {
+        foreach (ScriptedDemand demand in scripted)
+        {
+            if (demand.SourceProfileId != Guid.Empty && !claimed.Add(demand.SourceProfileId))
+                continue;
+
+            desired[demand.Slot] = new RuleDemand(
+                demand.Slot,
+                demand.Profile,
+                SCRIPT_PRIORITY,
+                new TriggerSignal { Intensity = demand.Intensity },
+                DemandSource.Script
+            );
+        }
+    }
+
+    /// <summary>
+    /// Drops the weakest of one source's demands until no more than its cap remain. Applied here,
+    /// not in the compositor: only this class records what it asked for, and a drop it cannot see is
+    /// never re-asserted. Dropping here retires through the normal path, so it fades and returns
+    /// when there is room. Internal and static so the policy can be tested, like
+    /// <see cref="SelectFirstMatches"/>.
+    /// <para>
+    /// One source at a time, because the caps are not shares of a single number: scripts sort above
+    /// rules, so a shared cap would let a script starve out the player's own state.
+    /// </para>
     /// </summary>
     /// <param name="desired">This pass's demands; trimmed in place.</param>
     /// <param name="ranked">Scratch list, cleared by this method.</param>
-    /// <param name="cap">Most overlays that may composite at once.</param>
-    internal static void ApplyConcurrencyCap(Dictionary<Guid, RuleDemand> desired, List<RuleDemand> ranked, int cap)
+    /// <param name="cap">Most overlays of this source that may composite at once.</param>
+    /// <param name="source">The partition to trim. Demands from any other are left alone.</param>
+    internal static void ApplyConcurrencyCap(
+        Dictionary<Guid, RuleDemand> desired,
+        List<RuleDemand> ranked,
+        int cap,
+        DemandSource source = DemandSource.Rule
+    )
     {
         if (desired.Count <= cap)
             return;
@@ -785,7 +973,13 @@ internal sealed class ScreenOverlayManager
         ranked.Clear();
 
         foreach (RuleDemand demand in desired.Values)
-            ranked.Add(demand);
+        {
+            if (demand.Source == source)
+                ranked.Add(demand);
+        }
+
+        if (ranked.Count <= cap)
+            return;
 
         // ID breaks ties so survivors don't depend on hash order - equal-priority rules swapping
         // between passes would cross-fade every poll.
@@ -885,7 +1079,7 @@ internal sealed class ScreenOverlayManager
     /// </para>
     /// </summary>
     /// <param name="demand">The occurrence being raised.</param>
-    private static void FireOnsetShake(RuleDemand demand)
+    private void FireOnsetShake(RuleDemand demand)
     {
         if (demand.Profile.Shake is not { } shake || shake.Trauma <= 0f)
             return;
@@ -894,10 +1088,21 @@ internal sealed class ScreenOverlayManager
         if (!DecorationSettings.Current.ShakeActive)
             return;
 
+        bool scripted = demand.Source == DemandSource.Script;
+
+        // Tagged with the script that raised it, so tearing that script down takes the shake with
+        // it. Without this a long quake on a timeout-less effect would outlive its script.
+        object? owner = scripted ? _scripted.FindOwner(demand.RuleId) : null;
+
         // The look's own scope decides which rectangle moves, so one profile can rattle the world
         // while another rattles the window. The envelope - ramps, gradient, rate - is the profile's
         // too; nothing here reshapes it beyond scaling by how strong this occurrence is.
-        ScreenShake.For(demand.Profile.FullScreen).Trauma(shake.ToRequest(demand.Signal.Intensity));
+        ScreenShake.For(demand.Profile.FullScreen)
+            .Trauma(
+                shake.ToRequest(demand.Signal.Intensity),
+                scripted ? ShakeSource.Script : ShakeSource.Rule,
+                owner
+            );
     }
 
     /// <summary>

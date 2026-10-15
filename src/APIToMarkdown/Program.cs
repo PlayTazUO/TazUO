@@ -620,6 +620,24 @@ public static partial class GenDoc
             "LegionApiConfig" => "LegionApiConfig",
             "ApiUiTiledGumpPic" => "ApiUiTiledGumpPic",
 
+            // Visual effects
+            "ApiVector2" => "ApiVector2",
+            "ApiEffectProfile" => "ApiEffectProfile",
+            "ApiEffectProfileInfo" => "ApiEffectProfileInfo",
+            "ApiProfileLayer" => "ApiProfileLayer",
+            "ApiLayerEffect" => "ApiLayerEffect",
+            "ApiTintLayer" => "ApiTintLayer",
+            "ApiBlurLayer" => "ApiBlurLayer",
+            "ApiRadialBlurLayer" => "ApiRadialBlurLayer",
+            "ApiChromaticLayer" => "ApiChromaticLayer",
+            "ApiShapeSpec" => "ApiShapeSpec",
+            "ApiJitterSpec" => "ApiJitterSpec",
+            "ApiNoiseSpec" => "ApiNoiseSpec",
+            "ApiPulseSpec" => "ApiPulseSpec",
+            "ApiFadeSpec" => "ApiFadeSpec",
+            "ApiShakeSpec" => "ApiShakeSpec",
+            "ApiShakeConfig" => "ApiShakeConfig",
+
             // Fallback for unknown types
             _ => noMatch
         };
