@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/16/26
+* ***Fix:*** The resizable journal now only auto-scrolls to the newest entry when it is already scrolled to the bottom - if it is scrolled partially or all the way up, incoming messages no longer shift the view, so reading or selecting text is not disturbed
+
 ## 10/13/26
 * ***Fix:*** Fixed a client crash when a vendor's sell list contained the same item serial twice (`ArgumentException: Argument_AddingDuplicateWithKey`) - a duplicate entry now replaces the previous shop item instead of throwing
 * ***Feature:*** Added `API.CreateEffect(...)` to Legion scripting, allowing scripts to create and display local visual effects (spell animations, projectiles, explosions) in the game world
