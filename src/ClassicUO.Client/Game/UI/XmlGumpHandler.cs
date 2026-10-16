@@ -750,47 +750,60 @@ namespace ClassicUO.Game.UI
 
         public static float GetPercentage(double value, double max) => (float)(value / max);
 
+        /// <summary>
+        /// One text-replacement tag: the literal token, a description for documentation, and how to
+        /// resolve the player value it stands for. This is the single source both for substitution and
+        /// for the editor's help, so the two cannot drift apart.
+        /// </summary>
+        public readonly record struct TextPlaceholder(string Token, string Description, Func<World, string> Value);
+
+        public static readonly TextPlaceholder[] TextPlaceholders =
+        [
+            new("{charname}", "Character name", world => world.Player.Name),
+            new("{hp}", "Current hit points", world => world.Player.Hits.ToString()),
+            new("{maxhp}", "Maximum hit points", world => world.Player.HitsMax.ToString()),
+            new("{mana}", "Current mana", world => world.Player.Mana.ToString()),
+            new("{maxmana}", "Maximum mana", world => world.Player.ManaMax.ToString()),
+            new("{stam}", "Current stamina", world => world.Player.Stamina.ToString()),
+            new("{maxstam}", "Maximum stamina", world => world.Player.StaminaMax.ToString()),
+            new("{weight}", "Current weight", world => world.Player.Weight.ToString()),
+            new("{maxweight}", "Maximum weight", world => world.Player.WeightMax.ToString()),
+            new("{str}", "Strength", world => world.Player.Strength.ToString()),
+            new("{dex}", "Dexterity", world => world.Player.Dexterity.ToString()),
+            new("{int}", "Intelligence", world => world.Player.Intelligence.ToString()),
+            new("{damagemin}", "Minimum damage", world => world.Player.DamageMin.ToString()),
+            new("{damagemax}", "Maximum damage", world => world.Player.DamageMax.ToString()),
+            new("{hci}", "Hit chance increase", world => world.Player.HitChanceIncrease.ToString()),
+            new("{di}", "Damage increase", world => world.Player.DamageIncrease.ToString()),
+            new("{ssi}", "Swing speed increase", world => world.Player.SwingSpeedIncrease.ToString()),
+            new("{defchance}", "Defense chance increase", world => world.Player.DefenseChanceIncrease.ToString()),
+            new("{defchancemax}", "Maximum defense chance increase", world => world.Player.MaxDefenseChanceIncrease.ToString()),
+            new("{sdi}", "Spell damage increase", world => world.Player.SpellDamageIncrease.ToString()),
+            new("{fc}", "Faster casting", world => world.Player.FasterCasting.ToString()),
+            new("{fcr}", "Faster cast recovery", world => world.Player.FasterCastRecovery.ToString()),
+            new("{lmc}", "Lower mana cost", world => world.Player.LowerManaCost.ToString()),
+            new("{lrc}", "Lower reagent cost", world => world.Player.LowerReagentCost.ToString()),
+            new("{phyres}", "Physical resistance", world => world.Player.PhysicalResistance.ToString()),
+            new("{phyresmax}", "Maximum physical resistance", world => world.Player.MaxPhysicResistence.ToString()),
+            new("{fireres}", "Fire resistance", world => world.Player.FireResistance.ToString()),
+            new("{fireresmax}", "Maximum fire resistance", world => world.Player.MaxFireResistence.ToString()),
+            new("{coldres}", "Cold resistance", world => world.Player.ColdResistance.ToString()),
+            new("{coldresmax}", "Maximum cold resistance", world => world.Player.MaxColdResistence.ToString()),
+            new("{poisonres}", "Poison resistance", world => world.Player.PoisonResistance.ToString()),
+            new("{poisonresmax}", "Maximum poison resistance", world => world.Player.MaxPoisonResistence.ToString()),
+            new("{energyres}", "Energy resistance", world => world.Player.EnergyResistance.ToString()),
+            new("{energyresmax}", "Maximum energy resistance", world => world.Player.MaxEnergyResistence.ToString()),
+            new("{maxstats}", "Maximum stats", world => world.Player.StatsCap.ToString()),
+            new("{luck}", "Luck", world => world.Player.Luck.ToString()),
+            new("{gold}", "Gold", world => world.Player.Gold.ToString()),
+            new("{pets}", "Current followers", world => world.Player.Followers.ToString()),
+            new("{petsmax}", "Maximum followers", world => world.Player.FollowersMax.ToString())
+        ];
+
         public static string FormatText(World world, string text)
         {
-            text = text.Replace("{charname}", world.Player.Name);
-            text = text.Replace("{hp}", world.Player.Hits.ToString());
-            text = text.Replace("{maxhp}", world.Player.HitsMax.ToString());
-            text = text.Replace("{mana}", world.Player.Mana.ToString());
-            text = text.Replace("{maxmana}", world.Player.ManaMax.ToString());
-            text = text.Replace("{stam}", world.Player.Stamina.ToString());
-            text = text.Replace("{maxstam}", world.Player.StaminaMax.ToString());
-            text = text.Replace("{weight}", world.Player.Weight.ToString());
-            text = text.Replace("{maxweight}", world.Player.WeightMax.ToString());
-            text = text.Replace("{str}", world.Player.Strength.ToString());
-            text = text.Replace("{dex}", world.Player.Dexterity.ToString());
-            text = text.Replace("{int}", world.Player.Intelligence.ToString());
-            text = text.Replace("{damagemin}", world.Player.DamageMin.ToString());
-            text = text.Replace("{damagemax}", world.Player.DamageMax.ToString());
-            text = text.Replace("{hci}", world.Player.HitChanceIncrease.ToString());
-            text = text.Replace("{di}", world.Player.DamageIncrease.ToString());
-            text = text.Replace("{ssi}", world.Player.SwingSpeedIncrease.ToString());
-            text = text.Replace("{defchance}", world.Player.DefenseChanceIncrease.ToString());
-            text = text.Replace("{defchancemax}", world.Player.MaxDefenseChanceIncrease.ToString());
-            text = text.Replace("{sdi}", world.Player.SpellDamageIncrease.ToString());
-            text = text.Replace("{fc}", world.Player.FasterCasting.ToString());
-            text = text.Replace("{fcr}", world.Player.FasterCastRecovery.ToString());
-            text = text.Replace("{lmc}", world.Player.LowerManaCost.ToString());
-            text = text.Replace("{lrc}", world.Player.LowerReagentCost.ToString());
-            text = text.Replace("{phyres}", world.Player.PhysicalResistance.ToString());
-            text = text.Replace("{phyresmax}", world.Player.MaxPhysicResistence.ToString());
-            text = text.Replace("{fireres}", world.Player.FireResistance.ToString());
-            text = text.Replace("{fireresmax}", world.Player.MaxFireResistence.ToString());
-            text = text.Replace("{coldres}", world.Player.ColdResistance.ToString());
-            text = text.Replace("{coldresmax}", world.Player.MaxColdResistence.ToString());
-            text = text.Replace("{poisonres}", world.Player.PoisonResistance.ToString());
-            text = text.Replace("{poisonresmax}", world.Player.MaxPoisonResistence.ToString());
-            text = text.Replace("{energyres}", world.Player.EnergyResistance.ToString());
-            text = text.Replace("{energyresmax}", world.Player.MaxEnergyResistence.ToString());
-            text = text.Replace("{maxstats}", world.Player.StatsCap.ToString());
-            text = text.Replace("{luck}", world.Player.Luck.ToString());
-            text = text.Replace("{gold}", world.Player.Gold.ToString());
-            text = text.Replace("{pets}", world.Player.Followers.ToString());
-            text = text.Replace("{petsmax}", world.Player.FollowersMax.ToString());
+            foreach (TextPlaceholder placeholder in TextPlaceholders)
+                text = text.Replace(placeholder.Token, placeholder.Value(world));
 
             return text;
         }
