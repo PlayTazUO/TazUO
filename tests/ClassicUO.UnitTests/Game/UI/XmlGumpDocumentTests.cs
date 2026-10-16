@@ -72,6 +72,18 @@ public class XmlGumpDocumentTests
     }
 
     [Fact]
+    public void CreateElement_OmitsEmptyDefaultsAndSizesBareElements()
+    {
+        XmlGumpElement box = XmlGumpSchema.CreateElement("colorbox");
+        box.GetAttribute("width").Should().Be("20");
+        box.GetAttribute("height").Should().Be("20");
+
+        XmlGumpElement image = XmlGumpSchema.CreateElement("image");
+        image.GetAttribute("width").Should().BeNull();
+        image.GetAttribute("height").Should().BeNull();
+    }
+
+    [Fact]
     public void Clone_IsDeepCopy()
     {
         XmlGumpElement original = XmlGumpSchema.CreateElement("control");

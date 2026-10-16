@@ -53,10 +53,19 @@ public static class XmlGumpSchema
     [
         new("x", XmlGumpAttributeKind.Integer, "X", "0"),
         new("y", XmlGumpAttributeKind.Integer, "Y", "0"),
-        new("width", XmlGumpAttributeKind.Integer, "Width", "0"),
-        new("height", XmlGumpAttributeKind.Integer, "Height", "0"),
         new("acceptmouseinput", XmlGumpAttributeKind.Boolean, "Accept mouse input", "true"),
         new("canmove", XmlGumpAttributeKind.Boolean, "Can move", "false")
+    ];
+
+    /// <summary>
+    /// The width/height pair for tags that have no natural size and would otherwise be created at zero
+    /// (and so invisible). Tags whose size comes from a graphic, or that size to their children, use
+    /// empty defaults instead and are left out of the created element entirely.
+    /// </summary>
+    private static XmlGumpAttributeDefinition[] Sized(int width, int height) =>
+    [
+        new("width", XmlGumpAttributeKind.Integer, "Width", width.ToString()),
+        new("height", XmlGumpAttributeKind.Integer, "Height", height.ToString())
     ];
 
     /// <summary>Every tag the editor can add, in palette order.</summary>
@@ -67,7 +76,7 @@ public static class XmlGumpSchema
             new("y", XmlGumpAttributeKind.Integer, "Y", "0"),
             new("font", XmlGumpAttributeKind.Text, "Font", TrueTypeLoader.EMBEDDED_FONT),
             new("size", XmlGumpAttributeKind.Integer, "Font size", "16"),
-            new("width", XmlGumpAttributeKind.Integer, "Width", "0"),
+            new("width", XmlGumpAttributeKind.Integer, "Width", ""),
             new("hue", XmlGumpAttributeKind.Hue, "Hue", "997"),
             new("updates", XmlGumpAttributeKind.Boolean, "Live updates", "false"),
             new("align", XmlGumpAttributeKind.Enum, "Alignment", "left", ["left", "center", "right"])
@@ -75,12 +84,15 @@ public static class XmlGumpSchema
         new("colorbox", "Color box", [
             new("hue", XmlGumpAttributeKind.Hue, "Hue", "0"),
             new("alpha", XmlGumpAttributeKind.Float, "Alpha", "1"),
+            .. Sized(20, 20),
             .. Universal
         ]),
         new("image", "Image", [
             new("id", XmlGumpAttributeKind.Graphic, "Graphic", "0"),
             new("hue", XmlGumpAttributeKind.Hue, "Hue", "0"),
             new("rect", XmlGumpAttributeKind.Rect, "Source rect", ""),
+            new("width", XmlGumpAttributeKind.Integer, "Width", ""),
+            new("height", XmlGumpAttributeKind.Integer, "Height", ""),
             .. Universal
         ]),
         new("image_progress_bar", "Image progress bar", [
@@ -92,6 +104,8 @@ public static class XmlGumpSchema
             new("max_value", XmlGumpAttributeKind.Text, "Max value", "0"),
             new("updates", XmlGumpAttributeKind.Boolean, "Live updates", "false"),
             new("direction", XmlGumpAttributeKind.Enum, "Direction", "right", ["right", "up"]),
+            new("width", XmlGumpAttributeKind.Integer, "Width", ""),
+            new("height", XmlGumpAttributeKind.Integer, "Height", ""),
             .. Universal
         ]),
         new("color_progress_bar", "Color progress bar", [
@@ -101,15 +115,17 @@ public static class XmlGumpSchema
             new("max_value", XmlGumpAttributeKind.Text, "Max value", "0"),
             new("updates", XmlGumpAttributeKind.Boolean, "Live updates", "false"),
             new("direction", XmlGumpAttributeKind.Enum, "Direction", "right", ["right", "up"]),
+            .. Sized(100, 12),
             .. Universal
         ]),
         new("control", "Container", [
+            new("width", XmlGumpAttributeKind.Integer, "Width", ""),
+            new("height", XmlGumpAttributeKind.Integer, "Height", ""),
             .. Universal
         ]),
         new("simple_border", "Border", [
             new("hue", XmlGumpAttributeKind.Hue, "Hue", "0"),
-            new("width", XmlGumpAttributeKind.Integer, "Width", "0"),
-            new("height", XmlGumpAttributeKind.Integer, "Height", "0"),
+            .. Sized(100, 100),
             new("x", XmlGumpAttributeKind.Integer, "X", "0"),
             new("y", XmlGumpAttributeKind.Integer, "Y", "0"),
             new("acceptmouseinput", XmlGumpAttributeKind.Boolean, "Accept mouse input", "true"),
@@ -120,6 +136,7 @@ public static class XmlGumpSchema
             new("hue", XmlGumpAttributeKind.Hue, "Hue", "0"),
             new("hue_hover", XmlGumpAttributeKind.Hue, "Hover hue", "0"),
             new("alpha", XmlGumpAttributeKind.Float, "Alpha", "1"),
+            .. Sized(32, 22),
             .. Universal
         ]),
         new("macro_button_graphic", "Macro button (graphic)", [
@@ -129,6 +146,8 @@ public static class XmlGumpSchema
             new("hue", XmlGumpAttributeKind.Hue, "Hue", "0"),
             new("hue_hover", XmlGumpAttributeKind.Hue, "Hover hue", "0"),
             new("alpha", XmlGumpAttributeKind.Float, "Alpha", "1"),
+            new("width", XmlGumpAttributeKind.Integer, "Width", ""),
+            new("height", XmlGumpAttributeKind.Integer, "Height", ""),
             .. Universal
         ]),
         new("hp_bar_color", "Health bar (color)", [
@@ -136,6 +155,7 @@ public static class XmlGumpSchema
             new("hue_background", XmlGumpAttributeKind.Hue, "Background hue", "0"),
             new("hue_poisoned", XmlGumpAttributeKind.Hue, "Poisoned hue", "62"),
             new("direction", XmlGumpAttributeKind.Enum, "Direction", "right", ["right", "up"]),
+            .. Sized(80, 12),
             .. Universal
         ]),
         new("hp_bar_image", "Health bar (image)", [
@@ -146,6 +166,8 @@ public static class XmlGumpSchema
             new("hue_background", XmlGumpAttributeKind.Hue, "Background hue", "0"),
             new("hue_poisoned", XmlGumpAttributeKind.Hue, "Poisoned hue", "62"),
             new("direction", XmlGumpAttributeKind.Enum, "Direction", "right", ["right", "up"]),
+            new("width", XmlGumpAttributeKind.Integer, "Width", ""),
+            new("height", XmlGumpAttributeKind.Integer, "Height", ""),
             .. Universal
         ])
     ];
@@ -164,7 +186,13 @@ public static class XmlGumpSchema
 
     public static XmlGumpTagDefinition? Find(string tag) => ByTag.GetValueOrDefault(tag);
 
-    /// <summary>Builds an empty element of a tag, seeded with the schema's defaults.</summary>
+    /// <summary>
+    /// Builds an empty element of a tag, seeded with the schema's defaults.
+    /// </summary>
+    /// <remarks>
+    /// Attributes whose default is empty are left out, so a new element carries only what it actually
+    /// needs - an image, for instance, takes its size from its graphic rather than a written zero.
+    /// </remarks>
     public static XmlGumpElement CreateElement(string tag)
     {
         var element = new XmlGumpElement(tag);
@@ -172,7 +200,8 @@ public static class XmlGumpSchema
 
         if (definition != null)
             foreach (XmlGumpAttributeDefinition attribute in definition.Attributes)
-                element.SetAttribute(attribute.Name, attribute.Default);
+                if (!string.IsNullOrEmpty(attribute.Default))
+                    element.SetAttribute(attribute.Name, attribute.Default);
 
         return element;
     }
