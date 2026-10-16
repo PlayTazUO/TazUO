@@ -1160,9 +1160,14 @@ namespace ClassicUO.Game.Scenes
                     _flags[3]
                 );
 
-                if (_world.InGame && !_world.Player.Pathfinder.AutoWalking && dir != Direction.NONE)
+                if (_world.InGame && dir != Direction.NONE)
                 {
-                    _world.Player.Walk(dir, currentProfile.AlwaysRun);
+                    StopFollowing();
+
+                    if (!_world.Player.Pathfinder.AutoWalking)
+                    {
+                        _world.Player.Walk(dir, currentProfile.AlwaysRun);
+                    }
                 }
             }
 

@@ -4,6 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 10/16/26
+* ***Fix:*** Moving with the keyboard (arrow keys, WASD, or a walk macro) now cancels auto follow, matching mouse movement instead of leaving follow active
 * ***Fix:*** The resizable journal now only auto-scrolls to the newest entry when it is already scrolled to the bottom - if it is scrolled partially or all the way up, incoming messages no longer shift the view, so reading or selecting text is not disturbed
 
 ## 10/13/26
