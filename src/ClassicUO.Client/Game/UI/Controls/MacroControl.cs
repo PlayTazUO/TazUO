@@ -5,6 +5,7 @@ using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Common.Enums;
@@ -433,30 +434,9 @@ namespace ClassicUO.Game.UI.Controls
                     GameActions.OpenSettings(_gump.World, 4);
                     break;
                 case (int)buttonsOption.OpenButtonEditor:
-                    UIManager.Gumps.OfType<MacroButtonEditorGump>().FirstOrDefault()?.Dispose();
-                    OpenMacroButtonEditor(Macro, null);
+                    MacroButtonEditorWindow.Show(Macro);
                     break;
             }
-        }
-
-        private void OpenMacroButtonEditor(Macro macro, Vector2? position = null)
-        {
-            MacroButtonEditorGump btnEditorGump = UIManager.GetGump<MacroButtonEditorGump>();
-
-            if (btnEditorGump == null)
-            {
-                int posX = (ScaleHelper.LogicalWindowWidth >> 1) - 300;
-                int posY = (ScaleHelper.LogicalWindowHeight >> 1) - 250;
-                if (position.HasValue)
-                {
-                    posX = (int)position.Value.X;
-                    posY = (int)position.Value.Y;
-                }
-                btnEditorGump = new MacroButtonEditorGump(_gump.World, macro, posX, posY);
-                UIManager.Add(btnEditorGump);
-            }
-            btnEditorGump.SetInScreen();
-            btnEditorGump.BringOnTop();
         }
 
         private class MacroEntry : Control

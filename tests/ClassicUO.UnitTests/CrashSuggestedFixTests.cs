@@ -77,6 +77,84 @@ public class CrashSuggestedFixTests
     }
 
     [Fact]
+    public void Get_AnimationLoaderCrash_ReturnsMismatchedDataFilesAdvice()
+    {
+        Exception exception = CreateExceptionWithStackTrace(
+            "   at ClassicUO.Assets.AnimationsLoader.ReadSpriteData(StackDataReader& reader, ReadOnlySpan`1 palette, FrameInfo& frame, Boolean alphaCheck) in AnimationsLoader.cs:line 1470\n" +
+            "   at ClassicUO.Assets.AnimationsLoader.ReadMULAnimationFrames(Int32 fileIndex, AnimationDirection index) in AnimationsLoader.cs:line 1457");
+
+        string fix = CrashSuggestedFix.Get(exception);
+
+        fix.Should().NotBeNullOrWhiteSpace();
+        fix.Should().Contain("animation");
+        fix.Should().Contain("client version");
+    }
+
+    [Fact]
+    public void Get_GumpsLoaderCrash_ReturnsMismatchedDataFilesAdvice()
+    {
+        Exception exception = CreateExceptionWithStackTrace(
+            "   at ClassicUO.Assets.GumpsLoader.GetGump(UInt32 index) in GumpsLoader.cs:line 186\n" +
+            "   at ClassicUO.Renderer.Gumps.Gump.GetGump(UInt32 idx) in Gump.cs:line 36");
+
+        string fix = CrashSuggestedFix.Get(exception);
+
+        fix.Should().NotBeNullOrWhiteSpace();
+        fix.Should().Contain("gump");
+        fix.Should().Contain("client version");
+    }
+
+    [Fact]
+    public void Get_ReadOnlyFileSystemCrash_ReturnsWritableLocationAdvice()
+    {
+        var inner = new System.IO.IOException("Read-only file system : '/opt/tazuo/Fonts'");
+        var exception = new AggregateException(inner);
+
+        string fix = CrashSuggestedFix.Get(exception);
+
+        fix.Should().NotBeNullOrWhiteSpace();
+        fix.Should().Contain("read-only");
+        fix.Should().Contain("write");
+    }
+
+    [Fact]
+    public void Get_SdlVideoInitNoVideoDevice_ReturnsDisplayAdvice()
+    {
+        Exception inner = new Exception("SDL_Init failed: No available video device");
+
+        SetStackTrace(
+            inner,
+            "   at Microsoft.Xna.Framework.SDL3_FNAPlatform.ProgramInit(LaunchParameters args) in SDL3_FNAPlatform.cs:line 202\n" +
+            "   at Microsoft.Xna.Framework.FNAPlatform..cctor() in FNAPlatform.cs:line 238");
+
+        Exception exception = new TypeInitializationException("Microsoft.Xna.Framework.FNAPlatform", inner);
+
+        string fix = CrashSuggestedFix.Get(exception);
+
+        fix.Should().NotBeNullOrWhiteSpace();
+        fix.Should().Contain("video device");
+        fix.Should().Contain("desktop session");
+    }
+
+    [Fact]
+    public void Get_FontStashInt32MapCrash_ReturnsScriptThreadAdvice()
+    {
+        Exception exception = new IndexOutOfRangeException();
+
+        SetStackTrace(
+            exception,
+            "   at FontStashSharp.Int32Map`1.Insert(Int32 key, TValue value, Boolean add) in Int32Map.cs:line 167\n" +
+            "   at FontStashSharp.SpriteFontBase.InternalTextBounds(TextSource source, Vector2 position, Single characterSpacing, Single lineSpacing, FontSystemEffect effect, Int32 effectAmount) in SpriteFontBase.cs:line 103\n" +
+            "   at ClassicUO.Game.UI.Controls.TextBox.get_Width() in TextBox.cs:line 211");
+
+        string fix = CrashSuggestedFix.Get(exception);
+
+        fix.Should().NotBeNullOrWhiteSpace();
+        fix.Should().Contain("FontStashSharp");
+        fix.Should().Contain("script");
+    }
+
+    [Fact]
     public void Get_NoStackTrace_ReturnsNull()
     {
         CrashSuggestedFix.Get(new InvalidOperationException("message")).Should().BeNull();

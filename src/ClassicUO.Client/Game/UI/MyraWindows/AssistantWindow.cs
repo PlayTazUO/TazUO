@@ -21,6 +21,9 @@ public class AssistantWindow : MyraControl
             {
                 w.CenterInViewPort();
                 w.BringOnTop();
+                // The window is reused, so its cached pages may predate changes made elsewhere
+                // (e.g. items shift-clicked into the auto loot list). Rebuild the visible page.
+                w.RefreshSelectedContent();
                 return;
             }
         }
@@ -28,6 +31,7 @@ public class AssistantWindow : MyraControl
     }
 
     private SkillsTabContent _skillsTabContent;
+    private MyraTabControl _tabs;
 
     public AssistantWindow() : base(TazLang.Get("assistantwindow_title", "Legion Assistant"))
     {
@@ -47,7 +51,6 @@ public class AssistantWindow : MyraControl
         base.Dispose();
 
         HotkeysTabContent.Cleanup();
-        SpellBarTabContent.Cleanup();
 
         EventSink.SkillValueChangedEvent -= EventSkillUpdated;
         EventSink.SkillBaseChangedEvent -= EventSkillUpdated;
@@ -56,15 +59,17 @@ public class AssistantWindow : MyraControl
 
     private void Build()
     {
-        var tabs = new MyraTabControl();
-        tabs.AddTab(TazLang.Get("assistantwindow_tab_general", "General"), GeneralTab.Build);
-        tabs.AddTab(TazLang.Get("assistantwindow_tab_agents", "Agents"), AgentTab.Build);
-        tabs.AddTab(TazLang.Get("assistantwindow_tab_filters", "Filters"), FiltersTab.Build);
-        tabs.AddTab(TazLang.Get("assistantwindow_tab_itemdatabase", "Item Database"), ItemDatabaseTabContent.Build);
-        tabs.AddTab(TazLang.Get("assistantwindow_tab_macros", "Macros"), () => MacrosTabContent.Build(this));
-        tabs.AddTab(TazLang.Get("assistantwindow_tab_hotkeys", "Hotkeys"), HotkeysTabContent.Build);
-        tabs.AddTab(TazLang.Get("assistantwindow_tab_skills", "Skills"), () => _skillsTabContent = new SkillsTabContent());
-        tabs.SelectFirst();
-        SetRootContent(tabs);
+        _tabs = new MyraTabControl();
+        _tabs.AddTab(TazLang.Get("assistantwindow_tab_general", "General"), GeneralTab.Build);
+        _tabs.AddTab(TazLang.Get("assistantwindow_tab_agents", "Agents"), AgentTab.Build, rebuildOnSelect: true);
+        _tabs.AddTab(TazLang.Get("assistantwindow_tab_filters", "Filters"), FiltersTab.Build);
+        _tabs.AddTab(TazLang.Get("assistantwindow_tab_itemdatabase", "Item Database"), ItemDatabaseTabContent.Build);
+        _tabs.AddTab(TazLang.Get("assistantwindow_tab_macros", "Macros"), () => MacrosTabContent.Build(this));
+        _tabs.AddTab(TazLang.Get("assistantwindow_tab_hotkeys", "Hotkeys"), HotkeysTabContent.Build);
+        _tabs.AddTab(TazLang.Get("assistantwindow_tab_skills", "Skills"), () => _skillsTabContent = new SkillsTabContent());
+        _tabs.SelectFirst();
+        SetRootContent(_tabs);
     }
+
+    private void RefreshSelectedContent() => _tabs?.RefreshSelectedContent();
 }

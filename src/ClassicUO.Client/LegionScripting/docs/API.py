@@ -634,10 +634,10 @@ class ApiUiGump:
          Get a blank gump.
          Example:
          ```py
-         g = API.CreateGump()
+         g = API.Gumps.CreateGump()
          g.SetRect(100, 100, 200, 200)
-         g.Add(API.CreateGumpLabel("Hello World!"))
-         API.AddGump(g)
+         g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
+         API.Gumps.AddGump(g)
          ```
         
         """
@@ -656,10 +656,10 @@ class ApiUiGump:
          Add a gump to the players screen.
          Example:
          ```py
-         g = API.CreateGump()
+         g = API.Gumps.CreateGump()
          g.SetRect(100, 100, 200, 200)
-         g.Add(API.CreateGumpLabel("Hello World!"))
-         API.AddGump(g)
+         g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
+         API.Gumps.AddGump(g)
          ```
         
         """
@@ -670,11 +670,11 @@ class ApiUiGump:
          Create a checkbox for gumps.
           Example:
          ```py
-         g = API.CreateGump()
+         g = API.Gumps.CreateGump()
          g.SetRect(100, 100, 200, 200)
-         cb = API.CreateGumpCheckbox("Check me?!")
+         cb = API.Gumps.CreateGumpCheckbox("Check me?!")
          g.Add(cb)
-         API.AddGump(g)
+         API.Gumps.AddGump(g)
         
          API.SysMsg("Checkbox checked: " + str(cb.IsChecked))
          ```
@@ -687,10 +687,10 @@ class ApiUiGump:
          Create a label for a gump.
          Example:
          ```py
-         g = API.CreateGump()
+         g = API.Gumps.CreateGump()
          g.SetRect(100, 100, 200, 200)
-         g.Add(API.CreateGumpLabel("Hello World!"))
-         API.AddGump(g)
+         g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
+         API.Gumps.AddGump(g)
          ```
         
         """
@@ -701,13 +701,13 @@ class ApiUiGump:
          Get a transparent color box for gumps.
          Example:
          ```py
-         g = API.CreateGump()
+         g = API.Gumps.CreateGump()
          g.SetRect(100, 100, 200, 200)
-         cb = API.CreateGumpColorBox(0.5, "#000000")
+         cb = API.Gumps.CreateGumpColorBox(0.5, "#000000")
          cb.SetWidth(200)
          cb.SetHeight(200)
          g.Add(cb)
-         API.AddGump(g)
+         API.Gumps.AddGump(g)
          ```
         
         """
@@ -718,10 +718,10 @@ class ApiUiGump:
          Create a picture of an item.
          Example:
          ```py
-         g = API.CreateGump()
+         g = API.Gumps.CreateGump()
          g.SetRect(100, 100, 200, 200)
-         g.Add(API.CreateGumpItemPic(0x0E78, 50, 50))
-         API.AddGump(g)
+         g.Add(API.Gumps.CreateGumpItemPic(0x0E78, 50, 50))
+         API.Gumps.AddGump(g)
          ```
         
         """
@@ -732,12 +732,12 @@ class ApiUiGump:
          Create a rendered map area, displaying a region of the world map as a texture.
          Example:
          ```py
-         gump = API.CreateGump()
+         gump = API.Gumps.CreateGump()
          gump.SetRect(100, 100, 200, 200)
         
-         map = API.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
+         map = API.Gumps.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
          gump.Add(map)
-         API.AddGump(gump)
+         API.Gumps.AddGump(gump)
          ```
         
         """
@@ -763,11 +763,11 @@ class ApiUiGump:
          Create a button for gumps.
          Example:
          ```py
-         g = API.CreateGump()
+         g = API.Gumps.CreateGump()
          g.SetRect(100, 100, 200, 200)
-         button = API.CreateGumpButton("Click Me!")
+         button = API.Gumps.CreateGumpButton("Click Me!")
          g.Add(button)
-         API.AddGump(g)
+         API.Gumps.AddGump(g)
         
          while True:
            API.SysMsg("Button currently clicked?: " + str(button.IsClicked))
@@ -783,11 +783,11 @@ class ApiUiGump:
          Create a simple button, does not use graphics.
          Example:
          ```py
-         g = API.CreateGump()
+         g = API.Gumps.CreateGump()
          g.SetRect(100, 100, 200, 200)
-         button = API.CreateSimpleButton("Click Me!", 100, 20)
+         button = API.Gumps.CreateSimpleButton("Click Me!", 100, 20)
          g.Add(button)
-         API.AddGump(g)
+         API.Gumps.AddGump(g)
          ```
         
         """
@@ -798,11 +798,11 @@ class ApiUiGump:
          Create a radio button for gumps, use group numbers to only allow one item to be checked at a time.
          Example:
          ```py
-         g = API.CreateGump()
+         g = API.Gumps.CreateGump()
          g.SetRect(100, 100, 200, 200)
-         rb = API.CreateGumpRadioButton("Click Me!", 1)
+         rb = API.Gumps.CreateGumpRadioButton("Click Me!", 1)
          g.Add(rb)
-         API.AddGump(g)
+         API.Gumps.AddGump(g)
          API.SysMsg("Radio button checked?: " + str(rb.IsChecked))
          ```
         
@@ -817,41 +817,41 @@ class ApiUiGump:
          w = 500
          h = 600
         
-         gump = API.CreateGump(True, True)
+         gump = API.Gumps.CreateGump(True, True)
          gump.SetWidth(w)
          gump.SetHeight(h)
          gump.CenterXInViewPort()
          gump.CenterYInViewPort()
         
-         bg = API.CreateGumpColorBox(0.7, "#D4202020")
+         bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
          bg.SetWidth(w)
          bg.SetHeight(h)
         
          gump.Add(bg)
         
-         textbox = API.CreateGumpTextBox("Text example", w, h, True)
+         textbox = API.Gumps.CreateGumpTextBox("Text example", w, h, True)
         
          gump.Add(textbox)
         
-         API.AddGump(gump)
+         API.Gumps.AddGump(gump)
          ```
         
         """
         pass
 
-    def CreateGumpTTFLabel(self, text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "let", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
+    def CreateGumpTTFLabel(self, text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "left", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
         """
          Create a TTF label with advanced options.
          Example:
          ```py
-         gump = API.CreateGump()
+         gump = API.Gumps.CreateGump()
          gump.SetRect(100, 100, 200, 200)
         
-         ttflabel = API.CreateGumpTTFLabel("Example label", 25, "#F100DD", "alagard")
+         ttflabel = API.Gumps.CreateGumpTTFLabel("Example label", 25, "#F100DD", "alagard")
          ttflabel.SetRect(10, 10, 180, 30)
          gump.Add(ttflabel)
         
-         API.AddGump(gump) #Add the gump to the players screen
+         API.Gumps.AddGump(gump) #Add the gump to the players screen
          ```
         
         """
@@ -862,13 +862,13 @@ class ApiUiGump:
          Create a progress bar. Can be updated as needed with `bar.SetProgress(current, max)`.
          Example:
          ```py
-         gump = API.CreateGump()
+         gump = API.Gumps.CreateGump()
          gump.SetRect(100, 100, 400, 200)
         
-         pb = API.CreateGumpSimpleProgressBar(400, 200)
+         pb = API.Gumps.CreateGumpSimpleProgressBar(400, 200)
          gump.Add(pb)
         
-         API.AddGump(gump)
+         API.Gumps.AddGump(gump)
         
          cur = 0
          max = 100
@@ -884,16 +884,33 @@ class ApiUiGump:
         """
         pass
 
+    def CreateSlider(self, width: "int", min: "int" = 0, max: "int" = 100, value: "int" = 0, x: "int" = 0, y: "int" = 0, showText: "bool" = False) -> "ApiUiSlider":
+        """
+         Create a horizontal slider control. Read or update its value with `slider.Value` / `slider.SetValue(value)`.
+         Example:
+         ```py
+         gump = API.Gumps.CreateGump()
+         gump.SetRect(100, 100, 300, 100)
+        
+         slider = API.Gumps.CreateSlider(200, 0, 100, 50)
+         gump.Add(slider)
+        
+         API.Gumps.AddGump(gump)
+         ```
+        
+        """
+        pass
+
     def CreateGumpScrollArea(self, x: "int", y: "int", width: "int", height: "int") -> "ApiUiScrollArea":
         """
          Create a scrolling area, add and position controls to it directly.
          Example:
          ```py
-         sa = API.CreateGumpScrollArea(0, 60, 200, 140)
+         sa = API.Gumps.CreateGumpScrollArea(0, 60, 200, 140)
          gump.Add(sa)
         
          for i in range(10):
-             label = API.CreateGumpTTFLabel(f"Label {i + 1}", 20, "#FFFFFF", "alagard")
+             label = API.Gumps.CreateGumpTTFLabel(f"Label {i + 1}", 20, "#FFFFFF", "alagard")
              label.SetRect(5, i * 20, 180, 20)
              sa.Add(label)
          ```
@@ -906,7 +923,7 @@ class ApiUiGump:
          Create a gump pic(Use this for gump art, not item art)
          Example:
          ```py
-         gumpPic = API.CreateGumpPic(0xafb)
+         gumpPic = API.Gumps.CreateGumpPic(0xafb)
          gump.Add(gumpPic)
         
         """
@@ -917,7 +934,7 @@ class ApiUiGump:
          Create a gump pic that tiles(repeats) (Use this for gump art, not item art)
          Example:
          ```py
-         gumpPic = API.CreateTiledGumpPic(0xafb, 100, 100)
+         gumpPic = API.Gumps.CreateTiledGumpPic(0xafb, 100, 100)
          gump.Add(gumpPic)
         
         """
@@ -937,8 +954,8 @@ class ApiUiGump:
          ```py
          def myfunc:
            API.SysMsg("Something clicked!")
-         bg = API.CreateGumpColorBox(0.7, "#D4202020")
-         API.AddControlOnClick(bg, myfunc)
+         bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
+         API.Gumps.AddControlOnClick(bg, myfunc)
          while True:
            API.ProcessCallbacks()
          ```
@@ -954,13 +971,13 @@ class ApiUiGump:
          def onClose():
              API.Stop()
         
-         gump = API.CreateGump()
+         gump = API.Gumps.CreateGump()
          gump.SetRect(100, 100, 200, 200)
         
-         bg = API.CreateGumpColorBox(opacity=0.7, color="#000000")
+         bg = API.Gumps.CreateGumpColorBox(opacity=0.7, color="#000000")
          gump.Add(bg.SetRect(0, 0, 200, 200))
         
-         API.AddControlOnDisposed(gump, onClose)
+         API.Gumps.AddControlOnDisposed(gump, onClose)
          ```
         
         """
@@ -1161,6 +1178,47 @@ class ApiUiSimpleProgressBar(ApiUiBaseControl):
         """
         pass
 
+class ApiUiSlider(ApiUiBaseControl):
+    ""
+    Value: int = None
+    MinValue: int = None
+    MaxValue: int = None
+
+    def GetValue(self) -> "int":
+        """
+         Gets the slider's current value.
+         Used in python API
+        
+        """
+        pass
+
+    def SetValue(self, value: "int") -> "ApiUiSlider":
+        """
+         Sets the slider's current value. Values outside MinValue/MaxValue are clamped.
+         Used in python API
+        
+        """
+        pass
+
+    def OnValueChanged(self, onValueChanged: "Any") -> "ApiUiSlider":
+        """
+         Add an onValueChanged callback to this slider, invoked whenever the value changes.
+         The callback function receives the new value as its only argument.
+         Example:
+         ```py
+         def on_change(value):
+           API.SysMsg(f"Slider is now {value}")
+        
+         slider = API.Gumps.CreateGumpSlider(200, 0, 100, 50)
+         slider.OnValueChanged(on_change)
+        
+         while True:
+           API.ProcessCallbacks()
+         ```
+        
+        """
+        pass
+
 class ApiUiTextBox(ApiUiBaseControl):
     ""
     Text: str = None
@@ -1251,6 +1309,22 @@ class PersistentVar:
     Server = 3
     Global = 4
 
+class EffectType:
+    Moving = 1
+    Lightning = 1
+    FixedXYZ = 1
+    FixedFrom = 1
+
+class EffectBlendMode:
+    Normal = 1
+    Multiply = 1
+    Screen = 1
+    ScreenMore = 1
+    ScreenLess = 1
+    NormalHalfTransparent = 1
+    ShadowBlue = 1
+    ScreenRed = 1
+
 def ProcessCallbacks() -> None:
     """
      Use this when you need to wait for players to click buttons.
@@ -1294,6 +1368,23 @@ def IsKeyPressed(key: "str") -> "bool":
      Returns true if the given key combination is currently held down.
      The key format matches `OnHotKey` , e.g. "CTRL+SHIFT+F1" or "A".
      Extra modifiers beyond those specified do not prevent a match.
+    
+    """
+    pass
+
+def RequestHotkey(prompt: "str" = "Press a hotkey", timeout: "float" = 30) -> "str":
+    """
+     Shows the in-game hotkey capture window and waits for the player to pick a key combination.
+     The returned string matches what `OnHotKey` and `IsKeyPressed` accept, so it can be passed
+     straight to them, e.g. "CTRL+SHIFT+F1" or "A".
+     Only keyboard bindings are returned; mouse, wheel, controller and modifier-only captures are
+     rejected. Blocks until the player saves a key or closes the window (or the timeout elapses).
+     Example:
+     ```py
+     key = API.RequestHotkey()
+     if key:
+       API.OnHotKey(key, on_pressed)
+     ```
     
     """
     pass
@@ -1596,7 +1687,7 @@ def MoveItem(serial: "int", destination: "int", amt: "int" = 0, x: "int" = 0xFFF
     """
     pass
 
-def QueueMoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z: "int" = 0, OSI: "bool" = False) -> None:
+def QueueMoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z: "int" = 1337, OSI: "bool" = False) -> None:
     """
      Move an item to the ground near you.
      Example:
@@ -1609,7 +1700,7 @@ def QueueMoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 
     """
     pass
 
-def MoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z: "int" = 0, OSI: "bool" = False) -> None:
+def MoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z: "int" = 1337, OSI: "bool" = False) -> None:
     """
      Move an item to the ground near you.
      Example:
@@ -2077,6 +2168,30 @@ def CooldownExists(name: "str") -> "bool":
      Example:
      ```py
      if API.CooldownExists("Healing"):
+     ```
+    
+    """
+    pass
+
+def CreateEffect(graphic: "int", type: "EffectType" = EffectType.FixedXYZ, source: "int" = 0, target: "int" = 0, hue: "int" = 0, sourceX: "int | None" = None, sourceY: "int | None" = None, sourceZ: "int | None" = None, targetX: "int | None" = None, targetY: "int | None" = None, targetZ: "int | None" = None, duration: "float" = 2, speed: "int" = 0, fixedDirection: "bool" = False, doesExplode: "bool" = False, blendMode: "EffectBlendMode" = EffectBlendMode.Normal) -> None:
+    """
+     Creates and displays a graphic effect in the world, the same kind the server sends for spells,
+     projectiles, explosions, etc. This is a purely local, visual effect - no packet is sent and only
+     you see it.
+     The type decides how it behaves: `EffectType.FixedXYZ` and
+     `EffectType.FixedFrom` stay in place, `EffectType.Moving` travels from
+     the source to the target, and `EffectType.Lightning` draws a bolt from the source.
+     Positions come from the source/target serials when given, otherwise from the coordinates, which
+     default to the player's position.
+     Example:
+     ```py
+     # A stationary animation on the tile next to the player, for 2 seconds
+     API.CreateEffect(0x373A, sourceX=API.Player.X + 1, sourceY=API.Player.Y, hue=0x0481)
+    
+     # A projectile fired from the player at the nearest murderer
+     mob = API.NearestMobile([API.Notoriety.Murderer], 8)
+     if mob:
+       API.CreateEffect(0x36D0, type=API.EffectType.Moving, source=API.Player, target=mob)
      ```
     
     """
@@ -3255,7 +3370,7 @@ def CreateGumpTextBox(text: "str" = "", width: "int" = 200, height: "int" = 30, 
     """
     pass
 
-def CreateGumpTTFLabel(text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "let", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
+def CreateGumpTTFLabel(text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "left", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
     """
      Use API.Gumps.CreateGumpTTFLabel instead.
     

@@ -1,4 +1,6 @@
 #nullable enable
+using System;
+using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -55,7 +57,21 @@ public class MyraGrid : Grid
             SetColumnSpan(widget, colspan.Value);
     }
 
-    internal void SetupWithHeaders(params GridColumnInfo[] columns)
+    internal Widget[] SetupWithHeaders(params GridColumnInfo[] columns) => SetupWithHeaders(null, columns);
+
+    /// <summary>
+    /// Sets up the grid's columns and header row, optionally making each header a button that
+    /// reports the column it belongs to. A sortable grid passes the callback and re-sorts itself.
+    /// </summary>
+    /// <param name="onHeaderClick">
+    /// Invoked with the clicked column's index. Null leaves headers as plain labels.
+    /// </param>
+    /// <param name="columns">Column definitions, left to right.</param>
+    /// <returns>
+    /// The header widgets in column order, so a caller that keeps the grid around can update
+    /// their labels in place instead of rebuilding the header row.
+    /// </returns>
+    internal Widget[] SetupWithHeaders(Action<int>? onHeaderClick, params GridColumnInfo[] columns)
     {
         MyraStyle.ApplyStandardGridStyling(this);
 
@@ -66,12 +82,31 @@ public class MyraGrid : Grid
                 : new Proportion(ProportionType.Auto));
         }
 
+        var headers = new Widget[columns.Length];
         for (int i = 0; i < columns.Length; i++)
         {
             GridColumnInfo col = columns[i];
-            AddWidget(new MyraLabel(col.Label, MyraLabel.TextStyle.TableHeader,
-                col.AlignRight ? MyraLabel.AlignMode.Right : MyraLabel.AlignMode.Left), 0, i);
+
+            Widget header;
+            if (onHeaderClick != null)
+            {
+                int index = i;
+                header = new MyraButton(col.Label, () => onHeaderClick(index), MyraLabel.TextStyle.TableHeader)
+                {
+                    HorizontalAlignment = col.AlignRight ? HorizontalAlignment.Right : HorizontalAlignment.Left,
+                };
+            }
+            else
+            {
+                header = new MyraLabel(col.Label, MyraLabel.TextStyle.TableHeader,
+                    col.AlignRight ? MyraLabel.AlignMode.Right : MyraLabel.AlignMode.Left);
+            }
+
+            headers[i] = header;
+            AddWidget(header, 0, i);
         }
+
+        return headers;
     }
 }
 

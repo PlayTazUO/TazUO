@@ -10,6 +10,8 @@ internal static class UpdateMobileStatus
         uint serial = p.ReadUInt32BE();
         byte status = p.ReadUInt8();
 
+        //In testing, this packet seems to not be used?
+
         if (status == 1)
         {
             uint attackerSerial = p.ReadUInt32BE();

@@ -219,36 +219,13 @@ namespace ClassicUO.Game.Managers
 
             });
 
-            Register("optlink", (s) =>
-            {
-                ModernOptionsGump g = UIManager.GetGump<ModernOptionsGump>();
-                if (s.Length > 1)
-                {
-                    if (g != null)
-                    {
-                        g.GoToPage(s[1]);
-                    }
-                    else
-                    {
-                        UIManager.Add(g = new ModernOptionsGump(_world));
-                        g.GoToPage(s[1]);
-                    }
-                }
-                else
-                {
-                    if (g != null)
-                    {
-                        GameActions.Print(_world, g.GetPageString());
-                    }
-                }
-            });
-
             Register("genspelldef", (s) =>
             {
                 Task.Run(() => SpellDefinition.SaveAllSpellsToJson(_world));
             });
 
             Register("gumppositions", (s) => Game.UI.MyraWindows.GumpPositionManagerWindow.Show());
+            Register("xmleditor", (s) => XmlGumpEditorWindow.Show(_world));
 
             Register("setinscreen", (s) =>
             {
@@ -282,7 +259,6 @@ namespace ClassicUO.Game.Managers
             Register("organize", s => OrganizerAgent.Instance?.OrganizerCommand(s));
             Register("organizer", s => OrganizerAgent.Instance?.OrganizerCommand(s));
             Register("organizerlist", s => OrganizerAgent.Instance?.ListOrganizers());
-            Register("old-options-window", s => GameActions.ShowLegacyOptionsGump(_world));
             Register("language-regenerate", _ => TazLang.Load(Settings.GlobalSettings.UILanguage));
 
             RegisterDebugCommands();

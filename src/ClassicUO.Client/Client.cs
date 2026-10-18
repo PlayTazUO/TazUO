@@ -81,7 +81,7 @@ namespace ClassicUO
 
             Animations = new Renderer.Animations.Animations(FileManager.Animations, game.GraphicsDevice);
             Arts = new Renderer.Arts.Art(FileManager.Arts, FileManager.Hues, game.GraphicsDevice);
-            Gumps = new Renderer.Gumps.Gump(FileManager.Gumps, game.GraphicsDevice);
+            Gumps = new Renderer.Gumps.Gump(FileManager.Gumps, FileManager.Hues, game.GraphicsDevice);
             Texmaps = new Renderer.Texmaps.Texmap(FileManager.Texmaps, game.GraphicsDevice);
             Lights = new Renderer.Lights.Light(FileManager.Lights, game.GraphicsDevice);
             MultiMaps = new Renderer.MultiMaps.MultiMap(FileManager.MultiMaps, game.GraphicsDevice);
@@ -110,7 +110,7 @@ namespace ClassicUO
             // set localize string like tooltips, hints, etc. for every usage.
             Game.UI.MyraWindows.Widgets.Search.SearchableComboBoxLocalization.Install();
 
-            string clientPath = Settings.GlobalSettings.UltimaOnlineDirectory;
+            string clientPath = Settings.GlobalSettings.ResolvedUltimaOnlineDirectory;
             Log.Trace($"Ultima Online installation folder: {clientPath}");
 
             Log.Trace("Loading files...");

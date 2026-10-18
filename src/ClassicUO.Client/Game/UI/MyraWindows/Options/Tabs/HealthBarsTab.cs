@@ -1,6 +1,9 @@
 using ClassicUO.Common;
+using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using Myra.Graphics2D;
+using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
@@ -11,6 +14,7 @@ public static class HealthBarsTab
     internal static IOptionSource GetContent() => OptionsUi.Vertical(
             GetMainSection(),
             GetHealthBars(),
+            GetLastAttackSection(),
             GetDragSection()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_buttonhealthbars"), Tags: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp")]));
 
@@ -70,6 +74,8 @@ public static class HealthBarsTab
         string healCureAllLabel = TazLang.Get("healthbar_healcureall", "Show heal/cure buttons on all health bars (except invulnerable)");
         string healCureFriendsLabel = TazLang.Get("healthbar_healcurefriends", "Show heal/cure buttons on friends list health bars");
         string healCurePetsLabel = TazLang.Get("healthbar_healcurepets", "Show heal/cure buttons on pet health bars");
+        string quickHealActionLabel = TazLang.Get("healthbar_quickhealaction", "Quick heal action");
+        string quickCureActionLabel = TazLang.Get("healthbar_quickcureaction", "Quick cure action");
 
         return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = TazLang.Get("healthbars_floating_section") },
@@ -101,6 +107,18 @@ public static class HealthBarsTab
                 new Accessor<bool>(() => profile.ShowHealCureButtonsPets),
                 search: new SearchMetadata(healCurePetsLabel, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_heal")])
             ),
+            Option.LComboBox(
+                quickHealActionLabel,
+                new Accessor<HealthBarQuickAction>(() => profile.QuickHealAction),
+                "healthbar_quickaction_",
+                search: new SearchMetadata(quickHealActionLabel, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_heal")])
+            ),
+            Option.LComboBox(
+                quickCureActionLabel,
+                new Accessor<HealthBarQuickAction>(() => profile.QuickCureAction),
+                "healthbar_quickaction_",
+                search: new SearchMetadata(quickCureActionLabel, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_cure")])
+            ),
             Option.Checkbox(
                 TazLang.Get("mog_general_savehpbars"),
                 new Accessor<bool>(() => profile.SaveHealthbars),
@@ -116,15 +134,90 @@ public static class HealthBarsTab
                 TazLang.Get("mog_tazuo_alsocloseanchoredhealthbarswhenautoclosinghealthbars"),
                 new Accessor<bool>(() => profile.CloseHealthBarIfAnchored),
                 search: new SearchMetadata(TazLang.Get("mog_tazuo_alsocloseanchoredhealthbarswhenautoclosinghealthbars"), Keywords: [TazLang.Get("mog_kw_close"), TazLang.Get("mog_kw_anchor")])
-            ),
-            OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.OpenHealthBarForLastAttack), TazLang.Get("mog_tazuo_automaticallyopenhealthbarsforlastattack")),
-                Option.Checkbox(
-                    TazLang.Get("mog_tazuo_updateonebaraslastattack"),
-                    new Accessor<bool>(() => profile.UseOneHPBarForLastAttack)
-                )
-            ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_automaticallyopenhealthbarsforlastattack"), Keywords: [TazLang.Get("mog_kw_last"), TazLang.Get("mog_kw_attack")]))
+            )
             ).WithSearch(new SearchMetadata(TazLang.Get("mog_kw_healthbar"), [TazLang.Get("mog_kw_heal")]));
+    }
+
+    private static OptionFragment GetLastAttackSection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        string openLabel = TazLang.Get("mog_tazuo_automaticallyopenhealthbarsforlastattack");
+        string updateOneLabel = TazLang.Get("mog_tazuo_updateonebaraslastattack");
+        string stackLabel = TazLang.Get("mog_tazuo_stackhealthbarsforlastattack");
+        string anchorLabel = TazLang.Get("mog_tazuo_anchorhealthbarsforlastattack");
+
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = TazLang.Get("mog_tazuo_lastattackhealthbars") },
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.OpenHealthBarForLastAttack), openLabel),
+                Option.Custom(
+                    () => BuildLastAttackToggles(profile, updateOneLabel, stackLabel, anchorLabel),
+                    new SearchMetadata(
+                        $"{updateOneLabel} {stackLabel} {anchorLabel}",
+                        Keywords: [TazLang.Get("mog_kw_last"), TazLang.Get("mog_kw_attack"), TazLang.Get("mog_kw_stack"), TazLang.Get("mog_kw_anchor")]
+                    )
+                )
+            ).WithSearch(new SearchMetadata(openLabel, Keywords: [TazLang.Get("mog_kw_last"), TazLang.Get("mog_kw_attack")]))
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_lastattackhealthbars"), Keywords: [TazLang.Get("mog_kw_last"), TazLang.Get("mog_kw_attack"), TazLang.Get("mog_kw_healthbar")]));
+    }
+
+    /// <summary>
+    /// Builds the mutually-exclusive "one bar" and "stack bars" toggles, with the anchor toggle
+    /// nested under stacking. The two toggles intercept their own clicks so only one can be on.
+    /// </summary>
+    private static Widget BuildLastAttackToggles(Profile profile, string updateOneLabel, string stackLabel, string anchorLabel)
+    {
+        GatedCheckBox updateOne = null!;
+        GatedCheckBox stack = null!;
+
+        updateOne = new GatedCheckBox(updateOneLabel, profile.UseOneHPBarForLastAttack, (newValue, commit) =>
+        {
+            profile.UseOneHPBarForLastAttack = newValue;
+
+            if (newValue)
+            {
+                profile.StackHealthBarsForLastAttack = false;
+                stack.IsChecked = false;
+            }
+
+            commit(newValue);
+        });
+
+        stack = new GatedCheckBox(stackLabel, profile.StackHealthBarsForLastAttack, (newValue, commit) =>
+        {
+            profile.StackHealthBarsForLastAttack = newValue;
+
+            if (newValue)
+            {
+                profile.UseOneHPBarForLastAttack = false;
+                updateOne.IsChecked = false;
+            }
+
+            commit(newValue);
+        });
+
+        MyraCheckButton anchor = MyraCheckButton.CreatePropBoundCheckButton(
+            new Accessor<bool>(() => profile.AnchorHealthBarsForLastAttack), anchorLabel);
+        anchor.Margin = new Thickness(20, 0, 0, 0);
+        anchor.Enabled = profile.StackHealthBarsForLastAttack;
+
+        stack.IsCheckedChanged += (_, _) =>
+        {
+            anchor.Enabled = stack.IsChecked;
+
+            if (!stack.IsChecked)
+            {
+                profile.AnchorHealthBarsForLastAttack = false;
+                anchor.IsChecked = false;
+            }
+        };
+
+        var panel = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
+        panel.Widgets.Add(updateOne);
+        panel.Widgets.Add(stack);
+        panel.Widgets.Add(anchor);
+        return panel;
     }
 
     private static OptionFragment GetDragSection()

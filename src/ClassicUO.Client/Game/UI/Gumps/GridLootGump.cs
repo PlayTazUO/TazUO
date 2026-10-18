@@ -30,7 +30,6 @@ namespace ClassicUO.Game.UI.Gumps
         private int _currentPage = 1;
         private readonly Label _currentPageLabel;
         private readonly Label _corpseNameLabel;
-        private readonly bool _hideIfEmpty;
         private int _pagesCount;
         private bool firstItemsLoaded = false;
 
@@ -276,7 +275,7 @@ namespace ClassicUO.Game.UI.Gumps
                 GameActions.Print(World, TazLang.Get("corpse_is_empty"));
                 Dispose();
             }
-            else if (_hideIfEmpty && !IsVisible)
+            else if (!IsVisible)
             {
                 IsVisible = true;
             }

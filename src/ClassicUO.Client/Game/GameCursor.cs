@@ -67,6 +67,7 @@ namespace ClassicUO.Game
         private bool _needGraphicUpdate = true;
         private readonly List<Multi> _temp = new List<Multi>();
         private readonly Tooltip _tooltip;
+        private readonly DebugHoverTooltip _debugHover;
         private readonly World _world;
 
         /// <summary>
@@ -79,6 +80,7 @@ namespace ClassicUO.Game
         {
             _world = world;
             _tooltip = new Tooltip(world);
+            _debugHover = new DebugHoverTooltip(world);
             _aura = new Aura(30);
 
             for (int i = 0; i < 2; i++)
@@ -457,6 +459,7 @@ namespace ClassicUO.Game
             }
 
             DrawToolTip(sb, Mouse.Position);
+            _debugHover.Draw(sb);
 
             if (!Settings.GlobalSettings.RunMouseInASeparateThread)
             {
@@ -571,7 +574,7 @@ namespace ClassicUO.Game
                             _tooltip.SetGameObject(item);
                         }
 
-                        _tooltip.Draw(batcher, position.X, position.Y + 24);
+                        _tooltip.Draw(batcher, position.X, position.Y);
 
                         return;
                     }
@@ -588,7 +591,7 @@ namespace ClassicUO.Game
                                 _tooltip.SetGameObject(serial);
                             }
 
-                            _tooltip.Draw(batcher, position.X, position.Y + 24);
+                            _tooltip.Draw(batcher, position.X, position.Y);
 
                             return;
                         }
@@ -615,7 +618,7 @@ namespace ClassicUO.Game
                         _tooltip.SetText(text);
                     }
 
-                    _tooltip.Draw(batcher, position.X, position.Y + 24);
+                    _tooltip.Draw(batcher, position.X, position.Y);
                 }
                 else if (UIManager.MouseOverControl.Tooltip is Control c)
                 {

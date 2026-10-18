@@ -20,7 +20,7 @@ namespace ClassicUO.Game.UI.Controls;
 /// While we inherit many interface methods from Gump controls, many of them do not apply to Myra controls.
 /// It's a long process to be able to support two different types of windows/gumps in the same UIManager
 /// </summary>
-public class MyraControl : IGui
+public class MyraControl : IGui, IDisposable
 {
     #region Internal Controls
 
@@ -59,12 +59,18 @@ public class MyraControl : IGui
     #region Event Handlers
     //private void UIManagerOnTopMostChanged(object sender, EventArgs e) => _desktop.Opacity = UIManager.TopMostControl == this ? 1f : 0.8f;
 
+    /// <remarks>
+    ///     Goes through <see cref="Dispose" /> rather than setting the flag, so a title-bar close runs
+    ///     a subclass's teardown. <see cref="ExecuteDispose" /> is not virtual and would skip it.
+    /// </remarks>
     private void OnRootWindowOnClosed(object s, EventArgs a)
     {
-        if (IsDisposed)
+        // _disposeRequested as well as IsDisposed: a close already requested this frame has had its
+        // teardown run, and Dispose() overrides are not all safe to run twice.
+        if (IsDisposed || _disposeRequested)
             return;
 
-        _disposeRequested = true;
+        Dispose();
     }
 
     private void RootWindowOnSizeChanged(object sender = null, EventArgs e = null) => UpdateBoundsToContents(false);
@@ -136,6 +142,14 @@ public class MyraControl : IGui
     public bool AcceptMouseInput { get; set; } = true;
     public bool HandlesKeyboardFocus { get; set; }
     public bool IsDisposed { get; private set; } = false;
+
+    /// <summary>
+    /// Whether a close is pending: teardown is deferred to the next <see cref="Update"/> so it cannot
+    /// run inside the UI event that asked for it, and <see cref="IsDisposed"/> reads false until then.
+    /// Anything testing whether a control is still usable - reusing a cached instance, say - must
+    /// check this too, or act on one that vanishes a frame later.
+    /// </summary>
+    public bool IsClosing => _disposeRequested;
     public bool IsVisible { get; set; } = true;
     public bool IsEnabled { get; set; } = true;
     public IGui RootParent { get; } = null;
@@ -263,9 +277,7 @@ public class MyraControl : IGui
         }
 
         while (_deferredActions.Count > 0)
-        {
             _deferredActions.Dequeue()?.Invoke();
-        }
     }
 
     public virtual void PreDraw()
@@ -368,6 +380,7 @@ public class MyraControl : IGui
             _rootWindow.LocationChanged -= DesktopWindowOnLocationChanged;
             _rootWindow.SizeChanged -= RootWindowOnSizeChanged;
             _rootWindow.ArrangeUpdated -= RootWindowOnSizeChanged;
+            _rootWindow.Dispose();
         }
 
         _desktop.Widgets.Clear();

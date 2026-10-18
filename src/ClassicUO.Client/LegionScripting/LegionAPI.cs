@@ -12,11 +12,13 @@ using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.LegionScripting.ApiClasses;
 using ClassicUO.Network;
 using ClassicUO.Utility;
@@ -479,6 +481,39 @@ namespace ClassicUO.LegionScripting
             Global
         }
 
+        /// <summary>
+        /// How a graphic effect created by `CreateEffect` behaves.
+        /// </summary>
+        public enum EffectType : byte
+        {
+            /// <summary>Travels from the source to the target.</summary>
+            Moving = 0x00,
+
+            /// <summary>Draws a lightning bolt from the source.</summary>
+            Lightning = 0x01,
+
+            /// <summary>Stationary, positioned at the source coordinates.</summary>
+            FixedXYZ = 0x02,
+
+            /// <summary>Stationary, follows the source serial (or source coordinates).</summary>
+            FixedFrom = 0x03,
+        }
+
+        /// <summary>
+        /// Blend mode used when drawing a graphic effect. Mirrors the values the server sends.
+        /// </summary>
+        public enum EffectBlendMode
+        {
+            Normal = 0x00,
+            Multiply = 0x01,
+            Screen = 0x02,
+            ScreenMore = 0x03,
+            ScreenLess = 0x04,
+            NormalHalfTransparent = 0x05,
+            ShadowBlue = 0x06,
+            ScreenRed = 0x07
+        }
+
         #endregion
 
         #region Methods
@@ -529,6 +564,80 @@ namespace ClassicUO.LegionScripting
         /// <param name="key">Key combination to check, e.g. "CTRL+SHIFT+F1".</param>
         /// <returns>True if the combination is currently pressed, false otherwise.</returns>
         public bool IsKeyPressed(string key) => OnMain(() => CUOKeyboard.IsKeyPressed(key));
+
+        /// <summary>
+        /// Shows the in-game hotkey capture window and waits for the player to pick a key combination.
+        /// The returned string matches what `OnHotKey` and `IsKeyPressed` accept, so it can be passed
+        /// straight to them, e.g. "CTRL+SHIFT+F1" or "A".
+        /// Only keyboard bindings are returned; mouse, wheel, controller and modifier-only captures are
+        /// rejected. Blocks until the player saves a key or closes the window (or the timeout elapses).
+        /// Example:
+        /// ```py
+        /// key = API.RequestHotkey()
+        /// if key:
+        ///   API.OnHotKey(key, on_pressed)
+        /// ```
+        /// </summary>
+        /// <param name="prompt">Optional message shown above the capture box.</param>
+        /// <param name="timeout">Maximum number of seconds to wait for the player to choose a hotkey.</param>
+        /// <returns>
+        /// The captured key combination, or an empty string if the player cancelled, closed the window
+        /// or the timeout elapsed.
+        /// </returns>
+        public string RequestHotkey(string prompt = "Press a hotkey", double timeout = 30)
+        {
+            object gate = new object();
+            string captured = null;
+
+            HotkeyCaptureWindow window = OnMain(() => new HotkeyCaptureWindow(
+                prompt,
+                existing: null,
+                onSaved: binding =>
+                {
+                    lock (gate)
+                        captured = BindingToKeyString(binding);
+                },
+                capturesMouseEvents: false,
+                bindingValidator: binding => binding.HasKey
+            ));
+
+            DateTime expire = DateTime.Now.AddSeconds(timeout);
+
+            while (DateTime.Now < expire && !StopRequested && !window.IsDisposed)
+            {
+                lock (gate)
+                    if (captured != null)
+                        return captured;
+
+                Thread.Sleep(5);
+            }
+
+            if (!window.IsDisposed)
+                OnMain(() => window.Dispose());
+
+            lock (gate)
+                return captured ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Converts a captured keyboard binding to the canonical key-string format used by the string
+        /// based hotkey APIs, e.g. "CTRL+SHIFT+F1". Returns an empty string for non-keyboard bindings.
+        /// </summary>
+        private static string BindingToKeyString(HotkeyBinding binding)
+        {
+            if (binding?.HasKey != true)
+                return string.Empty;
+
+            var parts = new List<string>();
+            if (binding.Ctrl) parts.Add("CTRL");
+            if (binding.Shift) parts.Add("SHIFT");
+            if (binding.Alt) parts.Add("ALT");
+
+            string keyName = binding.Key.ToString();
+            parts.Add(keyName.StartsWith("SDLK_", StringComparison.Ordinal) ? keyName.Substring(5) : keyName);
+
+            return string.Join("+", parts);
+        }
 
         /// <summary>
         /// Schedules a callback to be invoked after a specified delay.
@@ -1109,31 +1218,23 @@ namespace ClassicUO.LegionScripting
         /// <param name="amt">0 to grab entire stack</param>
         /// <param name="x">Offset from your location</param>
         /// <param name="y">Offset from your location</param>
-        /// <param name="z">Offset from your location. Leave blank in most cases</param>
+        /// <param name="z">Z offset from your location. Leave blank to auto-use the ground/static z at the destination tile</param>
         /// <param name="OSI">True if you are playing OSI</param>
-        public void QueueMoveItemOffset(uint serial, ushort amt = 0, int x = 0, int y = 0, int z = 0, bool OSI = false) => OnMain
+        public void QueueMoveItemOffset(uint serial, ushort amt = 0, int x = 0, int y = 0, int z = int.MinValue, bool OSI = false) => OnMain
         (() =>
             {
                 if (World?.Map == null || World?.Player == null)
                     return;
 
-                World.Map.GetMapZ(World.Player.X + x, World.Player.Y + y, out sbyte gz, out sbyte gz2);
-
-                bool useCalculatedZ = false;
-
-                if (gz > z)
+                if (z == int.MinValue)
                 {
-                    z = gz;
-                    useCalculatedZ = true;
+                    World.Map.GetMapZ(World.Player.X + x, World.Player.Y + y, out sbyte gz, out sbyte gz2);
+                    z = gz2 > gz ? gz2 : gz;
                 }
-                if (gz2 > z)
+                else
                 {
-                    z = gz2;
-                    useCalculatedZ = true;
-                }
-
-                if (!useCalculatedZ)
                     z = World.Player.Z + z;
+                }
 
                 ObjectActionQueue.Instance.Enqueue(new MoveRequest(serial, OSI ? uint.MaxValue : 0, amt, World.Player.X + x, World.Player.Y + y, z).ToObjectActionQueueItem(), ActionPriority.MoveItem);
             }
@@ -1153,31 +1254,23 @@ namespace ClassicUO.LegionScripting
         /// <param name="amt">0 to grab entire stack</param>
         /// <param name="x">Offset from your location</param>
         /// <param name="y">Offset from your location</param>
-        /// <param name="z">Offset from your location. Leave blank in most cases</param>
+        /// <param name="z">Z offset from your location. Leave blank to auto-use the ground/static z at the destination tile</param>
         /// <param name="OSI">True if you are playing OSI</param>
-        public void MoveItemOffset(uint serial, int amt = 0, int x = 0, int y = 0, int z = 0, bool OSI = false) => OnMain
+        public void MoveItemOffset(uint serial, int amt = 0, int x = 0, int y = 0, int z = int.MinValue, bool OSI = false) => OnMain
         (() =>
             {
                 if (World?.Map == null || World?.Player == null)
                     return;
 
-                World.Map.GetMapZ(World.Player.X + x, World.Player.Y + y, out sbyte gz, out sbyte gz2);
-
-                bool useCalculatedZ = false;
-
-                if (gz > z)
+                if (z == int.MinValue)
                 {
-                    z = gz;
-                    useCalculatedZ = true;
+                    World.Map.GetMapZ(World.Player.X + x, World.Player.Y + y, out sbyte gz, out sbyte gz2);
+                    z = gz2 > gz ? gz2 : gz;
                 }
-                if (gz2 > z)
+                else
                 {
-                    z = gz2;
-                    useCalculatedZ = true;
-                }
-
-                if (!useCalculatedZ)
                     z = World.Player.Z + z;
+                }
 
                 GameActions.PickUp(World, serial, 0, 0, amt);
                 GameActions.DropItem(serial, World.Player.X + x, World.Player.Y + y, z, OSI ? uint.MaxValue : 0);
@@ -2065,6 +2158,94 @@ namespace ClassicUO.LegionScripting
         /// <returns>True if the cooldown bar exists, false otherwise</returns>
         public bool CooldownExists(string name) => OnMain
             (() => Game.Managers.CoolDownBarManager.CoolDownBarExists(name));
+
+        /// <summary>
+        /// Creates and displays a graphic effect in the world, the same kind the server sends for spells,
+        /// projectiles, explosions, etc. This is a purely local, visual effect - no packet is sent and only
+        /// you see it.
+        /// The type decides how it behaves: `EffectType.FixedXYZ` and
+        /// `EffectType.FixedFrom` stay in place, `EffectType.Moving` travels from
+        /// the source to the target, and `EffectType.Lightning` draws a bolt from the source.
+        /// Positions come from the source/target serials when given, otherwise from the coordinates, which
+        /// default to the player's position.
+        /// Example:
+        /// ```py
+        /// # A stationary animation on the tile next to the player, for 2 seconds
+        /// API.CreateEffect(0x373A, sourceX=API.Player.X + 1, sourceY=API.Player.Y, hue=0x0481)
+        ///
+        /// # A projectile fired from the player at the nearest murderer
+        /// mob = API.NearestMobile([API.Notoriety.Murderer], 8)
+        /// if mob:
+        ///   API.CreateEffect(0x36D0, type=API.EffectType.Moving, source=API.Player, target=mob)
+        /// ```
+        /// </summary>
+        /// <param name="graphic">The animation/art graphic to draw.</param>
+        /// <param name="type">How the effect behaves. Defaults to a stationary effect.</param>
+        /// <param name="source">Serial of the source item/mobile. Takes priority over the source coordinates.</param>
+        /// <param name="target">Serial of the target item/mobile. Takes priority over the target coordinates.</param>
+        /// <param name="hue">Hue to color the effect. 0 means no hue.</param>
+        /// <param name="sourceX">Source X coordinate. Defaults to the player's X.</param>
+        /// <param name="sourceY">Source Y coordinate. Defaults to the player's Y.</param>
+        /// <param name="sourceZ">Source Z coordinate. Defaults to the player's Z.</param>
+        /// <param name="targetX">Target X coordinate. Defaults to the source X.</param>
+        /// <param name="targetY">Target Y coordinate. Defaults to the source Y.</param>
+        /// <param name="targetZ">Target Z coordinate. Defaults to the source Z.</param>
+        /// <param name="duration">How long the effect lasts, in seconds. 0 or less makes it last until it leaves the area.</param>
+        /// <param name="speed">Animation speed. 0 uses the default speed.</param>
+        /// <param name="fixedDirection">Hold the effect's direction instead of rotating it to face the target.</param>
+        /// <param name="doesExplode">Create an explosion at the target when a moving effect arrives.</param>
+        /// <param name="blendMode">How the effect is blended over the world.</param>
+        public void CreateEffect(
+            ushort graphic,
+            EffectType type = EffectType.FixedXYZ,
+            uint source = 0,
+            uint target = 0,
+            ushort hue = 0,
+            int? sourceX = null,
+            int? sourceY = null,
+            int? sourceZ = null,
+            int? targetX = null,
+            int? targetY = null,
+            int? targetZ = null,
+            double duration = 2,
+            byte speed = 0,
+            bool fixedDirection = false,
+            bool doesExplode = false,
+            EffectBlendMode blendMode = EffectBlendMode.Normal
+        ) => OnMain
+        (() =>
+            {
+                if (World?.Player == null)
+                    return;
+
+                int sx = sourceX ?? World.Player.X;
+                int sy = sourceY ?? World.Player.Y;
+                int sz = sourceZ ?? World.Player.Z;
+
+                int durationTicks = duration > 0 ? (int)(duration * 1000 / Constants.ITEM_EFFECT_ANIMATION_DELAY) : 0;
+
+                World.SpawnEffect
+                (
+                    (GraphicEffectType)type,
+                    source,
+                    target,
+                    graphic,
+                    hue,
+                    (ushort)sx,
+                    (ushort)sy,
+                    (sbyte)sz,
+                    (ushort)(targetX ?? sx),
+                    (ushort)(targetY ?? sy),
+                    (sbyte)(targetZ ?? sz),
+                    speed,
+                    durationTicks,
+                    fixedDirection,
+                    doesExplode,
+                    false,
+                    (GraphicEffectBlendMode)blendMode
+                );
+            }
+        );
 
         /// <summary>
         /// Adds an item or mobile to your ignore list.

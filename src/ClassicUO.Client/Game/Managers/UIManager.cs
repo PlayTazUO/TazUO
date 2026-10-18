@@ -244,35 +244,44 @@ namespace ClassicUO.Game.Managers
         {
             HandleMouseInput();
 
-            if (MouseOverControl != null)
+            // Snapshot the control: a mouse-down handler (or a focus change it triggers) may run
+            // HandleMouseInput reentrantly and null out MouseOverControl mid-way through this block.
+            IGui mouseOver = MouseOverControl;
+
+            if (mouseOver != null)
             {
-                if (MouseOverControl.IsEnabled && MouseOverControl.IsVisible)
+                if (mouseOver.IsEnabled && mouseOver.IsVisible)
                 {
-                    if (_lastFocus != MouseOverControl)
+                    if (_lastFocus != mouseOver)
                     {
                         _lastFocus?.OnFocusLost();
-                        MouseOverControl.OnFocusEnter();
-                        _lastFocus = MouseOverControl;
+                        mouseOver.OnFocusEnter();
+                        _lastFocus = mouseOver;
                     }
                 }
 
-                MakeTopMostGump(MouseOverControl);
-                MouseOverControl.InvokeMouseDown(Mouse.Position, button);
+                MakeTopMostGump(mouseOver);
+                mouseOver.InvokeMouseDown(Mouse.Position, button);
 
-                if (MouseOverControl.AcceptKeyboardInput)
+                // The handler may have closed the control it was invoked on; skip focus/state
+                // bookkeeping for a disposed control.
+                if (!mouseOver.IsDisposed)
                 {
-                    _keyboardFocusControl = MouseOverControl;
-                }
-                else if (button == MouseButtonType.Left && !IsModalOpen && _keyboardFocusControl != null
-                         && GetOwningGump(_keyboardFocusControl) != GetOwningGump(MouseOverControl))
-                {
-                    // Clicked a different gump than the one that owns the focused input field (search
-                    // boxes, rename fields, etc.), so release it back to the system chat - same as a
-                    // world/background click. Clicks inside the field's own gump keep it focused.
-                    RestoreSystemChatFocus();
-                }
+                    if (mouseOver.AcceptKeyboardInput)
+                    {
+                        _keyboardFocusControl = mouseOver;
+                    }
+                    else if (button == MouseButtonType.Left && !IsModalOpen && _keyboardFocusControl != null
+                             && GetOwningGump(_keyboardFocusControl) != GetOwningGump(mouseOver))
+                    {
+                        // Clicked a different gump than the one that owns the focused input field (search
+                        // boxes, rename fields, etc.), so release it back to the system chat - same as a
+                        // world/background click. Clicks inside the field's own gump keep it focused.
+                        RestoreSystemChatFocus();
+                    }
 
-                _mouseDownControls[(int)button] = MouseOverControl;
+                    _mouseDownControls[(int)button] = mouseOver;
+                }
             }
             else
             {
@@ -713,10 +722,16 @@ namespace ClassicUO.Game.Managers
 
         public static void Clear()
         {
-            foreach (IGui s in Gumps)
+            // Snapshot before disposing: a gump's Dispose can add or remove gumps (event
+            // handlers, anchoring, scripts), which would invalidate a live enumeration of Gumps.
+            var snapshot = new IGui[Gumps.Count];
+            Gumps.CopyTo(snapshot, 0);
+
+            foreach (IGui gump in snapshot)
             {
-                s.Dispose();
+                gump.Dispose();
             }
+
             Gumps.Clear();
 
             // The whole tree is gone; a cached hit-test result pointing into it must not survive.

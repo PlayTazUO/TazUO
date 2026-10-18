@@ -293,13 +293,15 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_virtueMenuPic = new GumpPic(Settings.Position_X_Virtue, Settings.Position_Y_Virtue, Settings.Graphic_Button_Virtue, 0));
             _virtueMenuPic.MouseDoubleClick += VirtueMenu_MouseDoubleClickEvent;
 
-            if (LocalSerial == World.Player.Serial)
-                Add(new DurabilityGumpMinimized(World)
-                {
-                    X = Settings.Position_X_Durability,
-                    Y = Settings.Position_Y_Durability,
-                    Graphic = Settings.Graphic_Button_Durability
-                });
+            // Adds a durability tracker for this paperdoll's mobile. It only draws and accepts input
+            // while that mobile has tracked durability, so it stays hidden otherwise.
+            Add(new DurabilityGumpMinimized(World)
+            {
+                WatchSerial = LocalSerial,
+                X = Settings.Position_X_Durability,
+                Y = Settings.Position_Y_Durability,
+                Graphic = Settings.Graphic_Button_Durability
+            });
 
             // Equipment slots for hat/earrings/neck/ring/bracelet
             AddEquipSlot(EquipSlotSide.Left, Layer.Helmet);
@@ -588,6 +590,16 @@ namespace ClassicUO.Game.UI.Gumps
                                     Mouse.CancelDoubleClick = true;
 
                                     Client.Game.UO.GameCursor.ItemHold.Clear();
+                                }
+                                else if (ProfileManager.GlobalSettings.SwapEquippedOnPaperdollDrop)
+                                {
+                                    GameActions.QueueEquipSwap(
+                                        World,
+                                        LocalSerial != World.Player ? container : World.Player,
+                                        (Layer)Client.Game.UO.GameCursor.ItemHold.ItemData.Layer,
+                                        equipment.Serial
+                                    );
+                                    Mouse.CancelDoubleClick = true;
                                 }
                             }
                         }

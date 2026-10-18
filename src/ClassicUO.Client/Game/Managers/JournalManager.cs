@@ -73,7 +73,21 @@ namespace ClassicUO.Game.Managers
                 output = $"[{timeNow:G}]  {name}: {text}";
             }
 
-            _fileWriter?.WriteLine(output);
+            if (_fileWriter == null)
+                return;
+
+            try
+            {
+                _fileWriter.WriteLine(output);
+            }
+            catch (Exception ex)
+            {
+                // The log location can disappear mid-session (removable or network drive). Stop writing
+                // rather than letting the IO failure bubble up through the packet/message path.
+                Log.Error(ex.ToString());
+                _writerHasException = true;
+                CloseWriter();
+            }
         }
 
         private void CreateWriter()
@@ -131,9 +145,19 @@ namespace ClassicUO.Game.Managers
 
         public void CloseWriter()
         {
-            _fileWriter?.Flush();
-            _fileWriter?.Dispose();
-            _fileWriter = null;
+            try
+            {
+                _fileWriter?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                // Flushing to an unavailable device throws; the writer is being discarded anyway.
+                Log.Error(ex.ToString());
+            }
+            finally
+            {
+                _fileWriter = null;
+            }
         }
 
         public void Clear() =>

@@ -135,7 +135,7 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
 - Keep layout responsive: `WrapPanel`, no fixed `Width`/`Height` boxes. Resizable windows already
   provide scrollers. A vertical `WrapPanel` answers an over-tall child by starting a second column,
   so a fixed vertical sequence wants a `StackPanel`.
-- User-facing strings live in `Configuration/language.ini`, read via `TazLang.Get(key, fallback)`.
+- User-facing strings live in `Configuration/language.ini`, read via `TazLang.Get(key)`. Fallback param not necessary
   Keys should have a meaningful prefix (e.g. `options_video_tab_`).
 
 #### Options tabs
@@ -152,6 +152,7 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
 
 ### Files
 - No license header on new files.
+- Use `#nullable enable` for new files unless it significantly complicates code.
 
 ### Cross-Platform
 - Decision hurts cross-platform compat → stop, ask user first.

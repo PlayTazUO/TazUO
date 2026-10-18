@@ -5,13 +5,39 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
-/// <summary>Options tab source for paperdoll display settings, including modern paperdoll appearance</summary>
+/// <summary>Options tab source for paperdoll settings, including equip-on-drop behavior and modern paperdoll appearance</summary>
 public class PaperdollTab
 {
-    /// <summary>Returns the option fragment for modern-paperdoll enable/disable and styling</summary>
+    /// <summary>Returns the option fragments for equip-on-drop behavior and modern-paperdoll enable/disable and styling</summary>
     internal static IOptionSource GetContent()
     {
         return OptionsUi.Vertical(
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(
+                    new Accessor<bool>(() => ProfileManager.GlobalSettings.SwapEquippedOnPaperdollDrop),
+                    TazLang.Get("mog_tazuo_swapequippedonpaperdolldrop"),
+                    TazLang.Get("mog_tazuo_swapequippedonpaperdolldroptooltip")
+                ),
+                Option.Checkbox(
+                    TazLang.Get("mog_tazuo_swapequippedonpaperdolldropkr"),
+                    new Accessor<bool>(
+                        () => ProfileManager.ServerSettings?.UseKrEquipSwap ?? false,
+                        value =>
+                        {
+                            if (ProfileManager.ServerSettings != null)
+                                ProfileManager.ServerSettings.UseKrEquipSwap = value;
+                        }
+                    ),
+                    TazLang.Get("mog_tazuo_swapequippedonpaperdolldropkrtooltip"),
+                    new SearchMetadata(
+                        TazLang.Get("mog_tazuo_swapequippedonpaperdolldropkr"),
+                        Keywords: [TazLang.Get("mog_kw_paperdoll"), TazLang.Get("mog_kw_equipment"), TazLang.Get("mog_kw_item"), TazLang.Get("mog_kw_drop")]
+                    )
+                )
+            ).WithSearch(new SearchMetadata(
+                TazLang.Get("mog_tazuo_swapequippedonpaperdolldrop"),
+                Keywords: [TazLang.Get("mog_kw_paperdoll"), TazLang.Get("mog_kw_equipment"), TazLang.Get("mog_kw_item"), TazLang.Get("mog_kw_drop")]
+            )),
             GetModernPaperdollSection()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_buttonpaperdoll"), [TazLang.Get("mog_kw_paperdoll"), TazLang.Get("mog_kw_character"), TazLang.Get("mog_kw_equipment")]));
     }

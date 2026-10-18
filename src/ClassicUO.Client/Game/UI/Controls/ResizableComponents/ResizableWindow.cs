@@ -1,6 +1,9 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ClassicUO.Configuration;
@@ -16,7 +19,8 @@ namespace ClassicUO.Game.UI.Controls.ResizableComponents;
 
 /// <summary>
 ///     A Myra <see cref="Window" /> that supports edge/corner drag-resizing, minimizing to its title bar,
-///     and persisting its size, based on the behavior configured via <see cref="Props" />.
+///     and persisting its size, based on the behavior configured via <see cref="Props" />. It can also
+///     carry a help affordance in its title bar, which it owns - see <see cref="Help" />.
 /// </summary>
 public class ResizableWindow : Window, IDisposable
 {
@@ -25,7 +29,7 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Raised after the window's size has changed as a result of a drag-resize operation.
     /// </summary>
-    public event EventHandler<ResizeEventArgs> Resized;
+    public event EventHandler<ResizeEventArgs>? Resized;
 
     #endregion
 
@@ -68,8 +72,29 @@ public class ResizableWindow : Window, IDisposable
         set
         {
             base.Title = value;
-            _titlePanelFullWidth = TitlePanel.Measure(new Point(2000, 2000)).X;
-            UpdateTitleLabelVisibility();
+            RefreshTitlePanelMetrics();
+        }
+    }
+
+    /// <summary>
+    ///     The help affordance offered in the title bar, to the left of the close button. Null for a
+    ///     window that documents nothing.
+    /// </summary>
+    /// <remarks>
+    ///     Owned while assigned: replacing it, or closing the window, dismisses the outgoing one's
+    ///     modal. One <see cref="HelpButton" /> per window - assigning the same instance twice
+    ///     reparents it away from the first.
+    /// </remarks>
+    public HelpButton? Help
+    {
+        get => _helpButton;
+
+        set
+        {
+            if (value == null)
+                RemoveHelpButton();
+            else
+                ConfigureHelpButton(value);
         }
     }
 
@@ -105,6 +130,12 @@ public class ResizableWindow : Window, IDisposable
     /// hairline at the square's size.</summary>
     private const int RESTORE_BTN_GLYPH_SIZE = 32;
 
+    /// <summary>Stand-in for an unbounded measure - Myra has no "infinity" for one.</summary>
+    private static readonly Point _unboundedMeasure = new(2000, 2000);
+
+    /// <summary>Tightens the title bar around the glyph buttons, which carry no padding of their own.</summary>
+    private static readonly Thickness _titlePanelPadding = new(0, 1, 0, 3);
+
     private ResizeEdges? _activeResizeEdge;
     private DragDirection _allowedDragDirections;
 
@@ -127,11 +158,13 @@ public class ResizableWindow : Window, IDisposable
 
     #region Components
 
-    private IconButton _minMaxButton;
+    private IconButton? _minMaxButton;
 
-    private IconButton _resetSizeButton;
+    private IconButton? _resetSizeButton;
 
-    private Widget _content;
+    private HelpButton? _helpButton;
+
+    private Widget? _content;
 
     #endregion
 
@@ -143,10 +176,15 @@ public class ResizableWindow : Window, IDisposable
     ///     Initializes a new instance of the <see cref="ResizableWindow" /> class.
     /// </summary>
     /// <param name="props">Properties defining initial window state and resize behavior.</param>
-    public ResizableWindow(ResizableWindowProps props = null)
+    public ResizableWindow(ResizableWindowProps? props = null)
     {
         Props = props ?? new ResizableWindowProps();
         Props.PropertyChanged += OnPropsChanged;
+
+        // Ahead of Configure, and only here: Configure re-runs on every property change, and
+        // re-applying these would undo whatever a caller has since done to the title bar.
+        TitlePanel.Padding = _titlePanelPadding;
+        _titleLabel.VerticalAlignment = VerticalAlignment.Center;
 
         Configure(null);
     }
@@ -229,6 +267,9 @@ public class ResizableWindow : Window, IDisposable
             return;
 
         Props?.PropertyChanged -= OnPropsChanged;
+        // The help modal lives in UIManager in its own right, so closing the window it belongs to
+        // would otherwise leave it on screen with nothing to dismiss it from.
+        _helpButton?.CloseModal();
         Mouse.Moved -= OnMouseMovedWhileInWindow;
         Mouse.LeftButtonClickStateChanged -= LeftClickChangedHandler;
         Mouse.Moved -= OnMouseMovedWhileResizing;
@@ -244,7 +285,7 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Gets or sets the content of the window
     /// </summary>
-    public override Widget Content
+    public override Widget? Content
     {
         get => base.Content;
         set
@@ -360,7 +401,7 @@ public class ResizableWindow : Window, IDisposable
     ///     Configures the window UI components.
     /// </summary>
     /// <param name="e">An optional property changed event arguments, if the call was triggered by property changes</param>
-    private void Configure(PropertyChangedEventArgs e)
+    private void Configure(PropertyChangedEventArgs? e)
     {
         if (e == null || e.PropertyName == nameof(Props.InitialSizeStore))
         {
@@ -389,6 +430,61 @@ public class ResizableWindow : Window, IDisposable
     }
 
     /// <summary>
+    ///     Seats a helpButton widget in the title panel, to the left of the close button, replacing any
+    ///     helpButton widget already there.
+    /// </summary>
+    /// <param name="helpButton">The helpButton widget to seat. Never null.</param>
+    /// <remarks>
+    ///     Myra's child collection takes the same widget twice without complaint, costing the stack
+    ///     panel a second slot - so a widget already seated is left alone, and any other occupant goes
+    ///     first.
+    /// </remarks>
+    private void ConfigureHelpButton(HelpButton helpButton)
+    {
+        Debug.Assert(helpButton != null, "helpButton is null - this indicates an unguarded call");
+
+        if (ReferenceEquals(_helpButton, helpButton))
+            return;
+
+        RemoveHelpButton();
+        _helpButton = helpButton;
+
+        int closeButtonIdx = TitlePanel.Widgets.IndexOf(CloseButton);
+        if (closeButtonIdx < 0)
+            TitlePanel.Widgets.Add(_helpButton);
+        else
+            TitlePanel.Widgets.Insert(closeButtonIdx, _helpButton);
+
+        RefreshTitlePanelMetrics();
+    }
+
+    /// <summary>
+    ///     Removes the help button from the title panel, if present, and dismisses the help modal it
+    ///     may have open.
+    /// </summary>
+    private void RemoveHelpButton()
+    {
+        if (_helpButton == null)
+            return;
+
+        _helpButton.CloseModal();
+        TitlePanel.Widgets.Remove(_helpButton);
+        _helpButton = null;
+
+        RefreshTitlePanelMetrics();
+    }
+
+    /// <summary>
+    ///     Re-measures the panel and re-tests whether the title label fits. Needed on any content
+    ///     change, not just text: the cached width is what decides the label's visibility.
+    /// </summary>
+    private void RefreshTitlePanelMetrics()
+    {
+        _titlePanelFullWidth = TitlePanel.Measure(_unboundedMeasure).X;
+        UpdateTitleLabelVisibility();
+    }
+
+    /// <summary>
     ///     Updates the text and font of the minimize/maximize button based on the current state.
     /// </summary>
     private void UpdateMinMaxButtonLabel() => _minMaxButton?.SetIcon(MinMaxButtonText, MinMaxGlyphSize);
@@ -399,7 +495,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="_1">Unused event arguments.</param>
-    private void OnMinMaxButtonClick(object _, EventArgs _1)
+    private void OnMinMaxButtonClick(object? _, EventArgs _1)
     {
         if (IsMinimized)
             Maximize();
@@ -413,7 +509,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="_1">Unused event arguments.</param>
-    private void OnResetSizeButtonClick(object _, EventArgs _1)
+    private void OnResetSizeButtonClick(object? _, EventArgs _1)
     {
         Width = null;
         Height = null;
@@ -679,7 +775,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="e">Unused mouse-moved event data.</param>
-    private void OnMouseMovedWhileInWindow(object _, MouseMovedEventArgs e)
+    private void OnMouseMovedWhileInWindow(object? _, MouseMovedEventArgs e)
     {
         // Resize is disabled when the window is minimized, so no need to even check the cursor position.
         if (!IsCurrentlyResizable)
@@ -703,7 +799,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="e">Unused mouse-moved event data.</param>
-    private void OnMouseMovedWhileResizing(object _, MouseMovedEventArgs e)
+    private void OnMouseMovedWhileResizing(object? _, MouseMovedEventArgs e)
     {
         if (!_activeResizeEdge.HasValue || !Mouse.LButtonPressed)
         {
@@ -744,15 +840,27 @@ public class ResizableWindow : Window, IDisposable
             return;
         }
 
-        // Otherwise, we can allow the label text to span under the button, but beyond that, it starts looking broken,
-        // so we hide it.
-        int closeButtonWidth = CloseButton?.Visible == true
-            ? Math.Max(0, CloseButton.Measure(new Point(2000, 2000)).X - (CloseButton.Margin.Right + CloseButton.Padding.Right))
-            : 0;
+        // Otherwise, we can allow the label text to span under the buttons at the panel's trailing edge,
+        // but beyond that, it starts looking broken, so we hide it.
+        int trailingButtonsWidth = TrailingEdgeWidth(CloseButton) + TrailingEdgeWidth(_helpButton);
 
         // Since the window may be resized to any size, we need to ensure the title label does not overflow;
         // Myra does not handle this gracefully, not even with ellipsis.
-        _titleLabel.Visible = _titlePanelFullWidth - closeButtonWidth <= (Width ?? Bounds.Width);
+        _titleLabel.Visible = _titlePanelFullWidth - trailingButtonsWidth <= (Width ?? Bounds.Width);
+    }
+
+    /// <summary>
+    ///     Width a title-bar widget occupies for <see cref="UpdateTitleLabelVisibility" />, less the
+    ///     trailing gap the label may run into.
+    /// </summary>
+    /// <param name="widget">The widget to measure. Null or hidden ones measure zero.</param>
+    /// <returns>The width, in pixels.</returns>
+    private static int TrailingEdgeWidth(Widget? widget)
+    {
+        if (widget?.Visible != true)
+            return 0;
+
+        return Math.Max(0, widget.Measure(_unboundedMeasure).X - (widget.Margin.Right + widget.Padding.Right));
     }
 
     /// <summary>
@@ -802,7 +910,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="e">Event data indicating the new left-button press state.</param>
-    private void LeftClickChangedHandler(object _, MouseLeftButtonClickStateChangedEventArgs e)
+    private void LeftClickChangedHandler(object? _, MouseLeftButtonClickStateChangedEventArgs e)
     {
         if (!e.Current && _activeResizeEdge.HasValue)
             OnDragStop(null, EventArgs.Empty);
@@ -813,7 +921,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="_">Unused event sender.</param>
     /// <param name="_1">Unused event arguments.</param>
-    private void OnDragStop(object _, EventArgs _1)
+    private void OnDragStop(object? _, EventArgs _1)
     {
         _activeResizeEdge = null;
 
@@ -846,7 +954,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <param name="sender">Unused event sender.</param>
     /// <param name="e">Event data identifying which property changed.</param>
-    private void OnPropsChanged(object sender, PropertyChangedEventArgs e) => Configure(e);
+    private void OnPropsChanged(object? sender, PropertyChangedEventArgs e) => Configure(e);
 
     #endregion
 }

@@ -38,6 +38,11 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
         private SpellRangeInfo currentSpell { get; set; }
         private bool frozenBySpell = false;
 
+        // Set once the server's target cursor has been seen for the current cast, so a spell that
+        // expects a cursor can hold its cast state through the packet round trip but still clear once
+        // that cursor closes. Reset on every cast start/end.
+        private bool sawTargetCursor = false;
+
         /// <summary>
         /// Monotonic tick of the last time the server reported a cast failure (a <see cref="stopAtClilocs"/>
         /// message: concentration disturbed, insufficient mana/reagents, frozen, etc.). Consumers can compare
@@ -110,6 +115,7 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
             LastSpellTime = DateTime.Now;
             currentSpell = spell;
             isCasting = true;
+            sawTargetCursor = false;
 
             if (currentSpell != null && currentSpell.FreezeCharacterWhileCasting)
             {
@@ -126,6 +132,7 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
             isCasting = false;
             currentSpell = null;
             LastSpellTime = DateTime.MinValue;
+            sawTargetCursor = false;
 
             if (World?.Player != null)
             {
@@ -198,12 +205,43 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
             SpellRangeInfo spell = currentSpell;
             if (spell == null) return false;
 
-            if (World.TargetManager.IsTargeting || (spell.ShowCastRangeDuringCasting && IsCastingWithoutTarget(spell)))
-                if (LastSpellTime + TimeSpan.FromSeconds(spell.MaxDuration) > DateTime.Now)
-                    return true;
+            if (World.TargetManager.IsTargeting)
+            {
+                sawTargetCursor = true;
+
+                return LastSpellTime + TimeSpan.FromSeconds(spell.MaxDuration) > DateTime.Now;
+            }
+
+            if (spell.ShowCastRangeDuringCasting && IsCastingWithoutTarget(spell)
+                && LastSpellTime + TimeSpan.FromSeconds(spell.MaxDuration) > DateTime.Now)
+                return true;
 
             return false;
         }
+
+        /// <summary>
+        /// Whether the cursor indicator — the <see cref="SpellRangeInfo.CursorSize" /> area, or the line
+        /// through the cursor for <see cref="SpellRangeInfo.IsLinear" /> spells — should tint this frame.
+        /// It is independent of the range indicator: it shows from the start of the cast until the target
+        /// cursor closes or the cast is cleared, regardless of <see cref="SpellRangeInfo.ShowCastRangeDuringCasting" />.
+        /// </summary>
+        public bool IsCursorIndicatorActive()
+        {
+            if (!loaded || !isCasting || ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.EnableSpellIndicators) return false;
+
+            SpellRangeInfo spell = currentSpell;
+            if (spell == null || spell.CursorSize <= 0) return false;
+
+            if (World.TargetManager.IsTargeting) sawTargetCursor = true;
+
+            return LastSpellTime + TimeSpan.FromSeconds(spell.MaxDuration) > DateTime.Now;
+        }
+
+        /// <summary>
+        /// Whether either indicator is active. Callers use this to skip the per-tile hue work when nothing
+        /// is shown; <see cref="ProcessHueForTile" /> decides which indicator applies to a given tile.
+        /// </summary>
+        public bool ShouldShowSpellIndicators() => IsTargetingAfterCasting() || IsCursorIndicatorActive();
 
         public bool IsCastingWithoutTarget()
         {
@@ -215,8 +253,13 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
 
         private bool IsCastingWithoutTarget(SpellRangeInfo spell)
         {
+            // The server sends the target cursor a round trip after the cast animation ends. Without the
+            // bridge for spells that expect a cursor, this per-frame poll clears the cast during that gap
+            // and the indicator vanishes the instant the cursor arrives. Once the cursor has been seen the
+            // normal cast-time check resumes, so the state still clears when that cursor closes.
             if (LastSpellTime + TimeSpan.FromSeconds(spell.MaxDuration) > DateTime.Now
-                && LastSpellTime + TimeSpan.FromSeconds(spell.CastTime) > DateTime.Now)
+                && (LastSpellTime + TimeSpan.FromSeconds(spell.CastTime) > DateTime.Now
+                    || (spell.ExpectTargetCursor && !sawTargetCursor)))
                 return true;
 
             // The cast window elapsed and no target cursor is pending. No packet marks a *successful*
@@ -228,27 +271,31 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
 
         public ushort ProcessHueForTile(ushort hue, GameObject o)
         {
-            if (!loaded || currentSpell == null) return hue;
+            if (!loaded) return hue;
 
-            if (currentSpell.CastRange > 0 && o.Distance <= currentSpell.CastRange) hue = currentSpell.Hue;
+            // Snapshot once: casts begin/end on other threads and must not race the derefs below.
+            SpellRangeInfo spell = currentSpell;
+            if (spell == null) return hue;
 
-            int cDistance = o.DistanceFrom(LastCursorTileLoc);
+            // Range indicator: full cast-range tint while targeting (or opted into during the cast).
+            if (IsTargetingAfterCasting() && spell.CastRange > 0 && o.Distance <= spell.CastRange) hue = spell.Hue;
 
-            if (currentSpell.CursorSize > 0 && cDistance < currentSpell.CursorSize)
+            // Cursor indicator: separate lifetime from the range indicator.
+            if (IsCursorIndicatorActive() && o.DistanceFrom(LastCursorTileLoc) < spell.CursorSize)
             {
-                if (currentSpell.IsLinear)
+                if (spell.IsLinear)
                 {
                     if (GetDirection(new Vector2(World.Player.X, World.Player.Y), LastCursorTileLoc) == SpellDirection.EastWest)
                     { //X
-                        if (o.Y == LastCursorTileLoc.Y) hue = currentSpell.CursorHue;
+                        if (o.Y == LastCursorTileLoc.Y) hue = spell.CursorHue;
                     }
                     else
                     { //Y
-                        if (o.X == LastCursorTileLoc.X) hue = currentSpell.CursorHue;
+                        if (o.X == LastCursorTileLoc.X) hue = spell.CursorHue;
                     }
                 }
                 else
-                    hue = currentSpell.CursorHue;
+                    hue = spell.CursorHue;
             }
 
             return hue;

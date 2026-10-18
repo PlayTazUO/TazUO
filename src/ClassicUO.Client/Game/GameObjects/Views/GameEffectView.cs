@@ -1,4 +1,5 @@
 ﻿using System;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Renderer;
@@ -98,11 +99,13 @@ namespace ClassicUO.Game.GameObjects
 
             ushort hue = Hue;
 
-            if (_profile.NoColorObjectsOutOfRange && Distance > World.ClientViewRange)
+            Profile profile = _profile ?? Profile.DefaultPreviewProfile;
+
+            if (profile.NoColorObjectsOutOfRange && Distance > World.ClientViewRange)
             {
                 hue = Constants.OUT_RANGE_COLOR;
             }
-            else if (World?.Player?.IsDead == true && _profile.EnableBlackWhiteEffect)
+            else if (World?.Player?.IsDead == true && profile.EnableBlackWhiteEffect)
             {
                 hue = Constants.DEAD_RANGE_COLOR;
             }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 using System;
+using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
@@ -163,14 +164,10 @@ internal static class GameActions
     }
 
     /// <summary>
-    /// Closes a currently opened settings window.
-    /// Note that this method attempts to close only the setting window currently defined as 'in-use' by the <see cref="Profile.UseNewOptionsWindow"/> property
+    /// Closes the currently opened settings window.
     /// </summary>
     /// <returns>False if no settings are open</returns>
-    internal static bool CloseSettings() =>
-        ProfileManager.CurrentProfile?.UseNewOptionsWindow == false
-            ? CloseSingletonGump<ModernOptionsGump>()
-            : CloseSingletonGump<NewOptionsWindow>();
+    internal static bool CloseSettings() => CloseSingletonGump<NewOptionsWindow>();
 
     private static bool CloseSingletonGump<TGump>() where TGump : class, IGui
     {
@@ -182,17 +179,10 @@ internal static class GameActions
         return true;
     }
 
-    internal static void OpenSettings(World world, int page = 0)
-    {
-        // Default to new window if unset
-        if (ProfileManager.CurrentProfile?.UseNewOptionsWindow == false)
-            ShowLegacyOptionsGump(world, page);
-        else
-            ShowNewOptionsGump();
-    }
+    internal static void OpenSettings(World world, int page = 0) => ShowNewOptionsGump();
 
     /// <summary>
-    /// Creates or opens the new options window
+    /// Creates or opens the options window
     /// </summary>
     public static void ShowNewOptionsGump()
     {
@@ -201,30 +191,6 @@ internal static class GameActions
             UIManager.Add(new NewOptionsWindow());
         else
             existing.BringOnTop();
-    }
-
-    /// <summary>
-    /// Creates or opens the legacy options window
-    /// </summary>
-    /// <param name="world">The world instance the gump belongs to</param>
-    /// <param name="page">The specific page to open</param>
-    public static void ShowLegacyOptionsGump(World world, int page = 0)
-    {
-        ModernOptionsGump opt = UIManager.GetGump<ModernOptionsGump>();
-
-        if (opt == null)
-        {
-            var optionsGump = new ModernOptionsGump(world);
-
-            UIManager.Add(optionsGump);
-            optionsGump.ChangePage(page);
-            optionsGump.SetInScreen();
-        }
-        else
-        {
-            opt.SetInScreen();
-            opt.BringOnTop();
-        }
     }
 
     internal static void OpenStatusBar(World world)
@@ -1039,6 +1005,50 @@ internal static class GameActions
         }
     }
 
+    /// <summary>
+    /// Queues unequipping the item occupying <paramref name="layer"/> to the player's backpack, then
+    /// equipping the currently held item into that layer on <paramref name="container"/>. Used by the
+    /// paperdolls when a wearable is dropped onto an already-occupied layer.
+    /// </summary>
+    internal static void QueueEquipSwap(World world, uint container, Layer layer, uint existingSerial)
+    {
+        Item backpack = world.Player?.Backpack;
+        uint heldSerial = Client.Game.UO.GameCursor.ItemHold.Serial;
+
+        // Can't make room without somewhere to put the existing item.
+        if (backpack == null)
+            return;
+
+        // With manual moves off the held item already sits on the server's cursor, which would make
+        // the queued unequip's pickup fail. Drop it into the backpack to free the cursor; the queued
+        // equip then picks it back up. With manual moves on the pickup is deferred to the queue, so
+        // there is no server cursor to clear.
+        if (ProfileManager.CurrentProfile.QueueManualItemMoves)
+            Client.Game.UO.GameCursor.ItemHold.Clear();
+        else
+            DropItem(heldSerial, 0xFFFF, 0xFFFF, 0, backpack.Serial);
+
+        // The KR equip macro equips items the server already holds in a container, so it can only run
+        // once the held item has been dropped into the backpack above. It replaces whatever occupies
+        // the target layer server-side, so no separate unequip request is needed.
+        if (ProfileManager.ServerSettings?.UseKrEquipSwap == true)
+        {
+            Socket.Send_EquipMacroKR(stackalloc uint[] { heldSerial });
+            return;
+        }
+
+        if (existingSerial != 0)
+            ObjectActionQueue.Instance.Enqueue(
+                new MoveRequest(existingSerial, backpack.Serial).ToObjectActionQueueItem(),
+                ActionPriority.UnequipItem
+            );
+
+        ObjectActionQueue.Instance.Enqueue(
+            new MoveRequest(heldSerial, container, layer: layer, moveType: MoveType.Equip).ToObjectActionQueueItem(),
+            ActionPriority.EquipItem
+        );
+    }
+
     internal static void ReplyGump(World world, uint local, uint server, int button, uint[] switches = null, Tuple<ushort, string>[] entries = null)
     {
         ScriptRecorder.Instance.RecordReplyGump(server, button, switches, entries);
@@ -1131,18 +1141,58 @@ internal static class GameActions
         }
     }
 
-    internal static void QuickHeal(World world, uint target)
+    internal static void QuickHeal(World world, uint target) =>
+        QuickAction(world, target, ProfileManager.CurrentProfile.QuickHealAction);
+
+    internal static void QuickCure(World world, uint target) =>
+        QuickAction(world, target, ProfileManager.CurrentProfile.QuickCureAction);
+
+    /// <summary>
+    /// Performs the configured quick heal/cure <paramref name="action"/> on <paramref name="target"/>.
+    /// Bandages are applied via <see cref="UseBandageOnTarget"/>; spells are cast and the target is
+    /// auto-selected once the server sends the target cursor (see the party heal timer consumed by the
+    /// target cursor handler).
+    /// </summary>
+    internal static void QuickAction(World world, uint target, HealthBarQuickAction action)
     {
-        CastSpell(ProfileManager.CurrentProfile.QuickHealSpell);
+        if (action == HealthBarQuickAction.Bandage)
+        {
+            UseBandageOnTarget(world, target);
+
+            return;
+        }
+
+        CastSpell(action.GetSpellId());
         world.Party.PartyHealTimer = Time.Ticks + 50;
         world.Party.PartyHealTarget = target;
     }
 
-    internal static void QuickCure(World world, uint target)
+    /// <summary>
+    /// Applies a bandage to <paramref name="target"/> using the same server-compatibility path as the
+    /// bandage agent: servers that support the target-object packet get a single packet, while older
+    /// servers require double-clicking the bandage and then auto-targeting. The bandage graphic and
+    /// target type come from the bandage agent profile settings.
+    /// </summary>
+    /// <returns><see langword="false"/> when no bandage matching the configured graphic is available.</returns>
+    internal static bool UseBandageOnTarget(World world, uint target)
     {
-        CastSpell(ProfileManager.CurrentProfile.QuickCureSpell);
-        world.Party.PartyHealTimer = Time.Ticks + 50;
-        world.Party.PartyHealTarget = target;
+        Profile profile = ProfileManager.CurrentProfile;
+        ushort graphic = profile?.BandageAgentGraphic ?? 0x0E21;
+
+        Item bandage = world.Player?.FindItemByGraphic(graphic) ?? world.Player?.FindBandage(graphic);
+
+        if (bandage == null)
+            return false;
+
+        if (profile?.BandageAgentUseNewPacket ?? true)
+            Socket.Send_TargetSelectedObject(bandage.Serial, target);
+        else
+        {
+            TargetManager.SetAutoTarget(target, profile?.BandageAgentTargetType ?? TargetType.Beneficial);
+            DoubleClick(world, bandage.Serial);
+        }
+
+        return true;
     }
 
     internal static void CastSpell(int index)
@@ -1413,11 +1463,22 @@ internal static class GameActions
             );
     }
 
-    public static void RequestEquippedOPL(World world)
+    public static void RequestEquippedOPL(World world) => RequestEquippedOPL(world, world.Player);
+
+    /// <summary>
+    ///     Requests the tooltip property lists of every item a mobile has equipped, so information
+    ///     derived from them (such as equipment durability) can be tracked for that mobile.
+    /// </summary>
+    /// <param name="world">The active world.</param>
+    /// <param name="mobile">The mobile whose equipment should be requested. No-op when <see langword="null" />.</param>
+    public static void RequestEquippedOPL(World world, Mobile mobile)
     {
+        if (mobile == null)
+            return;
+
         foreach (Layer layer in Enum.GetValues(typeof(Layer)))
         {
-            Item item = world.Player.FindItemByLayer(layer);
+            Item item = mobile.FindItemByLayer(layer);
             if(item == null) continue;
 
             world.OPL.Contains(item); //Requests data if we don't have it

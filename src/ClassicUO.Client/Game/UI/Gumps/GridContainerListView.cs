@@ -7,10 +7,10 @@ namespace ClassicUO.Game.UI.Gumps
     public partial class GridContainer
     {
         public const int LIST_ICON_SIZE = 40;
-        public const int LIST_NAME_MAX_CHARS = 20;
         public const int LIST_ROW_HEIGHT = 40;
         public const int LIST_COLUMN_WIDTH = 200;
         public const int LIST_COLUMN_GAP = 8;
+        public const int LIST_CELL_PADDING = 4;
 
         private enum GridContainerViewMode
         {
@@ -53,7 +53,8 @@ namespace ClassicUO.Game.UI.Gumps
             if (!IsListView)
                 return;
 
-            SlotManager?.FindItem(e.Serial)?.RefreshListName();
+            if (SlotManager?.FindItem(e.Serial)?.RefreshListName() == true)
+                SlotManager.SetGridPositions();
         }
 
         private static GridContainerViewModeOverride ToViewModeOverride(int value) =>

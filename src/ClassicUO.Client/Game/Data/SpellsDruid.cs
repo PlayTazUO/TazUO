@@ -7,8 +7,6 @@ namespace ClassicUO.Game.Data
     {
         private static readonly Dictionary<int, SpellDefinition> _spellsDict;
 
-        private static string[] _spRegsChars;
-
         static SpellsDruid()
         {
             _spellsDict = new Dictionary<int, SpellDefinition>

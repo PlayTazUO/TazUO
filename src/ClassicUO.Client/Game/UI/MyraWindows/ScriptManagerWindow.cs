@@ -120,7 +120,7 @@ public class ScriptManagerWindow : MyraControl
         }
     }
 
-    // Restores the window's size and position from the profile (persisted in SqlProfile). Falls
+    // Restores the window's size and position from the profile. Falls
     // back to auto-sizing / centering when a value has not been saved yet.
     private void RestoreWindowState()
     {

@@ -80,6 +80,23 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
+        public int MaxWidth
+        {
+            get => _gText.MaxWidth;
+            set
+            {
+                if (_gText.MaxWidth == value)
+                    return;
+
+                string text = _gText.Text;
+                _gText.Text = string.Empty;
+                _gText.MaxWidth = value;
+                _gText.Text = text;
+                Width = (int)(_gText.Width * InternalScale);
+                Height = (int)(_gText.Height * InternalScale);
+            }
+        }
+
 
         public ushort Hue
         {

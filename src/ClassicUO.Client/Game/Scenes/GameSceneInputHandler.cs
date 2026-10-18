@@ -377,6 +377,14 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseDown(MouseButtonType button)
         {
+            // Profile is unloaded as the scene tears down, but the SDL save-conflict prompt shown during the
+            // final settings save keeps pumping mouse events back in. Nothing here is actionable without a
+            // profile, so bail rather than dereference it.
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return false;
+            }
+
             switch (button)
             {
                 case MouseButtonType.Left:
@@ -394,6 +402,11 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseUp(MouseButtonType button)
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return false;
+            }
+
             switch (button)
             {
                 case MouseButtonType.Left:
@@ -411,6 +424,11 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseDoubleClick(MouseButtonType button)
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return false;
+            }
+
             switch (button)
             {
                 case MouseButtonType.Left:
@@ -1079,7 +1097,6 @@ namespace ClassicUO.Game.Scenes
                 return false;
             }
 
-            _rightMousePressed = true;
             _continueRunning = false;
             StopFollowing();
 
@@ -1087,6 +1104,10 @@ namespace ClassicUO.Game.Scenes
             {
                 if ((ProfileManager.CurrentProfile.UseShiftToPathfind && !HotKeys.IsPressed(HotKeyRegistrar.PathfindId)) || ProfileManager.CurrentProfile.PathfindSingleClick)
                 {
+                    // Pathfinding is not requested for this click, so mirror OnRightMouseDown: the
+                    // second click of a rapid pair still counts as holding the button to walk.
+                    _rightMousePressed = true;
+
                     return false;
                 }
 
@@ -1105,6 +1126,10 @@ namespace ClassicUO.Game.Scenes
                                 TextType.CLIENT
                             );
 
+                            // The pathfinder drives movement now. Leave _rightMousePressed false so
+                            // MoveCharacterByMouseInput does not override it with a cursor walk —
+                            // the release is skipped after a consumed double-click, so nothing would
+                            // reset it afterwards.
                             return true;
                         }
                     }
@@ -1131,6 +1156,8 @@ namespace ClassicUO.Game.Scenes
                 //    }
                 //}
             }
+
+            _rightMousePressed = true;
 
             return false;
         }
@@ -1194,6 +1221,11 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseWheel(bool up)
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return false;
+            }
+
             if (HotKeys.IsPressed(HotKeyRegistrar.ItemDragLockId) && Client.Game.UO.GameCursor.ItemHold.Enabled)
             {
                 if (!up && !Client.Game.UO.GameCursor.ItemHold.IsFixedPosition)
@@ -1258,6 +1290,11 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseDragging()
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return false;
+            }
+
             if (!UIManager.IsMouseOverWorld)
             {
                 return false;
@@ -1488,7 +1525,6 @@ namespace ClassicUO.Game.Scenes
 
             if (CanExecuteMacro())
             {
-                SpellBarManager.KeyPress(key, e.mod);
                 SelfHealManager.HandleKeyDown(key, e.mod, e.repeat);
                 ClassicUO.Game.Managers.Hotkeys.HotKeys.HandleKeyDown(key, e.mod, e.repeat);
 
@@ -1775,8 +1811,6 @@ namespace ClassicUO.Game.Scenes
 
             if (CanExecuteMacro())
             {
-                SpellBarManager.ControllerInput((SDL.SDL_GamepadButton)e.button);
-
                 Macro macro = _world.Macros.FindMacro((SDL.SDL_GamepadButton)e.button);
                 if (macro != null && macro.Items is MacroObject mac)
                 {

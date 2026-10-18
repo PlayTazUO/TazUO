@@ -12,7 +12,7 @@ public enum HideHudFlags : ulong //Up to 63 gump types for ulong
     Containers = 1 << 3,
     Healthbars = 1 << 4,
     StatusBar = 1 << 5,
-    SpellBar = 1 << 6,
+    REMOVED = 1 << 6,
     Journal = 1 << 7,
     XMLGumps = 1 << 8,
     NearbyCorpseLoot = 1 << 9,

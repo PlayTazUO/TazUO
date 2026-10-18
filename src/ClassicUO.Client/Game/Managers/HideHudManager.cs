@@ -2,7 +2,6 @@ using System;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Utility;
 using SDL3;
@@ -61,8 +60,6 @@ public static class HideHudManager
             else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.Healthbars) && gump is BaseHealthBarGump)
                 gump.IsVisible = isVisible;
             else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.StatusBar) && gump is StatusGumpBase)
-                gump.IsVisible = isVisible;
-            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.SpellBar) && gump is SpellBar)
                 gump.IsVisible = isVisible;
             else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.Journal) && gump is ResizableJournal)
                 gump.IsVisible = isVisible;

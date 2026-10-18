@@ -42,7 +42,11 @@ public static class TooltipsTab
             Option.Checkbox(
                 TazLang.Get("mog_tazuo_aligntooltipstotheleftside"),
                 new Accessor<bool>(() => profile.LeftAlignToolTips),
-                search: new SearchMetadata(TazLang.Get("mog_tazuo_aligntooltipstotheleftside"), Keywords: [TazLang.Get("mog_kw_align"), TazLang.Get("mog_kw_left")])
+                TazLang.Get("mog_tazuo_aligntooltipstotheleftside_tooltip"),
+                new SearchMetadata(
+                    TazLang.Get("mog_tazuo_aligntooltipstotheleftside"),
+                    Keywords: [TazLang.Get("mog_kw_align"), TazLang.Get("mog_kw_left")]
+                )
             ),
             Option.Checkbox(
                 TazLang.Get("mog_tazuo_alignmobiletooltipstocenter"),

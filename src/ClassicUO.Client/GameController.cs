@@ -117,6 +117,7 @@ namespace ClassicUO
         public event EventHandler<float> ScaleChanged;
 
         private readonly List<(uint, Action)> _queuedActions = new();
+        private bool _isExiting;
 
         public void EnqueueAction(uint time, Action action) => _queuedActions.Add((Time.Ticks + time, action));
 
@@ -201,6 +202,10 @@ namespace ClassicUO
 
             AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)packetsProcessed;
 
+            // The send loop is event-driven and no longer ticks on its own, so refresh the
+            // throughput deltas from the frame loop (Update is internally gated to 500 ms).
+            AsyncNetClient.Socket.Statistics.Update();
+
             // Plugin packets are buffered separately and would sit unprocessed
             // if no network packets arrived this frame, so always drain them.
             PacketParser.Instance.ParsePluginsPackets(Client.Game.UO.World);
@@ -257,22 +262,32 @@ namespace ClassicUO
             UIManager.World = UO.World;
 
             SetScene(new LoginScene(UO.World));
+
+            Console.WriteLine("|--------------------------------------------------------------|");
+            Console.WriteLine("                             READY");
+            Console.WriteLine("|--------------------------------------------------------------|");
 #endif
         }
 
         private void OnVoiceTextRecognized(string text)
         {
-            SystemChatControl chat = UIManager.SystemChat;
-            if (chat == null || chat.IsDisposed)
-                return;
-
-            if (!chat.IsActive)
+            // VoiceRecognitionManager raises this on its own audio-processing thread, but the chat
+            // control measures text through FontStashSharp when text is appended - its caches are
+            // not thread-safe, so mutating the UI off the main thread corrupts them and crashes.
+            MainThreadQueue.InvokeOnMainThread(() =>
             {
-                chat.IsActive = true;
-                chat.SetFocus();
-            }
+                SystemChatControl chat = UIManager.SystemChat;
+                if (chat == null || chat.IsDisposed)
+                    return;
 
-            chat.TextBoxControl.AppendText(text);
+                if (!chat.IsActive)
+                {
+                    chat.IsActive = true;
+                    chat.SetFocus();
+                }
+
+                chat.TextBoxControl.AppendText(text);
+            });
         }
 
         private void LoadPlugins()
@@ -870,6 +885,13 @@ namespace ClassicUO
                 return false;
             }
 
+            // Events pumped while exiting (e.g. by the native save-conflict prompt) must reach SDL - and
+            // that prompt - untouched, but they must not be dispatched into the tearing-down game.
+            if (_isExiting)
+            {
+                return true;
+            }
+
             switch ((SDL_EventType)sdlEvent->type)
             {
                 case SDL_EventType.SDL_EVENT_AUDIO_DEVICE_ADDED:
@@ -1223,14 +1245,9 @@ namespace ClassicUO
                     }
                     else if (sdlEvent->gbutton.button == (byte)SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_START && UO.World.InGame)
                     {
-                        Gump g = UIManager.GetGump<ModernOptionsGump>();
-                        if (g == null)
+                        if (!GameActions.CloseSettings())
                         {
-                            UIManager.Add(new ModernOptionsGump(UIManager.World));
-                        }
-                        else
-                        {
-                            g.Dispose();
+                            GameActions.ShowNewOptionsGump();
                         }
                     }
                     break;
@@ -1295,6 +1312,11 @@ namespace ClassicUO
 
         protected override void OnExiting(object sender, EventArgs args)
         {
+            // The settings save below can raise a save conflict whose native SDL prompt pumps events back
+            // through the filter. Stop dispatching them to the scene now: it is being torn down, the
+            // profile may already be unloaded, and game input is no longer actionable.
+            _isExiting = true;
+
             Scene?.Dispose();
 
             // These used to be written while the graphics device tore down. Write them here instead,

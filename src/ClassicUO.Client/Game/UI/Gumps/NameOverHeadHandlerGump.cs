@@ -26,7 +26,9 @@ namespace ClassicUO.Game.UI.Gumps
         {
             CanMove = true;
             AcceptMouseInput = true;
-            CanCloseWithRightClick = false; //Prevent accidentally closing when stay active is enabled
+            // Seed from the persisted Stay active state so right-click close still works after a relog;
+            // the checkbox below is initialized the same way before its ValueChanged handler is attached.
+            CanCloseWithRightClick = NameOverHeadManager.IsPermaToggled;
 
             if (LastPosition == null)
             {

@@ -1,5 +1,6 @@
 using ClassicUO.Configuration;
 using ClassicUO.Game;
+using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
@@ -19,7 +20,7 @@ internal static class UpdateName
 
         WMapEntity wme = world.WMapManager.GetEntity(serial);
 
-        if (wme != null && !string.IsNullOrEmpty(name))
+        if (wme != null && wme.WaypointType == WaypointsType.None && !string.IsNullOrEmpty(name))
             wme.Name = name;
 
         Entity entity = world.Get(serial);

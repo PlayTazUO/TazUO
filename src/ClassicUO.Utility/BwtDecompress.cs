@@ -22,8 +22,13 @@ namespace ClassicUO.Utility
 
                 byte firstChar = reader.ReadByte();
 
-                Span<ushort> table = new ushort[256 * 256];
-                BuildTable(table, firstChar);
+                // The sorted table built from firstChar is always the identity, and only the first
+                // 256 entries are ever read (the array is indexed by a byte), so build that directly.
+                Span<ushort> table = stackalloc ushort[256];
+                for (int j = 0; j < 256; j++)
+                {
+                    table[j] = (ushort)j;
+                }
 
                 byte[] list = new byte[reader.BaseStream.Length - 4];
                 int i = 0;
@@ -33,10 +38,19 @@ namespace ClassicUO.Utility
                     ushort value = table[currentValue];
                     if (currentValue > 0)
                     {
-                        do
+                        // CopyTo is an overlap-safe memmove that beats the scalar loop for large
+                        // shifts; below ~32 the call overhead wins, so keep the simple loop there.
+                        if (currentValue <= 32)
                         {
-                            table[currentValue] = table[currentValue - 1];
-                        } while (--currentValue > 0);
+                            for (int k = currentValue; k > 0; k--)
+                            {
+                                table[k] = table[k - 1];
+                            }
+                        }
+                        else
+                        {
+                            table.Slice(0, currentValue).CopyTo(table.Slice(1));
+                        }
                     }
 
                     table[0] = value;
@@ -49,26 +63,6 @@ namespace ClassicUO.Utility
             }
 
             return output;
-        }
-
-        static void BuildTable(Span<ushort> table, byte startValue)
-        {
-            int index = 0;
-            byte firstByte = startValue;
-            byte secondByte = 0;
-            for (int i = 0; i < 256 * 256; i++)
-            {
-                ushort val = (ushort)(firstByte + (secondByte << 8));
-                table[index++] = val;
-
-                firstByte++;
-                if (firstByte == 0)
-                {
-                    secondByte++;
-                }
-            }
-
-            table.Sort();
         }
 
         static byte[] InternalDecompress(Span<byte> input, uint len)
@@ -183,8 +177,16 @@ namespace ClassicUO.Utility
 
         static void ShiftLeft(Span<char> input, int max)
         {
-            for (int i = 0; i < max; ++i)
-                input[i] = input[i + 1];
+            // Memmove beats the scalar loop for large shifts; small ones keep the loop.
+            if (max <= 32)
+            {
+                for (int i = 0; i < max; ++i)
+                    input[i] = input[i + 1];
+            }
+            else
+            {
+                input.Slice(1, max).CopyTo(input);
+            }
         }
     }
 }

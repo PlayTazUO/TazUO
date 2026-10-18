@@ -83,6 +83,12 @@ internal static class CrashSuggestedFix
             if (TryGetMapLoaderCrashFix(exception, out string mapFix))
                 return mapFix;
 
+            if (TryGetAnimationLoaderCrashFix(exception, out string animationFix))
+                return animationFix;
+
+            if (TryGetGumpsLoaderCrashFix(exception, out string gumpFix))
+                return gumpFix;
+
             if (TryGetBadUopFileCrashFix(exception, out string uopFix))
                 return uopFix;
 
@@ -94,6 +100,9 @@ internal static class CrashSuggestedFix
 
             if (TryGetFileAccessDeniedCrashFix(exception, out string fileAccessFix))
                 return fileAccessFix;
+
+            if (TryGetReadOnlyFileSystemCrashFix(exception, out string readOnlyFix))
+                return readOnlyFix;
         }
         catch
         {
@@ -160,11 +169,11 @@ internal static class CrashSuggestedFix
 
     /// <summary>
     ///     Recognizes SDL failing to bring up the video subsystem on startup - FNA's
-    ///     <c>SDL3_FNAPlatform.ProgramInit</c> throws when <c>SDL_Init</c> returns false. The
-    ///     SDL error "The video driver did not add any displays" means the process was offered
-    ///     no screen to use, which happens when the game runs outside a logged-in graphical
-    ///     desktop session (SSH, an automated launch context) or on a headless/virtual machine
-    ///     with no display configured.
+    ///     <c>SDL3_FNAPlatform.ProgramInit</c> throws when <c>SDL_Init</c> returns false. Both
+    ///     "The video driver did not add any displays" and "No available video device" mean the
+    ///     process was offered no screen or video driver to use, which happens when the game runs
+    ///     outside a logged-in graphical desktop session (SSH, an automated launch context) or on
+    ///     a headless/virtual machine with no display configured.
     /// </summary>
     /// <param name="e">Exception under inspection.</param>
     /// <param name="fix">Set to the suggested fix text when recognized.</param>
@@ -177,19 +186,35 @@ internal static class CrashSuggestedFix
         // inner (and aggregated) exceptions, so the whole chain can be inspected in one string.
         string details = e.ToString();
 
+        if (string.IsNullOrEmpty(details) || !details.Contains("SDL3_FNAPlatform.ProgramInit"))
+            return false;
+
         // SDL error strings are not localized, so the text is a reliable match. Scoped to the
-        // zero-displays error rather than every SDL_Init failure, since other SDL init errors
-        // need different advice.
-        if (string.IsNullOrEmpty(details) ||
-            !details.Contains("The video driver did not add any displays") ||
-            !details.Contains("SDL3_FNAPlatform.ProgramInit"))
+        // no-display and no-video-device errors rather than every SDL_Init failure, since other
+        // SDL init errors need different advice.
+        bool noDisplays = details.Contains("The video driver did not add any displays");
+        bool noVideoDevice = details.Contains("No available video device");
+
+        if (!noDisplays && !noVideoDevice)
             return false;
 
         var sb = new StringBuilder();
-        sb.AppendLine("TazUO could not start because the graphics system had no display to use.");
-        sb.AppendLine(
-            "The game opens its window through SDL, and the operating system did not offer it a single screen " +
-            "('The video driver did not add any displays').");
+
+        if (noVideoDevice && !noDisplays)
+        {
+            sb.AppendLine("TazUO could not start because the graphics system found no video device to use.");
+            sb.AppendLine(
+                "The game opens its window through SDL, and this system offered it no usable video driver or device " +
+                "('No available video device').");
+        }
+        else
+        {
+            sb.AppendLine("TazUO could not start because the graphics system had no display to use.");
+            sb.AppendLine(
+                "The game opens its window through SDL, and the operating system did not offer it a single screen " +
+                "('The video driver did not add any displays').");
+        }
+
         sb.AppendLine("This is an environment problem, not a fault in TazUO: the game was started without access to a graphical desktop session.");
         sb.AppendLine();
         sb.AppendLine("Suggested fixes:");
@@ -200,7 +225,8 @@ internal static class CrashSuggestedFix
         sb.AppendLine(
             "3. Make sure a user is logged into the machine's desktop before starting TazUO; if the machine is sitting at the login screen, log in first.");
         sb.AppendLine("4. On a virtual machine or headless setup, make sure a real or virtual display is available and powered on.");
-        sb.AppendLine("5. Restart the computer and try launching TazUO normally.");
+        sb.AppendLine("5. On a headless Linux machine or build server, run TazUO under a virtual display (for example Xvfb) and make sure your graphics drivers are installed.");
+        sb.AppendLine("6. Restart the computer and try launching TazUO normally.");
         fix = sb.ToString();
         return true;
     }
@@ -287,9 +313,11 @@ internal static class CrashSuggestedFix
     }
 
     /// <summary>
-    ///     Recognizes a crash inside FontStashSharp's glyph/kerning cache. That cache is not
-    ///     thread-safe, so this fires when text is built from a background thread - almost
-    ///     always a Legion script touching the UI off the main thread.
+    ///     Recognizes a crash inside FontStashSharp's glyph/kerning caches - an
+    ///     <c>Int32Map</c> index fault during text measuring/bounds, or an explicit frame in the
+    ///     glyph/kerning lookup. Those caches are not thread-safe, so this fires when text is
+    ///     built from a background thread (almost always a Legion script) at the same time the
+    ///     game is measuring or drawing text on the main thread, corrupting the shared map.
     /// </summary>
     /// <param name="e">Exception under inspection.</param>
     /// <param name="fix">Set to the suggested fix text when recognized.</param>
@@ -304,6 +332,9 @@ internal static class CrashSuggestedFix
             return false;
 
         bool crashedInFontCache = details.Contains("FontStashSharp.Rasterizers.StbTrueTypeSharp.Int32Map") ||
+                                  details.Contains("FontStashSharp.Int32Map") ||
+                                  details.Contains("SpriteFontBase.InternalTextBounds") ||
+                                  details.Contains("SpriteFontBase.MeasureString") ||
                                   details.Contains("GetGlyphKernAdvance") ||
                                   (details.Contains("FontStashSharp") && details.Contains("GetKerning"));
 
@@ -363,6 +394,93 @@ internal static class CrashSuggestedFix
             "2. Verify/repair your UO installation (for example through the official installer or your shard's patcher) to restore any missing or corrupt files.");
         sb.AppendLine("3. If you copied the data files manually, re-copy them and confirm none were skipped or truncated.");
         sb.AppendLine("4. Confirm the client version configured in TazUO matches the version of your UO data files.");
+        fix = sb.ToString();
+        return true;
+    }
+
+    /// <summary>
+    ///     Recognizes a crash inside <c>AnimationsLoader.ReadSpriteData</c> /
+    ///     <c>ReadMULAnimationFrames</c> - a corrupt or version-mismatched animation data file
+    ///     whose frame table or sprite run points outside the file, so the decoder reads an
+    ///     out-of-range palette index or pixel position.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetAnimationLoaderCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        // ToString() on the top-level exception includes the stack traces of any inner
+        // (and aggregated) exceptions, so we can inspect the whole chain in one string.
+        string details = e.ToString();
+
+        if (string.IsNullOrEmpty(details))
+            return false;
+
+        // A crash inside the animation sprite decoder means the frame header or its pixel
+        // run described data outside the file - almost always a missing, truncated, or
+        // version-mismatched animation file rather than a fault in TazUO.
+        if (!details.Contains("ClassicUO.Assets.AnimationsLoader.ReadSpriteData") &&
+            !details.Contains("ClassicUO.Assets.AnimationsLoader.ReadMULAnimationFrames"))
+            return false;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("TazUO crashed while decoding a character or creature animation.");
+        sb.AppendLine("This usually means one of the animation data files is missing, incomplete, or does not match your client version.");
+        sb.AppendLine(
+            "The affected files are named like anim.mul, anim2.mul, anim3.mul ... (or AnimationFrame1.uop and up on UOP clients), together with their .idx index files, in your UO data directory.");
+        sb.AppendLine();
+        sb.AppendLine("Suggested fixes:");
+        sb.AppendLine(
+            "1. Make sure TazUO is pointed at a complete Ultima Online data directory that contains all of the animation files and their .idx files.");
+        sb.AppendLine(
+            "2. Verify/repair your UO installation (for example through the official installer or your shard's patcher) to restore any missing or corrupt files.");
+        sb.AppendLine("3. If you copied the data files manually, re-copy them and confirm none were skipped or truncated.");
+        sb.AppendLine("4. Confirm the client version configured in TazUO matches the version of your UO data files.");
+        fix = sb.ToString();
+        return true;
+    }
+
+    /// <summary>
+    ///     Recognizes a crash inside <c>GumpsLoader.GetGump</c> - a missing, truncated, or
+    ///     version-mismatched gump art file (gumpart.mul/gumpidx.mul, gumpartLegacyMUL.uop, or a
+    ///     hand-added .gump file) whose entry points outside the archive.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetGumpsLoaderCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        // ToString() on the top-level exception includes the stack traces of any inner
+        // (and aggregated) exceptions, so we can inspect the whole chain in one string.
+        string details = e.ToString();
+
+        if (string.IsNullOrEmpty(details))
+            return false;
+
+        // A crash inside GetGump means the looked-up entry described data outside the gump
+        // archive - almost always a missing or version-mismatched gump art file rather than a
+        // fault in TazUO.
+        if (!details.Contains("ClassicUO.Assets.GumpsLoader.GetGump"))
+            return false;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("TazUO crashed while loading gump artwork (an interface image).");
+        sb.AppendLine("This usually means one of the gump art data files is missing, incomplete, or does not match your client version.");
+        sb.AppendLine(
+            "The affected files are named gumpart.mul and gumpidx.mul (or gumpartLegacyMUL.uop on UOP clients) in your UO data directory. A custom .gump file you added can also cause this.");
+        sb.AppendLine();
+        sb.AppendLine("Suggested fixes:");
+        sb.AppendLine(
+            "1. Make sure TazUO is pointed at a complete Ultima Online data directory that contains all of the gump art files and their .idx files.");
+        sb.AppendLine(
+            "2. Verify/repair your UO installation (for example through the official installer or your shard's patcher) to restore any missing or corrupt files.");
+        sb.AppendLine("3. If you added custom .gump files, remove them to confirm one of them is not the cause, then re-add them one at a time.");
+        sb.AppendLine("4. If you copied the data files manually, re-copy them and confirm none were skipped or truncated.");
+        sb.AppendLine("5. Confirm the client version configured in TazUO matches the version of your UO data files.");
         fix = sb.ToString();
         return true;
     }
@@ -1026,5 +1144,50 @@ internal static class CrashSuggestedFix
         sb.AppendLine("5. Try running TazUO as Administrator once to rule out a permissions problem.");
         fix = sb.ToString();
         return true;
+    }
+
+    /// <summary>
+    ///     Recognizes a read-only file system error (Unix <c>EROFS</c>, "Read-only file system")
+    ///     raised when TazUO tries to create or write one of its own folders (for example
+    ///     <c>Fonts</c>) during startup. The install directory is mounted read-only, which is
+    ///     common on Linux packages installed under <c>/opt</c> or <c>/usr</c>, or in a
+    ///     container/immutable image.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetReadOnlyFileSystemCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        // The IOException may sit directly on the exception or inside an AggregateException,
+        // since the file loaders run in parallel tasks whose faults are rethrown as aggregates.
+        foreach (Exception candidate in EnumerateExceptionChain(e))
+        {
+            if (candidate is not IOException ioException || string.IsNullOrEmpty(ioException.Message))
+                continue;
+
+            if (ioException.Message.IndexOf("Read-only file system", StringComparison.OrdinalIgnoreCase) < 0)
+                continue;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("TazUO could not write to its own folder because the file system is read-only.");
+            sb.AppendLine(
+                "The error 'Read-only file system' comes from the operating system refusing any change to the disk location TazUO is installed in, so " +
+                "it cannot create or update files it needs.");
+            sb.AppendLine(
+                "This normally happens when TazUO is installed in a system location (for example /opt, /usr or /var) that your package manager mounted read-only, or when it is running inside a read-only container or immutable system image.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. Install TazUO in a folder you own and can write to, such as your home directory (~/TazUO or ~/opt/tazuo), and run it from there.");
+            sb.AppendLine(
+                "2. If you installed it through a package manager, make the folder writable by your user (for example: sudo chown -R $USER /opt/tazuo) or reinstall it into your home directory.");
+            sb.AppendLine("3. In a container or sandboxed environment, add a writable volume for the TazUO folder instead of leaving it read-only.");
+            sb.AppendLine("4. If the location must stay read-only, point TazUO at a data directory on a writable disk and launch it from there.");
+            fix = sb.ToString();
+            return true;
+        }
+
+        return false;
     }
 }

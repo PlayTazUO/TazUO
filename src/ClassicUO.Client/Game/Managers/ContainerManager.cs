@@ -33,8 +33,8 @@ namespace ClassicUO.Game.Managers
         {
             _world = world;
 
-            if (Settings.GlobalSettings.UltimaOnlineDirectory.NotNullNotEmpty())
-                BuildContainerFile(false, Path.GetFullPath(Settings.GlobalSettings.UltimaOnlineDirectory)); //Use UO folder for containers.txt if it exists
+            if (Settings.GlobalSettings.ResolvedUltimaOnlineDirectory.NotNullNotEmpty())
+                BuildContainerFile(false, Settings.GlobalSettings.ResolvedUltimaOnlineDirectory); //Use UO folder for containers.txt if it exists
 
             if(_data.IsEmpty) //Only use default if uo folder doesn't have containers.txt
                 BuildContainerFile(false);

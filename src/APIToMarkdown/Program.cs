@@ -457,8 +457,11 @@ public static partial class GenDoc
     {
         defaultValue = defaultValue.Replace("=", "").Trim();
 
-        if (defaultValue != "false")
-            defaultValue = defaultValue.Replace("f", ""); //Remove f suffix from float literals
+        // Remove the 'f' suffix from float literals (e.g. "2f"), but leave every other 'f' intact.
+        if (defaultValue.Length > 1 &&
+            (defaultValue[^1] == 'f' || defaultValue[^1] == 'F') &&
+            char.IsDigit(defaultValue[^2]))
+            defaultValue = defaultValue[..^1];
 
         // Map C# default values to Python
         return defaultValue.Trim() switch
@@ -580,6 +583,8 @@ public static partial class GenDoc
             // "BuffIconType" => "BuffIconType",
             "ScanType" => "ScanType",
             "Notoriety" => "Notoriety",
+            "EffectType" => "EffectType",
+            "EffectBlendMode" => "EffectBlendMode",
             "GameObject" or "ApiGameObject" => "ApiGameObject",
             "ApiUserProfile" => "ApiUserProfile",
             "ApiUiControlDropDown" => "ApiUiControlDropDown",
@@ -598,6 +603,7 @@ public static partial class GenDoc
             "ApiUiTtfTextInputField" => "ApiUiTtfTextInputField",
             "ApiUiTextBox" => "ApiUiTextBox",
             "ApiUiSimpleProgressBar" => "ApiUiSimpleProgressBar",
+            "ApiUiSlider" => "ApiUiSlider",
             "ApiUiGumpPic" => "ApiUiGumpPic",
             "ApiUiNineSliceGump" => "ApiUiNineSliceGump",
             "ApiUiCheckbox" => "ApiUiCheckbox",

@@ -338,6 +338,13 @@ namespace ClassicUO.Game.UI.Gumps
             bool fromcliloc
         )
         {
+            if (_shopItems.TryGetValue(serial, out ShopItem existing))
+            {
+                _shopItems.Remove(serial);
+                _shopScrollArea.Remove(existing);
+                existing.Dispose();
+            }
+
             int count = _shopScrollArea.Children.Count - 1;
 
             int y = count > 0 ? _shopScrollArea.Children[count].Bounds.Bottom : 0;

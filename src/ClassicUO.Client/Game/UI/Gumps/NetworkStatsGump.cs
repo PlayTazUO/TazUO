@@ -16,7 +16,8 @@ namespace ClassicUO.Game.UI.Gumps
     {
         private static Point _last_position = new Point(-1, -1);
 
-        private uint _ping, _deltaBytesReceived, _deltaBytesSent;
+        private uint _ping, _lastPing, _deltaBytesReceived, _deltaBytesSent, _totalPacketsReceived, _totalPacketsSent;
+        private bool _pingDisabled;
         private uint _time_to_update;
         private readonly AlphaBlendControl _trans;
         private string _cacheText = string.Empty;
@@ -79,8 +80,12 @@ namespace ClassicUO.Game.UI.Gumps
                 if (AsyncNetClient.Socket.IsConnected)
                 {
                     _ping = AsyncNetClient.Socket.Statistics.Ping;
+                    _lastPing = AsyncNetClient.Socket.Statistics.LastPing;
+                    _pingDisabled = AsyncNetClient.Socket.Statistics.CurrentPingSource == PingSource.Disabled;
                     _deltaBytesReceived = AsyncNetClient.Socket.Statistics.DeltaBytesReceived;
                     _deltaBytesSent = AsyncNetClient.Socket.Statistics.DeltaBytesSent;
+                    _totalPacketsReceived = AsyncNetClient.Socket.Statistics.TotalPacketsReceived;
+                    _totalPacketsSent = AsyncNetClient.Socket.Statistics.TotalPacketsSent;
                 }
 
                 Span<char> span = stackalloc char[128];
@@ -88,11 +93,13 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (IsMinimized)
                 {
-                    sb.Append($"Ping: {_ping} ms");
+                    sb.Append(_pingDisabled ? "Ping: N/A" : $"Ping: {_ping} ms");
                 }
                 else
                 {
-                    sb.Append($"Ping: {_ping} ms\n{"In:"} {NetStatistics.GetSizeAdaptive(_deltaBytesReceived),-6} {"Out:"} {NetStatistics.GetSizeAdaptive(_deltaBytesSent),-6}");
+                    string pingText = _pingDisabled ? "Ping: N/A" : $"Ping: {_ping} ms ({_lastPing})";
+
+                    sb.Append($"{pingText}\n{"In:"} {NetStatistics.GetSizeAdaptive(_deltaBytesReceived),-6} {"Out:"} {NetStatistics.GetSizeAdaptive(_deltaBytesSent),-6}\nPkts In: {AbbreviateCount(_totalPacketsReceived)} Out: {AbbreviateCount(_totalPacketsSent)}");
                 }
 
                 _cacheText = sb.ToString();
@@ -175,6 +182,27 @@ namespace ClassicUO.Game.UI.Gumps
 
             _last_position.X = ScreenCoordinateX;
             _last_position.Y = ScreenCoordinateY;
+        }
+
+        /// <summary>Formats a packet count with a k/m/b suffix once it reaches the matching thousand.</summary>
+        private static string AbbreviateCount(uint count)
+        {
+            if (count >= 1_000_000_000)
+            {
+                return $"{count / 1_000_000_000.0:0.##}b";
+            }
+
+            if (count >= 1_000_000)
+            {
+                return $"{count / 1_000_000.0:0.##}m";
+            }
+
+            if (count >= 1_000)
+            {
+                return $"{count / 1_000.0:0.##}k";
+            }
+
+            return count.ToString();
         }
     }
 }

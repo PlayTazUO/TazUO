@@ -9,11 +9,32 @@ using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
+using System;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace ClassicUO.Game.UI
 {
     public class Tooltip
     {
+        /// <summary>
+        /// Clearance between the cursor hotspot and the nearest background edge, held equal in both
+        /// vertical directions. Sized to clear the cursor sprite, which hangs below the hotspot.
+        /// </summary>
+        private const int CURSOR_GAP = 22;
+
+        /// <summary>
+        /// Pixels the background extends past the text origin on its top edge. The two offsets below
+        /// have to correct for it, because it shifts the background the same way whichever direction
+        /// the box grows: downward it eats into the clearance, upward it adds to it.
+        /// </summary>
+        private const int BACKGROUND_TOP_PADDING = 2;
+
+        /// <summary>Anchor-to-text offset when the box grows downward, leaving <see cref="CURSOR_GAP"/> of clearance.</summary>
+        private const int CURSOR_OFFSET_BELOW = CURSOR_GAP + BACKGROUND_TOP_PADDING;
+
+        /// <summary>Anchor-to-box offset when the box is flipped upward, leaving <see cref="CURSOR_GAP"/> of clearance.</summary>
+        private const int CURSOR_OFFSET_ABOVE = CURSOR_GAP - BACKGROUND_TOP_PADDING;
+
         private uint _hash;
         private uint _lastHoverTime;
         private TextBox _textBox;
@@ -155,28 +176,24 @@ namespace ClassicUO.Game.UI
             int z_width = _textBox.Width + 8;
             int z_height = _textBox.Height + 8;
 
-            if (x < 0)
-            {
-                x = 0;
-            }
-            else if (x > ScaleHelper.LogicalWindowWidth - z_width)
-            {
-                x = ScaleHelper.LogicalWindowWidth - z_width;
-            }
+            int bgWidth = (int)(z_width * zoom);
+            int bgHeight = (int)(z_height * zoom);
 
-            if (y < 0)
-            {
-                y = 0;
-            }
-            else if (y > ScaleHelper.LogicalWindowHeight - z_height)
-            {
-                y = ScaleHelper.LogicalWindowHeight - z_height;
-            }
+            // A flip anchors the box's far edge, so placement must bound whatever reaches furthest:
+            // the background scales with zoom and the text does not, so either can be the larger.
+            int placementWidth = Math.Max(bgWidth, _textBox.Width);
+            int placementHeight = Math.Max(bgHeight, _textBox.Height);
 
-            X = x - 4;
-            Y = y - 2;
-            Width = (int)(z_width * zoom) + 1;
-            Height = (int)(z_height * zoom) + 1;
+            x = ResolveAxis(x, 0, 0, placementWidth, ScaleHelper.LogicalWindowWidth);
+            y = ResolveAxis(y, CURSOR_OFFSET_BELOW, CURSOR_OFFSET_ABOVE, placementHeight, ScaleHelper.LogicalWindowHeight);
+
+            int bgX = x - 4;
+            int bgY = y - BACKGROUND_TOP_PADDING;
+
+            X = bgX;
+            Y = bgY;
+            Width = bgWidth + 1;
+            Height = bgHeight + 1;
 
             Vector3 hue_vec = ShaderHueTranslator.GetHueVector(1, false, alpha);
 
@@ -186,22 +203,11 @@ namespace ClassicUO.Game.UI
             batcher.Draw
             (
                 SolidColorTextureCache.GetTexture(Color.White),
-                new Rectangle
-                (
-                    x - 4,
-                    y - 2,
-                    (int)(z_width * zoom),
-                    (int)(z_height * zoom)
-                ),
+                new Rectangle(bgX, bgY, bgWidth, bgHeight),
                 hue_vec
             );
 
-            var borderTexture = SolidColorTextureCache.GetTexture(Color.Gray);
-
-            int bgX = x - 4;
-            int bgY = y - 2;
-            int bgWidth = (int)(z_width * zoom);
-            int bgHeight = (int)(z_height * zoom);
+            Texture2D borderTexture = SolidColorTextureCache.GetTexture(Color.Gray);
 
             // A matched tooltip override draws a colored accent border on the left and top edges only.
             if (_borderHueOverride >= 0)
@@ -260,6 +266,34 @@ namespace ClassicUO.Game.UI
             }
         }
 
+
+        /// <summary>
+        /// Places the box along one axis, growing away from the anchor in the forward direction and
+        /// flipping to the opposite side when that would run off screen.
+        /// </summary>
+        /// <param name="anchor">Cursor coordinate the tooltip hangs off.</param>
+        /// <param name="forwardOffset">Gap between the anchor and the box when growing forward.</param>
+        /// <param name="flipOffset">Gap between the anchor and the box when flipped back.</param>
+        /// <param name="size">Box extent along this axis, padding included.</param>
+        /// <param name="screenSize">Logical screen extent along this axis.</param>
+        /// <returns>The box's start coordinate, clamped on screen when neither direction fits.</returns>
+        private static int ResolveAxis(int anchor, int forwardOffset, int flipOffset, int size, int screenSize)
+        {
+            int forward = anchor + forwardOffset;
+
+            // Preferred direction, taken whenever the far edge stays on screen.
+            if (forward + size <= screenSize)
+                return Math.Clamp(forward, 0, Math.Max(0, screenSize - size));
+
+            // Overflowed, so grow back past the anchor instead; the box ends where the cursor begins.
+            int flipped = anchor - size - flipOffset;
+
+            // Flipping only helps if the near edge clears 0; otherwise the box outgrows the screen
+            // on both sides, so fall back to the preferred direction pinned against the far edge.
+            return flipped >= 0
+                ? flipped
+                : Math.Clamp(forward, 0, Math.Max(0, screenSize - size));
+        }
 
         private string ReadProperties(uint serial, out string htmltext)
         {

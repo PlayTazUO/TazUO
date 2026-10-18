@@ -196,6 +196,11 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        /// <summary>Formats item properties and appends the matching rule legend when enabled.</summary>
+        /// <param name="itemPropertiesData">The properties to display.</param>
+        /// <param name="borderHue">Receives the first border hue supplied by a tooltip override, or -1.</param>
+        /// <param name="compareTo">Item serial used for comparison, or <see cref="uint.MinValue"/> for none.</param>
+        /// <returns>The formatted tooltip, or null when property data is unavailable.</returns>
         private static string BuildTooltip(ItemPropertiesData itemPropertiesData, out int borderHue, uint compareTo = uint.MinValue)
         {
             borderHue = -1;
@@ -211,10 +216,18 @@ namespace ClassicUO.Game.Managers
             {
                 if (MatchItemName(itemPropertiesData.Name, overrideData.SearchText))
                 {
-                    sb.AppendLine(string.Format(
-                        overrideData.FormattedText,
-                        itemPropertiesData.Name, "", "", "", "", ""
-                    ));
+                    try
+                    {
+                        sb.AppendLine(string.Format(
+                            overrideData.FormattedText,
+                            itemPropertiesData.Name, "", "", "", "", ""
+                        ));
+                    }
+                    catch
+                    {
+                        GameActions.Print(World.Instance, $"Invalid format string in tooltip override: {overrideData.FormattedText}", Constants.HUE_ERROR);
+                        sb.AppendLine(itemPropertiesData.Name);
+                    }
 
                     // The first matching rule that sets a border hue wins for the whole tooltip.
                     if (borderHue < 0 && overrideData.HasBorderHue)
@@ -230,19 +243,37 @@ namespace ClassicUO.Game.Managers
                 if(string.IsNullOrEmpty(itemPropertiesData.Name))
                     itemPropertiesData.Name = "";
 
-                sb.AppendLine(
-                    ProfileManager.CurrentProfile == null
-                        ? $"/c[yellow]{itemPropertiesData.Name}"
-                        : string.Format(ProfileManager.CurrentProfile.TooltipHeaderFormat, itemPropertiesData.Name)
-                );
+                if (ProfileManager.CurrentProfile == null)
+                {
+                    sb.AppendLine($"/c[yellow]{itemPropertiesData.Name}");
+                }
+                else
+                {
+                    try
+                    {
+                        sb.AppendLine(string.Format(ProfileManager.CurrentProfile.TooltipHeaderFormat, itemPropertiesData.Name));
+                    }
+                    catch
+                    {
+                        GameActions.Print(World.Instance, $"Invalid format string in tooltip header format: {ProfileManager.CurrentProfile.TooltipHeaderFormat}", Constants.HUE_ERROR);
+                        sb.AppendLine(itemPropertiesData.Name);
+                    }
+                }
             }
 
-            GridHighlightData bestGridHighlightData = ProfileManager.CurrentProfile is { GridHighlightProperties: true } ? GridHighlightData.GetBestMatch(itemPropertiesData) : null;
+            bool highlightProperties = ProfileManager.CurrentProfile is { GridHighlightProperties: true };
+            bool showRuleName = ProfileManager.CurrentProfile is { GridHighlightShowRuleName: true };
+            GridHighlightData[] matchingGridHighlights = highlightProperties || showRuleName
+                ? GridHighlightData.GetMatches(itemPropertiesData)
+                : Array.Empty<GridHighlightData>();
+            GridHighlightData bestGridHighlightData = matchingGridHighlights.Length > 0
+                ? matchingGridHighlights[0]
+                : null;
 
             foreach (ItemPropertiesData.SinglePropertyData property in itemPropertiesData.singlePropertyData)
             {
                 // Find if this property is highlighted
-                bool isHighlighted = bestGridHighlightData != null && bestGridHighlightData.DoesPropertyMatch(property);
+                bool isHighlighted = highlightProperties && bestGridHighlightData != null && bestGridHighlightData.DoesPropertyMatch(property);
 
                 // Try to find an override
                 ToolTipOverrideData matchedOverride = null;
@@ -317,14 +348,39 @@ namespace ClassicUO.Game.Managers
                 sb.AppendLine(finalLine);
             }
 
-            if (ProfileManager.CurrentProfile is { GridHighlightShowRuleName: true } && bestGridHighlightData != null && !string.IsNullOrEmpty(bestGridHighlightData.Name))
-            {
-                sb.AppendLine($"/c[gray]Matched Rule: {bestGridHighlightData.Name}/cd");
-            }
+            if (showRuleName)
+                AppendGridHighlightLegend(sb, matchingGridHighlights);
 
             return sb.ToString();
         }
 
+        /// <summary>Adds the names and colors of every matching rule to a tooltip.</summary>
+        /// <param name="sb">The tooltip text being assembled.</param>
+        /// <param name="matchingRules">Matching rules in display order.</param>
+        internal static void AppendGridHighlightLegend(StringBuilder sb, IReadOnlyList<GridHighlightData> matchingRules)
+        {
+            if (sb == null || matchingRules == null || matchingRules.Count == 0)
+                return;
+
+            sb.AppendLine($"/c[gray]{TazLang.Get("gridhighlight_matchedrules", "Matched Rules:")}/cd");
+
+            foreach (GridHighlightData rule in matchingRules)
+            {
+                if (rule == null)
+                    continue;
+
+                string ruleName = string.IsNullOrWhiteSpace(rule.Name)
+                    ? TazLang.Get("gridhighlight_unnamedrule", "Unnamed Rule")
+                    : rule.Name.Trim().Replace('\r', ' ').Replace('\n', ' ');
+                sb.AppendLine($"/c[{rule.HighlightColor.ToHtmlHex()}]•/cd /c[gray]{ruleName}/cd");
+            }
+        }
+
+        /// <summary>Builds the tooltip for an item, optionally comparing it with another item.</summary>
+        /// <param name="world">The world containing the item.</param>
+        /// <param name="serial">The item serial.</param>
+        /// <param name="compareTo">Item serial used for comparison, or <see cref="uint.MinValue"/> for none.</param>
+        /// <returns>The formatted tooltip, or null when property data is unavailable.</returns>
         public static string ProcessTooltipText(World world, uint serial, uint compareTo = uint.MinValue)
             => ProcessTooltipText(world, serial, out _, compareTo);
 

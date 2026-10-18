@@ -471,6 +471,11 @@ namespace ClassicUO.Game.UI
             ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.QuickLoot(currentItem), ActionPriority.MoveItem);
         }
 
+        /// <summary>Draws the loot item with a primary border and markers for additional matches.</summary>
+        /// <param name="batcher">The renderer for this frame.</param>
+        /// <param name="x">The item's horizontal drawing position.</param>
+        /// <param name="y">The item's vertical drawing position.</param>
+        /// <returns>Whether the item was drawn.</returns>
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
             base.Draw(batcher, x, y);
@@ -562,6 +567,12 @@ namespace ClassicUO.Game.UI
                     new Rectangle(bx, by + ITEM_SIZE - 11, ITEM_SIZE - 12, 1),
                     borderHueVec
                     );
+
+                GridItem.DrawAdditionalHighlightMarkers(
+                    batcher,
+                    new Rectangle(x, y, ITEM_SIZE, ITEM_SIZE),
+                    currentItem.HighlightColors
+                );
             }
 
             return true;

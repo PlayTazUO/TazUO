@@ -50,8 +50,6 @@ namespace ClassicUO.Game.Managers
         private bool PetBandagingEnabled => ProfileManager.CurrentProfile?.BandageAgentBandagePets ?? false;
         private int HealDelayMs => ProfileManager.CurrentProfile?.BandageAgentDelay ?? 3000;
         private bool CheckForBuff => ProfileManager.CurrentProfile?.BandageAgentCheckForBuff ?? false;
-        private ushort BandageGraphic => ProfileManager.CurrentProfile?.BandageAgentGraphic ?? 0x0E21;
-        private bool UseNewBandagePacket => ProfileManager.CurrentProfile?.BandageAgentUseNewPacket ?? true;
         private int HpPercentageThreshold => ProfileManager.CurrentProfile?.BandageAgentHPPercentage ?? 80;
         private bool UseOnPoisoned => ProfileManager.CurrentProfile?.BandageAgentCheckPoisoned ?? false;
         private bool CheckHidden => ProfileManager.CurrentProfile?.BandageAgentCheckHidden ?? false;
@@ -59,7 +57,6 @@ namespace ClassicUO.Game.Managers
         private bool HasBandagingBuff { get; set; } = false;
         private bool UseDexFormula => ProfileManager.CurrentProfile?.BandageAgentUseDexFormula ?? false;
         private bool DisableSelfHeal => ProfileManager.CurrentProfile?.BandageAgentDisableSelfHeal ?? false;
-        private TargetType BandageTargetType => ProfileManager.CurrentProfile?.BandageAgentTargetType ?? TargetType.Beneficial;
         private bool UseJournalTrigger => ProfileManager.CurrentProfile?.BandageAgentUseJournalTrigger ?? false;
         private string JournalMessages => ProfileManager.CurrentProfile?.BandageAgentJournalMessages ?? "";
         private bool UseSelfCommand => ProfileManager.CurrentProfile?.BandageAgentUseSelfCommand ?? false;
@@ -423,26 +420,11 @@ namespace ClassicUO.Game.Managers
 
                 GameActions.Say(SelfCommand);
             }
-            else
+            else if (!GameActions.UseBandageOnTarget(World.Instance, mobile.Serial))
             {
-                Item bandage = FindBandage();
-                if (bandage == null)
-                {
-                    // No bandage found, schedule retry to check again later
-                    ScheduleRetry(mobile.Serial);
-                    return false;
-                }
-
-                if (UseNewBandagePacket)
-                    // Use the same pattern as BandageSelf but target the mobile
-                    AsyncNetClient.Socket.Send_TargetSelectedObject(bandage.Serial, mobile.Serial);
-                else
-                {
-                    // Set up auto-target before double-clicking
-                    TargetManager.SetAutoTarget(mobile.Serial, BandageTargetType);
-
-                    GameActions.DoubleClick(World.Instance, bandage.Serial);
-                }
+                // No bandage found, schedule retry to check again later
+                ScheduleRetry(mobile.Serial);
+                return false;
             }
 
             if (UseDexFormula)
@@ -455,14 +437,6 @@ namespace ClassicUO.Game.Managers
             // Schedule recheck in case heal failed and hp stayed the same
             ScheduleRetry(mobile.Serial);
             return true;
-        }
-
-        private Item FindBandage()
-        {
-            if (World.Instance.Player?.FindItemByGraphic(BandageGraphic) is { } bandage)
-                return bandage;
-
-            return World.Instance.Player?.FindBandage(BandageGraphic);
         }
 
         /// <summary>

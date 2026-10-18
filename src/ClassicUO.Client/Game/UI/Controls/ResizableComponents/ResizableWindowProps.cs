@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.ComponentModel;
 using ClassicUO.Common;
 using Microsoft.Xna.Framework;
@@ -13,6 +15,10 @@ public class ResizableWindowProps : MyraCommonProps
     /// <summary>
     ///     Gets or sets the resize behavior (enabled edges, size limits, and scrollbar mode) of the window.
     /// </summary>
+    /// <remarks>
+    ///     Never null - <see cref="ResizableWindow" /> reads it on every reconfigure with no
+    ///     fallback. Disable resizing through <see cref="ResizeBehavior.Enabled" />.
+    /// </remarks>
     public ResizeBehavior Resize
     {
         get;
@@ -21,8 +27,8 @@ public class ResizableWindowProps : MyraCommonProps
             ResizeBehavior oldValue = field;
             if (SetField(ref field, value))
             {
-                oldValue?.PropertyChanged -= OnResizePropertyChanged;
-                field?.PropertyChanged += OnResizePropertyChanged;
+                oldValue.PropertyChanged -= OnResizePropertyChanged;
+                field.PropertyChanged += OnResizePropertyChanged;
             }
         }
     } = new();
@@ -35,20 +41,21 @@ public class ResizableWindowProps : MyraCommonProps
     /// <summary>
     ///     Gets or sets the accessor used to persist and restore the window's size across sessions.
     /// </summary>
-    public Accessor<Point?> InitialSizeStore { get; set => SetField(ref field, value); }
+    public Accessor<Point?>? InitialSizeStore { get; set => SetField(ref field, value); }
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ResizableWindowProps" /> class.
     /// </summary>
     public ResizableWindowProps()
     {
-        Resize?.PropertyChanged += OnResizePropertyChanged;
+        Resize.PropertyChanged += OnResizePropertyChanged;
     }
 
     /// <summary>
-    ///     Re-raises property change notifications from <see cref="Resize" /> as a change of the <see cref="Resize" /> property itself.
+    ///     Re-raises property change notifications from <see cref="Resize" /> as a change of the <see cref="Resize" />
+    ///     property itself.
     /// </summary>
     /// <param name="sender">The <see cref="ResizeBehavior" /> instance that changed.</param>
     /// <param name="e">Event data describing which property of <see cref="Resize" /> changed.</param>
-    private void OnResizePropertyChanged(object sender, PropertyChangedEventArgs e) => OnPropertyChanged(nameof(Resize));
+    private void OnResizePropertyChanged(object? sender, PropertyChangedEventArgs e) => OnPropertyChanged(nameof(Resize));
 }

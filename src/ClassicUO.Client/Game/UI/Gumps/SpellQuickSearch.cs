@@ -7,7 +7,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using Microsoft.Xna.Framework;
 
-namespace ClassicUO.Game.UI.Gumps.SpellBar;
+namespace ClassicUO.Game.UI.Gumps;
 
 public class SpellQuickSearch : NineSliceGump
 {

@@ -101,7 +101,7 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
-        public void ActiveHue_MatchesSpellBarValue()
+        public void ActiveHue_MatchesExpectedValue()
         {
             CounterBarSlot.ActiveHue.Should().Be(38);
         }

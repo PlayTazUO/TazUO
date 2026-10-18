@@ -10,9 +10,8 @@ using ClassicUO.Input;
 using ClassicUO.Network;
 using ClassicUO.Utility;
 using System;
-using System.Threading;
-using System.Threading.Tasks;
-using ClassicUO.Utility.Logging;
+using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.Managers
 {
@@ -197,10 +196,25 @@ namespace ClassicUO.Game.Managers
                     {
                         if (UIManager.GetGump<BaseHealthBarGump>(value) == null)
                         {
-                            if (ProfileManager.CurrentProfile.CustomBarsToggled)
-                                UIManager.Add(new HealthBarGumpCustom(_world, value) { Location = ProfileManager.CurrentProfile.LastTargetHealthBarPos, IsLastTarget = true });
+                            BaseHealthBarGump bar = ProfileManager.CurrentProfile.CustomBarsToggled
+                                ? new HealthBarGumpCustom(_world, value)
+                                : new HealthBarGump(_world, value);
+
+                            if (ProfileManager.CurrentProfile.StackHealthBarsForLastAttack)
+                            {
+                                bar.StackBelowExisting(
+                                    UIManager.Gumps.OfType<BaseHealthBarGump>(),
+                                    ProfileManager.CurrentProfile.LastTargetHealthBarPos,
+                                    ProfileManager.CurrentProfile.AnchorHealthBarsForLastAttack
+                                );
+                            }
                             else
-                                UIManager.Add(new HealthBarGump(_world, value) { Location = ProfileManager.CurrentProfile.LastTargetHealthBarPos, IsLastTarget = true });
+                            {
+                                bar.Location = ProfileManager.CurrentProfile.LastTargetHealthBarPos;
+                            }
+
+                            bar.IsLastTarget = true;
+                            UIManager.Add(bar);
                         }
                     }
                 }

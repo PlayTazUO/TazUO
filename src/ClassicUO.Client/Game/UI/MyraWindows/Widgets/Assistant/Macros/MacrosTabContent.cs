@@ -15,7 +15,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Macros;
 
 public static class MacrosTabContent
 {
-    private static readonly HashSet<MacroType> _filteredMacroTypes = [MacroType.INVALID];
+    private static readonly HashSet<MacroType> _filteredMacroTypes = [MacroType.INVALID, MacroType.REMOVED, MacroType.REMOVED2, MacroType.REMOVED3];
 
     /// <summary>Macro types whose sub-type dropdown is a list of available gumps (shared sub-type range).</summary>
     private static readonly HashSet<MacroType> _gumpListMacroTypes = [MacroType.Open, MacroType.Close, MacroType.Minimize, MacroType.Maximize, MacroType.ToggleGump];
@@ -170,7 +170,7 @@ public static class MacrosTabContent
 
             macroButtonRow.Widgets.Add(new MyraButton(TazLang.Get("macrostab_buttoneditor"), () =>
             {
-                OpenMacroButtonEditor(macro);
+                MacroButtonEditorWindow.Show(macro);
             }) { Tooltip = TazLang.Get("macrostab_buttoneditor_tooltip") });
 
             editorPanel.Widgets.Add(macroButtonRow);
@@ -634,19 +634,5 @@ public static class MacrosTabContent
         root.Widgets.Add(toolbar);
         root.Widgets.Add(mainArea);
         return root;
-    }
-
-    /// <summary>Opens (or brings to front) the macro button editor for the given macro.</summary>
-    private static void OpenMacroButtonEditor(Macro macro)
-    {
-        MacroButtonEditorGump? existing = UIManager.Gumps.OfType<MacroButtonEditorGump>().FirstOrDefault();
-        existing?.Dispose();
-
-        var btnEditorGump = new MacroButtonEditorGump(World.Instance, macro, 0, 0);
-        btnEditorGump.CenterXInViewPort();
-        btnEditorGump.CenterYInViewPort();
-        UIManager.Add(btnEditorGump);
-        btnEditorGump.SetInScreen();
-        btnEditorGump.BringOnTop();
     }
 }

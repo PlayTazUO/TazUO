@@ -33,6 +33,8 @@ namespace ClassicUO.Game.GameObjects
 
         public bool MatchesHighlightData;
         public Color HighlightColor = Color.White;
+        /// <summary>Colors of all matching grid highlight rules in configured order.</summary>
+        public Color[] HighlightColors = Array.Empty<Color>();
         public string HighlightName = string.Empty;
         public bool ShouldAutoLoot;
         public bool HighlightChecked;
@@ -155,7 +157,7 @@ namespace ClassicUO.Game.GameObjects
         }
 
         public ref StaticTiles ItemData =>
-            ref Client.Game.UO.FileManager.TileData.StaticData[IsMulti ? MultiGraphic : Graphic];
+            ref Client.Game.UO.FileManager.TileData.GetStaticTile(IsMulti ? MultiGraphic : Graphic);
 
         public bool IsLootable =>
             ItemData.Layer != (int)Layer.Hair

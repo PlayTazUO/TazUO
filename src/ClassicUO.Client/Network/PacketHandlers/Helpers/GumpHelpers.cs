@@ -99,30 +99,52 @@ internal static class GumpHelpers
             gump.CleanUpDisposedChildren();
         }
 
-        var gumpTextBuilder = new StringBuilder(string.Join("\n", lines));
+        var gumpTextBuilder = new StringBuilder();
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (i > 0)
+                gumpTextBuilder.Append('\n');
+
+            gumpTextBuilder.Append(lines[i]);
+        }
 
         int group = 0;
         int page = 0;
 
         bool textBoxFocused = false;
 
+        // Reused across commands: no control constructor retains the list, so the per-command
+        // allocation can be avoided.
+        var gparams = new List<string>();
+
         for (int cnt = 0; cnt < cmdlen; cnt++)
         {
-            List<string> gparams = GetCmdParser().GetTokens(cmdlist[cnt], false);
+            gparams.Clear();
+            GetCmdParser().GetTokens(cmdlist[cnt], gparams, false);
 
             if (gparams.Count == 0)
                 continue;
 
             string entry = gparams[0];
-            gumpTextBuilder.Append(string.Join(" ", gparams)).Append('\n');
 
-            if (string.Equals(entry, "button", StringComparison.InvariantCultureIgnoreCase))
+            for (int i = 0; i < gparams.Count; i++)
+            {
+                if (i > 0)
+                    gumpTextBuilder.Append(' ');
+
+                gumpTextBuilder.Append(gparams[i]);
+            }
+
+            gumpTextBuilder.Append('\n');
+
+            if (string.Equals(entry, "button", StringComparison.OrdinalIgnoreCase))
                 gump.Add(new Button(gparams), page);
             else if (
                 string.Equals(
                     entry,
                     "buttontileart",
-                    StringComparison.InvariantCultureIgnoreCase
+                    StringComparison.OrdinalIgnoreCase
                 )
             )
                 gump.Add(new ButtonTileArt(gparams), page);
@@ -130,7 +152,7 @@ internal static class GumpHelpers
                 string.Equals(
                     entry,
                     "checkertrans",
-                    StringComparison.InvariantCultureIgnoreCase
+                    StringComparison.OrdinalIgnoreCase
                 )
             )
             {
@@ -146,19 +168,19 @@ internal static class GumpHelpers
                 );
             }
             else if (
-                string.Equals(entry, "croppedtext", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "croppedtext", StringComparison.OrdinalIgnoreCase)
             )
                 gump.Add(new CroppedText(gparams, lines), page);
             else if (
-                string.Equals(entry, "tilepicasgumppic", StringComparison.InvariantCultureIgnoreCase) ||
-                string.Equals(entry, "gumppic", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "tilepicasgumppic", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(entry, "gumppic", StringComparison.OrdinalIgnoreCase)
             )
             {
                 GumpPic pic;
                 bool isVirtue = gparams.Count >= 6
                                 && gparams[5].IndexOf(
                                     "virtuegumpitem",
-                                    StringComparison.InvariantCultureIgnoreCase
+                                    StringComparison.OrdinalIgnoreCase
                                 ) >= 0;
 
                 if (isVirtue)
@@ -282,16 +304,16 @@ internal static class GumpHelpers
                 string.Equals(
                     entry,
                     "gumppictiled",
-                    StringComparison.InvariantCultureIgnoreCase
+                    StringComparison.OrdinalIgnoreCase
                 )
             )
                 gump.Add(new GumpPicTiled(gparams), page);
             else if (
-                string.Equals(entry, "htmlgump", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "htmlgump", StringComparison.OrdinalIgnoreCase)
             )
                 gump.Add(new HtmlControl(gparams, lines), page);
             else if (
-                string.Equals(entry, "xmfhtmlgump", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "xmfhtmlgump", StringComparison.OrdinalIgnoreCase)
             )
                 gump.Add(
                     new HtmlControl(
@@ -312,7 +334,7 @@ internal static class GumpHelpers
                 string.Equals(
                     entry,
                     "xmfhtmlgumpcolor",
-                    StringComparison.InvariantCultureIgnoreCase
+                    StringComparison.OrdinalIgnoreCase
                 )
             )
             {
@@ -338,7 +360,7 @@ internal static class GumpHelpers
                 );
             }
             else if (
-                string.Equals(entry, "xmfhtmltok", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "xmfhtmltok", StringComparison.OrdinalIgnoreCase)
             )
             {
                 int color = int.Parse(gparams[7]);
@@ -382,16 +404,16 @@ internal static class GumpHelpers
                     page
                 );
             }
-            else if (string.Equals(entry, "page", StringComparison.InvariantCultureIgnoreCase))
+            else if (string.Equals(entry, "page", StringComparison.OrdinalIgnoreCase))
             {
                 if (gparams.Count >= 2)
                     page = int.Parse(gparams[1]);
             }
             else if (
-                string.Equals(entry, "resizepic", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "resizepic", StringComparison.OrdinalIgnoreCase)
             )
                 gump.Add(new ResizePic(gparams), page);
-            else if (string.Equals(entry, "text", StringComparison.InvariantCultureIgnoreCase))
+            else if (string.Equals(entry, "text", StringComparison.OrdinalIgnoreCase))
             {
                 if (gparams.Count >= 5)
                     gump.Add(new Label(gparams, lines), page);
@@ -400,12 +422,12 @@ internal static class GumpHelpers
                 string.Equals(
                     entry,
                     "textentrylimited",
-                    StringComparison.InvariantCultureIgnoreCase
+                    StringComparison.OrdinalIgnoreCase
                 )
                 || string.Equals(
                     entry,
                     "textentry",
-                    StringComparison.InvariantCultureIgnoreCase
+                    StringComparison.OrdinalIgnoreCase
                 )
             )
             {
@@ -420,35 +442,35 @@ internal static class GumpHelpers
                 gump.Add(textBox, page);
             }
             else if (
-                string.Equals(entry, "tilepichue", StringComparison.InvariantCultureIgnoreCase)
-                || string.Equals(entry, "tilepic", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "tilepichue", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(entry, "tilepic", StringComparison.OrdinalIgnoreCase)
             )
                 gump.Add(new StaticPic(gparams), page);
             else if (
-                string.Equals(entry, "noclose", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "noclose", StringComparison.OrdinalIgnoreCase)
             )
                 gump.CanCloseWithRightClick = false;
             else if (
-                string.Equals(entry, "nodispose", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "nodispose", StringComparison.OrdinalIgnoreCase)
             )
                 gump.CanCloseWithEsc = false;
             else if (
-                string.Equals(entry, "nomove", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "nomove", StringComparison.OrdinalIgnoreCase)
             )
                 gump.CanMove = false;
             else if (
-                string.Equals(entry, "group", StringComparison.InvariantCultureIgnoreCase)
-                || string.Equals(entry, "endgroup", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "group", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(entry, "endgroup", StringComparison.OrdinalIgnoreCase)
             )
                 group++;
-            else if (string.Equals(entry, "radio", StringComparison.InvariantCultureIgnoreCase))
+            else if (string.Equals(entry, "radio", StringComparison.OrdinalIgnoreCase))
                 gump.Add(new RadioButton(group, gparams, lines), page);
             else if (
-                string.Equals(entry, "checkbox", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "checkbox", StringComparison.OrdinalIgnoreCase)
             )
                 gump.Add(new Checkbox(gparams, lines), page);
             else if (
-                string.Equals(entry, "tooltip", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "tooltip", StringComparison.OrdinalIgnoreCase)
             )
             {
                 string text = null;
@@ -500,7 +522,7 @@ internal static class GumpHelpers
                 string.Equals(
                     entry,
                     "itemproperty",
-                    StringComparison.InvariantCultureIgnoreCase
+                    StringComparison.OrdinalIgnoreCase
                 )
             )
             {
@@ -518,34 +540,34 @@ internal static class GumpHelpers
                 }
             }
             else if (
-                string.Equals(entry, "noresize", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "noresize", StringComparison.OrdinalIgnoreCase)
             ) { }
             else if (
-                string.Equals(entry, "mastergump", StringComparison.InvariantCultureIgnoreCase)
+                string.Equals(entry, "mastergump", StringComparison.OrdinalIgnoreCase)
             )
                 gump.MasterGumpSerial = gparams.Count > 0 ? SerialHelper.Parse(gparams[1]) : 0;
-            else if (string.Equals(entry, "picinpichued", StringComparison.InvariantCultureIgnoreCase) ||
-                     string.Equals(entry, "picinpicphued", StringComparison.InvariantCultureIgnoreCase) ||
-                     string.Equals(entry, "picinpic", StringComparison.InvariantCultureIgnoreCase)
+            else if (string.Equals(entry, "picinpichued", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(entry, "picinpicphued", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(entry, "picinpic", StringComparison.OrdinalIgnoreCase)
                     )
             {
                 if (gparams.Count > 7)
                     gump.Add(new GumpPicInPic(gparams), page);
             }
-            else if (string.Equals(entry, "\0", StringComparison.InvariantCultureIgnoreCase))
+            else if (string.Equals(entry, "\0", StringComparison.OrdinalIgnoreCase))
                 //This gump is null terminated: Breaking
                 break;
-            else if (string.Equals(entry, "gumppichued", StringComparison.InvariantCultureIgnoreCase) ||
-                     string.Equals(entry, "gumppicphued", StringComparison.InvariantCultureIgnoreCase))
+            else if (string.Equals(entry, "gumppichued", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(entry, "gumppicphued", StringComparison.OrdinalIgnoreCase))
             {
                 if (gparams.Count >= 3)
                     gump.Add(new GumpPic(gparams));
             }
-            else if (string.Equals(entry, "togglelimitgumpscale", StringComparison.InvariantCultureIgnoreCase))
+            else if (string.Equals(entry, "togglelimitgumpscale", StringComparison.OrdinalIgnoreCase))
             {
                 // ??
             }
-            else if (string.Equals(entry, "maparea", StringComparison.InvariantCultureIgnoreCase))
+            else if (string.Equals(entry, "maparea", StringComparison.OrdinalIgnoreCase))
             {
                 if (gparams.Count >= 10)
                     if (int.TryParse(gparams[1], out int cx) &&
@@ -595,13 +617,12 @@ internal static class GumpHelpers
                 for (int i = 0; i < gump.Children.Count; i++)
                     if (gump.Children[i] is HtmlControl)
                     {
-                        string pattern = @"(\d+('N)?('S)?('E)?('W)?)";
+                        const string pattern = @"(\d+('N)?('S)?('E)?('W)?)";
 
                         string[] loc = new string[4];
 
                         int c = 0;
-                        foreach (Match m in Regex.Matches(((HtmlControl)gump.Children[i]).Text, pattern,
-                                     RegexOptions.Multiline))
+                        foreach (Match m in RegexHelper.GetRegex(pattern, RegexOptions.Multiline).Matches(((HtmlControl)gump.Children[i]).Text))
                         {
                             if (c > 3)
                                 break;

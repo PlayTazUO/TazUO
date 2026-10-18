@@ -21,6 +21,24 @@ internal static class DisplayWaypoint
 
         Log.Info($"Waypoint received: {type} - {name}");
 
+        if (type == WaypointsType.Resurrection)
+        {
+            if (cliloc != 0)
+            {
+                string translated = Client.Game.UO.FileManager.Clilocs.Translate((int)cliloc, name ?? string.Empty);
+
+                if (!string.IsNullOrEmpty(translated))
+                {
+                    name = translated;
+                }
+            }
+
+            if (string.IsNullOrEmpty(name))
+            {
+                name = type.ToString();
+            }
+        }
+
         switch (type)
         {
             case WaypointsType.Corpse:
@@ -35,7 +53,7 @@ internal static class DisplayWaypoint
             case WaypointsType.QuestDestination:
                 break;
             case WaypointsType.Resurrection:
-                world.WMapManager.AddOrUpdate(serial, x, y, 0, map, true, "Resurrection");
+                world.WMapManager.AddOrUpdate(serial, x, y, 0, map, false, name, type: type);
                 break;
             case WaypointsType.PointOfInterest:
                 break;

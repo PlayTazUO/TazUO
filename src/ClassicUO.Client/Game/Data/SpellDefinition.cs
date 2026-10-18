@@ -147,7 +147,7 @@ namespace ClassicUO.Game.Data
                 LoadSpellsFromFile(world, path);
             }
 
-            path = Path.Combine(Settings.GlobalSettings.UltimaOnlineDirectory, "spelldef.json");
+            path = Path.Combine(Settings.GlobalSettings.ResolvedUltimaOnlineDirectory, "spelldef.json");
             if (File.Exists(path))
             {
                 LoadSpellsFromFile(world, path);

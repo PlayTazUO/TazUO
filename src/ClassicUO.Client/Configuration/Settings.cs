@@ -1,12 +1,9 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
-
-using System;
+﻿using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ClassicUO.Assets;
 using ClassicUO.Configuration.Json;
-using ClassicUO.Game;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Configuration
@@ -56,6 +53,25 @@ namespace ClassicUO.Configuration
         [JsonPropertyName("ignore_relay_ip")] public bool IgnoreRelayIp { get; set; } = false;
 
         [JsonPropertyName("ultimaonlinedirectory")] public string UltimaOnlineDirectory { get; set; } = "";
+
+        /// <summary>
+        ///     Gets <see cref="UltimaOnlineDirectory"/> as an absolute path, resolving a relative value against
+        ///     <see cref="CUOEnviroment.ExecutablePath"/> rather than the process working directory so file lookups
+        ///     behave the same however the client was launched. The raw value is left untouched for serialization.
+        /// </summary>
+        [JsonIgnore]
+        public string ResolvedUltimaOnlineDirectory
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(UltimaOnlineDirectory))
+                    return CUOEnviroment.ExecutablePath;
+
+                return Path.IsPathRooted(UltimaOnlineDirectory)
+                    ? UltimaOnlineDirectory
+                    : Path.Combine(CUOEnviroment.ExecutablePath, UltimaOnlineDirectory);
+            }
+        }
 
         [JsonPropertyName("profilespath")] public string ProfilesPath { get; set; } = string.Empty;
 
@@ -135,17 +151,12 @@ namespace ClassicUO.Configuration
 
         public static string GetSettingsFilepath()
         {
-            if (CustomSettingsFilepath != null)
-            {
-                if (Path.IsPathRooted(CustomSettingsFilepath))
-                {
-                    return CustomSettingsFilepath;
-                }
+            if (CustomSettingsFilepath == null)
+                return Path.Combine(CUOEnviroment.ExecutablePath, SETTINGS_FILENAME);
 
-                return Path.Combine(CUOEnviroment.ExecutablePath, CustomSettingsFilepath);
-            }
-
-            return Path.Combine(CUOEnviroment.ExecutablePath, SETTINGS_FILENAME);
+            return Path.IsPathRooted(CustomSettingsFilepath)
+                ? CustomSettingsFilepath
+                : Path.Combine(CUOEnviroment.ExecutablePath, CustomSettingsFilepath);
         }
 
         public void Save()
@@ -176,7 +187,7 @@ namespace ClassicUO.Configuration
             if (_eventineIPs.Contains(IP))
             {
                 CustomServer = CustomServers.Eventine;
-                CustomServerSettings.GetCustomAnimPath = () => Path.Combine(Path.GetFullPath(UltimaOnlineDirectory), "Anims" );
+                CustomServerSettings.GetCustomAnimPath = () => Path.Combine(ResolvedUltimaOnlineDirectory, "Anims" );
                 return;
             }
         }

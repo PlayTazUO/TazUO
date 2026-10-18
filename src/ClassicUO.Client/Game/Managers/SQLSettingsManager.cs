@@ -187,8 +187,7 @@ namespace ClassicUO.Game.Managers
 
         /// <summary>
         /// Parses a <see cref="Point"/> from its <see cref="Point.ToString"/> representation
-        /// (e.g. "{X:5 Y:10}"). Used both by <see cref="ParseValue{T}"/> and by the generated
-        /// SQL-setting loaders for [SqlSetting] properties typed as <see cref="Point"/>/<see cref="Point"/>?.
+        /// (e.g. "{X:5 Y:10}"). Used by <see cref="ParseValue{T}"/> for Point-typed settings.
         /// </summary>
         public static bool TryParsePoint(string value, out Point point)
         {

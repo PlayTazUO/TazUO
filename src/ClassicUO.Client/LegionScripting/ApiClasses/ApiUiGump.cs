@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using ClassicUO.Assets;
-using ClassicUO.Game;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
-using ClassicUO.LegionScripting.ApiClasses;
 using FontStashSharp.RichText;
 
 namespace ClassicUO.LegionScripting.ApiClasses;
@@ -24,10 +22,10 @@ public class ApiUiGump(LegionAPI api)
     /// Get a blank gump.
     /// Example:
     /// ```py
-    /// g = API.CreateGump()
+    /// g = API.Gumps.CreateGump()
     /// g.SetRect(100, 100, 200, 200)
-    /// g.Add(API.CreateGumpLabel("Hello World!"))
-    /// API.AddGump(g)
+    /// g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
+    /// API.Gumps.AddGump(g)
     /// ```
     /// </summary>
     /// <param name="acceptMouseInput">Allow clicking the gump</param>
@@ -80,10 +78,10 @@ public class ApiUiGump(LegionAPI api)
     /// Add a gump to the players screen.
     /// Example:
     /// ```py
-    /// g = API.CreateGump()
+    /// g = API.Gumps.CreateGump()
     /// g.SetRect(100, 100, 200, 200)
-    /// g.Add(API.CreateGumpLabel("Hello World!"))
-    /// API.AddGump(g)
+    /// g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
+    /// API.Gumps.AddGump(g)
     /// ```
     /// </summary>
     /// <param name="g">The gump to add</param>
@@ -104,11 +102,11 @@ public class ApiUiGump(LegionAPI api)
     /// Create a checkbox for gumps.
     /// /// Example:
     /// ```py
-    /// g = API.CreateGump()
+    /// g = API.Gumps.CreateGump()
     /// g.SetRect(100, 100, 200, 200)
-    /// cb = API.CreateGumpCheckbox("Check me?!")
+    /// cb = API.Gumps.CreateGumpCheckbox("Check me?!")
     /// g.Add(cb)
-    /// API.AddGump(g)
+    /// API.Gumps.AddGump(g)
     ///
     /// API.SysMsg("Checkbox checked: " + str(cb.IsChecked))
     /// ```
@@ -124,10 +122,10 @@ public class ApiUiGump(LegionAPI api)
     /// Create a label for a gump.
     /// Example:
     /// ```py
-    /// g = API.CreateGump()
+    /// g = API.Gumps.CreateGump()
     /// g.SetRect(100, 100, 200, 200)
-    /// g.Add(API.CreateGumpLabel("Hello World!"))
-    /// API.AddGump(g)
+    /// g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
+    /// API.Gumps.AddGump(g)
     /// ```
     /// </summary>
     /// <param name="text">The text</param>
@@ -143,13 +141,13 @@ public class ApiUiGump(LegionAPI api)
     /// Get a transparent color box for gumps.
     /// Example:
     /// ```py
-    /// g = API.CreateGump()
+    /// g = API.Gumps.CreateGump()
     /// g.SetRect(100, 100, 200, 200)
-    /// cb = API.CreateGumpColorBox(0.5, "#000000")
+    /// cb = API.Gumps.CreateGumpColorBox(0.5, "#000000")
     /// cb.SetWidth(200)
     /// cb.SetHeight(200)
     /// g.Add(cb)
-    /// API.AddGump(g)
+    /// API.Gumps.AddGump(g)
     /// ```
     /// </summary>
     /// <param name="opacity">0.5 = 50%</param>
@@ -166,10 +164,10 @@ public class ApiUiGump(LegionAPI api)
     /// Create a picture of an item.
     /// Example:
     /// ```py
-    /// g = API.CreateGump()
+    /// g = API.Gumps.CreateGump()
     /// g.SetRect(100, 100, 200, 200)
-    /// g.Add(API.CreateGumpItemPic(0x0E78, 50, 50))
-    /// API.AddGump(g)
+    /// g.Add(API.Gumps.CreateGumpItemPic(0x0E78, 50, 50))
+    /// API.Gumps.AddGump(g)
     /// ```
     /// </summary>
     /// <param name="graphic"></param>
@@ -190,12 +188,12 @@ public class ApiUiGump(LegionAPI api)
     /// Create a rendered map area, displaying a region of the world map as a texture.
     /// Example:
     /// ```py
-    /// gump = API.CreateGump()
+    /// gump = API.Gumps.CreateGump()
     /// gump.SetRect(100, 100, 200, 200)
     ///
-    /// map = API.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
+    /// map = API.Gumps.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
     /// gump.Add(map)
-    /// API.AddGump(gump)
+    /// API.Gumps.AddGump(gump)
     /// ```
     /// </summary>
     /// <param name="mapIndex">The map/facet to render (0 = Felucca, 1 = Trammel, etc)</param>
@@ -237,11 +235,11 @@ public class ApiUiGump(LegionAPI api)
     /// Create a button for gumps.
     /// Example:
     /// ```py
-    /// g = API.CreateGump()
+    /// g = API.Gumps.CreateGump()
     /// g.SetRect(100, 100, 200, 200)
-    /// button = API.CreateGumpButton("Click Me!")
+    /// button = API.Gumps.CreateGumpButton("Click Me!")
     /// g.Add(button)
-    /// API.AddGump(g)
+    /// API.Gumps.AddGump(g)
     ///
     /// while True:
     ///   API.SysMsg("Button currently clicked?: " + str(button.IsClicked))
@@ -266,11 +264,11 @@ public class ApiUiGump(LegionAPI api)
     /// Create a simple button, does not use graphics.
     /// Example:
     /// ```py
-    /// g = API.CreateGump()
+    /// g = API.Gumps.CreateGump()
     /// g.SetRect(100, 100, 200, 200)
-    /// button = API.CreateSimpleButton("Click Me!", 100, 20)
+    /// button = API.Gumps.CreateSimpleButton("Click Me!", 100, 20)
     /// g.Add(button)
-    /// API.AddGump(g)
+    /// API.Gumps.AddGump(g)
     /// ```
     /// </summary>
     /// <param name="text"></param>
@@ -289,11 +287,11 @@ public class ApiUiGump(LegionAPI api)
     /// Create a radio button for gumps, use group numbers to only allow one item to be checked at a time.
     /// Example:
     /// ```py
-    /// g = API.CreateGump()
+    /// g = API.Gumps.CreateGump()
     /// g.SetRect(100, 100, 200, 200)
-    /// rb = API.CreateGumpRadioButton("Click Me!", 1)
+    /// rb = API.Gumps.CreateGumpRadioButton("Click Me!", 1)
     /// g.Add(rb)
-    /// API.AddGump(g)
+    /// API.Gumps.AddGump(g)
     /// API.SysMsg("Radio button checked?: " + str(rb.IsChecked))
     /// ```
     /// </summary>
@@ -318,23 +316,23 @@ public class ApiUiGump(LegionAPI api)
     /// w = 500
     /// h = 600
     ///
-    /// gump = API.CreateGump(True, True)
+    /// gump = API.Gumps.CreateGump(True, True)
     /// gump.SetWidth(w)
     /// gump.SetHeight(h)
     /// gump.CenterXInViewPort()
     /// gump.CenterYInViewPort()
     ///
-    /// bg = API.CreateGumpColorBox(0.7, "#D4202020")
+    /// bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
     /// bg.SetWidth(w)
     /// bg.SetHeight(h)
     ///
     /// gump.Add(bg)
     ///
-    /// textbox = API.CreateGumpTextBox("Text example", w, h, True)
+    /// textbox = API.Gumps.CreateGumpTextBox("Text example", w, h, True)
     ///
     /// gump.Add(textbox)
     ///
-    /// API.AddGump(gump)
+    /// API.Gumps.AddGump(gump)
     /// ```
     /// </summary>
     /// <param name="text"></param>
@@ -351,14 +349,14 @@ public class ApiUiGump(LegionAPI api)
     /// Create a TTF label with advanced options.
     /// Example:
     /// ```py
-    /// gump = API.CreateGump()
+    /// gump = API.Gumps.CreateGump()
     /// gump.SetRect(100, 100, 200, 200)
     ///
-    /// ttflabel = API.CreateGumpTTFLabel("Example label", 25, "#F100DD", "alagard")
+    /// ttflabel = API.Gumps.CreateGumpTTFLabel("Example label", 25, "#F100DD", "alagard")
     /// ttflabel.SetRect(10, 10, 180, 30)
     /// gump.Add(ttflabel)
     ///
-    /// API.AddGump(gump) #Add the gump to the players screen
+    /// API.Gumps.AddGump(gump) #Add the gump to the players screen
     /// ```
     /// </summary>
     /// <param name="text"></param>
@@ -401,13 +399,13 @@ public class ApiUiGump(LegionAPI api)
     /// Create a progress bar. Can be updated as needed with `bar.SetProgress(current, max)`.
     /// Example:
     /// ```py
-    /// gump = API.CreateGump()
+    /// gump = API.Gumps.CreateGump()
     /// gump.SetRect(100, 100, 400, 200)
     ///
-    /// pb = API.CreateGumpSimpleProgressBar(400, 200)
+    /// pb = API.Gumps.CreateGumpSimpleProgressBar(400, 200)
     /// gump.Add(pb)
     ///
-    /// API.AddGump(gump)
+    /// API.Gumps.AddGump(gump)
     ///
     /// cur = 0
     /// max = 100
@@ -437,14 +435,43 @@ public class ApiUiGump(LegionAPI api)
         });
 
     /// <summary>
+    /// Create a horizontal slider control. Read or update its value with `slider.Value` / `slider.SetValue(value)`.
+    /// Example:
+    /// ```py
+    /// gump = API.Gumps.CreateGump()
+    /// gump.SetRect(100, 100, 300, 100)
+    ///
+    /// slider = API.Gumps.CreateSlider(200, 0, 100, 50)
+    /// gump.Add(slider)
+    ///
+    /// API.Gumps.AddGump(gump)
+    /// ```
+    /// </summary>
+    /// <param name="width">The width of the slider bar</param>
+    /// <param name="min">The minimum value</param>
+    /// <param name="max">The maximum value</param>
+    /// <param name="value">The initial value</param>
+    /// <param name="x">X position</param>
+    /// <param name="y">Y position</param>
+    /// <param name="showText">If true, displays the current value next to the slider</param>
+    /// <returns>A slider control</returns>
+    public ApiUiSlider CreateSlider
+        (int width, int min = 0, int max = 100, int value = 0, int x = 0, int y = 0, bool showText = false) => OnMain(() =>
+        {
+            var slider = new HSliderBar(x, y, width, min, max, value, HSliderBarStyle.MetalWidgetRecessedBar, hasText: showText);
+
+            return new ApiUiSlider(slider, api);
+        });
+
+    /// <summary>
     /// Create a scrolling area, add and position controls to it directly.
     /// Example:
     /// ```py
-    /// sa = API.CreateGumpScrollArea(0, 60, 200, 140)
+    /// sa = API.Gumps.CreateGumpScrollArea(0, 60, 200, 140)
     /// gump.Add(sa)
     ///
     /// for i in range(10):
-    ///     label = API.CreateGumpTTFLabel(f"Label {i + 1}", 20, "#FFFFFF", "alagard")
+    ///     label = API.Gumps.CreateGumpTTFLabel(f"Label {i + 1}", 20, "#FFFFFF", "alagard")
     ///     label.SetRect(5, i * 20, 180, 20)
     ///     sa.Add(label)
     /// ```
@@ -461,7 +488,7 @@ public class ApiUiGump(LegionAPI api)
     /// Create a gump pic(Use this for gump art, not item art)
     /// Example:
     /// ```py
-    /// gumpPic = API.CreateGumpPic(0xafb)
+    /// gumpPic = API.Gumps.CreateGumpPic(0xafb)
     /// gump.Add(gumpPic)
     /// </summary>
     /// <param name="graphic"></param>
@@ -478,7 +505,7 @@ public class ApiUiGump(LegionAPI api)
     /// Create a gump pic that tiles(repeats) (Use this for gump art, not item art)
     /// Example:
     /// ```py
-    /// gumpPic = API.CreateTiledGumpPic(0xafb, 100, 100)
+    /// gumpPic = API.Gumps.CreateTiledGumpPic(0xafb, 100, 100)
     /// gump.Add(gumpPic)
     /// </summary>
     /// <param name="graphic"></param>
@@ -509,8 +536,8 @@ public class ApiUiGump(LegionAPI api)
     /// ```py
     /// def myfunc:
     ///   API.SysMsg("Something clicked!")
-    /// bg = API.CreateGumpColorBox(0.7, "#D4202020")
-    /// API.AddControlOnClick(bg, myfunc)
+    /// bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
+    /// API.Gumps.AddControlOnClick(bg, myfunc)
     /// while True:
     ///   API.ProcessCallbacks()
     /// ```
@@ -556,13 +583,13 @@ public class ApiUiGump(LegionAPI api)
     /// def onClose():
     ///     API.Stop()
     ///
-    /// gump = API.CreateGump()
+    /// gump = API.Gumps.CreateGump()
     /// gump.SetRect(100, 100, 200, 200)
     ///
-    /// bg = API.CreateGumpColorBox(opacity=0.7, color="#000000")
+    /// bg = API.Gumps.CreateGumpColorBox(opacity=0.7, color="#000000")
     /// gump.Add(bg.SetRect(0, 0, 200, 200))
     ///
-    /// API.AddControlOnDisposed(gump, onClose)
+    /// API.Gumps.AddControlOnDisposed(gump, onClose)
     /// ```
     /// </summary>
     /// <param name="control"></param>

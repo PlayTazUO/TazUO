@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using ClassicUO.Configuration;
+using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using SDL3;
 
@@ -12,7 +13,10 @@ namespace ClassicUO.Game.Managers.Hotkeys
     /// <summary>
     /// Central, per-profile hotkey registry. Code registers named hotkeys at startup with
     /// <see cref="Register"/> and queries them with <c>HotKeys.Get(id).IsPressed(...)</c>.
-    /// Bindings persist to <c>hotkeys.json</c> in the current profile folder.
+    /// Bindings persist to <c>hotkeys.json</c> in the current profile folder. Keyboard bindings
+    /// dispatch through <see cref="HandleKeyDown"/>; mouse-button and controller-button bindings are
+    /// dispatched here too (from the raw button-down events), so an entry's OnPressed fires for every
+    /// binding kind it supports and consumers never need their own button plumbing.
     ///
     /// Registered entries live for the lifetime of the process (they are code registrations);
     /// <see cref="Load"/> re-applies the active profile's saved bindings onto them, and
@@ -80,6 +84,8 @@ namespace ClassicUO.Game.Managers.Hotkeys
             {
                 Keyboard.KeyDownEvent += OnRawKeyDown;
                 Keyboard.KeyUpEvent += OnRawKeyUp;
+                Mouse.ButtonDownEvent += OnRawMouseButtonDown;
+                Controller.ButtonDownEvent += OnRawControllerButtonDown;
                 _subscribed = true;
             }
 
@@ -224,6 +230,58 @@ namespace ClassicUO.Game.Managers.Hotkeys
                 if (b.Key == key && b.Mod == n)
                     entry.OnPressed.Invoke();
             }
+        }
+
+        // Mouse and controller button bindings have no keyboard dispatch, so route their raw
+        // button-down events through the same OnPressed callback. This is what lets consumers
+        // (bar cells, scripts, …) register a binding once and get every binding kind.
+        private static void OnRawMouseButtonDown(MouseButtonType button)
+            => DispatchButton(b => b.HasMouseButton && b.MouseButton == button);
+
+        private static void OnRawControllerButtonDown(SDL.SDL_GamepadButton button)
+            => DispatchButton(b => b.HasController && b.ControllerButtons != null && Array.IndexOf(b.ControllerButtons, button) >= 0);
+
+        /// <summary>
+        /// Fires <see cref="HotKeyEntry.OnPressed"/> for every entry whose binding matches the button
+        /// that just went down. Gated the same way as the keyboard path (world must own input; globally
+        /// suppressed entries skipped) so a button can't fire while it is being bound in the capture box
+        /// or while a window/textbox has focus.
+        /// </summary>
+        private static void DispatchButton(Func<HotkeyBinding, bool> isKind)
+        {
+            if (!WorldHasInputFocus())
+                return;
+
+            // Snapshot so an OnPressed callback that (un)registers a hotkey can't invalidate the enumerator.
+            foreach (HotKeyEntry entry in _entries.Values.ToArray())
+            {
+                if (!entry.Registered || !entry.Enabled || entry.OnPressed == null)
+                    continue;
+
+                // Same exemption as the keyboard path: an IgnoresGlobalDisable entry keeps firing when
+                // hotkeys are globally suppressed, the rest are skipped.
+                if (GloballyDisabled && !entry.IgnoresGlobalDisable)
+                    continue;
+
+                HotkeyBinding b = entry.Binding;
+                if (b == null || !isKind(b))
+                    continue;
+
+                // Exact modifier match (like HandleKeyDown) so a no-modifier button binding doesn't
+                // also fire while modifiers are held.
+                if (entry.IsPressed(allowAdditionalModifiers: false))
+                    entry.OnPressed.Invoke();
+            }
+        }
+
+        // Equivalent to GameSceneInputHandler.CanExecuteMacro: input belongs to the world (the system
+        // chat box holds focus and isn't mid-compose), not to a gump/window such as the capture box.
+        private static bool WorldHasInputFocus()
+        {
+            SystemChatControl chat = UIManager.SystemChat;
+            return chat != null
+                   && UIManager.KeyboardFocusControl == chat.TextBoxControl
+                   && chat.Mode >= ChatMode.Default;
         }
 
         internal static bool IsKeyHeld(SDL.SDL_Keycode key) => _heldKeys.Contains(key);
