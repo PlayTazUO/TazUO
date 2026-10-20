@@ -30,6 +30,12 @@ namespace ClassicUO.Game
         }
 
         public WeatherType? CurrentWeather { get; protected set; }
+
+        /// <summary>
+        /// Last weather that actually started. Survives <see cref="Reset"/>, so a server refresh of the same weather
+        /// doesn't repeat its message.
+        /// </summary>
+        public WeatherType? LastWeather { get; protected set; }
         public WeatherType Type { get; protected set; }
         public byte Count { get; protected set; }
         public byte CurrentCount { get; protected set; }
