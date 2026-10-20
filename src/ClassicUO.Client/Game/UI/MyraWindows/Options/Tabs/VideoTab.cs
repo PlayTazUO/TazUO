@@ -440,6 +440,11 @@ public static class VideoTab
                 TazLang.Get("mog_videotab_lighting_candleflicker"),
                 new Accessor<bool>(() => profile.CandleFlickerLights),
                 search: new SearchMetadata(TazLang.Get("mog_videotab_lighting_candleflicker"), Keywords: [TazLang.Get("mog_kw_light")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_videotab_lighting_lightningflash"),
+                new Accessor<bool>(() => profile.LightningFlash),
+                search: new SearchMetadata(TazLang.Get("mog_videotab_lighting_lightningflash"), Keywords: [TazLang.Get("mog_kw_light")])
             )
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_videotab_lighting_label"), Tags: [TazLang.Get("mog_kw_light")]));
 
