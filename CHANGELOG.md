@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/20/26
+* ***Fix:*** Lights near the camera no longer disappear in crowded areas or with a large viewport - lights per frame were capped at 100 (the number of light graphics), and the off-screen light margin filled the cap before the closest lights were collected
+
 ## 10/16/26
 * ***Feature:*** Added an in-game visual editor for Xml Gumps - open it with the `xmleditor` command or the top bar's Xml Gumps menu. It lists every element, lets you add, duplicate, delete and reorder them, and edits each attribute in a property panel (with hue and graphic pickers).
 * ***Fix:*** Moving with the keyboard (arrow keys, WASD, or a walk macro) now cancels auto follow, matching mouse movement instead of leaving follow active
