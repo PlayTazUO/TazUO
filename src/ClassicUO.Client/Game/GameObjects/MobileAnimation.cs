@@ -130,7 +130,8 @@ namespace ClassicUO.Game.GameObjects
             }
             else
             {
-                if (mobile.IsFlyingAnimationEnabled)
+                // Bodies without a fly animation keep their ground animations instead of vanishing.
+                if (mobile.IsFlyingAnimationEnabled && animations.AnimationExists(graphic, 19))
                 {
                     result = 19;
                 }
