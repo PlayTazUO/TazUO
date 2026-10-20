@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/20/26
+* ***Fix:*** The trade window no longer caps the gold and platinum offers separately at each balance - the server converts between the two (1 platinum = 1,000,000,000 gold), so each field is now limited by your total wealth minus what the other field already offers
+
 ## 10/16/26
 * ***Feature:*** Added an in-game visual editor for Xml Gumps - open it with the `xmleditor` command or the top bar's Xml Gumps menu. It lists every element, lets you add, duplicate, delete and reorder them, and edits each attribute in a property panel (with hue and graphic pickers).
 * ***Fix:*** Moving with the keyboard (arrow keys, WASD, or a walk macro) now cancels auto follow, matching mouse movement instead of leaving follow active
