@@ -19,6 +19,7 @@ All notable changes to TazUO will be recorded here.
 * ***Fix:*** The season packet no longer starts music track 0 or 1 when the season changes and nothing is playing - its second byte is a play-sound flag, not a music index
 * ***Fix:*** Music volume changes (including unchecking `Enable Music`) now apply to the track already playing when `Reproduce sounds in background` is enabled
 * ***Fix:*** Mobiles and corpses whose body has no second death animation (common on custom creatures and mounts) no longer turn invisible when they die running - they fall back to the first death animation
+* ***Fix:*** Non-movable server gumps (e.g. a region name shown over the viewport) always open where the server places them - a position remembered from earlier in the session, saved in the profile at logout, or pinned by "save all gump positions automatically" no longer overrides it, and that option no longer pins non-movable gumps
 
 ## 10/16/26
 * ***Feature:*** Added an in-game visual editor for Xml Gumps - open it with the `xmleditor` command or the top bar's Xml Gumps menu. It lists every element, lets you add, duplicate, delete and reorder them, and edits each attribute in a property panel (with hue and graphic pickers).
