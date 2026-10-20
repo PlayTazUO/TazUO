@@ -887,6 +887,12 @@ namespace ClassicUO.Game.Scenes
                     _world.NameOverHeadManager.Close();
                 }
             }
+            else if (_useObjectHandles && NameOverHeadManager.IsHotkeyHeld)
+            {
+                // With Stay active the showing state never flips, so a settings gump closed by right-click
+                // would never come back; holding the hotkey reopens it. Open() only recreates a disposed gump.
+                _world.NameOverHeadManager.Open();
+            }
 
             _rectanglePlayer.X = (int)(
                 _world.Player.RealScreenPosition.X
