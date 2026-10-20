@@ -23,6 +23,7 @@ public class GridItem : Control
     private readonly int _slot;
     private GridContainerPreview _preview;
     private Label _count;
+    private bool _isStacked;
     private readonly AlphaBlendControl _background;
     private readonly Label _listLabel;
     private CustomToolTip _toolTipThis, _toolTipitem1, _toolTipitem2;
@@ -222,6 +223,7 @@ public class GridItem : Control
             Highlight = false;
             _count?.Dispose();
             _count = null;
+            _isStacked = false;
             _listLabel.Text = string.Empty;
             _listLabel.IsVisible = false;
             ItemGridLocked = false;
@@ -246,8 +248,9 @@ public class GridItem : Control
 
         LocalSerial = item.Serial;
         int itemAmt = _item.ItemData.IsStackable ? _item.Amount : 1;
+        _isStacked = itemAmt > 1;
 
-        if (itemAmt > 1)
+        if (_isStacked)
         {
             _count?.Dispose();
             _count = new Label(itemAmt.ToString(), true, 0x0481, align: TEXT_ALIGN_TYPE.TS_LEFT)
@@ -255,6 +258,11 @@ public class GridItem : Control
                 X = 1
             };
             RepositionCount();
+        }
+        else
+        {
+            _count?.Dispose();
+            _count = null;
         }
 
         RefreshListName();
@@ -534,6 +542,8 @@ public class GridItem : Control
     private const ushort PARTIAL_HUE_FLAG = 0x8000;
     private const ushort SPECTRAL_HUE_FLAG = 0x4000;
     private const int LOW_CONTRAST_OUTLINE_PADDING = 1;
+    // Unscaled offset of the second art drawn for stacks, as in the classic container gump.
+    private const int STACKED_ART_OFFSET = 5;
     private const int LOW_CONTRAST_CACHE_MAX_ENTRIES = 8192;
     private const byte LOW_CONTRAST_MINIMUM_LEVEL = 1;
     private const byte LOW_CONTRAST_MAXIMUM_LEVEL = 10;
@@ -983,6 +993,15 @@ public class GridItem : Control
         DrawSpotlightRectangle(batcher, InflateRectangle(destination, 2), cellBounds, _lowContrastSpotlightInnerHue);
     }
 
+    /// <summary>Offset of the second stack art, scaled like the drawn item.</summary>
+    private static int GetStackedArtOffset(Rectangle destination, Rectangle source)
+    {
+        if (source.Width <= 0)
+            return STACKED_ART_OFFSET;
+
+        return Math.Max(1, (int)Math.Round(STACKED_ART_OFFSET * destination.Width / (float)source.Width));
+    }
+
     private void DrawLowContrastFull(UltimaBatcher2D batcher, Rectangle cellBounds) =>
         batcher.Draw(_whiteTexture, cellBounds, _lowContrastSpotlightInnerHue);
 
@@ -1178,12 +1197,26 @@ public class GridItem : Control
             _rect.Height
         );
 
-        if (_profile.GridHighlightLowContrastItems && IsLowContrastItem())
+        Rectangle stackedDestination = destination;
+
+        if (_isStacked)
         {
-            switch ((LowContrastHighlightStyle)_profile.GridHighlightLowContrastItemsStyle)
+            // Keep the pair centered in the cell: the back art shifts up-left, the front art down-right.
+            int stackOffset = GetStackedArtOffset(destination, source);
+            destination.Offset(-stackOffset / 2, -stackOffset / 2);
+            stackedDestination = destination;
+            stackedDestination.Offset(stackOffset, stackOffset);
+        }
+
+        bool highlightLowContrast = _profile.GridHighlightLowContrastItems && IsLowContrastItem();
+        var lowContrastStyle = (LowContrastHighlightStyle)_profile.GridHighlightLowContrastItemsStyle;
+
+        if (highlightLowContrast)
+        {
+            switch (lowContrastStyle)
             {
                 case LowContrastHighlightStyle.Spotlight:
-                    DrawLowContrastSpotlight(batcher, destination, itemCellBounds);
+                    DrawLowContrastSpotlight(batcher, Rectangle.Union(destination, stackedDestination), itemCellBounds);
                     break;
                 case LowContrastHighlightStyle.Full:
                     DrawLowContrastFull(batcher, itemCellBounds);
@@ -1195,6 +1228,19 @@ public class GridItem : Control
         }
 
         batcher.Draw(_texture, destination, source, hueVector);
+
+        if (_isStacked)
+        {
+            // Sprite borders follow each art; spotlight and full highlights already cover both.
+            if (highlightLowContrast
+                && lowContrastStyle != LowContrastHighlightStyle.Spotlight
+                && lowContrastStyle != LowContrastHighlightStyle.Full)
+            {
+                DrawLowContrastSpriteBorder(batcher, stackedDestination, source);
+            }
+
+            batcher.Draw(_texture, stackedDestination, source, hueVector);
+        }
 
         if (_item.MatchesHighlightData && !_gridContainer.HighlightsDisabledForContainer)
             DrawAdditionalHighlightMarkers(batcher, itemCellBounds, _item.HighlightColors);
