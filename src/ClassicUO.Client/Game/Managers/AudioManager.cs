@@ -547,23 +547,22 @@ namespace ClassicUO.Game.Managers
             {
                 if (_currentMusic[i] != null && globalSettings != null)
                 {
-                    if (Client.Game.IsActive)
+                    // With sounds playing in background the volume must still follow the settings, otherwise
+                    // unchecking Enable Music (or moving the slider) never reaches the track already playing.
+                    if (Client.Game.IsActive || globalSettings.ReproduceSoundsInBackground)
                     {
-                        if (!globalSettings.ReproduceSoundsInBackground)
+                        float volume;
+
+                        if (_currentMusicIsLogin[i])
                         {
-                            float volume;
-
-                            if (_currentMusicIsLogin[i])
-                            {
-                                volume = Settings.GlobalSettings.LoginMusic ? Settings.GlobalSettings.LoginMusicVolume / SOUND_DELTA : 0;
-                            }
-                            else
-                            {
-                                volume = i == 0 && runninWarMusic || !globalSettings.EnableMusic ? 0 : globalSettings.MusicVolume / SOUND_DELTA;
-                            }
-
-                            _currentMusic[i].Volume = volume;
+                            volume = Settings.GlobalSettings.LoginMusic ? Settings.GlobalSettings.LoginMusicVolume / SOUND_DELTA : 0;
                         }
+                        else
+                        {
+                            volume = i == 0 && runninWarMusic || !globalSettings.EnableMusic ? 0 : globalSettings.MusicVolume / SOUND_DELTA;
+                        }
+
+                        _currentMusic[i].Volume = volume;
                     }
                     else if (!globalSettings.ReproduceSoundsInBackground && _currentMusic[i].Volume != 0.0f)
                     {

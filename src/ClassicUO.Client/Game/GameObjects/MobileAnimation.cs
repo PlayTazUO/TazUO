@@ -66,13 +66,14 @@ namespace ClassicUO.Game.GameObjects
                         break;
                     }
 
+                // Gargoyle ghosts: 0x02B6 male, 0x02B7 female.
                 case 0x02B6:
-                    g = 667;
+                    g = 666;
 
                     break;
 
                 case 0x02B7:
-                    g = 666;
+                    g = 667;
 
                     break;
             }
@@ -639,6 +640,12 @@ namespace ClassicUO.Game.GameObjects
 
                                         break;
                                 }
+                            }
+                            else if (isParent && v13 == (ushort)LowAnimationGroup.Attack2 && !animations.AnimationExists(graphic, (byte)v13))
+                            {
+                                // Many animals have a single attack: fall back to it instead of showing nothing.
+                                // Skipped for mounts, whose group comes from the rider's action.
+                                v13 = (ushort)LowAnimationGroup.Attack1;
                             }
 
                             //if (v13 > 12)
