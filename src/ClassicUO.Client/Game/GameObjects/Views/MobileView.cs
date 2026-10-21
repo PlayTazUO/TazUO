@@ -436,7 +436,8 @@ namespace ClassicUO.Game.GameObjects
                                 depth,
                                 mountOffsetY,
                                 overridenHue,
-                                charSitting,
+                                // The sitting squash folds the legs; held weapons must keep their shape.
+                                layer != Layer.OneHanded && layer != Layer.TwoHanded && charSitting,
                                 outlineColor: OutlineColor
                             );
 
