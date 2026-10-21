@@ -1,6 +1,6 @@
 ---
 title: ApiUiNineSliceGump
-description: ApiUiNineSliceGump class documentation
+description: "ApiUiNineSliceGump class documentation"
 ---
 
 ## Properties
@@ -16,8 +16,7 @@ description: ApiUiNineSliceGump class documentation
 ## Methods
 ### GetHue
 
- Gets the current hue of the nine-slice gump
-
+Gets the current hue of the nine-slice gump
 
 **Return Type:** `ushort`
 
@@ -25,8 +24,7 @@ description: ApiUiNineSliceGump class documentation
 
 ### SetHue
 `(hue)`
- Sets the hue of the nine-slice gump
-
+Sets the hue of the nine-slice gump
 
 **Parameters:**
 
@@ -40,8 +38,7 @@ description: ApiUiNineSliceGump class documentation
 
 ### GetResizable
 
- Gets whether the gump is resizable
-
+Gets whether the gump is resizable
 
 **Return Type:** `bool`
 
@@ -49,8 +46,7 @@ description: ApiUiNineSliceGump class documentation
 
 ### SetResizable
 `(resizable)`
- Sets whether the gump is resizable
-
+Sets whether the gump is resizable
 
 **Parameters:**
 
@@ -64,8 +60,7 @@ description: ApiUiNineSliceGump class documentation
 
 ### GetBorderSize
 
- Gets the border size of the nine-slice
-
+Gets the border size of the nine-slice
 
 **Return Type:** `int`
 
@@ -73,8 +68,7 @@ description: ApiUiNineSliceGump class documentation
 
 ### SetBorderSize
 `(borderSize)`
- Sets the border size of the nine-slice
-
+Sets the border size of the nine-slice
 
 **Parameters:**
 
@@ -88,8 +82,7 @@ description: ApiUiNineSliceGump class documentation
 
 ### SetLegionTexture
 `(texture, borderSize)`
- Set the modern gump texture and border size
-
+Set the modern gump texture and border size
 
 **Parameters:**
 

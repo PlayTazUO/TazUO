@@ -1,6 +1,6 @@
 ---
 title: ApiUiNiceButton
-description: ApiUiNiceButton class documentation
+description: "ApiUiNiceButton class documentation"
 ---
 
 ## Properties
@@ -69,8 +69,7 @@ description: ApiUiNiceButton class documentation
 
 ### SetBackgroundColor
 `(r, g, b, a)`
- Sets the background color of the button. Pass null to clear.
-
+Sets the background color of the button. Pass null to clear.
 
 **Parameters:**
 
@@ -87,8 +86,7 @@ description: ApiUiNiceButton class documentation
 
 ### ClearBackgroundColor
 
- Clears the background color of the button.
-
+Clears the background color of the button.
 
 **Return Type:** `void` *(Does not return anything)*
 

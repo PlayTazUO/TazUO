@@ -3,7 +3,7 @@
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 using ClassicUO.Renderer.Effects;
 
-namespace ClassicUO.LegionScripting.ApiClasses;
+namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
 /// Disk blur - out-of-focus vision. Build one with `API.NewBlurLayer`.

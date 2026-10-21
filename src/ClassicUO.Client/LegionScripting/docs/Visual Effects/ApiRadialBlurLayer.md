@@ -1,13 +1,12 @@
 ---
 title: ApiRadialBlurLayer
-description:  Zoom blur along the ray from the shape's centre - head-spin, speed. Reads as vertigo rather than  poor focus because the centre of the screen stays sharp however strong it is. Build one with  `API.NewRadialBlurLayer`. 
+description: "Zoom blur along the ray from the shape's centre - head-spin, speed. Reads as vertigo rather than poor focus because the centre of the screen stays sharp however strong it is. Build one with `API.NewRadialBlurLayer`."
 ---
 
 ## Class Description
- Zoom blur along the ray from the shape's centre - head-spin, speed. Reads as vertigo rather than
+Zoom blur along the ray from the shape's centre - head-spin, speed. Reads as vertigo rather than
  poor focus because the centre of the screen stays sharp however strong it is. Build one with
  `API.NewRadialBlurLayer`.
-
 
 ## Properties
 ### `Zoom`

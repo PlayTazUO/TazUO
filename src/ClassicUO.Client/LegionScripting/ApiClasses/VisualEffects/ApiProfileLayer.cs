@@ -4,7 +4,7 @@ using System;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Renderer.Effects;
 
-namespace ClassicUO.LegionScripting.ApiClasses;
+namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
 /// One effect's participation in a composition: the layer, and how it combines with what is already

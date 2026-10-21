@@ -72,11 +72,11 @@ public static partial class GenDoc
             string classSummary = GetXmlSummary(classDeclaration);
             if (!string.IsNullOrEmpty(classSummary))
             {
-                sb.AppendLf($"description: {classSummary.Replace('\n', ' ').Replace('\r', ' ')}");
+                sb.AppendLf($"description: {YamlScalar(classSummary)}");
             }
             else
             {
-                sb.AppendLf($"description: {classDeclaration.Identifier.Text} class documentation");
+                sb.AppendLf($"description: {YamlScalar($"{classDeclaration.Identifier.Text} class documentation")}");
             }
 
             sb.AppendLf("---");
@@ -346,8 +346,36 @@ public static partial class GenDoc
         //string cleanedText = string.Join(" ", rawText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
         string cleanedDocumentation = XmlDocPrefixRx().Replace(rawText, "$1");
         cleanedDocumentation = CodeBlockRx().Replace(cleanedDocumentation, "`$1`");
-        return cleanedDocumentation.Replace("///", "");
 
+        // <para> has no Markdown equivalent, so it reaches the page as an unknown element and the
+        // paragraph break it stands for is lost. Both halves become one blank line.
+        cleanedDocumentation = ParaRx().Replace(cleanedDocumentation, "\n\n");
+
+        // Cross-references carry the only noun in sentences like "inherits from <see cref="X"/>",
+        // so they have to become that name - dropping the tag would leave the sentence dangling.
+        cleanedDocumentation = ReferenceRx().Replace(cleanedDocumentation, match => $"`{match.Groups[1].Value}`");
+
+        return cleanedDocumentation.Replace("///", "").Trim();
+    }
+
+    /// <summary>
+    /// Renders a doc summary as a YAML frontmatter value.
+    /// <para>
+    /// Always quoted. An unquoted scalar breaks the whole page the moment a summary contains ": ",
+    /// which YAML reads as a nested mapping - and the site build fails on the file rather than
+    /// degrading, so one colon in one C# doc comment takes the documentation down.
+    /// </para>
+    /// </summary>
+    /// <param name="summary">The summary text, possibly spanning lines.</param>
+    /// <returns>A double-quoted single-line scalar.</returns>
+    private static string YamlScalar(string summary)
+    {
+        // Any markup left over (<em>, <see cref="..."/>) would show as itself in a meta
+        // description and in search results, where there is nothing to render it.
+        string flattened = XmlTagRx().Replace(summary, string.Empty);
+        flattened = WhitespaceRx().Replace(flattened, " ").Trim();
+
+        return $"\"{flattened.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
     }
 
     private static void GenReturnType(TypeSyntax returnType, ref StringBuilder sb)
@@ -646,6 +674,23 @@ public static partial class GenDoc
     [GeneratedRegex(@"<c(?:ode)?\>\s*(.*?)\s*<\/c(?:ode)?>", RegexOptions.Singleline)]
     private static partial Regex CodeBlockRx();
 
+    [GeneratedRegex(@"[ \t]*</?para\s*/?>[ \t]*", RegexOptions.IgnoreCase)]
+    private static partial Regex ParaRx();
+
+    /// <summary>
+    /// A cross-reference tag, capturing what it names: <c>see cref</c>, <c>seealso cref</c>,
+    /// <c>see langword</c> and <c>paramref name</c>. The optional <c>T:</c>-style prefix Roslyn
+    /// accepts is excluded from the capture.
+    /// </summary>
+    [GeneratedRegex("""<(?:see(?:also)?\s+(?:cref|langword)|paramref\s+name)\s*=\s*"(?:[A-Za-z]:)?([^"]+)"\s*/?>""")]
+    private static partial Regex ReferenceRx();
+
+    [GeneratedRegex(@"<[^>]+>")]
+    private static partial Regex XmlTagRx();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRx();
+
     [GeneratedRegex(@"^\s*(///.*)$", RegexOptions.Multiline // Treat ^ and $ as start/end of LINE
     )]
     private static partial Regex XmlDocPrefixRx();
@@ -653,6 +698,45 @@ public static partial class GenDoc
 
 class Program
 {
+    /// <summary>Folder the API classes are grouped under, and the anchor page folders are relative to.</summary>
+    private const string ApiClassesFolder = "ApiClasses";
+
+    /// <summary>
+    /// Sidebar group the visual effect scripting types are published under. No "API" in the name -
+    /// everything here is the API, so the word would only repeat the section it sits in.
+    /// </summary>
+    private const string VisualEffectsGroup = "Visual Effects";
+
+    /// <summary>
+    /// Published folder name per source folder under <see cref="ApiClassesFolder"/>, where the two
+    /// should differ. Anything absent publishes under its own name, and a class sitting directly in
+    /// <see cref="ApiClassesFolder"/> publishes at the root.
+    /// <para>
+    /// The website copies the docs directory wholesale into its content collection and lets
+    /// Starlight autogenerate the sidebar from it, so these names are published URL segments and
+    /// sidebar group labels - which is why they read as prose rather than as C# folder names.
+    /// Renaming one moves every page under it.
+    /// </para>
+    /// </summary>
+    private static readonly Dictionary<string, string> PublishedFolders = new()
+    {
+        ["VisualEffects"] = VisualEffectsGroup
+    };
+
+    /// <summary>
+    /// Published folder for classes whose source file cannot be moved to decide it.
+    /// <para>
+    /// A type nested inside <c>LegionAPI</c> is the only kind a script can reach by name, since
+    /// nothing but <c>API</c> is injected into the Python scope - so these have to be declared in
+    /// <c>LegionAPI.cs</c> however they ought to be grouped, and the source tree cannot say where
+    /// their page belongs.
+    /// </para>
+    /// </summary>
+    private static readonly Dictionary<string, string> PublishedFolderByClass = new()
+    {
+        ["VisualEffectIds"] = VisualEffectsGroup
+    };
+
     static void Main(string[] args)
     {
         if (args.Length == 0)
@@ -679,19 +763,55 @@ class Program
             Dictionary<string, Tuple<StringBuilder, StringBuilder>> gen = GenDoc.GenerateMarkdown(filePath);
             //Console.WriteLine($"Generation complete for [{filePath}].");
 
+            string sourceFolder = PublishedFolder(filePath);
+
             foreach (KeyValuePair<string, Tuple<StringBuilder, StringBuilder>> kvp in gen)
             {
-                if (!Directory.Exists(docsDir))
-                    Directory.CreateDirectory(docsDir);
+                // Per class, not per file: one file can hold several classes, and a nested type's
+                // group is decided by name because its file is not free to move.
+                string folder = PublishedFolderByClass.GetValueOrDefault(kvp.Key, sourceFolder);
+                string pageDir = Path.Combine(docsDir, folder);
+
+                if (!Directory.Exists(pageDir))
+                    Directory.CreateDirectory(pageDir);
 
                 // Normalize to LF line endings to avoid cross-platform conflicts
                 string mdContent = kvp.Value.Item1.ToString().Replace("\r\n", "\n").Replace("\r", "\n");
                 string pyContent = kvp.Value.Item2.ToString().Replace("\r\n", "\n").Replace("\r", "\n");
 
-                File.WriteAllText(Path.Combine(docsDir, $"{kvp.Key}.md"), mdContent);
+                File.WriteAllText(Path.Combine(pageDir, $"{kvp.Key}.md"), mdContent);
                 File.AppendAllText(pyFilePath, pyContent);
             }
         }
+    }
+
+    /// <summary>
+    /// Where a source file's pages are published, relative to the docs directory.
+    /// <para>
+    /// Derived from the source tree rather than from a list of class names, so grouping a new class
+    /// is a matter of putting its file in the right folder - a name list would silently publish
+    /// anything nobody remembered to add to it at the root.
+    /// </para>
+    /// </summary>
+    /// <param name="filePath">The source file being documented.</param>
+    /// <returns>The folder, or an empty string for the docs root.</returns>
+    private static string PublishedFolder(string filePath)
+    {
+        string[] segments = Path.GetFullPath(filePath)
+            .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        int anchor = Array.LastIndexOf(segments, ApiClassesFolder);
+
+        // Not under ApiClasses at all (LegionAPI.cs, the generated event declarations), or sitting
+        // directly in it - either way the page belongs at the root, which is where it has always
+        // been published from.
+        if (anchor < 0 || anchor >= segments.Length - 2)
+            return string.Empty;
+
+        IEnumerable<string> folders = segments[(anchor + 1)..^1]
+            .Select(segment => PublishedFolders.GetValueOrDefault(segment, segment));
+
+        return Path.Combine(folders.ToArray());
     }
 }
 

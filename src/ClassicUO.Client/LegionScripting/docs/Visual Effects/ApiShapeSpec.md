@@ -1,12 +1,11 @@
 ---
 title: ApiShapeSpec
-description:  Where on screen a layer lives: vignette or border shape, how far it extends, and how its boundary  breaks up. 
+description: "Where on screen a layer lives: vignette or border shape, how far it extends, and how its boundary breaks up."
 ---
 
 ## Class Description
- Where on screen a layer lives: vignette or border shape, how far it extends, and how its boundary
+Where on screen a layer lives: vignette or border shape, how far it extends, and how its boundary
  breaks up.
-
 
 ## Properties
 ### `Center`
@@ -19,9 +18,8 @@ Centre of the radial falloff in screen uv. (0.5, 0.5) is the middle.
 
 **Type:** `ApiVector2?`
 
- Rate `Center` drifts at, in Hz per axis. Different X and Y give a wander instead of a
+Rate `Center` drifts at, in Hz per axis. Different X and Y give a wander instead of a
  pendulum; zero on an axis holds it still.
-
 
 ### `WobbleAmp`
 
@@ -47,10 +45,9 @@ Width of the fade behind the boundary. Wide thins the effect into haze; narrow g
 
 **Type:** `double`
 
- 0 = radial vignette, 1 = border trim. Avoid values in between: the radial term is normalised
+0 = radial vignette, 1 = border trim. Avoid values in between: the radial term is normalised
  to screen width, so any blend lands mostly on the left and right edges. Use `CornerBias` for
  corner weighting instead - it is per-axis and has no aspect bias.
-
 
 ### `CornerBias`
 

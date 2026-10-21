@@ -1,29 +1,33 @@
 ---
 title: ApiShakeSpec
-description:  Screen shake a visual effect includes, fired once as the effect arrives. Build one with  `API.NewShakeSpec` and hang it on `ApiEffectProfile.Shake`.  <para>  For a shake on its own, with no look attached, use `ApiShakeConfig` and `API.StartScreenShake`  instead. This type is the one that travels with a composition, so it has no scope of its own -  `ApiEffectProfile.FullScreen` decides which rectangle it displaces - and no gradient, since a  composition shapes its arc with the two ramps.  </para>  <para>  The shape is `Trauma x rampUp x rampDown`. An impact sets only the ramp down, so it starts at  full and decays; a quake sets both and leaves a hold between them, so it builds, holds, subsides.  </para> 
+description: "Screen shake a visual effect includes, fired once as the effect arrives. Build one with `API.NewShakeSpec` and hang it on `ApiEffectProfile.Shake`. For a shake on its own, with no look attached, use `ApiShakeConfig` and `API.StartScreenShake` instead. This type is the one that travels with a composition, so it has no scope of its own - `ApiEffectProfile.FullScreen` decides which rectangle it displaces - and no gradient, since a composition shapes its arc with the two ramps. The shape is `Trauma x rampUp x rampDown`. An impact sets only the ramp down, so it starts at full and decays; a quake sets both and leaves a hold between them, so it builds, holds, subsides."
 ---
 
 ## Class Description
- Screen shake a visual effect includes, fired once as the effect arrives. Build one with
+Screen shake a visual effect includes, fired once as the effect arrives. Build one with
  `API.NewShakeSpec` and hang it on `ApiEffectProfile.Shake`.
- <para>
+
+
+
  For a shake on its own, with no look attached, use `ApiShakeConfig` and `API.StartScreenShake`
  instead. This type is the one that travels with a composition, so it has no scope of its own -
  `ApiEffectProfile.FullScreen` decides which rectangle it displaces - and no gradient, since a
  composition shapes its arc with the two ramps.
- </para>  <para>
+
+
+
+
+
  The shape is `Trauma x rampUp x rampDown`. An impact sets only the ramp down, so it starts at
  full and decays; a quake sets both and leaves a hold between them, so it builds, holds, subsides.
- </para> 
 
 ## Properties
 ### `Trauma`
 
 **Type:** `double`
 
- How far the screen moves at the peak, 0 to 1, before the effect's own intensity and the
+How far the screen moves at the peak, 0 to 1, before the effect's own intensity and the
  user's shake setting scale it down. Linear in pixels: 0.5 really is half as far as 1.
-
 
 ### `DurationSeconds`
 
@@ -35,17 +39,15 @@ Total length of the shake in seconds, ramps included.
 
 **Type:** `double`
 
- Seconds spent building to full strength. Zero starts at full amplitude on the first frame,
+Seconds spent building to full strength. Zero starts at full amplitude on the first frame,
  which is what an impact wants and what anything building up does not.
-
 
 ### `RampDownSeconds`
 
 **Type:** `double`
 
- Seconds spent falling away at the end. Zero stops dead, which reads as a jolt. Set it to the
+Seconds spent falling away at the end. Zero stops dead, which reads as a jolt. Set it to the
  whole duration for an impact that decays from the first frame.
-
 
 ### `Curve`
 

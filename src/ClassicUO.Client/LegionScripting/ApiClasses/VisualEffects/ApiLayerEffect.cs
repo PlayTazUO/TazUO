@@ -4,7 +4,7 @@ using System;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 using ClassicUO.Renderer.Effects;
 
-namespace ClassicUO.LegionScripting.ApiClasses;
+namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
 /// Time-varying swell of a layer's strength. Distinct from a noise field, which varies strength

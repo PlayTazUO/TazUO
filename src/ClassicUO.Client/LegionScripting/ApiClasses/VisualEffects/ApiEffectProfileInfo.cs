@@ -1,6 +1,6 @@
 #nullable enable
 
-namespace ClassicUO.LegionScripting.ApiClasses;
+namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
 /// One entry in the client's visual effect library, as `API.GetVisualEffectProfiles` lists it.

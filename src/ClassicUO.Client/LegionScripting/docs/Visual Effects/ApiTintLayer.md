@@ -1,13 +1,12 @@
 ---
 title: ApiTintLayer
-description:  Colour painted over the scene. The only technique that reads a colour and the only one that never  touches the frame behind it, which also makes it the only one that may sit anywhere in a stack.  Build one with `API.NewTintLayer`. 
+description: "Colour painted over the scene. The only technique that reads a colour and the only one that never touches the frame behind it, which also makes it the only one that may sit anywhere in a stack. Build one with `API.NewTintLayer`."
 ---
 
 ## Class Description
- Colour painted over the scene. The only technique that reads a colour and the only one that never
+Colour painted over the scene. The only technique that reads a colour and the only one that never
  touches the frame behind it, which also makes it the only one that may sit anywhere in a stack.
  Build one with `API.NewTintLayer`.
-
 
 ## Properties
 ### `R`
@@ -32,9 +31,8 @@ Blue channel of the layer's colour, 0-255.
 
 **Type:** `int`
 
- Alpha channel of the layer's colour, 0-255. Note that `ApiLayerEffect.Strength` is what the
+Alpha channel of the layer's colour, 0-255. Note that `ApiLayerEffect.Strength` is what the
  layer is actually painted at; this one tints rather than fades.
-
 
 
 *No fields found.*

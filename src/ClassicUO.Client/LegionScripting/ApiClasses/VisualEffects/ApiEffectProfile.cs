@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 
-namespace ClassicUO.LegionScripting.ApiClasses;
+namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
 /// A visual effect composition: which layers, in what order, blended how, plus how it arrives and

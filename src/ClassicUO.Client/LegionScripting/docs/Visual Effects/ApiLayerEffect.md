@@ -1,25 +1,25 @@
 ---
 title: ApiLayerEffect
-description:  One layer of a visual effect composition. The subtype is the technique, so a technique's knobs  exist only on the type that reads them - there is no radius on a chromatic layer to mis-set.  <para>  Build one with `API.NewTintLayer`, `API.NewBlurLayer`, `API.NewRadialBlurLayer` or  `API.NewChromaticLayer`, each of which hands back the client's own defaults for that technique.  Fixed set of four: the shader has four techniques and there is no way to describe a fifth.  </para> 
+description: "One layer of a visual effect composition. The subtype is the technique, so a technique's knobs exist only on the type that reads them - there is no radius on a chromatic layer to mis-set. Build one with `API.NewTintLayer`, `API.NewBlurLayer`, `API.NewRadialBlurLayer` or `API.NewChromaticLayer`, each of which hands back the client's own defaults for that technique. Fixed set of four: the shader has four techniques and there is no way to describe a fifth."
 ---
 
 ## Class Description
- One layer of a visual effect composition. The subtype is the technique, so a technique's knobs
+One layer of a visual effect composition. The subtype is the technique, so a technique's knobs
  exist only on the type that reads them - there is no radius on a chromatic layer to mis-set.
- <para>
+
+
+
  Build one with `API.NewTintLayer`, `API.NewBlurLayer`, `API.NewRadialBlurLayer` or
  `API.NewChromaticLayer`, each of which hands back the client's own defaults for that technique.
  Fixed set of four: the shader has four techniques and there is no way to describe a fifth.
- </para> 
 
 ## Properties
 ### `Shape`
 
 **Type:** `ApiShapeSpec?`
 
- Where on screen the layer lives and how its boundary breaks up. Every technique masks with
+Where on screen the layer lives and how its boundary breaks up. Every technique masks with
  this - a distortion layer's mask doubles as its strength.
-
 
 ### `Noise`
 
@@ -31,10 +31,9 @@ How the layer moves and what texture it has.
 
 **Type:** `double`
 
- Peak strength where the mask is full: the alpha a tint is painted at, or the degree to which
+Peak strength where the mask is full: the alpha a tint is painted at, or the degree to which
  a distortion replaces the sharp frame. The occurrence's intensity, the fade envelope and the
  user's own intensity setting can only attenuate this.
-
 
 ### `Pulse`
 

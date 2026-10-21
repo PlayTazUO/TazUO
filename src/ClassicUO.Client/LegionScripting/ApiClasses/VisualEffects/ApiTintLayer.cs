@@ -3,7 +3,7 @@
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 using Microsoft.Xna.Framework;
 
-namespace ClassicUO.LegionScripting.ApiClasses;
+namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
 /// Colour painted over the scene. The only technique that reads a colour and the only one that never

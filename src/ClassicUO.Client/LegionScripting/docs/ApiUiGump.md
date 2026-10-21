@@ -1,6 +1,6 @@
 ---
 title: ApiUiGump
-description: ApiUiGump class documentation
+description: "ApiUiGump class documentation"
 ---
 
 ## Properties
@@ -13,7 +13,7 @@ description: ApiUiGump class documentation
 ## Methods
 ### CreateGump
 `(acceptMouseInput, canMove, keepOpen)`
- Get a blank gump.
+Get a blank gump.
  Example:
  ```py
  g = API.Gumps.CreateGump()
@@ -21,7 +21,6 @@ description: ApiUiGump class documentation
  g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
  API.Gumps.AddGump(g)
  ```
-
 
 **Parameters:**
 
@@ -37,9 +36,8 @@ description: ApiUiGump class documentation
 
 ### CreateModernGump
 `(x, y, width, height, resizable, minWidth, minHeight, onResized, keepOpen)`
- Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
+Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
  The gump uses the standard modern UI panel texture and border size internally.
-
 
 **Parameters:**
 
@@ -61,7 +59,7 @@ description: ApiUiGump class documentation
 
 ### AddGump
 `(g)`
- Add a gump to the players screen.
+Add a gump to the players screen.
  Example:
  ```py
  g = API.Gumps.CreateGump()
@@ -69,7 +67,6 @@ description: ApiUiGump class documentation
  g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
  API.Gumps.AddGump(g)
  ```
-
 
 **Parameters:**
 
@@ -83,7 +80,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpCheckbox
 `(text, hue, isChecked)`
- Create a checkbox for gumps.
+Create a checkbox for gumps.
   Example:
  ```py
  g = API.Gumps.CreateGump()
@@ -94,7 +91,6 @@ description: ApiUiGump class documentation
 
  API.SysMsg("Checkbox checked: " + str(cb.IsChecked))
  ```
-
 
 **Parameters:**
 
@@ -110,7 +106,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpLabel
 `(text, hue)`
- Create a label for a gump.
+Create a label for a gump.
  Example:
  ```py
  g = API.Gumps.CreateGump()
@@ -118,7 +114,6 @@ description: ApiUiGump class documentation
  g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
  API.Gumps.AddGump(g)
  ```
-
 
 **Parameters:**
 
@@ -133,7 +128,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpColorBox
 `(opacity, color)`
- Get a transparent color box for gumps.
+Get a transparent color box for gumps.
  Example:
  ```py
  g = API.Gumps.CreateGump()
@@ -144,7 +139,6 @@ description: ApiUiGump class documentation
  g.Add(cb)
  API.Gumps.AddGump(g)
  ```
-
 
 **Parameters:**
 
@@ -159,7 +153,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpItemPic
 `(graphic, width, height)`
- Create a picture of an item.
+Create a picture of an item.
  Example:
  ```py
  g = API.Gumps.CreateGump()
@@ -167,7 +161,6 @@ description: ApiUiGump class documentation
  g.Add(API.Gumps.CreateGumpItemPic(0x0E78, 50, 50))
  API.Gumps.AddGump(g)
  ```
-
 
 **Parameters:**
 
@@ -183,7 +176,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpRenderedMapArea
 `(mapIndex, mapX, mapY, mapWidth, mapHeight, x, y, width, height)`
- Create a rendered map area, displaying a region of the world map as a texture.
+Create a rendered map area, displaying a region of the world map as a texture.
  Example:
  ```py
  gump = API.Gumps.CreateGump()
@@ -193,7 +186,6 @@ description: ApiUiGump class documentation
  gump.Add(map)
  API.Gumps.AddGump(gump)
  ```
-
 
 **Parameters:**
 
@@ -215,7 +207,7 @@ description: ApiUiGump class documentation
 
 ### LegionTextureControl
 `(textureName, width, height)`
- Create an image control that displays a named PNG texture loaded from a ZIP archive.
+Create an image control that displays a named PNG texture loaded from a ZIP archive.
  Place the PNG anywhere inside the ZIP (outside gumps/ and art/ folders) and reference it by its path within the archive.
  Example:
  ```py
@@ -224,7 +216,6 @@ description: ApiUiGump class documentation
  img.SetPos(10, 10)
  g.Add(img)
  ```
-
 
 **Parameters:**
 
@@ -240,7 +231,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpButton
 `(text, hue, normal, pressed, hover)`
- Create a button for gumps.
+Create a button for gumps.
  Example:
  ```py
  g = API.Gumps.CreateGump()
@@ -254,7 +245,6 @@ description: ApiUiGump class documentation
    API.SysMsg("Button clicked since last check?: " + str(button.HasBeenClicked()))
    API.Pause(0.2)
  ```
-
 
 **Parameters:**
 
@@ -272,7 +262,7 @@ description: ApiUiGump class documentation
 
 ### CreateSimpleButton
 `(text, width, height)`
- Create a simple button, does not use graphics.
+Create a simple button, does not use graphics.
  Example:
  ```py
  g = API.Gumps.CreateGump()
@@ -281,7 +271,6 @@ description: ApiUiGump class documentation
  g.Add(button)
  API.Gumps.AddGump(g)
  ```
-
 
 **Parameters:**
 
@@ -297,7 +286,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpRadioButton
 `(text, group, inactive, active, hue, isChecked)`
- Create a radio button for gumps, use group numbers to only allow one item to be checked at a time.
+Create a radio button for gumps, use group numbers to only allow one item to be checked at a time.
  Example:
  ```py
  g = API.Gumps.CreateGump()
@@ -307,7 +296,6 @@ description: ApiUiGump class documentation
  API.Gumps.AddGump(g)
  API.SysMsg("Radio button checked?: " + str(rb.IsChecked))
  ```
-
 
 **Parameters:**
 
@@ -326,7 +314,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpTextBox
 `(text, width, height, multiline, fontSize)`
- Create a text area control.
+Create a text area control.
  Example:
  ```py
  w = 500
@@ -351,7 +339,6 @@ description: ApiUiGump class documentation
  API.Gumps.AddGump(gump)
  ```
 
-
 **Parameters:**
 
 | Name | Type | Optional | Description |
@@ -368,7 +355,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpTTFLabel
 `(text, size, color, font, aligned, maxWidth, applyStroke)`
- Create a TTF label with advanced options.
+Create a TTF label with advanced options.
  Example:
  ```py
  gump = API.Gumps.CreateGump()
@@ -380,7 +367,6 @@ description: ApiUiGump class documentation
 
  API.Gumps.AddGump(gump) #Add the gump to the players screen
  ```
-
 
 **Parameters:**
 
@@ -400,7 +386,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpSimpleProgressBar
 `(width, height, backgroundColor, foregroundColor, value, max)`
- Create a progress bar. Can be updated as needed with `bar.SetProgress(current, max)`.
+Create a progress bar. Can be updated as needed with `bar.SetProgress(current, max)`.
  Example:
  ```py
  gump = API.Gumps.CreateGump()
@@ -422,7 +408,6 @@ description: ApiUiGump class documentation
      API.Pause(0.5)
  ```
 
-
 **Parameters:**
 
 | Name | Type | Optional | Description |
@@ -440,7 +425,7 @@ description: ApiUiGump class documentation
 
 ### CreateSlider
 `(width, min, max, value, x, y, showText)`
- Create a horizontal slider control. Read or update its value with `slider.Value` / `slider.SetValue(value)`.
+Create a horizontal slider control. Read or update its value with `slider.Value` / `slider.SetValue(value)`.
  Example:
  ```py
  gump = API.Gumps.CreateGump()
@@ -451,7 +436,6 @@ description: ApiUiGump class documentation
 
  API.Gumps.AddGump(gump)
  ```
-
 
 **Parameters:**
 
@@ -471,7 +455,7 @@ description: ApiUiGump class documentation
 
 ### CreateGumpScrollArea
 `(x, y, width, height)`
- Create a scrolling area, add and position controls to it directly.
+Create a scrolling area, add and position controls to it directly.
  Example:
  ```py
  sa = API.Gumps.CreateGumpScrollArea(0, 60, 200, 140)
@@ -482,7 +466,6 @@ description: ApiUiGump class documentation
      label.SetRect(5, i * 20, 180, 20)
      sa.Add(label)
  ```
-
 
 **Parameters:**
 
@@ -499,12 +482,11 @@ description: ApiUiGump class documentation
 
 ### CreateGumpPic
 `(graphic, x, y, hue)`
- Create a gump pic(Use this for gump art, not item art)
+Create a gump pic(Use this for gump art, not item art)
  Example:
  ```py
  gumpPic = API.Gumps.CreateGumpPic(0xafb)
  gump.Add(gumpPic)
-
 
 **Parameters:**
 
@@ -521,12 +503,11 @@ description: ApiUiGump class documentation
 
 ### CreateTiledGumpPic
 `(graphic, width, height, hue)`
- Create a gump pic that tiles(repeats) (Use this for gump art, not item art)
+Create a gump pic that tiles(repeats) (Use this for gump art, not item art)
  Example:
  ```py
  gumpPic = API.Gumps.CreateTiledGumpPic(0xafb, 100, 100)
  gump.Add(gumpPic)
-
 
 **Parameters:**
 
@@ -543,8 +524,7 @@ description: ApiUiGump class documentation
 
 ### CreateDropDown
 `(width, items, selectedIndex)`
- Creates a dropdown control (combobox) with the specified width and items.
-
+Creates a dropdown control (combobox) with the specified width and items.
 
 **Parameters:**
 
@@ -560,7 +540,7 @@ description: ApiUiGump class documentation
 
 ### AddControlOnClick
 `(control, onClick, leftOnly)`
- Add an onClick callback to a control.
+Add an onClick callback to a control.
  Example:
  ```py
  def myfunc:
@@ -570,7 +550,6 @@ description: ApiUiGump class documentation
  while True:
    API.ProcessCallbacks()
  ```
-
 
 **Parameters:**
 
@@ -586,7 +565,7 @@ description: ApiUiGump class documentation
 
 ### AddControlOnDisposed
 `(control, onDispose)`
- Add onDispose(Closed) callback to a control.
+Add onDispose(Closed) callback to a control.
  Example:
  ```py
  def onClose():
@@ -600,7 +579,6 @@ description: ApiUiGump class documentation
 
  API.Gumps.AddControlOnDisposed(gump, onClose)
  ```
-
 
 **Parameters:**
 

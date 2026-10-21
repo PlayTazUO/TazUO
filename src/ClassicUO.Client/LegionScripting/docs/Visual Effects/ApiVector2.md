@@ -1,12 +1,11 @@
 ---
 title: ApiVector2
-description:  A per-axis pair of values, used wherever a visual effect knob differs between X and Y. Build one  with `API.NewVector2`, or assign to the `X` and `Y` of the one a layer already carries. 
+description: "A per-axis pair of values, used wherever a visual effect knob differs between X and Y. Build one with `API.NewVector2`, or assign to the `X` and `Y` of the one a layer already carries."
 ---
 
 ## Class Description
- A per-axis pair of values, used wherever a visual effect knob differs between X and Y. Build one
+A per-axis pair of values, used wherever a visual effect knob differs between X and Y. Build one
  with `API.NewVector2`, or assign to the `X` and `Y` of the one a layer already carries.
-
 
 ## Properties
 ### `X`

@@ -2,7 +2,7 @@
 
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 
-namespace ClassicUO.LegionScripting.ApiClasses;
+namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
 /// How a visual effect layer moves and what texture it has: two scrolling samples of the tiling

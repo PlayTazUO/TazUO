@@ -2,7 +2,7 @@
 
 using Microsoft.Xna.Framework;
 
-namespace ClassicUO.LegionScripting.ApiClasses;
+namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
 /// A per-axis pair of values, used wherever a visual effect knob differs between X and Y. Build one

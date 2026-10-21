@@ -1,12 +1,11 @@
 ---
 title: ApiEffectProfileInfo
-description:  One entry in the client's visual effect library, as `API.GetVisualEffectProfiles` lists it.  Enough to pick a composition and no more; `API.GetVisualEffectProfile` fetches the editable copy. 
+description: "One entry in the client's visual effect library, as `API.GetVisualEffectProfiles` lists it. Enough to pick a composition and no more; `API.GetVisualEffectProfile` fetches the editable copy."
 ---
 
 ## Class Description
- One entry in the client's visual effect library, as `API.GetVisualEffectProfiles` lists it.
+One entry in the client's visual effect library, as `API.GetVisualEffectProfiles` lists it.
  Enough to pick a composition and no more; `API.GetVisualEffectProfile` fetches the editable copy.
-
 
 ## Properties
 ### `Id`
@@ -19,9 +18,8 @@ Stable identity, and what `API.StartVisualEffect` takes.
 
 **Type:** `string`
 
- Display name. Shipped compositions are localized and suffixed "(built-in)", so this is only
+Display name. Shipped compositions are localized and suffixed "(built-in)", so this is only
  a reliable key into `API.StartVisualEffectByName` for the user's own.
-
 
 ### `IsBuiltIn`
 

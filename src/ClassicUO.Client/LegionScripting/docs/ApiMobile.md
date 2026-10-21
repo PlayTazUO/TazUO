@@ -1,12 +1,11 @@
 ---
 title: ApiMobile
-description:  Represents a Python-accessible mobile (NPC, creature, or player character).   Inherits entity and positional data from <see cref="ApiEntity"/> .  
+description: "Represents a Python-accessible mobile (NPC, creature, or player character). Inherits entity and positional data from `ApiEntity` ."
 ---
 
 ## Class Description
- Represents a Python-accessible mobile (NPC, creature, or player character).
- Inherits entity and positional data from <see cref="ApiEntity"/> .
-
+Represents a Python-accessible mobile (NPC, creature, or player character).
+ Inherits entity and positional data from `ApiEntity` .
 
 ## Properties
 ### `X`
@@ -105,8 +104,7 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 
 **Type:** `string`
 
- Get this mobiles direction as a string, for example: "west", "east", etc
-
+Get this mobiles direction as a string, for example: "west", "east", etc
 
 ### `Notoriety`
 
@@ -120,23 +118,20 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 
 **Type:** `ApiItem`
 
- Get the mobile's Backpack item
-
+Get the mobile's Backpack item
 
 ### `Mount`
 
 **Type:** `ApiItem`
 
- Get the mobile's Mount item (if mounted)
-
+Get the mobile's Mount item (if mounted)
 
 ### `__class__`
 
 **Type:** `string`
 
- The Python-visible class name of this object.
+The Python-visible class name of this object.
  Accessible in Python as `obj.__class__` .
-
 
 
 
@@ -146,7 +141,7 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 ## Methods
 ### Highlight
 `(hue)`
- Highlight this mobile and all of its equipped items with the given hue.
+Highlight this mobile and all of its equipped items with the given hue.
  The original hues are remembered so they can be restored.
  Call with `None` to restore the mobile and its equipped items to their original hues.
  Example:
@@ -154,7 +149,6 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
  mob.Highlight(0x0021)
  mob.Highlight(None)
  ```
-
 
 **Parameters:**
 
@@ -168,9 +162,8 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 
 ### NameAndProps
 `(wait, timeout)`
- Gets the mobile name and properties (tooltip text).
+Gets the mobile name and properties (tooltip text).
  This returns the name and properties in a single string. You can split it by newline if you want to separate them.
-
 
 **Parameters:**
 

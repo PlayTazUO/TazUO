@@ -1,33 +1,32 @@
 ---
 title: ApiShakeConfig
-description:  A screen shake with no look attached, for `API.StartScreenShake`. Build one with  `API.NewShakeConfig`.  <para>  Amplitude at any moment is `Intensity x gradient(progress) x rampUp(elapsed) x  rampDown(remaining)`, so `Gradient` decides the overall arc and the two ramps decide how abruptly  it starts and stops. Unlike `ApiShakeSpec`, which travels inside a composition, this one carries  its own scope and gradient because there is no composition to take them from.  </para> 
+description: "A screen shake with no look attached, for `API.StartScreenShake`. Build one with `API.NewShakeConfig`. Amplitude at any moment is `Intensity x gradient(progress) x rampUp(elapsed) x rampDown(remaining)`, so `Gradient` decides the overall arc and the two ramps decide how abruptly it starts and stops. Unlike `ApiShakeSpec`, which travels inside a composition, this one carries its own scope and gradient because there is no composition to take them from."
 ---
 
 ## Class Description
- A screen shake with no look attached, for `API.StartScreenShake`. Build one with
+A screen shake with no look attached, for `API.StartScreenShake`. Build one with
  `API.NewShakeConfig`.
- <para>
+
+
+
  Amplitude at any moment is `Intensity x gradient(progress) x rampUp(elapsed) x
  rampDown(remaining)`, so `Gradient` decides the overall arc and the two ramps decide how abruptly
  it starts and stops. Unlike `ApiShakeSpec`, which travels inside a composition, this one carries
  its own scope and gradient because there is no composition to take them from.
- </para> 
 
 ## Properties
 ### `Seconds`
 
 **Type:** `double`
 
- Total length of the shake in seconds, ramps included. Must be above zero - there is no
+Total length of the shake in seconds, ramps included. Must be above zero - there is no
  open-ended shake, since a shake nothing is sustaining would never stop.
-
 
 ### `Intensity`
 
 **Type:** `double`
 
- Peak trauma, 0 to 1, before the user's own shake setting scales it down. Linear in pixels.
-
+Peak trauma, 0 to 1, before the user's own shake setting scales it down. Linear in pixels.
 
 ### `RampUpSeconds`
 
@@ -72,10 +71,9 @@ Peak displacement in pixels at full trauma, or zero for the client default. Capp
 
 **Type:** `bool`
 
- Whether the shake displaces the whole window, UI included, rather than the game world alone.
+Whether the shake displaces the whole window, UI included, rather than the game world alone.
  Window scope moves the gumps and the cursor with it, which makes them hard to use for as long
  as the shake lasts.
-
 
 
 *No fields found.*

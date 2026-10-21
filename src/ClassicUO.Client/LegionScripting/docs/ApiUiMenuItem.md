@@ -1,11 +1,10 @@
 ---
 title: ApiUiMenuItem
-description:  Represents a Python-accessible item in a menu. 
+description: "Represents a Python-accessible item in a menu."
 ---
 
 ## Class Description
- Represents a Python-accessible item in a menu.
-
+Represents a Python-accessible item in a menu.
 
 ## Properties
 ### `Index`
@@ -28,9 +27,8 @@ description:  Represents a Python-accessible item in a menu.
 
 **Type:** `string`
 
- The Python-visible class name of this object.
+The Python-visible class name of this object.
  Accessible in Python as `obj.__class__` .
-
 
 
 *No fields found.*
@@ -41,9 +39,8 @@ description:  Represents a Python-accessible item in a menu.
 ## Methods
 ### ToString
 
- Returns a readable string representation of the menu item.
+Returns a readable string representation of the menu item.
  Used when printing or converting the object to a string in Python scripts.
-
 
 **Return Type:** `string`
 
@@ -51,9 +48,8 @@ description:  Represents a Python-accessible item in a menu.
 
 ### __repr__
 
- Returns a detailed string representation of the object.
+Returns a detailed string representation of the object.
  This string is used by Python’s built-in `repr()` function.
-
 
 **Return Type:** `string`
 

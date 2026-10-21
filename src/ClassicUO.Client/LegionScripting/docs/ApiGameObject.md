@@ -1,55 +1,48 @@
 ---
 title: ApiGameObject
-description:  Base class for all Python-accessible game world objects.  Encapsulates common spatial and visual properties such as position and graphics. 
+description: "Base class for all Python-accessible game world objects. Encapsulates common spatial and visual properties such as position and graphics."
 ---
 
 ## Class Description
- Base class for all Python-accessible game world objects.
+Base class for all Python-accessible game world objects.
  Encapsulates common spatial and visual properties such as position and graphics.
-
 
 ## Properties
 ### `Impassible`
 
 **Type:** `bool`
 
- Check if the object is impassible or not based on item data.
-
+Check if the object is impassible or not based on item data.
 
 ### `X`
 
 **Type:** `ushort`
 
- The X-coordinate of the object in the game world.
-
+The X-coordinate of the object in the game world.
 
 ### `Y`
 
 **Type:** `ushort`
 
- The Y-coordinate of the object in the game world.
-
+The Y-coordinate of the object in the game world.
 
 ### `Z`
 
 **Type:** `sbyte`
 
- The Z-coordinate (elevation) of the object in the game world.
-
+The Z-coordinate (elevation) of the object in the game world.
 
 ### `Graphic`
 
 **Type:** `ushort`
 
- The graphic ID of the object, representing its visual appearance.
-
+The graphic ID of the object, representing its visual appearance.
 
 ### `Hue`
 
 **Type:** `ushort`
 
- The hue (color tint) applied to the object.
-
+The hue (color tint) applied to the object.
 
 ### `Distance`
 
@@ -63,9 +56,8 @@ description:  Base class for all Python-accessible game world objects.  Encapsul
 
 **Type:** `string`
 
- The Python-visible class name of this object.
+The Python-visible class name of this object.
  Accessible in Python as `obj.__class__` .
-
 
 
 
@@ -75,13 +67,12 @@ description:  Base class for all Python-accessible game world objects.  Encapsul
 ## Methods
 ### SetOutlineColor
 `(htmlColor)`
- Set an object's outline color using HTML hex colors.
+Set an object's outline color using HTML hex colors.
  Example:
  ```py
  API.Player.SetOutlineColor("#105510")
  API.Player.SetOutlineColor(None)
  ```
-
 
 **Parameters:**
 
@@ -95,8 +86,7 @@ description:  Base class for all Python-accessible game world objects.  Encapsul
 
 ### SetHue
 `(hue)`
- Set the hue of a game object.
-
+Set the hue of a game object.
 
 **Parameters:**
 
@@ -110,14 +100,13 @@ description:  Base class for all Python-accessible game world objects.  Encapsul
 
 ### Highlight
 `(hue)`
- Highlight this object by setting its hue. The original hue is remembered so it can be restored.
+Highlight this object by setting its hue. The original hue is remembered so it can be restored.
  Call with `None` to restore the original hue.
  Example:
  ```py
  obj.Highlight(0x0021)
  obj.Highlight(None)
  ```
-
 
 **Parameters:**
 
@@ -131,9 +120,8 @@ description:  Base class for all Python-accessible game world objects.  Encapsul
 
 ### HasLineOfSightFrom
 `(observer)`
- Determines if there is line of sight from the specified observer to this object.
+Determines if there is line of sight from the specified observer to this object.
  If no observer is specified, it defaults to the player.
-
 
 **Parameters:**
 
@@ -147,9 +135,8 @@ description:  Base class for all Python-accessible game world objects.  Encapsul
 
 ### ToString
 
- Returns a readable string representation of the game object.
+Returns a readable string representation of the game object.
  Used when printing or converting the object to a string in Python scripts.
-
 
 **Return Type:** `string`
 
@@ -157,9 +144,8 @@ description:  Base class for all Python-accessible game world objects.  Encapsul
 
 ### __repr__
 
- Returns a detailed string representation of the object.
+Returns a detailed string representation of the object.
  This string is used by Python’s built-in `repr()` function.
-
 
 **Return Type:** `string`
 

@@ -1,16 +1,17 @@
 ---
 title: ApiEffectProfile
-description:  A visual effect composition: which layers, in what order, blended how, plus how it arrives and  leaves and what it shakes.  <para>  Get an editable copy of one the client already has with `API.GetVisualEffectProfile`, or start  from nothing with `API.NewVisualEffectProfile`. Either way it is yours: nothing a script passes  is ever saved, and editing this after `API.StartVisualEffect` cannot reach the running effect.  </para> 
+description: "A visual effect composition: which layers, in what order, blended how, plus how it arrives and leaves and what it shakes. Get an editable copy of one the client already has with `API.GetVisualEffectProfile`, or start from nothing with `API.NewVisualEffectProfile`. Either way it is yours: nothing a script passes is ever saved, and editing this after `API.StartVisualEffect` cannot reach the running effect."
 ---
 
 ## Class Description
- A visual effect composition: which layers, in what order, blended how, plus how it arrives and
+A visual effect composition: which layers, in what order, blended how, plus how it arrives and
  leaves and what it shakes.
- <para>
+
+
+
  Get an editable copy of one the client already has with `API.GetVisualEffectProfile`, or start
  from nothing with `API.NewVisualEffectProfile`. Either way it is yours: nothing a script passes
  is ever saved, and editing this after `API.StartVisualEffect` cannot reach the running effect.
- </para> 
 
 ## Properties
 ### `Name`
@@ -23,12 +24,13 @@ Only ever used in log messages for a script-built composition.
 
 **Type:** `bool`
 
- Whether this covers the whole window rather than the game world alone. Governs both halves of
+Whether this covers the whole window rather than the game world alone. Governs both halves of
  scope: which pass draws the layers, and which rectangle `Shake` displaces.
- <para>
+
+
+
  Leave it off unless the effect really is meant to cover the gumps and the cursor - doing so
  makes the UI hard to use for as long as the effect lasts.
- </para> 
 
 ### `Layers`
 
@@ -58,8 +60,7 @@ Screen shake the effect includes, fired once on arrival, or null for a purely
 ## Methods
 ### AddLayer
 `(effect, blend)`
- Appends a layer, which is the usual way to build a composition up.
-
+Appends a layer, which is the usual way to build a composition up.
 
 **Parameters:**
 

@@ -1,7 +1,7 @@
 #nullable enable
 
 using System;
-using ClassicUO.LegionScripting.ApiClasses;
+using ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.LegionScripting;

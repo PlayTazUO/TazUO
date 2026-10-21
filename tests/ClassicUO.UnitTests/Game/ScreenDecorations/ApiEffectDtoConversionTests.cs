@@ -4,7 +4,7 @@ using System.Linq;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.ScreenDecorations.Overlays;
 using ClassicUO.LegionScripting;
-using ClassicUO.LegionScripting.ApiClasses;
+using ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 using ClassicUO.Renderer.Effects;
 using FluentAssertions;
 using Xunit;

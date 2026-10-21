@@ -1,25 +1,25 @@
 ---
 title: ApiBlurLayer
-description:  Disk blur - out-of-focus vision. Build one with `API.NewBlurLayer`.  <para>  Like every distortion technique it reads the frame as it stood <em>before</em> the effect was  drawn, so it must sit below anything it is meant to affect, and two distortion layers in one  composition do not compose: the upper one re-reads the original frame and overwrites the lower.  </para> 
+description: "Disk blur - out-of-focus vision. Build one with `API.NewBlurLayer`. Like every distortion technique it reads the frame as it stood before the effect was drawn, so it must sit below anything it is meant to affect, and two distortion layers in one composition do not compose: the upper one re-reads the original frame and overwrites the lower."
 ---
 
 ## Class Description
- Disk blur - out-of-focus vision. Build one with `API.NewBlurLayer`.
- <para>
+Disk blur - out-of-focus vision. Build one with `API.NewBlurLayer`.
+
+
+
  Like every distortion technique it reads the frame as it stood <em>before</em> the effect was
  drawn, so it must sit below anything it is meant to affect, and two distortion layers in one
  composition do not compose: the upper one re-reads the original frame and overwrites the lower.
- </para> 
 
 ## Properties
 ### `Radius`
 
 **Type:** `double`
 
- Blur disk radius as a fraction of screen width, aspect-corrected so it stays circular. Small
+Blur disk radius as a fraction of screen width, aspect-corrected so it stays circular. Small
  values read as soft focus; past a couple of percent it becomes frosted glass. Capped when the
  layer is baked.
-
 
 ### `Taps`
 

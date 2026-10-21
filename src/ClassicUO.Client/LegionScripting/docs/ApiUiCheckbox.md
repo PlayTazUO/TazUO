@@ -1,28 +1,25 @@
 ---
 title: ApiUiCheckbox
-description:  Inherits from ApiUiBaseControl 
+description: "Inherits from ApiUiBaseControl"
 ---
 
 ## Class Description
- Inherits from ApiUiBaseControl
-
+Inherits from ApiUiBaseControl
 
 ## Properties
 ### `IsChecked`
 
 **Type:** `bool`
 
- Gets the checked state of the checkbox.
+Gets the checked state of the checkbox.
  Used in python API
-
 
 ### `Text`
 
 **Type:** `string`
 
- Gets the text label displayed next to the checkbox.
+Gets the text label displayed next to the checkbox.
  Used in python API
-
 
 
 *No fields found.*
@@ -33,9 +30,8 @@ description:  Inherits from ApiUiBaseControl
 ## Methods
 ### GetIsChecked
 
- Gets the checked state of the checkbox.
+Gets the checked state of the checkbox.
  Used in python API
-
 
 **Return Type:** `bool`
 
@@ -43,9 +39,8 @@ description:  Inherits from ApiUiBaseControl
 
 ### SetIsChecked
 `(isChecked)`
- Sets the checked state of the checkbox.
+Sets the checked state of the checkbox.
  Used in python API
-
 
 **Parameters:**
 
@@ -59,9 +54,8 @@ description:  Inherits from ApiUiBaseControl
 
 ### GetText
 
- Gets the text label displayed next to the checkbox.
+Gets the text label displayed next to the checkbox.
  Used in python API
-
 
 **Return Type:** `string`
 

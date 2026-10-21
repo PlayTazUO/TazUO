@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `10/14/26`.*
+*This was generated on `10/19/26`.*
 
 ## Properties
 ### `Events`
@@ -37,101 +37,89 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 **Type:** `string`
 
- Get this scripts full filename
-
+Get this scripts full filename
 
 ### `ScriptPath`
 
 **Type:** `string`
 
- Get the full path to the file, no filename included. Use API.ScriptName to get the script.
-
+Get the full path to the file, no filename included. Use API.ScriptName to get the script.
 
 ### `Backpack`
 
 **Type:** `uint`
 
- Get the player's backpack serial
-
+Get the player's backpack serial
 
 ### `Player`
 
 **Type:** `ApiPlayer`
 
- Returns the player character object
-
+Returns the player character object
 
 ### `Bank`
 
 **Type:** `uint`
 
- Return the player's bank container serial if open, otherwise 0
-
+Return the player's bank container serial if open, otherwise 0
 
 ### `Random`
 
 **Type:** `Random`
 
- Can be used for random numbers.
+Can be used for random numbers.
  `API.Random.Next(1, 100)` will return a number between 1 and 100.
  `API.Random.Next(100)` will return a number between 0 and 100.
-
 
 ### `LastTargetSerial`
 
 **Type:** `uint`
 
- The serial of the last target, if it has a serial.
-
+The serial of the last target, if it has a serial.
 
 ### `LastTargetPos`
 
 **Type:** `ApiPoint3D`
 
- The last target's position
-
+The last target's position
 
 ### `LastTargetGraphic`
 
 **Type:** `ushort`
 
- The graphic of the last targeting object
-
+The graphic of the last targeting object
 
 ### `LastSpellIndex`
 
 **Type:** `int`
 
- The index of the last spell cast by the player.
+The index of the last spell cast by the player.
  Example:
  ```py
  API.SysMsg("Last spell index: " + str(API.LastSpellIndex))
  ```
 
-
 ### `LastSpellName`
 
 **Type:** `string`
 
- The name of the last spell cast by the player.
+The name of the last spell cast by the player.
  Example:
  ```py
  API.SysMsg("Last spell: " + API.LastSpellName)
  ```
 
-
 ### `Found`
 
 **Type:** `uint`
 
- The serial of the last item or mobile from the various findtype/mobile methods
-
+The serial of the last item or mobile from the various findtype/mobile methods
 
 ### `VisualEffectsEnabled`
 
 **Type:** `bool`
 
- Whether the user has full-screen visual effects switched on. They ship off, and a script
+Whether the user has full-screen visual effects switched on. They ship off, and a script
  cannot override that - `StartVisualEffect` answers 0 while this is false.
  Example:
  ```py
@@ -139,22 +127,19 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.StartVisualEffect(API.VisualEffectIds.Poison, 3)
  ```
 
-
 ### `ScreenShakeEnabled`
 
 **Type:** `bool`
 
- Whether the user has screen shake switched on. As with visual effects it ships off and a
+Whether the user has screen shake switched on. As with visual effects it ships off and a
  script cannot override it - `StartScreenShake` answers 0 while this is false.
-
 
 
 ### `Profile`
 
 **Type:** `ApiUserProfile`
 
- Access useful player settings.
-
+Access useful player settings.
 
 ### `Gumps`
 
@@ -164,12 +149,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 **Type:** `bool`
 
- Check if the script has been requested to stop.
+Check if the script has been requested to stop.
  ```py
  while not API.StopRequested:
    DoSomeStuff()
  ```
-
 
 ### `CancellationToken`
 
@@ -209,8 +193,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ### EffectType
 
 :::note[Description]
- How a graphic effect created by `CreateEffect` behaves.
-
+How a graphic effect created by `CreateEffect` behaves.
 :::
 
 **Values:**
@@ -222,8 +205,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ### EffectBlendMode
 
 :::note[Description]
- Blend mode used when drawing a graphic effect. Mirrors the values the server sends.
-
+Blend mode used when drawing a graphic effect. Mirrors the values the server sends.
 :::
 
 **Values:**
@@ -239,8 +221,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ### OverlayBlend
 
 :::note[Description]
- How a visual effect layer composites against what is already beneath it.
-
+How a visual effect layer composites against what is already beneath it.
 :::
 
 **Values:**
@@ -250,8 +231,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ### NoiseChannel
 
 :::note[Description]
- Which packed channel of the shared noise texture a field reads.
-
+Which packed channel of the shared noise texture a field reads.
 :::
 
 **Values:**
@@ -263,9 +243,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ### OverlaySampleTaps
 
 :::note[Description]
- Samples a distortion layer takes per pixel, which is its entire cost. A closed set because
+Samples a distortion layer takes per pixel, which is its entire cost. A closed set because
  each count is a separately compiled unrolled loop in the shader.
-
 :::
 
 **Values:**
@@ -277,8 +256,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ### ShakeGradient
 
 :::note[Description]
- How a shake's intensity travels across its whole duration, independently of its ramps.
-
+How a shake's intensity travels across its whole duration, independently of its ramps.
 :::
 
 **Values:**
@@ -290,8 +268,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ### ShakeCurve
 
 :::note[Description]
- Easing applied to a shake's ramps and gradient.
-
+Easing applied to a shake's ramps and gradient.
 :::
 
 **Values:**
@@ -304,14 +281,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 ## Methods
 ### ProcessCallbacks
 
- Use this when you need to wait for players to click buttons.
+Use this when you need to wait for players to click buttons.
  Example:
  ```py
  while not API.StopRequested:
    API.ProcessCallbacks()
    API.Pause(0.1)
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -325,7 +301,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### OnHotKey
 `(key, callback)`
- Register or unregister a Python callback for a hotkey.
+Register or unregister a Python callback for a hotkey.
  ### Register:
  ```py
  def on_shift_a():
@@ -339,9 +315,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  ```py
  API.OnHotKey("SHIFT+A")
  ```
- The <paramref name="key"/> can include modifiers (CTRL, SHIFT, ALT),
+ The `key` can include modifiers (CTRL, SHIFT, ALT),
  for example: "CTRL+SHIFT+F1" or "ALT+A".
-
 
 **Parameters:**
 
@@ -356,10 +331,9 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### IsKeyPressed
 `(key)`
- Returns true if the given key combination is currently held down.
+Returns true if the given key combination is currently held down.
  The key format matches `OnHotKey` , e.g. "CTRL+SHIFT+F1" or "A".
  Extra modifiers beyond those specified do not prevent a match.
-
 
 **Parameters:**
 
@@ -373,7 +347,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RequestHotkey
 `(prompt, timeout)`
- Shows the in-game hotkey capture window and waits for the player to pick a key combination.
+Shows the in-game hotkey capture window and waits for the player to pick a key combination.
  The returned string matches what `OnHotKey` and `IsKeyPressed` accept, so it can be passed
  straight to them, e.g. "CTRL+SHIFT+F1" or "A".
  Only keyboard bindings are returned; mouse, wheel, controller and modifier-only captures are
@@ -384,7 +358,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  if key:
    API.OnHotKey(key, on_pressed)
  ```
-
 
 **Parameters:**
 
@@ -399,10 +372,9 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ScheduleTimedCallback
 `(delayMs, callback, timesToRepeat)`
- Schedules a callback to be invoked after a specified delay.
+Schedules a callback to be invoked after a specified delay.
 
  Note that as with keyboard hotkeys, you must call `ProcessCallbacks` for the callback to actually be run.
-
 
 **Parameters:**
 
@@ -418,8 +390,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RemoveTimedCallback
 `(id)`
- Removes a previously scheduled timed callback
-
+Removes a previously scheduled timed callback
 
 **Parameters:**
 
@@ -433,12 +404,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### SetSharedVar
 `(name, value)`
- Set a variable that is shared between scripts.
+Set a variable that is shared between scripts.
  Example:
  ```py
  API.SetSharedVar("myVar", 10)
  ```
-
 
 **Parameters:**
 
@@ -453,14 +423,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetSharedVar
 `(name)`
- Get the value of a shared variable.
+Get the value of a shared variable.
  Example:
  ```py
  myVar = API.GetSharedVar("myVar")
  if myVar:
   API.SysMsg(f"myVar is {myVar}")
  ```
-
 
 **Parameters:**
 
@@ -474,12 +443,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RemoveSharedVar
 `(name)`
- Try to remove a shared variable.
+Try to remove a shared variable.
  Example:
  ```py
  API.RemoveSharedVar("myVar")
  ```
-
 
 **Parameters:**
 
@@ -493,12 +461,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ClearSharedVars
 
- Clear all shared vars.
+Clear all shared vars.
  Example:
  ```py
  API.ClearSharedVars()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -506,8 +473,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CloseGumps
 
- Close all gumps created by the API unless marked to remain open.
-
+Close all gumps created by the API unless marked to remain open.
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -515,14 +481,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Attack
 `(serial)`
- Attack a mobile
+Attack a mobile
  Example:
  ```py
  enemy = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
  if enemy:
    API.Attack(enemy)
  ```
-
 
 **Parameters:**
 
@@ -536,8 +501,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### SetWarMode
 `(enabled)`
- Sets the player's war mode state (peace/war toggle).
-
+Sets the player's war mode state (peace/war toggle).
 
 **Parameters:**
 
@@ -551,7 +515,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### BandageSelf
 
- Attempt to bandage yourself. Older clients this will not work, you will need to find a bandage, use it, and target yourself.
+Attempt to bandage yourself. Older clients this will not work, you will need to find a bandage, use it, and target yourself.
  Example:
  ```py
  if player.HitsMax - player.Hits > 10 or player.IsPoisoned:
@@ -563,14 +527,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
      break
  ```
 
-
 **Return Type:** `bool`
 
 ---
 
 ### ClearLeftHand
 
- If you have an item in your left hand, move it to your backpack
+If you have an item in your left hand, move it to your backpack
  Sets API.Found to the item's serial.
  Example:
  ```py
@@ -579,14 +542,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.SysMsg("Cleared left hand: " + leftHand.Name)
  ```
 
-
 **Return Type:** `ApiItem`
 
 ---
 
 ### ClearRightHand
 
- If you have an item in your right hand, move it to your backpack
+If you have an item in your right hand, move it to your backpack
  Sets API.Found to the item's serial.
  Example:
  ```py
@@ -595,19 +557,17 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.SysMsg("Cleared right hand: " + rightHand.Name)
   ```
 
-
 **Return Type:** `ApiItem`
 
 ---
 
 ### ClickObject
 `(serial)`
- Single click an object
+Single click an object
  Example:
  ```py
  API.ClickObject(API.Player)
  ```
-
 
 **Parameters:**
 
@@ -621,12 +581,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### UseObject
 `(serial, skipQueue)`
- Attempt to use(double click) an object.
+Attempt to use(double click) an object.
  Example:
  ```py
  API.UseObject(API.Backpack)
  ```
-
 
 **Parameters:**
 
@@ -641,14 +600,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Contents
 `(serial)`
- Get an item count for the contents of a container
+Get an item count for the contents of a container
  Example:
  ```py
  count = API.Contents(API.Backpack)
  if count > 0:
    API.SysMsg(f"You have {count} items in your backpack")
  ```
-
 
 **Parameters:**
 
@@ -662,7 +620,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetSpellsInSpellbook
 `(serial)`
- Get the names of all spells scribed into a spellbook.
+Get the names of all spells scribed into a spellbook.
  Example:
  ```py
  spells = API.GetSpellsInSpellbook(book_serial)
@@ -670,7 +628,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    for spell in spells:
      API.SysMsg(spell)
  ```
-
 
 **Parameters:**
 
@@ -684,13 +641,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ContextMenu
 `(serial, entry)`
- Send a context menu(right click menu) response.
+Send a context menu(right click menu) response.
  This does not open the menu, you do not need to open the menu first. This handles both in one action.
  Example:
  ```py
  API.ContextMenu(API.Player, 1)
  ```
-
 
 **Parameters:**
 
@@ -705,14 +661,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ContextMenu
 `(serial, entry, timeout)`
- Send a context menu(right click menu) response by matching the entry text.
+Send a context menu(right click menu) response by matching the entry text.
  This opens the menu, finds the entry whose text matches, and responds with the correct index.
  The match is case-insensitive and matches the first entry that contains the given text.
  Example:
  ```py
  API.ContextMenu(API.Player, "Open Paperdoll")
  ```
-
 
 **Parameters:**
 
@@ -728,10 +683,9 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### MenuResponseCurrent
 `(index, itemGraphic, itemHue)`
- Send a response to the currently open menu (uses the latest MenuGump).
+Send a response to the currently open menu (uses the latest MenuGump).
  Useful when menu IDs change every time (e.g., Tracking skill).
  Returns true if a menu was found and a response was sent.
-
 
 **Parameters:**
 
@@ -747,9 +701,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### MenuItemsCurrent
 
- Retrieve the current open menu's (uses the latest MenuGump) menu item descriptions.
+Retrieve the current open menu's (uses the latest MenuGump) menu item descriptions.
  Useful when menu IDs change every time (e.g., Tracking skill).
-
 
 **Return Type:** `IList<ApiUiMenuItem>`
 
@@ -757,9 +710,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GrayMenuResponseCurrent
 `(index)`
- Send a response to the currently open gray menu (text list menu).
+Send a response to the currently open gray menu (text list menu).
  Returns true if a gray menu was found and a response was sent.
-
 
 **Parameters:**
 
@@ -773,14 +725,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### EquipItem
 `(serial)`
- Attempt to equip an item. Layer is automatically detected.
+Attempt to equip an item. Layer is automatically detected.
  Example:
  ```py
  lefthand = API.ClearLeftHand()
  API.Pause(2)
  API.EquipItem(lefthand)
  ```
-
 
 **Parameters:**
 
@@ -794,8 +745,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ClearMoveQueue
 
- Clear the move item que of all items.
-
+Clear the move item que of all items.
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -803,7 +753,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### QueueMoveItem
 `(serial, destination, amt, x, y)`
- Move an item to another container.
+Move an item to another container.
  Use x, and y if you don't want items stacking in the desination container.
  Example:
  ```py
@@ -819,7 +769,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
          if data and "An Exotic Fish" in data:
              API.QueueMoveItem(item, barrel)
  ```
-
 
 **Parameters:**
 
@@ -837,7 +786,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### MoveItem
 `(serial, destination, amt, x, y)`
- Move an item to another container.
+Move an item to another container.
  Use x, and y if you don't want items stacking in the desination container.
  Example:
  ```py
@@ -855,7 +804,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
              API.Pause(0.75)
  ```
 
-
 **Parameters:**
 
 | Name | Type | Optional | Description |
@@ -872,14 +820,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### QueueMoveItemOffset
 `(serial, amt, x, y, z, OSI)`
- Move an item to the ground near you.
+Move an item to the ground near you.
  Example:
  ```py
  items = API.ItemsInContainer(API.Backpack)
  for item in items:
    API.QueueMoveItemOffset(item, 0, 1, 0, 0)
  ```
-
 
 **Parameters:**
 
@@ -898,7 +845,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### MoveItemOffset
 `(serial, amt, x, y, z, OSI)`
- Move an item to the ground near you.
+Move an item to the ground near you.
  Example:
  ```py
  items = API.ItemsInContainer(API.Backpack)
@@ -906,7 +853,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.MoveItemOffset(item, 0, 1, 0, 0)
    API.Pause(0.75)
  ```
-
 
 **Parameters:**
 
@@ -925,8 +871,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### PickUpToCursor
 `(serial, amt)`
- Picks up an item from the game world and places it onto the mouse cursor.
-
+Picks up an item from the game world and places it onto the mouse cursor.
 
 **Parameters:**
 
@@ -941,8 +886,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### DropFromCursor
 `(serial, x, y, z, container)`
- Drops an item currently held by the mouse cursor into a container or on the ground at a specified position.
-
+Drops an item currently held by the mouse cursor into a container or on the ground at a specified position.
 
 **Parameters:**
 
@@ -960,8 +904,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetHeldItem
 
- Retrieves serial of the currently held item on the game cursor.
-
+Retrieves serial of the currently held item on the game cursor.
 
 **Return Type:** `uint`
 
@@ -969,13 +912,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### UseSkill
 `(skillName)`
- Use a skill.
+Use a skill.
  Example:
  ```py
  API.UseSkill("Hiding")
  API.Pause(11)
  ```
-
 
 **Parameters:**
 
@@ -989,14 +931,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CastSpell
 `(spellName)`
- Attempt to cast a spell by its name.
+Attempt to cast a spell by its name.
  Example:
  ```py
  API.CastSpell("Fireball")
  API.WaitForTarget()
  API.Target(API.Player)
  ```
-
 
 **Parameters:**
 
@@ -1010,12 +951,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Dress
 `(name)`
- Dress from a saved dress configuration.
+Dress from a saved dress configuration.
  Example:
  ```py
  API.Dress("PvP Gear")
  ```
-
 
 **Parameters:**
 
@@ -1029,12 +969,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Undress
 `(name)`
- Undress from a saved dress configuration.
+Undress from a saved dress configuration.
  Example:
  ```py
  API.Undress("PvP Gear")
  ```
-
 
 **Parameters:**
 
@@ -1048,8 +987,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### UndressAll
 `(kr)`
- Undress all your equipment
-
+Undress all your equipment
 
 **Parameters:**
 
@@ -1063,7 +1001,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetAvailableDressOutfits
 
- Get all available dress configurations.
+Get all available dress configurations.
  Example:
  ```py
  outfits = API.GetAvailableDressOutfits()
@@ -1071,20 +1009,18 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    Dress(outfits[0])
  ```
 
-
 **Return Type:** `IList<string>`
 
 ---
 
 ### DressItems
 `(serials, kr)`
- Dress items by serial
+Dress items by serial
  example:
  ```py
  serials = [0xabc, 0xdef]
  API.DressItems(serials, kr=True)
  ```
-
 
 **Parameters:**
 
@@ -1099,7 +1035,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Organizer
 `(name, source, destination)`
- Runs an organizer agent to move items between containers.
+Runs an organizer agent to move items between containers.
  Example:
  ```py
  # Run organizer with default containers
@@ -1108,7 +1044,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  # Run organizer with specific source and destination
  API.Organizer("MyOrganizer", 0x40001234, 0x40005678)
  ```
-
 
 **Parameters:**
 
@@ -1124,8 +1059,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ClientCommand
 `(command)`
- Executes a client command as if typed in the game console
-
+Executes a client command as if typed in the game console
 
 **Parameters:**
 
@@ -1139,13 +1073,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### BuffExists
 `(buffName)`
- Check if a buff is active.
+Check if a buff is active.
  Example:
  ```py
  if API.BuffExists("Bless"):
    API.SysMsg("You are blessed!")
  ```
-
 
 **Parameters:**
 
@@ -1159,7 +1092,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ActiveBuffs
 
- Get a list of all buffs that are active.
+Get a list of all buffs that are active.
  See [Buff](Buff.md) to see what attributes are available.
  Buff does not get updated after you access it in python, you will need to call this again to get the latest buff data.
  Example:
@@ -1169,14 +1102,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
      API.SysMsg(buff.Title)
  ```
 
-
 **Return Type:** `ApiBuff[]`
 
 ---
 
 ### ActiveSpells
 
- Get a list of spell ids for spells that are currently toggled on/active.
+Get a list of spell ids for spells that are currently toggled on/active.
  These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
  reports as active, the same ones the spell bar highlights.
  Example:
@@ -1185,14 +1117,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
      API.SysMsg("Active spell id: " + str(spellId))
  ```
 
-
 **Return Type:** `int[]`
 
 ---
 
 ### ActiveSpellNames
 
- Get a list of names for spells that are currently toggled on/active.
+Get a list of names for spells that are currently toggled on/active.
  These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
  reports as active, the same ones the spell bar highlights.
  Example:
@@ -1201,14 +1132,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
      API.SysMsg("Active spell: " + name)
  ```
 
-
 **Return Type:** `string[]`
 
 ---
 
 ### IsSpellActive
 `(spell)`
- Check if a toggle spell/move is currently active.
+Check if a toggle spell/move is currently active.
  You can pass a spell name (for example "Confidence") or a spell id.
  These are toggle spells/moves that the server reports as active, the same ones the spell bar highlights.
  Example:
@@ -1216,7 +1146,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  if API.IsSpellActive("Confidence"):
      API.SysMsg("Confidence is active!")
  ```
-
 
 **Parameters:**
 
@@ -1230,12 +1159,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### SysMsg
 `(message, hue)`
- Show a system message(Left side of screen).
+Show a system message(Left side of screen).
  Example:
  ```py
  API.SysMsg("Script started!")
  ```
-
 
 **Parameters:**
 
@@ -1250,12 +1178,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Msg
 `(message)`
- Say a message outloud.
+Say a message outloud.
  Example:
  ```py
  API.Msg("Hello friend!")
  ```
-
 
 **Parameters:**
 
@@ -1269,12 +1196,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### HeadMsg
 `(message, serial, hue)`
- Show a message above a mobile or item, this is only visible to you.
+Show a message above a mobile or item, this is only visible to you.
  Example:
  ```py
  API.HeadMsg("Only I can see this!", API.Player)
  ```
-
 
 **Parameters:**
 
@@ -1290,12 +1216,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### PartyMsg
 `(message)`
- Send a message to your party.
+Send a message to your party.
  Example:
  ```py
  API.PartyMsg("The raid begins in 30 second! Wait... we don't have raids, wrong game..")
  ```
-
 
 **Parameters:**
 
@@ -1309,12 +1234,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GuildMsg
 `(message)`
- Send your guild a message.
+Send your guild a message.
  Example:
  ```py
  API.GuildMsg("Hey guildies, just restocked my vendor, fresh valorite suits available!")
  ```
-
 
 **Parameters:**
 
@@ -1328,12 +1252,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### AllyMsg
 `(message)`
- Send a message to your alliance.
+Send a message to your alliance.
  Example:
  ```py
  API.AllyMsg("Hey allies, just restocked my vendor, fresh valorite suits available!")
  ```
-
 
 **Parameters:**
 
@@ -1347,12 +1270,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### WhisperMsg
 `(message)`
- Whisper a message.
+Whisper a message.
  Example:
  ```py
  API.WhisperMsg("Psst, bet you didn't see me here..")
  ```
-
 
 **Parameters:**
 
@@ -1366,12 +1288,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### YellMsg
 `(message)`
- Yell a message.
+Yell a message.
  Example:
  ```py
  API.YellMsg("Vendor restocked, get your fresh feathers!")
  ```
-
 
 **Parameters:**
 
@@ -1385,12 +1306,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### EmoteMsg
 `(message)`
- Emote a message.
+Emote a message.
  Example:
  ```py
  API.EmoteMsg("laughing")
  ```
-
 
 **Parameters:**
 
@@ -1404,8 +1324,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GlobalMsg
 `(message)`
- Send a chat message via the global chat msg system ( ,message here ).
-
+Send a chat message via the global chat msg system ( ,message here ).
 
 **Parameters:**
 
@@ -1419,8 +1338,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### PromptResponse
 `(message)`
- Send a response to a server prompt(Like renaming a rune for example).
-
+Send a response to a server prompt(Like renaming a rune for example).
 
 **Parameters:**
 
@@ -1434,7 +1352,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### FindItem
 `(serial)`
- Try to get an item by its serial.
+Try to get an item by its serial.
  Sets API.Found to the serial of the item found.
  Example:
  ```py
@@ -1444,7 +1362,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.SysMsg("Found the donkey!")
    API.UseObject(item)
  ```
-
 
 **Parameters:**
 
@@ -1458,7 +1375,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### FindType
 `(graphic, container, range, hue, minamount)`
- Attempt to find an item by type(graphic).
+Attempt to find an item by type(graphic).
  Sets API.Found to the serial of the item found.
  Example:
  ```py
@@ -1467,7 +1384,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.SysMsg("Found the item!")
    API.UseObject(item)
  ```
-
 
 **Parameters:**
 
@@ -1485,14 +1401,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### FindTypeAll
 `(graphic, container, range, hue, minamount)`
- Return a list of items matching the parameters set.
+Return a list of items matching the parameters set.
  Example:
  ```py
  items = API.FindTypeAll(0x0EED, API.Backpack)
  if items:
    API.SysMsg("Found " + str(len(items)) + " items!")
  ```
-
 
 **Parameters:**
 
@@ -1510,7 +1425,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### FindLayer
 `(layer, serial)`
- Attempt to find an item on a layer.
+Attempt to find an item on a layer.
  Sets API.Found to the serial of the item found.
  Example:
  ```py
@@ -1518,7 +1433,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  if item:
    API.SysMsg("Wearing a helmet!")
  ```
-
 
 **Parameters:**
 
@@ -1533,14 +1447,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetItemsOnGround
 `(distance, graphic)`
- Get all items on the ground within specified range.
+Get all items on the ground within specified range.
  Example:
  ```py
  items = API.GetItemsOnGround(10)  # All items within 10 tiles
  if items:
    API.SysMsg("Found " + str(len(items)) + " items on ground!")
  ```
-
 
 **Parameters:**
 
@@ -1555,7 +1468,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ItemsInContainer
 `(container, recursive)`
- Get all items in a container.
+Get all items in a container.
  Example:
  ```py
  items = API.ItemsInContainer(API.Backpack)
@@ -1565,7 +1478,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
      API.SysMsg(item.Name)
      API.Pause(0.5)
  ```
-
 
 **Parameters:**
 
@@ -1580,14 +1492,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### UseType
 `(graphic, hue, container, skipQueue)`
- Attempt to use the first item found by graphic(type).
+Attempt to use the first item found by graphic(type).
  Example:
  ```py
  API.UseType(0x3434, container=API.Backpack)
  API.WaitForTarget()
  API.Target(API.Player)
  ```
-
 
 **Parameters:**
 
@@ -1604,12 +1515,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateCooldownBar
 `(seconds, text, hue)`
- Create a cooldown bar.
+Create a cooldown bar.
  Example:
  ```py
  API.CreateCooldownBar(5, "Healing", 21)
  ```
-
 
 **Parameters:**
 
@@ -1625,12 +1535,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### UpdateCooldown
 `(name, maxValue, currentValue)`
- Updates an existing cooldown bar. Only the provided values are applied.
+Updates an existing cooldown bar. Only the provided values are applied.
  Example:
  ```py
  API.UpdateCooldown("Healing", maxValue=10, currentValue=5)
  ```
-
 
 **Parameters:**
 
@@ -1646,12 +1555,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RestartCooldown
 `(name)`
- Restarts the countdown of an existing cooldown bar to its full duration.
+Restarts the countdown of an existing cooldown bar to its full duration.
  Example:
  ```py
  API.RestartCooldown("Healing")
  ```
-
 
 **Parameters:**
 
@@ -1665,12 +1573,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### DeleteCooldown
 `(name)`
- Deletes an existing cooldown bar.
+Deletes an existing cooldown bar.
  Example:
  ```py
  API.DeleteCooldown("Healing")
  ```
-
 
 **Parameters:**
 
@@ -1684,12 +1591,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CooldownExists
 `(name)`
- Checks whether a cooldown bar with the given name exists.
+Checks whether a cooldown bar with the given name exists.
  Example:
  ```py
  if API.CooldownExists("Healing"):
  ```
-
 
 **Parameters:**
 
@@ -1703,7 +1609,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateEffect
 `(graphic, type, source, target, hue, sourceX, sourceY, sourceZ, targetX, targetY, targetZ, duration, speed, fixedDirection, doesExplode, blendMode)`
- Creates and displays a graphic effect in the world, the same kind the server sends for spells,
+Creates and displays a graphic effect in the world, the same kind the server sends for spells,
  projectiles, explosions, etc. This is a purely local, visual effect - no packet is sent and only
  you see it.
  The type decides how it behaves: `EffectType.FixedXYZ` and
@@ -1721,7 +1627,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  if mob:
    API.CreateEffect(0x36D0, type=API.EffectType.Moving, source=API.Player, target=mob)
  ```
-
 
 **Parameters:**
 
@@ -1750,7 +1655,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### IgnoreObject
 `(serial)`
- Adds an item or mobile to your ignore list.
+Adds an item or mobile to your ignore list.
  These are unique lists per script. Ignoring an item in one script, will not affect other running scripts.
  Example:
  ```py
@@ -1758,7 +1663,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    if item.Name == "Dagger":
    API.IgnoreObject(item)
  ```
-
 
 **Parameters:**
 
@@ -1772,12 +1676,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### UnIgnoreObject
 `(serial)`
- Removes an item or mobile from your ignore list.
+Removes an item or mobile from your ignore list.
  Example:
  ```py
  API.UnIgnoreObject(item)
  ```
-
 
 **Parameters:**
 
@@ -1791,12 +1694,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ClearIgnoreList
 
- Clears the ignore list. Allowing functions to see those items again.
+Clears the ignore list. Allowing functions to see those items again.
  Example:
  ```py
  API.ClearIgnoreList()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -1804,13 +1706,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### OnIgnoreList
 `(serial)`
- Check if a serial is on the ignore list.
+Check if a serial is on the ignore list.
  Example:
  ```py
  if API.OnIgnoreList(API.Backpack):
    API.SysMsg("Currently ignoring backpack")
  ```
-
 
 **Parameters:**
 
@@ -1824,12 +1725,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Pathfind
 `(x, y, z, distance, wait, timeout, run)`
- Attempt to pathfind to a location.  This will fail with large distances.
+Attempt to pathfind to a location.  This will fail with large distances.
  Example:
  ```py
  API.Pathfind(1414, 1515)
  ```
-
 
 **Parameters:**
 
@@ -1849,14 +1749,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### PathfindEntity
 `(entity, distance, wait, timeout, run)`
- Attempt to pathfind to a mobile or item.
+Attempt to pathfind to a mobile or item.
  Example:
  ```py
  mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
  if mob:
    API.PathfindEntity(mob)
  ```
-
 
 **Parameters:**
 
@@ -1874,7 +1773,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Pathfinding
 
- Check if you are already pathfinding.
+Check if you are already pathfinding.
  Example:
  ```py
  if API.Pathfinding():
@@ -1882,20 +1781,18 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.Pause(0.25)
  ```
 
-
 **Return Type:** `bool`
 
 ---
 
 ### CancelPathfinding
 
- Cancel pathfinding.
+Cancel pathfinding.
  Example:
  ```py
  if API.Pathfinding():
    API.CancelPathfinding()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -1903,7 +1800,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetPath
 `(x, y, z, distance)`
- Attempt to build a path to a location.  This will fail with large distances.
+Attempt to build a path to a location.  This will fail with large distances.
  Example:
  ```py
  API.RequestTarget()
@@ -1913,7 +1810,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
          tile = API.GetTile(x, y)
          tile.Hue = 53
  ```
-
 
 **Parameters:**
 
@@ -1930,14 +1826,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### AutoFollow
 `(mobile)`
- Automatically follow a mobile. This is different from pathfinding. This will continue to follow the mobile.
+Automatically follow a mobile. This is different from pathfinding. This will continue to follow the mobile.
  Example:
  ```py
  mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
  if mob:
    API.AutoFollow(mob)
  ```
-
 
 **Parameters:**
 
@@ -1951,13 +1846,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CancelAutoFollow
 
- Cancel auto follow mode.
+Cancel auto follow mode.
  Example:
  ```py
  if API.Pathfinding():
    API.CancelAutoFollow()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -1965,12 +1859,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Run
 `(direction)`
- Run in a direction.
+Run in a direction.
  Example:
  ```py
  API.Run("north")
  ```
-
 
 **Parameters:**
 
@@ -1984,12 +1877,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Walk
 `(direction)`
- Walk in a direction.
+Walk in a direction.
  Example:
  ```py
  API.Walk("north")
  ```
-
 
 **Parameters:**
 
@@ -2003,12 +1895,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Turn
 `(direction)`
- Turn your character a specific direction.
+Turn your character a specific direction.
  Example:
  ```py
  API.Turn("north")
  ```
-
 
 **Parameters:**
 
@@ -2022,12 +1913,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Rename
 `(serial, name)`
- Attempt to rename something like a pet.
+Attempt to rename something like a pet.
  Example:
  ```py
  API.Rename(0x12345678, "My Handsome Pet")
  ```
-
 
 **Parameters:**
 
@@ -2042,12 +1932,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Dismount
 `(skipQueue)`
- Attempt to dismount if mounted.
+Attempt to dismount if mounted.
  Example:
  ```py
  API.Dismount()
  ```
-
 
 **Parameters:**
 
@@ -2061,12 +1950,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Mount
 `(serial, skipQueue)`
- Attempt to mount(double click)
+Attempt to mount(double click)
  Example:
  ```py
  API.Mount(0x12345678)
  ```
-
 
 **Parameters:**
 
@@ -2081,8 +1969,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### SetMount
 `(serial)`
- This will set your saved mount for this character.
-
+This will set your saved mount for this character.
 
 **Parameters:**
 
@@ -2096,12 +1983,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### WaitForTarget
 `(targetType, timeout)`
- Wait for a target cursor.
+Wait for a target cursor.
  Example:
  ```py
  API.WaitForTarget()
  ```
-
 
 **Parameters:**
 
@@ -2116,13 +2002,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Target
 `(serial)`
- Target an item or mobile.
+Target an item or mobile.
  Example:
  ```py
  if API.WaitForTarget():
    API.Target(0x12345678)
  ```
-
 
 **Parameters:**
 
@@ -2136,13 +2021,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Target
 `(x, y, z, graphic)`
- Target a location. Include graphic if targeting a static.
+Target a location. Include graphic if targeting a static.
  Example:
  ```py
  if API.WaitForTarget():
    API.Target(1243, 1337, 0)
   ```
-
 
 **Parameters:**
 
@@ -2159,14 +2043,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RequestTarget
 `(timeout)`
- Request the player to target something.
+Request the player to target something.
  Example:
  ```py
  target = API.RequestTarget()
  if target:
    API.SysMsg("Targeted serial: " + str(target))
  ```
-
 
 **Parameters:**
 
@@ -2180,9 +2063,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RequestAnyTarget
 `(timeout)`
- Prompts the player to target any object in the game world, including an Item, Mobile, Land tile, Static, or Multi.
+Prompts the player to target any object in the game world, including an Item, Mobile, Land tile, Static, or Multi.
  Waits for the player to select a target within a given timeout period.
-
 
 **Parameters:**
 
@@ -2196,12 +2078,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### TargetSelf
 
- Target yourself.
+Target yourself.
  Example:
  ```py
  API.TargetSelf()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -2209,13 +2090,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### TargetRel
 `(xOffset, yOffset, tilesOnly)`
- Target the spot at an offset from your position, resolving it the same way a click would:
+Target the spot at an offset from your position, resolving it the same way a click would:
  the topmost visible object there is targeted, whether that is an entity, a static/multi, or land.
  Example:
  ```py
  API.TargetRel(1, 1)
  ```
-
 
 **Parameters:**
 
@@ -2231,13 +2111,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### TargetLandRel
 `(xOffset, yOffset)`
- Target a land tile relative to your position.
+Target a land tile relative to your position.
  If this doesn't work, try TargetTileRel instead.
  Example:
  ```py
  API.TargetLand(1, 1)
  ```
-
 
 **Parameters:**
 
@@ -2252,13 +2131,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### TargetTileRel
 `(xOffset, yOffset, graphic, tilesOnly)`
- Target the highest visible object at a tile relative to your location, skipping land.
- Resolves the spot the same way <see cref="TargetRel"/> does, but never falls back to land.
+Target the highest visible object at a tile relative to your location, skipping land.
+ Resolves the spot the same way `TargetRel` does, but never falls back to land.
  Example:
  ```py
  API.TargetTileRel(1, 1)
  ```
-
 
 **Parameters:**
 
@@ -2275,7 +2153,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### TargetResource
 `(itemSerial, resource)`
- This will attempt to use an item and target a resource, some servers may not support this.
+This will attempt to use an item and target a resource, some servers may not support this.
  ```
  0: ore
  1: sand
@@ -2287,7 +2165,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  ```py
  API.TargetResource(MY_SHOVEL_SERIAL, 0)
  ```
-
 
 **Parameters:**
 
@@ -2302,7 +2179,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CancelTarget
 
- Cancel targeting.
+Cancel targeting.
  Example:
  ```py
  if API.WaitForTarget():
@@ -2310,14 +2187,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.SysMsg("Targeting cancelled, april fools made you target something!")
  ```
 
-
 **Return Type:** `void` *(Does not return anything)*
 
 ---
 
 ### SetLastTarget
 `(serial, x, y, z, graphic)`
- Override the client's last target. Pass a serial for an entity, or a location (x/y/z)
+Override the client's last target. Pass a serial for an entity, or a location (x/y/z)
  for a land tile. Include graphic to mark the location as a static instead.
  Example:
  ```py
@@ -2325,7 +2201,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  API.SetLastTarget(x=1243, y=1337, z=0)
  API.SetLastTarget(x=1243, y=1337, z=0, graphic=0x1)
  ```
-
 
 **Parameters:**
 
@@ -2343,7 +2218,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### PreTarget
 `(serial, targetType)`
- Sets a pre-target that will be automatically applied when the next targeting request comes from the server.
+Sets a pre-target that will be automatically applied when the next targeting request comes from the server.
  This is useful for automating actions that require targeting, like using bandages or spells.
  Example:
  ```py
@@ -2356,7 +2231,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  API.PreTarget(enemy.Serial, "harmful")
  API.CastSpell("Lightning")  # This will automatically target the enemy
  ```
-
 
 **Parameters:**
 
@@ -2371,7 +2245,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CancelPreTarget
 
- Cancels any active pre-target.
+Cancels any active pre-target.
  Example:
  ```py
  API.PreTarget(enemy.Serial, "harmful")
@@ -2379,20 +2253,18 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  API.CancelPreTarget()
  ```
 
-
 **Return Type:** `void` *(Does not return anything)*
 
 ---
 
 ### HasTarget
 `(targetType)`
- Check if the player has a target cursor.
+Check if the player has a target cursor.
  Example:
  ```py
  if API.HasTarget():
      API.CancelTarget()
  ```
-
 
 **Parameters:**
 
@@ -2406,7 +2278,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetMap
 
- Get the current map index.
+Get the current map index.
  Standard maps are:
  0 = Fel
  1 = Tram
@@ -2415,19 +2287,17 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  4 = Tokuno
  5 = TerMur
 
-
 **Return Type:** `int`
 
 ---
 
 ### SetSkillLock
 `(skill, up_down_locked)`
- Set a skills lock status.
+Set a skills lock status.
  Example:
  ```py
  API.SetSkillLock("Hiding", "locked")
  ```
-
 
 **Parameters:**
 
@@ -2442,12 +2312,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### SetStatLock
 `(stat, up_down_locked)`
- Set a skills lock status.
+Set a skills lock status.
  Example:
  ```py
  API.SetStatLock("str", "locked")
  ```
-
 
 **Parameters:**
 
@@ -2462,12 +2331,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Logout
 
- Logout of the game.
+Logout of the game.
  Example:
  ```py
  API.Logout()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -2475,7 +2343,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ItemNameAndProps
 `(serial, wait, timeout)`
- Gets item name and properties.
+Gets item name and properties.
  This returns the name and properties in a single string. You can split it by new line if you want to separate them.
  Example:
  ```py
@@ -2485,7 +2353,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    if "An Exotic Fish" in data:
      API.SysMsg("Found an exotic fish!")
  ```
-
 
 **Parameters:**
 
@@ -2501,10 +2368,9 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RequestOPLData
 `(serials)`
- Requests Object Property List (OPL) data for the specified serials.
+Requests Object Property List (OPL) data for the specified serials.
  If the OPL data doesn't already exist, it will be requested from the server.
  OPL consists of item name and tooltip text(properties).
-
 
 **Parameters:**
 
@@ -2518,13 +2384,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### HasGump
 `(ID)`
- Check if a player has a server gump. Leave blank to check if they have any server gump.
+Check if a player has a server gump. Leave blank to check if they have any server gump.
  Example:
  ```py
  if API.HasGump(0x12345678):
    API.SysMsg("Found a gump!")
 ```
-
 
 **Parameters:**
 
@@ -2538,14 +2403,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ReplyGump
 `(button, gump, switches, entries)`
- Reply to a gump.
+Reply to a gump.
  Example:
  ```py
  API.ReplyGump(21)
  API.ReplyGump(1, 0x555, [100])
  API.ReplyGump(1, 0x555, [100], [(0, "text input")])
  ```
-
 
 **Parameters:**
 
@@ -2562,12 +2426,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CloseGump
 `(ID)`
- Close the last gump open, or a specific gump.
+Close the last gump open, or a specific gump.
  Example:
  ```py
  API.CloseGump()
  ```
-
 
 **Parameters:**
 
@@ -2581,7 +2444,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ConfigNextGump
 `(serial, x, y, isVisible, autoClose, autoRespond, autoRespondButton)`
- Configure how the next gump should be handled.
+Configure how the next gump should be handled.
  Example:
  ```py
  # Position gump at coordinates
@@ -2598,7 +2461,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
  Note: This is only applied once. You cannot stack multiple configs. This is reset after successfully applied and only applies to server-sent gumps.
  ```
-
 
 **Parameters:**
 
@@ -2618,13 +2480,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GumpContains
 `(text, ID)`
- Check if a gump contains a specific text.
+Check if a gump contains a specific text.
  Example:
  ```py
  if API.GumpContains("Hello"):
    API.SysMsg("Found the text!")
  ```
-
 
 **Parameters:**
 
@@ -2639,8 +2500,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetGumpContents
 `(ID)`
- This will return a string of all the text in a server-side gump.
-
+This will return a string of all the text in a server-side gump.
 
 **Parameters:**
 
@@ -2654,7 +2514,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetGump
 `(ID)`
- Get a gump by ID.
+Get a gump by ID.
  Example:
  ```py
  gump = API.GetGump()
@@ -2662,7 +2522,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.SysMsg("Found the gump!")
    gump.Dispose() #Close it
  ```
-
 
 **Parameters:**
 
@@ -2676,8 +2535,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetAllGumps
 
- Gets all currently open server-side gumps.
-
+Gets all currently open server-side gumps.
 
 **Return Type:** `IList<IGui>`
 
@@ -2685,7 +2543,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### WaitForGump
 `(ID, delay)`
- Wait for a server-side gump.
+Wait for a server-side gump.
  Example:
  ```py
  if API.WaitForGump(1951773915):
@@ -2693,7 +2551,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  else:
   API.HeadMsg("FAILURE", API.Player, 32)
  ```
-
 
 **Parameters:**
 
@@ -2708,8 +2565,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CloseContextMenus
 
- Close all menu and context menus open.
-
+Close all menu and context menus open.
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -2717,12 +2573,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ToggleFly
 
- Toggle flying if you are a gargoyle.
+Toggle flying if you are a gargoyle.
  Example:
  ```py
  API.ToggleFly()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -2730,13 +2585,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ToggleAbility
 `(ability)`
- Toggle an ability.
+Toggle an ability.
  Example:
  ```py
  if not API.PrimaryAbilityActive():
    API.ToggleAbility("primary")
  ```
-
 
 **Parameters:**
 
@@ -2750,13 +2604,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### PrimaryAbilityActive
 
- Check if your primary ability is active.
+Check if your primary ability is active.
  Example:
  ```py
  if API.PrimaryAbilityActive():
    API.SysMsg("Primary ability is active!")
  ```
-
 
 **Return Type:** `bool`
 
@@ -2764,13 +2617,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### SecondaryAbilityActive
 
- Check if your secondary ability is active.
+Check if your secondary ability is active.
  Example:
  ```py
  if API.SecondaryAbilityActive():
    API.SysMsg("Secondary ability is active!")
  ```
-
 
 **Return Type:** `bool`
 
@@ -2778,10 +2630,9 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CurrentAbilityNames
 
- Gets your currently available ability names.
+Gets your currently available ability names.
 
  The full list of known abilities can be obtained via the `KnownAbilityNames` API
-
 
 **Return Type:** `string[]`
 
@@ -2789,8 +2640,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### KnownAbilityNames
 
- Gets an array of all known ability names
-
+Gets an array of all known ability names
 
 **Return Type:** `string[]`
 
@@ -2798,13 +2648,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### InJournal
 `(msg, clearMatches)`
- Check if your journal contains a message.
+Check if your journal contains a message.
  Example:
  ```py
  if API.InJournal("You have been slain"):
    API.SysMsg("You have been slain!")
  ```
-
 
 **Parameters:**
 
@@ -2819,12 +2668,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ClearSoundLog
 
- Clear your sound log (This is specific for each script).
+Clear your sound log (This is specific for each script).
  Example:
  ```py
  API.ClearSoundLog()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -2832,13 +2680,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CheckSoundLog
 `(idx)`
- Check if the sound log contains a given sound and retrieves it.
+Check if the sound log contains a given sound and retrieves it.
  Example:
  ```py
  if API.CheckSoundLog(0x13E):
    API.SysMsg("Chopped wood!")
  ```
-
 
 **Parameters:**
 
@@ -2852,7 +2699,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetSoundLog
 `(seconds)`
- Get all the sound logs of the last X seconds.
+Get all the sound logs of the last X seconds.
  Example:
  ```py
  list = API.GetSoundLog(30)
@@ -2860,7 +2707,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    for entry in list:
      entry.ID # Do something with this
  ```
-
 
 **Parameters:**
 
@@ -2874,12 +2720,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### PlaySound
 `(index)`
- Play a sound effect locally (only audible to you).
+Play a sound effect locally (only audible to you).
  Example:
  ```py
  API.PlaySound(0x13E)
  ```
-
 
 **Parameters:**
 
@@ -2893,14 +2738,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### InJournalAny
 `(msgs, clearMatches)`
- Check if the journal contains *any* of the strings in this list.
+Check if the journal contains *any* of the strings in this list.
  Can be regex, prepend your msgs with $
  Example:
  ```py
  if API.InJournalAny(["You have been slain", "You are dead"]):
    API.SysMsg("You have been slain or dead!")
  ```
-
 
 **Parameters:**
 
@@ -2915,7 +2759,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetJournalEntries
 `(seconds, matchingText)`
- Get all the journal entires in the last X seconds.
+Get all the journal entires in the last X seconds.
  matchingText supports regex with $ prepended.
  Example:
  ```py
@@ -2924,7 +2768,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    for entry in list:
      entry.Text # Do something with this
  ```
-
 
 **Parameters:**
 
@@ -2939,13 +2782,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ClearJournal
 `(matchingEntries)`
- Clear your journal(This is specific for each script).
+Clear your journal(This is specific for each script).
  Supports regex matching if prefixed with $
  Example:
  ```py
  API.ClearJournal()
  ```
-
 
 **Parameters:**
 
@@ -2959,12 +2801,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Pause
 `(seconds)`
- Pause the script.
+Pause the script.
  Example:
  ```py
  API.Pause(5)
  ```
-
 
 **Parameters:**
 
@@ -2978,12 +2819,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Stop
 
- Stops the current script.
+Stops the current script.
  Example:
  ```py
  API.Stop()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -2991,7 +2831,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### OnStop
 `(callback)`
- Register an optional callback to run when this script is being stopped.
+Register an optional callback to run when this script is being stopped.
  When set, stopping the script will be delayed until this callback has been
  processed, or until a maximum of 5 seconds have passed.
 
@@ -3013,7 +2853,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  API.OnStop()
  ```
 
-
 **Parameters:**
 
 | Name | Type | Optional | Description |
@@ -3026,12 +2865,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ToggleAutoLoot
 
- Toggle autolooting on or off.
+Toggle autolooting on or off.
  Example:
  ```py
  API.ToggleAutoLoot()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -3039,14 +2877,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### AutoLootContainer
 `(container)`
- Use autoloot on a specific container.
+Use autoloot on a specific container.
  Example:
  ```py
  targ = API.RequestTarget()
  if targ:
    API.AutoLootContainer(targ)
  ```
-
 
 **Parameters:**
 
@@ -3060,12 +2897,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Virtue
 `(virtue)`
- Use a virtue.
+Use a virtue.
  Example:
  ```py
  API.Virtue("honor")
  ```
-
 
 **Parameters:**
 
@@ -3079,12 +2915,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### OpenQuestLog
 
- Open the quest log gump.
+Open the quest log gump.
  Example:
  ```py
  API.OpenQuestLog()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -3092,12 +2927,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### OpenHelp
 
- Open the help menu.
+Open the help menu.
  Example:
  ```py
  API.OpenHelp()
  ```
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -3105,7 +2939,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### NearestEntity
 `(scanType, maxDistance)`
- Find the nearest item/mobile based on scan type.
+Find the nearest item/mobile based on scan type.
  Sets API.Found to the serial of the item/mobile.
  Example:
  ```py
@@ -3115,7 +2949,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.UseObject(item)
    # You can use API.FindItem or API.FindMobile(item.Serial) to determine if it's an item or mobile
  ```
-
 
 **Parameters:**
 
@@ -3130,7 +2963,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### NearestMobile
 `(notoriety, maxDistance)`
- Get the nearest mobile by Notoriety.
+Get the nearest mobile by Notoriety.
  Sets API.Found to the serial of the mobile.
  Example:
  ```py
@@ -3140,7 +2973,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.Msg("Guards!")
    API.Attack(mob)
    ```
-
 
 **Parameters:**
 
@@ -3155,7 +2987,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### NearestCorpse
 `(distance)`
- Get the nearest corpse within a distance.
+Get the nearest corpse within a distance.
  Sets API.Found to the serial of the corpse.
  Example:
  ```py
@@ -3164,7 +2996,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.SysMsg("Found a corpse!")
    API.UseObject(corpse)
  ```
-
 
 **Parameters:**
 
@@ -3178,7 +3009,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### NearestMobiles
 `(notoriety, maxDistance)`
- Get all mobiles matching Notoriety and distance.
+Get all mobiles matching Notoriety and distance.
  Example:
  ```py
  mob = API.NearestMobiles([API.Notoriety.Murderer, API.Notoriety.Criminal], 7)
@@ -3187,7 +3018,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.Msg("Guards!")
    API.Attack(mob[0])
    ```
-
 
 **Parameters:**
 
@@ -3202,7 +3032,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### FindMobile
 `(serial)`
- Get a mobile from its serial.
+Get a mobile from its serial.
  Sets API.Found to the serial of the mobile.
  Example:
  ```py
@@ -3211,7 +3041,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.SysMsg("Found the mobile!")
    API.UseObject(mob)
  ```
-
 
 **Parameters:**
 
@@ -3225,7 +3054,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetAllMobiles
 `(graphic, distance, notoriety, sortby, name, graphics, minDistance, isHuman, isFemale, isGhost, isFriend, poisoned, paralyzed, hasLineOfSight, hues)`
- Return a list of all mobiles the client is aware of, optionally filtered by graphic, distance, and/or notoriety.
+Return a list of all mobiles the client is aware of, optionally filtered by graphic, distance, and/or notoriety.
  Any additional filter is ignored unless supplied.
  Example:
  ```py
@@ -3244,7 +3073,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  # Get only dead friends with a specific hue, at least 2 tiles away
  ghosts = API.GetAllMobiles(isGhost=True, isFriend=True, minDistance=2, hues=[0x83EA])
  ```
-
 
 **Parameters:**
 
@@ -3272,14 +3100,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetTile
 `(x, y)`
- Get the tile at a location.
+Get the tile at a location.
  Example:
  ```py
  tile = API.GetTile(1414, 1515)
  if tile:
    API.SysMsg(f"Found a tile with graphic: {tile.Graphic}")
  ```
-
 
 **Parameters:**
 
@@ -3294,7 +3121,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetStaticsAt
 `(x, y)`
- Gets all static objects at a specific position (x, y coordinates).
+Gets all static objects at a specific position (x, y coordinates).
  This includes trees, vegetation, buildings, and other non-movable scenery.
  Example:
  ```py
@@ -3302,7 +3129,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  for s in statics:
      API.SysMsg(f"Static Graphic: {s.Graphic}, Z: {s.Z}")
  ```
-
 
 **Parameters:**
 
@@ -3317,7 +3143,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetStaticsInArea
 `(x1, y1, x2, y2)`
- Gets all static objects within a rectangular area defined by coordinates.
+Gets all static objects within a rectangular area defined by coordinates.
  This includes trees, vegetation, buildings, and other non-movable scenery.
  Example:
  ```py
@@ -3327,7 +3153,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
      if s.IsVegetation:
          API.SysMsg(f"Vegetation Graphic: {s.Graphic} at {s.X}, {s.Y}")
  ```
-
 
 **Parameters:**
 
@@ -3344,7 +3169,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetMultisAt
 `(x, y)`
- Gets all multi objects at a specific position (x, y coordinates).
+Gets all multi objects at a specific position (x, y coordinates).
  This includes server-side house data.
  Example:
  ```py
@@ -3352,7 +3177,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  for m in multis:
      API.SysMsg(f"Multi Graphic: {m.Graphic}, Z: {m.Z}")
  ```
-
 
 **Parameters:**
 
@@ -3367,7 +3191,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetMultisInArea
 `(x1, y1, x2, y2)`
- Gets all multi objects within a rectangular area defined by coordinates.
+Gets all multi objects within a rectangular area defined by coordinates.
  This includes server-side house data.
  Example:
  ```py
@@ -3376,7 +3200,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  for m in multis:
      API.SysMsg(f"Multi Graphic: {m.Graphic} at {m.X}, {m.Y}")
  ```
-
 
 **Parameters:**
 
@@ -3393,13 +3216,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### IsFriend
 `(serial)`
- Check if a mobile is in the friends list.
+Check if a mobile is in the friends list.
  Example:
  ```py
  if API.IsFriend(player.Serial):
      API.SysMsg("This player is your friend!")
  ```
-
 
 **Parameters:**
 
@@ -3413,14 +3235,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### AddFriend
 `(serial)`
- Add a mobile to the friends list by serial number.
+Add a mobile to the friends list by serial number.
  Example:
  ```py
  mobile = API.FindMobile(0x12345)
  if mobile:
      API.AddFriend(mobile.Serial)
  ```
-
 
 **Parameters:**
 
@@ -3434,12 +3255,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RemoveFriend
 `(serial)`
- Remove a mobile from the friends list by serial number.
+Remove a mobile from the friends list by serial number.
  Example:
  ```py
  API.RemoveFriend(0x12345)
  ```
-
 
 **Parameters:**
 
@@ -3453,7 +3273,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetAllFriends
 
- Get all friends as an array of serials.
+Get all friends as an array of serials.
  Example:
  ```py
  friends = API.GetAllFriends()
@@ -3461,17 +3281,15 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
      API.FindMobile(friend)
  ```
 
-
 **Return Type:** `IList<uint>`
 
 ---
 
 ### GetPartyMemberSerials
 
- Gets a list of serials for all current party members, excluding yourself.
+Gets a list of serials for all current party members, excluding yourself.
 
  Note that members may not always have an associated Mobile.
-
 
 **Return Type:** `IList<uint>`
 
@@ -3479,8 +3297,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetPartyLeader
 
- Gets the party leader's serial, or 0 if not in a party.
-
+Gets the party leader's serial, or 0 if not in a party.
 
 **Return Type:** `uint`
 
@@ -3488,8 +3305,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGump
 `(acceptMouseInput, canMove, keepOpen)`
- Use API.Gumps.CreateGump instead
-
+Use API.Gumps.CreateGump instead
 
 **Parameters:**
 
@@ -3505,8 +3321,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### AddGump
 `(g)`
- Use API.Gumps.AddGump instead
-
+Use API.Gumps.AddGump instead
 
 **Parameters:**
 
@@ -3520,8 +3335,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpCheckbox
 `(text, hue, isChecked)`
- Use API.Gumps.CreateGumpCheckbox instead.
-
+Use API.Gumps.CreateGumpCheckbox instead.
 
 **Parameters:**
 
@@ -3537,8 +3351,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpLabel
 `(text, hue)`
- Use API.Gumps.CreateGumpLabel instead.
-
+Use API.Gumps.CreateGumpLabel instead.
 
 **Parameters:**
 
@@ -3553,8 +3366,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpColorBox
 `(opacity, color)`
- Use API.Gumps.CreateGumpColorBox instead.
-
+Use API.Gumps.CreateGumpColorBox instead.
 
 **Parameters:**
 
@@ -3569,8 +3381,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpItemPic
 `(graphic, width, height)`
- Use API.Gumps.CreateGumpItemPic instead.
-
+Use API.Gumps.CreateGumpItemPic instead.
 
 **Parameters:**
 
@@ -3586,8 +3397,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpButton
 `(text, hue, normal, pressed, hover)`
- Use API.Gumps.CreateGumpButton instead.
-
+Use API.Gumps.CreateGumpButton instead.
 
 **Parameters:**
 
@@ -3605,8 +3415,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateSimpleButton
 `(text, width, height)`
- Use API.Gumps.CreateSimpleButton instead.
-
+Use API.Gumps.CreateSimpleButton instead.
 
 **Parameters:**
 
@@ -3622,8 +3431,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpRadioButton
 `(text, group, inactive, active, hue, isChecked)`
- Use API.Gumps.CreateGumpRadioButton instead.
-
+Use API.Gumps.CreateGumpRadioButton instead.
 
 **Parameters:**
 
@@ -3642,8 +3450,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpTextBox
 `(text, width, height, multiline, fontSize)`
- Use API.Gumps.CreateGumpTextBox instead.
-
+Use API.Gumps.CreateGumpTextBox instead.
 
 **Parameters:**
 
@@ -3661,8 +3468,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpTTFLabel
 `(text, size, color, font, aligned, maxWidth, applyStroke)`
- Use API.Gumps.CreateGumpTTFLabel instead.
-
+Use API.Gumps.CreateGumpTTFLabel instead.
 
 **Parameters:**
 
@@ -3682,8 +3488,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpSimpleProgressBar
 `(width, height, backgroundColor, foregroundColor, value, max)`
- Use API.Gumps.CreateGumpSimpleProgressBar instead.
-
+Use API.Gumps.CreateGumpSimpleProgressBar instead.
 
 **Parameters:**
 
@@ -3702,8 +3507,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpScrollArea
 `(x, y, width, height)`
- Use API.Gumps.CreateGumpScrollArea instead.
-
+Use API.Gumps.CreateGumpScrollArea instead.
 
 **Parameters:**
 
@@ -3720,8 +3524,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateGumpPic
 `(graphic, x, y, hue)`
- Use API.Gumps.CreateGumpPic instead.
-
+Use API.Gumps.CreateGumpPic instead.
 
 **Parameters:**
 
@@ -3738,8 +3541,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateDropDown
 `(width, items, selectedIndex)`
- Use API.Gumps.CreateDropDown instead.
-
+Use API.Gumps.CreateDropDown instead.
 
 **Parameters:**
 
@@ -3755,8 +3557,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### CreateModernGump
 `(x, y, width, height, resizable, minWidth, minHeight, onResized)`
- Use API.Gumps.CreateModernGump instead.
-
+Use API.Gumps.CreateModernGump instead.
 
 **Parameters:**
 
@@ -3777,8 +3578,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### AddControlOnClick
 `(control, onClick, leftOnly)`
- Use API.Gumps.AddControlOnClick instead.
-
+Use API.Gumps.AddControlOnClick instead.
 
 **Parameters:**
 
@@ -3794,8 +3594,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### AddControlOnDisposed
 `(control, onDispose)`
- Use API.Gumps.AddControlOnDisposed instead.
-
+Use API.Gumps.AddControlOnDisposed instead.
 
 **Parameters:**
 
@@ -3810,7 +3609,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetSkill
 `(skill)`
- Get a skill from the player. See the Skill class for what properties are available: https://github.com/PlayTazUO/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Skill.cs
+Get a skill from the player. See the Skill class for what properties are available: https://github.com/PlayTazUO/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Skill.cs
  Example:
  ```py
  skill = API.GetSkill("Hiding")
@@ -3820,7 +3619,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
    API.SysMsg("Skill Cap: " + str(skill.Cap))
    API.SysMsg("Skill Lock: " + str(skill.Lock))
    ```
-
 
 **Parameters:**
 
@@ -3834,12 +3632,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### DisplayRange
 `(distance, hue)`
- Show a radius around the player.
+Show a radius around the player.
  Example:
  ```py
  API.DisplayRange(7, 32)
  ```
-
 
 **Parameters:**
 
@@ -3854,12 +3651,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ToggleScript
 `(scriptPath)`
- Toggle another script on or off.
+Toggle another script on or off.
  Example:
  ```py
  API.ToggleScript("mygroup/MyScript.py")
  ```
-
 
 **Parameters:**
 
@@ -3873,12 +3669,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### PlayScript
 `(scriptPath)`
- Play a legion script.
+Play a legion script.
  Example:
  ```py
  API.PlayScript("mygroup/MyScript.py")
  ```
-
 
 **Parameters:**
 
@@ -3892,12 +3687,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### StopScript
 `(scriptPath)`
- Stop a legion script.
+Stop a legion script.
  Example:
  ```py
  API.StopScript("mygroup/MyScript.py")
  ```
-
 
 **Parameters:**
 
@@ -3911,7 +3705,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### ListRunningScripts
 
- Get the paths of all currently running legion scripts.
+Get the paths of all currently running legion scripts.
  The paths are relative to the LegionScripts folder and can be passed
  straight back to PlayScript, StopScript, ToggleScript or IsScriptRunning.
  Example:
@@ -3920,20 +3714,18 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
      API.SysMsg(path)
  ```
 
-
 **Return Type:** `IList<string>`
 
 ---
 
 ### IsScriptRunning
 `(scriptPath)`
- Check if a legion script is currently running.
+Check if a legion script is currently running.
  Example:
  ```py
  if not API.IsScriptRunning("mygroup/MyScript.py"):
      API.PlayScript("mygroup/MyScript.py")
  ```
-
 
 **Parameters:**
 
@@ -3947,12 +3739,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### AddMapMarker
 `(name, x, y, map, color)`
- Add a marker to the current World Map (If one is open)
+Add a marker to the current World Map (If one is open)
  Example:
  ```py
  API.AddMapMarker("Death")
  ```
-
 
 **Parameters:**
 
@@ -3970,12 +3761,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RemoveMapMarker
 `(name)`
- Remove a marker from the world map.
+Remove a marker from the world map.
  Example:
  ```py
  API.RemoveMapMarker("Death")
  ```
-
 
 **Parameters:**
 
@@ -3989,13 +3779,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### IsProcessingMoveQueue
 
- Check if the move item queue is being processed. You can use this to prevent actions if the queue is being processed.
+Check if the move item queue is being processed. You can use this to prevent actions if the queue is being processed.
  Example:
  ```py
  if API.IsProcessingMoveQueue():
    API.Pause(0.5)
  ```
-
 
 **Return Type:** `bool`
 
@@ -4003,13 +3792,12 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### IsProcessingUseItemQueue
 
- Check if the use item queue is being processed. You can use this to prevent actions if the queue is being processed.
+Check if the use item queue is being processed. You can use this to prevent actions if the queue is being processed.
  Example:
  ```py
  if API.IsProcessingUseItemQueue():
    API.Pause(0.5)
  ```
-
 
 **Return Type:** `bool`
 
@@ -4017,7 +3805,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### IsGlobalCooldownActive
 
- Check if the global cooldown is currently active. This applies to actions like moving or using items,
+Check if the global cooldown is currently active. This applies to actions like moving or using items,
  and prevents new actions from executing until the cooldown has expired.
 
  Example:
@@ -4026,19 +3814,17 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
      API.Pause(0.5)
  ```
 
-
 **Return Type:** `bool`
 
 ---
 
 ### SavePersistentVar
 `(name, value, scope)`
- Save a variable that persists between sessions and scripts.
+Save a variable that persists between sessions and scripts.
  Example:
  ```py
  API.SavePersistentVar("TotalKills", "5", API.PersistentVar.Char)
  ```
-
 
 **Parameters:**
 
@@ -4054,12 +3840,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RemovePersistentVar
 `(name, scope)`
- Delete/remove a persistent variable.
+Delete/remove a persistent variable.
  Example:
  ```py
  API.RemovePersistentVar("TotalKills", API.PersistentVar.Char)
  ```
-
 
 **Parameters:**
 
@@ -4074,12 +3859,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetPersistentVar
 `(name, defaultValue, scope)`
- Get a persistent variable.
+Get a persistent variable.
  Example:
  ```py
  API.GetPersistentVar("TotalKills", "0", API.PersistentVar.Char)
  ```
-
 
 **Parameters:**
 
@@ -4095,8 +3879,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### MarkTile
 `(x, y, hue, map)`
- Mark a tile with a specific hue.
-
+Mark a tile with a specific hue.
 
 **Parameters:**
 
@@ -4113,8 +3896,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### RemoveMarkedTile
 `(x, y, map)`
- Remove a marked tile. See MarkTile for more info.
-
+Remove a marked tile. See MarkTile for more info.
 
 **Parameters:**
 
@@ -4130,12 +3912,11 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### TrackingArrow
 `(x, y, identifier)`
- Create a tracking arrow pointing towards a location.
+Create a tracking arrow pointing towards a location.
  Set x or y to a negative value to close existing tracker arrow.
  ```py
  API.TrackingArrow(400, 400)
  ```
-
 
 **Parameters:**
 
@@ -4151,7 +3932,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetClilocString
 `(cliloc, englishOnly)`
- Get the string for a cliloc number.
+Get the string for a cliloc number.
  Example:
  ```py
  text = API.GetClilocString(1020000)
@@ -4161,7 +3942,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  # Force English regardless of client language setting
  text = API.GetClilocString(1020000, englishOnly=True)
  ```
-
 
 **Parameters:**
 
@@ -4176,7 +3956,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetClientBounds
 
- Get the bounds of the client game window.
+Get the bounds of the client game window.
  This covers the entire window, including all UI and the game world.
  Coordinates are in screen pixels.
  Example:
@@ -4185,14 +3965,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
  ```
 
-
 **Return Type:** `Rectangle`
 
 ---
 
 ### GetViewportBounds
 
- Get the bounds of the game world viewport.
+Get the bounds of the game world viewport.
  This is the area where the game world is rendered, in screen pixel coordinates.
  Example:
  ```py
@@ -4200,20 +3979,18 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
  ```
 
-
 **Return Type:** `Rectangle`
 
 ---
 
 ### GetVisualEffectProfiles
 
- List the visual effect compositions this client knows about, shipped and user-authored.
+List the visual effect compositions this client knows about, shipped and user-authored.
  Example:
  ```py
  for info in API.GetVisualEffectProfiles():
    API.SysMsg(f"{info.Name} -> {info.Id}")
  ```
-
 
 **Return Type:** `IList<ApiEffectProfileInfo>`
 
@@ -4221,7 +3998,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetVisualEffectProfile
 `(id)`
- Get an editable copy of one of the client's visual effect compositions, as a starting
+Get an editable copy of one of the client's visual effect compositions, as a starting
  point for a variation on it. The copy is yours - changing it does not touch the client's,
  and there is no way to save it back.
  Example:
@@ -4230,7 +4007,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  effect.Layers[0].Effect.Strength = 0.9
  handle = API.StartVisualEffect(effect, 5)
  ```
-
 
 **Parameters:**
 
@@ -4244,7 +4020,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### NewVisualEffectProfile
 
- Build an empty visual effect composition, to add layers to with `AddLayer`.
+Build an empty visual effect composition, to add layers to with `AddLayer`.
  Example:
  ```py
  effect = API.NewVisualEffectProfile()
@@ -4254,16 +4030,14 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  handle = API.StartVisualEffect(effect, 4)
  ```
 
-
 **Return Type:** `ApiEffectProfile`
 
 ---
 
 ### NewTintLayer
 
- Build a colour layer, set to the client's defaults. The only technique that paints rather
+Build a colour layer, set to the client's defaults. The only technique that paints rather
  than distorting, and so the only one that may sit anywhere in a stack.
-
 
 **Return Type:** `ApiTintLayer`
 
@@ -4271,8 +4045,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### NewBlurLayer
 
- Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
-
+Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
 
 **Return Type:** `ApiBlurLayer`
 
@@ -4280,9 +4053,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### NewRadialBlurLayer
 
- Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
+Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
  focus, because the centre of the screen stays sharp however strong it is.
-
 
 **Return Type:** `ApiRadialBlurLayer`
 
@@ -4290,9 +4062,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### NewChromaticLayer
 
- Build a chromatic split layer, set to the client's defaults. The cheapest technique by a
+Build a chromatic split layer, set to the client's defaults. The cheapest technique by a
  wide margin, so it is worth reaching for first when something needs to look wrong.
-
 
 **Return Type:** `ApiChromaticLayer`
 
@@ -4300,9 +4071,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### NewShakeSpec
 
- Build the shake a visual effect fires as it arrives, to hang on
+Build the shake a visual effect fires as it arrives, to hang on
  `ApiEffectProfile.Shake`. For a shake on its own use `NewShakeConfig` instead.
-
 
 **Return Type:** `ApiShakeSpec`
 
@@ -4310,7 +4080,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### NewShakeConfig
 
- Build a standalone screen shake, for `StartScreenShake`.
+Build a standalone screen shake, for `StartScreenShake`.
  Example:
  ```py
  shake = API.NewShakeConfig()
@@ -4320,15 +4090,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  API.StartScreenShake(shake)
  ```
 
-
 **Return Type:** `ApiShakeConfig`
 
 ---
 
 ### NewVector2
 `(x, y)`
- Build a per-axis value pair, for the visual effect knobs that take one.
-
+Build a per-axis value pair, for the visual effect knobs that take one.
 
 **Parameters:**
 
@@ -4343,21 +4111,28 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### StartVisualEffect
 `(profileId, seconds, intensity)`
- Start one of the client's visual effect compositions by id.
- <para>
+Start one of the client's visual effect compositions by id.
+
+
+
  A composition raised this way claims the look against the rulebase, so starting poison
  while the player is poisoned shows one poison rather than two at doubled alpha.
- </para>  <para>
+
+
+
+
+
  Effects do not survive leaving the world: the handle goes stale and nothing comes back on
  the next login. Stop them yourself, give them a duration, or let the script end - whatever
  a script leaves running is dropped when it stops.
- </para>  Example:
+
+
+ Example:
  ```py
  handle = API.StartVisualEffect(API.VisualEffectIds.Drunk, 10)
  API.Pause(2)
  API.StopVisualEffect(handle)
  ```
-
 
 **Parameters:**
 
@@ -4373,12 +4148,13 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### StartVisualEffectByName
 `(name, seconds, intensity)`
- Start one of the user's own visual effect compositions by name.
- <para>
+Start one of the user's own visual effect compositions by name.
+
+
+
  User-authored compositions only. Every shipped one is named through the client's language
  file and carries a "(built-in)" suffix, so no name here could reach them on a non-English
  client - use `StartVisualEffect` with `VisualEffectIds` for those.
- </para> 
 
 **Parameters:**
 
@@ -4394,13 +4170,14 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### StartVisualEffect
 `(config, seconds, intensity)`
- Start a visual effect the script built itself.
- <para>
+Start a visual effect the script built itself.
+
+
+
  Unlike the two by-name forms this claims nothing, because there is no library composition
  behind it to claim - so two scripts starting identical hand-built effects do composite
  together, at doubled strength. Editing `config` afterwards cannot reach the running
  effect; start it again to change it.
- </para> 
 
 **Parameters:**
 
@@ -4416,8 +4193,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### StopVisualEffect
 `(handle)`
- Stop one visual effect this script started. It fades out rather than cutting.
-
+Stop one visual effect this script started. It fades out rather than cutting.
 
 **Parameters:**
 
@@ -4431,9 +4207,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### StopAllVisualEffects
 
- Stop every visual effect this script started. Other scripts' effects, and the ones the
+Stop every visual effect this script started. Other scripts' effects, and the ones the
  player's own state raises, are left alone.
-
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -4441,7 +4216,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### StartScreenShake
 `(config)`
- Shake the screen, with no visual effect attached.
+Shake the screen, with no visual effect attached.
  Example:
  ```py
  shake = API.NewShakeConfig()
@@ -4449,7 +4224,6 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
  shake.Intensity = 1.0
  API.StartScreenShake(shake)
  ```
-
 
 **Parameters:**
 
@@ -4463,8 +4237,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### StopScreenShake
 `(handle)`
- Stop one screen shake this script started.
-
+Stop one screen shake this script started.
 
 **Parameters:**
 
@@ -4478,9 +4251,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### StopAllScreenShakes
 
- Stop every screen shake this script started, including the ones its visual effects fired
+Stop every screen shake this script started, including the ones its visual effects fired
  as they arrived.
-
 
 **Return Type:** `void` *(Does not return anything)*
 

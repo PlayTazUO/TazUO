@@ -3,7 +3,7 @@
 using System;
 using ClassicUO.Game.ScreenDecorations.Shake;
 
-namespace ClassicUO.LegionScripting.ApiClasses;
+namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
 /// A screen shake with no look attached, for `API.StartScreenShake`. Build one with

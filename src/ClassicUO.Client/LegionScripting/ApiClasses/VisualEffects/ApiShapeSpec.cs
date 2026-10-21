@@ -2,7 +2,7 @@
 
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 
-namespace ClassicUO.LegionScripting.ApiClasses;
+namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
 /// Breaks up a layer's shape boundary with its own noise field. Without it the effect terminates
