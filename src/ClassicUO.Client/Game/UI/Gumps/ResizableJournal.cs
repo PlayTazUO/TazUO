@@ -555,6 +555,12 @@ namespace ClassicUO.Game.UI.Gumps
             private SelectionPoint? _selectionActive;
             private bool _isSelecting;
 
+            /// <summary>
+            /// While the user is selecting (or holding) text, new entries must not snap the view to
+            /// the bottom, otherwise the content shifts out from under the cursor mid-selection.
+            /// </summary>
+            private bool AutoScrollPaused => _isSelecting || TryGetSelectionRange(out _, out _);
+
             public JournalEntriesContainer(int x, int y, int width, int height, ScrollBarBase scrollBarControl, ResizableJournal resizableJournal)
             {
                 _resizableJournal = resizableJournal;
@@ -650,7 +656,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             public void CalculateScrollBarMaxValue()
             {
-                bool maxValue = _scrollBar.Value == _scrollBar.MaxValue;
+                bool maxValue = _scrollBar.Value == _scrollBar.MaxValue && !AutoScrollPaused;
                 int height = 0;
 
                 foreach (JournalData _ in journalDatas)
@@ -681,7 +687,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             public void AddEntry(string text, ushort hue, DateTime time, TextType text_type, MessageType messageType)
             {
-                bool maxScroll = _scrollBar.Value == _scrollBar.MaxValue;
+                bool maxScroll = _scrollBar.Value == _scrollBar.MaxValue && !AutoScrollPaused;
 
                 while (journalDatas.Count > (ProfileManager.CurrentProfile == null ? 200 : ProfileManager.CurrentProfile.MaxJournalEntries))
                 {
@@ -738,7 +744,7 @@ namespace ClassicUO.Game.UI.Gumps
                         return;
                     }
 
-                    CanMove = true;
+                    ClearSelection();
                 }
 
                 base.OnMouseDown(x, y, button);

@@ -225,6 +225,7 @@ namespace ClassicUO.Game.Managers
             });
 
             Register("gumppositions", (s) => Game.UI.MyraWindows.GumpPositionManagerWindow.Show());
+            Register("xmleditor", (s) => XmlGumpEditorWindow.Show(_world));
 
             Register("setinscreen", (s) =>
             {
