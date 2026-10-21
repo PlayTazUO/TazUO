@@ -1393,7 +1393,13 @@ namespace ClassicUO.Game.Scenes
                         }
 
                     case GameEffect effect:
-                        if (
+                        // An effect attached to an entity below the roof cut (player and entity under the same roof)
+                        // is always drawn, even when the effect itself is raised above the cut.
+                        if (effect.Source != null && !effect.Source.IsDestroyed && effect.Source.Z < _maxZ)
+                        {
+                            obj.AlphaHue = 0xFF;
+                        }
+                        else if (
                                             !ProcessAlpha(
                                                 obj,
                                                 ref Client.Game.UO.FileManager.TileData.StaticData[effect.Graphic],
