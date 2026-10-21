@@ -381,7 +381,8 @@ namespace ClassicUO.Game.Scenes
             {
                 if (Vector2.Distance(new Vector2(obj.RealScreenPosition.X, obj.RealScreenPosition.Y), playerPos) < ProfileManager.GlobalSettings.CircleOfTransparencyRadius)
                 {
-                    if (obj.Z >= _maxZ)
+                    // _maxZ stays at the map ceiling (127) when nothing is overhead: nothing to hide then.
+                    if (obj.Z >= _maxZ && _maxZ < 127)
                     {
                         obj.AlphaHue = 0;
                         //CalculateAlpha(ref obj.AlphaHue, 0);
@@ -413,7 +414,8 @@ namespace ClassicUO.Game.Scenes
                     }
                 }
             }
-            if (obj.Z >= _maxZ)
+            // _maxZ stays at the map ceiling (127) when nothing is overhead: nothing to hide then.
+            if (obj.Z >= _maxZ && _maxZ < 127)
             {
                 bool changed;
 

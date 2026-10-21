@@ -59,6 +59,13 @@ internal static class DisplayDeath
             running != 0,
             true
         );
+
+        // A body without a second death action falls back to the first instead of playing nothing.
+        if (running != 0 && !animations.AnimationExists(gfx, group))
+        {
+            group = Client.Game.UO.FileManager.Animations.GetDeathAction(gfx, animFlags, animGroup, false, true);
+        }
+
         owner.SetAnimation(group, 0, 5, 1);
         owner.AnimIndex = 0;
 
