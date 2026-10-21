@@ -101,7 +101,7 @@ Gets the item name and properties (tooltip text).
 | `wait` | `bool` | ✅ Yes | True or false to wait for name and props |
 | `timeout` | `int` | ✅ Yes | Timeout in seconds |
 
-**Return Type:** `string`
+**Return Type:** `string` - Item name and properties, or empty string if we don't have them.
 
 ---
 

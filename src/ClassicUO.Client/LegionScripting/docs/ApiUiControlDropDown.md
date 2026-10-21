@@ -42,7 +42,7 @@ Add an onSelectionChanged callback to this dropdown control.
 | --- | --- | --- | --- |
 | `onSelectionChanged` | `object` | ❌ No | The callback function that receives the selected index |
 
-**Return Type:** `ApiUiControlDropDown`
+**Return Type:** `ApiUiControlDropDown` - Returns this control so methods can be chained.
 
 ---
 

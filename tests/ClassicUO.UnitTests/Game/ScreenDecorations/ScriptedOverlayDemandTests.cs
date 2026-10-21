@@ -224,10 +224,10 @@ public class ScriptedOverlayDemandTests
         var registry = new ScriptedOverlayRegistry();
 
         uint released = registry.Add(Profile("a"), Guid.NewGuid(), 1f, null, _owner);
-        registry.Remove(released).Should().BeTrue();
+        registry.Remove(released, _owner).Should().BeTrue();
 
         registry.Add(Profile("b"), Guid.NewGuid(), 1f, null, _owner).Should().NotBe(released);
-        registry.Remove(released).Should().BeFalse();
+        registry.Remove(released, _owner).Should().BeFalse();
     }
 
     [Fact]
@@ -236,9 +236,69 @@ public class ScriptedOverlayDemandTests
         var registry = new ScriptedOverlayRegistry();
         registry.Add(Profile("a"), Guid.NewGuid(), 1f, null, _owner);
 
-        registry.Remove(0).Should().BeFalse();
-        registry.Remove(9999).Should().BeFalse();
+        registry.Remove(0, _owner).Should().BeFalse();
+        registry.Remove(9999, _owner).Should().BeFalse();
         registry.Count.Should().Be(1);
+    }
+
+    /// <summary>
+    /// Slots are pooled, not minted per demand.
+    /// <para>
+    /// A slot the compositor has been told to hide stays in its active set until the look's fade-out
+    /// finishes, and nothing counts those - so a fresh slot per start would let a start-stop loop
+    /// grow that set without bound, and the compositor walks and sorts all of it every frame.
+    /// Reusing a vacated slot makes the next start replace the retiring overlay instead.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void SlotsAreReusedRatherThanMintedPerStart()
+    {
+        var registry = new ScriptedOverlayRegistry();
+        var seen = new HashSet<Guid>();
+
+        // Far more cycles than the cap, which is exactly the shape of the loop that grew the
+        // compositor's active set.
+        for (int i = 0; i < ScreenOverlayManager.ScriptCap * 20; i++)
+        {
+            uint handle = registry.Add(Profile("a"), Guid.NewGuid(), 1f, null, _owner);
+
+            seen.Add(registry.Entries[^1].Slot);
+            registry.Remove(handle, _owner).Should().BeTrue();
+        }
+
+        seen.Should().HaveCount(ScreenOverlayManager.ScriptCap);
+    }
+
+    /// <summary>Slots are distinct while held, or two demands would fight for one compositor entry.</summary>
+    [Fact]
+    public void EveryLiveDemandHoldsItsOwnSlot()
+    {
+        var registry = new ScriptedOverlayRegistry();
+
+        for (int i = 0; i < ScreenOverlayManager.ScriptCap; i++)
+            registry.Add(Profile($"p{i}"), Guid.NewGuid(), 1f, null, _owner);
+
+        registry.Entries.Select(entry => entry.Slot).Should().OnlyHaveUniqueItems();
+    }
+
+    /// <summary>
+    /// Handles are monotonic small integers, so without an ownership check one script holding a
+    /// single handle could walk the range and stop every other script's effects.
+    /// </summary>
+    [Fact]
+    public void AHandleOnlyStopsForTheScriptThatRaisedIt()
+    {
+        var mine = new object();
+        var theirs = new object();
+
+        var registry = new ScriptedOverlayRegistry();
+        uint handle = registry.Add(Profile("a"), Guid.NewGuid(), 1f, null, theirs);
+
+        registry.Remove(handle, mine).Should().BeFalse();
+        registry.Count.Should().Be(1);
+
+        registry.Remove(handle, theirs).Should().BeTrue();
+        registry.Count.Should().Be(0);
     }
 
     /// <summary>

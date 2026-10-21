@@ -84,10 +84,11 @@ rectangle the shake displaces. One switch, because an effect that shakes the wor
 UI reads as two unrelated things. Hence two independent shake accumulators,
 `ScreenShake.Viewport` and `ScreenShake.Window`, each sampled once per frame at its own blit.
 
-Shaped shakes are source-tagged too (`ShakeSource`) and **a source never evicts another's**: a script
-holds at most 4 of `MAX_ACTIVE_SHAKES` = 8, displaces only its own quietest past that, and is dropped
-outright when the list is full of rule shakes. Each shake carries a `uint Id` for `Cancel`, and
-scripted ones an owner for `CancelByOwner`.
+Shaped shakes are source-tagged too (`ShakeSource`) and the caps are **independent, not shares of one
+number**: `MAX_RULE_SHAKES` = 8 and `MAX_SCRIPT_SHAKES` = 4 sum to the list ceiling, so a source
+neither evicts nor crowds out another's — past its own allowance it displaces its own quietest. Each
+shake carries a `uint Id` and an owner; `Cancel` requires both, since ids are monotonic small
+integers and a caller holding one could otherwise walk the range and cancel a rule's.
 
 One flat pool, shared by reference. Shipped profiles (`BuiltInProfiles`) resolve from code every
 session and are never stored, so a retuned look reaches everyone using it. Copying one produces an
@@ -158,6 +159,10 @@ because they sort against each other and a shared cap would let the strongest st
 Worst case is therefore 12 overlays × `MaxLayers` 4 = **48 full-screen shader passes** in one frame,
 which is the number `ScreenOverlayCompositor`'s layer budget is sized to.
 
+Reaching `ScriptCap` answers 0 rather than throwing: the cap is shared, so a script finds it full
+through another script's doing. `ScriptSlotsFree()` tells that apart from the system being switched
+off, which also answers 0.
+
 **Scripted demands** (`Manager/ScriptedOverlayRegistry.cs`) are transient: never persisted, no
 `ScreenDecorationsJsonContext` entry, no migration. `ScriptedDemand` carries a `SourceProfileId` the
 claim is tested against — `EffectProfile.Clone()` stamps a fresh `Guid`, so without it two
@@ -167,6 +172,13 @@ neither claims nor is suppressed, and two identical hand-built ones do double up
 Insertion order decides which of two demands on one look draws; the other stays in the registry and
 takes over on the pass after the first lapses, arriving as a **fresh onset** — fade-in from zero,
 onset shake re-fires. The blink is accepted deliberately.
+
+Compositor slots come from a **pool of `ScriptCap` ids**, handed out round-robin, not minted per
+demand. A slot told to hide stays in the compositor's active set until the fade-out finishes and
+nothing counts those, so a fresh id per start would let a start-stop loop grow that set without
+bound — and it is walked and sorted every frame. Reusing a vacated slot makes the next start replace
+the retiring overlay instead; round-robin picks the one vacated longest ago, whose fade is most
+likely already done.
 
 The whole registry is dropped on the `!wanted` path of `SyncReconciler`, which `Reset()` goes through
 — so handles go stale on leaving the world and nothing is re-asserted on the next load. The other
@@ -208,7 +220,7 @@ Draws what it is told and knows nothing about why. Slots keyed by rule ID.
 | `ViewportShakeOffset` / `ViewportShakeMarginPixels` | `GameScene` — moves the *crop*, not the destination |
 | `ApplyWindowShake` / `DrawFullScreenOverlays` | `GameController`, at the final blit |
 | `RulesChanged` / `ProfilesChanged` / `SetPreview` / `ClearPreview` | Options tabs and editors |
-| `StartScripted` / `StopScripted` / `StopScriptedByOwner` | `LegionAPI` — main thread only, so it hops |
+| `StartScripted` / `StopScripted` / `StopScriptedByOwner` / `ScriptSlotsFree` | `ApiVisualEffects` — main thread only, so it hops |
 
 Viewport shake moves the source crop inside a margin-padded render target; moving the destination
 would expose the target's unrendered edge.
@@ -330,7 +342,7 @@ stacking layers cannot fix anything the shape mask does wrong.
 - Shared trigger instances when parameters compare equal (two rules on `SoundPlayedTrigger` each hook
   `EventSink.SoundPlayed`; harmless, mildly wasteful).
 - User-authored trigger *logic*. Python scripts registering triggers is the eventual cheap path.
-  Scripts can already *raise* an effect directly (`API.StartVisualEffect`), which is not the same
+  Scripts can already *raise* an effect directly (`API.VisualEffects.Start`), which is not the same
   thing: nothing a script passes becomes a rule, and the rulebase is untouched by it.
 - CRUD on layer techniques — fixed set of four; the shader has four.
 - Per-layer fade timing (would land on `ProfileLayer`).

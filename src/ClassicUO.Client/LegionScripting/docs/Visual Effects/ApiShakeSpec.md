@@ -1,15 +1,15 @@
 ---
 title: ApiShakeSpec
-description: "Screen shake a visual effect includes, fired once as the effect arrives. Build one with `API.NewShakeSpec` and hang it on `ApiEffectProfile.Shake`. For a shake on its own, with no look attached, use `ApiShakeConfig` and `API.StartScreenShake` instead. This type is the one that travels with a composition, so it has no scope of its own - `ApiEffectProfile.FullScreen` decides which rectangle it displaces - and no gradient, since a composition shapes its arc with the two ramps. The shape is `Trauma x rampUp x rampDown`. An impact sets only the ramp down, so it starts at full and decays; a quake sets both and leaves a hold between them, so it builds, holds, subsides."
+description: "Screen shake a visual effect includes, fired once as the effect arrives. Build one with `API.VisualEffects.NewShakeSpec` and hang it on `ApiEffectProfile.Shake`. For a shake on its own, with no look attached, use `ApiShakeConfig` and `API.VisualEffects.StartShake` instead. This type is the one that travels with a composition, so it has no scope of its own - `ApiEffectProfile.FullScreen` decides which rectangle it displaces - and no gradient, since a composition shapes its arc with the two ramps. The shape is `Trauma x rampUp x rampDown`. An impact sets only the ramp down, so it starts at full and decays; a quake sets both and leaves a hold between them, so it builds, holds, subsides."
 ---
 
 ## Class Description
 Screen shake a visual effect includes, fired once as the effect arrives. Build one with
- `API.NewShakeSpec` and hang it on `ApiEffectProfile.Shake`.
+ `API.VisualEffects.NewShakeSpec` and hang it on `ApiEffectProfile.Shake`.
 
 
 
- For a shake on its own, with no look attached, use `ApiShakeConfig` and `API.StartScreenShake`
+ For a shake on its own, with no look attached, use `ApiShakeConfig` and `API.VisualEffects.StartShake`
  instead. This type is the one that travels with a composition, so it has no scope of its own -
  `ApiEffectProfile.FullScreen` decides which rectangle it displaces - and no gradient, since a
  composition shapes its arc with the two ramps.
@@ -51,7 +51,7 @@ Seconds spent falling away at the end. Zero stops dead, which reads as a jolt. S
 
 ### `Curve`
 
-**Type:** `LegionAPI.ShakeCurve`
+**Type:** `ApiVisualEffects.ShakeCurve`
 
 Easing applied to both ramps.
 

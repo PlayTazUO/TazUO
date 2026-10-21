@@ -18,7 +18,7 @@ description: "ApiUiNineSliceGump class documentation"
 
 Gets the current hue of the nine-slice gump
 
-**Return Type:** `ushort`
+**Return Type:** `ushort` - The current hue value
 
 ---
 
@@ -40,7 +40,7 @@ Sets the hue of the nine-slice gump
 
 Gets whether the gump is resizable
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if resizable, false otherwise
 
 ---
 
@@ -62,7 +62,7 @@ Sets whether the gump is resizable
 
 Gets the border size of the nine-slice
 
-**Return Type:** `int`
+**Return Type:** `int` - The border size in pixels
 
 ---
 

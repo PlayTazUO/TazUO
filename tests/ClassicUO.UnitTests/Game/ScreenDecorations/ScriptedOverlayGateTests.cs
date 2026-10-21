@@ -70,11 +70,13 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
     }
 
     /// <summary>
-    /// Exhausting the cap is a script bug - something is starting effects it never stops - so it
-    /// faults rather than answering 0, which would read as the user having switched the system off.
+    /// Exhausting the cap answers 0 rather than faulting. The cap is shared between every script on
+    /// the client, so one script holding effects it has not stopped is a state another script finds
+    /// itself in through no fault of its own - and <see cref="ScreenOverlayManager.ScriptSlotsFree"/>
+    /// is what tells the two cases apart.
     /// </summary>
     [Fact]
-    public void ExhaustingTheScriptCapFaults()
+    public void ExhaustingTheScriptCapAnswersZero()
     {
         mainThread.Invoke(() =>
             {
@@ -85,15 +87,19 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
                     for (int i = 0; i < ScreenOverlayManager.ScriptCap; i++)
                         ScreenOverlayManager.Instance.StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner);
 
+                    ScreenOverlayManager.Instance.ScriptSlotsFree().Should().Be(0);
+
                     ScreenOverlayManager.Instance
-                        .Invoking(manager => manager.StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner))
+                        .StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner)
                         .Should()
-                        .Throw<InvalidOperationException>();
+                        .Be(0u);
                 }
                 finally
                 {
                     ScreenOverlayManager.Instance.StopScriptedByOwner(_owner);
                 }
+
+                ScreenOverlayManager.Instance.ScriptSlotsFree().Should().Be(ScreenOverlayManager.ScriptCap);
             }
         );
     }
@@ -113,7 +119,7 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
                     for (int i = 1; i < ScreenOverlayManager.ScriptCap; i++)
                         ScreenOverlayManager.Instance.StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner);
 
-                    ScreenOverlayManager.Instance.StopScripted(first);
+                    ScreenOverlayManager.Instance.StopScripted(first, _owner);
 
                     ScreenOverlayManager.Instance
                         .StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner)
@@ -167,12 +173,12 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
 
                 try
                 {
-                    ScreenOverlayManager.Instance.StopScripted(0);
-                    ScreenOverlayManager.Instance.StopScripted(uint.MaxValue);
-                    ScreenOverlayManager.Instance.StopScripted(live);
+                    ScreenOverlayManager.Instance.StopScripted(0, _owner);
+                    ScreenOverlayManager.Instance.StopScripted(uint.MaxValue, _owner);
+                    ScreenOverlayManager.Instance.StopScripted(live, _owner);
 
                     // Stopping the same handle twice must not reach whatever was started since.
-                    ScreenOverlayManager.Instance.StopScripted(live);
+                    ScreenOverlayManager.Instance.StopScripted(live, _owner);
 
                     ScreenOverlayManager.Instance
                         .StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner)

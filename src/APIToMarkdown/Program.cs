@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 public static partial class GenDoc
 {
-    private static bool isMainAPI = false;
+    private static bool isMainApi;
 
     public static Dictionary<string, Tuple<StringBuilder, StringBuilder>> GenerateMarkdown(string filePath)
     {
@@ -15,22 +15,28 @@ public static partial class GenDoc
         SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
         var root = (CompilationUnitSyntax)tree.GetRoot();
 
-        IEnumerable<ClassDeclarationSyntax> classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
+        // Constant holders are rendered into their parent's page by GenClassConstants, so they must
+        // not also become one. A page named for one would be titled after a type a script reaches
+        // only through its parent - "Ids" rather than anything that says what it holds.
+        IEnumerable<ClassDeclarationSyntax> classes = root.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .Where(declaration => !IsConstantHolder(declaration));
 
         foreach (ClassDeclarationSyntax classDeclaration in classes)
         {
             string className = classDeclaration.Identifier.Text;
-            isMainAPI = className == "LegionAPI";
+            isMainApi = className == "LegionAPI";
             classesDict.TryAdd(className, new Tuple<StringBuilder, StringBuilder>(new StringBuilder(), new StringBuilder()));
             StringBuilder sb = classesDict[className].Item1;
             StringBuilder python = classesDict[className].Item2;
 
-            if (isMainAPI)
+            if (isMainApi)
                 GenUniversalMdHeader(sb);
             GenClassHeader(sb, python, classDeclaration);
             GenClassProperties(sb, python, classDeclaration);
             GenClassFields(sb, python, classDeclaration);
             GenClassEnums(sb, python, classDeclaration);
+            GenClassConstants(sb, python, classDeclaration);
             GenClassMethods(sb, python, classDeclaration);
         }
 
@@ -64,7 +70,7 @@ public static partial class GenDoc
 
     private static void GenClassHeader(StringBuilder sb, StringBuilder python, ClassDeclarationSyntax classDeclaration)
     {
-        if (!isMainAPI)
+        if (!isMainApi)
         {
             // Add Starlight frontmatter for non-main API classes
             sb.AppendLf("---");
@@ -84,14 +90,14 @@ public static partial class GenDoc
         }
 
         // Add class description section for non-main API
-        if (!string.IsNullOrEmpty(GetXmlSummary(classDeclaration)) && !isMainAPI)
+        if (!string.IsNullOrEmpty(GetXmlSummary(classDeclaration)) && !isMainApi)
         {
             sb.AppendLf("## Class Description");
             sb.AppendLf(GetXmlSummary(classDeclaration));
             sb.AppendLf();
         }
 
-        if (!isMainAPI)
+        if (!isMainApi)
         {
             string baseClasses = string.Empty;
             if (classDeclaration.BaseList != null && classDeclaration.BaseList.Types.Count > 0)
@@ -137,7 +143,7 @@ public static partial class GenDoc
                 }
 
                 string space = string.Empty;
-                if (!isMainAPI)
+                if (!isMainApi)
                     space = "    ";
 
                 string pyType = MapCSharpTypeToPython(property.Type.ToString(), "");
@@ -187,7 +193,7 @@ public static partial class GenDoc
 
                     string space = string.Empty;
 
-                    if (!isMainAPI)
+                    if (!isMainApi)
                         space = "    ";
 
                     string pyType = MapCSharpTypeToPython(typeName, "");
@@ -219,7 +225,7 @@ public static partial class GenDoc
                 if (!enumDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
                     continue;
 
-                string pySpace = isMainAPI ? string.Empty : "    ";
+                string pySpace = isMainApi ? string.Empty : "    ";
 
                 python.AppendLf();
                 python.AppendLf($"{pySpace}class {enumDeclaration.Identifier.Text}:");
@@ -264,6 +270,85 @@ public static partial class GenDoc
         sb.AppendLf();
     }
 
+    /// <summary>
+    /// Whether a class exists only to name constants, like an enum that has to carry strings.
+    /// <para>
+    /// These read best as a section of whatever they hang off - a script reaches them only through
+    /// the parent, so a page of their own would be titled after a name that means nothing alone.
+    /// </para>
+    /// </summary>
+    /// <param name="classDeclaration">The class to judge.</param>
+    /// <returns>True where every member is a constant and there is at least one.</returns>
+    private static bool IsConstantHolder(ClassDeclarationSyntax classDeclaration) =>
+        classDeclaration.Members.Count > 0
+        && classDeclaration.Members.All(member =>
+            member is FieldDeclarationSyntax field && field.Modifiers.Any(SyntaxKind.ConstKeyword)
+        );
+
+    /// <summary>
+    /// Renders the constant holders nested in a class, each as its own section, mirroring how enums
+    /// are rendered rather than given pages.
+    /// </summary>
+    /// <param name="sb">Page being built.</param>
+    /// <param name="python">Stub file being built.</param>
+    /// <param name="classDeclaration">The owning class.</param>
+    private static void GenClassConstants(StringBuilder sb, StringBuilder python, ClassDeclarationSyntax classDeclaration)
+    {
+        var holders = classDeclaration.Members
+            .OfType<ClassDeclarationSyntax>()
+            .Where(nested => nested.Modifiers.Any(SyntaxKind.PublicKeyword) && IsConstantHolder(nested))
+            .ToList();
+
+        if (holders.Count == 0)
+            return;
+
+        sb.AppendLf("## Constants");
+
+        foreach (ClassDeclarationSyntax holder in holders)
+        {
+            string pySpace = isMainApi ? string.Empty : "    ";
+
+            python.AppendLf();
+            python.AppendLf($"{pySpace}class {holder.Identifier.Text}:");
+
+            sb.AppendLf($"### {holder.Identifier.Text}");
+            sb.AppendLf();
+
+            string holderSummary = GetXmlSummary(holder);
+
+            if (!string.IsNullOrEmpty(holderSummary))
+            {
+                sb.AppendLf(":::note[Description]");
+                sb.AppendLf(holderSummary);
+                sb.AppendLf(":::");
+                sb.AppendLf();
+            }
+
+            // Name and value both: a constant's value is its whole point, and a reader comparing one
+            // against something the client reported back has nothing to compare without it.
+            sb.AppendLf("| Name | Value | Description |");
+            sb.AppendLf("| --- | --- | --- |");
+
+            foreach (FieldDeclarationSyntax field in holder.Members.OfType<FieldDeclarationSyntax>())
+            {
+                string fieldSummary = GetXmlSummary(field);
+
+                foreach (VariableDeclaratorSyntax declarator in field.Declaration.Variables)
+                {
+                    string value = declarator.Initializer?.Value.ToString() ?? string.Empty;
+
+                    sb.AppendLf($"| `{declarator.Identifier.Text}` | `{value.Trim('"')}` | {fieldSummary} |");
+                    python.AppendLf($"{pySpace}    {declarator.Identifier.Text} = {value}");
+                }
+            }
+
+            sb.AppendLf();
+        }
+
+        python.AppendLf();
+        sb.AppendLf();
+    }
+
     private static void GenClassMethods(StringBuilder sb, StringBuilder python, ClassDeclarationSyntax classDeclaration)
     {
         // List methods
@@ -290,18 +375,19 @@ public static partial class GenDoc
 
                 GenParameters(method.ParameterList.Parameters, ref sb, method);
 
-                GenReturnType(method.ReturnType, ref sb);
+                GenReturnType(method.ReturnType, ref sb, method);
+                GenExceptions(sb, method);
 
                 sb.AppendLf("---");
                 sb.AppendLf();
 
-                string pySpace = isMainAPI ? string.Empty : "    ";
+                string pySpace = isMainApi ? string.Empty : "    ";
                 string pyReturn = MapCSharpTypeToPython(method.ReturnType.ToString());
 
                 if (pyReturn != "None")
                     pyReturn = $"\"{pyReturn}\"";
 
-                python.AppendLf($"{pySpace}def {method.Identifier.Text}({GetPythonParameters(method.ParameterList.Parameters, !isMainAPI)})"
+                python.AppendLf($"{pySpace}def {method.Identifier.Text}({GetPythonParameters(method.ParameterList.Parameters, !isMainApi)})"
                                   + $" -> {pyReturn}:");
                 if (!string.IsNullOrWhiteSpace(methodSummary))
                 {
@@ -334,16 +420,33 @@ public static partial class GenDoc
             .OfType<XmlElementSyntax>()
             .FirstOrDefault(e => e.StartTag.Name.LocalName.Text == "summary");
 
-        if (summary == null)
-            return string.Empty;
+        return summary == null ? string.Empty : CleanDocumentation(TagText(summary));
+    }
 
-        string rawText = string.Join(" ", summary.Content.Select(c => c.ToString().Trim()));
+    /// <summary>Joined text of a doc element's content, before cleaning.</summary>
+    /// <param name="element">The doc element.</param>
+    /// <returns>The raw text.</returns>
+    private static string TagText(XmlElementSyntax element) =>
+        string.Join(" ", element.Content.Select(c => c.ToString().Trim()));
 
-        // 2. Remove any potential leftover XML comment markers and trim ends
-        //rawText = rawText.Replace("///", "").Trim();
+    /// <summary>
+    /// A doc tag rendered as one line, for the values that sit inline rather than as a body: a
+    /// wrapped source comment would otherwise carry its line breaks into a table cell or list item.
+    /// </summary>
+    /// <param name="element">The doc element.</param>
+    /// <returns>The Markdown, on a single line.</returns>
+    private static string CleanInline(XmlElementSyntax element) =>
+        WhitespaceRx().Replace(CleanDocumentation(TagText(element)), " ").Trim();
 
-        // 3. Split by space, remove empty results, join with single space
-        //string cleanedText = string.Join(" ", rawText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+    /// <summary>
+    /// Turns the raw text of a doc tag into Markdown: strips the comment markers, and renders the
+    /// XMLDoc elements that have no Markdown equivalent rather than letting them through as literal
+    /// tags.
+    /// </summary>
+    /// <param name="rawText">Joined content of a doc element.</param>
+    /// <returns>The Markdown.</returns>
+    private static string CleanDocumentation(string rawText)
+    {
         string cleanedDocumentation = XmlDocPrefixRx().Replace(rawText, "$1");
         cleanedDocumentation = CodeBlockRx().Replace(cleanedDocumentation, "`$1`");
 
@@ -378,11 +481,25 @@ public static partial class GenDoc
         return $"\"{flattened.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
     }
 
-    private static void GenReturnType(TypeSyntax returnType, ref StringBuilder sb)
+    /// <summary>
+    /// Renders the return line, with whatever the <c>&lt;returns&gt;</c> tag says about the value.
+    /// The type alone answers what comes back but not what it means - and for the APIs that report
+    /// failure in their return value, the prose is the only place that is written down.
+    /// </summary>
+    /// <param name="returnType">The declared return type.</param>
+    /// <param name="sb">Page being built.</param>
+    /// <param name="methodNode">The method, for its doc comment.</param>
+    private static void GenReturnType(TypeSyntax returnType, ref StringBuilder sb, SyntaxNode methodNode)
     {
         if (returnType.ToString() != "void")
         {
-            sb.AppendLf($"**Return Type:** `{returnType}`");
+            string returns = GetXmlTagText(methodNode, "returns");
+
+            sb.AppendLf(
+                string.IsNullOrEmpty(returns)
+                    ? $"**Return Type:** `{returnType}`"
+                    : $"**Return Type:** `{returnType}` - {returns}"
+            );
         }
         else
         {
@@ -390,6 +507,73 @@ public static partial class GenDoc
         }
 
         sb.AppendLf();
+    }
+
+    /// <summary>
+    /// Renders what a method throws. Worth a section of its own rather than a line in the summary:
+    /// a script cannot see a signature, so an undocumented throw is one a script author meets at
+    /// runtime or not at all.
+    /// </summary>
+    /// <param name="sb">Page being built.</param>
+    /// <param name="methodNode">The method, for its doc comment.</param>
+    private static void GenExceptions(StringBuilder sb, SyntaxNode methodNode)
+    {
+        DocumentationCommentTriviaSyntax? trivia = methodNode.GetLeadingTrivia()
+            .Select(i => i.GetStructure())
+            .OfType<DocumentationCommentTriviaSyntax>()
+            .FirstOrDefault();
+
+        if (trivia == null)
+            return;
+
+        List<XmlElementSyntax> thrown = trivia.Content
+            .OfType<XmlElementSyntax>()
+            .Where(element => element.StartTag.Name.LocalName.Text == "exception")
+            .ToList();
+
+        if (thrown.Count == 0)
+            return;
+
+        sb.AppendLf("**Raises:**");
+        sb.AppendLf();
+
+        foreach (XmlElementSyntax element in thrown)
+        {
+            // The cref is the exception's own name, which is what a script sees when it catches one.
+            string name = element.StartTag.Attributes
+                .OfType<XmlCrefAttributeSyntax>()
+                .Select(attribute => attribute.Cref.ToString())
+                .FirstOrDefault() ?? "Exception";
+
+            string reason = CleanInline(element);
+
+            sb.AppendLf($"- `{name}` - {reason}");
+        }
+
+        sb.AppendLf();
+    }
+
+    /// <summary>
+    /// Text of a single-occurrence doc tag, cleaned the same way a summary is.
+    /// </summary>
+    /// <param name="node">The documented member.</param>
+    /// <param name="tag">Local name of the tag, without angle brackets.</param>
+    /// <returns>The text, or an empty string where the tag is absent.</returns>
+    private static string GetXmlTagText(SyntaxNode node, string tag)
+    {
+        DocumentationCommentTriviaSyntax? trivia = node.GetLeadingTrivia()
+            .Select(i => i.GetStructure())
+            .OfType<DocumentationCommentTriviaSyntax>()
+            .FirstOrDefault();
+
+        XmlElementSyntax? element = trivia?.Content
+            .OfType<XmlElementSyntax>()
+            .FirstOrDefault(e => e.StartTag.Name.LocalName.Text == tag);
+
+        if (element == null)
+            return string.Empty;
+
+        return CleanInline(element);
     }
 
     private static void GenParameters(SeparatedSyntaxList<ParameterSyntax> parameters, ref StringBuilder sb, SyntaxNode methodNode)
@@ -649,6 +833,7 @@ public static partial class GenDoc
             "ApiUiTiledGumpPic" => "ApiUiTiledGumpPic",
 
             // Visual effects
+            "ApiVisualEffects" => "ApiVisualEffects",
             "ApiVector2" => "ApiVector2",
             "ApiEffectProfile" => "ApiEffectProfile",
             "ApiEffectProfileInfo" => "ApiEffectProfileInfo",
@@ -723,20 +908,6 @@ class Program
         ["VisualEffects"] = VisualEffectsGroup
     };
 
-    /// <summary>
-    /// Published folder for classes whose source file cannot be moved to decide it.
-    /// <para>
-    /// A type nested inside <c>LegionAPI</c> is the only kind a script can reach by name, since
-    /// nothing but <c>API</c> is injected into the Python scope - so these have to be declared in
-    /// <c>LegionAPI.cs</c> however they ought to be grouped, and the source tree cannot say where
-    /// their page belongs.
-    /// </para>
-    /// </summary>
-    private static readonly Dictionary<string, string> PublishedFolderByClass = new()
-    {
-        ["VisualEffectIds"] = VisualEffectsGroup
-    };
-
     static void Main(string[] args)
     {
         if (args.Length == 0)
@@ -767,10 +938,7 @@ class Program
 
             foreach (KeyValuePair<string, Tuple<StringBuilder, StringBuilder>> kvp in gen)
             {
-                // Per class, not per file: one file can hold several classes, and a nested type's
-                // group is decided by name because its file is not free to move.
-                string folder = PublishedFolderByClass.GetValueOrDefault(kvp.Key, sourceFolder);
-                string pageDir = Path.Combine(docsDir, folder);
+                string pageDir = Path.Combine(docsDir, sourceFolder);
 
                 if (!Directory.Exists(pageDir))
                     Directory.CreateDirectory(pageDir);

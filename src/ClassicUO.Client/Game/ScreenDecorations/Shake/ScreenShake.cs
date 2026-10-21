@@ -110,17 +110,21 @@ internal sealed class ScreenShake
     private const float FREQUENCY = 20f;
     private const int NOISE_SAMPLES = 256;
 
-    /// <summary>Cap on concurrent shaped shakes. Past a handful they sum into mush anyway, and
-    /// the list must not grow without bound if something schedules one per frame.</summary>
-    private const int MAX_ACTIVE_SHAKES = 8;
+    /// <summary>
+    /// How many shaped shakes a rule may hold. Past a handful they sum into mush anyway, and the
+    /// list must not grow without bound if something schedules one per frame.
+    /// </summary>
+    private const int MAX_RULE_SHAKES = 8;
 
     /// <summary>
-    /// How many of <see cref="MAX_ACTIVE_SHAKES"/> a script may hold. A sub-cap rather than a share
-    /// of the same number, because a script looping on <c>StartScreenShake</c> would otherwise
-    /// displace the shakes the player's own state is raising, and those are the ones that carry
-    /// information.
+    /// How many a script may hold, alongside <see cref="MAX_RULE_SHAKES"/> rather than carved out of
+    /// it: a script looping on <c>StartScreenShake</c> must not displace or crowd out the shakes the
+    /// player's own state is raising, and those are the ones that carry information.
     /// </summary>
     private const int MAX_SCRIPT_SHAKES = 4;
+
+    /// <summary>Ceiling on the list itself, which the two independent caps add up to.</summary>
+    private const int MAX_ACTIVE_SHAKES = MAX_RULE_SHAKES + MAX_SCRIPT_SHAKES;
 
     /// <summary>Walked between shakes so two of them never sample the noise in lockstep, which
     /// would read as one shake at twice the amplitude.</summary>
@@ -202,10 +206,9 @@ internal sealed class ScreenShake
     /// <summary>
     /// Schedules a shaped shake. Ignored if it would do nothing.
     /// <para>
-    /// Caps are per source and a source never evicts another's shakes: once this source has filled
-    /// its own allowance the quietest of <em>its</em> shakes is displaced, since that is the one
-    /// least likely to be missed, and where the list is full of another source's the request is
-    /// simply dropped.
+    /// Caps are per source and independent, so a source neither evicts nor crowds out another's
+    /// shakes: once this source has filled its own allowance the quietest of <em>its</em> shakes is
+    /// displaced, since that is the one least likely to be missed.
     /// </para>
     /// </summary>
     /// <param name="request">The envelope to schedule.</param>
@@ -231,14 +234,11 @@ internal sealed class ScreenShake
                 Owner = owner
             };
 
-            if (CountOf(source) >= CapOf(source) || _active.Count >= MAX_ACTIVE_SHAKES)
+            // The per-source caps sum to the list ceiling, so filling one is the only way the list
+            // can be full - which is what keeps a script's shakes off the rules' allowance.
+            if (CountOf(source) >= CapOf(source))
             {
-                int quietest = IndexOfQuietest(source);
-
-                if (quietest < 0)
-                    return 0;
-
-                _active[quietest] = shake;
+                _active[IndexOfQuietest(source)] = shake;
 
                 return id;
             }
@@ -250,13 +250,22 @@ internal sealed class ScreenShake
     }
 
     /// <summary>
-    /// Ends one shaped shake early.
+    /// Ends one shaped shake early, if <paramref name="owner"/> is the one that raised it.
+    /// <para>
+    /// Ownership is checked rather than trusted: ids are monotonic small integers, so without it any
+    /// caller holding one handle could walk the range and cancel a rule's shakes or another script's
+    /// - which is exactly what the per-source caps exist to prevent.
+    /// </para>
     /// </summary>
     /// <param name="id">The id <see cref="Trauma(in ShakeRequest, ShakeSource, object)"/> returned.
     /// Unknown, expired and displaced ids are ignored, as is 0.</param>
-    /// <returns>True if a shake was still running under that id.</returns>
-    public bool Cancel(uint id)
+    /// <param name="owner">The owner passed to
+    /// <see cref="Trauma(in ShakeRequest, ShakeSource, object)"/>.</param>
+    /// <returns>True if a shake <paramref name="owner"/> raised was still running under that id.</returns>
+    public bool Cancel(uint id, object owner)
     {
+        ArgumentNullException.ThrowIfNull(owner);
+
         if (id == 0)
             return false;
 
@@ -264,7 +273,7 @@ internal sealed class ScreenShake
         {
             for (int i = 0; i < _active.Count; i++)
             {
-                if (_active[i].Id != id)
+                if (_active[i].Id != id || !ReferenceEquals(_active[i].Owner, owner))
                     continue;
 
                 _active.RemoveAt(i);
@@ -409,7 +418,8 @@ internal sealed class ScreenShake
     /// source displaces.
     /// </summary>
     /// <param name="source">Only this source's shakes are candidates.</param>
-    /// <returns>Its index, or -1 if the source has nothing running.</returns>
+    /// <returns>Its index, or -1 if the source has nothing running - which its only caller has
+    /// already ruled out by reaching the source's cap.</returns>
     private int IndexOfQuietest(ShakeSource source)
     {
         int quietest = -1;
@@ -446,7 +456,7 @@ internal sealed class ScreenShake
         return count;
     }
 
-    private static int CapOf(ShakeSource source) => source == ShakeSource.Script ? MAX_SCRIPT_SHAKES : MAX_ACTIVE_SHAKES;
+    private static int CapOf(ShakeSource source) => source == ShakeSource.Script ? MAX_SCRIPT_SHAKES : MAX_RULE_SHAKES;
 
     private static float Sample(float[] table, float t)
     {

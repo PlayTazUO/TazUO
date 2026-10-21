@@ -2,11 +2,11 @@
 
 using Microsoft.Xna.Framework;
 
-namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
+namespace ClassicUO.LegionScripting.ApiClasses;
 
 /// <summary>
-/// A per-axis pair of values, used wherever a visual effect knob differs between X and Y. Build one
-/// with `API.NewVector2`, or assign to the `X` and `Y` of the one a layer already carries.
+/// A per-axis pair of values, for wherever an API knob differs between X and Y. Build one with
+/// `API.VisualEffects.NewVector2`, or assign to the `X` and `Y` of the one a layer already carries.
 /// </summary>
 public class ApiVector2
 {

@@ -1,10 +1,10 @@
 ---
 title: ApiBlurLayer
-description: "Disk blur - out-of-focus vision. Build one with `API.NewBlurLayer`. Like every distortion technique it reads the frame as it stood before the effect was drawn, so it must sit below anything it is meant to affect, and two distortion layers in one composition do not compose: the upper one re-reads the original frame and overwrites the lower."
+description: "Disk blur - out-of-focus vision. Build one with `API.VisualEffects.NewBlurLayer`. Like every distortion technique it reads the frame as it stood before the effect was drawn, so it must sit below anything it is meant to affect, and two distortion layers in one composition do not compose: the upper one re-reads the original frame and overwrites the lower."
 ---
 
 ## Class Description
-Disk blur - out-of-focus vision. Build one with `API.NewBlurLayer`.
+Disk blur - out-of-focus vision. Build one with `API.VisualEffects.NewBlurLayer`.
 
 
 
@@ -23,7 +23,7 @@ Blur disk radius as a fraction of screen width, aspect-corrected so it stays cir
 
 ### `Taps`
 
-**Type:** `LegionAPI.OverlaySampleTaps`
+**Type:** `ApiVisualEffects.OverlaySampleTaps`
 
 Samples taken per pixel, and the whole cost of the layer. Too few for the radius
  shows as distinct ghost copies instead of a blur.

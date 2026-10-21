@@ -29,7 +29,7 @@ public class ApiNoiseSpec
     /// Which packed noise channel the primary field reads. Red and Green are fBm and read as
     /// organic; Blue is ridged and Alpha is Worley, and both draw cell outlines.
     /// </summary>
-    public LegionAPI.NoiseChannel BaseChannel { get; set; }
+    public ApiVisualEffects.NoiseChannel BaseChannel { get; set; }
 
     /// <summary>Frequency of the secondary field, whose lookup is warped by the primary.</summary>
     public ApiVector2? DetailScale { get; set; } = new();
@@ -38,7 +38,7 @@ public class ApiNoiseSpec
     public ApiVector2? DetailScroll { get; set; } = new();
 
     /// <summary>Which packed noise channel the secondary field reads.</summary>
-    public LegionAPI.NoiseChannel DetailChannel { get; set; }
+    public ApiVisualEffects.NoiseChannel DetailChannel { get; set; }
 
     /// <summary>
     /// Static texture-space shift of both fields, never varying with time. Desyncs a layer from
@@ -80,10 +80,10 @@ public class ApiNoiseSpec
         {
             BaseScale = ApiVector2.From(noise.BaseScale),
             BaseScroll = ApiVector2.From(noise.BaseScroll),
-            BaseChannel = (LegionAPI.NoiseChannel)noise.BaseChannel,
+            BaseChannel = (ApiVisualEffects.NoiseChannel)noise.BaseChannel,
             DetailScale = ApiVector2.From(noise.DetailScale),
             DetailScroll = ApiVector2.From(noise.DetailScroll),
-            DetailChannel = (LegionAPI.NoiseChannel)noise.DetailChannel,
+            DetailChannel = (ApiVisualEffects.NoiseChannel)noise.DetailChannel,
             Offset = ApiVector2.From(noise.Offset),
             WarpStrength = noise.WarpStrength,
             RidgeAmount = noise.RidgeAmount,
@@ -95,18 +95,18 @@ public class ApiNoiseSpec
     internal NoiseSpec ToInternal() =>
         new()
         {
-            BaseScale = ApiOverlayGuard.Vector(BaseScale),
-            BaseScroll = ApiOverlayGuard.Vector(BaseScroll),
-            BaseChannel = (Renderer.Effects.NoiseChannel)ApiOverlayGuard.Defined(BaseChannel, nameof(BaseChannel)),
-            DetailScale = ApiOverlayGuard.Vector(DetailScale),
-            DetailScroll = ApiOverlayGuard.Vector(DetailScroll),
-            DetailChannel = (Renderer.Effects.NoiseChannel)ApiOverlayGuard.Defined(DetailChannel, nameof(DetailChannel)),
-            Offset = ApiOverlayGuard.Vector(Offset),
-            WarpStrength = (float)WarpStrength,
-            RidgeAmount = (float)RidgeAmount,
-            Threshold = (float)Threshold,
-            Softness = (float)Softness,
-            FlatFloor = (float)FlatFloor
+            BaseScale = VfxInputValidator.Vector(BaseScale, nameof(BaseScale)),
+            BaseScroll = VfxInputValidator.Vector(BaseScroll, nameof(BaseScroll)),
+            BaseChannel = (Renderer.Effects.NoiseChannel)VfxInputValidator.Defined(BaseChannel, nameof(BaseChannel)),
+            DetailScale = VfxInputValidator.Vector(DetailScale, nameof(DetailScale)),
+            DetailScroll = VfxInputValidator.Vector(DetailScroll, nameof(DetailScroll)),
+            DetailChannel = (Renderer.Effects.NoiseChannel)VfxInputValidator.Defined(DetailChannel, nameof(DetailChannel)),
+            Offset = VfxInputValidator.Vector(Offset, nameof(Offset)),
+            WarpStrength = VfxInputValidator.Number(WarpStrength, nameof(WarpStrength)),
+            RidgeAmount = VfxInputValidator.Number(RidgeAmount, nameof(RidgeAmount)),
+            Threshold = VfxInputValidator.Number(Threshold, nameof(Threshold)),
+            Softness = VfxInputValidator.Number(Softness, nameof(Softness)),
+            FlatFloor = VfxInputValidator.Number(FlatFloor, nameof(FlatFloor))
         };
 
     #endregion

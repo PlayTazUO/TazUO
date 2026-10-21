@@ -6,7 +6,7 @@ using ClassicUO.Renderer.Effects;
 namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
-/// Disk blur - out-of-focus vision. Build one with `API.NewBlurLayer`.
+/// Disk blur - out-of-focus vision. Build one with `API.VisualEffects.NewBlurLayer`.
 /// <para>
 /// Like every distortion technique it reads the frame as it stood <em>before</em> the effect was
 /// drawn, so it must sit below anything it is meant to affect, and two distortion layers in one
@@ -26,14 +26,14 @@ public class ApiBlurLayer : ApiLayerEffect
 
     /// <summary>Samples taken per pixel, and the whole cost of the layer. Too few for the radius
     /// shows as distinct ghost copies instead of a blur.</summary>
-    public LegionAPI.OverlaySampleTaps Taps { get; set; } = LegionAPI.OverlaySampleTaps.Twelve;
+    public ApiVisualEffects.OverlaySampleTaps Taps { get; set; } = ApiVisualEffects.OverlaySampleTaps.Twelve;
 
     #endregion
 
     #region Internal methods
 
     internal static ApiBlurLayer FromBlur(BlurEffect blur) =>
-        new() { Radius = blur.Radius, Taps = (LegionAPI.OverlaySampleTaps)blur.Taps };
+        new() { Radius = blur.Radius, Taps = (ApiVisualEffects.OverlaySampleTaps)blur.Taps };
 
     #endregion
 
@@ -43,8 +43,8 @@ public class ApiBlurLayer : ApiLayerEffect
     private protected override LayerEffect CreateInternal() =>
         new BlurEffect
         {
-            Radius = (float)Radius,
-            Taps = (OverlaySampleTaps)ApiOverlayGuard.Defined(Taps, nameof(Taps))
+            Radius = VfxInputValidator.Number(Radius, nameof(Radius)),
+            Taps = (OverlaySampleTaps)VfxInputValidator.Defined(Taps, nameof(Taps))
         };
 
     #endregion
@@ -53,7 +53,7 @@ public class ApiBlurLayer : ApiLayerEffect
 /// <summary>
 /// Zoom blur along the ray from the shape's centre - head-spin, speed. Reads as vertigo rather than
 /// poor focus because the centre of the screen stays sharp however strong it is. Build one with
-/// `API.NewRadialBlurLayer`.
+/// `API.VisualEffects.NewRadialBlurLayer`.
 /// </summary>
 public class ApiRadialBlurLayer : ApiLayerEffect
 {
@@ -65,14 +65,14 @@ public class ApiRadialBlurLayer : ApiLayerEffect
 
     /// <summary>Samples taken per pixel. Fewer than a disk blur needs: radial taps land on a line
     /// rather than spreading over an area, so the gaps between them are far less visible.</summary>
-    public LegionAPI.OverlaySampleTaps Taps { get; set; } = LegionAPI.OverlaySampleTaps.Eight;
+    public ApiVisualEffects.OverlaySampleTaps Taps { get; set; } = ApiVisualEffects.OverlaySampleTaps.Eight;
 
     #endregion
 
     #region Internal methods
 
     internal static ApiRadialBlurLayer FromRadial(RadialBlurEffect radial) =>
-        new() { Zoom = radial.Zoom, Taps = (LegionAPI.OverlaySampleTaps)radial.Taps };
+        new() { Zoom = radial.Zoom, Taps = (ApiVisualEffects.OverlaySampleTaps)radial.Taps };
 
     #endregion
 
@@ -82,8 +82,8 @@ public class ApiRadialBlurLayer : ApiLayerEffect
     private protected override LayerEffect CreateInternal() =>
         new RadialBlurEffect
         {
-            Zoom = (float)Zoom,
-            Taps = (OverlaySampleTaps)ApiOverlayGuard.Defined(Taps, nameof(Taps))
+            Zoom = VfxInputValidator.Number(Zoom, nameof(Zoom)),
+            Taps = (OverlaySampleTaps)VfxInputValidator.Defined(Taps, nameof(Taps))
         };
 
     #endregion
@@ -92,7 +92,7 @@ public class ApiRadialBlurLayer : ApiLayerEffect
 /// <summary>
 /// Red/blue split along the ray from the shape's centre - lens fringing. The cheapest technique by a
 /// wide margin, three taps whatever its strength, so it is worth reaching for first when something
-/// needs to look wrong without costing anything. Build one with `API.NewChromaticLayer`.
+/// needs to look wrong without costing anything. Build one with `API.VisualEffects.NewChromaticLayer`.
 /// </summary>
 public class ApiChromaticLayer : ApiLayerEffect
 {
@@ -117,7 +117,8 @@ public class ApiChromaticLayer : ApiLayerEffect
     #region Protected methods
 
     /// <inheritdoc />
-    private protected override LayerEffect CreateInternal() => new ChromaticEffect { Aberration = (float)Aberration };
+    private protected override LayerEffect CreateInternal() =>
+        new ChromaticEffect { Aberration = VfxInputValidator.Number(Aberration, nameof(Aberration)) };
 
     #endregion
 }

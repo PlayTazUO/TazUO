@@ -47,7 +47,7 @@ Adds a child control to this control. Works with gumps too (gump.Add(control)).
 Returns the control's X position.
  Used in python API
 
-**Return Type:** `int`
+**Return Type:** `int` - The X coordinate of the control
 
 ---
 
@@ -56,7 +56,7 @@ Returns the control's X position.
 Returns the control's Y position.
  Used in python API
 
-**Return Type:** `int`
+**Return Type:** `int` - The Y coordinate of the control
 
 ---
 
@@ -189,7 +189,7 @@ Centers a GUMP vertically in the viewport. Only works on Gump instances.
 Returns the control's Alpha value.
  Used in python API
 
-**Return Type:** `float`
+**Return Type:** `float` - The Alpha value of the control
 
 ---
 

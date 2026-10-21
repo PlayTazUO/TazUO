@@ -28,7 +28,7 @@ Gets the group index of the radio button.
  Radio buttons with the same group index are mutually exclusive.
  Used in python API
 
-**Return Type:** `int`
+**Return Type:** `int` - The group index
 
 ---
 

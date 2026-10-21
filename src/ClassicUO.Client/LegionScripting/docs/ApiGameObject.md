@@ -129,7 +129,7 @@ Determines if there is line of sight from the specified observer to this object.
 | --- | --- | --- | --- |
 | `observer` | `ApiGameObject` | ✅ Yes | The observing GameObject (optional). |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if the observer has line of sight to this object; otherwise, false.
 
 ---
 
@@ -147,7 +147,7 @@ Returns a readable string representation of the game object.
 Returns a detailed string representation of the object.
  This string is used by Python’s built-in `repr()` function.
 
-**Return Type:** `string`
+**Return Type:** `string` - A string suitable for debugging and inspection in Python.
 
 ---
 

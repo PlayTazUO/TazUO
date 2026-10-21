@@ -1,11 +1,11 @@
 ---
 title: ApiShakeConfig
-description: "A screen shake with no look attached, for `API.StartScreenShake`. Build one with `API.NewShakeConfig`. Amplitude at any moment is `Intensity x gradient(progress) x rampUp(elapsed) x rampDown(remaining)`, so `Gradient` decides the overall arc and the two ramps decide how abruptly it starts and stops. Unlike `ApiShakeSpec`, which travels inside a composition, this one carries its own scope and gradient because there is no composition to take them from."
+description: "A screen shake with no look attached, for `API.VisualEffects.StartShake`. Build one with `API.VisualEffects.NewShakeConfig`. Amplitude at any moment is `Intensity x gradient(progress) x rampUp(elapsed) x rampDown(remaining)`, so `Gradient` decides the overall arc and the two ramps decide how abruptly it starts and stops. Unlike `ApiShakeSpec`, which travels inside a composition, this one carries its own scope and gradient because there is no composition to take them from."
 ---
 
 ## Class Description
-A screen shake with no look attached, for `API.StartScreenShake`. Build one with
- `API.NewShakeConfig`.
+A screen shake with no look attached, for `API.VisualEffects.StartShake`. Build one with
+ `API.VisualEffects.NewShakeConfig`.
 
 
 
@@ -20,7 +20,8 @@ A screen shake with no look attached, for `API.StartScreenShake`. Build one with
 **Type:** `double`
 
 Total length of the shake in seconds, ramps included. Must be above zero - there is no
- open-ended shake, since a shake nothing is sustaining would never stop.
+ open-ended shake, since a shake nothing is sustaining would never stop - and clamped to
+ 86400 at the top.
 
 ### `Intensity`
 
@@ -43,13 +44,13 @@ Seconds spent falling away at the end. Zero stops dead, which reads as a jolt.
 
 ### `Gradient`
 
-**Type:** `LegionAPI.ShakeGradient`
+**Type:** `ApiVisualEffects.ShakeGradient`
 
 How intensity travels across the whole duration, independently of the ramps.
 
 ### `Curve`
 
-**Type:** `LegionAPI.ShakeCurve`
+**Type:** `ApiVisualEffects.ShakeCurve`
 
 Easing applied to both ramps and to the gradient.
 

@@ -40,7 +40,7 @@ Texture-space velocity of the displacement field. Usually matched to the layer's
 
 ### `Channel`
 
-**Type:** `LegionAPI.NoiseChannel`
+**Type:** `ApiVisualEffects.NoiseChannel`
 
 Which packed noise channel drives the boundary displacement.
 

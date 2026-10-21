@@ -51,7 +51,7 @@ Returns a readable string representation of the menu item.
 Returns a detailed string representation of the object.
  This string is used by Python’s built-in `repr()` function.
 
-**Return Type:** `string`
+**Return Type:** `string` - A string suitable for debugging and inspection in Python.
 
 ---
 

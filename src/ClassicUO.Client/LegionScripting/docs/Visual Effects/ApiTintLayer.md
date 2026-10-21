@@ -1,12 +1,12 @@
 ---
 title: ApiTintLayer
-description: "Colour painted over the scene. The only technique that reads a colour and the only one that never touches the frame behind it, which also makes it the only one that may sit anywhere in a stack. Build one with `API.NewTintLayer`."
+description: "Colour painted over the scene. The only technique that reads a colour and the only one that never touches the frame behind it, which also makes it the only one that may sit anywhere in a stack. Build one with `API.VisualEffects.NewTintLayer`."
 ---
 
 ## Class Description
 Colour painted over the scene. The only technique that reads a colour and the only one that never
  touches the frame behind it, which also makes it the only one that may sit anywhere in a stack.
- Build one with `API.NewTintLayer`.
+ Build one with `API.VisualEffects.NewTintLayer`.
 
 ## Properties
 ### `R`

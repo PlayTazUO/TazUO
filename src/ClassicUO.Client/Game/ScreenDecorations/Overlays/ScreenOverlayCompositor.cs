@@ -501,12 +501,27 @@ internal sealed class ScreenOverlayCompositor
             _active.Remove(id);
     }
 
+    /// <summary>
+    /// Steps <paramref name="current"/> toward <paramref name="target"/> by at most
+    /// <paramref name="maxDelta"/>.
+    /// <para>
+    /// Snaps on a non-finite step rather than computing one: <see cref="MathF.Sign(float)"/> throws
+    /// on NaN, and this runs inside the frame's draw, so a single bad fade value would take the
+    /// client down. Authored values are validated upstream - this is the floor under that.
+    /// </para>
+    /// </summary>
+    /// <param name="current">Where the envelope is.</param>
+    /// <param name="target">Where it is heading.</param>
+    /// <param name="maxDelta">Most it may move this frame.</param>
+    /// <returns>The new value.</returns>
     private static float MoveTowards(float current, float target, float maxDelta)
     {
-        if (MathF.Abs(target - current) <= maxDelta)
+        float remaining = target - current;
+
+        if (!float.IsFinite(remaining) || !float.IsFinite(maxDelta) || MathF.Abs(remaining) <= maxDelta)
             return target;
 
-        return current + MathF.Sign(target - current) * maxDelta;
+        return current + MathF.Sign(remaining) * maxDelta;
     }
 
     private void EnsureResources(GraphicsDevice gd)

@@ -60,10 +60,31 @@ internal sealed class ScriptedOverlayRegistry
     private readonly List<ScriptedDemand> _entries = [];
 
     /// <summary>
+    /// The compositor slots scripts share, handed out round-robin and reused.
+    /// <para>
+    /// A fixed set rather than a fresh <see cref="Guid.NewGuid"/> per demand, because a slot the
+    /// compositor has been told to hide stays in its active set until the look's fade-out finishes,
+    /// and nothing counts those: with a new slot each time, a start-stop loop on a long fade-out
+    /// grows that set without bound, and the compositor walks and sorts all of it every frame. A
+    /// pool of <see cref="ScreenOverlayManager.ScriptCap"/> caps it, because reusing a vacated slot
+    /// makes the next start replace the retiring overlay instead of adding another beside it.
+    /// </para>
+    /// <para>
+    /// Round-robin rather than lowest-free so the slot reused is the one vacated longest ago, whose
+    /// fade is most likely already done - reusing one mid-fade means the next effect inherits its
+    /// residual envelope rather than fading in from nothing.
+    /// </para>
+    /// </summary>
+    private readonly Guid[] _slots = BuildSlots();
+
+    /// <summary>
     /// Handles are never reused, so a script holding one that has already lapsed cannot stop
     /// whatever took its place. 0 is reserved for "the user has the system switched off".
     /// </summary>
     private uint _nextHandle;
+
+    /// <summary>Where in <see cref="_slots"/> the search for a free slot starts.</summary>
+    private int _nextSlot;
 
     #endregion
 
@@ -79,29 +100,34 @@ internal sealed class ScriptedOverlayRegistry
     /// <param name="expiresAt">When it lapses, or null to run until stopped.</param>
     /// <param name="owner">The script's API instance.</param>
     /// <returns>The handle.</returns>
+    /// <exception cref="InvalidOperationException">Every slot is held, which the caller is expected
+    /// to have ruled out by checking <see cref="Count"/> against the cap.</exception>
     public uint Add(EffectProfile profile, Guid sourceProfileId, float intensity, DateTime? expiresAt, object owner)
     {
         uint handle = ++_nextHandle;
 
-        _entries.Add(new ScriptedDemand(handle, Guid.NewGuid(), profile, sourceProfileId, intensity, expiresAt, owner));
+        _entries.Add(new ScriptedDemand(handle, TakeSlot(), profile, sourceProfileId, intensity, expiresAt, owner));
 
         return handle;
     }
 
     /// <summary>
-    /// Drops the demand behind <paramref name="handle"/>.
+    /// Drops the demand behind <paramref name="handle"/>, if <paramref name="owner"/> is the script
+    /// that asked for it.
     /// </summary>
     /// <param name="handle">The handle to release. Unknown, expired and already-released handles,
     /// and 0, are ignored.</param>
+    /// <param name="owner">The script's API instance. A handle belonging to another script is
+    /// ignored, so one script cannot stop another's effects by guessing at the handle range.</param>
     /// <returns>True if a demand was dropped.</returns>
-    public bool Remove(uint handle)
+    public bool Remove(uint handle, object owner)
     {
         if (handle == 0)
             return false;
 
         for (int i = 0; i < _entries.Count; i++)
         {
-            if (_entries[i].Handle != handle)
+            if (_entries[i].Handle != handle || !ReferenceEquals(_entries[i].Owner, owner))
                 continue;
 
             _entries.RemoveAt(i);
@@ -173,6 +199,61 @@ internal sealed class ScriptedOverlayRegistry
         }
 
         return earliest;
+    }
+
+    #endregion
+
+    #region Private methods
+
+    /// <summary>
+    /// The next slot no live demand holds, searching round-robin from where the last search left
+    /// off.
+    /// </summary>
+    /// <returns>The slot.</returns>
+    /// <exception cref="InvalidOperationException">Every slot is held.</exception>
+    private Guid TakeSlot()
+    {
+        for (int offset = 0; offset < _slots.Length; offset++)
+        {
+            Guid candidate = _slots[(_nextSlot + offset) % _slots.Length];
+
+            if (IsHeld(candidate))
+                continue;
+
+            _nextSlot = (_nextSlot + offset + 1) % _slots.Length;
+
+            return candidate;
+        }
+
+        throw new InvalidOperationException(
+            $"All {_slots.Length} scripted overlay slots are held; the cap should have been checked first."
+        );
+    }
+
+    private bool IsHeld(Guid slot)
+    {
+        foreach (ScriptedDemand entry in _entries)
+        {
+            if (entry.Slot == slot)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Mints the pool. Per instance rather than static so two registries - the live one and a test's
+    /// - cannot hand the compositor the same slot ids.
+    /// </summary>
+    /// <returns>The slots.</returns>
+    private static Guid[] BuildSlots()
+    {
+        var slots = new Guid[ScreenOverlayManager.ScriptCap];
+
+        for (int i = 0; i < slots.Length; i++)
+            slots[i] = Guid.NewGuid();
+
+        return slots;
     }
 
     #endregion

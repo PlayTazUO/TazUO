@@ -8,7 +8,7 @@ namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 /// <summary>
 /// Colour painted over the scene. The only technique that reads a colour and the only one that never
 /// touches the frame behind it, which also makes it the only one that may sit anywhere in a stack.
-/// Build one with `API.NewTintLayer`.
+/// Build one with `API.VisualEffects.NewTintLayer`.
 /// </summary>
 public class ApiTintLayer : ApiLayerEffect
 {
@@ -45,7 +45,7 @@ public class ApiTintLayer : ApiLayerEffect
     #region Protected methods
 
     /// <inheritdoc />
-    private protected override LayerEffect CreateInternal() => new TintEffect { Tint = ApiOverlayGuard.Rgba(R, G, B, A) };
+    private protected override LayerEffect CreateInternal() => new TintEffect { Tint = VfxInputValidator.Rgba(R, G, B, A) };
 
     #endregion
 }

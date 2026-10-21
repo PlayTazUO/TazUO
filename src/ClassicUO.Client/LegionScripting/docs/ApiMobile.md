@@ -172,7 +172,7 @@ Gets the mobile name and properties (tooltip text).
 | `wait` | `bool` | ✅ Yes | True or false to wait for name and props |
 | `timeout` | `int` | ✅ Yes | Timeout in seconds |
 
-**Return Type:** `string`
+**Return Type:** `string` - Mobile name and properties, or empty string if we don't have them.
 
 ---
 

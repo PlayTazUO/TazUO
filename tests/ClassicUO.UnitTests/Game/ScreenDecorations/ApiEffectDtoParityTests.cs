@@ -173,11 +173,11 @@ public class ApiEffectDtoParityTests
     public static TheoryData<Type, Type> EnumPairs() =>
         new()
         {
-            { typeof(LegionAPI.OverlayBlend), typeof(OverlayBlend) },
-            { typeof(LegionAPI.NoiseChannel), typeof(NoiseChannel) },
-            { typeof(LegionAPI.OverlaySampleTaps), typeof(OverlaySampleTaps) },
-            { typeof(LegionAPI.ShakeGradient), typeof(ShakeGradient) },
-            { typeof(LegionAPI.ShakeCurve), typeof(ShakeCurve) }
+            { typeof(ApiVisualEffects.OverlayBlend), typeof(OverlayBlend) },
+            { typeof(ApiVisualEffects.NoiseChannel), typeof(NoiseChannel) },
+            { typeof(ApiVisualEffects.OverlaySampleTaps), typeof(OverlaySampleTaps) },
+            { typeof(ApiVisualEffects.ShakeGradient), typeof(ShakeGradient) },
+            { typeof(ApiVisualEffects.ShakeCurve), typeof(ShakeCurve) }
         };
 
     [Theory]
@@ -203,7 +203,7 @@ public class ApiEffectDtoParityTests
             .GetFields(BindingFlags.Public | BindingFlags.Static)
             .ToDictionary(field => field.Name, field => (Guid)field.GetValue(null)!);
 
-        Dictionary<string, Guid> exposed = typeof(LegionAPI.VisualEffectIds)
+        Dictionary<string, Guid> exposed = typeof(ApiVisualEffects.Ids)
             .GetFields(BindingFlags.Public | BindingFlags.Static)
             .ToDictionary(field => field.Name, field => Guid.Parse((string)field.GetRawConstantValue()!));
 

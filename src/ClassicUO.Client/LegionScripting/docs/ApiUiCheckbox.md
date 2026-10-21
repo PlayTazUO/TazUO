@@ -33,7 +33,7 @@ Gets the text label displayed next to the checkbox.
 Gets the checked state of the checkbox.
  Used in python API
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if the checkbox is checked, false otherwise
 
 ---
 
@@ -57,7 +57,7 @@ Sets the checked state of the checkbox.
 Gets the text label displayed next to the checkbox.
  Used in python API
 
-**Return Type:** `string`
+**Return Type:** `string` - The checkbox label text
 
 ---
 

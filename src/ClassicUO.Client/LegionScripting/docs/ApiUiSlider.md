@@ -38,7 +38,7 @@ Gets or sets the slider's maximum value.
 Gets the slider's current value.
  Used in python API
 
-**Return Type:** `int`
+**Return Type:** `int` - The current value
 
 ---
 
@@ -53,7 +53,7 @@ Sets the slider's current value. Values outside MinValue/MaxValue are clamped.
 | --- | --- | --- | --- |
 | `value` | `int` | ❌ No | The new value |
 
-**Return Type:** `ApiUiSlider`
+**Return Type:** `ApiUiSlider` - Returns this control so methods can be chained.
 
 ---
 
@@ -79,7 +79,7 @@ Add an onValueChanged callback to this slider, invoked whenever the value change
 | --- | --- | --- | --- |
 | `onValueChanged` | `object` | ❌ No | The callback function that receives the new value |
 
-**Return Type:** `ApiUiSlider`
+**Return Type:** `ApiUiSlider` - Returns this control so methods can be chained.
 
 ---
 

@@ -21,7 +21,7 @@ What this layer draws.
 
 ### `Blend`
 
-**Type:** `LegionAPI.OverlayBlend`
+**Type:** `ApiVisualEffects.OverlayBlend`
 
 How the layer composites against what is beneath it. A highlight pass wants Additive - a
  covering highlight reads as a second flat colour, an additive one as light caught on the

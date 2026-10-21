@@ -25,7 +25,7 @@ Texture-space velocity. On-screen speed is `Scroll / Scale`, so two layers with 
 
 ### `BaseChannel`
 
-**Type:** `LegionAPI.NoiseChannel`
+**Type:** `ApiVisualEffects.NoiseChannel`
 
 Which packed noise channel the primary field reads. Red and Green are fBm and read as
  organic; Blue is ridged and Alpha is Worley, and both draw cell outlines.
@@ -44,7 +44,7 @@ Texture-space velocity of the secondary field.
 
 ### `DetailChannel`
 
-**Type:** `LegionAPI.NoiseChannel`
+**Type:** `ApiVisualEffects.NoiseChannel`
 
 Which packed noise channel the secondary field reads.
 

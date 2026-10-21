@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.ScreenDecorations.Overlays;
+using ClassicUO.Game.ScreenDecorations.Shake;
 using ClassicUO.LegionScripting;
+using ClassicUO.LegionScripting.ApiClasses;
 using ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 using ClassicUO.Renderer.Effects;
 using FluentAssertions;
@@ -98,7 +100,7 @@ public class ApiEffectDtoConversionTests
         config.Invoking(effect => effect.ToInternal())
             .Should()
             .Throw<ArgumentException>()
-            .WithMessage("*at least one layer*");
+            .WithMessage("*has no layers*");
     }
 
     [Fact]
@@ -121,7 +123,7 @@ public class ApiEffectDtoConversionTests
         config.Invoking(effect => effect.ToInternal())
             .Should()
             .Throw<ArgumentException>()
-            .WithMessage("*must have an Effect*");
+            .WithMessage("*Effect is not set*");
     }
 
     /// <summary>
@@ -131,7 +133,7 @@ public class ApiEffectDtoConversionTests
     [Fact]
     public void AnInventedEnumValueIsRejected()
     {
-        var blur = new ApiBlurLayer { Taps = (LegionAPI.OverlaySampleTaps)7 };
+        var blur = new ApiBlurLayer { Taps = (ApiVisualEffects.OverlaySampleTaps)7 };
         var config = new ApiEffectProfile();
         config.AddLayer(blur);
 
@@ -145,7 +147,7 @@ public class ApiEffectDtoConversionTests
     public void AnInventedBlendIsRejected()
     {
         var config = new ApiEffectProfile();
-        config.AddLayer(new ApiTintLayer(), (LegionAPI.OverlayBlend)9);
+        config.AddLayer(new ApiTintLayer(), (ApiVisualEffects.OverlayBlend)9);
 
         config.Invoking(effect => effect.ToInternal()).Should().Throw<ArgumentException>();
     }
@@ -234,6 +236,69 @@ public class ApiEffectDtoConversionTests
         fade.Should().NotBeNull();
         fade!.InSeconds.Should().Be(expected.InSeconds);
         fade.OutSeconds.Should().Be(expected.OutSeconds);
+    }
+
+    /// <summary>
+    /// Non-finite values are rejected at this tier because nothing downstream contains them: NaN
+    /// survives every <c>MathHelper.Clamp</c> on the bake path, and a NaN fade reaches
+    /// <c>MathF.Sign</c> inside the compositor's envelope advance, which throws mid-frame.
+    /// </summary>
+    public static TheoryData<double> NonFinite() => new(double.NaN, double.PositiveInfinity, double.NegativeInfinity);
+
+    [Theory]
+    [MemberData(nameof(NonFinite))]
+    public void ANonFiniteFadeIsRejected(double bad)
+    {
+        ApiEffectProfile config = NewTintEffect(1d);
+        config.Fade!.InSeconds = bad;
+
+        config.Invoking(effect => effect.ToInternal()).Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFinite))]
+    public void ANonFiniteLayerValueIsRejected(double bad)
+    {
+        NewTintEffect(bad).Invoking(effect => effect.ToInternal()).Should().Throw<ArgumentException>();
+
+        var shaped = new ApiEffectProfile();
+        shaped.AddLayer(new ApiBlurLayer { Shape = new ApiShapeSpec { Reach = bad } });
+
+        shaped.Invoking(effect => effect.ToInternal()).Should().Throw<ArgumentException>();
+
+        var scrolled = new ApiEffectProfile();
+        scrolled.AddLayer(new ApiBlurLayer { Noise = new ApiNoiseSpec { BaseScroll = new ApiVector2(bad, 0) } });
+
+        scrolled.Invoking(effect => effect.ToInternal()).Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFinite))]
+    public void ANonFiniteShakeValueIsRejected(double bad)
+    {
+        new ApiShakeConfig { Seconds = bad }
+            .Invoking(shake => shake.ToInternal())
+            .Should()
+            .Throw<ArgumentException>();
+
+        new ApiShakeConfig { Intensity = bad }
+            .Invoking(shake => shake.ToInternal())
+            .Should()
+            .Throw<ArgumentException>();
+    }
+
+    /// <summary>
+    /// A duration past the ceiling is clamped rather than refused - it is an arithmetic slip, and a
+    /// day-long effect already outlives any session - but it must not reach
+    /// <see cref="TimeSpan.FromSeconds(double)"/>, which overflows well below what a script can type.
+    /// </summary>
+    [Fact]
+    public void AnAbsurdShakeDurationIsClampedRatherThanOverflowing()
+    {
+        ShakeRequest request = new ApiShakeConfig { Seconds = 1e30, RampDownSeconds = 1e30 }.ToInternal();
+
+        request.Duration.Should().Be(TimeSpan.FromSeconds(VfxInputValidator.MaxSeconds));
+        request.RampDown.Should().Be(request.Duration);
     }
 
     private static ApiEffectProfile NewTintEffect(double strength)

@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
 using ClassicUO.Game.ScreenDecorations.Shake;
 
@@ -12,15 +13,22 @@ namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 /// that, and a fast fade-out draws attention to the effect ending rather than to it being over.
 /// Hence the client's own defaults are quick in, unhurried out.
 /// </para>
+/// <para>
+/// **Photosensitivity.** Near-zero fades make an effect appear and vanish at once, so starting and
+/// stopping one in a loop strobes the whole screen. Keep both above a tenth of a second unless the
+/// effect is raised once.
+/// </para>
 /// </summary>
 public class ApiFadeSpec
 {
     #region Public accessors
 
-    /// <summary>Seconds to reach full strength from nothing.</summary>
+    /// <summary>Seconds to reach full strength from nothing. Clamped to 0-86400; the client floors
+    /// the effective fade at 0.01s.</summary>
     public double InSeconds { get; set; } = _defaults.InSeconds;
 
-    /// <summary>Seconds to fade away once nothing is asking for the effect any more.</summary>
+    /// <summary>Seconds to fade away once nothing is asking for the effect any more. Same range as
+    /// `InSeconds`.</summary>
     public double OutSeconds { get; set; } = _defaults.OutSeconds;
 
     #endregion
@@ -39,16 +47,24 @@ public class ApiFadeSpec
 
     internal static ApiFadeSpec From(FadeSpec fade) => new() { InSeconds = fade.InSeconds, OutSeconds = fade.OutSeconds };
 
-    internal FadeSpec ToInternal() => new() { InSeconds = (float)InSeconds, OutSeconds = (float)OutSeconds };
+    /// <summary>Flattens this to the authoring type the compositor reads its envelope rate from.</summary>
+    /// <returns>A fresh timing; mutating the DTO afterwards cannot reach it.</returns>
+    /// <exception cref="ArgumentException">Either span is not a real number.</exception>
+    internal FadeSpec ToInternal() =>
+        new()
+        {
+            InSeconds = (float)VfxInputValidator.Seconds(InSeconds, nameof(InSeconds)),
+            OutSeconds = (float)VfxInputValidator.Seconds(OutSeconds, nameof(OutSeconds))
+        };
 
     #endregion
 }
 
 /// <summary>
 /// Screen shake a visual effect includes, fired once as the effect arrives. Build one with
-/// `API.NewShakeSpec` and hang it on `ApiEffectProfile.Shake`.
+/// `API.VisualEffects.NewShakeSpec` and hang it on `ApiEffectProfile.Shake`.
 /// <para>
-/// For a shake on its own, with no look attached, use `ApiShakeConfig` and `API.StartScreenShake`
+/// For a shake on its own, with no look attached, use `ApiShakeConfig` and `API.VisualEffects.StartShake`
 /// instead. This type is the one that travels with a composition, so it has no scope of its own -
 /// `ApiEffectProfile.FullScreen` decides which rectangle it displaces - and no gradient, since a
 /// composition shapes its arc with the two ramps.
@@ -84,7 +100,7 @@ public class ApiShakeSpec
     public double RampDownSeconds { get; set; } = _defaults.RampDownSeconds;
 
     /// <summary>Easing applied to both ramps.</summary>
-    public LegionAPI.ShakeCurve Curve { get; set; } = (LegionAPI.ShakeCurve)_defaults.Curve;
+    public ApiVisualEffects.ShakeCurve Curve { get; set; } = (ApiVisualEffects.ShakeCurve)_defaults.Curve;
 
     /// <summary>Shake rate in Hz, or zero for the client default. Lower reads as a heavy rumble,
     /// higher as a rattle - it separates a quake from a hit far more than trauma does.</summary>
@@ -111,19 +127,23 @@ public class ApiShakeSpec
             DurationSeconds = shake.DurationSeconds,
             RampUpSeconds = shake.RampUpSeconds,
             RampDownSeconds = shake.RampDownSeconds,
-            Curve = (LegionAPI.ShakeCurve)shake.Curve,
+            Curve = (ApiVisualEffects.ShakeCurve)shake.Curve,
             Frequency = shake.Frequency
         };
 
+    /// <summary>Flattens this to the authoring type a composition carries.</summary>
+    /// <returns>A fresh shake; mutating the DTO afterwards cannot reach it.</returns>
+    /// <exception cref="ArgumentException">A value is not a real number, or <see cref="Curve"/> is
+    /// set to something the API does not offer.</exception>
     internal ShakeSpec ToInternal() =>
         new()
         {
-            Trauma = (float)Trauma,
-            DurationSeconds = (float)DurationSeconds,
-            RampUpSeconds = (float)RampUpSeconds,
-            RampDownSeconds = (float)RampDownSeconds,
-            Curve = (ShakeCurve)ApiOverlayGuard.Defined(Curve, nameof(Curve)),
-            Frequency = (float)Frequency
+            Trauma = VfxInputValidator.Intensity(Trauma, nameof(Trauma)),
+            DurationSeconds = (float)VfxInputValidator.Seconds(DurationSeconds, nameof(DurationSeconds)),
+            RampUpSeconds = (float)VfxInputValidator.Seconds(RampUpSeconds, nameof(RampUpSeconds)),
+            RampDownSeconds = (float)VfxInputValidator.Seconds(RampDownSeconds, nameof(RampDownSeconds)),
+            Curve = (ShakeCurve)VfxInputValidator.Defined(Curve, nameof(Curve)),
+            Frequency = VfxInputValidator.Number(Frequency, nameof(Frequency))
         };
 
     #endregion

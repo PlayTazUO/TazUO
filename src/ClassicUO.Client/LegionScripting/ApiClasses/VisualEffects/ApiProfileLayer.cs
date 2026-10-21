@@ -26,7 +26,7 @@ public class ApiProfileLayer
     /// covering highlight reads as a second flat colour, an additive one as light caught on the
     /// layer under it.
     /// </summary>
-    public LegionAPI.OverlayBlend Blend { get; set; }
+    public ApiVisualEffects.OverlayBlend Blend { get; set; }
 
     #endregion
 
@@ -36,21 +36,29 @@ public class ApiProfileLayer
         new()
         {
             Effect = layer.Effect == null ? null : ApiLayerEffect.From(layer.Effect),
-            Blend = (LegionAPI.OverlayBlend)layer.Blend
+            Blend = (ApiVisualEffects.OverlayBlend)layer.Blend
         };
 
     /// <summary>Flattens this to the authoring type the compositor bakes from.</summary>
     /// <returns>A fresh layer wrapper.</returns>
-    /// <exception cref="ArgumentException">The layer has no effect, so there is nothing to draw.</exception>
+    /// <exception cref="ArgumentException">The layer's <see cref="Effect"/> is not set, so there is
+    /// nothing to draw.</exception>
     internal ProfileLayer ToInternal()
     {
         if (Effect == null)
-            throw new ArgumentException("A visual effect layer must have an Effect.", nameof(Effect));
+        {
+            throw new ArgumentException(
+                "This layer's Effect is not set, so there is nothing for it to draw. Set it to a layer "
+                + "from API.VisualEffects - NewTintLayer, NewBlurLayer, NewRadialBlurLayer or "
+                + "NewChromaticLayer.",
+                nameof(Effect)
+            );
+        }
 
         return new ProfileLayer
         {
             Effect = Effect.ToInternal(),
-            Blend = (OverlayBlend)ApiOverlayGuard.Defined(Blend, nameof(Blend))
+            Blend = (OverlayBlend)VfxInputValidator.Defined(Blend, nameof(Blend))
         };
     }
 

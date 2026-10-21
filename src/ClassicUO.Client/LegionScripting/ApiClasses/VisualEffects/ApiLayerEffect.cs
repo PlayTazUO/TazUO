@@ -30,7 +30,12 @@ public class ApiPulseSpec
     internal static ApiPulseSpec From(in PulseSpec pulse) =>
         new() { Frequency = pulse.Frequency, Amplitude = pulse.Amplitude };
 
-    internal PulseSpec ToInternal() => new() { Frequency = (float)Frequency, Amplitude = (float)Amplitude };
+    internal PulseSpec ToInternal() =>
+        new()
+        {
+            Frequency = VfxInputValidator.Number(Frequency, nameof(Frequency)),
+            Amplitude = VfxInputValidator.Number(Amplitude, nameof(Amplitude))
+        };
 
     #endregion
 }
@@ -39,8 +44,8 @@ public class ApiPulseSpec
 /// One layer of a visual effect composition. The subtype is the technique, so a technique's knobs
 /// exist only on the type that reads them - there is no radius on a chromatic layer to mis-set.
 /// <para>
-/// Build one with `API.NewTintLayer`, `API.NewBlurLayer`, `API.NewRadialBlurLayer` or
-/// `API.NewChromaticLayer`, each of which hands back the client's own defaults for that technique.
+/// Build one with `API.VisualEffects.NewTintLayer`, `API.VisualEffects.NewBlurLayer`, `API.VisualEffects.NewRadialBlurLayer` or
+/// `API.VisualEffects.NewChromaticLayer`, each of which hands back the client's own defaults for that technique.
 /// Fixed set of four: the shader has four techniques and there is no way to describe a fifth.
 /// </para>
 /// </summary>
@@ -86,7 +91,14 @@ public abstract class ApiLayerEffect
             BlurEffect blur => ApiBlurLayer.FromBlur(blur),
             RadialBlurEffect radial => ApiRadialBlurLayer.FromRadial(radial),
             ChromaticEffect chromatic => ApiChromaticLayer.FromChromatic(chromatic),
-            _ => throw new ArgumentException($"{effect.GetType().Name} has no scripting DTO.", nameof(effect))
+            // Not a script's doing: it can only mean the client gained a fifth technique without
+            // this tier being extended to match. Says so, or a script author hunts their own code.
+            _ => throw new ArgumentException(
+                $"This effect uses a layer type the scripting API does not know about yet "
+                + $"({effect.GetType().Name}). This is a gap in the client, not in your script - "
+                + "please report it.",
+                nameof(effect)
+            )
         };
 
         projected.Shape = ApiShapeSpec.From(effect.Shape);
@@ -105,7 +117,7 @@ public abstract class ApiLayerEffect
 
         effect.Shape = Shape?.ToInternal() ?? ShapeSpec.Default;
         effect.Noise = Noise?.ToInternal() ?? NoiseSpec.Default;
-        effect.Strength = (float)Strength;
+        effect.Strength = VfxInputValidator.Number(Strength, nameof(Strength));
         effect.Pulse = Pulse?.ToInternal() ?? default;
 
         return effect;

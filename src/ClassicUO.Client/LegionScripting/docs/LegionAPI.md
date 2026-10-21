@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `10/19/26`.*
+*This was generated on `10/21/26`.*
 
 ## Properties
 ### `Events`
@@ -115,25 +115,6 @@ The name of the last spell cast by the player.
 
 The serial of the last item or mobile from the various findtype/mobile methods
 
-### `VisualEffectsEnabled`
-
-**Type:** `bool`
-
-Whether the user has full-screen visual effects switched on. They ship off, and a script
- cannot override that - `StartVisualEffect` answers 0 while this is false.
- Example:
- ```py
- if API.VisualEffectsEnabled:
-   API.StartVisualEffect(API.VisualEffectIds.Poison, 3)
- ```
-
-### `ScreenShakeEnabled`
-
-**Type:** `bool`
-
-Whether the user has screen shake switched on. As with visual effects it ships off and a
- script cannot override it - `StartScreenShake` answers 0 while this is false.
-
 
 ### `Profile`
 
@@ -144,6 +125,13 @@ Access useful player settings.
 ### `Gumps`
 
 **Type:** `ApiUiGump`
+
+### `VisualEffects`
+
+**Type:** `ApiVisualEffects`
+
+Full-screen visual effects and screen shake. Both ship switched off and a script cannot
+ override that; see `ApiVisualEffects`.
 
 ### `StopRequested`
 
@@ -218,65 +206,6 @@ Blend mode used when drawing a graphic effect. Mirrors the values the server sen
 - `ShadowBlue`
 - `ScreenRed`
 
-### OverlayBlend
-
-:::note[Description]
-How a visual effect layer composites against what is already beneath it.
-:::
-
-**Values:**
-- `Alpha`
-- `Additive`
-
-### NoiseChannel
-
-:::note[Description]
-Which packed channel of the shared noise texture a field reads.
-:::
-
-**Values:**
-- `Red`
-- `Green`
-- `Blue`
-- `Alpha`
-
-### OverlaySampleTaps
-
-:::note[Description]
-Samples a distortion layer takes per pixel, which is its entire cost. A closed set because
- each count is a separately compiled unrolled loop in the shader.
-:::
-
-**Values:**
-- `Four`
-- `Eight`
-- `Twelve`
-- `Sixteen`
-
-### ShakeGradient
-
-:::note[Description]
-How a shake's intensity travels across its whole duration, independently of its ramps.
-:::
-
-**Values:**
-- `Constant`
-- `Decay`
-- `Swell`
-- `Pulse`
-
-### ShakeCurve
-
-:::note[Description]
-Easing applied to a shake's ramps and gradient.
-:::
-
-**Values:**
-- `Linear`
-- `Smooth`
-- `EaseIn`
-- `EaseOut`
-
 
 ## Methods
 ### ProcessCallbacks
@@ -341,7 +270,7 @@ Returns true if the given key combination is currently held down.
 | --- | --- | --- | --- |
 | `key` | `string` | ❌ No | Key combination to check, e.g. "CTRL+SHIFT+F1". |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if the combination is currently pressed, false otherwise.
 
 ---
 
@@ -366,7 +295,7 @@ Shows the in-game hotkey capture window and waits for the player to pick a key c
 | `prompt` | `string` | ✅ Yes | Optional message shown above the capture box. |
 | `timeout` | `double` | ✅ Yes | Maximum number of seconds to wait for the player to choose a hotkey. |
 
-**Return Type:** `string`
+**Return Type:** `string` - The captured key combination, or an empty string if the player cancelled, closed the window or the timeout elapsed.
 
 ---
 
@@ -384,7 +313,7 @@ Schedules a callback to be invoked after a specified delay.
 | `callback` | `Action` | ❌ No | The callback to invoke |
 | `timesToRepeat` | `int` | ✅ Yes | The number of times the callback should be repeated after the initial invocation.<br>         Repeated invocations respect the requested delay.<br>         A negative number means "forever", 0 means "do not repeat" (i.e., invoke once), and positive numbers mean "repeat N times".<br>         A repeat of '9', for example, will result in 10 total invocations (1 initial + 9 repeats). |
 
-**Return Type:** `uint`
+**Return Type:** `uint` - An unsigned integer serving as the ID for the callback timer. <br/> Can be used to unregister the callback
 
 ---
 
@@ -527,7 +456,7 @@ Attempt to bandage yourself. Older clients this will not work, you will need to 
      break
  ```
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if bandages found and used
 
 ---
 
@@ -542,7 +471,7 @@ If you have an item in your left hand, move it to your backpack
    API.SysMsg("Cleared left hand: " + leftHand.Name)
  ```
 
-**Return Type:** `ApiItem`
+**Return Type:** `ApiItem` - The item that was in your hand
 
 ---
 
@@ -557,7 +486,7 @@ If you have an item in your right hand, move it to your backpack
    API.SysMsg("Cleared right hand: " + rightHand.Name)
   ```
 
-**Return Type:** `ApiItem`
+**Return Type:** `ApiItem` - The item that was in your hand
 
 ---
 
@@ -614,7 +543,7 @@ Get an item count for the contents of a container
 | --- | --- | --- | --- |
 | `serial` | `uint` | ❌ No |  |
 
-**Return Type:** `int`
+**Return Type:** `int` - The amount of items in a container. Does **not** include sub-containers, or item amounts. (100 Gold = 1 item if it's in a single stack)
 
 ---
 
@@ -635,7 +564,7 @@ Get the names of all spells scribed into a spellbook.
 | --- | --- | --- | --- |
 | `serial` | `uint` | ❌ No | Serial of the spellbook item |
 
-**Return Type:** `string[]`
+**Return Type:** `string[]` - An array of spell names contained in the book. Empty if the serial is not a spellbook.
 
 ---
 
@@ -677,7 +606,7 @@ Send a context menu(right click menu) response by matching the entry text.
 | `entry` | `string` | ❌ No | The text of the menu entry to select |
 | `timeout` | `double` | ✅ Yes | Seconds to wait for the menu to appear |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if a matching entry was found and a response was sent
 
 ---
 
@@ -704,7 +633,7 @@ Send a response to the currently open menu (uses the latest MenuGump).
 Retrieve the current open menu's (uses the latest MenuGump) menu item descriptions.
  Useful when menu IDs change every time (e.g., Tracking skill).
 
-**Return Type:** `IList<ApiUiMenuItem>`
+**Return Type:** `IList<ApiUiMenuItem>` - List of ApiUiMenuItem containing Index, Name, Graphic and Hue values for each menu item
 
 ---
 
@@ -906,7 +835,7 @@ Drops an item currently held by the mouse cursor into a container or on the grou
 
 Retrieves serial of the currently held item on the game cursor.
 
-**Return Type:** `uint`
+**Return Type:** `uint` - The serial representing the held item data.
 
 ---
 
@@ -1009,7 +938,7 @@ Get all available dress configurations.
    Dress(outfits[0])
  ```
 
-**Return Type:** `IList<string>`
+**Return Type:** `IList<string>` - Returns a list of outfit names for use with Dress(outfitname)
 
 ---
 
@@ -1117,7 +1046,7 @@ Get a list of spell ids for spells that are currently toggled on/active.
      API.SysMsg("Active spell id: " + str(spellId))
  ```
 
-**Return Type:** `int[]`
+**Return Type:** `int[]` - An array of active spell ids.
 
 ---
 
@@ -1132,7 +1061,7 @@ Get a list of names for spells that are currently toggled on/active.
      API.SysMsg("Active spell: " + name)
  ```
 
-**Return Type:** `string[]`
+**Return Type:** `string[]` - An array of active spell names.
 
 ---
 
@@ -1153,7 +1082,7 @@ Check if a toggle spell/move is currently active.
 | --- | --- | --- | --- |
 | `spell` | `object` | ❌ No | The spell name or spell id to check. |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if the spell is currently toggled on.
 
 ---
 
@@ -1369,7 +1298,7 @@ Try to get an item by its serial.
 | --- | --- | --- | --- |
 | `serial` | `uint` | ❌ No | The serial |
 
-**Return Type:** `ApiItem`
+**Return Type:** `ApiItem` - The item object
 
 ---
 
@@ -1395,7 +1324,7 @@ Attempt to find an item by type(graphic).
 | `hue` | `ushort` | ✅ Yes | Hue of item |
 | `minamount` | `ushort` | ✅ Yes | Only match if item stack is at least this much |
 
-**Return Type:** `ApiItem`
+**Return Type:** `ApiItem` - Returns the first item found that matches
 
 ---
 
@@ -1441,7 +1370,7 @@ Attempt to find an item on a layer.
 | `layer` | `string` | ❌ No | The layer to check, see https://github.com/PlayTazUO/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Layers.cs |
 | `serial` | `uint` | ✅ Yes | Optional, if not set it will check yourself, otherwise it will check the mobile requested |
 
-**Return Type:** `ApiItem`
+**Return Type:** `ApiItem` - The item if it exists
 
 ---
 
@@ -1462,7 +1391,7 @@ Get all items on the ground within specified range.
 | `distance` | `int` | ✅ Yes | Optional max distance to search (default: no limit) |
 | `graphic` | `uint` | ✅ Yes | Optional graphic/type filter (default: no filter) |
 
-**Return Type:** `IList<ApiItem>`
+**Return Type:** `IList<ApiItem>` - A list of items on ground, or null if none found
 
 ---
 
@@ -1486,7 +1415,7 @@ Get all items in a container.
 | `container` | `uint` | ❌ No |  |
 | `recursive` | `bool` | ✅ Yes | Search sub containers also? |
 
-**Return Type:** `ApiItem[]`
+**Return Type:** `ApiItem[]` - A list of items in the container
 
 ---
 
@@ -1603,7 +1532,7 @@ Checks whether a cooldown bar with the given name exists.
 | --- | --- | --- | --- |
 | `name` | `string` | ❌ No | Name of the cooldown bar to check |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if the cooldown bar exists, false otherwise
 
 ---
 
@@ -1719,7 +1648,7 @@ Check if a serial is on the ignore list.
 | --- | --- | --- | --- |
 | `serial` | `uint` | ❌ No |  |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if on the ignore list.
 
 ---
 
@@ -1743,7 +1672,7 @@ Attempt to pathfind to a location.  This will fail with large distances.
 | `timeout` | `int` | ✅ Yes | Seconds to wait before cancelling waiting |
 | `run` | `bool` | ✅ Yes | True/False should we run? |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - true/false if a path was generated
 
 ---
 
@@ -1767,7 +1696,7 @@ Attempt to pathfind to a mobile or item.
 | `timeout` | `int` | ✅ Yes | Seconds to wait before cancelling waiting |
 | `run` | `bool` | ✅ Yes | True/False should we run? |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - true/false if a path was generated
 
 ---
 
@@ -1781,7 +1710,7 @@ Check if you are already pathfinding.
    API.Pause(0.25)
  ```
 
-**Return Type:** `bool`
+**Return Type:** `bool` - true/false
 
 ---
 
@@ -1820,7 +1749,7 @@ Attempt to build a path to a location.  This will fail with large distances.
 | `z` | `int` | ✅ Yes |  |
 | `distance` | `int` | ✅ Yes | Distance away from goal to stop. |
 
-**Return Type:** `IList<ApiPoint3D>`
+**Return Type:** `IList<ApiPoint3D>` - Returns a list of positions to reach the goal. Returns null if cannot find path.
 
 ---
 
@@ -1996,7 +1925,7 @@ Wait for a target cursor.
 | `targetType` | `string` | ✅ Yes | neutral/harmful/beneficial/any/harm/ben |
 | `timeout` | `double` | ✅ Yes | Max duration in seconds to wait |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if target was matching the type, or false if not/timed out
 
 ---
 
@@ -2057,7 +1986,7 @@ Request the player to target something.
 | --- | --- | --- | --- |
 | `timeout` | `double` | ✅ Yes | Max duration to wait for them to target something. |
 
-**Return Type:** `uint`
+**Return Type:** `uint` - The serial of the object targeted
 
 ---
 
@@ -2072,7 +2001,7 @@ Prompts the player to target any object in the game world, including an Item, Mo
 | --- | --- | --- | --- |
 | `timeout` | `double` | ✅ Yes | The maximum time, in seconds, to wait for a valid target selection.<br>         If the timeout expires without a selection, the method returns null. |
 
-**Return Type:** `ApiGameObject`
+**Return Type:** `ApiGameObject` - Returns a Python wrapper (ApiGameObject) for the selected target: -ApiMobile if a mobile (e.g. NPC, player) is targeted -ApiItem if an item is targeted -ApiStatic if a static tile (e.g. tree, building) is targeted -ApiMulti if a multi tile (e.g. a player house, boat) is targeted -ApiLand if a land tile (e.g. a base map tile at a coordinate) is targeted -None if no valid target was selected within the timeout
 
 ---
 
@@ -2362,7 +2291,7 @@ Gets item name and properties.
 | `wait` | `bool` | ✅ Yes | True or false to wait for name and props |
 | `timeout` | `int` | ✅ Yes | Timeout in seconds |
 
-**Return Type:** `string`
+**Return Type:** `string` - Item name and properties, or empty if we don't have them.
 
 ---
 
@@ -2397,7 +2326,7 @@ Check if a player has a server gump. Leave blank to check if they have any serve
 | --- | --- | --- | --- |
 | `ID` | `uint` | ✅ Yes | Skip to check if player has any gump from server. |
 
-**Return Type:** `uint`
+**Return Type:** `uint` - Returns gump id if found
 
 ---
 
@@ -2420,7 +2349,7 @@ Reply to a gump.
 | `switches` | `IEnumerable<int>` | ✅ Yes | Optional for some gump responses |
 | `entries` | `IEnumerable<object>` | ✅ Yes | Optional list of (index, text) tuples for text entry fields |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if gump was found, false if not
 
 ---
 
@@ -2537,7 +2466,7 @@ Get a gump by ID.
 
 Gets all currently open server-side gumps.
 
-**Return Type:** `IList<IGui>`
+**Return Type:** `IList<IGui>` - A list containing all open server gumps, or null if none are open
 
 ---
 
@@ -2611,7 +2540,7 @@ Check if your primary ability is active.
    API.SysMsg("Primary ability is active!")
  ```
 
-**Return Type:** `bool`
+**Return Type:** `bool` - true/false
 
 ---
 
@@ -2624,7 +2553,7 @@ Check if your secondary ability is active.
    API.SysMsg("Secondary ability is active!")
  ```
 
-**Return Type:** `bool`
+**Return Type:** `bool` - true/false
 
 ---
 
@@ -2634,7 +2563,7 @@ Gets your currently available ability names.
 
  The full list of known abilities can be obtained via the `KnownAbilityNames` API
 
-**Return Type:** `string[]`
+**Return Type:** `string[]` - The returned array will be [PrimaryAbility, SecondaryAbility] or an empty array if no ability is available
 
 ---
 
@@ -2642,7 +2571,7 @@ Gets your currently available ability names.
 
 Gets an array of all known ability names
 
-**Return Type:** `string[]`
+**Return Type:** `string[]` - A list of all known ability names, as defined by the `Ability` enumeration
 
 ---
 
@@ -2662,7 +2591,7 @@ Check if your journal contains a message.
 | `msg` | `string` | ❌ No | The message to check for. Can be regex, prepend your msg with $ |
 | `clearMatches` | `bool` | ✅ Yes | When true, the matched message will be discarded after retrieval |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if a message was found
 
 ---
 
@@ -2693,7 +2622,7 @@ Check if the sound log contains a given sound and retrieves it.
 | --- | --- | --- | --- |
 | `idx` | `int` | ❌ No | The sound effect ID to check for. |
 
-**Return Type:** `ApiSoundEntry`
+**Return Type:** `ApiSoundEntry` - Sound effect meta information if found, None otherwise
 
 ---
 
@@ -2714,7 +2643,7 @@ Get all the sound logs of the last X seconds.
 | --- | --- | --- | --- |
 | `seconds` | `double` | ❌ No |  |
 
-**Return Type:** `IList<ApiSoundEntry>`
+**Return Type:** `IList<ApiSoundEntry>` - A list of SoundEntry's
 
 ---
 
@@ -2776,7 +2705,7 @@ Get all the journal entires in the last X seconds.
 | `seconds` | `double` | ❌ No |  |
 | `matchingText` | `string` | ✅ Yes | Only add if text matches |
 
-**Return Type:** `IList<ApiJournalEntry>`
+**Return Type:** `IList<ApiJournalEntry>` - A list of JournalEntry's
 
 ---
 
@@ -3048,7 +2977,7 @@ Get a mobile from its serial.
 | --- | --- | --- | --- |
 | `serial` | `uint` | ❌ No |  |
 
-**Return Type:** `ApiMobile`
+**Return Type:** `ApiMobile` - The mobile or null
 
 ---
 
@@ -3115,7 +3044,7 @@ Get the tile at a location.
 | `x` | `int` | ❌ No |  |
 | `y` | `int` | ❌ No |  |
 
-**Return Type:** `ApiGameObject`
+**Return Type:** `ApiGameObject` - A GameObject of that location.
 
 ---
 
@@ -3137,7 +3066,7 @@ Gets all static objects at a specific position (x, y coordinates).
 | `x` | `int` | ❌ No | X coordinate |
 | `y` | `int` | ❌ No | Y coordinate |
 
-**Return Type:** `List<ApiStatic>`
+**Return Type:** `List<ApiStatic>` - List of ApiStatic objects at the specified position
 
 ---
 
@@ -3163,7 +3092,7 @@ Gets all static objects within a rectangular area defined by coordinates.
 | `x2` | `int` | ❌ No | Ending X coordinate |
 | `y2` | `int` | ❌ No | Ending Y coordinate |
 
-**Return Type:** `List<ApiStatic>`
+**Return Type:** `List<ApiStatic>` - List of ApiStatic objects within the specified area
 
 ---
 
@@ -3185,7 +3114,7 @@ Gets all multi objects at a specific position (x, y coordinates).
 | `x` | `int` | ❌ No | X coordinate |
 | `y` | `int` | ❌ No | Y coordinate |
 
-**Return Type:** `List<ApiMulti>`
+**Return Type:** `List<ApiMulti>` - List of ApiMulti objects at the specified position
 
 ---
 
@@ -3210,7 +3139,7 @@ Gets all multi objects within a rectangular area defined by coordinates.
 | `x2` | `int` | ❌ No | Ending X coordinate |
 | `y2` | `int` | ❌ No | Ending Y coordinate |
 
-**Return Type:** `List<ApiMulti>`
+**Return Type:** `List<ApiMulti>` - List of ApiMulti objects within the specified area
 
 ---
 
@@ -3229,7 +3158,7 @@ Check if a mobile is in the friends list.
 | --- | --- | --- | --- |
 | `serial` | `uint` | ❌ No | Serial number of the mobile to check |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if the mobile is in the friends list, false otherwise
 
 ---
 
@@ -3249,7 +3178,7 @@ Add a mobile to the friends list by serial number.
 | --- | --- | --- | --- |
 | `serial` | `uint` | ❌ No | Serial number of the mobile to add |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if the friend was added successfully, false if already exists or invalid
 
 ---
 
@@ -3267,7 +3196,7 @@ Remove a mobile from the friends list by serial number.
 | --- | --- | --- | --- |
 | `serial` | `uint` | ❌ No | Serial number of the mobile to remove |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if the friend was removed successfully, false if not found
 
 ---
 
@@ -3281,7 +3210,7 @@ Get all friends as an array of serials.
      API.FindMobile(friend)
  ```
 
-**Return Type:** `IList<uint>`
+**Return Type:** `IList<uint>` - Array of serials representing all friends
 
 ---
 
@@ -3291,7 +3220,7 @@ Gets a list of serials for all current party members, excluding yourself.
 
  Note that members may not always have an associated Mobile.
 
-**Return Type:** `IList<uint>`
+**Return Type:** `IList<uint>` - A list of party member serials
 
 ---
 
@@ -3665,6 +3594,10 @@ Toggle another script on or off.
 
 **Return Type:** `void` *(Does not return anything)*
 
+**Raises:**
+
+- `Exception` - 
+
 ---
 
 ### PlayScript
@@ -3714,7 +3647,7 @@ Get the paths of all currently running legion scripts.
      API.SysMsg(path)
  ```
 
-**Return Type:** `IList<string>`
+**Return Type:** `IList<string>` - The relative paths of the running scripts.
 
 ---
 
@@ -3733,7 +3666,7 @@ Check if a legion script is currently running.
 | --- | --- | --- | --- |
 | `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by ListRunningScripts to avoid ambiguity between scripts that share a file name. |
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if the script is currently running.
 
 ---
 
@@ -3814,7 +3747,7 @@ Check if the global cooldown is currently active. This applies to actions like m
      API.Pause(0.5)
  ```
 
-**Return Type:** `bool`
+**Return Type:** `bool` - True if the global cooldown is active; otherwise, false.
 
 ---
 
@@ -3950,7 +3883,7 @@ Get the string for a cliloc number.
 | `cliloc` | `int` | ❌ No | The cliloc number |
 | `englishOnly` | `bool` | ✅ Yes | True to always return the English string, ignoring the client language setting |
 
-**Return Type:** `string`
+**Return Type:** `string` - The cliloc string, or null if not found
 
 ---
 
@@ -3965,7 +3898,7 @@ Get the bounds of the client game window.
  API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
  ```
 
-**Return Type:** `Rectangle`
+**Return Type:** `Rectangle` - A Rectangle with X, Y, Width and Height of the client window in screen pixels.
 
 ---
 
@@ -3979,282 +3912,7 @@ Get the bounds of the game world viewport.
  API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
  ```
 
-**Return Type:** `Rectangle`
-
----
-
-### GetVisualEffectProfiles
-
-List the visual effect compositions this client knows about, shipped and user-authored.
- Example:
- ```py
- for info in API.GetVisualEffectProfiles():
-   API.SysMsg(f"{info.Name} -> {info.Id}")
- ```
-
-**Return Type:** `IList<ApiEffectProfileInfo>`
-
----
-
-### GetVisualEffectProfile
-`(id)`
-Get an editable copy of one of the client's visual effect compositions, as a starting
- point for a variation on it. The copy is yours - changing it does not touch the client's,
- and there is no way to save it back.
- Example:
- ```py
- effect = API.GetVisualEffectProfile(API.VisualEffectIds.Poison)
- effect.Layers[0].Effect.Strength = 0.9
- handle = API.StartVisualEffect(effect, 5)
- ```
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `id` | `string` | ❌ No | The composition's id, from `GetVisualEffectProfiles` or `VisualEffectIds`. |
-
-**Return Type:** `ApiEffectProfile`
-
----
-
-### NewVisualEffectProfile
-
-Build an empty visual effect composition, to add layers to with `AddLayer`.
- Example:
- ```py
- effect = API.NewVisualEffectProfile()
- tint = API.NewTintLayer()
- tint.R, tint.G, tint.B = 150, 0, 0
- effect.AddLayer(tint)
- handle = API.StartVisualEffect(effect, 4)
- ```
-
-**Return Type:** `ApiEffectProfile`
-
----
-
-### NewTintLayer
-
-Build a colour layer, set to the client's defaults. The only technique that paints rather
- than distorting, and so the only one that may sit anywhere in a stack.
-
-**Return Type:** `ApiTintLayer`
-
----
-
-### NewBlurLayer
-
-Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
-
-**Return Type:** `ApiBlurLayer`
-
----
-
-### NewRadialBlurLayer
-
-Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
- focus, because the centre of the screen stays sharp however strong it is.
-
-**Return Type:** `ApiRadialBlurLayer`
-
----
-
-### NewChromaticLayer
-
-Build a chromatic split layer, set to the client's defaults. The cheapest technique by a
- wide margin, so it is worth reaching for first when something needs to look wrong.
-
-**Return Type:** `ApiChromaticLayer`
-
----
-
-### NewShakeSpec
-
-Build the shake a visual effect fires as it arrives, to hang on
- `ApiEffectProfile.Shake`. For a shake on its own use `NewShakeConfig` instead.
-
-**Return Type:** `ApiShakeSpec`
-
----
-
-### NewShakeConfig
-
-Build a standalone screen shake, for `StartScreenShake`.
- Example:
- ```py
- shake = API.NewShakeConfig()
- shake.Seconds = 2.5
- shake.Intensity = 0.8
- shake.Gradient = API.ShakeGradient.Decay
- API.StartScreenShake(shake)
- ```
-
-**Return Type:** `ApiShakeConfig`
-
----
-
-### NewVector2
-`(x, y)`
-Build a per-axis value pair, for the visual effect knobs that take one.
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `x` | `double` | ✅ Yes | The X component. |
-| `y` | `double` | ✅ Yes | The Y component. |
-
-**Return Type:** `ApiVector2`
-
----
-
-### StartVisualEffect
-`(profileId, seconds, intensity)`
-Start one of the client's visual effect compositions by id.
-
-
-
- A composition raised this way claims the look against the rulebase, so starting poison
- while the player is poisoned shows one poison rather than two at doubled alpha.
-
-
-
-
-
- Effects do not survive leaving the world: the handle goes stale and nothing comes back on
- the next login. Stop them yourself, give them a duration, or let the script end - whatever
- a script leaves running is dropped when it stops.
-
-
- Example:
- ```py
- handle = API.StartVisualEffect(API.VisualEffectIds.Drunk, 10)
- API.Pause(2)
- API.StopVisualEffect(handle)
- ```
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `profileId` | `string` | ❌ No | The composition's id, from `GetVisualEffectProfiles` or `VisualEffectIds`. |
-| `seconds` | `double` | ✅ Yes | How long to run for. Zero or less runs until stopped. |
-| `intensity` | `double` | ✅ Yes | Strength to draw at, 0-1. Scales the composition rather than replacing anything in it. |
-
-**Return Type:** `uint`
-
----
-
-### StartVisualEffectByName
-`(name, seconds, intensity)`
-Start one of the user's own visual effect compositions by name.
-
-
-
- User-authored compositions only. Every shipped one is named through the client's language
- file and carries a "(built-in)" suffix, so no name here could reach them on a non-English
- client - use `StartVisualEffect` with `VisualEffectIds` for those.
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | ❌ No | The composition's name, matched ignoring case. Must match exactly one. |
-| `seconds` | `double` | ✅ Yes | How long to run for. Zero or less runs until stopped. |
-| `intensity` | `double` | ✅ Yes | Strength to draw at, 0-1. |
-
-**Return Type:** `uint`
-
----
-
-### StartVisualEffect
-`(config, seconds, intensity)`
-Start a visual effect the script built itself.
-
-
-
- Unlike the two by-name forms this claims nothing, because there is no library composition
- behind it to claim - so two scripts starting identical hand-built effects do composite
- together, at doubled strength. Editing `config` afterwards cannot reach the running
- effect; start it again to change it.
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `config` | `ApiEffectProfile` | ❌ No | The composition to draw. Needs at least one and at most four layers. |
-| `seconds` | `double` | ✅ Yes | How long to run for. Zero or less runs until stopped. |
-| `intensity` | `double` | ✅ Yes | Strength to draw at, 0-1. |
-
-**Return Type:** `uint`
-
----
-
-### StopVisualEffect
-`(handle)`
-Stop one visual effect this script started. It fades out rather than cutting.
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `handle` | `uint` | ❌ No | The handle a `StartVisualEffect` returned. Handles that already<br>         lapsed, were stopped, or came back as 0 are ignored. |
-
-**Return Type:** `void` *(Does not return anything)*
-
----
-
-### StopAllVisualEffects
-
-Stop every visual effect this script started. Other scripts' effects, and the ones the
- player's own state raises, are left alone.
-
-**Return Type:** `void` *(Does not return anything)*
-
----
-
-### StartScreenShake
-`(config)`
-Shake the screen, with no visual effect attached.
- Example:
- ```py
- shake = API.NewShakeConfig()
- shake.Seconds = 0.4
- shake.Intensity = 1.0
- API.StartScreenShake(shake)
- ```
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `config` | `ApiShakeConfig` | ❌ No | The shake to run, from `NewShakeConfig`. |
-
-**Return Type:** `uint`
-
----
-
-### StopScreenShake
-`(handle)`
-Stop one screen shake this script started.
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `handle` | `uint` | ❌ No | The handle `StartScreenShake` returned. Handles that already<br>         finished, were stopped, or came back as 0 are ignored. |
-
-**Return Type:** `void` *(Does not return anything)*
-
----
-
-### StopAllScreenShakes
-
-Stop every screen shake this script started, including the ones its visual effects fired
- as they arrived.
-
-**Return Type:** `void` *(Does not return anything)*
+**Return Type:** `Rectangle` - A Rectangle with X, Y, Width and Height of the game viewport in screen pixels, or an empty Rectangle if the game scene is not active.
 
 ---
 

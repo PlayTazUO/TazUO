@@ -45,32 +45,35 @@ public class ScriptedShakeTests : IDisposable
         };
 
     /// <summary>
-    /// The cap partitioning. Four scripted shakes must not consume the eight slots the rules share,
-    /// and a fifth must displace one of the script's own rather than a rule's.
+    /// The cap partitioning. However many shakes a script asks for, it must not displace the rule's:
+    /// past its own allowance it starts overwriting its own.
     /// </summary>
     [Fact]
     public void ScriptedShakesDoNotEvictRuleShakes()
     {
-        uint ruleShake = ScreenShake.Viewport.Trauma(Request(0.2f));
+        ScreenShake.Viewport.Trauma(Request(0.2f));
 
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 16; i++)
             ScreenShake.Viewport.Trauma(Request(1f), ShakeSource.Script, _owner);
 
-        // The rule's is still there to be cancelled, which it would not be had a script taken it.
-        ScreenShake.Viewport.Cancel(ruleShake).Should().BeTrue();
+        // Taking every scripted shake away leaves the rule's still running, which it would not be
+        // had a script taken its slot.
+        ScreenShake.Viewport.CancelByOwner(_owner);
+
+        ScreenShake.Viewport.IsShaking.Should().BeTrue();
     }
 
     /// <summary>
-    /// With the list already full of rule shakes a scripted one is dropped rather than taking one:
-    /// 0 back means nothing was scheduled, which is the same answer as the gate being off.
+    /// The caps are independent, not shares of one number: rules filling their own allowance must
+    /// still leave a script able to raise its.
     /// </summary>
     [Fact]
-    public void AScriptedShakeIsDroppedRatherThanEvictingAnotherSource()
+    public void RuleShakesDoNotConsumeTheScriptAllowance()
     {
         for (int i = 0; i < 8; i++)
             ScreenShake.Viewport.Trauma(Request());
 
-        ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner).Should().Be(0u);
+        ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner).Should().NotBe(0u);
     }
 
     [Fact]
@@ -105,10 +108,10 @@ public class ScriptedShakeTests : IDisposable
         uint first = ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
         uint second = ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
 
-        ScreenShake.Viewport.Cancel(first).Should().BeTrue();
+        ScreenShake.Viewport.Cancel(first, _owner).Should().BeTrue();
         ScreenShake.Viewport.IsShaking.Should().BeTrue();
 
-        ScreenShake.Viewport.Cancel(second).Should().BeTrue();
+        ScreenShake.Viewport.Cancel(second, _owner).Should().BeTrue();
         ScreenShake.Viewport.IsShaking.Should().BeFalse();
     }
 
@@ -117,8 +120,26 @@ public class ScriptedShakeTests : IDisposable
     {
         ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
 
-        ScreenShake.Viewport.Cancel(0).Should().BeFalse();
-        ScreenShake.Viewport.Cancel(uint.MaxValue).Should().BeFalse();
+        ScreenShake.Viewport.Cancel(0, _owner).Should().BeFalse();
+        ScreenShake.Viewport.Cancel(uint.MaxValue, _owner).Should().BeFalse();
+        ScreenShake.Viewport.IsShaking.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// Handles are monotonic small integers, so a caller holding one could otherwise walk the range
+    /// and cancel whatever it found - which is what the per-source caps exist to prevent.
+    /// </summary>
+    [Fact]
+    public void AHandleOnlyCancelsForTheOwnerThatRaisedIt()
+    {
+        var theirs = new object();
+
+        uint ruleShake = ScreenShake.Viewport.Trauma(Request());
+        uint scripted = ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, theirs);
+
+        ScreenShake.Viewport.Cancel(ruleShake, _owner).Should().BeFalse();
+        ScreenShake.Viewport.Cancel(scripted, _owner).Should().BeFalse();
+        ScreenShake.Viewport.Cancel(scripted, theirs).Should().BeTrue();
         ScreenShake.Viewport.IsShaking.Should().BeTrue();
     }
 
@@ -134,12 +155,15 @@ public class ScriptedShakeTests : IDisposable
         ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
         ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
         uint survivor = ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, theirs);
-        uint ruleShake = ScreenShake.Viewport.Trauma(Request());
+
+        ScreenShake.Viewport.Trauma(Request());
 
         ScreenShake.Viewport.CancelByOwner(_owner);
 
-        ScreenShake.Viewport.Cancel(survivor).Should().BeTrue();
-        ScreenShake.Viewport.Cancel(ruleShake).Should().BeTrue();
-        ScreenShake.Viewport.IsShaking.Should().BeFalse();
+        // The other script's is still cancellable, so tearing one script down left it alone.
+        ScreenShake.Viewport.Cancel(survivor, theirs).Should().BeTrue();
+
+        // And the rule's, which no handle can reach, is still running.
+        ScreenShake.Viewport.IsShaking.Should().BeTrue();
     }
 }

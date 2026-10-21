@@ -30,7 +30,7 @@ Get a blank gump.
 | `canMove` | `bool` | ✅ Yes | Allow the player to move this gump |
 | `keepOpen` | `bool` | ✅ Yes | If true, the gump won't be closed if the script stops. Otherwise, it will be closed when the script is stopped. Defaults to false. |
 
-**Return Type:** `ApiUiBaseGump`
+**Return Type:** `ApiUiBaseGump` - A new, empty gump
 
 ---
 
@@ -53,7 +53,7 @@ Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
 | `onResized` | `object` | ✅ Yes | Optional callback function called when the gump is resized |
 | `keepOpen` | `bool` | ✅ Yes |  |
 
-**Return Type:** `ApiUiNineSliceGump`
+**Return Type:** `ApiUiNineSliceGump` - A ApiUiNineSliceGump wrapper containing the nine-slice gump control
 
 ---
 
@@ -100,7 +100,7 @@ Create a checkbox for gumps.
 | `hue` | `ushort` | ✅ Yes | Optional hue |
 | `isChecked` | `bool` | ✅ Yes | Default false, set to true if you want this checkbox checked on creation |
 
-**Return Type:** `ApiUiCheckbox`
+**Return Type:** `ApiUiCheckbox` - The checkbox
 
 ---
 
@@ -201,7 +201,7 @@ Create a rendered map area, displaying a region of the world map as a texture.
 | `width` | `int` | ❌ No | Display width in pixels |
 | `height` | `int` | ❌ No | Display height in pixels |
 
-**Return Type:** `ApiUiRenderedMapArea`
+**Return Type:** `ApiUiRenderedMapArea` - A rendered map area control
 
 ---
 
@@ -225,7 +225,7 @@ Create an image control that displays a named PNG texture loaded from a ZIP arch
 | `width` | `int` | ✅ Yes | Display width in pixels; 0 uses the image's natural width |
 | `height` | `int` | ✅ Yes | Display height in pixels; 0 uses the image's natural height |
 
-**Return Type:** `ApiUiLegionTexture`
+**Return Type:** `ApiUiLegionTexture` - A LegionTexture control
 
 ---
 
@@ -449,7 +449,7 @@ Create a horizontal slider control. Read or update its value with `slider.Value`
 | `y` | `int` | ✅ Yes | Y position |
 | `showText` | `bool` | ✅ Yes | If true, displays the current value next to the slider |
 
-**Return Type:** `ApiUiSlider`
+**Return Type:** `ApiUiSlider` - A slider control
 
 ---
 
@@ -534,7 +534,7 @@ Creates a dropdown control (combobox) with the specified width and items.
 | `items` | `IList<string>` | ❌ No | Array of strings to display as dropdown options |
 | `selectedIndex` | `int` | ✅ Yes | The initially selected item index (default: 0) |
 
-**Return Type:** `ApiUiControlDropDown`
+**Return Type:** `ApiUiControlDropDown` - A ApiUiControlDropDown wrapper containing the combobox control
 
 ---
 
@@ -559,7 +559,7 @@ Add an onClick callback to a control.
 | `onClick` | `object` | ❌ No | The callback function |
 | `leftOnly` | `bool` | ✅ Yes | Only accept left mouse clicks? |
 
-**Return Type:** `object`
+**Return Type:** `object` - Returns the control so methods can be chained.
 
 ---
 

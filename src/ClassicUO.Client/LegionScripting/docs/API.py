@@ -1181,6 +1181,20 @@ class ApiUserProfile:
     MoveItemDelay: int = None
     AutoLootEnabled: bool = None
 
+class ApiVector2:
+    ""
+    X: float = None
+    Y: float = None
+
+    def ToString(self) -> "str":
+        pass
+
+    def __str__(self) -> "str":
+        pass
+
+    def __repr__(self) -> "str":
+        pass
+
 class ApiEffectProfile:
     ""
     Name: str = None
@@ -1189,7 +1203,7 @@ class ApiEffectProfile:
     Fade: ApiFadeSpec | None = None
     Shake: ApiShakeSpec | None = None
 
-    def AddLayer(self, effect: "ApiLayerEffect", blend: "Any" = LegionAPI.OverlayBlend.Alpha) -> "ApiProfileLayer":
+    def AddLayer(self, effect: "ApiLayerEffect", blend: "Any" = ApiVisualEffects.OverlayBlend.Alpha) -> "ApiProfileLayer":
         """
         Appends a layer, which is the usual way to build a composition up.
         """
@@ -1311,18 +1325,233 @@ class ApiTintLayer(ApiLayerEffect):
     B: int = None
     A: int = None
 
-class ApiVector2:
+class ApiVisualEffects:
     ""
-    X: float = None
-    Y: float = None
+    Enabled: bool = None
+    ShakeEnabled: bool = None
+    SlotsFree: int = None
 
-    def ToString(self) -> "str":
+    class OverlayBlend:
+        Alpha = 0
+        Additive = 1
+
+    class NoiseChannel:
+        Red = 0
+        Green = 1
+        Blue = 2
+        Alpha = 3
+
+    class OverlaySampleTaps:
+        Four = 4
+        Eight = 8
+        Twelve = 12
+        Sixteen = 16
+
+    class ShakeGradient:
+        Constant = 0
+        Decay = 1
+        Swell = 2
+        Pulse = 3
+
+    class ShakeCurve:
+        Linear = 0
+        Smooth = 1
+        EaseIn = 2
+        EaseOut = 3
+
+
+    class Ids:
+        Poison = "1c419034-7c0f-4e65-a3af-81f27a1e0efa"
+        Bleed = "0e778268-d89d-4538-80c6-621ca768a4b2"
+        Fog = "7195989d-5c02-47b8-bcd9-b91aaaafaa99"
+        Drunk = "271f1b8f-13b1-4a4a-acc4-a9784852398b"
+        Concussion = "b7b6a46c-9899-4d6f-8493-cd22d695c0fb"
+        TunnelVision = "b006e04f-3087-4ac7-bdbb-0c903d35792d"
+        Death = "bd6cf532-4dc4-46d7-94eb-bc061ef041da"
+        EarthquakeRumble = "7f67a87a-e30a-441b-9b5a-3a91da98d050"
+
+    def GetProfiles(self) -> "list[ApiEffectProfileInfo]":
+        """
+        List the visual effect compositions this client knows about, shipped and user-authored.
+         Example:
+         ```py
+         for info in API.VisualEffects.GetProfiles():
+           API.SysMsg(f"{info.Name} -> {info.Id}")
+         ```
+        """
         pass
 
-    def __str__(self) -> "str":
+    def GetProfile(self, id: "str") -> "ApiEffectProfile":
+        """
+        Get an editable copy of one of the client's visual effect compositions, as a starting point
+         for a variation on it. The copy is yours - changing it does not touch the client's, and there
+         is no way to save it back.
+         Example:
+         ```py
+         effect = API.VisualEffects.GetProfile(API.VisualEffects.Ids.Poison)
+         effect.Layers[0].Effect.Strength = 0.9
+         handle = API.VisualEffects.Start(effect, 5)
+         ```
+        """
         pass
 
-    def __repr__(self) -> "str":
+    def NewProfile(self) -> "ApiEffectProfile":
+        """
+        Build an empty visual effect composition, to add layers to with `AddLayer`.
+         Example:
+         ```py
+         effect = API.VisualEffects.NewProfile()
+         tint = API.VisualEffects.NewTintLayer()
+         tint.R, tint.G, tint.B = 150, 0, 0
+         effect.AddLayer(tint)
+         handle = API.VisualEffects.Start(effect, 4)
+         ```
+        """
+        pass
+
+    def NewTintLayer(self) -> "ApiTintLayer":
+        """
+        Build a colour layer, set to the client's defaults. The only technique that paints rather
+         than distorting, and so the only one that may sit anywhere in a stack.
+        """
+        pass
+
+    def NewBlurLayer(self) -> "ApiBlurLayer":
+        """
+        Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
+        """
+        pass
+
+    def NewRadialBlurLayer(self) -> "ApiRadialBlurLayer":
+        """
+        Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
+         focus, because the centre of the screen stays sharp however strong it is.
+        """
+        pass
+
+    def NewChromaticLayer(self) -> "ApiChromaticLayer":
+        """
+        Build a chromatic split layer, set to the client's defaults. The cheapest technique by a wide
+         margin, so it is worth reaching for first when something needs to look wrong.
+        """
+        pass
+
+    def NewShakeSpec(self) -> "ApiShakeSpec":
+        """
+        Build the shake a visual effect fires as it arrives, to hang on `ApiEffectProfile.Shake`. For
+         a shake on its own use `NewShakeConfig` instead.
+        """
+        pass
+
+    def NewShakeConfig(self) -> "ApiShakeConfig":
+        """
+        Build a standalone screen shake, for `StartShake`.
+         Example:
+         ```py
+         shake = API.VisualEffects.NewShakeConfig()
+         shake.Seconds = 2.5
+         shake.Intensity = 0.8
+         shake.Gradient = API.VisualEffects.ShakeGradient.Decay
+         API.VisualEffects.StartShake(shake)
+         ```
+        """
+        pass
+
+    def NewVector2(self, x: "float" = 0, y: "float" = 0) -> "ApiVector2":
+        """
+        Build a per-axis value pair, for the visual effect knobs that take one.
+        """
+        pass
+
+    def Start(self, profileId: "str", seconds: "float" = 0, intensity: "float" = 1.0) -> "int":
+        """
+        Start one of the client's visual effect compositions by id.
+        
+        
+        
+         A composition raised this way claims the look against the rulebase, so starting poison while
+         the player is poisoned shows one poison rather than two at doubled alpha.
+        
+        
+        
+        
+        
+         Effects do not survive leaving the world: the handle goes stale and nothing comes back on the
+         next login. Stop them yourself, give them a duration, or let the script end - whatever a
+         script leaves running is dropped when it stops.
+        
+        
+         Example:
+         ```py
+         handle = API.VisualEffects.Start(API.VisualEffects.Ids.Drunk, 10)
+         API.Pause(2)
+         API.VisualEffects.Stop(handle)
+         ```
+        """
+        pass
+
+    def Start(self, config: "ApiEffectProfile", seconds: "float" = 0, intensity: "float" = 1.0) -> "int":
+        """
+        Start a visual effect the script built itself.
+        
+        
+        
+         Unlike the two by-name forms this claims nothing, because there is no library composition
+         behind it to claim - so two scripts starting identical hand-built effects do composite
+         together, at doubled strength. Editing `config` afterwards cannot reach the running effect;
+         start it again to change it.
+        """
+        pass
+
+    def StartByName(self, name: "str", seconds: "float" = 0, intensity: "float" = 1.0) -> "int":
+        """
+        Start one of the user's own visual effect compositions by name.
+        
+        
+        
+         User-authored compositions only. Every shipped one is named through the client's language file
+         and carries a "(built-in)" suffix, so no name here could reach them on a non-English client -
+         use `Start` with `Ids` for those.
+        """
+        pass
+
+    def Stop(self, handle: "int") -> None:
+        """
+        Stop one visual effect this script started. It fades out rather than cutting.
+        """
+        pass
+
+    def StopAll(self) -> None:
+        """
+        Stop every visual effect this script started. Other scripts' effects, and the ones the
+         player's own state raises, are left alone.
+        """
+        pass
+
+    def StartShake(self, config: "ApiShakeConfig") -> "int":
+        """
+        Shake the screen, with no visual effect attached.
+         Example:
+         ```py
+         shake = API.VisualEffects.NewShakeConfig()
+         shake.Seconds = 0.4
+         shake.Intensity = 1.0
+         API.VisualEffects.StartShake(shake)
+         ```
+        """
+        pass
+
+    def StopShake(self, handle: "int") -> None:
+        """
+        Stop one screen shake this script started.
+        """
+        pass
+
+    def StopAllShakes(self) -> None:
+        """
+        Stop every screen shake this script started, including the ones its visual effects fired as
+         they arrived.
+        """
         pass
 
 Events: EventSinkApiDeclaration = None
@@ -1341,10 +1570,9 @@ LastTargetGraphic: int = None
 LastSpellIndex: int = None
 LastSpellName: str = None
 Found: int = None
-VisualEffectsEnabled: bool = None
-ScreenShakeEnabled: bool = None
 Profile: ApiUserProfile = None
 Gumps: ApiUiGump = None
+VisualEffects: ApiVisualEffects = None
 StopRequested: bool = None
 CancellationToken = None
 
@@ -1386,34 +1614,6 @@ class EffectBlendMode:
     NormalHalfTransparent = 1
     ShadowBlue = 1
     ScreenRed = 1
-
-class OverlayBlend:
-    Alpha = 0
-    Additive = 1
-
-class NoiseChannel:
-    Red = 0
-    Green = 1
-    Blue = 2
-    Alpha = 3
-
-class OverlaySampleTaps:
-    Four = 4
-    Eight = 8
-    Twelve = 12
-    Sixteen = 16
-
-class ShakeGradient:
-    Constant = 0
-    Decay = 1
-    Swell = 2
-    Pulse = 3
-
-class ShakeCurve:
-    Linear = 0
-    Smooth = 1
-    EaseIn = 2
-    EaseOut = 3
 
 def ProcessCallbacks() -> None:
     """
@@ -3563,201 +3763,6 @@ def GetViewportBounds() -> "Any":
      ```
     """
     pass
-
-def GetVisualEffectProfiles() -> "list[ApiEffectProfileInfo]":
-    """
-    List the visual effect compositions this client knows about, shipped and user-authored.
-     Example:
-     ```py
-     for info in API.GetVisualEffectProfiles():
-       API.SysMsg(f"{info.Name} -> {info.Id}")
-     ```
-    """
-    pass
-
-def GetVisualEffectProfile(id: "str") -> "ApiEffectProfile":
-    """
-    Get an editable copy of one of the client's visual effect compositions, as a starting
-     point for a variation on it. The copy is yours - changing it does not touch the client's,
-     and there is no way to save it back.
-     Example:
-     ```py
-     effect = API.GetVisualEffectProfile(API.VisualEffectIds.Poison)
-     effect.Layers[0].Effect.Strength = 0.9
-     handle = API.StartVisualEffect(effect, 5)
-     ```
-    """
-    pass
-
-def NewVisualEffectProfile() -> "ApiEffectProfile":
-    """
-    Build an empty visual effect composition, to add layers to with `AddLayer`.
-     Example:
-     ```py
-     effect = API.NewVisualEffectProfile()
-     tint = API.NewTintLayer()
-     tint.R, tint.G, tint.B = 150, 0, 0
-     effect.AddLayer(tint)
-     handle = API.StartVisualEffect(effect, 4)
-     ```
-    """
-    pass
-
-def NewTintLayer() -> "ApiTintLayer":
-    """
-    Build a colour layer, set to the client's defaults. The only technique that paints rather
-     than distorting, and so the only one that may sit anywhere in a stack.
-    """
-    pass
-
-def NewBlurLayer() -> "ApiBlurLayer":
-    """
-    Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
-    """
-    pass
-
-def NewRadialBlurLayer() -> "ApiRadialBlurLayer":
-    """
-    Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
-     focus, because the centre of the screen stays sharp however strong it is.
-    """
-    pass
-
-def NewChromaticLayer() -> "ApiChromaticLayer":
-    """
-    Build a chromatic split layer, set to the client's defaults. The cheapest technique by a
-     wide margin, so it is worth reaching for first when something needs to look wrong.
-    """
-    pass
-
-def NewShakeSpec() -> "ApiShakeSpec":
-    """
-    Build the shake a visual effect fires as it arrives, to hang on
-     `ApiEffectProfile.Shake`. For a shake on its own use `NewShakeConfig` instead.
-    """
-    pass
-
-def NewShakeConfig() -> "ApiShakeConfig":
-    """
-    Build a standalone screen shake, for `StartScreenShake`.
-     Example:
-     ```py
-     shake = API.NewShakeConfig()
-     shake.Seconds = 2.5
-     shake.Intensity = 0.8
-     shake.Gradient = API.ShakeGradient.Decay
-     API.StartScreenShake(shake)
-     ```
-    """
-    pass
-
-def NewVector2(x: "float" = 0, y: "float" = 0) -> "ApiVector2":
-    """
-    Build a per-axis value pair, for the visual effect knobs that take one.
-    """
-    pass
-
-def StartVisualEffect(profileId: "str", seconds: "float" = 0, intensity: "float" = 1.0) -> "int":
-    """
-    Start one of the client's visual effect compositions by id.
-    
-    
-    
-     A composition raised this way claims the look against the rulebase, so starting poison
-     while the player is poisoned shows one poison rather than two at doubled alpha.
-    
-    
-    
-    
-    
-     Effects do not survive leaving the world: the handle goes stale and nothing comes back on
-     the next login. Stop them yourself, give them a duration, or let the script end - whatever
-     a script leaves running is dropped when it stops.
-    
-    
-     Example:
-     ```py
-     handle = API.StartVisualEffect(API.VisualEffectIds.Drunk, 10)
-     API.Pause(2)
-     API.StopVisualEffect(handle)
-     ```
-    """
-    pass
-
-def StartVisualEffectByName(name: "str", seconds: "float" = 0, intensity: "float" = 1.0) -> "int":
-    """
-    Start one of the user's own visual effect compositions by name.
-    
-    
-    
-     User-authored compositions only. Every shipped one is named through the client's language
-     file and carries a "(built-in)" suffix, so no name here could reach them on a non-English
-     client - use `StartVisualEffect` with `VisualEffectIds` for those.
-    """
-    pass
-
-def StartVisualEffect(config: "ApiEffectProfile", seconds: "float" = 0, intensity: "float" = 1.0) -> "int":
-    """
-    Start a visual effect the script built itself.
-    
-    
-    
-     Unlike the two by-name forms this claims nothing, because there is no library composition
-     behind it to claim - so two scripts starting identical hand-built effects do composite
-     together, at doubled strength. Editing `config` afterwards cannot reach the running
-     effect; start it again to change it.
-    """
-    pass
-
-def StopVisualEffect(handle: "int") -> None:
-    """
-    Stop one visual effect this script started. It fades out rather than cutting.
-    """
-    pass
-
-def StopAllVisualEffects() -> None:
-    """
-    Stop every visual effect this script started. Other scripts' effects, and the ones the
-     player's own state raises, are left alone.
-    """
-    pass
-
-def StartScreenShake(config: "ApiShakeConfig") -> "int":
-    """
-    Shake the screen, with no visual effect attached.
-     Example:
-     ```py
-     shake = API.NewShakeConfig()
-     shake.Seconds = 0.4
-     shake.Intensity = 1.0
-     API.StartScreenShake(shake)
-     ```
-    """
-    pass
-
-def StopScreenShake(handle: "int") -> None:
-    """
-    Stop one screen shake this script started.
-    """
-    pass
-
-def StopAllScreenShakes() -> None:
-    """
-    Stop every screen shake this script started, including the ones its visual effects fired
-     as they arrived.
-    """
-    pass
-
-class VisualEffectIds:
-    ""
-    Poison: str = None
-    Bleed: str = None
-    Fog: str = None
-    Drunk: str = None
-    Concussion: str = None
-    TunnelVision: str = None
-    Death: str = None
-    EarthquakeRumble: str = None
 
 class EventSinkApiDeclaration:
     ""

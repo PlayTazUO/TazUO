@@ -1,6 +1,6 @@
 ---
 title: ApiLayerEffect
-description: "One layer of a visual effect composition. The subtype is the technique, so a technique's knobs exist only on the type that reads them - there is no radius on a chromatic layer to mis-set. Build one with `API.NewTintLayer`, `API.NewBlurLayer`, `API.NewRadialBlurLayer` or `API.NewChromaticLayer`, each of which hands back the client's own defaults for that technique. Fixed set of four: the shader has four techniques and there is no way to describe a fifth."
+description: "One layer of a visual effect composition. The subtype is the technique, so a technique's knobs exist only on the type that reads them - there is no radius on a chromatic layer to mis-set. Build one with `API.VisualEffects.NewTintLayer`, `API.VisualEffects.NewBlurLayer`, `API.VisualEffects.NewRadialBlurLayer` or `API.VisualEffects.NewChromaticLayer`, each of which hands back the client's own defaults for that technique. Fixed set of four: the shader has four techniques and there is no way to describe a fifth."
 ---
 
 ## Class Description
@@ -9,8 +9,8 @@ One layer of a visual effect composition. The subtype is the technique, so a tec
 
 
 
- Build one with `API.NewTintLayer`, `API.NewBlurLayer`, `API.NewRadialBlurLayer` or
- `API.NewChromaticLayer`, each of which hands back the client's own defaults for that technique.
+ Build one with `API.VisualEffects.NewTintLayer`, `API.VisualEffects.NewBlurLayer`, `API.VisualEffects.NewRadialBlurLayer` or
+ `API.VisualEffects.NewChromaticLayer`, each of which hands back the client's own defaults for that technique.
  Fixed set of four: the shader has four techniques and there is no way to describe a fifth.
 
 ## Properties

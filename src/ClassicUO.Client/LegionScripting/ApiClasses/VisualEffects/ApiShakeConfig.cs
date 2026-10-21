@@ -6,8 +6,8 @@ using ClassicUO.Game.ScreenDecorations.Shake;
 namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
-/// A screen shake with no look attached, for `API.StartScreenShake`. Build one with
-/// `API.NewShakeConfig`.
+/// A screen shake with no look attached, for `API.VisualEffects.StartShake`. Build one with
+/// `API.VisualEffects.NewShakeConfig`.
 /// <para>
 /// Amplitude at any moment is `Intensity x gradient(progress) x rampUp(elapsed) x
 /// rampDown(remaining)`, so `Gradient` decides the overall arc and the two ramps decide how abruptly
@@ -21,7 +21,8 @@ public class ApiShakeConfig
 
     /// <summary>
     /// Total length of the shake in seconds, ramps included. Must be above zero - there is no
-    /// open-ended shake, since a shake nothing is sustaining would never stop.
+    /// open-ended shake, since a shake nothing is sustaining would never stop - and clamped to
+    /// 86400 at the top.
     /// </summary>
     public double Seconds { get; set; } = 1.0;
 
@@ -38,10 +39,10 @@ public class ApiShakeConfig
     public double RampDownSeconds { get; set; }
 
     /// <summary>How intensity travels across the whole duration, independently of the ramps.</summary>
-    public LegionAPI.ShakeGradient Gradient { get; set; }
+    public ApiVisualEffects.ShakeGradient Gradient { get; set; }
 
     /// <summary>Easing applied to both ramps and to the gradient.</summary>
-    public LegionAPI.ShakeCurve Curve { get; set; }
+    public ApiVisualEffects.ShakeCurve Curve { get; set; }
 
     /// <summary>Shake rate in Hz, or zero for the client default. Lower reads as a heavy rumble,
     /// higher as a rattle.</summary>
@@ -66,25 +67,38 @@ public class ApiShakeConfig
     /// Builds the request the shake accumulator takes.
     /// </summary>
     /// <returns>The request.</returns>
-    /// <exception cref="ArgumentOutOfRangeException"><see cref="Seconds"/> is not above zero.</exception>
+    /// <exception cref="ArgumentException">A value is not a real number, or <see cref="Gradient"/>
+    /// or <see cref="Curve"/> is set to something the API does not offer.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><see cref="Seconds"/> is zero or less.</exception>
     internal ShakeRequest ToInternal()
     {
-        if (Seconds <= 0)
-            throw new ArgumentOutOfRangeException(nameof(Seconds), Seconds, "A screen shake needs a duration above zero.");
+        // Bounded before the comparison, so a non-finite duration cannot slip past it into
+        // TimeSpan.FromSeconds, which throws on NaN and overflows well below double's range.
+        double duration = VfxInputValidator.Seconds(Seconds, nameof(Seconds));
+
+        if (duration <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(Seconds),
+                Seconds,
+                "Set Seconds to how long the shake should last. A shake has no 'until stopped' setting - "
+                + "nothing would ever end it - so it needs a length above zero."
+            );
+        }
 
         // Each ramp is capped at the duration so a value that could never be reached cannot
         // silently do nothing. Overlapping ramps are left alone: they multiply, so the peak simply
         // never reaches full, which is a legitimate short shake rather than a mistake to correct.
         return new ShakeRequest
         {
-            Duration = TimeSpan.FromSeconds(Seconds),
-            Intensity = (float)Math.Clamp(Intensity, 0d, 1d),
-            RampUp = TimeSpan.FromSeconds(Math.Clamp(RampUpSeconds, 0d, Seconds)),
-            RampDown = TimeSpan.FromSeconds(Math.Clamp(RampDownSeconds, 0d, Seconds)),
-            Gradient = (ShakeGradient)ApiOverlayGuard.Defined(Gradient, nameof(Gradient)),
-            Curve = (ShakeCurve)ApiOverlayGuard.Defined(Curve, nameof(Curve)),
-            Frequency = (float)Math.Max(Frequency, 0d),
-            MaxOffsetPixels = (float)Math.Max(MaxOffsetPixels, 0d)
+            Duration = TimeSpan.FromSeconds(duration),
+            Intensity = VfxInputValidator.Intensity(Intensity, nameof(Intensity)),
+            RampUp = TimeSpan.FromSeconds(Math.Min(VfxInputValidator.Seconds(RampUpSeconds, nameof(RampUpSeconds)), duration)),
+            RampDown = TimeSpan.FromSeconds(Math.Min(VfxInputValidator.Seconds(RampDownSeconds, nameof(RampDownSeconds)), duration)),
+            Gradient = (ShakeGradient)VfxInputValidator.Defined(Gradient, nameof(Gradient)),
+            Curve = (ShakeCurve)VfxInputValidator.Defined(Curve, nameof(Curve)),
+            Frequency = Math.Max(VfxInputValidator.Number(Frequency, nameof(Frequency)), 0f),
+            MaxOffsetPixels = Math.Max(VfxInputValidator.Number(MaxOffsetPixels, nameof(MaxOffsetPixels)), 0f)
         };
     }
 

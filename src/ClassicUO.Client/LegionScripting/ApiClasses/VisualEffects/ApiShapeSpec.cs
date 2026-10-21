@@ -39,7 +39,7 @@ public class ApiJitterSpec
     public ApiVector2? Scroll { get; set; } = new();
 
     /// <summary>Which packed noise channel drives the boundary displacement.</summary>
-    public LegionAPI.NoiseChannel Channel { get; set; }
+    public ApiVisualEffects.NoiseChannel Channel { get; set; }
 
     #endregion
 
@@ -52,17 +52,17 @@ public class ApiJitterSpec
             FeatherAmount = jitter.FeatherAmount,
             Scale = ApiVector2.From(jitter.Scale),
             Scroll = ApiVector2.From(jitter.Scroll),
-            Channel = (LegionAPI.NoiseChannel)jitter.Channel
+            Channel = (ApiVisualEffects.NoiseChannel)jitter.Channel
         };
 
     internal JitterSpec ToInternal() =>
         new()
         {
-            ReachAmount = (float)ReachAmount,
-            FeatherAmount = (float)FeatherAmount,
-            Scale = ApiOverlayGuard.Vector(Scale),
-            Scroll = ApiOverlayGuard.Vector(Scroll),
-            Channel = (Renderer.Effects.NoiseChannel)ApiOverlayGuard.Defined(Channel, nameof(Channel))
+            ReachAmount = VfxInputValidator.Number(ReachAmount, nameof(ReachAmount)),
+            FeatherAmount = VfxInputValidator.Number(FeatherAmount, nameof(FeatherAmount)),
+            Scale = VfxInputValidator.Vector(Scale, nameof(Scale)),
+            Scroll = VfxInputValidator.Vector(Scroll, nameof(Scroll)),
+            Channel = (Renderer.Effects.NoiseChannel)VfxInputValidator.Defined(Channel, nameof(Channel))
         };
 
     #endregion
@@ -141,17 +141,17 @@ public class ApiShapeSpec
     internal ShapeSpec ToInternal() =>
         new()
         {
-            Center = ApiOverlayGuard.Vector(Center),
-            WobbleFreq = ApiOverlayGuard.Vector(WobbleFreq),
-            WobbleAmp = (float)WobbleAmp,
-            Reach = (float)Reach,
-            Feather = (float)Feather,
-            EdgeBlend = (float)EdgeBlend,
-            CornerBias = (float)CornerBias,
+            Center = VfxInputValidator.Vector(Center, nameof(Center)),
+            WobbleFreq = VfxInputValidator.Vector(WobbleFreq, nameof(WobbleFreq)),
+            WobbleAmp = VfxInputValidator.Number(WobbleAmp, nameof(WobbleAmp)),
+            Reach = VfxInputValidator.Number(Reach, nameof(Reach)),
+            Feather = VfxInputValidator.Number(Feather, nameof(Feather)),
+            EdgeBlend = VfxInputValidator.Number(EdgeBlend, nameof(EdgeBlend)),
+            CornerBias = VfxInputValidator.Number(CornerBias, nameof(CornerBias)),
             Jitter = Jitter?.ToInternal() ?? default,
-            FocusDir = ApiOverlayGuard.Vector(FocusDir),
-            FocusPower = (float)FocusPower,
-            FocusAmount = (float)FocusAmount
+            FocusDir = VfxInputValidator.Vector(FocusDir, nameof(FocusDir)),
+            FocusPower = VfxInputValidator.Number(FocusPower, nameof(FocusPower)),
+            FocusAmount = VfxInputValidator.Number(FocusAmount, nameof(FocusAmount))
         };
 
     #endregion

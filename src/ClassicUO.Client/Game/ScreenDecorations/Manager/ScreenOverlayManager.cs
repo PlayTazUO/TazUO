@@ -409,10 +409,10 @@ internal sealed class ScreenOverlayManager
     /// <param name="intensity">Strength to draw at; clamped to 0-1.</param>
     /// <param name="duration">How long to run for, or null to run until stopped.</param>
     /// <param name="owner">The script's API instance, for <see cref="StopScriptedByOwner"/>.</param>
-    /// <returns>The handle, or 0 if the user has overlays switched off - not an error, and
-    /// distinguishable without catching by asking the settings first.</returns>
-    /// <exception cref="InvalidOperationException">Scripts already hold
-    /// <see cref="ScriptCap"/> effects.</exception>
+    /// <returns>The handle, or 0 where nothing was raised - the user has overlays switched off, or
+    /// scripts already hold <see cref="ScriptCap"/> effects. Neither is an error: both are states a
+    /// script can read off <see cref="ScriptSlotsFree"/> and the settings without catching anything.
+    /// </returns>
     public uint StartScripted(
         EffectProfile profile,
         Guid sourceProfileId,
@@ -425,15 +425,8 @@ internal sealed class ScreenOverlayManager
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(owner);
 
-        if (!DecorationSettings.Current.OverlaysActive)
+        if (!DecorationSettings.Current.OverlaysActive || _scripted.Count >= ScriptCap)
             return 0;
-
-        if (_scripted.Count >= ScriptCap)
-        {
-            throw new InvalidOperationException(
-                $"Scripts may hold at most {ScriptCap} visual effects at once, and all of them are in use."
-            );
-        }
 
         DateTime? expiresAt = duration is { } span && span > TimeSpan.Zero ? DateTime.UtcNow + span : null;
 
@@ -445,15 +438,35 @@ internal sealed class ScreenOverlayManager
     }
 
     /// <summary>
-    /// Stops one script-raised effect, which fades out through the normal path.
+    /// How many more effects scripts may raise between them. Main thread only, like the rest of the
+    /// <c>Scripted</c> entry points.
     /// </summary>
-    /// <param name="handle">The handle <see cref="StartScripted"/> returned. Unknown, lapsed and
-    /// already-stopped handles are ignored, as is 0.</param>
-    public void StopScripted(uint handle)
+    /// <returns>The count, 0 through <see cref="ScriptCap"/>.</returns>
+    public int ScriptSlotsFree()
     {
         AssertMainThread();
 
-        if (_scripted.Remove(handle))
+        return Math.Max(ScriptCap - _scripted.Count, 0);
+    }
+
+    /// <summary>
+    /// Stops one script-raised effect, if <paramref name="owner"/> is the script that raised it.
+    /// Fades out through the normal path.
+    /// <para>
+    /// Ownership is checked rather than trusted: handles are monotonic small integers, so without it
+    /// one script holding a single handle could walk the range and stop every other script's
+    /// effects.
+    /// </para>
+    /// </summary>
+    /// <param name="handle">The handle <see cref="StartScripted"/> returned. Unknown, lapsed and
+    /// already-stopped handles are ignored, as is 0.</param>
+    /// <param name="owner">The script's API instance.</param>
+    public void StopScripted(uint handle, object owner)
+    {
+        AssertMainThread();
+        ArgumentNullException.ThrowIfNull(owner);
+
+        if (_scripted.Remove(handle, owner))
             _scheduler.RequestPass();
     }
 

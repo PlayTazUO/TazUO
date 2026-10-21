@@ -1,6 +1,6 @@
 ---
 title: ApiEffectProfile
-description: "A visual effect composition: which layers, in what order, blended how, plus how it arrives and leaves and what it shakes. Get an editable copy of one the client already has with `API.GetVisualEffectProfile`, or start from nothing with `API.NewVisualEffectProfile`. Either way it is yours: nothing a script passes is ever saved, and editing this after `API.StartVisualEffect` cannot reach the running effect."
+description: "A visual effect composition: which layers, in what order, blended how, plus how it arrives and leaves and what it shakes. Get an editable copy of one the client already has with `API.VisualEffects.GetProfile`, or start from nothing with `API.VisualEffects.NewProfile`. Either way it is yours: nothing a script passes is ever saved, and editing this after `API.VisualEffects.Start` cannot reach the running effect."
 ---
 
 ## Class Description
@@ -9,9 +9,9 @@ A visual effect composition: which layers, in what order, blended how, plus how 
 
 
 
- Get an editable copy of one the client already has with `API.GetVisualEffectProfile`, or start
- from nothing with `API.NewVisualEffectProfile`. Either way it is yours: nothing a script passes
- is ever saved, and editing this after `API.StartVisualEffect` cannot reach the running effect.
+ Get an editable copy of one the client already has with `API.VisualEffects.GetProfile`, or start
+ from nothing with `API.VisualEffects.NewProfile`. Either way it is yours: nothing a script passes
+ is ever saved, and editing this after `API.VisualEffects.Start` cannot reach the running effect.
 
 ## Properties
 ### `Name`
@@ -49,7 +49,7 @@ How the effect arrives and leaves. Starts at the client's own timing.
 **Type:** `ApiShakeSpec?`
 
 Screen shake the effect includes, fired once on arrival, or null for a purely
- visual one. Build one with `API.NewShakeSpec`.
+ visual one. Build one with `API.VisualEffects.NewShakeSpec`.
 
 
 *No fields found.*
@@ -67,9 +67,9 @@ Appends a layer, which is the usual way to build a composition up.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | `effect` | `ApiLayerEffect` | ❌ No | The layer to draw. |
-| `blend` | `LegionAPI.OverlayBlend` | ✅ Yes | How it composites against what is already beneath it. |
+| `blend` | `ApiVisualEffects.OverlayBlend` | ✅ Yes | How it composites against what is already beneath it. |
 
-**Return Type:** `ApiProfileLayer`
+**Return Type:** `ApiProfileLayer` - The wrapper that was added, so the blend can be changed later.
 
 ---
 
