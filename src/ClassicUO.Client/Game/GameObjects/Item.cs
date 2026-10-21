@@ -606,12 +606,7 @@ namespace ClassicUO.Game.GameObjects
                     animations.ConvertBodyIfNeeded(ref id);
                     AnimationGroupsType animGroup = animations.GetAnimType(id);
                     AnimationFlags animFlags = animations.GetAnimFlags(id);
-                    byte action = Client.Game.UO.FileManager.Animations.GetDeathAction(
-                        id,
-                        animFlags,
-                        animGroup,
-                        UsedLayer
-                    );
+                    byte action = GetCorpseDeathAction(id, animFlags, animGroup);
                     Span<Renderer.SpriteInfo> frames = animations.GetAnimationFrames(
                         id,
                         action,
@@ -635,6 +630,23 @@ namespace ClassicUO.Game.GameObjects
 
                 LastAnimationChangeTime = Time.Ticks + Constants.CHARACTER_ANIMATION_DELAY;
             }
+        }
+
+        /// <summary>
+        /// Death action for this corpse's body. A mobile that died running leaves a corpse on the second
+        /// death action; bodies without one (common on custom creatures and mounts) fall back to the first,
+        /// as the dying mobile does in DisplayDeath, instead of drawing nothing.
+        /// </summary>
+        private byte GetCorpseDeathAction(ushort graphic, AnimationFlags animFlags, AnimationGroupsType animGroup)
+        {
+            byte action = Client.Game.UO.FileManager.Animations.GetDeathAction(graphic, animFlags, animGroup, UsedLayer);
+
+            if (UsedLayer && !Client.Game.UO.Animations.AnimationExists(graphic, action, isCorpse: true))
+            {
+                action = Client.Game.UO.FileManager.Animations.GetDeathAction(graphic, animFlags, animGroup, false);
+            }
+
+            return action;
         }
     }
 }

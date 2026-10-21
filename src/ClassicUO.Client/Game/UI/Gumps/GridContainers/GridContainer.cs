@@ -1197,7 +1197,12 @@ public partial class GridContainer : ResizableGump
 
                 Item bank = World.Player?.FindItemByLayer(Layer.Bank);
 
-                if (bank != null && (currentContainer.Serial == bank.Serial || currentContainer.Container == bank.Serial))
+                // Containers carried by another mobile (a player vendor's shop, a pack animal): when the main one is
+                // closed its inner containers are closed too, like the bank. The player's own bags stay open.
+                uint root = currentContainer.RootContainer;
+                bool onOtherMobile = SerialHelper.IsMobile(root) && root != World.Player?.Serial;
+
+                if (onOtherMobile || (bank != null && (currentContainer.Serial == bank.Serial || currentContainer.Container == bank.Serial)))
                 {
                     for (LinkedObject i = currentContainer.Items; i != null; i = i.Next)
                     {

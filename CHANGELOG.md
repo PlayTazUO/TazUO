@@ -5,6 +5,20 @@ All notable changes to TazUO will be recorded here.
 
 ## 10/20/26
 * ***Feature:*** Grid containers draw a second art for item stacks, like the classic container gump
+* ***Fix:*** Flying monsters whose body has no fly animation keep using their walk and stand animations
+* ***Fix:*** Lights near the camera no longer disappear in crowded areas or with a large viewport - lights per frame were capped at 100 (the number of light graphics), and the off-screen light margin filled the cap before the closest lights were collected
+* ***Feature:*** Grid containers: closing a container carried by another mobile (a player vendor, a pack animal) also closes its inner containers, like the bank
+* ***Feature:*** Xml Gump health bars show a paralyzed state - new `hue_paralyzed` and `image_foreground_paralyzed` attributes (default hue 49)
+* ***Fix:*** Animals without a second attack animation now play their first attack when the server requests the second one, instead of showing nothing
+* ***Fix:*** Always run unless hidden no longer forces ghosts to walk on servers that flag them as hidden
+* ***Fix:*** Elf and gargoyle ghosts keep their gender and race, and gargoyle ghosts no longer use the opposite gender's body animation
+* ***Fix:*** Fixed the tiledata static count being overestimated - the 20-character tile names were measured as a pointer, so the static table was oversized and graphics past the end of `tiledata.mul` passed validity checks as empty tiles
+* ***Fix:*** The trade window no longer caps the gold and platinum offers separately at each balance - the server converts between the two (1 platinum = 1,000,000,000 gold), so each field is now limited by your total wealth minus what the other field already offers
+* ***Fix:*** Statics high on the map are no longer hidden or cut off - statics at the maximum height (Z 127) stay visible when there is nothing above the player, and tall statics whose top goes past Z 150 are drawn
+* ***Fix:*** Weapons held by a sitting character are no longer squashed by the sitting animation - only the body is folded
+* ***Fix:*** The season packet no longer starts music track 0 or 1 when the season changes and nothing is playing - its second byte is a play-sound flag, not a music index
+* ***Fix:*** Music volume changes (including unchecking `Enable Music`) now apply to the track already playing when `Reproduce sounds in background` is enabled
+* ***Fix:*** Mobiles and corpses whose body has no second death animation (common on custom creatures and mounts) no longer turn invisible when they die running - they fall back to the first death animation
 
 ## 10/16/26
 * ***Feature:*** Added an in-game visual editor for Xml Gumps - open it with the `xmleditor` command or the top bar's Xml Gumps menu. It lists every element, lets you add, duplicate, delete and reorder them, and edits each attribute in a property panel (with hue and graphic pickers).
