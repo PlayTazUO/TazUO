@@ -480,18 +480,16 @@ internal sealed class ScreenOverlayCompositor
     {
         List<Guid>? finishedHiding = null;
 
-        foreach (KeyValuePair<Guid, ActiveOverlay> entry in _active)
+        foreach ((Guid key, ActiveOverlay overlay) in _active)
         {
-            ActiveOverlay overlay = entry.Value;
-
             float target = overlay.Hiding ? 0f : 1f;
             float fadeSeconds = overlay.Hiding ? overlay.Profile.Fade.OutSeconds : overlay.Profile.Fade.InSeconds;
             float rate = 1f / MathF.Max(fadeSeconds, MIN_FADE_SECONDS);
 
             overlay.Envelope = MoveTowards(overlay.Envelope, target, rate * dt);
 
-            if (overlay.Hiding && overlay.Envelope <= 0f)
-                (finishedHiding ??= []).Add(entry.Key);
+            if (overlay is { Hiding: true, Envelope: <= 0f })
+                (finishedHiding ??= []).Add(key);
         }
 
         if (finishedHiding == null)

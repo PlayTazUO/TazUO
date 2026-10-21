@@ -5,7 +5,7 @@ description: "Where on screen a layer lives: vignette or border shape, how far i
 
 ## Class Description
 Where on screen a layer lives: vignette or border shape, how far it extends, and how its boundary
- breaks up.
+breaks up.
 
 ## Properties
 ### `Center`
@@ -19,14 +19,14 @@ Centre of the radial falloff in screen uv. (0.5, 0.5) is the middle.
 **Type:** `ApiVector2?`
 
 Rate `Center` drifts at, in Hz per axis. Different X and Y give a wander instead of a
- pendulum; zero on an axis holds it still.
+pendulum; zero on an axis holds it still.
 
 ### `WobbleAmp`
 
 **Type:** `double`
 
 Peak drift of `Center`, in screen uv. Kept small - this unsteadies the pivot rather
- than sending it touring the screen.
+than sending it touring the screen.
 
 ### `Reach`
 
@@ -39,22 +39,22 @@ How far in from the screen edge the effect extends. Larger is thicker.
 **Type:** `double`
 
 Width of the fade behind the boundary. Wide thins the effect into haze; narrow gives
- it a defined surface.
+it a defined surface.
 
 ### `EdgeBlend`
 
 **Type:** `double`
 
 0 = radial vignette, 1 = border trim. Avoid values in between: the radial term is normalised
- to screen width, so any blend lands mostly on the left and right edges. Use `CornerBias` for
- corner weighting instead - it is per-axis and has no aspect bias.
+to screen width, so any blend lands mostly on the left and right edges. Use `CornerBias` for
+corner weighting instead - it is per-axis and has no aspect bias.
 
 ### `CornerBias`
 
 **Type:** `double`
 
 Corner weighting of the border trim, ignored when `EdgeBlend` is 0. Raising it
- thickens and rounds the corners without favouring any one edge.
+thickens and rounds the corners without favouring any one edge.
 
 ### `Jitter`
 

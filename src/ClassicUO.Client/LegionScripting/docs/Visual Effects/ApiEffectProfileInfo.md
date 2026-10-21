@@ -5,7 +5,7 @@ description: "One entry in the client's visual effect library, as `API.VisualEff
 
 ## Class Description
 One entry in the client's visual effect library, as `API.VisualEffects.GetProfiles` lists it.
- Enough to pick a composition and no more; `API.VisualEffects.GetProfile` fetches the editable copy.
+Enough to pick a composition and no more; `API.VisualEffects.GetProfile` fetches the editable copy.
 
 ## Properties
 ### `Id`
@@ -19,7 +19,7 @@ Stable identity, and what `API.VisualEffects.Start` takes.
 **Type:** `string`
 
 Display name. Shipped compositions are localized and suffixed "(built-in)", so this is only
- a reliable key into `API.VisualEffects.StartByName` for the user's own.
+a reliable key into `API.VisualEffects.StartByName` for the user's own.
 
 ### `IsBuiltIn`
 

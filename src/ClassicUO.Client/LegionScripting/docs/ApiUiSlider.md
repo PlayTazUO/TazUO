@@ -5,7 +5,7 @@ description: "Inherits from ApiUiBaseControl Wraps a `HSliderBar` so scripts can
 
 ## Class Description
 Inherits from ApiUiBaseControl
- Wraps a `HSliderBar` so scripts can read and change its value and react to changes.
+Wraps a `HSliderBar` so scripts can read and change its value and react to changes.
 
 ## Properties
 ### `Value`
@@ -36,7 +36,7 @@ Gets or sets the slider's maximum value.
 ### GetValue
 
 Gets the slider's current value.
- Used in python API
+Used in python API
 
 **Return Type:** `int` - The current value
 
@@ -45,7 +45,7 @@ Gets the slider's current value.
 ### SetValue
 `(value)`
 Sets the slider's current value. Values outside MinValue/MaxValue are clamped.
- Used in python API
+Used in python API
 
 **Parameters:**
 
@@ -60,18 +60,21 @@ Sets the slider's current value. Values outside MinValue/MaxValue are clamped.
 ### OnValueChanged
 `(onValueChanged)`
 Add an onValueChanged callback to this slider, invoked whenever the value changes.
- The callback function receives the new value as its only argument.
- Example:
- ```py
- def on_change(value):
-   API.SysMsg(f"Slider is now {value}")
+The callback function receives the new value as its only argument.
 
- slider = API.Gumps.CreateGumpSlider(200, 0, 100, 50)
- slider.OnValueChanged(on_change)
+**Example:**
 
- while True:
-   API.ProcessCallbacks()
- ```
+```py
+def on_change(value):
+  API.SysMsg(f"Slider is now {value}")
+
+slider = API.Gumps.CreateGumpSlider(200, 0, 100, 50)
+slider.OnValueChanged(on_change)
+
+while True:
+  API.ProcessCallbacks()
+
+```
 
 **Parameters:**
 

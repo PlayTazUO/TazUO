@@ -1,18 +1,16 @@
 ---
 title: ApiShakeConfig
-description: "A screen shake with no look attached, for `API.VisualEffects.StartShake`. Build one with `API.VisualEffects.NewShakeConfig`. Amplitude at any moment is `Intensity x gradient(progress) x rampUp(elapsed) x rampDown(remaining)`, so `Gradient` decides the overall arc and the two ramps decide how abruptly it starts and stops. Unlike `ApiShakeSpec`, which travels inside a composition, this one carries its own scope and gradient because there is no composition to take them from."
+description: "A screen shake with no look attached, for `API.VisualEffects.StartShake`. Build one with `API.VisualEffects.NewShakeConfig`."
 ---
 
 ## Class Description
 A screen shake with no look attached, for `API.VisualEffects.StartShake`. Build one with
- `API.VisualEffects.NewShakeConfig`.
+`API.VisualEffects.NewShakeConfig`.
 
-
-
- Amplitude at any moment is `Intensity x gradient(progress) x rampUp(elapsed) x
- rampDown(remaining)`, so `Gradient` decides the overall arc and the two ramps decide how abruptly
- it starts and stops. Unlike `ApiShakeSpec`, which travels inside a composition, this one carries
- its own scope and gradient because there is no composition to take them from.
+Amplitude at any moment is `Intensity x gradient(progress) x rampUp(elapsed) x
+rampDown(remaining)`, so `Gradient` decides the overall arc and the two ramps decide how abruptly
+it starts and stops. Unlike `ApiShakeSpec`, which travels inside a composition, this one carries
+its own scope and gradient because there is no composition to take them from.
 
 ## Properties
 ### `Seconds`
@@ -20,8 +18,8 @@ A screen shake with no look attached, for `API.VisualEffects.StartShake`. Build 
 **Type:** `double`
 
 Total length of the shake in seconds, ramps included. Must be above zero - there is no
- open-ended shake, since a shake nothing is sustaining would never stop - and clamped to
- 86400 at the top.
+open-ended shake, since a shake nothing is sustaining would never stop - and clamped to
+86400 at the top.
 
 ### `Intensity`
 
@@ -34,7 +32,7 @@ Peak trauma, 0 to 1, before the user's own shake setting scales it down. Linear 
 **Type:** `double`
 
 Seconds spent building to full strength. Zero is at full amplitude on the first
- frame, which is what an impact wants.
+frame, which is what an impact wants.
 
 ### `RampDownSeconds`
 
@@ -59,22 +57,22 @@ Easing applied to both ramps and to the gradient.
 **Type:** `double`
 
 Shake rate in Hz, or zero for the client default. Lower reads as a heavy rumble,
- higher as a rattle.
+higher as a rattle.
 
 ### `MaxOffsetPixels`
 
 **Type:** `double`
 
 Peak displacement in pixels at full trauma, or zero for the client default. Capped
- by the client whatever is asked for.
+by the client whatever is asked for.
 
 ### `FullScreen`
 
 **Type:** `bool`
 
 Whether the shake displaces the whole window, UI included, rather than the game world alone.
- Window scope moves the gumps and the cursor with it, which makes them hard to use for as long
- as the shake lasts.
+Window scope moves the gumps and the cursor with it, which makes them hard to use for as long
+as the shake lasts.
 
 
 *No fields found.*

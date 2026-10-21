@@ -5,7 +5,7 @@ description: "Represents a Python-accessible entity in the game world, such as a
 
 ## Class Description
 Represents a Python-accessible entity in the game world, such as a mobile or item.
- Inherits basic spatial and visual data from `ApiGameObject` .
+Inherits basic spatial and visual data from `ApiGameObject` .
 
 ## Properties
 ### `Name`
@@ -17,7 +17,7 @@ Represents a Python-accessible entity in the game world, such as a mobile or ite
 **Type:** `string`
 
 The Python-visible class name of this object.
- Accessible in Python as `obj.__class__` .
+Accessible in Python as `obj.__class__` .
 
 
 ### `Serial`
@@ -34,7 +34,7 @@ The unique serial identifier of the entity.
 ### ToString
 
 Returns a readable string representation of the entity.
- Used when printing or converting the object to a string in Python scripts.
+Used when printing or converting the object to a string in Python scripts.
 
 **Return Type:** `string`
 
@@ -43,7 +43,7 @@ Returns a readable string representation of the entity.
 ### Destroy
 
 This will remove the item from the client, it will reappear if you leave the area and come back.
- This object will also no longer be available and may cause issues if you try to interact with it further.
+This object will also no longer be available and may cause issues if you try to interact with it further.
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -60,8 +60,8 @@ Attempts to target this entity. Only has any effect while the client is waiting 
 ### TargetRel
 `(xOffset, yOffset, tilesOnly)`
 Attempts to target the spot at an offset from this entity's position, resolving it the same way a
- click would: the topmost visible object there is targeted, whether that is an entity, a static/multi,
- or land. Only has any effect while the client is waiting for a target selection.
+click would: the topmost visible object there is targeted, whether that is an entity, a static/multi,
+or land. Only has any effect while the client is waiting for a target selection.
 
 **Parameters:**
 

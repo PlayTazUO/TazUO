@@ -32,9 +32,9 @@ Set the modern gump texture and border size
 ### SetResizeCallback
 `(callback)`
 Registers a callback to be called when the gump is resized.
- <remarks>
- Note that only one callback may be registered at a time. Subsequent calls will replace the previous callback.
- </remarks>
+<remarks>
+Note that only one callback may be registered at a time. Subsequent calls will replace the previous callback.
+</remarks>
 
 **Parameters:**
 

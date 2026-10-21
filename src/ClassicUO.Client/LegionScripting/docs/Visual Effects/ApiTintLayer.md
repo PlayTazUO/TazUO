@@ -5,8 +5,8 @@ description: "Colour painted over the scene. The only technique that reads a col
 
 ## Class Description
 Colour painted over the scene. The only technique that reads a colour and the only one that never
- touches the frame behind it, which also makes it the only one that may sit anywhere in a stack.
- Build one with `API.VisualEffects.NewTintLayer`.
+touches the frame behind it, which also makes it the only one that may sit anywhere in a stack.
+Build one with `API.VisualEffects.NewTintLayer`.
 
 ## Properties
 ### `R`
@@ -32,7 +32,7 @@ Blue channel of the layer's colour, 0-255.
 **Type:** `int`
 
 Alpha channel of the layer's colour, 0-255. Note that `ApiLayerEffect.Strength` is what the
- layer is actually painted at; this one tints rather than fades.
+layer is actually painted at; this one tints rather than fades.
 
 
 *No fields found.*

@@ -1,67 +1,84 @@
 ---
 title: ApiVisualEffects
-description: "Full-screen visual effects and screen shake, reached through `API.VisualEffects`. Both halves ship switched off and a script cannot override that: `Start` and `StartShake` answer 0 while the user has them off. 0 also comes back when scripts already hold every slot, so a handle of 0 means \"nothing was raised\" and never an error - `Enabled`, `ShakeEnabled` and `SlotsFree` say which it was, if the script cares. Nothing a script raises outlives it: whatever is still running when the script stops is dropped, as is everything on leaving the world. A malformed composition throws instead, since that is a bug in the script rather than a state of the client. **Photosensitivity.** Raise an effect once and let it run. Starting and stopping one in a loop, or near-zero fades, strobe the whole screen - nothing in the client throttles that, since the 3 Hz ceiling only governs a layer's own pulse."
+description: "On-screen visual effects and screen shake, reached through `API.VisualEffects`."
 ---
 
 ## Class Description
-Full-screen visual effects and screen shake, reached through `API.VisualEffects`.
+On-screen visual effects and screen shake, reached through `API.VisualEffects`.
 
+:::tip[Advanced APIs]
+This section contains a set of advanced and highly complex APIs, designed for very specific use-cases
+:::
 
+Starting an effect hands back a handle, which is what stops it early. A handle of 0 means nothing
+was raised: either the system is off, or scripts already hold every slot - `SlotsFree` tells those
+two apart.
 
- Both halves ship switched off and a script cannot override that: `Start` and `StartShake` answer
- 0 while the user has them off. 0 also comes back when scripts already hold every slot, so a
- handle of 0 means "nothing was raised" and never an error - `Enabled`, `ShakeEnabled` and
- `SlotsFree` say which it was, if the script cares.
+Nothing you raise outlives your script. Whatever is still running when it stops is dropped, as is
+everything on leaving the world. Getting a setting wrong raises an error instead, since that is a
+mistake in the script rather than a state of the client.
 
+:::caution[Photosensitive Epilepsy Warning]
+Visual effects may contain flashing lights or rapid color changes.
 
+If you have an epileptic condition or have had seizures of any kind, please consult your physician before
+enabling the system or using the VFX APIs.
 
+Note that while the in-game UI has some safeguards meant to reduce PSE risks, certain API usage patterns can
+bypass those.
 
-
- Nothing a script raises outlives it: whatever is still running when the script stops is dropped,
- as is everything on leaving the world. A malformed composition throws instead, since that is a
- bug in the script rather than a state of the client.
-
-
-
-
-
- **Photosensitivity.** Raise an effect once and let it run. Starting and stopping one in a loop,
- or near-zero fades, strobe the whole screen - nothing in the client throttles that, since the
- 3 Hz ceiling only governs a layer's own pulse.
+Near-zero fades make an effect appear and vanish at once, so starting and stopping one in a loop
+strobes the whole screen.
+Keep both above a tenth of a second unless the effect is started once and left to run.
+:::
 
 ## Properties
 ### `Enabled`
 
 **Type:** `bool`
 
-Whether the user has full-screen visual effects switched on. They ship off, and a script
- cannot override that - `Start` answers 0 while this is false.
- Example:
- ```py
- if API.VisualEffects.Enabled:
-   API.VisualEffects.Start(API.VisualEffects.Ids.Poison, 3)
- ```
+:::note[Off by default]
+The entire VFX/Shake system ships disabled, and scripts cannot switch it on.
+
+The user turns it on under `Options > Video > Visual Effects`.
+Until they do, `Start` and `StartShake` return 0 and draw nothing.
+That is not an error - check `Enabled` and `ShakeEnabled` if your script needs to know.
+:::
+
+ Whether the user has full-screen visual effects switched on. They ship off, and a script
+cannot override that - `Start` answers 0 while this is false.
+
+**Example:**
+
+```py
+if API.VisualEffects.Enabled:
+API.VisualEffects.Start(API.VisualEffects.Ids.Poison, 3)
+
+```
 
 ### `ShakeEnabled`
 
 **Type:** `bool`
 
 Whether the user has screen shake switched on. As with visual effects it ships off and a
- script cannot override it - `StartShake` answers 0 while this is false.
+script cannot override it - `StartShake` answers 0 while this is false.
 
 ### `SlotsFree`
 
 **Type:** `int`
 
 How many more effects every script on the client may raise between them. Shared rather than
- per script, so a script holding effects it no longer needs takes them from the others - stop
- what you are done with.
- Example:
- ```py
- h = API.VisualEffects.Start(API.VisualEffects.Ids.Fog, 10)
- if not h and API.VisualEffects.SlotsFree == 0:
-   API.SysMsg("another script is using every effect slot")
- ```
+per script, so a script holding effects it no longer needs takes them from the others - stop
+what you are done with.
+
+**Example:**
+
+```py
+h = API.VisualEffects.Start(API.VisualEffects.Ids.Fog, 10)
+if not h and API.VisualEffects.SlotsFree == 0:
+API.SysMsg("another script is using every effect slot")
+
+```
 
 
 
@@ -92,7 +109,7 @@ Which packed channel of the shared noise texture a field reads.
 
 :::note[Description]
 Samples a distortion layer takes per pixel, which is its entire cost. A closed set because
- each count is a separately compiled unrolled loop in the shader.
+each count is a separately compiled unrolled loop in the shader.
 :::
 
 **Values:**
@@ -131,12 +148,10 @@ Easing applied to a shake's ramps and gradient.
 
 :::note[Description]
 Stable ids of the visual effect compositions shipped with the client, for `Start`. These
- never change.
+never change.
 
-
-
- Ids rather than names because every shipped composition's name is localized and carries a
- "(built-in)" suffix, so `StartByName` cannot reach any of them.
+Ids rather than names because every shipped composition's name is localized and carries a
+"(built-in)" suffix, so `StartByName` cannot reach any of them.
 :::
 
 | Name | Value | Description |
@@ -155,11 +170,14 @@ Stable ids of the visual effect compositions shipped with the client, for `Start
 ### GetProfiles
 
 List the visual effect compositions this client knows about, shipped and user-authored.
- Example:
- ```py
- for info in API.VisualEffects.GetProfiles():
-   API.SysMsg(f"{info.Name} -> {info.Id}")
- ```
+
+**Example:**
+
+```py
+for info in API.VisualEffects.GetProfiles():
+API.SysMsg(f"{info.Name} -> {info.Id}")
+
+```
 
 **Return Type:** `IList<ApiEffectProfileInfo>` - The library, in the order the options list it.
 
@@ -168,14 +186,17 @@ List the visual effect compositions this client knows about, shipped and user-au
 ### GetProfile
 `(id)`
 Get an editable copy of one of the client's visual effect compositions, as a starting point
- for a variation on it. The copy is yours - changing it does not touch the client's, and there
- is no way to save it back.
- Example:
- ```py
- effect = API.VisualEffects.GetProfile(API.VisualEffects.Ids.Poison)
- effect.Layers[0].Effect.Strength = 0.9
- handle = API.VisualEffects.Start(effect, 5)
- ```
+for a variation on it. The copy is yours - changing it does not touch the client's, and there
+is no way to save it back.
+
+**Example:**
+
+```py
+effect = API.VisualEffects.GetProfile(API.VisualEffects.Ids.Poison)
+effect.Layers[0].Effect.Strength = 0.9
+handle = API.VisualEffects.Start(effect, 5)
+
+```
 
 **Parameters:**
 
@@ -187,21 +208,24 @@ Get an editable copy of one of the client's visual effect compositions, as a sta
 
 **Raises:**
 
-- `ArgumentException` - The ID is not in the right format, or no effect in the client has it.
+- `ArgumentException` - The ID is malformed or was not found
 
 ---
 
 ### NewProfile
 
 Build an empty visual effect composition, to add layers to with `AddLayer`.
- Example:
- ```py
- effect = API.VisualEffects.NewProfile()
- tint = API.VisualEffects.NewTintLayer()
- tint.R, tint.G, tint.B = 150, 0, 0
- effect.AddLayer(tint)
- handle = API.VisualEffects.Start(effect, 4)
- ```
+
+**Example:**
+
+```py
+effect = API.VisualEffects.NewProfile()
+tint = API.VisualEffects.NewTintLayer()
+tint.R, tint.G, tint.B = 150, 0, 0
+effect.AddLayer(tint)
+handle = API.VisualEffects.Start(effect, 4)
+
+```
 
 **Return Type:** `ApiEffectProfile` - The composition, with the client's own fade timing and no layers.
 
@@ -210,7 +234,7 @@ Build an empty visual effect composition, to add layers to with `AddLayer`.
 ### NewTintLayer
 
 Build a colour layer, set to the client's defaults. The only technique that paints rather
- than distorting, and so the only one that may sit anywhere in a stack.
+than distorting, and so the only one that may sit anywhere in a stack.
 
 **Return Type:** `ApiTintLayer` - The layer.
 
@@ -227,7 +251,7 @@ Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
 ### NewRadialBlurLayer
 
 Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
- focus, because the centre of the screen stays sharp however strong it is.
+focus, because the centre of the screen stays sharp however strong it is.
 
 **Return Type:** `ApiRadialBlurLayer` - The layer.
 
@@ -236,7 +260,7 @@ Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather t
 ### NewChromaticLayer
 
 Build a chromatic split layer, set to the client's defaults. The cheapest technique by a wide
- margin, so it is worth reaching for first when something needs to look wrong.
+margin, so it is worth reaching for first when something needs to look wrong.
 
 **Return Type:** `ApiChromaticLayer` - The layer.
 
@@ -245,7 +269,7 @@ Build a chromatic split layer, set to the client's defaults. The cheapest techni
 ### NewShakeSpec
 
 Build the shake a visual effect fires as it arrives, to hang on `ApiEffectProfile.Shake`. For
- a shake on its own use `NewShakeConfig` instead.
+a shake on its own use `NewShakeConfig` instead.
 
 **Return Type:** `ApiShakeSpec` - The shake, set to the client's defaults - an impact that decays.
 
@@ -254,14 +278,17 @@ Build the shake a visual effect fires as it arrives, to hang on `ApiEffectProfil
 ### NewShakeConfig
 
 Build a standalone screen shake, for `StartShake`.
- Example:
- ```py
- shake = API.VisualEffects.NewShakeConfig()
- shake.Seconds = 2.5
- shake.Intensity = 0.8
- shake.Gradient = API.VisualEffects.ShakeGradient.Decay
- API.VisualEffects.StartShake(shake)
- ```
+
+**Example:**
+
+```py
+shake = API.VisualEffects.NewShakeConfig()
+shake.Seconds = 2.5
+shake.Intensity = 0.8
+shake.Gradient = API.VisualEffects.ShakeGradient.Decay
+API.VisualEffects.StartShake(shake)
+
+```
 
 **Return Type:** `ApiShakeConfig` - The shake.
 
@@ -286,26 +313,21 @@ Build a per-axis value pair, for the visual effect knobs that take one.
 `(profileId, seconds, intensity)`
 Start one of the client's visual effect compositions by id.
 
+A composition raised this way claims the look against the rulebase, so starting poison while
+the player is poisoned shows one poison rather than two at doubled alpha.
 
+Effects do not survive leaving the world: the handle goes stale and nothing comes back on the
+next login. Stop them yourself, give them a duration, or let the script end - whatever a
+script leaves running is dropped when it stops.
 
- A composition raised this way claims the look against the rulebase, so starting poison while
- the player is poisoned shows one poison rather than two at doubled alpha.
+**Example:**
 
+```py
+handle = API.VisualEffects.Start(API.VisualEffects.Ids.Drunk, 10)
+API.Pause(2)
+API.VisualEffects.Stop(handle)
 
-
-
-
- Effects do not survive leaving the world: the handle goes stale and nothing comes back on the
- next login. Stop them yourself, give them a duration, or let the script end - whatever a
- script leaves running is dropped when it stops.
-
-
- Example:
- ```py
- handle = API.VisualEffects.Start(API.VisualEffects.Ids.Drunk, 10)
- API.Pause(2)
- API.VisualEffects.Stop(handle)
- ```
+```
 
 **Parameters:**
 
@@ -327,12 +349,10 @@ Start one of the client's visual effect compositions by id.
 `(config, seconds, intensity)`
 Start a visual effect the script built itself.
 
-
-
- Unlike the two by-name forms this claims nothing, because there is no library composition
- behind it to claim - so two scripts starting identical hand-built effects do composite
- together, at doubled strength. Editing `config` afterwards cannot reach the running effect;
- start it again to change it.
+Unlike the two by-name forms this claims nothing, because there is no library composition
+behind it to claim - so two scripts starting identical hand-built effects do composite
+together, at doubled strength. Editing `config` afterwards cannot reach the running effect;
+start it again to change it.
 
 **Parameters:**
 
@@ -354,11 +374,9 @@ Start a visual effect the script built itself.
 `(name, seconds, intensity)`
 Start one of the user's own visual effect compositions by name.
 
-
-
- User-authored compositions only. Every shipped one is named through the client's language file
- and carries a "(built-in)" suffix, so no name here could reach them on a non-English client -
- use `Start` with `Ids` for those.
+User-authored compositions only. Every shipped one is named through the client's language file
+and carries a "(built-in)" suffix, so no name here could reach them on a non-English client -
+use `Start` with `Ids` for those.
 
 **Parameters:**
 
@@ -384,7 +402,7 @@ Stop one visual effect this script started. It fades out rather than cutting.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `handle` | `uint` | ❌ No | The handle a `Start` returned. Handles that already lapsed, were<br>     stopped, came back as 0, or belong to another script are ignored. |
+| `handle` | `uint` | ❌ No | The handle a `Start` returned. Handles that already lapsed, were stopped, came back as 0, or belong to another script are ignored. |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -393,7 +411,7 @@ Stop one visual effect this script started. It fades out rather than cutting.
 ### StopAll
 
 Stop every visual effect this script started. Other scripts' effects, and the ones the
- player's own state raises, are left alone.
+player's own state raises, are left alone.
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -402,13 +420,16 @@ Stop every visual effect this script started. Other scripts' effects, and the on
 ### StartShake
 `(config)`
 Shake the screen, with no visual effect attached.
- Example:
- ```py
- shake = API.VisualEffects.NewShakeConfig()
- shake.Seconds = 0.4
- shake.Intensity = 1.0
- API.VisualEffects.StartShake(shake)
- ```
+
+**Example:**
+
+```py
+shake = API.VisualEffects.NewShakeConfig()
+shake.Seconds = 0.4
+shake.Intensity = 1.0
+API.VisualEffects.StartShake(shake)
+
+```
 
 **Parameters:**
 
@@ -433,7 +454,7 @@ Stop one screen shake this script started.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `handle` | `uint` | ❌ No | The handle `StartShake` returned. Handles that already finished, were<br>     stopped, came back as 0, or belong to another script are ignored. |
+| `handle` | `uint` | ❌ No | The handle `StartShake` returned. Handles that already finished, were stopped, came back as 0, or belong to another script are ignored. |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -442,7 +463,7 @@ Stop one screen shake this script started.
 ### StopAllShakes
 
 Stop every screen shake this script started, including the ones its visual effects fired as
- they arrived.
+they arrived.
 
 **Return Type:** `void` *(Does not return anything)*
 

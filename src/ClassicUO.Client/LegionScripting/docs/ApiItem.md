@@ -5,7 +5,7 @@ description: "Represents a Python-accessible item in the game world. Inherits en
 
 ## Class Description
 Represents a Python-accessible item in the game world.
- Inherits entity and positional data from `ApiEntity` .
+Inherits entity and positional data from `ApiEntity` .
 
 ## Properties
 ### `Amount`
@@ -43,7 +43,7 @@ If this item is a corpse, the serial of the parent mobile it belongs to.
 **Type:** `string`
 
 The Python-visible class name of this object.
- Accessible in Python as `obj.__class__` .
+Accessible in Python as `obj.__class__` .
 
 
 ### `IsCorpse`
@@ -92,7 +92,7 @@ If this item is a container ( item.IsContainer ) and is open, this will return t
 ### NameAndProps
 `(wait, timeout)`
 Gets the item name and properties (tooltip text).
- This returns the name and properties in a single string. You can split it by newline if you want to separate them.
+This returns the name and properties in a single string. You can split it by newline if you want to separate them.
 
 **Parameters:**
 

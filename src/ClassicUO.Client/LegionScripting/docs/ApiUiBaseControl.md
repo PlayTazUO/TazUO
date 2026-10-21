@@ -30,7 +30,7 @@ Check if this control has been disposed(delete/removed/etc)
 ### Add
 `(childControl)`
 Adds a child control to this control. Works with gumps too (gump.Add(control)).
- Used in python API
+Used in python API
 
 **Parameters:**
 
@@ -45,7 +45,7 @@ Adds a child control to this control. Works with gumps too (gump.Add(control)).
 ### GetX
 
 Returns the control's X position.
- Used in python API
+Used in python API
 
 **Return Type:** `int` - The X coordinate of the control
 
@@ -54,7 +54,7 @@ Returns the control's X position.
 ### GetY
 
 Returns the control's Y position.
- Used in python API
+Used in python API
 
 **Return Type:** `int` - The Y coordinate of the control
 
@@ -63,7 +63,7 @@ Returns the control's Y position.
 ### SetX
 `(x)`
 Sets the control's X position.
- Used in python API
+Used in python API
 
 **Parameters:**
 
@@ -78,7 +78,7 @@ Sets the control's X position.
 ### SetY
 `(y)`
 Sets the control's Y position.
- Used in python API
+Used in python API
 
 **Parameters:**
 
@@ -93,7 +93,7 @@ Sets the control's Y position.
 ### SetPos
 `(x, y)`
 Sets the control's X and Y positions.
- Used in python API
+Used in python API
 
 **Parameters:**
 
@@ -121,7 +121,7 @@ Sets the control's X and Y positions.
 ### SetWidth
 `(width)`
 Sets the control's width.
- Used in python API
+Used in python API
 
 **Parameters:**
 
@@ -136,7 +136,7 @@ Sets the control's width.
 ### SetHeight
 `(height)`
 Sets the control's height.
- Used in python API
+Used in python API
 
 **Parameters:**
 
@@ -151,7 +151,7 @@ Sets the control's height.
 ### SetRect
 `(x, y, width, height)`
 Sets the control's position and size in one operation.
- Used in python API
+Used in python API
 
 **Parameters:**
 
@@ -169,7 +169,7 @@ Sets the control's position and size in one operation.
 ### CenterXInViewPort
 
 Centers a GUMP horizontally in the viewport. Only works on Gump instances.
- Used in python API
+Used in python API
 
 **Return Type:** `ApiUiBaseControl`
 
@@ -178,7 +178,7 @@ Centers a GUMP horizontally in the viewport. Only works on Gump instances.
 ### CenterYInViewPort
 
 Centers a GUMP vertically in the viewport. Only works on Gump instances.
- Used in python API
+Used in python API
 
 **Return Type:** `ApiUiBaseControl`
 
@@ -187,7 +187,7 @@ Centers a GUMP vertically in the viewport. Only works on Gump instances.
 ### GetAlpha
 
 Returns the control's Alpha value.
- Used in python API
+Used in python API
 
 **Return Type:** `float` - The Alpha value of the control
 
@@ -196,7 +196,7 @@ Returns the control's Alpha value.
 ### SetAlpha
 `(alpha)`
 Sets the control's Alpha value.
- Used in python API
+Used in python API
 
 **Parameters:**
 
@@ -211,8 +211,8 @@ Sets the control's Alpha value.
 ### SetTooltip
 `(text)`
 Sets a plain text tooltip that is shown when hovering this control.
- Automatically enables mouse input so the tooltip can be triggered by hovering.
- Used in python API
+Automatically enables mouse input so the tooltip can be triggered by hovering.
+Used in python API
 
 **Parameters:**
 
@@ -227,8 +227,8 @@ Sets a plain text tooltip that is shown when hovering this control.
 ### SetEntityTooltip
 `(serial)`
 Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
- Automatically enables mouse input so the tooltip can be triggered by hovering.
- Used in python API
+Automatically enables mouse input so the tooltip can be triggered by hovering.
+Used in python API
 
 **Parameters:**
 
@@ -243,8 +243,8 @@ Sets the tooltip of this control to display the properties of an item/entity, as
 ### SetAcceptMouseInput
 `(enabled)`
 Sets whether this control accepts mouse input. Mouse input must be enabled for
- hover-based features such as tooltips to work.
- Used in python API
+hover-based features such as tooltips to work.
+Used in python API
 
 **Parameters:**
 
@@ -259,7 +259,7 @@ Sets whether this control accepts mouse input. Mouse input must be enabled for
 ### ClearTooltip
 
 Clears the tooltip from this control.
- Used in python API
+Used in python API
 
 **Return Type:** `ApiUiBaseControl`
 
@@ -268,7 +268,7 @@ Clears the tooltip from this control.
 ### Clear
 
 Clears all child controls from this control.
- Used in python API
+Used in python API
 
 **Return Type:** `ApiUiBaseControl`
 

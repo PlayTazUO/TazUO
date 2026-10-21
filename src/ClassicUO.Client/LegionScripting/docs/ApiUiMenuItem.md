@@ -28,7 +28,7 @@ Represents a Python-accessible item in a menu.
 **Type:** `string`
 
 The Python-visible class name of this object.
- Accessible in Python as `obj.__class__` .
+Accessible in Python as `obj.__class__` .
 
 
 *No fields found.*
@@ -40,7 +40,7 @@ The Python-visible class name of this object.
 ### ToString
 
 Returns a readable string representation of the menu item.
- Used when printing or converting the object to a string in Python scripts.
+Used when printing or converting the object to a string in Python scripts.
 
 **Return Type:** `string`
 
@@ -49,7 +49,7 @@ Returns a readable string representation of the menu item.
 ### __repr__
 
 Returns a detailed string representation of the object.
- This string is used by Python’s built-in `repr()` function.
+This string is used by Python’s built-in `repr()` function.
 
 **Return Type:** `string` - A string suitable for debugging and inspection in Python.
 

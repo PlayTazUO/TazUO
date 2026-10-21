@@ -78,7 +78,7 @@ public static partial class GenDoc
             string classSummary = GetXmlSummary(classDeclaration);
             if (!string.IsNullOrEmpty(classSummary))
             {
-                sb.AppendLf($"description: {YamlScalar(classSummary)}");
+                sb.AppendLf($"description: {YamlScalar(FirstParagraph(classSummary))}");
             }
             else
             {
@@ -435,8 +435,16 @@ public static partial class GenDoc
     /// </summary>
     /// <param name="element">The doc element.</param>
     /// <returns>The Markdown, on a single line.</returns>
-    private static string CleanInline(XmlElementSyntax element) =>
-        WhitespaceRx().Replace(CleanDocumentation(TagText(element)), " ").Trim();
+    private static string CleanInline(XmlElementSyntax element)
+    {
+        string cleaned = CleanDocumentation(TagText(element));
+
+        // A deliberate break survives as <br>, since a table cell cannot hold a newline and running
+        // the two halves together would lose the author's point. Soft wrapping collapses to spaces.
+        cleaned = cleaned.Replace("\n\n", "<br>");
+
+        return WhitespaceRx().Replace(cleaned, " ").Trim();
+    }
 
     /// <summary>
     /// Turns the raw text of a doc tag into Markdown: strips the comment markers, and renders the
@@ -450,6 +458,13 @@ public static partial class GenDoc
         string cleanedDocumentation = XmlDocPrefixRx().Replace(rawText, "$1");
         cleanedDocumentation = CodeBlockRx().Replace(cleanedDocumentation, "`$1`");
 
+        // Before the asides, so a <br/> inside one is already a break by the time its body is laid
+        // out. Markdown has no single-line break worth the ambiguity, so one reads as a paragraph.
+        cleanedDocumentation = BreakRx().Replace(cleanedDocumentation, "\n\n");
+
+        // Before <para>, so an aside's own body still gets its paragraph breaks.
+        cleanedDocumentation = AsideRx().Replace(cleanedDocumentation, RenderAside);
+
         // <para> has no Markdown equivalent, so it reaches the page as an unknown element and the
         // paragraph break it stands for is lost. Both halves become one blank line.
         cleanedDocumentation = ParaRx().Replace(cleanedDocumentation, "\n\n");
@@ -458,7 +473,129 @@ public static partial class GenDoc
         // so they have to become that name - dropping the tag would leave the sentence dangling.
         cleanedDocumentation = ReferenceRx().Replace(cleanedDocumentation, match => $"`{match.Groups[1].Value}`");
 
-        return cleanedDocumentation.Replace("///", "").Trim();
+        // Dropping the marker alone leaves the space that followed it, indenting every wrapped line
+        // by one. Four such lines read as a code block, and one before a fence breaks the fence.
+        cleanedDocumentation = DocMarkerRx().Replace(cleanedDocumentation, string.Empty);
+
+        // A line left holding only the space that followed its marker is not blank, so it would
+        // survive the run collapse below and show as an indented empty paragraph.
+        cleanedDocumentation = BlankLineRx().Replace(cleanedDocumentation, string.Empty);
+
+        // Consecutive </para><para> each yield their own pair of breaks, so the run adds up.
+        cleanedDocumentation = BlankRunRx().Replace(cleanedDocumentation, "\n\n");
+
+        // Authors indent doc comments to match the tags they sit inside, and four spaces of that is
+        // a Markdown code block. Run after the breaks are settled, so each paragraph is dedented
+        // against itself and a block indented more deeply than its neighbours still comes out flat.
+        cleanedDocumentation = Dedent(cleanedDocumentation);
+
+        // A fence on the line directly after prose is not a fence; Markdown needs the blank line.
+        // Same for the "Example:" label authors put immediately above one.
+        cleanedDocumentation = ExampleLabelRx().Replace(cleanedDocumentation, "\n\n**Example:**");
+        cleanedDocumentation = FenceRx().Replace(cleanedDocumentation, "\n\n```");
+
+        return BlankRunRx().Replace(cleanedDocumentation, "\n\n").Trim();
+    }
+
+    /// <summary>
+    /// Renders one authored aside as a Starlight aside. The four kinds map onto Starlight's own, so
+    /// a page gets its native callout styling rather than a bold run of text in the body.
+    /// </summary>
+    /// <param name="match">The matched aside element.</param>
+    /// <returns>The directive block.</returns>
+    private static string RenderAside(Match match)
+    {
+        string kind = match.Groups["tag"].Value.ToLowerInvariant() switch
+        {
+            "tip" => "tip",
+            "warn" => "caution",
+            "danger" => "danger",
+            _ => "note"
+        };
+
+        string title = match.Groups["title"].Success ? $"[{match.Groups["title"].Value}]" : string.Empty;
+
+        // Markers come off here rather than in the usual pass: the body's last line is a bare "///"
+        // that would otherwise survive the trim and leave a blank line above the closing fence.
+        // Dedented here too, because an aside's body is usually indented further than the prose
+        // around it, so the shared pass would measure the two together and flatten neither.
+        string body = DocMarkerRx().Replace(match.Groups["body"].Value, string.Empty);
+
+        body = Dedent(BlankRunRx().Replace(BlankLineRx().Replace(body, string.Empty), "\n\n")).Trim();
+
+        // Padded with blank lines because a directive fence has to own its line, and the author
+        // wrote the tag mid-paragraph.
+        return $"\n\n:::{kind}{title}\n{body}\n:::\n\n";
+    }
+
+    /// <summary>
+    /// Removes the indentation an author gave their doc comment, one paragraph at a time.
+    /// <para>
+    /// Per paragraph rather than over the whole text, so a block indented more deeply than its
+    /// neighbours - an aside's body beside unindented prose - is still flattened. Each block is
+    /// shifted by one amount, so indentation <em>within</em> it survives: a fenced code sample keeps
+    /// its own shape, and the fence markers are measured along with the code, so a sample indented
+    /// with its comment comes out aligned rather than mangled.
+    /// </para>
+    /// </summary>
+    /// <param name="text">Cleaned documentation, with blank lines already settled.</param>
+    /// <returns>The text, flattened.</returns>
+    private static string Dedent(string text)
+    {
+        string[] blocks = text.Split("\n\n");
+
+        for (int i = 0; i < blocks.Length; i++)
+            blocks[i] = DedentBlock(blocks[i]);
+
+        return string.Join("\n\n", blocks);
+    }
+
+    /// <summary>Shifts one paragraph left by the indentation its least-indented line carries.</summary>
+    /// <param name="block">The paragraph.</param>
+    /// <returns>The paragraph, flattened.</returns>
+    private static string DedentBlock(string block)
+    {
+        string[] lines = block.Split('\n');
+        int shared = int.MaxValue;
+
+        foreach (string line in lines)
+        {
+            if (line.Trim().Length == 0)
+                continue;
+
+            shared = Math.Min(shared, line.Length - line.TrimStart(' ', '\t').Length);
+        }
+
+        if (shared is 0 or int.MaxValue)
+            return block;
+
+        for (int i = 0; i < lines.Length; i++)
+            lines[i] = lines[i].Length >= shared ? lines[i][shared..] : string.Empty;
+
+        return string.Join("\n", lines);
+    }
+
+    /// <summary>
+    /// First paragraph of a summary, for the frontmatter description. The whole summary would put
+    /// every caveat and code sample into a meta description and a sidebar card.
+    /// </summary>
+    /// <param name="summary">The cleaned summary.</param>
+    /// <returns>The opening paragraph.</returns>
+    private static string FirstParagraph(string summary)
+    {
+        // Asides come out whole before splitting, not skipped paragraph by paragraph: one carries
+        // its own blank lines, so a split would hand back the middle of a callout as the summary.
+        string prose = AsideBlockRx().Replace(summary, string.Empty);
+
+        foreach (string paragraph in prose.Split("\n\n", StringSplitOptions.RemoveEmptyEntries))
+        {
+            string trimmed = paragraph.Trim();
+
+            if (trimmed.Length > 0)
+                return trimmed;
+        }
+
+        return string.Empty;
     }
 
     /// <summary>
@@ -526,7 +663,7 @@ public static partial class GenDoc
         if (trivia == null)
             return;
 
-        List<XmlElementSyntax> thrown = trivia.Content
+        var thrown = trivia.Content
             .OfType<XmlElementSyntax>()
             .Where(element => element.StartTag.Name.LocalName.Text == "exception")
             .ToList();
@@ -610,16 +747,7 @@ public static partial class GenDoc
                     .Any(a => a.Identifier.Identifier.Text == paramName)
             );
 
-        if (paramElement == null)
-            return string.Empty;
-
-        string r = string.Join(" ", paramElement.Content.Select(c => c.ToString().Trim()));
-        Regex codeBlockReplacer = CodeBlockRx();
-        r = codeBlockReplacer.Replace(r, "`$1`")
-            .Replace("///", "")
-            .Trim()
-            .Replace("\n", "<br>");
-        return r;
+        return paramElement == null ? string.Empty : CleanInline(paramElement);
     }
 
     private static void GenParametersParenthesis(SeparatedSyntaxList<ParameterSyntax> parameters, ref StringBuilder sb)
@@ -876,6 +1004,49 @@ public static partial class GenDoc
     [GeneratedRegex(@"\s+")]
     private static partial Regex WhitespaceRx();
 
+    /// <summary>
+    /// An authored callout: <c>&lt;note&gt;</c>, <c>&lt;tip&gt;</c>, <c>&lt;warn&gt;</c> or
+    /// <c>&lt;danger&gt;</c>, each taking an optional <c>title</c>. Not XMLDoc elements - the
+    /// compiler ignores tags it does not know, which is what lets the docs define their own.
+    /// </summary>
+    [GeneratedRegex(
+        """<(?<tag>note|tip|warn|danger)(?:\s+title\s*=\s*"(?<title>[^"]*)")?\s*>(?<body>.*?)</\k<tag>\s*>""",
+        RegexOptions.Singleline | RegexOptions.IgnoreCase
+    )]
+    private static partial Regex AsideRx();
+
+    /// <summary>The comment marker and the single space authors put after it.</summary>
+    [GeneratedRegex(@"///[ \t]?")]
+    private static partial Regex DocMarkerRx();
+
+    /// <summary>
+    /// An explicit break, <c>&lt;br&gt;</c> or <c>&lt;br/&gt;</c>. Reads as a paragraph break:
+    /// Markdown's single-line break is two trailing spaces, which no author would mean to type and
+    /// no reviewer could see.
+    /// </summary>
+    [GeneratedRegex(@"[ \t]*<br\s*/?>[ \t]*", RegexOptions.IgnoreCase)]
+    private static partial Regex BreakRx();
+
+    /// <summary>Three or more line breaks, which Markdown renders the same as two.</summary>
+    [GeneratedRegex(@"\n{3,}")]
+    private static partial Regex BlankRunRx();
+
+    /// <summary>A line holding nothing but whitespace.</summary>
+    [GeneratedRegex(@"^[ \t]+$", RegexOptions.Multiline)]
+    private static partial Regex BlankLineRx();
+
+    /// <summary>A rendered aside, open fence to close fence, including the lines between.</summary>
+    [GeneratedRegex(@"^:::.*?^:::[ \t]*$", RegexOptions.Multiline | RegexOptions.Singleline)]
+    private static partial Regex AsideBlockRx();
+
+    /// <summary>A fenced block opening on the line directly below prose, with no blank between.</summary>
+    [GeneratedRegex(@"(?<=\S)[ \t]*\n[ \t]*```")]
+    private static partial Regex FenceRx();
+
+    /// <summary>The bare "Example:" label authors write above a sample.</summary>
+    [GeneratedRegex(@"(?:(?<=\S)[ \t]*\n[ \t]*|^[ \t]*)Example:[ \t]*(?=\n)", RegexOptions.Multiline)]
+    private static partial Regex ExampleLabelRx();
+
     [GeneratedRegex(@"^\s*(///.*)$", RegexOptions.Multiline // Treat ^ and $ as start/end of LINE
     )]
     private static partial Regex XmlDocPrefixRx();
@@ -887,12 +1058,6 @@ class Program
     private const string ApiClassesFolder = "ApiClasses";
 
     /// <summary>
-    /// Sidebar group the visual effect scripting types are published under. No "API" in the name -
-    /// everything here is the API, so the word would only repeat the section it sits in.
-    /// </summary>
-    private const string VisualEffectsGroup = "Visual Effects";
-
-    /// <summary>
     /// Published folder name per source folder under <see cref="ApiClassesFolder"/>, where the two
     /// should differ. Anything absent publishes under its own name, and a class sitting directly in
     /// <see cref="ApiClassesFolder"/> publishes at the root.
@@ -900,12 +1065,13 @@ class Program
     /// The website copies the docs directory wholesale into its content collection and lets
     /// Starlight autogenerate the sidebar from it, so these names are published URL segments and
     /// sidebar group labels - which is why they read as prose rather than as C# folder names.
-    /// Renaming one moves every page under it.
+    /// Renaming one moves every page under it. No "API" in a label - everything here is the API, so
+    /// the word would only repeat the section it sits in.
     /// </para>
     /// </summary>
     private static readonly Dictionary<string, string> PublishedFolders = new()
     {
-        ["VisualEffects"] = VisualEffectsGroup
+        ["VisualEffects"] = "Visual Effects"
     };
 
     static void Main(string[] args)

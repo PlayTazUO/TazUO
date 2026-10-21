@@ -13,30 +13,40 @@ using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorati
 namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
-/// Full-screen visual effects and screen shake, reached through `API.VisualEffects`.
-/// <para>
-/// Both halves ship switched off and a script cannot override that: `Start` and `StartShake` answer
-/// 0 while the user has them off. 0 also comes back when scripts already hold every slot, so a
-/// handle of 0 means "nothing was raised" and never an error - `Enabled`, `ShakeEnabled` and
-/// `SlotsFree` say which it was, if the script cares.
-/// </para>
-/// <para>
-/// Nothing a script raises outlives it: whatever is still running when the script stops is dropped,
-/// as is everything on leaving the world. A malformed composition throws instead, since that is a
-/// bug in the script rather than a state of the client.
-/// </para>
-/// <para>
-/// **Photosensitivity.** Raise an effect once and let it run. Starting and stopping one in a loop,
-/// or near-zero fades, strobe the whole screen - nothing in the client throttles that, since the
-/// 3 Hz ceiling only governs a layer's own pulse.
-/// </para>
+///     On-screen visual effects and screen shake, reached through `API.VisualEffects`.
+///     <tip title="Advanced APIs">
+///         This section contains a set of advanced and highly complex APIs, designed for very specific use-cases
+///     </tip>
+///     <para>
+///         Starting an effect hands back a handle, which is what stops it early. A handle of 0 means nothing
+///         was raised: either the system is off, or scripts already hold every slot - `SlotsFree` tells those
+///         two apart.
+///     </para>
+///     <para>
+///         Nothing you raise outlives your script. Whatever is still running when it stops is dropped, as is
+///         everything on leaving the world. Getting a setting wrong raises an error instead, since that is a
+///         mistake in the script rather than a state of the client.
+///     </para>
+///     <warn title="Photosensitive Epilepsy Warning">
+///         Visual effects may contain flashing lights or rapid color changes.
+///
+///         If you have an epileptic condition or have had seizures of any kind, please consult your physician before
+///         enabling the system or using the VFX APIs.
+///
+///         Note that while the in-game UI has some safeguards meant to reduce PSE risks, certain API usage patterns can
+///         bypass those.
+///
+///         Near-zero fades make an effect appear and vanish at once, so starting and stopping one in a loop
+///         strobes the whole screen.
+///         Keep both above a tenth of a second unless the effect is started once and left to run.
+///     </warn>
 /// </summary>
 public class ApiVisualEffects(LegionAPI api)
 {
     #region Enums
 
     /// <summary>
-    /// How a visual effect layer composites against what is already beneath it.
+    ///     How a visual effect layer composites against what is already beneath it.
     /// </summary>
     public enum OverlayBlend
     {
@@ -48,7 +58,7 @@ public class ApiVisualEffects(LegionAPI api)
     }
 
     /// <summary>
-    /// Which packed channel of the shared noise texture a field reads.
+    ///     Which packed channel of the shared noise texture a field reads.
     /// </summary>
     public enum NoiseChannel
     {
@@ -61,14 +71,16 @@ public class ApiVisualEffects(LegionAPI api)
         /// <summary>Ridged fBm. Thin bright filaments - cracks and lightning, never fluid or gas.</summary>
         Blue = 2,
 
-        /// <summary>Worley cell edges. Only right for shattering; on organic content it reads as a
-        /// microscope slide.</summary>
+        /// <summary>
+        ///     Worley cell edges. Only right for shattering; on organic content it reads as a
+        ///     microscope slide.
+        /// </summary>
         Alpha = 3
     }
 
     /// <summary>
-    /// Samples a distortion layer takes per pixel, which is its entire cost. A closed set because
-    /// each count is a separately compiled unrolled loop in the shader.
+    ///     Samples a distortion layer takes per pixel, which is its entire cost. A closed set because
+    ///     each count is a separately compiled unrolled loop in the shader.
     /// </summary>
     public enum OverlaySampleTaps
     {
@@ -86,7 +98,7 @@ public class ApiVisualEffects(LegionAPI api)
     }
 
     /// <summary>
-    /// How a shake's intensity travels across its whole duration, independently of its ramps.
+    ///     How a shake's intensity travels across its whole duration, independently of its ramps.
     /// </summary>
     public enum ShakeGradient
     {
@@ -104,7 +116,7 @@ public class ApiVisualEffects(LegionAPI api)
     }
 
     /// <summary>
-    /// Easing applied to a shake's ramps and gradient.
+    ///     Easing applied to a shake's ramps and gradient.
     /// </summary>
     public enum ShakeCurve
     {
@@ -125,12 +137,12 @@ public class ApiVisualEffects(LegionAPI api)
     #region Profile Ids
 
     /// <summary>
-    /// Stable ids of the visual effect compositions shipped with the client, for `Start`. These
-    /// never change.
-    /// <para>
-    /// Ids rather than names because every shipped composition's name is localized and carries a
-    /// "(built-in)" suffix, so `StartByName` cannot reach any of them.
-    /// </para>
+    ///     Stable ids of the visual effect compositions shipped with the client, for `Start`. These
+    ///     never change.
+    ///     <para>
+    ///         Ids rather than names because every shipped composition's name is localized and carries a
+    ///         "(built-in)" suffix, so `StartByName` cannot reach any of them.
+    ///     </para>
     /// </summary>
     public static class Ids
     {
@@ -164,32 +176,39 @@ public class ApiVisualEffects(LegionAPI api)
     #region Public accessors
 
     /// <summary>
-    /// Whether the user has full-screen visual effects switched on. They ship off, and a script
-    /// cannot override that - `Start` answers 0 while this is false.
-    /// Example:
-    /// ```py
-    /// if API.VisualEffects.Enabled:
-    ///   API.VisualEffects.Start(API.VisualEffects.Ids.Poison, 3)
-    /// ```
+    ///     <note title="Off by default">
+    ///         The entire VFX/Shake system ships disabled, and scripts cannot switch it on.
+    ///
+    ///         The user turns it on under `Options > Video > Visual Effects`.
+    ///         Until they do, `Start` and `StartShake` return 0 and draw nothing.
+    ///         That is not an error - check `Enabled` and `ShakeEnabled` if your script needs to know.
+    ///     </note>
+    ///     Whether the user has full-screen visual effects switched on. They ship off, and a script
+    ///     cannot override that - `Start` answers 0 while this is false.
+    ///     Example:
+    ///     ```py
+    ///     if API.VisualEffects.Enabled:
+    ///     API.VisualEffects.Start(API.VisualEffects.Ids.Poison, 3)
+    ///     ```
     /// </summary>
     public bool Enabled => DecorationSettings.Current.OverlaysActive;
 
     /// <summary>
-    /// Whether the user has screen shake switched on. As with visual effects it ships off and a
-    /// script cannot override it - `StartShake` answers 0 while this is false.
+    ///     Whether the user has screen shake switched on. As with visual effects it ships off and a
+    ///     script cannot override it - `StartShake` answers 0 while this is false.
     /// </summary>
     public bool ShakeEnabled => DecorationSettings.Current.ShakeActive;
 
     /// <summary>
-    /// How many more effects every script on the client may raise between them. Shared rather than
-    /// per script, so a script holding effects it no longer needs takes them from the others - stop
-    /// what you are done with.
-    /// Example:
-    /// ```py
-    /// h = API.VisualEffects.Start(API.VisualEffects.Ids.Fog, 10)
-    /// if not h and API.VisualEffects.SlotsFree == 0:
-    ///   API.SysMsg("another script is using every effect slot")
-    /// ```
+    ///     How many more effects every script on the client may raise between them. Shared rather than
+    ///     per script, so a script holding effects it no longer needs takes them from the others - stop
+    ///     what you are done with.
+    ///     Example:
+    ///     ```py
+    ///     h = API.VisualEffects.Start(API.VisualEffects.Ids.Fog, 10)
+    ///     if not h and API.VisualEffects.SlotsFree == 0:
+    ///     API.SysMsg("another script is using every effect slot")
+    ///     ```
     /// </summary>
     public int SlotsFree => OnMain(ScreenOverlayManager.Instance.ScriptSlotsFree);
 
@@ -204,12 +223,12 @@ public class ApiVisualEffects(LegionAPI api)
     #region Public methods
 
     /// <summary>
-    /// List the visual effect compositions this client knows about, shipped and user-authored.
-    /// Example:
-    /// ```py
-    /// for info in API.VisualEffects.GetProfiles():
-    ///   API.SysMsg(f"{info.Name} -> {info.Id}")
-    /// ```
+    ///     List the visual effect compositions this client knows about, shipped and user-authored.
+    ///     Example:
+    ///     ```py
+    ///     for info in API.VisualEffects.GetProfiles():
+    ///     API.SysMsg(f"{info.Name} -> {info.Id}")
+    ///     ```
     /// </summary>
     /// <returns>The library, in the order the options list it.</returns>
     public IList<ApiEffectProfileInfo> GetProfiles() => BubblingOnMain<IList<ApiEffectProfileInfo>>(() =>
@@ -217,30 +236,23 @@ public class ApiVisualEffects(LegionAPI api)
         var listed = new List<ApiEffectProfileInfo>();
 
         foreach (EffectProfile profile in DecorationSettings.Current.Overlays.AllProfiles())
-        {
             listed.Add(
-                new ApiEffectProfileInfo
-                {
-                    Id = profile.Id.ToString(),
-                    Name = profile.Name,
-                    IsBuiltIn = profile.IsBuiltIn
-                }
+                new ApiEffectProfileInfo { Id = profile.Id.ToString(), Name = profile.Name, IsBuiltIn = profile.IsBuiltIn }
             );
-        }
 
         return listed;
     });
 
     /// <summary>
-    /// Get an editable copy of one of the client's visual effect compositions, as a starting point
-    /// for a variation on it. The copy is yours - changing it does not touch the client's, and there
-    /// is no way to save it back.
-    /// Example:
-    /// ```py
-    /// effect = API.VisualEffects.GetProfile(API.VisualEffects.Ids.Poison)
-    /// effect.Layers[0].Effect.Strength = 0.9
-    /// handle = API.VisualEffects.Start(effect, 5)
-    /// ```
+    ///     Get an editable copy of one of the client's visual effect compositions, as a starting point
+    ///     for a variation on it. The copy is yours - changing it does not touch the client's, and there
+    ///     is no way to save it back.
+    ///     Example:
+    ///     ```py
+    ///     effect = API.VisualEffects.GetProfile(API.VisualEffects.Ids.Poison)
+    ///     effect.Layers[0].Effect.Strength = 0.9
+    ///     handle = API.VisualEffects.Start(effect, 5)
+    ///     ```
     /// </summary>
     /// <param name="id">The composition's id, from `GetProfiles` or `Ids`.</param>
     /// <returns>The copy.</returns>
@@ -249,69 +261,69 @@ public class ApiVisualEffects(LegionAPI api)
         BubblingOnMain(() => ApiEffectProfile.From(FindProfileOrThrow(id)));
 
     /// <summary>
-    /// Build an empty visual effect composition, to add layers to with `AddLayer`.
-    /// Example:
-    /// ```py
-    /// effect = API.VisualEffects.NewProfile()
-    /// tint = API.VisualEffects.NewTintLayer()
-    /// tint.R, tint.G, tint.B = 150, 0, 0
-    /// effect.AddLayer(tint)
-    /// handle = API.VisualEffects.Start(effect, 4)
-    /// ```
+    ///     Build an empty visual effect composition, to add layers to with `AddLayer`.
+    ///     Example:
+    ///     ```py
+    ///     effect = API.VisualEffects.NewProfile()
+    ///     tint = API.VisualEffects.NewTintLayer()
+    ///     tint.R, tint.G, tint.B = 150, 0, 0
+    ///     effect.AddLayer(tint)
+    ///     handle = API.VisualEffects.Start(effect, 4)
+    ///     ```
     /// </summary>
     /// <returns>The composition, with the client's own fade timing and no layers.</returns>
     public ApiEffectProfile NewProfile() => new();
 
     /// <summary>
-    /// Build a colour layer, set to the client's defaults. The only technique that paints rather
-    /// than distorting, and so the only one that may sit anywhere in a stack.
+    ///     Build a colour layer, set to the client's defaults. The only technique that paints rather
+    ///     than distorting, and so the only one that may sit anywhere in a stack.
     /// </summary>
     /// <returns>The layer.</returns>
     public ApiTintLayer NewTintLayer() => new();
 
     /// <summary>
-    /// Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
+    ///     Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
     /// </summary>
     /// <returns>The layer.</returns>
     public ApiBlurLayer NewBlurLayer() => new();
 
     /// <summary>
-    /// Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
-    /// focus, because the centre of the screen stays sharp however strong it is.
+    ///     Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
+    ///     focus, because the centre of the screen stays sharp however strong it is.
     /// </summary>
     /// <returns>The layer.</returns>
     public ApiRadialBlurLayer NewRadialBlurLayer() => new();
 
     /// <summary>
-    /// Build a chromatic split layer, set to the client's defaults. The cheapest technique by a wide
-    /// margin, so it is worth reaching for first when something needs to look wrong.
+    ///     Build a chromatic split layer, set to the client's defaults. The cheapest technique by a wide
+    ///     margin, so it is worth reaching for first when something needs to look wrong.
     /// </summary>
     /// <returns>The layer.</returns>
     public ApiChromaticLayer NewChromaticLayer() => new();
 
     /// <summary>
-    /// Build the shake a visual effect fires as it arrives, to hang on `ApiEffectProfile.Shake`. For
-    /// a shake on its own use `NewShakeConfig` instead.
+    ///     Build the shake a visual effect fires as it arrives, to hang on `ApiEffectProfile.Shake`. For
+    ///     a shake on its own use `NewShakeConfig` instead.
     /// </summary>
     /// <returns>The shake, set to the client's defaults - an impact that decays.</returns>
     public ApiShakeSpec NewShakeSpec() => new();
 
     /// <summary>
-    /// Build a standalone screen shake, for `StartShake`.
-    /// Example:
-    /// ```py
-    /// shake = API.VisualEffects.NewShakeConfig()
-    /// shake.Seconds = 2.5
-    /// shake.Intensity = 0.8
-    /// shake.Gradient = API.VisualEffects.ShakeGradient.Decay
-    /// API.VisualEffects.StartShake(shake)
-    /// ```
+    ///     Build a standalone screen shake, for `StartShake`.
+    ///     Example:
+    ///     ```py
+    ///     shake = API.VisualEffects.NewShakeConfig()
+    ///     shake.Seconds = 2.5
+    ///     shake.Intensity = 0.8
+    ///     shake.Gradient = API.VisualEffects.ShakeGradient.Decay
+    ///     API.VisualEffects.StartShake(shake)
+    ///     ```
     /// </summary>
     /// <returns>The shake.</returns>
     public ApiShakeConfig NewShakeConfig() => new();
 
     /// <summary>
-    /// Build a per-axis value pair, for the visual effect knobs that take one.
+    ///     Build a per-axis value pair, for the visual effect knobs that take one.
     /// </summary>
     /// <param name="x">The X component.</param>
     /// <param name="y">The Y component.</param>
@@ -319,30 +331,34 @@ public class ApiVisualEffects(LegionAPI api)
     public ApiVector2 NewVector2(double x = 0, double y = 0) => new(x, y);
 
     /// <summary>
-    /// Start one of the client's visual effect compositions by id.
-    /// <para>
-    /// A composition raised this way claims the look against the rulebase, so starting poison while
-    /// the player is poisoned shows one poison rather than two at doubled alpha.
-    /// </para>
-    /// <para>
-    /// Effects do not survive leaving the world: the handle goes stale and nothing comes back on the
-    /// next login. Stop them yourself, give them a duration, or let the script end - whatever a
-    /// script leaves running is dropped when it stops.
-    /// </para>
-    /// Example:
-    /// ```py
-    /// handle = API.VisualEffects.Start(API.VisualEffects.Ids.Drunk, 10)
-    /// API.Pause(2)
-    /// API.VisualEffects.Stop(handle)
-    /// ```
+    ///     Start one of the client's visual effect compositions by id.
+    ///     <para>
+    ///         A composition raised this way claims the look against the rulebase, so starting poison while
+    ///         the player is poisoned shows one poison rather than two at doubled alpha.
+    ///     </para>
+    ///     <para>
+    ///         Effects do not survive leaving the world: the handle goes stale and nothing comes back on the
+    ///         next login. Stop them yourself, give them a duration, or let the script end - whatever a
+    ///         script leaves running is dropped when it stops.
+    ///     </para>
+    ///     Example:
+    ///     ```py
+    ///     handle = API.VisualEffects.Start(API.VisualEffects.Ids.Drunk, 10)
+    ///     API.Pause(2)
+    ///     API.VisualEffects.Stop(handle)
+    ///     ```
     /// </summary>
     /// <param name="profileId">The composition's id, from `GetProfiles` or `Ids`.</param>
     /// <param name="seconds">How long to run for. Zero or less runs until stopped; capped at 86400.</param>
     /// <param name="intensity">Strength to draw at, 0-1. Scales the composition rather than replacing anything in it.</param>
-    /// <returns>A handle for `Stop`, or 0 if the user has visual effects switched off or every slot
-    /// is in use.</returns>
-    /// <exception cref="ArgumentException">The ID is not in the right format, no effect in the
-    /// client has it, or `seconds` or `intensity` is not a real number.</exception>
+    /// <returns>
+    ///     A handle for `Stop`, or 0 if the user has visual effects switched off or every slot
+    ///     is in use.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    ///     The ID is not in the right format, no effect in the
+    ///     client has it, or `seconds` or `intensity` is not a real number.
+    /// </exception>
     public uint Start(string profileId, double seconds = 0, double intensity = 1.0) =>
         BubblingOnMain(() =>
         {
@@ -358,22 +374,26 @@ public class ApiVisualEffects(LegionAPI api)
         });
 
     /// <summary>
-    /// Start a visual effect the script built itself.
-    /// <para>
-    /// Unlike the two by-name forms this claims nothing, because there is no library composition
-    /// behind it to claim - so two scripts starting identical hand-built effects do composite
-    /// together, at doubled strength. Editing `config` afterwards cannot reach the running effect;
-    /// start it again to change it.
-    /// </para>
+    ///     Start a visual effect the script built itself.
+    ///     <para>
+    ///         Unlike the two by-name forms this claims nothing, because there is no library composition
+    ///         behind it to claim - so two scripts starting identical hand-built effects do composite
+    ///         together, at doubled strength. Editing `config` afterwards cannot reach the running effect;
+    ///         start it again to change it.
+    ///     </para>
     /// </summary>
     /// <param name="config">The composition to draw. Needs at least one and at most four layers.</param>
     /// <param name="seconds">How long to run for. Zero or less runs until stopped; capped at 86400.</param>
     /// <param name="intensity">Strength to draw at, 0-1.</param>
-    /// <returns>A handle for `Stop`, or 0 if the user has visual effects switched off or every slot
-    /// is in use.</returns>
-    /// <exception cref="ArgumentException">`config` has no layers or more than four, one of its
-    /// layers is empty, a setting is not one of the options the API offers, or a value is not a
-    /// real number.</exception>
+    /// <returns>
+    ///     A handle for `Stop`, or 0 if the user has visual effects switched off or every slot
+    ///     is in use.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    ///     `config` has no layers or more than four, one of its
+    ///     layers is empty, a setting is not one of the options the API offers, or a value is not a
+    ///     real number.
+    /// </exception>
     public uint Start(ApiEffectProfile config, double seconds = 0, double intensity = 1.0)
     {
         ArgumentNullException.ThrowIfNull(config);
@@ -384,26 +404,29 @@ public class ApiVisualEffects(LegionAPI api)
         float strength = VfxInputValidator.Intensity(intensity, nameof(intensity));
         TimeSpan? duration = Duration(seconds);
 
-        return BubblingOnMain(
-            () => ScreenOverlayManager.Instance.StartScripted(profile, Guid.Empty, strength, duration, api)
+        return BubblingOnMain(() => ScreenOverlayManager.Instance.StartScripted(profile, Guid.Empty, strength, duration, api)
         );
     }
 
     /// <summary>
-    /// Start one of the user's own visual effect compositions by name.
-    /// <para>
-    /// User-authored compositions only. Every shipped one is named through the client's language file
-    /// and carries a "(built-in)" suffix, so no name here could reach them on a non-English client -
-    /// use `Start` with `Ids` for those.
-    /// </para>
+    ///     Start one of the user's own visual effect compositions by name.
+    ///     <para>
+    ///         User-authored compositions only. Every shipped one is named through the client's language file
+    ///         and carries a "(built-in)" suffix, so no name here could reach them on a non-English client -
+    ///         use `Start` with `Ids` for those.
+    ///     </para>
     /// </summary>
     /// <param name="name">The composition's name, matched ignoring case. Must match exactly one.</param>
     /// <param name="seconds">How long to run for. Zero or less runs until stopped; capped at 86400.</param>
     /// <param name="intensity">Strength to draw at, 0-1.</param>
-    /// <returns>A handle for `Stop`, or 0 if the user has visual effects switched off or every slot
-    /// is in use.</returns>
-    /// <exception cref="ArgumentException">You have no effect with that name, several of yours
-    /// share it, or `seconds` or `intensity` is not a real number.</exception>
+    /// <returns>
+    ///     A handle for `Stop`, or 0 if the user has visual effects switched off or every slot
+    ///     is in use.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    ///     You have no effect with that name, several of yours
+    ///     share it, or `seconds` or `intensity` is not a real number.
+    /// </exception>
     public uint StartByName(string name, double seconds = 0, double intensity = 1.0) =>
         BubblingOnMain(() =>
         {
@@ -419,34 +442,40 @@ public class ApiVisualEffects(LegionAPI api)
         });
 
     /// <summary>
-    /// Stop one visual effect this script started. It fades out rather than cutting.
+    ///     Stop one visual effect this script started. It fades out rather than cutting.
     /// </summary>
-    /// <param name="handle">The handle a `Start` returned. Handles that already lapsed, were
-    /// stopped, came back as 0, or belong to another script are ignored.</param>
+    /// <param name="handle">
+    ///     The handle a `Start` returned. Handles that already lapsed, were
+    ///     stopped, came back as 0, or belong to another script are ignored.
+    /// </param>
     public void Stop(uint handle) => OnMain(() => ScreenOverlayManager.Instance.StopScripted(handle, api));
 
     /// <summary>
-    /// Stop every visual effect this script started. Other scripts' effects, and the ones the
-    /// player's own state raises, are left alone.
+    ///     Stop every visual effect this script started. Other scripts' effects, and the ones the
+    ///     player's own state raises, are left alone.
     /// </summary>
     public void StopAll() => OnMain(() => ScreenOverlayManager.Instance.StopScriptedByOwner(api));
 
     /// <summary>
-    /// Shake the screen, with no visual effect attached.
-    /// Example:
-    /// ```py
-    /// shake = API.VisualEffects.NewShakeConfig()
-    /// shake.Seconds = 0.4
-    /// shake.Intensity = 1.0
-    /// API.VisualEffects.StartShake(shake)
-    /// ```
+    ///     Shake the screen, with no visual effect attached.
+    ///     Example:
+    ///     ```py
+    ///     shake = API.VisualEffects.NewShakeConfig()
+    ///     shake.Seconds = 0.4
+    ///     shake.Intensity = 1.0
+    ///     API.VisualEffects.StartShake(shake)
+    ///     ```
     /// </summary>
     /// <param name="config">The shake to run, from `NewShakeConfig`.</param>
     /// <returns>A handle for `StopShake`, or 0 if the user has screen shake switched off.</returns>
-    /// <exception cref="ArgumentException">A setting on `config` is not one of the options the API
-    /// offers, or one of its values is not a real number.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">`config.Seconds` is zero or less. A shake needs
-    /// a length - there is nothing that would end an open-ended one.</exception>
+    /// <exception cref="ArgumentException">
+    ///     A setting on `config` is not one of the options the API
+    ///     offers, or one of its values is not a real number.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     `config.Seconds` is zero or less. A shake needs
+    ///     a length - there is nothing that would end an open-ended one.
+    /// </exception>
     public uint StartShake(ApiShakeConfig config)
     {
         ArgumentNullException.ThrowIfNull(config);
@@ -457,10 +486,12 @@ public class ApiVisualEffects(LegionAPI api)
     }
 
     /// <summary>
-    /// Stop one screen shake this script started.
+    ///     Stop one screen shake this script started.
     /// </summary>
-    /// <param name="handle">The handle `StartShake` returned. Handles that already finished, were
-    /// stopped, came back as 0, or belong to another script are ignored.</param>
+    /// <param name="handle">
+    ///     The handle `StartShake` returned. Handles that already finished, were
+    ///     stopped, came back as 0, or belong to another script are ignored.
+    /// </param>
     public void StopShake(uint handle)
     {
         // A handle does not say which rectangle its shake was moving, and a caller has no reason to
@@ -470,8 +501,8 @@ public class ApiVisualEffects(LegionAPI api)
     }
 
     /// <summary>
-    /// Stop every screen shake this script started, including the ones its visual effects fired as
-    /// they arrived.
+    ///     Stop every screen shake this script started, including the ones its visual effects fired as
+    ///     they arrived.
     /// </summary>
     public void StopAllShakes()
     {
@@ -490,24 +521,26 @@ public class ApiVisualEffects(LegionAPI api)
     private T BubblingOnMain<T>(Func<T> func) => MainThreadQueue.BubblingInvokeOnMainThread(func, _cachedToken);
 
     /// <summary>
-    /// The library composition behind an id. Main thread, like everything that reads the pools.
+    ///     The library composition behind an id. Main thread, like everything that reads the pools.
     /// </summary>
     /// <param name="id">The id as a script spelled it.</param>
-    /// <returns>The composition, shared by reference the way a rule's is - so a retune of it reaches
-    /// a running script effect too.</returns>
-    /// <exception cref="ArgumentException">The ID is not in the right format, or no effect in the
-    /// client has it.</exception>
+    /// <returns>
+    ///     The composition, shared by reference the way a rule's is - so a retune of it reaches
+    ///     a running script effect too.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    ///     The ID is not in the right format, or no effect in the
+    ///     client has it.
+    /// </exception>
     private static EffectProfile FindProfileOrThrow(string id)
     {
         if (!Guid.TryParse(id, out Guid parsed))
-        {
             throw new ArgumentException(
                 $"'{id}' is not a visual effect ID. An ID looks like "
                 + "'1c419034-7c0f-4e65-a3af-81f27a1e0efa'. Use API.VisualEffects.Ids for the effects "
                 + "that ship with the client, or API.VisualEffects.GetProfiles() to list them all.",
                 nameof(id)
             );
-        }
 
         return DecorationSettings.Current.Overlays.FindProfile(parsed)
                ?? throw new ArgumentException(
@@ -518,13 +551,15 @@ public class ApiVisualEffects(LegionAPI api)
     }
 
     /// <summary>
-    /// The user's own composition with this name. Built-ins are excluded deliberately: their names
-    /// are localized, so matching one would work on an English client and nowhere else.
+    ///     The user's own composition with this name. Built-ins are excluded deliberately: their names
+    ///     are localized, so matching one would work on an English client and nowhere else.
     /// </summary>
     /// <param name="name">The name as a script spelled it.</param>
     /// <returns>The composition.</returns>
-    /// <exception cref="ArgumentException">No effect you made has that name, or several do and
-    /// there is no way to tell which you meant.</exception>
+    /// <exception cref="ArgumentException">
+    ///     No effect you made has that name, or several do and
+    ///     there is no way to tell which you meant.
+    /// </exception>
     private static EffectProfile FindUserProfileOrThrow(string name)
     {
         var matches = DecorationSettings.Current.Overlays.Profiles
@@ -550,13 +585,13 @@ public class ApiVisualEffects(LegionAPI api)
     }
 
     /// <summary>
-    /// Script-supplied seconds as a span, where anything non-positive means no timeout. Bounded
-    /// before conversion: <see cref="TimeSpan.FromSeconds(double)"/> throws on NaN and overflows far
-    /// below what a script can type, and the span is then added to the wall clock.
+    ///     Script-supplied seconds as a span, where anything non-positive means no timeout. Bounded
+    ///     before conversion: <see cref="TimeSpan.FromSeconds(double)" /> throws on NaN and overflows far
+    ///     below what a script can type, and the span is then added to the wall clock.
     /// </summary>
     /// <param name="seconds">What the script asked for.</param>
     /// <returns>The span, or null to run until stopped.</returns>
-    /// <exception cref="ArgumentException"><paramref name="seconds"/> is not a real number.</exception>
+    /// <exception cref="ArgumentException"><paramref name="seconds" /> is not a real number.</exception>
     private static TimeSpan? Duration(double seconds)
     {
         double bounded = VfxInputValidator.Seconds(seconds, nameof(seconds));

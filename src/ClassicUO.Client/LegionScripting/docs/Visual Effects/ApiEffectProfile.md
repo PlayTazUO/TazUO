@@ -1,17 +1,15 @@
 ---
 title: ApiEffectProfile
-description: "A visual effect composition: which layers, in what order, blended how, plus how it arrives and leaves and what it shakes. Get an editable copy of one the client already has with `API.VisualEffects.GetProfile`, or start from nothing with `API.VisualEffects.NewProfile`. Either way it is yours: nothing a script passes is ever saved, and editing this after `API.VisualEffects.Start` cannot reach the running effect."
+description: "A visual effect composition: which layers, in what order, blended how, plus how it arrives and leaves and what it shakes."
 ---
 
 ## Class Description
 A visual effect composition: which layers, in what order, blended how, plus how it arrives and
- leaves and what it shakes.
+leaves and what it shakes.
 
-
-
- Get an editable copy of one the client already has with `API.VisualEffects.GetProfile`, or start
- from nothing with `API.VisualEffects.NewProfile`. Either way it is yours: nothing a script passes
- is ever saved, and editing this after `API.VisualEffects.Start` cannot reach the running effect.
+Get an editable copy of one the client already has with `API.VisualEffects.GetProfile`, or start
+from nothing with `API.VisualEffects.NewProfile`. Either way it is yours: nothing a script passes
+is ever saved, and editing this after `API.VisualEffects.Start` cannot reach the running effect.
 
 ## Properties
 ### `Name`
@@ -25,12 +23,10 @@ Only ever used in log messages for a script-built composition.
 **Type:** `bool`
 
 Whether this covers the whole window rather than the game world alone. Governs both halves of
- scope: which pass draws the layers, and which rectangle `Shake` displaces.
+scope: which pass draws the layers, and which rectangle `Shake` displaces.
 
-
-
- Leave it off unless the effect really is meant to cover the gumps and the cursor - doing so
- makes the UI hard to use for as long as the effect lasts.
+Leave it off unless the effect really is meant to cover the gumps and the cursor - doing so
+makes the UI hard to use for as long as the effect lasts.
 
 ### `Layers`
 
@@ -49,7 +45,7 @@ How the effect arrives and leaves. Starts at the client's own timing.
 **Type:** `ApiShakeSpec?`
 
 Screen shake the effect includes, fired once on arrival, or null for a purely
- visual one. Build one with `API.VisualEffects.NewShakeSpec`.
+visual one. Build one with `API.VisualEffects.NewShakeSpec`.
 
 
 *No fields found.*

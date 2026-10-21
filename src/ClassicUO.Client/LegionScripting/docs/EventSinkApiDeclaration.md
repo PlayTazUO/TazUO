@@ -15,7 +15,7 @@ description: "EventSinkApiDeclaration class documentation"
 ### OnItemCreated
 `(callback)`
 Invoked when an item is added to the client.
- The event's argument is the ApiItem.
+The event's argument is the ApiItem.
 
 **Parameters:**
 
@@ -30,7 +30,7 @@ Invoked when an item is added to the client.
 ### OnItemUpdated
 `(callback)`
 Invoked when an item is already in the client but has been updated.
- The event's argument is the ApiItem.
+The event's argument is the ApiItem.
 
 **Parameters:**
 
@@ -171,7 +171,7 @@ Invoked when an object's property list data (Tooltip text for items) is received
 ### OnBuffAdded
 `(callback)`
 Invoked when a buff is "added" to a player.
- The event's argument is the ApiBuff.
+The event's argument is the ApiBuff.
 
 **Parameters:**
 
@@ -186,7 +186,7 @@ Invoked when a buff is "added" to a player.
 ### OnBuffRemoved
 `(callback)`
 Invoked when a buff is "removed" to a player (Called before removal)
- The event's argument is the ApiBuff.
+The event's argument is the ApiBuff.
 
 **Parameters:**
 
@@ -229,7 +229,7 @@ Invoked when any entity in the game receives damage, not necessarily the player.
 ### OnOpenContainer
 `(callback)`
 Invoked when a container is opened.
- The event's 'sender' is the Item, the event's argument is the item's serial
+The event's 'sender' is the Item, the event's argument is the item's serial
 
 **Parameters:**
 
@@ -272,7 +272,7 @@ Invoked when the player receives a death packet from the server
 ### OnPathFinding
 `(callback)`
 Invoked when the player or server tells the client to path find
-  Vector is X, Y, Z, and Distance
+Vector is X, Y, Z, and Distance
 
 **Parameters:**
 
@@ -315,7 +315,7 @@ Invoked after the player's hit points have changed.
 ### ApiMobileCreated
 `(callback)`
 Invoked when a mobile is created.
- The event's sender is null and the argument is an ApiMobile.
+The event's sender is null and the argument is an ApiMobile.
 
 **Parameters:**
 

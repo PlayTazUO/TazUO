@@ -135,7 +135,9 @@ internal sealed class ScreenShake
 
     private readonly float[] _noiseX;
     private readonly float[] _noiseY;
-    private readonly List<ActiveShake> _active = [];
+    /// <summary>Sized to the ceiling up front: the per-source caps mean it never has to grow, and
+    /// it is walked under the lock every frame.</summary>
+    private readonly List<ActiveShake> _active = new(MAX_ACTIVE_SHAKES);
     private readonly Lock _sync = new();
 
     /// <summary>

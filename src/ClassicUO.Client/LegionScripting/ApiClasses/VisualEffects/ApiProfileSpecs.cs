@@ -7,17 +7,25 @@ using ClassicUO.Game.ScreenDecorations.Shake;
 namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 
 /// <summary>
-/// How a visual effect arrives and leaves.
-/// <para>
-/// Onset reads as something happening, so it wants to be noticed; leaving is only the absence of
-/// that, and a fast fade-out draws attention to the effect ending rather than to it being over.
-/// Hence the client's own defaults are quick in, unhurried out.
-/// </para>
-/// <para>
-/// **Photosensitivity.** Near-zero fades make an effect appear and vanish at once, so starting and
-/// stopping one in a loop strobes the whole screen. Keep both above a tenth of a second unless the
-/// effect is raised once.
-/// </para>
+///     How a visual effect arrives and leaves.
+///     <para>
+///         Onset reads as something happening, so it wants to be noticed; leaving is only the absence of
+///         that, and a fast fade-out draws attention to the effect ending rather than to it being over.
+///         Hence the client's own defaults are quick in, unhurried out.
+///     </para>
+///     <warn title="Photosensitive Epilepsy Warning">
+///         Visual effects may contain flashing lights or rapid color changes.
+///
+///         If you have an epileptic condition or have had seizures of any kind, please consult your physician before
+///         enabling the system or using the VFX APIs.
+///
+///         Note that while the in-game UI has some safeguards meant to reduce PSE risks, certain API usage patterns can
+///         bypass those.
+///
+///         Near-zero fades make an effect appear and vanish at once, so starting and stopping one in a loop
+///         strobes the whole screen.
+///         Keep both above a tenth of a second unless the effect is started once and left to run.
+///     </warn>
 /// </summary>
 public class ApiFadeSpec
 {

@@ -12,14 +12,14 @@ Inherits from ApiUiBaseControl
 **Type:** `bool`
 
 Gets the checked state of the checkbox.
- Used in python API
+Used in python API
 
 ### `Text`
 
 **Type:** `string`
 
 Gets the text label displayed next to the checkbox.
- Used in python API
+Used in python API
 
 
 *No fields found.*
@@ -31,7 +31,7 @@ Gets the text label displayed next to the checkbox.
 ### GetIsChecked
 
 Gets the checked state of the checkbox.
- Used in python API
+Used in python API
 
 **Return Type:** `bool` - True if the checkbox is checked, false otherwise
 
@@ -40,7 +40,7 @@ Gets the checked state of the checkbox.
 ### SetIsChecked
 `(isChecked)`
 Sets the checked state of the checkbox.
- Used in python API
+Used in python API
 
 **Parameters:**
 
@@ -55,7 +55,7 @@ Sets the checked state of the checkbox.
 ### GetText
 
 Gets the text label displayed next to the checkbox.
- Used in python API
+Used in python API
 
 **Return Type:** `string` - The checkbox label text
 

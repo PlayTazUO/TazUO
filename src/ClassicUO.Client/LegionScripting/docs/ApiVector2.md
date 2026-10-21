@@ -5,7 +5,7 @@ description: "A per-axis pair of values, for wherever an API knob differs betwee
 
 ## Class Description
 A per-axis pair of values, for wherever an API knob differs between X and Y. Build one with
- `API.VisualEffects.NewVector2`, or assign to the `X` and `Y` of the one a layer already carries.
+`API.VisualEffects.NewVector2`, or assign to the `X` and `Y` of the one a layer already carries.
 
 ## Properties
 ### `X`

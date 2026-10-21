@@ -5,7 +5,7 @@ description: "Base class for all Python-accessible game world objects. Encapsula
 
 ## Class Description
 Base class for all Python-accessible game world objects.
- Encapsulates common spatial and visual properties such as position and graphics.
+Encapsulates common spatial and visual properties such as position and graphics.
 
 ## Properties
 ### `Impassible`
@@ -57,7 +57,7 @@ The hue (color tint) applied to the object.
 **Type:** `string`
 
 The Python-visible class name of this object.
- Accessible in Python as `obj.__class__` .
+Accessible in Python as `obj.__class__` .
 
 
 
@@ -68,11 +68,14 @@ The Python-visible class name of this object.
 ### SetOutlineColor
 `(htmlColor)`
 Set an object's outline color using HTML hex colors.
- Example:
- ```py
- API.Player.SetOutlineColor("#105510")
- API.Player.SetOutlineColor(None)
- ```
+
+**Example:**
+
+```py
+API.Player.SetOutlineColor("#105510")
+API.Player.SetOutlineColor(None)
+
+```
 
 **Parameters:**
 
@@ -101,12 +104,15 @@ Set the hue of a game object.
 ### Highlight
 `(hue)`
 Highlight this object by setting its hue. The original hue is remembered so it can be restored.
- Call with `None` to restore the original hue.
- Example:
- ```py
- obj.Highlight(0x0021)
- obj.Highlight(None)
- ```
+Call with `None` to restore the original hue.
+
+**Example:**
+
+```py
+obj.Highlight(0x0021)
+obj.Highlight(None)
+
+```
 
 **Parameters:**
 
@@ -121,7 +127,7 @@ Highlight this object by setting its hue. The original hue is remembered so it c
 ### HasLineOfSightFrom
 `(observer)`
 Determines if there is line of sight from the specified observer to this object.
- If no observer is specified, it defaults to the player.
+If no observer is specified, it defaults to the player.
 
 **Parameters:**
 
@@ -136,7 +142,7 @@ Determines if there is line of sight from the specified observer to this object.
 ### ToString
 
 Returns a readable string representation of the game object.
- Used when printing or converting the object to a string in Python scripts.
+Used when printing or converting the object to a string in Python scripts.
 
 **Return Type:** `string`
 
@@ -145,7 +151,7 @@ Returns a readable string representation of the game object.
 ### __repr__
 
 Returns a detailed string representation of the object.
- This string is used by Python’s built-in `repr()` function.
+This string is used by Python’s built-in `repr()` function.
 
 **Return Type:** `string` - A string suitable for debugging and inspection in Python.
 
