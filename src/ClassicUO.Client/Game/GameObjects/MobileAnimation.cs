@@ -66,13 +66,14 @@ namespace ClassicUO.Game.GameObjects
                         break;
                     }
 
+                // Gargoyle ghosts: 0x02B6 male, 0x02B7 female.
                 case 0x02B6:
-                    g = 667;
+                    g = 666;
 
                     break;
 
                 case 0x02B7:
-                    g = 666;
+                    g = 667;
 
                     break;
             }
