@@ -23,7 +23,6 @@ public class GridItem : Control
     private readonly int _slot;
     private GridContainerPreview _preview;
     private Label _count;
-    private bool _isStacked;
     private readonly AlphaBlendControl _background;
     private readonly Label _listLabel;
     private CustomToolTip _toolTipThis, _toolTipitem1, _toolTipitem2;
@@ -223,7 +222,6 @@ public class GridItem : Control
             Highlight = false;
             _count?.Dispose();
             _count = null;
-            _isStacked = false;
             _listLabel.Text = string.Empty;
             _listLabel.IsVisible = false;
             ItemGridLocked = false;
@@ -248,9 +246,8 @@ public class GridItem : Control
 
         LocalSerial = item.Serial;
         int itemAmt = _item.ItemData.IsStackable ? _item.Amount : 1;
-        _isStacked = itemAmt > 1;
 
-        if (_isStacked)
+        if (itemAmt > 1)
         {
             _count?.Dispose();
             _count = new Label(itemAmt.ToString(), true, 0x0481, align: TEXT_ALIGN_TYPE.TS_LEFT)
@@ -1197,9 +1194,11 @@ public class GridItem : Control
             _rect.Height
         );
 
+        // Checked live: the amount changes (e.g. ingots used up) without the slot being set again.
+        bool isStacked = _item.ItemData.IsStackable && _item.Amount > 1;
         Rectangle stackedDestination = destination;
 
-        if (_isStacked)
+        if (isStacked)
         {
             // Keep the pair centered in the cell: the back art shifts up-left, the front art down-right.
             int stackOffset = GetStackedArtOffset(destination, source);
@@ -1229,7 +1228,7 @@ public class GridItem : Control
 
         batcher.Draw(_texture, destination, source, hueVector);
 
-        if (_isStacked)
+        if (isStacked)
         {
             // Sprite borders follow each art; spotlight and full highlights already cover both.
             if (highlightLowContrast
