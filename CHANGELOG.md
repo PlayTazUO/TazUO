@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/22/26
+* ***Fix:*** A denied step (e.g. walking into a mobile) no longer clears the weather - the server doesn't resend it, so rain or snow vanished until the weather changed
+
 ## 10/20/26
 * ***Feature:*** Grid containers draw a second art for item stacks, like the classic container gump
 * ***Fix:*** Flying monsters whose body has no fly animation keep using their walk and stand animations
