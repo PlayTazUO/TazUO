@@ -242,6 +242,7 @@ namespace ClassicUO.Game
 
             if (Type == WeatherType.WT_INVALID_0 || Type == WeatherType.WT_INVALID_1)
             {
+                OnWeatherStopped();
                 _timer = 0;
                 CurrentWeather = null;
 
@@ -249,8 +250,7 @@ namespace ClassicUO.Game
             }
 
             bool showMessage = Count > 0 && !extended;
-            // A server refresh of the same weather (after a stop or count 0) shouldn't repeat its message.
-            bool printMessage = LastWeather != type;
+            bool printMessage = ShouldPrintStartMessage(type);
 
             switch (type)
             {
@@ -348,7 +348,7 @@ namespace ClassicUO.Game
 
             if (CurrentWeather.HasValue)
             {
-                LastWeather = CurrentWeather;
+                OnWeatherStarted(CurrentWeather.Value);
             }
 
             _windTimer = 0;
