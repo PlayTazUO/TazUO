@@ -57,7 +57,7 @@ The hue (color tint) applied to the object.
 **Type:** `string`
 
 The Python-visible class name of this object.
-Accessible in Python as `obj.__class__` .
+Accessible in Python as `obj.__class__`.
 
 
 

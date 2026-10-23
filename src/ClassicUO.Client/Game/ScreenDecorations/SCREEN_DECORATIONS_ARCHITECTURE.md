@@ -163,6 +163,13 @@ Reaching `ScriptCap` answers 0 rather than throwing: the cap is shared, so a scr
 through another script's doing. `ScriptSlotsFree()` tells that apart from the system being switched
 off, which also answers 0.
 
+`StartScripted` also declines **out of world** (`_inWorld`). Nothing reconciles there, so a demand
+taken would hold a slot, draw nothing, and then arrive all at once on the next world load — one
+onset shake per banked effect. `ScriptSlotsFree()` answers 0 out of world for the same reason. Shake
+is gated by the same fact one level down: `Unwatch()` clears `ScreenShake.Enabled`, which every
+`Trauma` entry point checks, and `ScreenShake.Enabled` starts `false` so a cold client before its
+first world session behaves the same as one that has left.
+
 **Scripted demands** (`Manager/ScriptedOverlayRegistry.cs`) are transient: never persisted, no
 `ScreenDecorationsJsonContext` entry, no migration. `ScriptedDemand` carries a `SourceProfileId` the
 claim is tested against — `EffectProfile.Clone()` stamps a fresh `Guid`, so without it two

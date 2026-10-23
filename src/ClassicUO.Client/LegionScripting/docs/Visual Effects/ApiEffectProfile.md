@@ -56,7 +56,8 @@ visual one. Build one with `API.VisualEffects.NewShakeSpec`.
 ## Methods
 ### AddLayer
 `(effect, blend)`
-Appends a layer, which is the usual way to build a composition up.
+Appends a layer, which is the usual way to build a composition up. At most 4, and each one is a
+full-screen pass per frame while the effect runs.
 
 **Parameters:**
 

@@ -409,9 +409,10 @@ internal sealed class ScreenOverlayManager
     /// <param name="intensity">Strength to draw at; clamped to 0-1.</param>
     /// <param name="duration">How long to run for, or null to run until stopped.</param>
     /// <param name="owner">The script's API instance, for <see cref="StopScriptedByOwner"/>.</param>
-    /// <returns>The handle, or 0 where nothing was raised - the user has overlays switched off, or
-    /// scripts already hold <see cref="ScriptCap"/> effects. Neither is an error: both are states a
-    /// script can read off <see cref="ScriptSlotsFree"/> and the settings without catching anything.
+    /// <returns>The handle, or 0 where nothing was raised - the player is not in the world, the user
+    /// has overlays switched off, or scripts already hold <see cref="ScriptCap"/> effects. None is an
+    /// error: all are states a script can read off <see cref="ScriptSlotsFree"/> and the settings
+    /// without catching anything.
     /// </returns>
     public uint StartScripted(
         EffectProfile profile,
@@ -425,7 +426,9 @@ internal sealed class ScreenOverlayManager
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(owner);
 
-        if (!DecorationSettings.Current.OverlaysActive || _scripted.Count >= ScriptCap)
+        // Out of world nothing reconciles, so a demand taken here would sit in the registry holding
+        // a slot, draw nothing, and then arrive all at once on the next world load.
+        if (!_inWorld || !DecorationSettings.Current.OverlaysActive || _scripted.Count >= ScriptCap)
             return 0;
 
         DateTime? expiresAt = duration is { } span && span > TimeSpan.Zero ? DateTime.UtcNow + span : null;
@@ -441,12 +444,12 @@ internal sealed class ScreenOverlayManager
     /// How many more effects scripts may raise between them. Main thread only, like the rest of the
     /// <c>Scripted</c> entry points.
     /// </summary>
-    /// <returns>The count, 0 through <see cref="ScriptCap"/>.</returns>
+    /// <returns>The count, 0 through <see cref="ScriptCap"/>. Always 0 out of world, where
+    /// <see cref="StartScripted"/> raises nothing.</returns>
     public int ScriptSlotsFree()
     {
         AssertMainThread();
-
-        return Math.Max(ScriptCap - _scripted.Count, 0);
+        return !_inWorld ? 0 : Math.Max(ScriptCap - _scripted.Count, 0);
     }
 
     /// <summary>
@@ -814,7 +817,7 @@ internal sealed class ScreenOverlayManager
 
         // Once per partition, so the two bounds are independent: a script holding its full
         // allowance leaves the user's cap untouched, and the reverse.
-        ApplyConcurrencyCap(_desired, _ranked, ScreenOverlayCompositor.ConcurrencyCap(), DemandSource.Rule);
+        ApplyConcurrencyCap(_desired, _ranked, ScreenOverlayCompositor.ConcurrencyCap());
         ApplyConcurrencyCap(_desired, _ranked, ScriptCap, DemandSource.Script);
 
         Reconcile();

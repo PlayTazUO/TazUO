@@ -15,12 +15,13 @@ public static partial class GenDoc
         SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
         var root = (CompilationUnitSyntax)tree.GetRoot();
 
-        // Constant holders are rendered into their parent's page by GenClassConstants, so they must
-        // not also become one. A page named for one would be titled after a type a script reaches
-        // only through its parent - "Ids" rather than anything that says what it holds.
+        // Nested constant holders are rendered into their parent's page by GenClassConstants, so they
+        // must not also become one. A page named for one would be titled after a type a script reaches
+        // only through its parent - "Ids" rather than anything that says what it holds. A top-level
+        // one has no parent to be rendered into, so it keeps its page rather than vanishing.
         IEnumerable<ClassDeclarationSyntax> classes = root.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
-            .Where(declaration => !IsConstantHolder(declaration));
+            .Where(declaration => declaration.Parent is not ClassDeclarationSyntax || !IsConstantHolder(declaration));
 
         foreach (ClassDeclarationSyntax classDeclaration in classes)
         {
@@ -472,6 +473,11 @@ public static partial class GenDoc
         // Cross-references carry the only noun in sentences like "inherits from <see cref="X"/>",
         // so they have to become that name - dropping the tag would leave the sentence dangling.
         cleanedDocumentation = ReferenceRx().Replace(cleanedDocumentation, match => $"`{match.Groups[1].Value}`");
+
+        // A tag is its own syntax node, so the text after it was joined on with a space - leaving
+        // "inherits from `ApiGameObject` ." wherever an author wrote the punctuation tight against
+        // the tag. Only whitespace is removed, and only between a span and the mark that follows it.
+        cleanedDocumentation = SpanPunctuationRx().Replace(cleanedDocumentation, "$1");
 
         // Dropping the marker alone leaves the space that followed it, indenting every wrapped line
         // by one. Four such lines read as a code block, and one before a fence breaks the fence.
@@ -1000,6 +1006,13 @@ public static partial class GenDoc
 
     [GeneratedRegex(@"<[^>]+>")]
     private static partial Regex XmlTagRx();
+
+    /// <summary>
+    /// An inline code span followed by horizontal whitespace and a punctuation mark. Confined to one
+    /// line and to spans with no backtick inside, so it cannot reach across a fenced sample.
+    /// </summary>
+    [GeneratedRegex(@"(`[^`\n]+`)[ \t]+(?=[.,;:!?)])")]
+    private static partial Regex SpanPunctuationRx();
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex WhitespaceRx();

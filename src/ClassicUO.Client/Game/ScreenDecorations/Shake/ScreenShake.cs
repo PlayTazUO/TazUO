@@ -98,8 +98,13 @@ internal sealed class ScreenShake
     /// concurrent disable has already cleared, banking one shake across the toggle. Costs a single
     /// stray jolt, and only a lock-held read would close it.
     /// </para>
+    /// <para>
+    /// Starts false, and the manager clears it again on leaving the world: there is no rectangle to
+    /// displace outside a world session, so a shake raised there would bank trauma nothing could
+    /// draw and nothing would ask for.
+    /// </para>
     /// </summary>
-    internal static volatile bool Enabled = true;
+    internal static volatile bool Enabled;
 
     #endregion
 

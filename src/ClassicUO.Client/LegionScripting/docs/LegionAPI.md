@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `10/22/26`.*
+*This was generated on `10/23/26`.*
 
 ## Properties
 ### `Events`
@@ -276,7 +276,7 @@ for example: "CTRL+SHIFT+F1" or "ALT+A".
 ### IsKeyPressed
 `(key)`
 Returns true if the given key combination is currently held down.
-The key format matches `OnHotKey` , e.g. "CTRL+SHIFT+F1" or "A".
+The key format matches `OnHotKey`, e.g. "CTRL+SHIFT+F1" or "A".
 Extra modifiers beyond those specified do not prevent a match.
 
 **Parameters:**

@@ -1,11 +1,11 @@
 ---
 title: ApiPlayer
-description: "Represents a Python-accessible player character with full stat and equipment data. Inherits mobile data from `ApiMobile` ."
+description: "Represents a Python-accessible player character with full stat and equipment data. Inherits mobile data from `ApiMobile`."
 ---
 
 ## Class Description
 Represents a Python-accessible player character with full stat and equipment data.
-Inherits mobile data from `ApiMobile` .
+Inherits mobile data from `ApiMobile`.
 
 ## Properties
 ### `X`
@@ -252,7 +252,7 @@ This API is most useful in combination with the Legion API's `GetPath`.
 **Type:** `string`
 
 The Python-visible class name of this object.
-Accessible in Python as `obj.__class__` .
+Accessible in Python as `obj.__class__`.
 
 
 

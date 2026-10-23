@@ -1,11 +1,11 @@
 ---
 title: ApiMobile
-description: "Represents a Python-accessible mobile (NPC, creature, or player character). Inherits entity and positional data from `ApiEntity` ."
+description: "Represents a Python-accessible mobile (NPC, creature, or player character). Inherits entity and positional data from `ApiEntity`."
 ---
 
 ## Class Description
 Represents a Python-accessible mobile (NPC, creature, or player character).
-Inherits entity and positional data from `ApiEntity` .
+Inherits entity and positional data from `ApiEntity`.
 
 ## Properties
 ### `X`
@@ -131,7 +131,7 @@ Get the mobile's Mount item (if mounted)
 **Type:** `string`
 
 The Python-visible class name of this object.
-Accessible in Python as `obj.__class__` .
+Accessible in Python as `obj.__class__`.
 
 
 

@@ -48,7 +48,8 @@ public class ApiEffectProfile
     #region Public methods
 
     /// <summary>
-    /// Appends a layer, which is the usual way to build a composition up.
+    /// Appends a layer, which is the usual way to build a composition up. At most 4, and each one is a
+    /// full-screen pass per frame while the effect runs.
     /// </summary>
     /// <param name="effect">The layer to draw.</param>
     /// <param name="blend">How it composites against what is already beneath it.</param>

@@ -1,11 +1,11 @@
 ---
 title: ApiItem
-description: "Represents a Python-accessible item in the game world. Inherits entity and positional data from `ApiEntity` ."
+description: "Represents a Python-accessible item in the game world. Inherits entity and positional data from `ApiEntity`."
 ---
 
 ## Class Description
 Represents a Python-accessible item in the game world.
-Inherits entity and positional data from `ApiEntity` .
+Inherits entity and positional data from `ApiEntity`.
 
 ## Properties
 ### `Amount`
@@ -43,7 +43,7 @@ If this item is a corpse, the serial of the parent mobile it belongs to.
 **Type:** `string`
 
 The Python-visible class name of this object.
-Accessible in Python as `obj.__class__` .
+Accessible in Python as `obj.__class__`.
 
 
 ### `IsCorpse`

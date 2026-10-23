@@ -9,20 +9,42 @@ using DecorationSettings = ClassicUO.Configuration.FeatureConfigs.ScreenDecorati
 namespace ClassicUO.UnitTests.Game.ScreenDecorations;
 
 /// <summary>
-/// What a script gets back when it asks for an effect it cannot have. Zero means exactly one thing -
-/// the user has the system switched off - so a script can tell "declined" from "failed" without
-/// catching anything, and the exceptions are reserved for a script asking for something impossible.
+/// What a script gets back when it asks for an effect it cannot have. Zero means the client declined
+/// - the system is off, the player is out of the world, or the cap is spoken for - so a script can
+/// tell "declined" from "failed" without catching anything, and the exceptions are reserved for a
+/// script asking for something impossible.
 /// <para>
 /// The manager is a main-thread-confined singleton, so these run through the fixture's thread and
-/// hand back everything they took.
+/// hand back everything they took, the world session included.
 /// </para>
 /// </summary>
 [Collection(MainThreadCollection.Name)]
-public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
+public class ScriptedOverlayGateTests : IDisposable
 {
+    private readonly MainThreadFixture _mainThread;
     private readonly object _owner = new();
 
-    private static EffectProfile Profile() => new() { Name = "scripted" };
+    /// <summary>
+    /// The manager is a process-wide singleton, so a world session another test left open would
+    /// decide what these see. Reset drops every script demand whoever raised it, which is the only
+    /// teardown strong enough - StopScriptedByOwner reaches this class's owner and nothing else.
+    /// </summary>
+    /// <param name="mainThread">The fixture's main thread.</param>
+    public ScriptedOverlayGateTests(MainThreadFixture mainThread)
+    {
+        this._mainThread = mainThread;
+        mainThread.Invoke(ScreenOverlayManager.Instance.Reset);
+    }
+
+    public void Dispose()
+    {
+        _mainThread.Invoke(ScreenOverlayManager.Instance.Reset);
+    }
+
+    private static EffectProfile Profile()
+    {
+        return new EffectProfile { Name = "scripted" };
+    }
 
     /// <summary>Fresh defaults, which ship with every decoration switched off.</summary>
     private static void SetDecorations(bool enabled)
@@ -32,12 +54,23 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
         settings.Overlays.Enabled = enabled;
     }
 
+    /// <summary>
+    /// Settings, then a world session - the order the client does it in, and the order
+    /// <see cref="ScreenOverlayManager.StartScripted"/> needs, since it declines out of world.
+    /// </summary>
+    /// <param name="enabled">Whether overlays are switched on.</param>
+    private static void EnterWorld(bool enabled)
+    {
+        SetDecorations(enabled);
+        ScreenOverlayManager.Instance.Start();
+    }
+
     [Fact]
     public void AskingWhileOverlaysAreSwitchedOffAnswersZero()
     {
-        mainThread.Invoke(() =>
+        _mainThread.Invoke(() =>
             {
-                SetDecorations(false);
+                EnterWorld(false);
 
                 ScreenOverlayManager.Instance
                     .StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner)
@@ -50,9 +83,9 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
     [Fact]
     public void AskingWhileOverlaysAreOnAnswersAHandle()
     {
-        mainThread.Invoke(() =>
+        _mainThread.Invoke(() =>
             {
-                SetDecorations(true);
+                EnterWorld(true);
 
                 try
                 {
@@ -78,9 +111,9 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
     [Fact]
     public void ExhaustingTheScriptCapAnswersZero()
     {
-        mainThread.Invoke(() =>
+        _mainThread.Invoke(() =>
             {
-                SetDecorations(true);
+                EnterWorld(true);
 
                 try
                 {
@@ -93,13 +126,15 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
                         .StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner)
                         .Should()
                         .Be(0u);
+
+                    ScreenOverlayManager.Instance.StopScriptedByOwner(_owner);
+
+                    ScreenOverlayManager.Instance.ScriptSlotsFree().Should().Be(ScreenOverlayManager.ScriptCap);
                 }
                 finally
                 {
                     ScreenOverlayManager.Instance.StopScriptedByOwner(_owner);
                 }
-
-                ScreenOverlayManager.Instance.ScriptSlotsFree().Should().Be(ScreenOverlayManager.ScriptCap);
             }
         );
     }
@@ -108,9 +143,9 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
     [Fact]
     public void StoppingAnEffectReturnsItsPlaceInTheCap()
     {
-        mainThread.Invoke(() =>
+        _mainThread.Invoke(() =>
             {
-                SetDecorations(true);
+                EnterWorld(true);
 
                 try
                 {
@@ -136,28 +171,59 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
 
     /// <summary>
     /// Leaving the world drops every script effect. Handles go stale and nothing is re-asserted on
-    /// the next world load, which is why the cap is free again afterwards.
+    /// the next world load, which is why the cap is free again on the next one.
     /// </summary>
     [Fact]
     public void LeavingTheWorldDropsEveryScriptEffect()
     {
-        mainThread.Invoke(() =>
+        _mainThread.Invoke(() =>
+            {
+                EnterWorld(true);
+
+                try
+                {
+                    ScreenOverlayManager.Instance.StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner);
+                    ScreenOverlayManager.Instance.Reset();
+
+                    ScreenOverlayManager.Instance.Start();
+
+                    // The cap would still be spoken for had Reset left the demands behind.
+                    for (int i = 0; i < ScreenOverlayManager.ScriptCap; i++)
+                    {
+                        ScreenOverlayManager.Instance
+                            .StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner)
+                            .Should()
+                            .BeGreaterThan(0u);
+                    }
+                }
+                finally
+                {
+                    ScreenOverlayManager.Instance.StopScriptedByOwner(_owner);
+                }
+            }
+        );
+    }
+
+    /// <summary>
+    /// Out of world nothing reconciles, so a demand taken there would hold a slot, draw nothing, and
+    /// then arrive all at once on the next world load. Declined instead, and
+    /// <see cref="ScreenOverlayManager.ScriptSlotsFree"/> says so rather than offering a slot that
+    /// cannot be had.
+    /// </summary>
+    [Fact]
+    public void AskingWhileOutOfWorldAnswersZero()
+    {
+        _mainThread.Invoke(() =>
             {
                 SetDecorations(true);
-
-                ScreenOverlayManager.Instance.StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner);
                 ScreenOverlayManager.Instance.Reset();
 
-                // The cap would still be spoken for had Reset left the demands behind.
-                for (int i = 0; i < ScreenOverlayManager.ScriptCap; i++)
-                {
-                    ScreenOverlayManager.Instance
-                        .StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner)
-                        .Should()
-                        .BeGreaterThan(0u);
-                }
+                ScreenOverlayManager.Instance
+                    .StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner)
+                    .Should()
+                    .Be(0u, "there is nothing to draw over and nothing reconciling");
 
-                ScreenOverlayManager.Instance.StopScriptedByOwner(_owner);
+                ScreenOverlayManager.Instance.ScriptSlotsFree().Should().Be(0);
             }
         );
     }
@@ -165,9 +231,9 @@ public class ScriptedOverlayGateTests(MainThreadFixture mainThread)
     [Fact]
     public void StoppingAHandleThatIsNotLiveDoesNothing()
     {
-        mainThread.Invoke(() =>
+        _mainThread.Invoke(() =>
             {
-                SetDecorations(true);
+                EnterWorld(true);
 
                 uint live = ScreenOverlayManager.Instance.StartScripted(Profile(), Guid.NewGuid(), 1f, null, _owner);
 

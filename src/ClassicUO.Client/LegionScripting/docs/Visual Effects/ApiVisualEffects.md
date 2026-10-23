@@ -11,12 +11,17 @@ This section contains a set of advanced and highly complex APIs, designed for ve
 :::
 
 Starting an effect hands back a handle, which is what stops it early. A handle of 0 means nothing
-was raised: either the system is off, or scripts already hold every slot - `SlotsFree` tells those
-two apart.
+was raised: the system is off, you are not in the world, or scripts already hold every slot -
+`SlotsFree` tells those apart.
 
 Nothing you raise outlives your script. Whatever is still running when it stops is dropped, as is
 everything on leaving the world. Getting a setting wrong raises an error instead, since that is a
 mistake in the script rather than a state of the client.
+
+:::note[Performance]
+Every layer of every running effect is a full-screen pass each frame, so each layer you add costs
+a little. Keep compositions small, and stop what you are done with.
+:::
 
 :::caution[Photosensitive Epilepsy Warning]
 Visual effects may contain flashing lights or rapid color changes.
@@ -52,7 +57,7 @@ cannot override that - `Start` answers 0 while this is false.
 
 ```py
 if API.VisualEffects.Enabled:
-API.VisualEffects.Start(API.VisualEffects.Ids.Poison, 3)
+    API.VisualEffects.Start(API.VisualEffects.Ids.Poison, 3)
 
 ```
 
@@ -67,9 +72,9 @@ script cannot override it - `StartShake` answers 0 while this is false.
 
 **Type:** `int`
 
-How many more effects every script on the client may raise between them. Shared rather than
-per script, so a script holding effects it no longer needs takes them from the others - stop
-what you are done with.
+How many more effects every script on the client may raise between them, and 0 while you are not
+in the world. Shared rather than per script, so a script holding effects it no longer needs takes
+them from the others - stop what you are done with.
 
 **Example:**
 
@@ -236,6 +241,8 @@ handle = API.VisualEffects.Start(effect, 4)
 Build a colour layer, set to the client's defaults. The only technique that paints rather
 than distorting, and so the only one that may sit anywhere in a stack.
 
+Like every layer, it costs a full-screen pass per frame while the effect runs.
+
 **Return Type:** `ApiTintLayer` - The layer.
 
 ---
@@ -243,6 +250,8 @@ than distorting, and so the only one that may sit anywhere in a stack.
 ### NewBlurLayer
 
 Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
+
+The priciest technique: a full-screen pass per frame, at `Taps` samples per pixel.
 
 **Return Type:** `ApiBlurLayer` - The layer.
 
@@ -253,6 +262,8 @@ Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
 Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
 focus, because the centre of the screen stays sharp however strong it is.
 
+A full-screen pass per frame, at `Taps` samples per pixel.
+
 **Return Type:** `ApiRadialBlurLayer` - The layer.
 
 ---
@@ -260,7 +271,8 @@ focus, because the centre of the screen stays sharp however strong it is.
 ### NewChromaticLayer
 
 Build a chromatic split layer, set to the client's defaults. The cheapest technique by a wide
-margin, so it is worth reaching for first when something needs to look wrong.
+margin - three samples per pixel - so it is worth reaching for first when something needs to
+look wrong.
 
 **Return Type:** `ApiChromaticLayer` - The layer.
 
@@ -337,7 +349,7 @@ API.VisualEffects.Stop(handle)
 | `seconds` | `double` | ✅ Yes | How long to run for. Zero or less runs until stopped; capped at 86400. |
 | `intensity` | `double` | ✅ Yes | Strength to draw at, 0-1. Scales the composition rather than replacing anything in it. |
 
-**Return Type:** `uint` - A handle for `Stop`, or 0 if the user has visual effects switched off or every slot is in use.
+**Return Type:** `uint` - A handle for `Stop`, or 0 if the user has visual effects switched off, you are not in the world, or every slot is in use.
 
 **Raises:**
 
@@ -362,7 +374,7 @@ start it again to change it.
 | `seconds` | `double` | ✅ Yes | How long to run for. Zero or less runs until stopped; capped at 86400. |
 | `intensity` | `double` | ✅ Yes | Strength to draw at, 0-1. |
 
-**Return Type:** `uint` - A handle for `Stop`, or 0 if the user has visual effects switched off or every slot is in use.
+**Return Type:** `uint` - A handle for `Stop`, or 0 if the user has visual effects switched off, you are not in the world, or every slot is in use.
 
 **Raises:**
 
@@ -386,7 +398,7 @@ use `Start` with `Ids` for those.
 | `seconds` | `double` | ✅ Yes | How long to run for. Zero or less runs until stopped; capped at 86400. |
 | `intensity` | `double` | ✅ Yes | Strength to draw at, 0-1. |
 
-**Return Type:** `uint` - A handle for `Stop`, or 0 if the user has visual effects switched off or every slot is in use.
+**Return Type:** `uint` - A handle for `Stop`, or 0 if the user has visual effects switched off, you are not in the world, or every slot is in use.
 
 **Raises:**
 
@@ -437,7 +449,7 @@ API.VisualEffects.StartShake(shake)
 | --- | --- | --- | --- |
 | `config` | `ApiShakeConfig` | ❌ No | The shake to run, from `NewShakeConfig`. |
 
-**Return Type:** `uint` - A handle for `StopShake`, or 0 if the user has screen shake switched off.
+**Return Type:** `uint` - A handle for `StopShake`, or 0 if the user has screen shake switched off or you are not in the world.
 
 **Raises:**
 

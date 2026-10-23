@@ -1275,7 +1275,8 @@ class ApiEffectProfile:
 
     def AddLayer(self, effect: "ApiLayerEffect", blend: "Any" = ApiVisualEffects.OverlayBlend.Alpha) -> "ApiProfileLayer":
         """
-        Appends a layer, which is the usual way to build a composition up.
+        Appends a layer, which is the usual way to build a composition up. At most 4, and each one is a
+        full-screen pass per frame while the effect runs.
         """
         pass
 
@@ -1492,12 +1493,16 @@ class ApiVisualEffects:
         """
         Build a colour layer, set to the client's defaults. The only technique that paints rather
         than distorting, and so the only one that may sit anywhere in a stack.
+        
+        Like every layer, it costs a full-screen pass per frame while the effect runs.
         """
         pass
 
     def NewBlurLayer(self) -> "ApiBlurLayer":
         """
         Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
+        
+        The priciest technique: a full-screen pass per frame, at `Taps` samples per pixel.
         """
         pass
 
@@ -1505,13 +1510,16 @@ class ApiVisualEffects:
         """
         Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
         focus, because the centre of the screen stays sharp however strong it is.
+        
+        A full-screen pass per frame, at `Taps` samples per pixel.
         """
         pass
 
     def NewChromaticLayer(self) -> "ApiChromaticLayer":
         """
         Build a chromatic split layer, set to the client's defaults. The cheapest technique by a wide
-        margin, so it is worth reaching for first when something needs to look wrong.
+        margin - three samples per pixel - so it is worth reaching for first when something needs to
+        look wrong.
         """
         pass
 
@@ -1737,7 +1745,7 @@ def OnHotKey(key: "str", callback: "Any" = None) -> None:
 def IsKeyPressed(key: "str") -> "bool":
     """
     Returns true if the given key combination is currently held down.
-    The key format matches `OnHotKey` , e.g. "CTRL+SHIFT+F1" or "A".
+    The key format matches `OnHotKey`, e.g. "CTRL+SHIFT+F1" or "A".
     Extra modifiers beyond those specified do not prevent a match.
     """
     pass

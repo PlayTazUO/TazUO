@@ -1,11 +1,11 @@
 ---
 title: ApiEntity
-description: "Represents a Python-accessible entity in the game world, such as a mobile or item. Inherits basic spatial and visual data from `ApiGameObject` ."
+description: "Represents a Python-accessible entity in the game world, such as a mobile or item. Inherits basic spatial and visual data from `ApiGameObject`."
 ---
 
 ## Class Description
 Represents a Python-accessible entity in the game world, such as a mobile or item.
-Inherits basic spatial and visual data from `ApiGameObject` .
+Inherits basic spatial and visual data from `ApiGameObject`.
 
 ## Properties
 ### `Name`
@@ -17,7 +17,7 @@ Inherits basic spatial and visual data from `ApiGameObject` .
 **Type:** `string`
 
 The Python-visible class name of this object.
-Accessible in Python as `obj.__class__` .
+Accessible in Python as `obj.__class__`.
 
 
 ### `Serial`

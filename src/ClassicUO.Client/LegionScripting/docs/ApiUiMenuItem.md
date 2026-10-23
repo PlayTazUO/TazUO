@@ -28,7 +28,7 @@ Represents a Python-accessible item in a menu.
 **Type:** `string`
 
 The Python-visible class name of this object.
-Accessible in Python as `obj.__class__` .
+Accessible in Python as `obj.__class__`.
 
 
 *No fields found.*
