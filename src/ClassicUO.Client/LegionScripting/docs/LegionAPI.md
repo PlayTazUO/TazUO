@@ -99,7 +99,6 @@ The index of the last spell cast by the player.
 
 ```py
 API.SysMsg("Last spell index: " + str(API.LastSpellIndex))
-
 ```
 
 ### `LastSpellName`
@@ -112,7 +111,6 @@ The name of the last spell cast by the player.
 
 ```py
 API.SysMsg("Last spell: " + API.LastSpellName)
-
 ```
 
 ### `Found`
@@ -148,7 +146,6 @@ Check if the script has been requested to stop.
 ```py
 while not API.StopRequested:
   DoSomeStuff()
-
 ```
 
 ### `CancellationToken`
@@ -226,7 +223,6 @@ Use this when you need to wait for players to click buttons.
 while not API.StopRequested:
   API.ProcessCallbacks()
   API.Pause(0.1)
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -251,13 +247,11 @@ API.OnHotKey("SHIFT+A", on_shift_a)
 while not API.StopRequested:
   API.ProcessCallbacks()
   API.Pause(0.1)
-
 ```
 ### Unregister:
 
 ```py
 API.OnHotKey("SHIFT+A")
-
 ```
 The `key` can include modifiers (CTRL, SHIFT, ALT),
 for example: "CTRL+SHIFT+F1" or "ALT+A".
@@ -303,7 +297,6 @@ rejected. Blocks until the player saves a key or closes the window (or the timeo
 key = API.RequestHotkey()
 if key:
   API.OnHotKey(key, on_pressed)
-
 ```
 
 **Parameters:**
@@ -357,7 +350,6 @@ Set a variable that is shared between scripts.
 
 ```py
 API.SetSharedVar("myVar", 10)
-
 ```
 
 **Parameters:**
@@ -381,7 +373,6 @@ Get the value of a shared variable.
 myVar = API.GetSharedVar("myVar")
 if myVar:
  API.SysMsg(f"myVar is {myVar}")
-
 ```
 
 **Parameters:**
@@ -402,7 +393,6 @@ Try to remove a shared variable.
 
 ```py
 API.RemoveSharedVar("myVar")
-
 ```
 
 **Parameters:**
@@ -423,7 +413,6 @@ Clear all shared vars.
 
 ```py
 API.ClearSharedVars()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -448,7 +437,6 @@ Attack a mobile
 enemy = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
 if enemy:
   API.Attack(enemy)
-
 ```
 
 **Parameters:**
@@ -489,7 +477,6 @@ if player.HitsMax - player.Hits > 10 or player.IsPoisoned:
   else:
     API.SysMsg("WARNING: No bandages!", 32)
     break
-
 ```
 
 **Return Type:** `bool` - True if bandages found and used
@@ -507,7 +494,6 @@ Sets API.Found to the item's serial.
 leftHand = API.ClearLeftHand()
 if leftHand:
   API.SysMsg("Cleared left hand: " + leftHand.Name)
-
 ```
 
 **Return Type:** `ApiItem` - The item that was in your hand
@@ -525,7 +511,6 @@ Sets API.Found to the item's serial.
 rightHand = API.ClearRightHand()
 if rightHand:
   API.SysMsg("Cleared right hand: " + rightHand.Name)
-
 ```
 
 **Return Type:** `ApiItem` - The item that was in your hand
@@ -540,7 +525,6 @@ Single click an object
 
 ```py
 API.ClickObject(API.Player)
-
 ```
 
 **Parameters:**
@@ -561,7 +545,6 @@ Attempt to use(double click) an object.
 
 ```py
 API.UseObject(API.Backpack)
-
 ```
 
 **Parameters:**
@@ -585,7 +568,6 @@ Get an item count for the contents of a container
 count = API.Contents(API.Backpack)
 if count > 0:
   API.SysMsg(f"You have {count} items in your backpack")
-
 ```
 
 **Parameters:**
@@ -609,7 +591,6 @@ spells = API.GetSpellsInSpellbook(book_serial)
 if spells:
   for spell in spells:
     API.SysMsg(spell)
-
 ```
 
 **Parameters:**
@@ -631,7 +612,6 @@ This does not open the menu, you do not need to open the menu first. This handle
 
 ```py
 API.ContextMenu(API.Player, 1)
-
 ```
 
 **Parameters:**
@@ -655,7 +635,6 @@ The match is case-insensitive and matches the first entry that contains the give
 
 ```py
 API.ContextMenu(API.Player, "Open Paperdoll")
-
 ```
 
 **Parameters:**
@@ -722,7 +701,6 @@ Attempt to equip an item. Layer is automatically detected.
 lefthand = API.ClearLeftHand()
 API.Pause(2)
 API.EquipItem(lefthand)
-
 ```
 
 **Parameters:**
@@ -761,7 +739,6 @@ if len(items) > 0 and barrel:
         data = API.ItemNameAndProps(item)
         if data and "An Exotic Fish" in data:
             API.QueueMoveItem(item, barrel)
-
 ```
 
 **Parameters:**
@@ -797,7 +774,6 @@ if len(items) > 0 and barrel:
         if data and "An Exotic Fish" in data:
             API.MoveItem(item, barrel)
             API.Pause(0.75)
-
 ```
 
 **Parameters:**
@@ -824,7 +800,6 @@ Move an item to the ground near you.
 items = API.ItemsInContainer(API.Backpack)
 for item in items:
   API.QueueMoveItemOffset(item, 0, 1, 0, 0)
-
 ```
 
 **Parameters:**
@@ -853,7 +828,6 @@ items = API.ItemsInContainer(API.Backpack)
 for item in items:
   API.MoveItemOffset(item, 0, 1, 0, 0)
   API.Pause(0.75)
-
 ```
 
 **Parameters:**
@@ -921,7 +895,6 @@ Use a skill.
 ```py
 API.UseSkill("Hiding")
 API.Pause(11)
-
 ```
 
 **Parameters:**
@@ -944,7 +917,6 @@ Attempt to cast a spell by its name.
 API.CastSpell("Fireball")
 API.WaitForTarget()
 API.Target(API.Player)
-
 ```
 
 **Parameters:**
@@ -965,7 +937,6 @@ Dress from a saved dress configuration.
 
 ```py
 API.Dress("PvP Gear")
-
 ```
 
 **Parameters:**
@@ -986,7 +957,6 @@ Undress from a saved dress configuration.
 
 ```py
 API.Undress("PvP Gear")
-
 ```
 
 **Parameters:**
@@ -1023,7 +993,6 @@ Get all available dress configurations.
 outfits = API.GetAvailableDressOutfits()
 if outfits:
   Dress(outfits[0])
-
 ```
 
 **Return Type:** `IList<string>` - Returns a list of outfit names for use with Dress(outfitname)
@@ -1038,7 +1007,6 @@ example:
 ```py
 serials = [0xabc, 0xdef]
 API.DressItems(serials, kr=True)
-
 ```
 
 **Parameters:**
@@ -1064,7 +1032,6 @@ API.Organizer("MyOrganizer")
 
 # Run organizer with specific source and destination
 API.Organizer("MyOrganizer", 0x40001234, 0x40005678)
-
 ```
 
 **Parameters:**
@@ -1102,7 +1069,6 @@ Check if a buff is active.
 ```py
 if API.BuffExists("Bless"):
   API.SysMsg("You are blessed!")
-
 ```
 
 **Parameters:**
@@ -1127,7 +1093,6 @@ Buff does not get updated after you access it in python, you will need to call t
 buffs = API.ActiveBuffs()
 for buff in buffs:
     API.SysMsg(buff.Title)
-
 ```
 
 **Return Type:** `ApiBuff[]`
@@ -1145,7 +1110,6 @@ reports as active, the same ones the spell bar highlights.
 ```py
 for spellId in API.ActiveSpells():
     API.SysMsg("Active spell id: " + str(spellId))
-
 ```
 
 **Return Type:** `int[]` - An array of active spell ids.
@@ -1163,7 +1127,6 @@ reports as active, the same ones the spell bar highlights.
 ```py
 for name in API.ActiveSpellNames():
     API.SysMsg("Active spell: " + name)
-
 ```
 
 **Return Type:** `string[]` - An array of active spell names.
@@ -1181,7 +1144,6 @@ These are toggle spells/moves that the server reports as active, the same ones t
 ```py
 if API.IsSpellActive("Confidence"):
     API.SysMsg("Confidence is active!")
-
 ```
 
 **Parameters:**
@@ -1202,7 +1164,6 @@ Show a system message(Left side of screen).
 
 ```py
 API.SysMsg("Script started!")
-
 ```
 
 **Parameters:**
@@ -1224,7 +1185,6 @@ Say a message outloud.
 
 ```py
 API.Msg("Hello friend!")
-
 ```
 
 **Parameters:**
@@ -1245,7 +1205,6 @@ Show a message above a mobile or item, this is only visible to you.
 
 ```py
 API.HeadMsg("Only I can see this!", API.Player)
-
 ```
 
 **Parameters:**
@@ -1268,7 +1227,6 @@ Send a message to your party.
 
 ```py
 API.PartyMsg("The raid begins in 30 second! Wait... we don't have raids, wrong game..")
-
 ```
 
 **Parameters:**
@@ -1289,7 +1247,6 @@ Send your guild a message.
 
 ```py
 API.GuildMsg("Hey guildies, just restocked my vendor, fresh valorite suits available!")
-
 ```
 
 **Parameters:**
@@ -1310,7 +1267,6 @@ Send a message to your alliance.
 
 ```py
 API.AllyMsg("Hey allies, just restocked my vendor, fresh valorite suits available!")
-
 ```
 
 **Parameters:**
@@ -1331,7 +1287,6 @@ Whisper a message.
 
 ```py
 API.WhisperMsg("Psst, bet you didn't see me here..")
-
 ```
 
 **Parameters:**
@@ -1352,7 +1307,6 @@ Yell a message.
 
 ```py
 API.YellMsg("Vendor restocked, get your fresh feathers!")
-
 ```
 
 **Parameters:**
@@ -1373,7 +1327,6 @@ Emote a message.
 
 ```py
 API.EmoteMsg("laughing")
-
 ```
 
 **Parameters:**
@@ -1427,7 +1380,6 @@ item = API.FindItem(donkey)
 if item:
   API.SysMsg("Found the donkey!")
   API.UseObject(item)
-
 ```
 
 **Parameters:**
@@ -1452,7 +1404,6 @@ item = API.FindType(0x0EED, API.Backpack)
 if item:
   API.SysMsg("Found the item!")
   API.UseObject(item)
-
 ```
 
 **Parameters:**
@@ -1479,7 +1430,6 @@ Return a list of items matching the parameters set.
 items = API.FindTypeAll(0x0EED, API.Backpack)
 if items:
   API.SysMsg("Found " + str(len(items)) + " items!")
-
 ```
 
 **Parameters:**
@@ -1507,7 +1457,6 @@ Sets API.Found to the serial of the item found.
 item = API.FindLayer("Helmet")
 if item:
   API.SysMsg("Wearing a helmet!")
-
 ```
 
 **Parameters:**
@@ -1531,7 +1480,6 @@ Get all items on the ground within specified range.
 items = API.GetItemsOnGround(10)  # All items within 10 tiles
 if items:
   API.SysMsg("Found " + str(len(items)) + " items on ground!")
-
 ```
 
 **Parameters:**
@@ -1558,7 +1506,6 @@ if items:
   for item in items:
     API.SysMsg(item.Name)
     API.Pause(0.5)
-
 ```
 
 **Parameters:**
@@ -1582,7 +1529,6 @@ Attempt to use the first item found by graphic(type).
 API.UseType(0x3434, container=API.Backpack)
 API.WaitForTarget()
 API.Target(API.Player)
-
 ```
 
 **Parameters:**
@@ -1606,7 +1552,6 @@ Create a cooldown bar.
 
 ```py
 API.CreateCooldownBar(5, "Healing", 21)
-
 ```
 
 **Parameters:**
@@ -1629,7 +1574,6 @@ Updates an existing cooldown bar. Only the provided values are applied.
 
 ```py
 API.UpdateCooldown("Healing", maxValue=10, currentValue=5)
-
 ```
 
 **Parameters:**
@@ -1652,7 +1596,6 @@ Restarts the countdown of an existing cooldown bar to its full duration.
 
 ```py
 API.RestartCooldown("Healing")
-
 ```
 
 **Parameters:**
@@ -1673,7 +1616,6 @@ Deletes an existing cooldown bar.
 
 ```py
 API.DeleteCooldown("Healing")
-
 ```
 
 **Parameters:**
@@ -1694,7 +1636,6 @@ Checks whether a cooldown bar with the given name exists.
 
 ```py
 if API.CooldownExists("Healing"):
-
 ```
 
 **Parameters:**
@@ -1728,7 +1669,6 @@ API.CreateEffect(0x373A, sourceX=API.Player.X + 1, sourceY=API.Player.Y, hue=0x0
 mob = API.NearestMobile([API.Notoriety.Murderer], 8)
 if mob:
   API.CreateEffect(0x36D0, type=API.EffectType.Moving, source=API.Player, target=mob)
-
 ```
 
 **Parameters:**
@@ -1767,7 +1707,6 @@ These are unique lists per script. Ignoring an item in one script, will not affe
 for item in ItemsInContainer(API.Backpack):
   if item.Name == "Dagger":
   API.IgnoreObject(item)
-
 ```
 
 **Parameters:**
@@ -1788,7 +1727,6 @@ Removes an item or mobile from your ignore list.
 
 ```py
 API.UnIgnoreObject(item)
-
 ```
 
 **Parameters:**
@@ -1809,7 +1747,6 @@ Clears the ignore list. Allowing functions to see those items again.
 
 ```py
 API.ClearIgnoreList()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -1825,7 +1762,6 @@ Check if a serial is on the ignore list.
 ```py
 if API.OnIgnoreList(API.Backpack):
   API.SysMsg("Currently ignoring backpack")
-
 ```
 
 **Parameters:**
@@ -1846,7 +1782,6 @@ Attempt to pathfind to a location.  This will fail with large distances.
 
 ```py
 API.Pathfind(1414, 1515)
-
 ```
 
 **Parameters:**
@@ -1875,7 +1810,6 @@ Attempt to pathfind to a mobile or item.
 mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
 if mob:
   API.PathfindEntity(mob)
-
 ```
 
 **Parameters:**
@@ -1902,7 +1836,6 @@ Check if you are already pathfinding.
 if API.Pathfinding():
   API.SysMsg("Pathfinding...!")
   API.Pause(0.25)
-
 ```
 
 **Return Type:** `bool` - true/false
@@ -1918,7 +1851,6 @@ Cancel pathfinding.
 ```py
 if API.Pathfinding():
   API.CancelPathfinding()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -1938,7 +1870,6 @@ if path is not None:
     for x, y, z in path:
         tile = API.GetTile(x, y)
         tile.Hue = 53
-
 ```
 
 **Parameters:**
@@ -1964,7 +1895,6 @@ Automatically follow a mobile. This is different from pathfinding. This will con
 mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
 if mob:
   API.AutoFollow(mob)
-
 ```
 
 **Parameters:**
@@ -1986,7 +1916,6 @@ Cancel auto follow mode.
 ```py
 if API.Pathfinding():
   API.CancelAutoFollow()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -2001,7 +1930,6 @@ Run in a direction.
 
 ```py
 API.Run("north")
-
 ```
 
 **Parameters:**
@@ -2022,7 +1950,6 @@ Walk in a direction.
 
 ```py
 API.Walk("north")
-
 ```
 
 **Parameters:**
@@ -2043,7 +1970,6 @@ Turn your character a specific direction.
 
 ```py
 API.Turn("north")
-
 ```
 
 **Parameters:**
@@ -2064,7 +1990,6 @@ Attempt to rename something like a pet.
 
 ```py
 API.Rename(0x12345678, "My Handsome Pet")
-
 ```
 
 **Parameters:**
@@ -2086,7 +2011,6 @@ Attempt to dismount if mounted.
 
 ```py
 API.Dismount()
-
 ```
 
 **Parameters:**
@@ -2107,7 +2031,6 @@ Attempt to mount(double click)
 
 ```py
 API.Mount(0x12345678)
-
 ```
 
 **Parameters:**
@@ -2143,7 +2066,6 @@ Wait for a target cursor.
 
 ```py
 API.WaitForTarget()
-
 ```
 
 **Parameters:**
@@ -2166,7 +2088,6 @@ Target an item or mobile.
 ```py
 if API.WaitForTarget():
   API.Target(0x12345678)
-
 ```
 
 **Parameters:**
@@ -2188,7 +2109,6 @@ Target a location. Include graphic if targeting a static.
 ```py
 if API.WaitForTarget():
   API.Target(1243, 1337, 0)
-
 ```
 
 **Parameters:**
@@ -2214,7 +2134,6 @@ Request the player to target something.
 target = API.RequestTarget()
 if target:
   API.SysMsg("Targeted serial: " + str(target))
-
 ```
 
 **Parameters:**
@@ -2250,7 +2169,6 @@ Target yourself.
 
 ```py
 API.TargetSelf()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -2266,7 +2184,6 @@ the topmost visible object there is targeted, whether that is an entity, a stati
 
 ```py
 API.TargetRel(1, 1)
-
 ```
 
 **Parameters:**
@@ -2290,7 +2207,6 @@ If this doesn't work, try TargetTileRel instead.
 
 ```py
 API.TargetLand(1, 1)
-
 ```
 
 **Parameters:**
@@ -2313,7 +2229,6 @@ Resolves the spot the same way `TargetRel` does, but never falls back to land.
 
 ```py
 API.TargetTileRel(1, 1)
-
 ```
 
 **Parameters:**
@@ -2339,14 +2254,12 @@ This will attempt to use an item and target a resource, some servers may not sup
 2: wood
 3: graves
 4: red_mushrooms
-
 ```
 
 **Example:**
 
 ```py
 API.TargetResource(MY_SHOVEL_SERIAL, 0)
-
 ```
 
 **Parameters:**
@@ -2370,7 +2283,6 @@ Cancel targeting.
 if API.WaitForTarget():
   API.CancelTarget()
   API.SysMsg("Targeting cancelled, april fools made you target something!")
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -2388,7 +2300,6 @@ for a land tile. Include graphic to mark the location as a static instead.
 API.SetLastTarget(serial=0x12345678)
 API.SetLastTarget(x=1243, y=1337, z=0)
 API.SetLastTarget(x=1243, y=1337, z=0, graphic=0x1)
-
 ```
 
 **Parameters:**
@@ -2421,7 +2332,6 @@ API.UseObject(bandage_item)  # This will automatically target self when targetin
 enemy = API.FindMobile(mobile_serial)
 API.PreTarget(enemy.Serial, "harmful")
 API.CastSpell("Lightning")  # This will automatically target the enemy
-
 ```
 
 **Parameters:**
@@ -2445,7 +2355,6 @@ Cancels any active pre-target.
 API.PreTarget(enemy.Serial, "harmful")
 # Changed my mind, cancel the pre-target
 API.CancelPreTarget()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -2461,7 +2370,6 @@ Check if the player has a target cursor.
 ```py
 if API.HasTarget():
     API.CancelTarget()
-
 ```
 
 **Parameters:**
@@ -2497,7 +2405,6 @@ Set a skills lock status.
 
 ```py
 API.SetSkillLock("Hiding", "locked")
-
 ```
 
 **Parameters:**
@@ -2519,7 +2426,6 @@ Set a skills lock status.
 
 ```py
 API.SetStatLock("str", "locked")
-
 ```
 
 **Parameters:**
@@ -2541,7 +2447,6 @@ Logout of the game.
 
 ```py
 API.Logout()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -2561,7 +2466,6 @@ if data:
   API.SysMsg("Item data: " + data)
   if "An Exotic Fish" in data:
     API.SysMsg("Found an exotic fish!")
-
 ```
 
 **Parameters:**
@@ -2601,7 +2505,6 @@ Check if a player has a server gump. Leave blank to check if they have any serve
 ```py
 if API.HasGump(0x12345678):
   API.SysMsg("Found a gump!")
-
 ```
 
 **Parameters:**
@@ -2624,7 +2527,6 @@ Reply to a gump.
 API.ReplyGump(21)
 API.ReplyGump(1, 0x555, [100])
 API.ReplyGump(1, 0x555, [100], [(0, "text input")])
-
 ```
 
 **Parameters:**
@@ -2648,7 +2550,6 @@ Close the last gump open, or a specific gump.
 
 ```py
 API.CloseGump()
-
 ```
 
 **Parameters:**
@@ -2681,7 +2582,6 @@ API.ConfigNextGump(serial=0x12345678, autoRespond=True, autoRespondButton=1)
 API.ConfigNextGump()
 
 Note: This is only applied once. You cannot stack multiple configs. This is reset after successfully applied and only applies to server-sent gumps.
-
 ```
 
 **Parameters:**
@@ -2709,7 +2609,6 @@ Check if a gump contains a specific text.
 ```py
 if API.GumpContains("Hello"):
   API.SysMsg("Found the text!")
-
 ```
 
 **Parameters:**
@@ -2748,7 +2647,6 @@ gump = API.GetGump()
 if gump:
   API.SysMsg("Found the gump!")
   gump.Dispose() #Close it
-
 ```
 
 **Parameters:**
@@ -2780,7 +2678,6 @@ if API.WaitForGump(1951773915):
   API.HeadMsg("SUCCESS", API.Player, 62)
 else:
  API.HeadMsg("FAILURE", API.Player, 32)
-
 ```
 
 **Parameters:**
@@ -2810,7 +2707,6 @@ Toggle flying if you are a gargoyle.
 
 ```py
 API.ToggleFly()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -2826,7 +2722,6 @@ Toggle an ability.
 ```py
 if not API.PrimaryAbilityActive():
   API.ToggleAbility("primary")
-
 ```
 
 **Parameters:**
@@ -2848,7 +2743,6 @@ Check if your primary ability is active.
 ```py
 if API.PrimaryAbilityActive():
   API.SysMsg("Primary ability is active!")
-
 ```
 
 **Return Type:** `bool` - true/false
@@ -2864,7 +2758,6 @@ Check if your secondary ability is active.
 ```py
 if API.SecondaryAbilityActive():
   API.SysMsg("Secondary ability is active!")
-
 ```
 
 **Return Type:** `bool` - true/false
@@ -2898,7 +2791,6 @@ Check if your journal contains a message.
 ```py
 if API.InJournal("You have been slain"):
   API.SysMsg("You have been slain!")
-
 ```
 
 **Parameters:**
@@ -2920,7 +2812,6 @@ Clear your sound log (This is specific for each script).
 
 ```py
 API.ClearSoundLog()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -2936,7 +2827,6 @@ Check if the sound log contains a given sound and retrieves it.
 ```py
 if API.CheckSoundLog(0x13E):
   API.SysMsg("Chopped wood!")
-
 ```
 
 **Parameters:**
@@ -2960,7 +2850,6 @@ list = API.GetSoundLog(30)
 if list:
   for entry in list:
     entry.ID # Do something with this
-
 ```
 
 **Parameters:**
@@ -2981,7 +2870,6 @@ Play a sound effect locally (only audible to you).
 
 ```py
 API.PlaySound(0x13E)
-
 ```
 
 **Parameters:**
@@ -3004,7 +2892,6 @@ Can be regex, prepend your msgs with $
 ```py
 if API.InJournalAny(["You have been slain", "You are dead"]):
   API.SysMsg("You have been slain or dead!")
-
 ```
 
 **Parameters:**
@@ -3030,7 +2917,6 @@ list = API.GetJournalEntries(30)
 if list:
   for entry in list:
     entry.Text # Do something with this
-
 ```
 
 **Parameters:**
@@ -3053,7 +2939,6 @@ Supports regex matching if prefixed with $
 
 ```py
 API.ClearJournal()
-
 ```
 
 **Parameters:**
@@ -3074,7 +2959,6 @@ Pause the script.
 
 ```py
 API.Pause(5)
-
 ```
 
 **Parameters:**
@@ -3095,7 +2979,6 @@ Stops the current script.
 
 ```py
 API.Stop()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -3121,13 +3004,11 @@ API.OnStop(on_stop)
 while not API.StopRequested:
   API.ProcessCallbacks()
   API.Pause(0.1)
-
 ```
 To unregister, call with no callback:
 
 ```py
 API.OnStop()
-
 ```
 
 **Parameters:**
@@ -3148,7 +3029,6 @@ Toggle autolooting on or off.
 
 ```py
 API.ToggleAutoLoot()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -3165,7 +3045,6 @@ Use autoloot on a specific container.
 targ = API.RequestTarget()
 if targ:
   API.AutoLootContainer(targ)
-
 ```
 
 **Parameters:**
@@ -3186,7 +3065,6 @@ Use a virtue.
 
 ```py
 API.Virtue("honor")
-
 ```
 
 **Parameters:**
@@ -3207,7 +3085,6 @@ Open the quest log gump.
 
 ```py
 API.OpenQuestLog()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -3222,7 +3099,6 @@ Open the help menu.
 
 ```py
 API.OpenHelp()
-
 ```
 
 **Return Type:** `void` *(Does not return anything)*
@@ -3242,7 +3118,6 @@ if item:
   API.SysMsg("Found an item!")
   API.UseObject(item)
   # You can use API.FindItem or API.FindMobile(item.Serial) to determine if it's an item or mobile
-
 ```
 
 **Parameters:**
@@ -3269,7 +3144,6 @@ if mob:
   API.SysMsg("Found a criminal!")
   API.Msg("Guards!")
   API.Attack(mob)
-
 ```
 
 **Parameters:**
@@ -3295,7 +3169,6 @@ corpse = API.NearestCorpse()
 if corpse:
   API.SysMsg("Found a corpse!")
   API.UseObject(corpse)
-
 ```
 
 **Parameters:**
@@ -3320,7 +3193,6 @@ if len(mob) > 0:
   API.SysMsg("Found enemies!")
   API.Msg("Guards!")
   API.Attack(mob[0])
-
 ```
 
 **Parameters:**
@@ -3346,7 +3218,6 @@ mob = API.FindMobile(0x12345678)
 if mob:
   API.SysMsg("Found the mobile!")
   API.UseObject(mob)
-
 ```
 
 **Parameters:**
@@ -3381,7 +3252,6 @@ sorted_by_hits = API.GetAllMobiles(sortby="hits")
 targets = API.GetAllMobiles(name="ogre", distance=10, poisoned=True, hasLineOfSight=True)
 # Get only dead friends with a specific hue, at least 2 tiles away
 ghosts = API.GetAllMobiles(isGhost=True, isFriend=True, minDistance=2, hues=[0x83EA])
-
 ```
 
 **Parameters:**
@@ -3418,7 +3288,6 @@ Get the tile at a location.
 tile = API.GetTile(1414, 1515)
 if tile:
   API.SysMsg(f"Found a tile with graphic: {tile.Graphic}")
-
 ```
 
 **Parameters:**
@@ -3443,7 +3312,6 @@ This includes trees, vegetation, buildings, and other non-movable scenery.
 statics = API.GetStaticsAt(1000, 1000)
 for s in statics:
     API.SysMsg(f"Static Graphic: {s.Graphic}, Z: {s.Z}")
-
 ```
 
 **Parameters:**
@@ -3470,7 +3338,6 @@ API.SysMsg(f"Found {len(statics)} statics in area")
 for s in statics:
     if s.IsVegetation:
         API.SysMsg(f"Vegetation Graphic: {s.Graphic} at {s.X}, {s.Y}")
-
 ```
 
 **Parameters:**
@@ -3497,7 +3364,6 @@ This includes server-side house data.
 multis = API.GetMultisAt(1000, 1000)
 for m in multis:
     API.SysMsg(f"Multi Graphic: {m.Graphic}, Z: {m.Z}")
-
 ```
 
 **Parameters:**
@@ -3523,7 +3389,6 @@ multis = API.GetMultisInArea(1000, 1000, 1010, 1010)
 API.SysMsg(f"Found {len(multis)} multis in area")
 for m in multis:
     API.SysMsg(f"Multi Graphic: {m.Graphic} at {m.X}, {m.Y}")
-
 ```
 
 **Parameters:**
@@ -3548,7 +3413,6 @@ Check if a mobile is in the friends list.
 ```py
 if API.IsFriend(player.Serial):
     API.SysMsg("This player is your friend!")
-
 ```
 
 **Parameters:**
@@ -3571,7 +3435,6 @@ Add a mobile to the friends list by serial number.
 mobile = API.FindMobile(0x12345)
 if mobile:
     API.AddFriend(mobile.Serial)
-
 ```
 
 **Parameters:**
@@ -3592,7 +3455,6 @@ Remove a mobile from the friends list by serial number.
 
 ```py
 API.RemoveFriend(0x12345)
-
 ```
 
 **Parameters:**
@@ -3615,7 +3477,6 @@ Get all friends as an array of serials.
 friends = API.GetAllFriends()
 for friend in friends:
     API.FindMobile(friend)
-
 ```
 
 **Return Type:** `IList<uint>` - Array of serials representing all friends
@@ -3957,7 +3818,6 @@ if skill:
   API.SysMsg("Skill Value: " + str(skill.Value))
   API.SysMsg("Skill Cap: " + str(skill.Cap))
   API.SysMsg("Skill Lock: " + str(skill.Lock))
-
 ```
 
 **Parameters:**
@@ -3978,7 +3838,6 @@ Show a radius around the player.
 
 ```py
 API.DisplayRange(7, 32)
-
 ```
 
 **Parameters:**
@@ -4000,7 +3859,6 @@ Toggle another script on or off.
 
 ```py
 API.ToggleScript("mygroup/MyScript.py")
-
 ```
 
 **Parameters:**
@@ -4025,7 +3883,6 @@ Play a legion script.
 
 ```py
 API.PlayScript("mygroup/MyScript.py")
-
 ```
 
 **Parameters:**
@@ -4046,7 +3903,6 @@ Stop a legion script.
 
 ```py
 API.StopScript("mygroup/MyScript.py")
-
 ```
 
 **Parameters:**
@@ -4070,7 +3926,6 @@ straight back to PlayScript, StopScript, ToggleScript or IsScriptRunning.
 ```py
 for path in API.ListRunningScripts():
     API.SysMsg(path)
-
 ```
 
 **Return Type:** `IList<string>` - The relative paths of the running scripts.
@@ -4086,7 +3941,6 @@ Check if a legion script is currently running.
 ```py
 if not API.IsScriptRunning("mygroup/MyScript.py"):
     API.PlayScript("mygroup/MyScript.py")
-
 ```
 
 **Parameters:**
@@ -4107,7 +3961,6 @@ Add a marker to the current World Map (If one is open)
 
 ```py
 API.AddMapMarker("Death")
-
 ```
 
 **Parameters:**
@@ -4132,7 +3985,6 @@ Remove a marker from the world map.
 
 ```py
 API.RemoveMapMarker("Death")
-
 ```
 
 **Parameters:**
@@ -4154,7 +4006,6 @@ Check if the move item queue is being processed. You can use this to prevent act
 ```py
 if API.IsProcessingMoveQueue():
   API.Pause(0.5)
-
 ```
 
 **Return Type:** `bool`
@@ -4170,7 +4021,6 @@ Check if the use item queue is being processed. You can use this to prevent acti
 ```py
 if API.IsProcessingUseItemQueue():
   API.Pause(0.5)
-
 ```
 
 **Return Type:** `bool`
@@ -4187,7 +4037,6 @@ and prevents new actions from executing until the cooldown has expired.
 ```py
 if API.IsGlobalCooldownActive():
     API.Pause(0.5)
-
 ```
 
 **Return Type:** `bool` - True if the global cooldown is active; otherwise, false.
@@ -4202,7 +4051,6 @@ Save a variable that persists between sessions and scripts.
 
 ```py
 API.SavePersistentVar("TotalKills", "5", API.PersistentVar.Char)
-
 ```
 
 **Parameters:**
@@ -4225,7 +4073,6 @@ Delete/remove a persistent variable.
 
 ```py
 API.RemovePersistentVar("TotalKills", API.PersistentVar.Char)
-
 ```
 
 **Parameters:**
@@ -4247,7 +4094,6 @@ Get a persistent variable.
 
 ```py
 API.GetPersistentVar("TotalKills", "0", API.PersistentVar.Char)
-
 ```
 
 **Parameters:**
@@ -4302,7 +4148,6 @@ Set x or y to a negative value to close existing tracker arrow.
 
 ```py
 API.TrackingArrow(400, 400)
-
 ```
 
 **Parameters:**
@@ -4330,7 +4175,6 @@ if text:
 
 # Force English regardless of client language setting
 text = API.GetClilocString(1020000, englishOnly=True)
-
 ```
 
 **Parameters:**
@@ -4355,7 +4199,6 @@ Coordinates are in screen pixels.
 ```py
 bounds = API.GetClientBounds()
 API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
-
 ```
 
 **Return Type:** `Rectangle` - A Rectangle with X, Y, Width and Height of the client window in screen pixels.
@@ -4372,7 +4215,6 @@ This is the area where the game world is rendered, in screen pixel coordinates.
 ```py
 vp = API.GetViewportBounds()
 API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
-
 ```
 
 **Return Type:** `Rectangle` - A Rectangle with X, Y, Width and Height of the game viewport in screen pixels, or an empty Rectangle if the game scene is not active.

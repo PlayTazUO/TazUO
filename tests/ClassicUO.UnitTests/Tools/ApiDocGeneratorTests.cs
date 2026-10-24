@@ -175,7 +175,38 @@ public sealed class ApiDocGeneratorTests : IDisposable
             "ApiThing"
         );
 
-        page.Split('\n').Should().Contain("```py").And.Contain("```");
+        // The blank line belongs above the opening fence only. Above the closing one it lands
+        // inside the block and renders as a trailing empty line in the sample.
+        page.Should().Contain("\n\n```py\nAPI.Thing(1)\n```");
+    }
+
+    [Fact]
+    public void ABlankLineInsideASampleDoesNotFlattenTheHalfBelowIt()
+    {
+        string page = Render(
+            """
+            /// <summary>
+            /// Does a thing.
+            /// ```py
+            /// if API.Thing(1):
+            ///     API.SysMsg("one")
+            ///
+            /// if API.Thing(2):
+            ///     API.SysMsg("two")
+            /// ```
+            /// </summary>
+            public class ApiThing
+            {
+            }
+            """,
+            "ApiThing"
+        );
+
+        // Both halves are one sample, so both keep their indentation. Dedenting the lower half on
+        // its own would strip the body's indent and leave the author an IndentationError.
+        page.Should()
+            .Contain("if API.Thing(1):\n    API.SysMsg(\"one\")")
+            .And.Contain("if API.Thing(2):\n    API.SysMsg(\"two\")");
     }
 
     [Fact]

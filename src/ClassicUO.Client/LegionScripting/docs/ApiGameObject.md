@@ -74,7 +74,6 @@ Set an object's outline color using HTML hex colors.
 ```py
 API.Player.SetOutlineColor("#105510")
 API.Player.SetOutlineColor(None)
-
 ```
 
 **Parameters:**
@@ -111,7 +110,6 @@ Call with `None` to restore the original hue.
 ```py
 obj.Highlight(0x0021)
 obj.Highlight(None)
-
 ```
 
 **Parameters:**

@@ -22,7 +22,6 @@ g = API.Gumps.CreateGump()
 g.SetRect(100, 100, 200, 200)
 g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
 API.Gumps.AddGump(g)
-
 ```
 
 **Parameters:**
@@ -71,7 +70,6 @@ g = API.Gumps.CreateGump()
 g.SetRect(100, 100, 200, 200)
 g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
 API.Gumps.AddGump(g)
-
 ```
 
 **Parameters:**
@@ -98,7 +96,6 @@ g.Add(cb)
 API.Gumps.AddGump(g)
 
 API.SysMsg("Checkbox checked: " + str(cb.IsChecked))
-
 ```
 
 **Parameters:**
@@ -124,7 +121,6 @@ g = API.Gumps.CreateGump()
 g.SetRect(100, 100, 200, 200)
 g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
 API.Gumps.AddGump(g)
-
 ```
 
 **Parameters:**
@@ -152,7 +148,6 @@ cb.SetWidth(200)
 cb.SetHeight(200)
 g.Add(cb)
 API.Gumps.AddGump(g)
-
 ```
 
 **Parameters:**
@@ -177,7 +172,6 @@ g = API.Gumps.CreateGump()
 g.SetRect(100, 100, 200, 200)
 g.Add(API.Gumps.CreateGumpItemPic(0x0E78, 50, 50))
 API.Gumps.AddGump(g)
-
 ```
 
 **Parameters:**
@@ -205,7 +199,6 @@ gump.SetRect(100, 100, 200, 200)
 map = API.Gumps.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
 gump.Add(map)
 API.Gumps.AddGump(gump)
-
 ```
 
 **Parameters:**
@@ -238,7 +231,6 @@ Place the PNG anywhere inside the ZIP (outside gumps/ and art/ folders) and refe
 img = API.Gumps.LegionTextureControl("icons/sword.png")
 img.SetPos(10, 10)
 g.Add(img)
-
 ```
 
 **Parameters:**
@@ -270,7 +262,6 @@ while True:
   API.SysMsg("Button currently clicked?: " + str(button.IsClicked))
   API.SysMsg("Button clicked since last check?: " + str(button.HasBeenClicked()))
   API.Pause(0.2)
-
 ```
 
 **Parameters:**
@@ -299,7 +290,6 @@ g.SetRect(100, 100, 200, 200)
 button = API.Gumps.CreateSimpleButton("Click Me!", 100, 20)
 g.Add(button)
 API.Gumps.AddGump(g)
-
 ```
 
 **Parameters:**
@@ -327,7 +317,6 @@ rb = API.Gumps.CreateGumpRadioButton("Click Me!", 1)
 g.Add(rb)
 API.Gumps.AddGump(g)
 API.SysMsg("Radio button checked?: " + str(rb.IsChecked))
-
 ```
 
 **Parameters:**
@@ -372,7 +361,6 @@ textbox = API.Gumps.CreateGumpTextBox("Text example", w, h, True)
 gump.Add(textbox)
 
 API.Gumps.AddGump(gump)
-
 ```
 
 **Parameters:**
@@ -404,7 +392,6 @@ ttflabel.SetRect(10, 10, 180, 30)
 gump.Add(ttflabel)
 
 API.Gumps.AddGump(gump) #Add the gump to the players screen
-
 ```
 
 **Parameters:**
@@ -447,7 +434,6 @@ while True:
         break
     cur += 1
     API.Pause(0.5)
-
 ```
 
 **Parameters:**
@@ -479,7 +465,6 @@ slider = API.Gumps.CreateSlider(200, 0, 100, 50)
 gump.Add(slider)
 
 API.Gumps.AddGump(gump)
-
 ```
 
 **Parameters:**
@@ -512,7 +497,6 @@ for i in range(10):
     label = API.Gumps.CreateGumpTTFLabel(f"Label {i + 1}", 20, "#FFFFFF", "alagard")
     label.SetRect(5, i * 20, 180, 20)
     sa.Add(label)
-
 ```
 
 **Parameters:**
@@ -603,7 +587,6 @@ bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
 API.Gumps.AddControlOnClick(bg, myfunc)
 while True:
   API.ProcessCallbacks()
-
 ```
 
 **Parameters:**
@@ -635,7 +618,6 @@ bg = API.Gumps.CreateGumpColorBox(opacity=0.7, color="#000000")
 gump.Add(bg.SetRect(0, 0, 200, 200))
 
 API.Gumps.AddControlOnDisposed(gump, onClose)
-
 ```
 
 **Parameters:**

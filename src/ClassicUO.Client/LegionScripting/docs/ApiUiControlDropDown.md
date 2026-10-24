@@ -36,7 +36,6 @@ dropdown.OnDropDownOptionSelected(on_select)
 
 while True:
   API.ProcessCallbacks()
-
 ```
 
 **Parameters:**

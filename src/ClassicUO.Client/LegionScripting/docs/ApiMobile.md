@@ -145,6 +145,7 @@ Highlight this mobile and all of its equipped items with the given hue.
 The original hues are remembered so they can be restored.
 Call with `None` to restore the mobile and its equipped items to their original hues.
 Example:
+
 ```py
 mob.Highlight(0x0021)
 mob.Highlight(None)

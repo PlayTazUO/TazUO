@@ -58,7 +58,6 @@ cannot override that - `Start` answers 0 while this is false.
 ```py
 if API.VisualEffects.Enabled:
     API.VisualEffects.Start(API.VisualEffects.Ids.Poison, 3)
-
 ```
 
 ### `ShakeEnabled`
@@ -85,8 +84,7 @@ them from the others - stop what you are done with.
 ```py
 h = API.VisualEffects.Start(API.VisualEffects.Ids.Fog, 10)
 if not h and API.VisualEffects.SlotsFree == 0:
-API.SysMsg("another script is using every effect slot")
-
+    API.SysMsg("another script is using every effect slot")
 ```
 
 
@@ -185,7 +183,6 @@ List the visual effect compositions this client knows about, shipped and user-au
 ```py
 for info in API.VisualEffects.GetProfiles():
     API.SysMsg(f"{info.Name} -> {info.Id}")
-
 ```
 
 **Return Type:** `IList<ApiEffectProfileInfo>` - The library, in the order the options list it.
@@ -204,7 +201,6 @@ is no way to save it back.
 effect = API.VisualEffects.GetProfile(API.VisualEffects.Ids.Poison)
 effect.Layers[0].Effect.Strength = 0.9
 handle = API.VisualEffects.Start(effect, 5)
-
 ```
 
 **Parameters:**
@@ -233,7 +229,6 @@ tint = API.VisualEffects.NewTintLayer()
 tint.R, tint.G, tint.B = 150, 0, 0
 effect.AddLayer(tint)
 handle = API.VisualEffects.Start(effect, 4)
-
 ```
 
 **Return Type:** `ApiEffectProfile` - The composition, with the client's own fade timing and no layers.
@@ -303,7 +298,6 @@ shake.Seconds = 2.5
 shake.Intensity = 0.8
 shake.Gradient = API.VisualEffects.ShakeGradient.Decay
 API.VisualEffects.StartShake(shake)
-
 ```
 
 **Return Type:** `ApiShakeConfig` - The shake.
@@ -342,7 +336,6 @@ script leaves running is dropped when it stops.
 handle = API.VisualEffects.Start(API.VisualEffects.Ids.Drunk, 10)
 API.Pause(2)
 API.VisualEffects.Stop(handle)
-
 ```
 
 **Parameters:**
@@ -444,7 +437,6 @@ shake = API.VisualEffects.NewShakeConfig()
 shake.Seconds = 0.4
 shake.Intensity = 1.0
 API.VisualEffects.StartShake(shake)
-
 ```
 
 **Parameters:**

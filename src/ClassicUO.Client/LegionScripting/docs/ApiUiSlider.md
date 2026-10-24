@@ -73,7 +73,6 @@ slider.OnValueChanged(on_change)
 
 while True:
   API.ProcessCallbacks()
-
 ```
 
 **Parameters:**

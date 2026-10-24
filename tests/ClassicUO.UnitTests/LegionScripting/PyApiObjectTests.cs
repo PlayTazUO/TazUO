@@ -10,6 +10,7 @@ using ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 using FluentAssertions;
 using IronPython.Hosting;
 using Microsoft.Scripting.Hosting;
+using Microsoft.Xna.Framework;
 using Xunit;
 
 namespace ClassicUO.UnitTests.LegionScripting;
@@ -158,6 +159,16 @@ public class PyApiObjectTests
             .ToString()
             .Should()
             .Be("Fog [7195989d]");
+    }
+
+    /// <summary>
+    /// An override still owes the caller what the shared path gives them: a pair read back off a
+    /// layer holds widened floats, so the exact form prints digits no script ever set.
+    /// </summary>
+    [Fact]
+    public void ToString_RoundsAnOverridesNumbersLikeTheSharedPath()
+    {
+        ApiVector2.From(new Vector2(0.3f, -1.7f)).ToString().Should().Be("(0.3, -1.7)");
     }
 
     [Fact]

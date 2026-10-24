@@ -61,7 +61,6 @@ class ApiGameObject:
         ```py
         API.Player.SetOutlineColor("#105510")
         API.Player.SetOutlineColor(None)
-        
         ```
         """
         pass
@@ -82,7 +81,6 @@ class ApiGameObject:
         ```py
         obj.Highlight(0x0021)
         obj.Highlight(None)
-        
         ```
         """
         pass
@@ -229,6 +227,7 @@ class ApiMobile(ApiEntity):
         The original hues are remembered so they can be restored.
         Call with `None` to restore the mobile and its equipped items to their original hues.
         Example:
+        
         ```py
         mob.Highlight(0x0021)
         mob.Highlight(None)
@@ -587,7 +586,6 @@ class ApiUiControlDropDown(ApiUiBaseControl):
         
         while True:
           API.ProcessCallbacks()
-        
         ```
         """
         pass
@@ -606,7 +604,6 @@ class ApiUiGump:
         g.SetRect(100, 100, 200, 200)
         g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
         API.Gumps.AddGump(g)
-        
         ```
         """
         pass
@@ -629,7 +626,6 @@ class ApiUiGump:
         g.SetRect(100, 100, 200, 200)
         g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
         API.Gumps.AddGump(g)
-        
         ```
         """
         pass
@@ -648,7 +644,6 @@ class ApiUiGump:
         API.Gumps.AddGump(g)
         
         API.SysMsg("Checkbox checked: " + str(cb.IsChecked))
-        
         ```
         """
         pass
@@ -664,7 +659,6 @@ class ApiUiGump:
         g.SetRect(100, 100, 200, 200)
         g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
         API.Gumps.AddGump(g)
-        
         ```
         """
         pass
@@ -683,7 +677,6 @@ class ApiUiGump:
         cb.SetHeight(200)
         g.Add(cb)
         API.Gumps.AddGump(g)
-        
         ```
         """
         pass
@@ -699,7 +692,6 @@ class ApiUiGump:
         g.SetRect(100, 100, 200, 200)
         g.Add(API.Gumps.CreateGumpItemPic(0x0E78, 50, 50))
         API.Gumps.AddGump(g)
-        
         ```
         """
         pass
@@ -717,7 +709,6 @@ class ApiUiGump:
         map = API.Gumps.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
         gump.Add(map)
         API.Gumps.AddGump(gump)
-        
         ```
         """
         pass
@@ -734,7 +725,6 @@ class ApiUiGump:
         img = API.Gumps.LegionTextureControl("icons/sword.png")
         img.SetPos(10, 10)
         g.Add(img)
-        
         ```
         """
         pass
@@ -756,7 +746,6 @@ class ApiUiGump:
           API.SysMsg("Button currently clicked?: " + str(button.IsClicked))
           API.SysMsg("Button clicked since last check?: " + str(button.HasBeenClicked()))
           API.Pause(0.2)
-        
         ```
         """
         pass
@@ -773,7 +762,6 @@ class ApiUiGump:
         button = API.Gumps.CreateSimpleButton("Click Me!", 100, 20)
         g.Add(button)
         API.Gumps.AddGump(g)
-        
         ```
         """
         pass
@@ -791,7 +779,6 @@ class ApiUiGump:
         g.Add(rb)
         API.Gumps.AddGump(g)
         API.SysMsg("Radio button checked?: " + str(rb.IsChecked))
-        
         ```
         """
         pass
@@ -823,7 +810,6 @@ class ApiUiGump:
         gump.Add(textbox)
         
         API.Gumps.AddGump(gump)
-        
         ```
         """
         pass
@@ -843,7 +829,6 @@ class ApiUiGump:
         gump.Add(ttflabel)
         
         API.Gumps.AddGump(gump) #Add the gump to the players screen
-        
         ```
         """
         pass
@@ -872,7 +857,6 @@ class ApiUiGump:
                 break
             cur += 1
             API.Pause(0.5)
-        
         ```
         """
         pass
@@ -891,7 +875,6 @@ class ApiUiGump:
         gump.Add(slider)
         
         API.Gumps.AddGump(gump)
-        
         ```
         """
         pass
@@ -910,7 +893,6 @@ class ApiUiGump:
             label = API.Gumps.CreateGumpTTFLabel(f"Label {i + 1}", 20, "#FFFFFF", "alagard")
             label.SetRect(5, i * 20, 180, 20)
             sa.Add(label)
-        
         ```
         """
         pass
@@ -958,7 +940,6 @@ class ApiUiGump:
         API.Gumps.AddControlOnClick(bg, myfunc)
         while True:
           API.ProcessCallbacks()
-        
         ```
         """
         pass
@@ -980,7 +961,6 @@ class ApiUiGump:
         gump.Add(bg.SetRect(0, 0, 200, 200))
         
         API.Gumps.AddControlOnDisposed(gump, onClose)
-        
         ```
         """
         pass
@@ -1200,7 +1180,6 @@ class ApiUiSlider(ApiUiBaseControl):
         
         while True:
           API.ProcessCallbacks()
-        
         ```
         """
         pass
@@ -1460,7 +1439,6 @@ class ApiVisualEffects:
         ```py
         for info in API.VisualEffects.GetProfiles():
             API.SysMsg(f"{info.Name} -> {info.Id}")
-        
         ```
         """
         pass
@@ -1477,7 +1455,6 @@ class ApiVisualEffects:
         effect = API.VisualEffects.GetProfile(API.VisualEffects.Ids.Poison)
         effect.Layers[0].Effect.Strength = 0.9
         handle = API.VisualEffects.Start(effect, 5)
-        
         ```
         """
         pass
@@ -1494,7 +1471,6 @@ class ApiVisualEffects:
         tint.R, tint.G, tint.B = 150, 0, 0
         effect.AddLayer(tint)
         handle = API.VisualEffects.Start(effect, 4)
-        
         ```
         """
         pass
@@ -1552,7 +1528,6 @@ class ApiVisualEffects:
         shake.Intensity = 0.8
         shake.Gradient = API.VisualEffects.ShakeGradient.Decay
         API.VisualEffects.StartShake(shake)
-        
         ```
         """
         pass
@@ -1580,7 +1555,6 @@ class ApiVisualEffects:
         handle = API.VisualEffects.Start(API.VisualEffects.Ids.Drunk, 10)
         API.Pause(2)
         API.VisualEffects.Stop(handle)
-        
         ```
         """
         pass
@@ -1630,7 +1604,6 @@ class ApiVisualEffects:
         shake.Seconds = 0.4
         shake.Intensity = 1.0
         API.VisualEffects.StartShake(shake)
-        
         ```
         """
         pass
@@ -1719,7 +1692,6 @@ def ProcessCallbacks() -> None:
     while not API.StopRequested:
       API.ProcessCallbacks()
       API.Pause(0.1)
-    
     ```
     """
     pass
@@ -1739,13 +1711,11 @@ def OnHotKey(key: "str", callback: "Any" = None) -> None:
     while not API.StopRequested:
       API.ProcessCallbacks()
       API.Pause(0.1)
-    
     ```
     ### Unregister:
     
     ```py
     API.OnHotKey("SHIFT+A")
-    
     ```
     The `key` can include modifiers (CTRL, SHIFT, ALT),
     for example: "CTRL+SHIFT+F1" or "ALT+A".
@@ -1774,7 +1744,6 @@ def RequestHotkey(prompt: "str" = "Press a hotkey", timeout: "float" = 30) -> "s
     key = API.RequestHotkey()
     if key:
       API.OnHotKey(key, on_pressed)
-    
     ```
     """
     pass
@@ -1801,7 +1770,6 @@ def SetSharedVar(name: "str", value: "Any") -> None:
     
     ```py
     API.SetSharedVar("myVar", 10)
-    
     ```
     """
     pass
@@ -1816,7 +1784,6 @@ def GetSharedVar(name: "str") -> "Any":
     myVar = API.GetSharedVar("myVar")
     if myVar:
      API.SysMsg(f"myVar is {myVar}")
-    
     ```
     """
     pass
@@ -1829,7 +1796,6 @@ def RemoveSharedVar(name: "str") -> None:
     
     ```py
     API.RemoveSharedVar("myVar")
-    
     ```
     """
     pass
@@ -1842,7 +1808,6 @@ def ClearSharedVars() -> None:
     
     ```py
     API.ClearSharedVars()
-    
     ```
     """
     pass
@@ -1863,7 +1828,6 @@ def Attack(serial: "int") -> None:
     enemy = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
     if enemy:
       API.Attack(enemy)
-    
     ```
     """
     pass
@@ -1888,7 +1852,6 @@ def BandageSelf() -> "bool":
       else:
         API.SysMsg("WARNING: No bandages!", 32)
         break
-    
     ```
     """
     pass
@@ -1904,7 +1867,6 @@ def ClearLeftHand() -> "ApiItem":
     leftHand = API.ClearLeftHand()
     if leftHand:
       API.SysMsg("Cleared left hand: " + leftHand.Name)
-    
     ```
     """
     pass
@@ -1920,7 +1882,6 @@ def ClearRightHand() -> "ApiItem":
     rightHand = API.ClearRightHand()
     if rightHand:
       API.SysMsg("Cleared right hand: " + rightHand.Name)
-    
     ```
     """
     pass
@@ -1933,7 +1894,6 @@ def ClickObject(serial: "int") -> None:
     
     ```py
     API.ClickObject(API.Player)
-    
     ```
     """
     pass
@@ -1946,7 +1906,6 @@ def UseObject(serial: "int", skipQueue: "bool" = True) -> None:
     
     ```py
     API.UseObject(API.Backpack)
-    
     ```
     """
     pass
@@ -1961,7 +1920,6 @@ def Contents(serial: "int") -> "int":
     count = API.Contents(API.Backpack)
     if count > 0:
       API.SysMsg(f"You have {count} items in your backpack")
-    
     ```
     """
     pass
@@ -1977,7 +1935,6 @@ def GetSpellsInSpellbook(serial: "int") -> "list[str]":
     if spells:
       for spell in spells:
         API.SysMsg(spell)
-    
     ```
     """
     pass
@@ -1991,7 +1948,6 @@ def ContextMenu(serial: "int", entry: "int") -> None:
     
     ```py
     API.ContextMenu(API.Player, 1)
-    
     ```
     """
     pass
@@ -2006,7 +1962,6 @@ def ContextMenu(serial: "int", entry: "str", timeout: "float" = 5) -> "bool":
     
     ```py
     API.ContextMenu(API.Player, "Open Paperdoll")
-    
     ```
     """
     pass
@@ -2043,7 +1998,6 @@ def EquipItem(serial: "int") -> None:
     lefthand = API.ClearLeftHand()
     API.Pause(2)
     API.EquipItem(lefthand)
-    
     ```
     """
     pass
@@ -2072,7 +2026,6 @@ def QueueMoveItem(serial: "int", destination: "int", amt: "int" = 0, x: "int" = 
             data = API.ItemNameAndProps(item)
             if data and "An Exotic Fish" in data:
                 API.QueueMoveItem(item, barrel)
-    
     ```
     """
     pass
@@ -2096,7 +2049,6 @@ def MoveItem(serial: "int", destination: "int", amt: "int" = 0, x: "int" = 0xFFF
             if data and "An Exotic Fish" in data:
                 API.MoveItem(item, barrel)
                 API.Pause(0.75)
-    
     ```
     """
     pass
@@ -2111,7 +2063,6 @@ def QueueMoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 
     items = API.ItemsInContainer(API.Backpack)
     for item in items:
       API.QueueMoveItemOffset(item, 0, 1, 0, 0)
-    
     ```
     """
     pass
@@ -2127,7 +2078,6 @@ def MoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z:
     for item in items:
       API.MoveItemOffset(item, 0, 1, 0, 0)
       API.Pause(0.75)
-    
     ```
     """
     pass
@@ -2159,7 +2109,6 @@ def UseSkill(skillName: "str") -> None:
     ```py
     API.UseSkill("Hiding")
     API.Pause(11)
-    
     ```
     """
     pass
@@ -2174,7 +2123,6 @@ def CastSpell(spellName: "str") -> None:
     API.CastSpell("Fireball")
     API.WaitForTarget()
     API.Target(API.Player)
-    
     ```
     """
     pass
@@ -2187,7 +2135,6 @@ def Dress(name: "str") -> None:
     
     ```py
     API.Dress("PvP Gear")
-    
     ```
     """
     pass
@@ -2200,7 +2147,6 @@ def Undress(name: "str") -> None:
     
     ```py
     API.Undress("PvP Gear")
-    
     ```
     """
     pass
@@ -2221,7 +2167,6 @@ def GetAvailableDressOutfits() -> "list[str]":
     outfits = API.GetAvailableDressOutfits()
     if outfits:
       Dress(outfits[0])
-    
     ```
     """
     pass
@@ -2234,7 +2179,6 @@ def DressItems(serials: "Any", kr: "bool" = False) -> None:
     ```py
     serials = [0xabc, 0xdef]
     API.DressItems(serials, kr=True)
-    
     ```
     """
     pass
@@ -2251,7 +2195,6 @@ def Organizer(name: "str", source: "int" = 0, destination: "int" = 0) -> None:
     
     # Run organizer with specific source and destination
     API.Organizer("MyOrganizer", 0x40001234, 0x40005678)
-    
     ```
     """
     pass
@@ -2271,7 +2214,6 @@ def BuffExists(buffName: "str") -> "bool":
     ```py
     if API.BuffExists("Bless"):
       API.SysMsg("You are blessed!")
-    
     ```
     """
     pass
@@ -2288,7 +2230,6 @@ def ActiveBuffs() -> "list[ApiBuff]":
     buffs = API.ActiveBuffs()
     for buff in buffs:
         API.SysMsg(buff.Title)
-    
     ```
     """
     pass
@@ -2304,7 +2245,6 @@ def ActiveSpells() -> "list[int]":
     ```py
     for spellId in API.ActiveSpells():
         API.SysMsg("Active spell id: " + str(spellId))
-    
     ```
     """
     pass
@@ -2320,7 +2260,6 @@ def ActiveSpellNames() -> "list[str]":
     ```py
     for name in API.ActiveSpellNames():
         API.SysMsg("Active spell: " + name)
-    
     ```
     """
     pass
@@ -2336,7 +2275,6 @@ def IsSpellActive(spell: "Any") -> "bool":
     ```py
     if API.IsSpellActive("Confidence"):
         API.SysMsg("Confidence is active!")
-    
     ```
     """
     pass
@@ -2349,7 +2287,6 @@ def SysMsg(message: "str", hue: "int" = 946) -> None:
     
     ```py
     API.SysMsg("Script started!")
-    
     ```
     """
     pass
@@ -2362,7 +2299,6 @@ def Msg(message: "str") -> None:
     
     ```py
     API.Msg("Hello friend!")
-    
     ```
     """
     pass
@@ -2375,7 +2311,6 @@ def HeadMsg(message: "str", serial: "int", hue: "int" = 1337) -> None:
     
     ```py
     API.HeadMsg("Only I can see this!", API.Player)
-    
     ```
     """
     pass
@@ -2388,7 +2323,6 @@ def PartyMsg(message: "str") -> None:
     
     ```py
     API.PartyMsg("The raid begins in 30 second! Wait... we don't have raids, wrong game..")
-    
     ```
     """
     pass
@@ -2401,7 +2335,6 @@ def GuildMsg(message: "str") -> None:
     
     ```py
     API.GuildMsg("Hey guildies, just restocked my vendor, fresh valorite suits available!")
-    
     ```
     """
     pass
@@ -2414,7 +2347,6 @@ def AllyMsg(message: "str") -> None:
     
     ```py
     API.AllyMsg("Hey allies, just restocked my vendor, fresh valorite suits available!")
-    
     ```
     """
     pass
@@ -2427,7 +2359,6 @@ def WhisperMsg(message: "str") -> None:
     
     ```py
     API.WhisperMsg("Psst, bet you didn't see me here..")
-    
     ```
     """
     pass
@@ -2440,7 +2371,6 @@ def YellMsg(message: "str") -> None:
     
     ```py
     API.YellMsg("Vendor restocked, get your fresh feathers!")
-    
     ```
     """
     pass
@@ -2453,7 +2383,6 @@ def EmoteMsg(message: "str") -> None:
     
     ```py
     API.EmoteMsg("laughing")
-    
     ```
     """
     pass
@@ -2483,7 +2412,6 @@ def FindItem(serial: "int") -> "ApiItem":
     if item:
       API.SysMsg("Found the donkey!")
       API.UseObject(item)
-    
     ```
     """
     pass
@@ -2500,7 +2428,6 @@ def FindType(graphic: "int", container: "int" = 1337, range: "int" = 1337, hue: 
     if item:
       API.SysMsg("Found the item!")
       API.UseObject(item)
-    
     ```
     """
     pass
@@ -2515,7 +2442,6 @@ def FindTypeAll(graphic: "int", container: "int" = 1337, range: "int" = 1337, hu
     items = API.FindTypeAll(0x0EED, API.Backpack)
     if items:
       API.SysMsg("Found " + str(len(items)) + " items!")
-    
     ```
     """
     pass
@@ -2531,7 +2457,6 @@ def FindLayer(layer: "str", serial: "int" = 1337) -> "ApiItem":
     item = API.FindLayer("Helmet")
     if item:
       API.SysMsg("Wearing a helmet!")
-    
     ```
     """
     pass
@@ -2546,7 +2471,6 @@ def GetItemsOnGround(distance: "int" = int.MaxValue, graphic: "int" = 1337) -> "
     items = API.GetItemsOnGround(10)  # All items within 10 tiles
     if items:
       API.SysMsg("Found " + str(len(items)) + " items on ground!")
-    
     ```
     """
     pass
@@ -2564,7 +2488,6 @@ def ItemsInContainer(container: "int", recursive: "bool" = False) -> "list[ApiIt
       for item in items:
         API.SysMsg(item.Name)
         API.Pause(0.5)
-    
     ```
     """
     pass
@@ -2579,7 +2502,6 @@ def UseType(graphic: "int", hue: "int" = 1337, container: "int" = 1337, skipQueu
     API.UseType(0x3434, container=API.Backpack)
     API.WaitForTarget()
     API.Target(API.Player)
-    
     ```
     """
     pass
@@ -2592,7 +2514,6 @@ def CreateCooldownBar(seconds: "float", text: "str", hue: "int") -> None:
     
     ```py
     API.CreateCooldownBar(5, "Healing", 21)
-    
     ```
     """
     pass
@@ -2605,7 +2526,6 @@ def UpdateCooldown(name: "str", maxValue: "float" = -1, currentValue: "float" = 
     
     ```py
     API.UpdateCooldown("Healing", maxValue=10, currentValue=5)
-    
     ```
     """
     pass
@@ -2618,7 +2538,6 @@ def RestartCooldown(name: "str") -> None:
     
     ```py
     API.RestartCooldown("Healing")
-    
     ```
     """
     pass
@@ -2631,7 +2550,6 @@ def DeleteCooldown(name: "str") -> None:
     
     ```py
     API.DeleteCooldown("Healing")
-    
     ```
     """
     pass
@@ -2644,7 +2562,6 @@ def CooldownExists(name: "str") -> "bool":
     
     ```py
     if API.CooldownExists("Healing"):
-    
     ```
     """
     pass
@@ -2670,7 +2587,6 @@ def CreateEffect(graphic: "int", type: "EffectType" = EffectType.FixedXYZ, sourc
     mob = API.NearestMobile([API.Notoriety.Murderer], 8)
     if mob:
       API.CreateEffect(0x36D0, type=API.EffectType.Moving, source=API.Player, target=mob)
-    
     ```
     """
     pass
@@ -2686,7 +2602,6 @@ def IgnoreObject(serial: "int") -> None:
     for item in ItemsInContainer(API.Backpack):
       if item.Name == "Dagger":
       API.IgnoreObject(item)
-    
     ```
     """
     pass
@@ -2699,7 +2614,6 @@ def UnIgnoreObject(serial: "int") -> None:
     
     ```py
     API.UnIgnoreObject(item)
-    
     ```
     """
     pass
@@ -2712,7 +2626,6 @@ def ClearIgnoreList() -> None:
     
     ```py
     API.ClearIgnoreList()
-    
     ```
     """
     pass
@@ -2726,7 +2639,6 @@ def OnIgnoreList(serial: "int") -> "bool":
     ```py
     if API.OnIgnoreList(API.Backpack):
       API.SysMsg("Currently ignoring backpack")
-    
     ```
     """
     pass
@@ -2739,7 +2651,6 @@ def Pathfind(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1, wait: "bo
     
     ```py
     API.Pathfind(1414, 1515)
-    
     ```
     """
     pass
@@ -2754,7 +2665,6 @@ def PathfindEntity(entity: "int", distance: "int" = 1, wait: "bool" = False, tim
     mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
     if mob:
       API.PathfindEntity(mob)
-    
     ```
     """
     pass
@@ -2769,7 +2679,6 @@ def Pathfinding() -> "bool":
     if API.Pathfinding():
       API.SysMsg("Pathfinding...!")
       API.Pause(0.25)
-    
     ```
     """
     pass
@@ -2783,7 +2692,6 @@ def CancelPathfinding() -> None:
     ```py
     if API.Pathfinding():
       API.CancelPathfinding()
-    
     ```
     """
     pass
@@ -2801,7 +2709,6 @@ def GetPath(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1) -> "list[A
         for x, y, z in path:
             tile = API.GetTile(x, y)
             tile.Hue = 53
-    
     ```
     """
     pass
@@ -2816,7 +2723,6 @@ def AutoFollow(mobile: "int") -> None:
     mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
     if mob:
       API.AutoFollow(mob)
-    
     ```
     """
     pass
@@ -2830,7 +2736,6 @@ def CancelAutoFollow() -> None:
     ```py
     if API.Pathfinding():
       API.CancelAutoFollow()
-    
     ```
     """
     pass
@@ -2843,7 +2748,6 @@ def Run(direction: "str") -> None:
     
     ```py
     API.Run("north")
-    
     ```
     """
     pass
@@ -2856,7 +2760,6 @@ def Walk(direction: "str") -> None:
     
     ```py
     API.Walk("north")
-    
     ```
     """
     pass
@@ -2869,7 +2772,6 @@ def Turn(direction: "str") -> None:
     
     ```py
     API.Turn("north")
-    
     ```
     """
     pass
@@ -2882,7 +2784,6 @@ def Rename(serial: "int", name: "str") -> None:
     
     ```py
     API.Rename(0x12345678, "My Handsome Pet")
-    
     ```
     """
     pass
@@ -2895,7 +2796,6 @@ def Dismount(skipQueue: "bool" = True) -> None:
     
     ```py
     API.Dismount()
-    
     ```
     """
     pass
@@ -2908,7 +2808,6 @@ def Mount(serial: "int" = 1337, skipQueue: "bool" = True) -> None:
     
     ```py
     API.Mount(0x12345678)
-    
     ```
     """
     pass
@@ -2927,7 +2826,6 @@ def WaitForTarget(targetType: "str" = "any", timeout: "float" = 5) -> "bool":
     
     ```py
     API.WaitForTarget()
-    
     ```
     """
     pass
@@ -2941,7 +2839,6 @@ def Target(serial: "int") -> None:
     ```py
     if API.WaitForTarget():
       API.Target(0x12345678)
-    
     ```
     """
     pass
@@ -2955,7 +2852,6 @@ def Target(x: "int", y: "int", z: "int", graphic: "int" = 1337) -> None:
     ```py
     if API.WaitForTarget():
       API.Target(1243, 1337, 0)
-    
     ```
     """
     pass
@@ -2970,7 +2866,6 @@ def RequestTarget(timeout: "float" = 5) -> "int":
     target = API.RequestTarget()
     if target:
       API.SysMsg("Targeted serial: " + str(target))
-    
     ```
     """
     pass
@@ -2990,7 +2885,6 @@ def TargetSelf() -> None:
     
     ```py
     API.TargetSelf()
-    
     ```
     """
     pass
@@ -3004,7 +2898,6 @@ def TargetRel(xOffset: "int", yOffset: "int", tilesOnly: "bool" = True) -> None:
     
     ```py
     API.TargetRel(1, 1)
-    
     ```
     """
     pass
@@ -3018,7 +2911,6 @@ def TargetLandRel(xOffset: "int", yOffset: "int") -> None:
     
     ```py
     API.TargetLand(1, 1)
-    
     ```
     """
     pass
@@ -3032,7 +2924,6 @@ def TargetTileRel(xOffset: "int", yOffset: "int", graphic: "int" = 1337, tilesOn
     
     ```py
     API.TargetTileRel(1, 1)
-    
     ```
     """
     pass
@@ -3047,14 +2938,12 @@ def TargetResource(itemSerial: "int", resource: "int") -> None:
     2: wood
     3: graves
     4: red_mushrooms
-    
     ```
     
     **Example:**
     
     ```py
     API.TargetResource(MY_SHOVEL_SERIAL, 0)
-    
     ```
     """
     pass
@@ -3069,7 +2958,6 @@ def CancelTarget() -> None:
     if API.WaitForTarget():
       API.CancelTarget()
       API.SysMsg("Targeting cancelled, april fools made you target something!")
-    
     ```
     """
     pass
@@ -3085,7 +2973,6 @@ def SetLastTarget(serial: "int | None" = None, x: "int | None" = None, y: "int |
     API.SetLastTarget(serial=0x12345678)
     API.SetLastTarget(x=1243, y=1337, z=0)
     API.SetLastTarget(x=1243, y=1337, z=0, graphic=0x1)
-    
     ```
     """
     pass
@@ -3106,7 +2993,6 @@ def PreTarget(serial: "int", targetType: "str" = "neutral") -> None:
     enemy = API.FindMobile(mobile_serial)
     API.PreTarget(enemy.Serial, "harmful")
     API.CastSpell("Lightning")  # This will automatically target the enemy
-    
     ```
     """
     pass
@@ -3121,7 +3007,6 @@ def CancelPreTarget() -> None:
     API.PreTarget(enemy.Serial, "harmful")
     # Changed my mind, cancel the pre-target
     API.CancelPreTarget()
-    
     ```
     """
     pass
@@ -3135,7 +3020,6 @@ def HasTarget(targetType: "str" = "any") -> "bool":
     ```py
     if API.HasTarget():
         API.CancelTarget()
-    
     ```
     """
     pass
@@ -3161,7 +3045,6 @@ def SetSkillLock(skill: "str", up_down_locked: "str") -> None:
     
     ```py
     API.SetSkillLock("Hiding", "locked")
-    
     ```
     """
     pass
@@ -3174,7 +3057,6 @@ def SetStatLock(stat: "str", up_down_locked: "str") -> None:
     
     ```py
     API.SetStatLock("str", "locked")
-    
     ```
     """
     pass
@@ -3187,7 +3069,6 @@ def Logout() -> None:
     
     ```py
     API.Logout()
-    
     ```
     """
     pass
@@ -3205,7 +3086,6 @@ def ItemNameAndProps(serial: "int", wait: "bool" = False, timeout: "int" = 10) -
       API.SysMsg("Item data: " + data)
       if "An Exotic Fish" in data:
         API.SysMsg("Found an exotic fish!")
-    
     ```
     """
     pass
@@ -3227,7 +3107,6 @@ def HasGump(ID: "int" = 1337) -> "int":
     ```py
     if API.HasGump(0x12345678):
       API.SysMsg("Found a gump!")
-    
     ```
     """
     pass
@@ -3242,7 +3121,6 @@ def ReplyGump(button: "int", gump: "int" = 1337, switches: "list[int]" = None, e
     API.ReplyGump(21)
     API.ReplyGump(1, 0x555, [100])
     API.ReplyGump(1, 0x555, [100], [(0, "text input")])
-    
     ```
     """
     pass
@@ -3255,7 +3133,6 @@ def CloseGump(ID: "int" = 1337) -> "bool":
     
     ```py
     API.CloseGump()
-    
     ```
     """
     pass
@@ -3280,7 +3157,6 @@ def ConfigNextGump(serial: "int | None" = None, x: "int | None" = None, y: "int 
     API.ConfigNextGump()
     
     Note: This is only applied once. You cannot stack multiple configs. This is reset after successfully applied and only applies to server-sent gumps.
-    
     ```
     """
     pass
@@ -3294,7 +3170,6 @@ def GumpContains(text: "str", ID: "int" = 1337) -> "bool":
     ```py
     if API.GumpContains("Hello"):
       API.SysMsg("Found the text!")
-    
     ```
     """
     pass
@@ -3316,7 +3191,6 @@ def GetGump(ID: "int" = 1337) -> "ApiUiBaseGump":
     if gump:
       API.SysMsg("Found the gump!")
       gump.Dispose() #Close it
-    
     ```
     """
     pass
@@ -3338,7 +3212,6 @@ def WaitForGump(ID: "int" = 1337, delay: "float" = 5) -> "bool":
       API.HeadMsg("SUCCESS", API.Player, 62)
     else:
      API.HeadMsg("FAILURE", API.Player, 32)
-    
     ```
     """
     pass
@@ -3357,7 +3230,6 @@ def ToggleFly() -> None:
     
     ```py
     API.ToggleFly()
-    
     ```
     """
     pass
@@ -3371,7 +3243,6 @@ def ToggleAbility(ability: "str") -> None:
     ```py
     if not API.PrimaryAbilityActive():
       API.ToggleAbility("primary")
-    
     ```
     """
     pass
@@ -3385,7 +3256,6 @@ def PrimaryAbilityActive() -> "bool":
     ```py
     if API.PrimaryAbilityActive():
       API.SysMsg("Primary ability is active!")
-    
     ```
     """
     pass
@@ -3399,7 +3269,6 @@ def SecondaryAbilityActive() -> "bool":
     ```py
     if API.SecondaryAbilityActive():
       API.SysMsg("Secondary ability is active!")
-    
     ```
     """
     pass
@@ -3427,7 +3296,6 @@ def InJournal(msg: "str", clearMatches: "bool" = False) -> "bool":
     ```py
     if API.InJournal("You have been slain"):
       API.SysMsg("You have been slain!")
-    
     ```
     """
     pass
@@ -3440,7 +3308,6 @@ def ClearSoundLog() -> None:
     
     ```py
     API.ClearSoundLog()
-    
     ```
     """
     pass
@@ -3454,7 +3321,6 @@ def CheckSoundLog(idx: "int") -> "ApiSoundEntry":
     ```py
     if API.CheckSoundLog(0x13E):
       API.SysMsg("Chopped wood!")
-    
     ```
     """
     pass
@@ -3470,7 +3336,6 @@ def GetSoundLog(seconds: "float") -> "list[ApiSoundEntry]":
     if list:
       for entry in list:
         entry.ID # Do something with this
-    
     ```
     """
     pass
@@ -3483,7 +3348,6 @@ def PlaySound(index: "int") -> None:
     
     ```py
     API.PlaySound(0x13E)
-    
     ```
     """
     pass
@@ -3498,7 +3362,6 @@ def InJournalAny(msgs: "list[str]", clearMatches: "bool" = False) -> "bool":
     ```py
     if API.InJournalAny(["You have been slain", "You are dead"]):
       API.SysMsg("You have been slain or dead!")
-    
     ```
     """
     pass
@@ -3515,7 +3378,6 @@ def GetJournalEntries(seconds: "float", matchingText: "str" = "") -> "list[ApiJo
     if list:
       for entry in list:
         entry.Text # Do something with this
-    
     ```
     """
     pass
@@ -3529,7 +3391,6 @@ def ClearJournal(matchingEntries: "str" = "") -> None:
     
     ```py
     API.ClearJournal()
-    
     ```
     """
     pass
@@ -3542,7 +3403,6 @@ def Pause(seconds: "float") -> None:
     
     ```py
     API.Pause(5)
-    
     ```
     """
     pass
@@ -3555,7 +3415,6 @@ def Stop() -> None:
     
     ```py
     API.Stop()
-    
     ```
     """
     pass
@@ -3579,13 +3438,11 @@ def OnStop(callback: "Any" = None) -> None:
     while not API.StopRequested:
       API.ProcessCallbacks()
       API.Pause(0.1)
-    
     ```
     To unregister, call with no callback:
     
     ```py
     API.OnStop()
-    
     ```
     """
     pass
@@ -3598,7 +3455,6 @@ def ToggleAutoLoot() -> None:
     
     ```py
     API.ToggleAutoLoot()
-    
     ```
     """
     pass
@@ -3613,7 +3469,6 @@ def AutoLootContainer(container: "int") -> None:
     targ = API.RequestTarget()
     if targ:
       API.AutoLootContainer(targ)
-    
     ```
     """
     pass
@@ -3626,7 +3481,6 @@ def Virtue(virtue: "str") -> None:
     
     ```py
     API.Virtue("honor")
-    
     ```
     """
     pass
@@ -3639,7 +3493,6 @@ def OpenQuestLog() -> None:
     
     ```py
     API.OpenQuestLog()
-    
     ```
     """
     pass
@@ -3652,7 +3505,6 @@ def OpenHelp() -> None:
     
     ```py
     API.OpenHelp()
-    
     ```
     """
     pass
@@ -3670,7 +3522,6 @@ def NearestEntity(scanType: "ScanType", maxDistance: "int" = 10) -> "ApiEntity":
       API.SysMsg("Found an item!")
       API.UseObject(item)
       # You can use API.FindItem or API.FindMobile(item.Serial) to determine if it's an item or mobile
-    
     ```
     """
     pass
@@ -3688,7 +3539,6 @@ def NearestMobile(notoriety: "list[Notoriety]", maxDistance: "int" = 10) -> "Api
       API.SysMsg("Found a criminal!")
       API.Msg("Guards!")
       API.Attack(mob)
-    
     ```
     """
     pass
@@ -3705,7 +3555,6 @@ def NearestCorpse(distance: "int" = 3) -> "ApiItem":
     if corpse:
       API.SysMsg("Found a corpse!")
       API.UseObject(corpse)
-    
     ```
     """
     pass
@@ -3722,7 +3571,6 @@ def NearestMobiles(notoriety: "list[Notoriety]", maxDistance: "int" = 10) -> "li
       API.SysMsg("Found enemies!")
       API.Msg("Guards!")
       API.Attack(mob[0])
-    
     ```
     """
     pass
@@ -3739,7 +3587,6 @@ def FindMobile(serial: "int") -> "ApiMobile":
     if mob:
       API.SysMsg("Found the mobile!")
       API.UseObject(mob)
-    
     ```
     """
     pass
@@ -3766,7 +3613,6 @@ def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, n
     targets = API.GetAllMobiles(name="ogre", distance=10, poisoned=True, hasLineOfSight=True)
     # Get only dead friends with a specific hue, at least 2 tiles away
     ghosts = API.GetAllMobiles(isGhost=True, isFriend=True, minDistance=2, hues=[0x83EA])
-    
     ```
     """
     pass
@@ -3781,7 +3627,6 @@ def GetTile(x: "int", y: "int") -> "ApiGameObject":
     tile = API.GetTile(1414, 1515)
     if tile:
       API.SysMsg(f"Found a tile with graphic: {tile.Graphic}")
-    
     ```
     """
     pass
@@ -3797,7 +3642,6 @@ def GetStaticsAt(x: "int", y: "int") -> "list[ApiStatic]":
     statics = API.GetStaticsAt(1000, 1000)
     for s in statics:
         API.SysMsg(f"Static Graphic: {s.Graphic}, Z: {s.Z}")
-    
     ```
     """
     pass
@@ -3815,7 +3659,6 @@ def GetStaticsInArea(x1: "int", y1: "int", x2: "int", y2: "int") -> "list[ApiSta
     for s in statics:
         if s.IsVegetation:
             API.SysMsg(f"Vegetation Graphic: {s.Graphic} at {s.X}, {s.Y}")
-    
     ```
     """
     pass
@@ -3831,7 +3674,6 @@ def GetMultisAt(x: "int", y: "int") -> "list[ApiMulti]":
     multis = API.GetMultisAt(1000, 1000)
     for m in multis:
         API.SysMsg(f"Multi Graphic: {m.Graphic}, Z: {m.Z}")
-    
     ```
     """
     pass
@@ -3848,7 +3690,6 @@ def GetMultisInArea(x1: "int", y1: "int", x2: "int", y2: "int") -> "list[ApiMult
     API.SysMsg(f"Found {len(multis)} multis in area")
     for m in multis:
         API.SysMsg(f"Multi Graphic: {m.Graphic} at {m.X}, {m.Y}")
-    
     ```
     """
     pass
@@ -3862,7 +3703,6 @@ def IsFriend(serial: "int") -> "bool":
     ```py
     if API.IsFriend(player.Serial):
         API.SysMsg("This player is your friend!")
-    
     ```
     """
     pass
@@ -3877,7 +3717,6 @@ def AddFriend(serial: "int") -> "bool":
     mobile = API.FindMobile(0x12345)
     if mobile:
         API.AddFriend(mobile.Serial)
-    
     ```
     """
     pass
@@ -3890,7 +3729,6 @@ def RemoveFriend(serial: "int") -> "bool":
     
     ```py
     API.RemoveFriend(0x12345)
-    
     ```
     """
     pass
@@ -3905,7 +3743,6 @@ def GetAllFriends() -> "list[int]":
     friends = API.GetAllFriends()
     for friend in friends:
         API.FindMobile(friend)
-    
     ```
     """
     pass
@@ -4045,7 +3882,6 @@ def GetSkill(skill: "str") -> "Skill":
       API.SysMsg("Skill Value: " + str(skill.Value))
       API.SysMsg("Skill Cap: " + str(skill.Cap))
       API.SysMsg("Skill Lock: " + str(skill.Lock))
-    
     ```
     """
     pass
@@ -4058,7 +3894,6 @@ def DisplayRange(distance: "int", hue: "int" = 22) -> None:
     
     ```py
     API.DisplayRange(7, 32)
-    
     ```
     """
     pass
@@ -4071,7 +3906,6 @@ def ToggleScript(scriptPath: "str") -> None:
     
     ```py
     API.ToggleScript("mygroup/MyScript.py")
-    
     ```
     """
     pass
@@ -4084,7 +3918,6 @@ def PlayScript(scriptPath: "str") -> None:
     
     ```py
     API.PlayScript("mygroup/MyScript.py")
-    
     ```
     """
     pass
@@ -4097,7 +3930,6 @@ def StopScript(scriptPath: "str") -> None:
     
     ```py
     API.StopScript("mygroup/MyScript.py")
-    
     ```
     """
     pass
@@ -4113,7 +3945,6 @@ def ListRunningScripts() -> "list[str]":
     ```py
     for path in API.ListRunningScripts():
         API.SysMsg(path)
-    
     ```
     """
     pass
@@ -4127,7 +3958,6 @@ def IsScriptRunning(scriptPath: "str") -> "bool":
     ```py
     if not API.IsScriptRunning("mygroup/MyScript.py"):
         API.PlayScript("mygroup/MyScript.py")
-    
     ```
     """
     pass
@@ -4140,7 +3970,6 @@ def AddMapMarker(name: "str", x: "int" = int.MaxValue, y: "int" = int.MaxValue, 
     
     ```py
     API.AddMapMarker("Death")
-    
     ```
     """
     pass
@@ -4153,7 +3982,6 @@ def RemoveMapMarker(name: "str") -> None:
     
     ```py
     API.RemoveMapMarker("Death")
-    
     ```
     """
     pass
@@ -4167,7 +3995,6 @@ def IsProcessingMoveQueue() -> "bool":
     ```py
     if API.IsProcessingMoveQueue():
       API.Pause(0.5)
-    
     ```
     """
     pass
@@ -4181,7 +4008,6 @@ def IsProcessingUseItemQueue() -> "bool":
     ```py
     if API.IsProcessingUseItemQueue():
       API.Pause(0.5)
-    
     ```
     """
     pass
@@ -4196,7 +4022,6 @@ def IsGlobalCooldownActive() -> "bool":
     ```py
     if API.IsGlobalCooldownActive():
         API.Pause(0.5)
-    
     ```
     """
     pass
@@ -4209,7 +4034,6 @@ def SavePersistentVar(name: "str", value: "str", scope: "PersistentVar") -> None
     
     ```py
     API.SavePersistentVar("TotalKills", "5", API.PersistentVar.Char)
-    
     ```
     """
     pass
@@ -4222,7 +4046,6 @@ def RemovePersistentVar(name: "str", scope: "PersistentVar") -> None:
     
     ```py
     API.RemovePersistentVar("TotalKills", API.PersistentVar.Char)
-    
     ```
     """
     pass
@@ -4235,7 +4058,6 @@ def GetPersistentVar(name: "str", defaultValue: "str", scope: "PersistentVar") -
     
     ```py
     API.GetPersistentVar("TotalKills", "0", API.PersistentVar.Char)
-    
     ```
     """
     pass
@@ -4259,7 +4081,6 @@ def TrackingArrow(x: "int", y: "int", identifier: "int" = 1337) -> None:
     
     ```py
     API.TrackingArrow(400, 400)
-    
     ```
     """
     pass
@@ -4277,7 +4098,6 @@ def GetClilocString(cliloc: "int", englishOnly: "bool" = False) -> "str":
     
     # Force English regardless of client language setting
     text = API.GetClilocString(1020000, englishOnly=True)
-    
     ```
     """
     pass
@@ -4293,7 +4113,6 @@ def GetClientBounds() -> "Any":
     ```py
     bounds = API.GetClientBounds()
     API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
-    
     ```
     """
     pass
@@ -4308,7 +4127,6 @@ def GetViewportBounds() -> "Any":
     ```py
     vp = API.GetViewportBounds()
     API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
-    
     ```
     """
     pass

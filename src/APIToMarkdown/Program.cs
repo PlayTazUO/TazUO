@@ -519,7 +519,7 @@ public static partial class GenDoc
         // A fence on the line directly after prose is not a fence; Markdown needs the blank line.
         // Same for the "Example:" label authors put immediately above one.
         cleanedDocumentation = ExampleLabelRx().Replace(cleanedDocumentation, "\n\n**Example:**");
-        cleanedDocumentation = FenceRx().Replace(cleanedDocumentation, "\n\n```");
+        cleanedDocumentation = SeparateOpeningFences(cleanedDocumentation);
 
         return BlankRunRx().Replace(cleanedDocumentation, "\n\n").Trim();
     }
@@ -570,11 +570,82 @@ public static partial class GenDoc
     private static string Dedent(string text)
     {
         string[] blocks = text.Split("\n\n");
+        List<string> dedented = new(blocks.Length);
+        int next = 0;
 
-        for (int i = 0; i < blocks.Length; i++)
-            blocks[i] = DedentBlock(blocks[i]);
+        while (next < blocks.Length)
+        {
+            string block = blocks[next++];
 
-        return string.Join("\n\n", blocks);
+            // A blank line inside a sample belongs to the sample, so the paragraph split cut the
+            // block mid-fence. Rejoined until the fence closes, or the half without the fence
+            // markers would be measured - and shifted - against its own deepest-indented line.
+            while (next < blocks.Length && FenceCount(block) % 2 != 0)
+                block = $"{block}\n\n{blocks[next++]}";
+
+            dedented.Add(DedentBlock(block));
+        }
+
+        return string.Join("\n\n", dedented);
+    }
+
+    /// <summary>How many fence markers a block holds, to tell an open sample from a closed one.</summary>
+    /// <param name="block">The paragraph to count over.</param>
+    /// <returns>The number of fence lines.</returns>
+    private static int FenceCount(string block)
+    {
+        int count = 0;
+
+        foreach (string line in block.Split('\n'))
+        {
+            if (IsFence(line))
+                count++;
+        }
+
+        return count;
+    }
+
+    /// <summary>Whether a line is a code fence, indentation aside.</summary>
+    /// <param name="line">The line to test.</param>
+    /// <returns>True when the line opens or closes a fenced block.</returns>
+    private static bool IsFence(string line) => line.AsSpan().TrimStart(" \t").StartsWith("```");
+
+    /// <summary>
+    /// Puts the blank line Markdown needs above every opening fence, which an author writing a
+    /// sample directly under their prose does not.
+    /// <para>
+    /// Fence state is tracked rather than matched line by line, because a closing fence looks the
+    /// same as an opening one: a blank line inserted above that one lands <em>inside</em> the code
+    /// block and shows as a trailing empty line in every sample on the page.
+    /// </para>
+    /// </summary>
+    /// <param name="text">Cleaned documentation, already dedented.</param>
+    /// <returns>The text, with its fences separated from the prose above them.</returns>
+    private static string SeparateOpeningFences(string text)
+    {
+        List<string> lines = [..text.Split('\n')];
+        bool insideFence = false;
+
+        for (int i = 0; i < lines.Count; i++)
+        {
+            if (!IsFence(lines[i]))
+                continue;
+
+            // Four spaces of indentation is itself a code block, and the markers were measured
+            // along with the sample's own lines, so whatever is left of theirs comes off here.
+            lines[i] = lines[i].TrimStart(' ', '\t');
+
+            if (!insideFence && i > 0 && lines[i - 1].Trim().Length > 0)
+            {
+                lines[i - 1] = lines[i - 1].TrimEnd(' ', '\t');
+                lines.Insert(i, string.Empty);
+                i++;
+            }
+
+            insideFence = !insideFence;
+        }
+
+        return string.Join('\n', lines);
     }
 
     /// <summary>Shifts one paragraph left by the indentation its least-indented line carries.</summary>
@@ -1072,10 +1143,6 @@ public static partial class GenDoc
     /// <summary>A rendered aside, open fence to close fence, including the lines between.</summary>
     [GeneratedRegex(@"^:::.*?^:::[ \t]*$", RegexOptions.Multiline | RegexOptions.Singleline)]
     private static partial Regex AsideBlockRx();
-
-    /// <summary>A fenced block opening on the line directly below prose, with no blank between.</summary>
-    [GeneratedRegex(@"(?<=\S)[ \t]*\n[ \t]*```")]
-    private static partial Regex FenceRx();
 
     /// <summary>The bare "Example:" label authors write above a sample.</summary>
     [GeneratedRegex(@"(?:(?<=\S)[ \t]*\n[ \t]*|^[ \t]*)Example:[ \t]*(?=\n)", RegexOptions.Multiline)]

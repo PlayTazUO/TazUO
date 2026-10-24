@@ -1,5 +1,6 @@
 #nullable enable
 
+using System.Globalization;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.LegionScripting.ApiClasses;
@@ -43,7 +44,11 @@ public class ApiVector2 : PyApiObject
 
     /// <summary>Both axes, so printing one while tuning a layer is readable.</summary>
     /// <returns><c>(X, Y)</c>.</returns>
-    public override string ToString() => $"({X}, {Y})";
+    public override string ToString() =>
+        // Formatted as the base class formats numbers: the axes are floats behind the double a
+        // script sets, so the exact form prints digits nobody typed, and a comma-decimal locale
+        // would put separators inside what reads as Python output.
+        $"({X.ToString("G6", CultureInfo.InvariantCulture)}, {Y.ToString("G6", CultureInfo.InvariantCulture)})";
 
     #endregion
 

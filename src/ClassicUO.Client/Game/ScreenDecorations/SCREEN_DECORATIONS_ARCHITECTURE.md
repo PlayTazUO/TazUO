@@ -54,7 +54,7 @@ structs `OverlayShape`, `OverlayJitter`, `OverlayNoise`. Same field names, same 
   `[LocalizedDisplayName]` / `[LocalizedDescription]` metadata.
 - The **renderer struct** is pure GPU wire format and carries no editor metadata, so
   `ClassicUO.Renderer` does not depend on any UI toolkit.
-- - The **`Api*` DTO** (`LegionScripting/ApiClasses/`) is the same shape again, for scripts. A third
+- The **`Api*` DTO** (`LegionScripting/ApiClasses/`) is the same shape again, for scripts. A third
   mirror exists because `ScriptFile.SetupPythonScope` injects only `API` into the builtin module, so
   a script cannot name any type not reachable through `API.` — which rules out the spec types, their
   enums and XNA `Color`/`Vector2`. It also decouples scripts from spec shapes the migrations keep

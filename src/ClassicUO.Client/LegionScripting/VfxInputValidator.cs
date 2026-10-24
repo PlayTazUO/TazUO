@@ -53,7 +53,8 @@ internal static class VfxInputValidator
 
     /// <summary>
     /// A script-supplied duration, clamped to <see cref="MaxSeconds"/>. Negative reads as zero,
-    /// which every caller already treats as "no timeout".
+    /// which each caller gives its own meaning - "no timeout" for a run length, "no ramp" for a
+    /// window.
     /// </summary>
     /// <param name="value">The span in seconds.</param>
     /// <param name="field">Name of the field being converted, for the message.</param>
@@ -64,9 +65,11 @@ internal static class VfxInputValidator
     {
         if (!double.IsFinite(value))
         {
+            // No advice about what 0 means here: this runs for durations, fade windows and shake
+            // ramps alike, and 0 means something different to each of them.
             throw new ArgumentException(
-                $"{field} is {Describe(value)}, which is not a length of time. For an effect that runs "
-                + "until you stop it, pass 0.",
+                $"{field} is {Describe(value)}, which is not a length of time. It usually means a "
+                + "calculation divided by zero or overflowed. Set it to a number of seconds.",
                 field
             );
         }

@@ -216,7 +216,7 @@ public class ApiVisualEffects(LegionAPI api)
     ///     ```py
     ///     h = API.VisualEffects.Start(API.VisualEffects.Ids.Fog, 10)
     ///     if not h and API.VisualEffects.SlotsFree == 0:
-    ///     API.SysMsg("another script is using every effect slot")
+    ///         API.SysMsg("another script is using every effect slot")
     ///     ```
     /// </summary>
     public int SlotsFree => OnMain(ScreenOverlayManager.Instance.ScriptSlotsFree);
