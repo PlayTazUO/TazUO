@@ -12,9 +12,14 @@ A per-axis pair of values, for wherever an API knob differs between X and Y. Bui
 
 **Type:** `double`
 
+Horizontal component. What it means is the knob's, not this class's - a frequency,
+a velocity or a position, depending on what carries it.
+
 ### `Y`
 
 **Type:** `double`
+
+Vertical component.
 
 
 *No fields found.*
@@ -25,19 +30,9 @@ A per-axis pair of values, for wherever an API knob differs between X and Y. Bui
 ## Methods
 ### ToString
 
-**Return Type:** `string`
+Both axes, so printing one while tuning a layer is readable.
 
----
-
-### __str__
-
-**Return Type:** `string`
-
----
-
-### __repr__
-
-**Return Type:** `string`
+**Return Type:** `string` - `(X, Y)`.
 
 ---
 

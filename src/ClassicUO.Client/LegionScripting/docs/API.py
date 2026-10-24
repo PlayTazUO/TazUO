@@ -1251,21 +1251,33 @@ class ApiUserProfile:
     MoveItemDelay: int = None
     AutoLootEnabled: bool = None
 
-class ApiVector2:
+class ApiVector2(PyApiObject):
     ""
     X: float = None
     Y: float = None
 
     def ToString(self) -> "str":
+        """
+        Both axes, so printing one while tuning a layer is readable.
+        """
         pass
 
-    def __str__(self) -> "str":
+class PyApiObject:
+    ""
+
+    def ToString(self) -> "str":
+        """
+        The object's property values. Nested API objects and sequences expand in place.
+        """
         pass
 
     def __repr__(self) -> "str":
+        """
+        The object's string representation.
+        """
         pass
 
-class ApiEffectProfile:
+class ApiEffectProfile(PyApiObject):
     ""
     Name: str = None
     FullScreen: bool = None
@@ -1280,34 +1292,32 @@ class ApiEffectProfile:
         """
         pass
 
-class ApiEffectProfileInfo:
+class ApiEffectProfileInfo(PyApiObject):
     ""
     Id: str = None
     Name: str = None
     IsBuiltIn: bool = None
 
     def ToString(self) -> "str":
+        """
+        Both halves, since neither alone identifies a composition to a reader: names repeat
+        and ids are unreadable.
+        """
         pass
 
-    def __str__(self) -> "str":
-        pass
-
-    def __repr__(self) -> "str":
-        pass
-
-class ApiPulseSpec:
+class ApiPulseSpec(PyApiObject):
     ""
     Frequency: float = None
     Amplitude: float = None
 
-class ApiLayerEffect:
+class ApiLayerEffect(PyApiObject):
     ""
     Shape: ApiShapeSpec | None = None
     Noise: ApiNoiseSpec | None = None
     Strength: float = None
     Pulse: ApiPulseSpec | None = None
 
-class ApiNoiseSpec:
+class ApiNoiseSpec(PyApiObject):
     ""
     BaseScale: ApiVector2 | None = None
     BaseScroll: ApiVector2 | None = None
@@ -1322,17 +1332,17 @@ class ApiNoiseSpec:
     Softness: float = None
     FlatFloor: float = None
 
-class ApiProfileLayer:
+class ApiProfileLayer(PyApiObject):
     ""
     Effect: ApiLayerEffect | None = None
     Blend = None
 
-class ApiFadeSpec:
+class ApiFadeSpec(PyApiObject):
     ""
     InSeconds: float = None
     OutSeconds: float = None
 
-class ApiShakeSpec:
+class ApiShakeSpec(PyApiObject):
     ""
     Trauma: float = None
     DurationSeconds: float = None
@@ -1355,7 +1365,7 @@ class ApiChromaticLayer(ApiLayerEffect):
     ""
     Aberration: float = None
 
-class ApiShakeConfig:
+class ApiShakeConfig(PyApiObject):
     ""
     Seconds: float = None
     Intensity: float = None
@@ -1367,7 +1377,7 @@ class ApiShakeConfig:
     MaxOffsetPixels: float = None
     FullScreen: bool = None
 
-class ApiJitterSpec:
+class ApiJitterSpec(PyApiObject):
     ""
     ReachAmount: float = None
     FeatherAmount: float = None
@@ -1375,7 +1385,7 @@ class ApiJitterSpec:
     Scroll: ApiVector2 | None = None
     Channel = None
 
-class ApiShapeSpec:
+class ApiShapeSpec(PyApiObject):
     ""
     Center: ApiVector2 | None = None
     WobbleFreq: ApiVector2 | None = None
@@ -1449,7 +1459,7 @@ class ApiVisualEffects:
         
         ```py
         for info in API.VisualEffects.GetProfiles():
-        API.SysMsg(f"{info.Name} -> {info.Id}")
+            API.SysMsg(f"{info.Name} -> {info.Id}")
         
         ```
         """
@@ -1491,7 +1501,7 @@ class ApiVisualEffects:
 
     def NewTintLayer(self) -> "ApiTintLayer":
         """
-        Build a colour layer, set to the client's defaults. The only technique that paints rather
+        Build a color layer, set to the client's defaults. The only technique that paints rather
         than distorting, and so the only one that may sit anywhere in a stack.
         
         Like every layer, it costs a full-screen pass per frame while the effect runs.

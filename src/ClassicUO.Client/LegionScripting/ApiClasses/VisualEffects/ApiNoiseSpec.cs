@@ -8,7 +8,7 @@ namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 /// How a visual effect layer moves and what texture it has: two scrolling samples of the tiling
 /// noise texture, the second domain-warped by the first.
 /// </summary>
-public class ApiNoiseSpec
+public class ApiNoiseSpec : PyApiObject
 {
     #region Public accessors
 
@@ -75,6 +75,9 @@ public class ApiNoiseSpec
 
     #region Internal methods
 
+    /// <summary>Projects an authored noise field into a DTO.</summary>
+    /// <param name="noise">The field to copy.</param>
+    /// <returns>The DTO, with its own vectors.</returns>
     internal static ApiNoiseSpec From(in NoiseSpec noise) =>
         new()
         {
@@ -92,6 +95,10 @@ public class ApiNoiseSpec
             FlatFloor = noise.FlatFloor
         };
 
+    /// <summary>Flattens this to the authoring type the compositor bakes from.</summary>
+    /// <returns>A fresh field; mutating the DTO afterwards cannot reach it.</returns>
+    /// <exception cref="ArgumentException">A value is not a real number, or a channel is set to
+    /// something the API does not offer.</exception>
     internal NoiseSpec ToInternal() =>
         new()
         {

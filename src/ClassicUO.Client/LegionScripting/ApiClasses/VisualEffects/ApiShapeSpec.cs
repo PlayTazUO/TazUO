@@ -9,7 +9,7 @@ namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 /// along a straight iso-line and reads as a rectangle, so anything organic wants `ReachAmount` well
 /// above 0.
 /// </summary>
-public class ApiJitterSpec
+public class ApiJitterSpec : PyApiObject
 {
     #region Public accessors
 
@@ -45,6 +45,9 @@ public class ApiJitterSpec
 
     #region Internal methods
 
+    /// <summary>Projects an authored boundary displacement into a DTO.</summary>
+    /// <param name="jitter">The displacement to copy.</param>
+    /// <returns>The DTO, with its own vectors.</returns>
     internal static ApiJitterSpec From(in JitterSpec jitter) =>
         new()
         {
@@ -55,6 +58,10 @@ public class ApiJitterSpec
             Channel = (ApiVisualEffects.NoiseChannel)jitter.Channel
         };
 
+    /// <summary>Flattens this to the authoring type the compositor bakes from.</summary>
+    /// <returns>A fresh displacement; mutating the DTO afterwards cannot reach it.</returns>
+    /// <exception cref="ArgumentException">A value is not a real number, or <see cref="Channel"/> is
+    /// set to something the API does not offer.</exception>
     internal JitterSpec ToInternal() =>
         new()
         {
@@ -72,7 +79,7 @@ public class ApiJitterSpec
 /// Where on screen a layer lives: vignette or border shape, how far it extends, and how its boundary
 /// breaks up.
 /// </summary>
-public class ApiShapeSpec
+public class ApiShapeSpec : PyApiObject
 {
     #region Public accessors
 
@@ -107,6 +114,8 @@ public class ApiShapeSpec
     /// thickens and rounds the corners without favouring any one edge.</summary>
     public double CornerBias { get; set; }
 
+    /// <summary>How the boundary is broken up, or all zero for a clean one. A smooth edge reads as
+    /// a drawn shape; a displaced one reads as something growing in from the frame.</summary>
     public ApiJitterSpec? Jitter { get; set; } = new();
 
     /// <summary>Unit vector biasing the effect toward one side or corner.</summary>
@@ -122,6 +131,9 @@ public class ApiShapeSpec
 
     #region Internal methods
 
+    /// <summary>Projects an authored mask into a DTO, including its boundary displacement.</summary>
+    /// <param name="shape">The mask to copy.</param>
+    /// <returns>The DTO, with its own vectors.</returns>
     internal static ApiShapeSpec From(in ShapeSpec shape) =>
         new()
         {
@@ -138,6 +150,10 @@ public class ApiShapeSpec
             FocusAmount = shape.FocusAmount
         };
 
+    /// <summary>Flattens this to the authoring type the compositor bakes from.</summary>
+    /// <returns>A fresh mask; mutating the DTO afterwards cannot reach it.</returns>
+    /// <exception cref="ArgumentException">A value is not a real number, or <see cref="Jitter"/>
+    /// carries a channel the API does not offer.</exception>
     internal ShapeSpec ToInternal() =>
         new()
         {

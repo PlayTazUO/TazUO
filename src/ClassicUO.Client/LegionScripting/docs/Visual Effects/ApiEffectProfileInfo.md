@@ -36,19 +36,10 @@ Whether this is one of the compositions shipped with the client.
 ## Methods
 ### ToString
 
-**Return Type:** `string`
+Both halves, since neither alone identifies a composition to a reader: names repeat
+and ids are unreadable.
 
----
-
-### __str__
-
-**Return Type:** `string`
-
----
-
-### __repr__
-
-**Return Type:** `string`
+**Return Type:** `string` - `Name [Id]`.
 
 ---
 

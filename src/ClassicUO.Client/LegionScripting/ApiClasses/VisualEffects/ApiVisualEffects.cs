@@ -236,20 +236,15 @@ public class ApiVisualEffects(LegionAPI api)
     ///     Example:
     ///     ```py
     ///     for info in API.VisualEffects.GetProfiles():
-    ///     API.SysMsg(f"{info.Name} -> {info.Id}")
+    ///         API.SysMsg(f"{info.Name} -> {info.Id}")
     ///     ```
     /// </summary>
     /// <returns>The library, in the order the options list it.</returns>
     public IList<ApiEffectProfileInfo> GetProfiles() => BubblingOnMain<IList<ApiEffectProfileInfo>>(() =>
     {
-        var listed = new List<ApiEffectProfileInfo>();
-
-        foreach (EffectProfile profile in DecorationSettings.Current.Overlays.AllProfiles())
-            listed.Add(
-                new ApiEffectProfileInfo { Id = profile.Id.ToString(), Name = profile.Name, IsBuiltIn = profile.IsBuiltIn }
-            );
-
-        return listed;
+        return DecorationSettings.Current.Overlays.AllProfiles()
+            .Select(profile => new ApiEffectProfileInfo { Id = profile.Id.ToString(), Name = profile.Name, IsBuiltIn = profile.IsBuiltIn })
+            .ToList();
     });
 
     /// <summary>
@@ -284,7 +279,7 @@ public class ApiVisualEffects(LegionAPI api)
     public ApiEffectProfile NewProfile() => new();
 
     /// <summary>
-    ///     Build a colour layer, set to the client's defaults. The only technique that paints rather
+    ///     Build a color layer, set to the client's defaults. The only technique that paints rather
     ///     than distorting, and so the only one that may sit anywhere in a stack.
     ///     <para>Like every layer, it costs a full-screen pass per frame while the effect runs.</para>
     /// </summary>

@@ -14,7 +14,7 @@ namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 /// stack and not of the look - the same blur belongs in two compositions blended differently.
 /// </para>
 /// </summary>
-public class ApiProfileLayer
+public class ApiProfileLayer : PyApiObject
 {
     #region Public accessors
 
@@ -32,6 +32,9 @@ public class ApiProfileLayer
 
     #region Internal methods
 
+    /// <summary>Projects an authored layer wrapper into a DTO, including the effect it carries.</summary>
+    /// <param name="layer">The wrapper to copy.</param>
+    /// <returns>The DTO, sharing nothing with <paramref name="layer"/>.</returns>
     internal static ApiProfileLayer From(ProfileLayer layer) =>
         new()
         {

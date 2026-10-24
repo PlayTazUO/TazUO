@@ -60,6 +60,9 @@ thickens and rounds the corners without favouring any one edge.
 
 **Type:** `ApiJitterSpec?`
 
+How the boundary is broken up, or all zero for a clean one. A smooth edge reads as
+a drawn shape; a displaced one reads as something growing in from the frame.
+
 ### `FocusDir`
 
 **Type:** `ApiVector2?`

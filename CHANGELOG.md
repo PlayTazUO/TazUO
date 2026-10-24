@@ -3,6 +3,10 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/24/26
+* ***Feature:*** Added VFX/Shake support to LegionAPI - [P.R 1179](https://github.com/PlayTazUO/TazUO/pull/1179) ([yuval-po](https://github.com/yuval-po))
+* ***Fix:*** Crash on shutdown due to setting NRE - [P.R 1179](https://github.com/PlayTazUO/TazUO/pull/1179) ([yuval-po](https://github.com/yuval-po))
+
 ## 10/20/26
 * ***Feature:*** Grid containers draw a second art for item stacks, like the classic container gump
 * ***Fix:*** Flying monsters whose body has no fly animation keep using their walk and stand animations

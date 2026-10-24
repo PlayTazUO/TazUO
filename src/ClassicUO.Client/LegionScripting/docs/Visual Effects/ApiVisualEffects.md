@@ -184,7 +184,7 @@ List the visual effect compositions this client knows about, shipped and user-au
 
 ```py
 for info in API.VisualEffects.GetProfiles():
-API.SysMsg(f"{info.Name} -> {info.Id}")
+    API.SysMsg(f"{info.Name} -> {info.Id}")
 
 ```
 
@@ -242,7 +242,7 @@ handle = API.VisualEffects.Start(effect, 4)
 
 ### NewTintLayer
 
-Build a colour layer, set to the client's defaults. The only technique that paints rather
+Build a color layer, set to the client's defaults. The only technique that paints rather
 than distorting, and so the only one that may sit anywhere in a stack.
 
 Like every layer, it costs a full-screen pass per frame while the effect runs.

@@ -10,7 +10,7 @@ namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 /// Time-varying swell of a layer's strength. Distinct from a noise field, which varies strength
 /// across the screen at one moment: this varies it everywhere at once, over time.
 /// </summary>
-public class ApiPulseSpec
+public class ApiPulseSpec : PyApiObject
 {
     #region Public accessors
 
@@ -27,9 +27,15 @@ public class ApiPulseSpec
 
     #region Internal methods
 
+    /// <summary>Projects an authored pulse into a DTO.</summary>
+    /// <param name="pulse">The pulse to copy.</param>
+    /// <returns>The DTO.</returns>
     internal static ApiPulseSpec From(in PulseSpec pulse) =>
         new() { Frequency = pulse.Frequency, Amplitude = pulse.Amplitude };
 
+    /// <summary>Flattens this to the authoring type the compositor bakes from.</summary>
+    /// <returns>A fresh pulse; mutating the DTO afterwards cannot reach it.</returns>
+    /// <exception cref="ArgumentException">Either value is not a real number.</exception>
     internal PulseSpec ToInternal() =>
         new()
         {
@@ -49,7 +55,7 @@ public class ApiPulseSpec
 /// Fixed set of four: the shader has four techniques and there is no way to describe a fifth.
 /// </para>
 /// </summary>
-public abstract class ApiLayerEffect
+public abstract class ApiLayerEffect : PyApiObject
 {
     #region Public accessors
 

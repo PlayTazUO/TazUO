@@ -6,7 +6,7 @@ namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 /// One entry in the client's visual effect library, as `API.VisualEffects.GetProfiles` lists it.
 /// Enough to pick a composition and no more; `API.VisualEffects.GetProfile` fetches the editable copy.
 /// </summary>
-public class ApiEffectProfileInfo
+public class ApiEffectProfileInfo : PyApiObject
 {
     #region Public accessors
 
@@ -26,15 +26,10 @@ public class ApiEffectProfileInfo
 
     #region Public methods
 
+    /// <summary>Both halves, since neither alone identifies a composition to a reader: names repeat
+    /// and ids are unreadable.</summary>
+    /// <returns><c>Name [Id]</c>.</returns>
     public override string ToString() => $"{Name} [{Id}]";
-
-    #region Python Emulation
-
-    public string __str__() => ToString();
-
-    public string __repr__() => ToString();
-
-    #endregion
 
     #endregion
 }

@@ -16,7 +16,7 @@ namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 /// is ever saved, and editing this after `API.VisualEffects.Start` cannot reach the running effect.
 /// </para>
 /// </summary>
-public class ApiEffectProfile
+public class ApiEffectProfile : PyApiObject
 {
     #region Public accessors
 

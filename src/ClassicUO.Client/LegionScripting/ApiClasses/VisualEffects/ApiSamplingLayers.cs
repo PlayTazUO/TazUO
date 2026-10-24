@@ -32,6 +32,10 @@ public class ApiBlurLayer : ApiLayerEffect
 
     #region Internal methods
 
+    /// <summary>Projects an authored disk blur into a DTO. Named apart from the base class's
+    /// <see cref="ApiLayerEffect.From"/>, which dispatches to this.</summary>
+    /// <param name="blur">The layer to copy.</param>
+    /// <returns>The DTO.</returns>
     internal static ApiBlurLayer FromBlur(BlurEffect blur) =>
         new() { Radius = blur.Radius, Taps = (ApiVisualEffects.OverlaySampleTaps)blur.Taps };
 
@@ -71,6 +75,9 @@ public class ApiRadialBlurLayer : ApiLayerEffect
 
     #region Internal methods
 
+    /// <summary>Projects an authored radial blur into a DTO.</summary>
+    /// <param name="radial">The layer to copy.</param>
+    /// <returns>The DTO.</returns>
     internal static ApiRadialBlurLayer FromRadial(RadialBlurEffect radial) =>
         new() { Zoom = radial.Zoom, Taps = (ApiVisualEffects.OverlaySampleTaps)radial.Taps };
 
@@ -109,6 +116,9 @@ public class ApiChromaticLayer : ApiLayerEffect
 
     #region Internal methods
 
+    /// <summary>Projects an authored chromatic aberration into a DTO.</summary>
+    /// <param name="chromatic">The layer to copy.</param>
+    /// <returns>The DTO.</returns>
     internal static ApiChromaticLayer FromChromatic(ChromaticEffect chromatic) =>
         new() { Aberration = chromatic.Aberration };
 

@@ -15,7 +15,7 @@ namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 /// its own scope and gradient because there is no composition to take them from.
 /// </para>
 /// </summary>
-public class ApiShakeConfig
+public class ApiShakeConfig : PyApiObject
 {
     #region Public accessors
 

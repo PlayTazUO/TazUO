@@ -27,7 +27,7 @@ namespace ClassicUO.LegionScripting.ApiClasses.VisualEffects;
 ///         Keep both above a tenth of a second unless the effect is started once and left to run.
 ///     </warn>
 /// </summary>
-public class ApiFadeSpec
+public class ApiFadeSpec : PyApiObject
 {
     #region Public accessors
 
@@ -53,6 +53,9 @@ public class ApiFadeSpec
 
     #region Internal methods
 
+    /// <summary>Projects an authored fade timing into a DTO.</summary>
+    /// <param name="fade">The timing to copy.</param>
+    /// <returns>The DTO.</returns>
     internal static ApiFadeSpec From(FadeSpec fade) => new() { InSeconds = fade.InSeconds, OutSeconds = fade.OutSeconds };
 
     /// <summary>Flattens this to the authoring type the compositor reads its envelope rate from.</summary>
@@ -82,7 +85,7 @@ public class ApiFadeSpec
 /// full and decays; a quake sets both and leaves a hold between them, so it builds, holds, subsides.
 /// </para>
 /// </summary>
-public class ApiShakeSpec
+public class ApiShakeSpec : PyApiObject
 {
     #region Public accessors
 
@@ -128,6 +131,9 @@ public class ApiShakeSpec
 
     #region Internal methods
 
+    /// <summary>Projects an authored shake into a DTO.</summary>
+    /// <param name="shake">The shake to copy.</param>
+    /// <returns>The DTO.</returns>
     internal static ApiShakeSpec From(ShakeSpec shake) =>
         new()
         {

@@ -33,6 +33,10 @@ public class ApiTintLayer : ApiLayerEffect
 
     #region Internal methods
 
+    /// <summary>Projects an authored tint into a DTO, unpacking its colour into the four channels a
+    /// script sets.</summary>
+    /// <param name="tint">The layer to copy.</param>
+    /// <returns>The DTO.</returns>
     internal static ApiTintLayer FromTint(TintEffect tint)
     {
         Color colour = tint.Tint;
