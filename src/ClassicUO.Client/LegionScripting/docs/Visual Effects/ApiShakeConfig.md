@@ -63,8 +63,9 @@ higher as a rattle.
 
 **Type:** `double`
 
-Peak displacement in pixels at full trauma, or zero for the client default. Capped
-by the client whatever is asked for.
+Peak displacement in pixels at full trauma, 0 to 24. Zero takes the client's own 24,
+and anything above it is clamped down: 24 is what the world render target is padded by, so a
+larger offset would shake past the pixels there are and expose the window's empty edge.
 
 ### `FullScreen`
 

@@ -68,6 +68,10 @@ if API.VisualEffects.Enabled:
 Whether the user has screen shake switched on. As with visual effects it ships off and a
 script cannot override it - `StartShake` answers 0 while this is false.
 
+The setting alone, so it can read true while `StartShake` still answers 0: shake also
+needs you in the world. `SlotsFree` is what tells those apart - it answers 0 out of
+world too.
+
 ### `SlotsFree`
 
 **Type:** `int`

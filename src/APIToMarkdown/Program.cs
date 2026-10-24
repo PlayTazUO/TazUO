@@ -332,7 +332,9 @@ public static partial class GenDoc
 
             foreach (FieldDeclarationSyntax field in holder.Members.OfType<FieldDeclarationSyntax>())
             {
-                string fieldSummary = GetXmlSummary(field);
+                // Inline form: a table row is one line, and CleanDocumentation keeps the newlines a
+                // wrapped summary carries - one of those mid-row terminates the table.
+                string fieldSummary = GetInlineXmlSummary(field);
 
                 foreach (VariableDeclaratorSyntax declarator in field.Declaration.Variables)
                 {
@@ -410,18 +412,37 @@ public static partial class GenDoc
         }
     }
 
+    /// <summary>A member's summary as a Markdown block, line breaks preserved.</summary>
+    /// <param name="node">The declaration to read the doc comment off.</param>
+    /// <returns>The Markdown, or empty if the member has no summary.</returns>
     private static string GetXmlSummary(SyntaxNode node)
+    {
+        XmlElementSyntax? summary = SummaryElement(node);
+        return summary == null ? string.Empty : CleanDocumentation(TagText(summary));
+    }
+
+    /// <summary>A member's summary as a single line, for a table cell or list item.</summary>
+    /// <param name="node">The declaration to read the doc comment off.</param>
+    /// <returns>The Markdown on one line, or empty if the member has no summary.</returns>
+    private static string GetInlineXmlSummary(SyntaxNode node)
+    {
+        XmlElementSyntax? summary = SummaryElement(node);
+        return summary == null ? string.Empty : CleanInline(summary);
+    }
+
+    /// <summary>The `&lt;summary&gt;` tag of a declaration's doc comment, if it has one.</summary>
+    /// <param name="node">The declaration to read the doc comment off.</param>
+    /// <returns>The element, or null if the member is undocumented.</returns>
+    private static XmlElementSyntax? SummaryElement(SyntaxNode node)
     {
         DocumentationCommentTriviaSyntax? trivia = node.GetLeadingTrivia()
             .Select(i => i.GetStructure())
             .OfType<DocumentationCommentTriviaSyntax>()
             .FirstOrDefault();
 
-        XmlElementSyntax? summary = trivia?.Content
+        return trivia?.Content
             .OfType<XmlElementSyntax>()
             .FirstOrDefault(e => e.StartTag.Name.LocalName.Text == "summary");
-
-        return summary == null ? string.Empty : CleanDocumentation(TagText(summary));
     }
 
     /// <summary>Joined text of a doc element's content, before cleaning.</summary>

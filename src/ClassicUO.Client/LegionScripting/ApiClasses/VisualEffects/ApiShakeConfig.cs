@@ -48,8 +48,9 @@ public class ApiShakeConfig
     /// higher as a rattle.</summary>
     public double Frequency { get; set; }
 
-    /// <summary>Peak displacement in pixels at full trauma, or zero for the client default. Capped
-    /// by the client whatever is asked for.</summary>
+    /// <summary>Peak displacement in pixels at full trauma, 0 to 24. Zero takes the client's own 24,
+    /// and anything above it is clamped down: 24 is what the world render target is padded by, so a
+    /// larger offset would shake past the pixels there are and expose the window's empty edge.</summary>
     public double MaxOffsetPixels { get; set; }
 
     /// <summary>
@@ -98,7 +99,15 @@ public class ApiShakeConfig
             Gradient = (ShakeGradient)VfxInputValidator.Defined(Gradient, nameof(Gradient)),
             Curve = (ShakeCurve)VfxInputValidator.Defined(Curve, nameof(Curve)),
             Frequency = Math.Max(VfxInputValidator.Number(Frequency, nameof(Frequency)), 0f),
-            MaxOffsetPixels = Math.Max(VfxInputValidator.Number(MaxOffsetPixels, nameof(MaxOffsetPixels)), 0f)
+
+            // Clamped to the ceiling the renderer is built for, not just to a sane-looking number:
+            // window-scoped shake offsets the screen blit with nothing padding it, so an unbounded
+            // offset slides the whole frame off the backbuffer and leaves black.
+            MaxOffsetPixels = Math.Clamp(
+                VfxInputValidator.Number(MaxOffsetPixels, nameof(MaxOffsetPixels)),
+                0f,
+                ScreenShake.MaxOffsetPixels
+            )
         };
     }
 

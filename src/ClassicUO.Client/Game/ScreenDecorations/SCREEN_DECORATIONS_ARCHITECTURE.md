@@ -152,12 +152,14 @@ because they sort against each other and a shared cap would let the strongest st
 
 | Source | Priority | Cap | Claims a look? |
 |---|---|---|---|
-| Preview | 100 | 1 (singular by construction, so uncapped) | yes |
+| Preview | 100 | `ScreenOverlayManager.PreviewCap` = 1, singular by construction so nothing enforces it | yes |
 | Script | 50 | `ScreenOverlayManager.ScriptCap` = 4, global across scripts | only if raised from a library profile |
 | Rule | `-(int)Order` ≤ 0 | the user's `MaxConcurrent`, 1–8 | yes |
 
-Worst case is therefore 12 overlays × `MaxLayers` 4 = **48 full-screen shader passes** in one frame,
-which is the number `ScreenOverlayCompositor`'s layer budget is sized to.
+Worst case is therefore 13 overlays × `MaxLayers` 4 = **52 full-screen shader passes** in one frame,
+which is the number `ScreenOverlayCompositor`'s layer budget is sized to. `PreviewCap` exists for
+that sum alone: the preview is exempt from `MaxConcurrent`, so a budget that left it out would not
+drop the preview (it outranks everything) but whichever rule overlay the preview displaced.
 
 Reaching `ScriptCap` answers 0 rather than throwing: the cap is shared, so a script finds it full
 through another script's doing. `ScriptSlotsFree()` tells that apart from the system being switched
@@ -210,10 +212,11 @@ Draws what it is told and knows nothing about why. Slots keyed by rule ID.
 - Baking happens in `Show()` — i.e. per raise/restate, **never per frame**. The draw loop iterates
   already-baked layers and allocates nothing.
 - One fade envelope per slot, multiplied into each layer's `Appearance.Intensity` at draw.
-- Layer budget `ApplyBudget` = `(cap + ScriptCap)` × `OverlayLayerStack.MaxLayers`. Drops overlays
-  **whole** and **stops** at the first that does not fit, so a cheap low-priority overlay cannot
-  displace an expensive important one. Both partitions are counted in because scripts sort above
-  rules; each source is bounded upstream, which leaves this a safety net rather than a binding limit.
+- Layer budget `ApplyBudget` = `(cap + ScriptCap + PreviewCap)` × `OverlayLayerStack.MaxLayers`.
+  Drops overlays **whole** and **stops** at the first that does not fit, so a cheap low-priority
+  overlay cannot displace an expensive important one. Every partition is counted in because they
+  sort against each other; each source is bounded upstream, which leaves this a safety net rather
+  than a binding limit.
 - Two scopes: `Viewport` (under gumps, drawn by `GameScene`) and `FullScreen` (over everything,
   drawn by `GameController`). Scene texture binds to `UltimaBatcher2D.SpareTextureSlot`.
 - `Time` is shared across all layers and wrapped at 3600 s — layers must stay phase-coherent.

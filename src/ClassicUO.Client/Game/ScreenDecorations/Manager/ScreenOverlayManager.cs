@@ -71,13 +71,20 @@ internal sealed class ScreenOverlayManager
     /// raising effects must not silently shrink what the player's own state can show, and a user
     /// lowering their cap to one must not take the scripting API away.
     /// <para>
-    /// It is also the number the cost ceiling is derived from. With the user's cap at its maximum of
-    /// 8 and this at 4, the worst case is 12 overlays of
-    /// <see cref="OverlayLayerStack.MaxLayers"/> layers each - 48 full-screen shader passes in one
-    /// frame. Raising either number raises that product.
+    /// It is also one of the numbers the cost ceiling is derived from. With the user's cap at its
+    /// maximum of 8, this at 4 and <see cref="PreviewCap"/> at 1, the worst case is 13 overlays of
+    /// <see cref="OverlayLayerStack.MaxLayers"/> layers each - 52 full-screen shader passes in one
+    /// frame. Raising any of them raises that product.
     /// </para>
     /// </summary>
     internal const int ScriptCap = 4;
+
+    /// <summary>
+    /// How many previewed overlays may composite at once. Singular by construction - the preview is
+    /// one nullable profile ID - so nothing enforces it; it exists so the cost ceiling can reserve
+    /// the preview its own layers instead of letting it eat a rule's.
+    /// </summary>
+    internal const int PreviewCap = 1;
 
     #endregion
 
