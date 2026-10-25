@@ -4,6 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 10/25/26
+* ***Fix:*** Logging out no longer crashes with a `NullReferenceException` when the player or profile is already gone (e.g. confirming the quit dialog while the world is shutting down) - the last-equipment snapshot is skipped in that case
 * ***Legion:*** `API.Pathfind`, `API.PathfindEntity` and `API.GetPath` now use the world-map pathfinder when the destination is more than 10 tiles away, so scripts can route long distances like world-map click-to-walk instead of failing
 * ***Fix:*** Clicking the resizable journal no longer steals keyboard focus from the game - arrow-key/WASD movement and Enter to open chat keep working, and a text selection no longer blocks the next key press
 * ***Fix:*** Script macro buttons created from the script manager target the script's folder path, so same-named scripts in different folders no longer run the wrong one

@@ -1253,19 +1253,40 @@ internal static class GameActions
 
     public static void Logout(World world)
     {
-        LastEquipmentManager.Save(world.Player.GetEquippedItems(), ProfileManager.CurrentProfile.ServerName, world.Player.Name, ProfileManager.CurrentProfile.Username, world.Player.Graphic, world.Player.Hue, world.Player.IsFemale);
+        if (world == null)
+            return;
+
+        // The player or profile can already be gone when the confirmation is answered during
+        // teardown (or a script calls this from outside the game); skip the snapshot then.
+        if (world.Player != null && ProfileManager.CurrentProfile != null)
+        {
+            LastEquipmentManager.Save(
+                world.Player.GetEquippedItems(),
+                ProfileManager.CurrentProfile.ServerName,
+                world.Player.Name,
+                ProfileManager.CurrentProfile.Username,
+                world.Player.Graphic,
+                world.Player.Hue,
+                world.Player.IsFemale
+            );
+        }
 
         LoginHandshake.Reconnect = false;
         WorldMapGump.ClearMapCache();
 
+        GameScene scene = Client.Game.GetScene<GameScene>();
+
+        if (scene == null)
+            return;
+
+        scene.DisconnectionRequested = true;
+
         if ((world.ClientFeatures.Flags & CharacterListFlags.CLF_OWERWRITE_CONFIGURATION_BUTTON) != 0)
         {
-            Client.Game.GetScene<GameScene>().DisconnectionRequested = true;
-            Socket.Send_LogoutNotification();
+            Socket?.Send_LogoutNotification();
         }
         else
         {
-            Client.Game.GetScene<GameScene>().DisconnectionRequested = true;
             Client.Game.SetScene(new LoginScene(world));
 
             Socket?.Disconnect();
