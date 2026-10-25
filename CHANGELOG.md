@@ -4,6 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 10/25/26
+* ***Feature:*** Grid container searches support regular expressions when the query begins with `$` (the `$` is not part of the pattern), matched case-insensitively against item names and tooltips
 * ***Feature:*** Spell indicators can start tracking a cast as soon as the client sends the cast packet, instead of waiting for the server's power words - new off-by-default `Begin spell indicator on cast` option in the Spells options and the Assistant spell indicators tab
 * ***Feature:*** Graphic replacement filters have a per-entry `Enabled` checkbox in the Assistant filters tab - entries can be turned off without deleting them, and existing filters stay enabled after updating
 * ***Fix:*** Logging out no longer crashes with a `NullReferenceException` when the player or profile is already gone (e.g. confirming the quit dialog while the world is shutting down) - the last-equipment snapshot is skipped in that case
