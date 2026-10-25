@@ -6,6 +6,7 @@ All notable changes to TazUO will be recorded here.
 ## 10/25/26
 * ***Feature:*** Added VFX/Shake support to LegionAPI - [P.R 1179](https://github.com/PlayTazUO/TazUO/pull/1179) ([yuval-po](https://github.com/yuval-po))
 * ***Fix:*** Crash on shutdown due to setting NRE - [P.R 1179](https://github.com/PlayTazUO/TazUO/pull/1179) ([yuval-po](https://github.com/yuval-po))
+* ***Feature:*** The Mount, Toggle mount and Set mount macros now accept mount items as well as creatures, supporting servers that mount by double-clicking a mount item in your inventory
 * ***Feature:*** Grid container searches support regular expressions when the query begins with `$` (the `$` is not part of the pattern), matched case-insensitively against item names and tooltips
 * ***Feature:*** Spell indicators can start tracking a cast as soon as the client sends the cast packet, instead of waiting for the server's power words - new off-by-default `Begin spell indicator on cast` option in the Spells options and the Assistant spell indicators tab
 * ***Feature:*** Graphic replacement filters have a per-entry `Enabled` checkbox in the Assistant filters tab - entries can be turned off without deleting them, and existing filters stay enabled after updating

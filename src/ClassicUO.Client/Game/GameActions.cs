@@ -1509,7 +1509,8 @@ internal static class GameActions
     }
 
     /// <summary>
-    ///     Double-clicks the player's saved mount to mount up.
+    ///     Double-clicks the player's saved mount to mount up. The saved mount may be a creature or
+    ///     a mount item on some servers, including one held in a container.
     /// </summary>
     /// <param name="useQueue">
     ///     If <see langword="true" />, routes through <see cref="DoubleClickQueued(uint, bool)" />.
@@ -1532,7 +1533,11 @@ internal static class GameActions
         if (mount == null)
             return MountResult.MountNotFound;
 
-        if (mount.Distance > profile.MountDistance)
+        // Items held in a container use container-relative coordinates, so their Distance is
+        // meaningless. They are always reachable by double-click.
+        bool isContainedItem = mount is Item { OnGround: false };
+
+        if (!isContainedItem && mount.Distance > profile.MountDistance)
             return MountResult.MountTooFar;
 
         if (useQueue)
