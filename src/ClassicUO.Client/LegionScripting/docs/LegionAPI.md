@@ -1990,7 +1990,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `serial` | `uint` | ✅ Yes | Defaults to saved mount |
+| `serial` | `uint` | ✅ Yes | Creature or mount item serial. Defaults to saved mount |
 | `skipQueue` | `bool` | ✅ Yes | Defaults true, set to false to use a double click queue |
 
 **Return Type:** `void` *(Does not return anything)*
@@ -2006,7 +2006,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `serial` | `uint` | ❌ No |  |
+| `serial` | `uint` | ❌ No | Creature or mount item serial. |
 
 **Return Type:** `void` *(Does not return anything)*
 

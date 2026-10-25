@@ -2801,7 +2801,7 @@ namespace ClassicUO.LegionScripting
         /// API.Mount(0x12345678)
         /// ```
         /// </summary>
-        /// <param name="serial">Defaults to saved mount</param>
+        /// <param name="serial">Creature or mount item serial. Defaults to saved mount</param>
         /// <param name="skipQueue">Defaults true, set to false to use a double click queue</param>
         public void Mount(uint serial = uint.MaxValue, bool skipQueue = true) => OnMain
         (() =>
@@ -2819,7 +2819,7 @@ namespace ClassicUO.LegionScripting
         /// <summary>
         /// This will set your saved mount for this character.
         /// </summary>
-        /// <param name="serial"></param>
+        /// <param name="serial">Creature or mount item serial.</param>
         public void SetMount(uint serial) => OnMain(() =>
         {
             ProfileManager.CurrentProfile.SavedMountSerial = serial;
