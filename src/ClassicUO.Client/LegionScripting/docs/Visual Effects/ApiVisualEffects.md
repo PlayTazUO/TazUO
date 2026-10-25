@@ -44,7 +44,6 @@ Keep both above a tenth of a second unless the effect is started once and left t
 
 :::note[Off by default]
 The entire VFX/Shake system ships disabled, and scripts cannot switch it on.
-
 The user turns it on under `Options > Video > Visual Effects`.
 Until they do, `Start` and `StartShake` return 0 and draw nothing.
 That is not an error - check `Enabled` and `ShakeEnabled` if your script needs to know.
