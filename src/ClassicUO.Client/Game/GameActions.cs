@@ -1138,6 +1138,7 @@ internal static class GameActions
             LastSpellIndex = index;
             SpellVisualRangeManager.Instance.ClearCasting();
             Socket.Send_CastSpellFromBook(index, bookSerial);
+            SpellVisualRangeManager.Instance.BeginCastingFromClient(index);
         }
     }
 
@@ -1216,6 +1217,7 @@ internal static class GameActions
             LastSpellIndex = index;
             SpellVisualRangeManager.Instance.ClearCasting();
             Socket.Send_CastSpell(index);
+            SpellVisualRangeManager.Instance.BeginCastingFromClient(index);
 
             // Record action for script recording
             string name = SpellDefinition.FullIndexGetSpell(index).Name;
