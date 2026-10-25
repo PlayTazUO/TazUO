@@ -4271,37 +4271,8 @@ public class WorldMapGump : ResizableGump
         }, houseMultis);
     }
 
-    /// <summary>
-    /// Shallow-copies Multi component fields from every loaded player house into a flat
-    /// list of plain structs. Runs on the main thread where live World data is safe to
-    /// iterate, but does NO filtering and NO map-file I/O — just field reads (~20 ns each).
-    /// The background thread (WorldMapPathfinder) does the flag checks and Z lookups.
-    /// </summary>
     private List<WorldMapPathfinder.HouseMultiSnapshot> BuildHouseMultiSnapshot()
-    {
-        var houseManager = _world?.HouseManager;
-        if (houseManager == null)
-            return null;
-
-        var list = new List<WorldMapPathfinder.HouseMultiSnapshot>(256);
-        foreach (var house in houseManager.Houses)
-        {
-            foreach (var multi in house.Components)
-            {
-                list.Add(new WorldMapPathfinder.HouseMultiSnapshot
-                {
-                    X = multi.X,
-                    Y = multi.Y,
-                    Z = multi.Z,
-                    Graphic = multi.Graphic,
-                    State = (int)multi.State,
-                    IsHousePreview = multi.IsHousePreview,
-                    IsDestroyed = multi.IsDestroyed,
-                });
-            }
-        }
-        return list;
-    }
+        => WorldMapPathfinder.CaptureHouseMultis(_world?.HouseManager);
 
     public override void OnMouseOver(int x, int y)
     {

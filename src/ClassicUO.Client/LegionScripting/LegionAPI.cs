@@ -2292,7 +2292,8 @@ namespace ClassicUO.LegionScripting
         public bool OnIgnoreList(uint serial) => _ignoreList.Contains(serial);
 
         /// <summary>
-        /// Attempt to pathfind to a location.  This will fail with large distances.
+        /// Attempt to pathfind to a location. Distances greater than 10 tiles use the
+        /// world-map pathfinder; shorter distances use the local one.
         /// Example:
         /// ```py
         /// API.Pathfind(1414, 1515)
@@ -2308,6 +2309,13 @@ namespace ClassicUO.LegionScripting
         /// <returns>true/false if a path was generated</returns>
         public bool Pathfind(int x, int y, int z = int.MinValue, int distance = 1, bool wait = false, int timeout = 10, bool run = true)
         {
+            bool useWorldMap = OnMain(() =>
+                World?.Player != null &&
+                World.Player.DistanceFrom(new Vector2(x, y)) > LongDistancePathfindThreshold);
+
+            if (useWorldMap)
+                return PathfindLongDistance(x, y, distance, wait, timeout, run);
+
             bool pathFindStatus = OnMain
             (() =>
                 {
@@ -2351,7 +2359,8 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
-        /// Attempt to pathfind to a mobile or item.
+        /// Attempt to pathfind to a mobile or item. Distances greater than 10 tiles use the
+        /// world-map pathfinder; shorter distances use the local one.
         /// Example:
         /// ```py
         /// mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
@@ -2368,26 +2377,34 @@ namespace ClassicUO.LegionScripting
         public bool PathfindEntity(uint entity, int distance = 1, bool wait = false, int timeout = 10, bool run = true)
         {
             int x = 0, y = 0, z = 0;
-            bool pathFindStatus = OnMain
+
+            bool useWorldMap = OnMain
             (() =>
                 {
                     if (World?.Player == null)
                         return false;
 
                     Entity mob = World.Get(entity);
-                    if (mob != null)
-                    {
-                        x = mob.X;
-                        y = mob.Y;
-                        z = mob.Z;
-                        return World.Player.Pathfinder.WalkTo(x, y, z, distance, run);
-                    }
+                    if (mob == null)
+                        return false;
 
-                    return false;
+                    x = mob.X;
+                    y = mob.Y;
+                    z = mob.Z;
+
+                    return World.Player.DistanceFrom(new Vector2(x, y)) > LongDistancePathfindThreshold;
                 }
             );
 
-            if (!wait || (x == 0 && y == 0))
+            if (x == 0 && y == 0)
+                return false;
+
+            if (useWorldMap)
+                return PathfindLongDistance(x, y, distance, wait, timeout, run);
+
+            bool pathFindStatus = OnMain(() => World?.Player?.Pathfinder?.WalkTo(x, y, z, distance, run) == true);
+
+            if (!wait)
                 return pathFindStatus;
 
             if (timeout > 30)
@@ -2444,7 +2461,8 @@ namespace ClassicUO.LegionScripting
         });
 
         /// <summary>
-        /// Attempt to build a path to a location.  This will fail with large distances.
+        /// Attempt to build a path to a location. Distances greater than 10 tiles use the
+        /// world-map pathfinder; shorter distances use the local one.
         /// Example:
         /// ```py
         /// API.RequestTarget()
@@ -2460,8 +2478,36 @@ namespace ClassicUO.LegionScripting
         /// <param name="z"></param>
         /// <param name="distance">Distance away from goal to stop.</param>
         /// <returns>Returns a list of positions to reach the goal. Returns null if cannot find path.</returns>
-        public IList<ApiPoint3D> GetPath(int x, int y, int z = int.MinValue, int distance = 1) =>
-            OnMain(() =>
+        public IList<ApiPoint3D> GetPath(int x, int y, int z = int.MinValue, int distance = 1)
+        {
+            bool useWorldMap = OnMain(() =>
+                World?.Player != null &&
+                World.Player.DistanceFrom(new Vector2(x, y)) > LongDistancePathfindThreshold);
+
+            if (useWorldMap)
+            {
+                List<WorldMapPathfinder.PathPoint> worldPath = ComputeWorldMapPath(x, y, WorldMapPathfindWaitSeconds);
+
+                if (worldPath == null)
+                    return null;
+
+                worldPath = TrimToStopDistance(worldPath, x, y, distance);
+
+                var result = new List<ApiPoint3D>(worldPath.Count + 1);
+
+                OnMain(() =>
+                {
+                    if (World?.Player != null)
+                        result.Add(new ApiPoint3D { X = World.Player.X, Y = World.Player.Y, Z = World.Player.Z });
+                });
+
+                foreach (WorldMapPathfinder.PathPoint p in worldPath)
+                    result.Add(new ApiPoint3D { X = p.X, Y = p.Y, Z = p.Z });
+
+                return result;
+            }
+
+            return OnMain(() =>
             {
                 if (World?.Player == null)
                     return null;
@@ -2480,6 +2526,161 @@ namespace ClassicUO.LegionScripting
                     ? null
                     : new List<ApiPoint3D>(path.Select(p => new ApiPoint3D { X = p.X, Y = p.Y, Z = p.Z }));
             });
+        }
+
+        private const int LongDistancePathfindThreshold = 10;
+        private const int WorldMapPathfindSnapRadius = 8;
+        private const int WorldMapPathfindWaitSeconds = 30;
+
+        /// <summary>
+        /// Runs a world-map pathfinder search and blocks the calling script thread until it
+        /// completes. Returns <c>null</c> when no path is found or the wait times out.
+        /// </summary>
+        /// <remarks>
+        /// The completion callback is dispatched to the main thread, so this cannot be called
+        /// from the main thread without deadlocking; that case returns <c>null</c>.
+        /// </remarks>
+        private List<WorldMapPathfinder.PathPoint> ComputeWorldMapPath(int x, int y, int timeoutSeconds)
+        {
+            if (MainThreadQueue.IsMainThread)
+            {
+                Log.Warn("[LegionAPI] Long-distance pathfinding cannot block the main thread.");
+                return null;
+            }
+
+            var completed = new ManualResetEventSlim(false);
+            List<WorldMapPathfinder.PathPoint> result = null;
+
+            bool started = OnMain(() =>
+            {
+                var player = World?.Player;
+                if (player?.Pathfinder == null || World.Map == null || WorldMapPathfinder.IsRunning)
+                    return false;
+
+                WorldMapPathfinder.ClearDynamicBlocks();
+                WorldMapPathfinder.FindPathAsync
+                (
+                    World.Map.Index,
+                    player.X,
+                    player.Y,
+                    player.Z,
+                    x,
+                    y,
+                    WorldMapPathfindSnapRadius,
+                    path =>
+                    {
+                        result = path;
+                        completed.Set();
+                    },
+                    WorldMapPathfinder.CaptureHouseMultis(World.HouseManager)
+                );
+
+                return true;
+            });
+
+            if (!started)
+                return null;
+
+            if (timeoutSeconds <= 0)
+                timeoutSeconds = 1;
+            else if (timeoutSeconds > WorldMapPathfindWaitSeconds)
+                timeoutSeconds = WorldMapPathfindWaitSeconds;
+
+            DateTime expire = DateTime.UtcNow.AddSeconds(timeoutSeconds);
+
+            while (!completed.IsSet && !StopRequested && DateTime.UtcNow < expire)
+                completed.Wait(15);
+
+            if (!completed.IsSet)
+            {
+                WorldMapPathfinder.Cancel();
+                return null;
+            }
+
+            return result is { Count: > 0 } ? result : null;
+        }
+
+        /// <summary>
+        /// Truncates a world-map path so it ends on the first tile within
+        /// <paramref name="distance"/> of the destination, matching the stop behaviour of the
+        /// local pathfinder. Returns the full path when the destination was snapped and no
+        /// tile lies that close.
+        /// </summary>
+        private static List<WorldMapPathfinder.PathPoint> TrimToStopDistance(
+            List<WorldMapPathfinder.PathPoint> path,
+            int x,
+            int y,
+            int distance
+        )
+        {
+            if (distance <= 0)
+                return path;
+
+            for (int i = 0; i < path.Count; i++)
+            {
+                int dist = Math.Max(Math.Abs(path[i].X - x), Math.Abs(path[i].Y - y));
+
+                if (dist <= distance)
+                    return i == path.Count - 1 ? path : path.GetRange(0, i + 1);
+            }
+
+            return path;
+        }
+
+        /// <summary>
+        /// Starts a pre-computed world-map path, optionally waiting for the walk to finish.
+        /// Mirrors the local pathfinder's <see cref="Pathfinder.WalkTo"/> return/wait semantics.
+        /// </summary>
+        private bool PathfindLongDistance(int x, int y, int distance, bool wait, int timeout, bool run)
+        {
+            List<WorldMapPathfinder.PathPoint> path = ComputeWorldMapPath(x, y, timeout);
+
+            if (path == null)
+                return false;
+
+            path = TrimToStopDistance(path, x, y, distance);
+
+            var pathPoints = new List<(int X, int Y, int Z, int Direction)>(path.Count);
+
+            foreach (WorldMapPathfinder.PathPoint p in path)
+                pathPoints.Add((p.X, p.Y, p.Z, p.Direction));
+
+            bool started = OnMain(() =>
+            {
+                var player = World?.Player;
+                if (player?.Pathfinder == null)
+                    return false;
+
+                player.Pathfinder.StopAutoWalk();
+                player.Pathfinder.StartComputedPath(pathPoints, run);
+                return player.Pathfinder.AutoWalking;
+            });
+
+            if (!started)
+                return false;
+
+            if (!wait)
+                return true;
+
+            if (timeout > 30)
+                timeout = 30;
+
+            DateTime expire = DateTime.Now.AddSeconds(timeout);
+
+            while (OnMain(() => World.Player?.Pathfinder?.AutoWalking == true) && !StopRequested)
+            {
+                if (DateTime.Now >= expire)
+                {
+                    OnMain(() => World.Player?.Pathfinder?.StopAutoWalk());
+                    return false;
+                }
+
+                Thread.Sleep(1);
+            }
+
+            OnMain(() => World.Player?.Pathfinder?.StopAutoWalk());
+            return OnMain(() => World.Player != null && World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
+        }
 
         /// <summary>
         /// Automatically follow a mobile. This is different from pathfinding. This will continue to follow the mobile.

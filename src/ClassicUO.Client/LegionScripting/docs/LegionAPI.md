@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `10/16/26`.*
+*This was generated on `10/25/26`.*
 
 ## Properties
 ### `Events`
@@ -1739,7 +1739,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### Pathfind
 `(x, y, z, distance, wait, timeout, run)`
- Attempt to pathfind to a location.  This will fail with large distances.
+ Attempt to pathfind to a location. Distances greater than 10 tiles use the
+ world-map pathfinder; shorter distances use the local one.
  Example:
  ```py
  API.Pathfind(1414, 1515)
@@ -1764,7 +1765,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### PathfindEntity
 `(entity, distance, wait, timeout, run)`
- Attempt to pathfind to a mobile or item.
+ Attempt to pathfind to a mobile or item. Distances greater than 10 tiles use the
+ world-map pathfinder; shorter distances use the local one.
  Example:
  ```py
  mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
@@ -1818,7 +1820,8 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 
 ### GetPath
 `(x, y, z, distance)`
- Attempt to build a path to a location.  This will fail with large distances.
+ Attempt to build a path to a location. Distances greater than 10 tiles use the
+ world-map pathfinder; shorter distances use the local one.
  Example:
  ```py
  API.RequestTarget()
