@@ -182,7 +182,6 @@ public class ApiVisualEffects(LegionAPI api)
     /// <summary>
     ///     <note title="Off by default">
     ///         The entire VFX/Shake system ships disabled, and scripts cannot switch it on.
-    ///
     ///         The user turns it on under `Options > Video > Visual Effects`.
     ///         Until they do, `Start` and `StartShake` return 0 and draw nothing.
     ///         That is not an error - check `Enabled` and `ShakeEnabled` if your script needs to know.
@@ -201,9 +200,9 @@ public class ApiVisualEffects(LegionAPI api)
     ///     Whether the user has screen shake switched on. As with visual effects it ships off and a
     ///     script cannot override it - `StartShake` answers 0 while this is false.
     ///     <para>
-    ///     The setting alone, so it can read true while `StartShake` still answers 0: shake also
-    ///     needs you in the world. `SlotsFree` is what tells those apart - it answers 0 out of
-    ///     world too.
+    ///         The setting alone, so it can read true while `StartShake` still answers 0: shake also
+    ///         needs you in the world. `SlotsFree` is what tells those apart - it answers 0 out of
+    ///         world too.
     ///     </para>
     /// </summary>
     public bool ShakeEnabled => DecorationSettings.Current.ShakeActive;
@@ -475,8 +474,10 @@ public class ApiVisualEffects(LegionAPI api)
     ///     ```
     /// </summary>
     /// <param name="config">The shake to run, from `NewShakeConfig`.</param>
-    /// <returns>A handle for `StopShake`, or 0 if the user has screen shake switched off or you are
-    /// not in the world.</returns>
+    /// <returns>
+    ///     A handle for `StopShake`, or 0 if the user has screen shake switched off or you are
+    ///     not in the world.
+    /// </returns>
     /// <exception cref="ArgumentException">
     ///     A setting on `config` is not one of the options the API
     ///     offers, or one of its values is not a real number.
@@ -491,7 +492,7 @@ public class ApiVisualEffects(LegionAPI api)
 
         // No main-thread hop: the shake accumulators take their own lock precisely so a shake can be
         // raised from whichever thread handled whatever caused it.
-        return ScreenShake.For(config.FullScreen).Trauma(config.ToInternal(), ShakeSource.Script, api);
+        return ScreenShake.For(config.FullScreen).Trauma(config.ToInternal(), ShakeOrigin.Script(api));
     }
 
     /// <summary>

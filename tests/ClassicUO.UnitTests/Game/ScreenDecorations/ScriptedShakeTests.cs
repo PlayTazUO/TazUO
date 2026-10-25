@@ -51,10 +51,10 @@ public class ScriptedShakeTests : IDisposable
     [Fact]
     public void ScriptedShakesDoNotEvictRuleShakes()
     {
-        ScreenShake.Viewport.Trauma(Request(0.2f));
+        ScreenShake.Viewport.Trauma(Request(0.2f), ShakeOrigin.Rule);
 
         for (int i = 0; i < 16; i++)
-            ScreenShake.Viewport.Trauma(Request(1f), ShakeSource.Script, _owner);
+            ScreenShake.Viewport.Trauma(Request(1f), ShakeOrigin.Script(_owner));
 
         // Taking every scripted shake away leaves the rule's still running, which it would not be
         // had a script taken its slot.
@@ -71,9 +71,22 @@ public class ScriptedShakeTests : IDisposable
     public void RuleShakesDoNotConsumeTheScriptAllowance()
     {
         for (int i = 0; i < 8; i++)
-            ScreenShake.Viewport.Trauma(Request());
+            ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Rule);
 
-        ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner).Should().NotBe(0u);
+        ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Script(_owner)).Should().NotBe(0u);
+    }
+
+    /// <summary>
+    /// Neither cancel path can reach an unowned scripted shake, so one would hold a slot of the
+    /// script allowance, unstoppable, until its duration ran out. The overload demands an owner, so
+    /// only a deliberate null gets this far.
+    /// </summary>
+    [Fact]
+    public void AScriptedShakeMustCarryAnOwner()
+    {
+        FluentActions.Invoking(() => ShakeOrigin.Script(null!)).Should().Throw<ArgumentNullException>();
+
+        ScreenShake.Viewport.IsShaking.Should().BeFalse();
     }
 
     [Fact]
@@ -83,7 +96,7 @@ public class ScriptedShakeTests : IDisposable
 
         try
         {
-            ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner).Should().Be(0u);
+            ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Script(_owner)).Should().Be(0u);
             ScreenShake.Viewport.IsShaking.Should().BeFalse();
         }
         finally
@@ -95,8 +108,8 @@ public class ScriptedShakeTests : IDisposable
     [Fact]
     public void HandlesAreUniqueAcrossBothScopes()
     {
-        uint viewport = ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
-        uint window = ScreenShake.Window.Trauma(Request(), ShakeSource.Script, _owner);
+        uint viewport = ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Script(_owner));
+        uint window = ScreenShake.Window.Trauma(Request(), ShakeOrigin.Script(_owner));
 
         viewport.Should().NotBe(0u);
         window.Should().NotBe(viewport);
@@ -105,8 +118,8 @@ public class ScriptedShakeTests : IDisposable
     [Fact]
     public void CancellingAHandleEndsThatShakeAndNothingElse()
     {
-        uint first = ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
-        uint second = ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
+        uint first = ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Script(_owner));
+        uint second = ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Script(_owner));
 
         ScreenShake.Viewport.Cancel(first, _owner).Should().BeTrue();
         ScreenShake.Viewport.IsShaking.Should().BeTrue();
@@ -118,7 +131,7 @@ public class ScriptedShakeTests : IDisposable
     [Fact]
     public void CancellingAnUnknownOrZeroHandleDoesNothing()
     {
-        ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
+        ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Script(_owner));
 
         ScreenShake.Viewport.Cancel(0, _owner).Should().BeFalse();
         ScreenShake.Viewport.Cancel(uint.MaxValue, _owner).Should().BeFalse();
@@ -134,8 +147,8 @@ public class ScriptedShakeTests : IDisposable
     {
         var theirs = new object();
 
-        uint ruleShake = ScreenShake.Viewport.Trauma(Request());
-        uint scripted = ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, theirs);
+        uint ruleShake = ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Rule);
+        uint scripted = ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Script(theirs));
 
         ScreenShake.Viewport.Cancel(ruleShake, _owner).Should().BeFalse();
         ScreenShake.Viewport.Cancel(scripted, _owner).Should().BeFalse();
@@ -152,11 +165,11 @@ public class ScriptedShakeTests : IDisposable
     {
         var theirs = new object();
 
-        ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
-        ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, _owner);
-        uint survivor = ScreenShake.Viewport.Trauma(Request(), ShakeSource.Script, theirs);
+        ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Script(_owner));
+        ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Script(_owner));
+        uint survivor = ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Script(theirs));
 
-        ScreenShake.Viewport.Trauma(Request());
+        ScreenShake.Viewport.Trauma(Request(), ShakeOrigin.Rule);
 
         ScreenShake.Viewport.CancelByOwner(_owner);
 

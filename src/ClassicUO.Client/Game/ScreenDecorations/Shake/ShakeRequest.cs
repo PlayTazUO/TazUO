@@ -3,7 +3,7 @@ using System;
 namespace ClassicUO.Game.ScreenDecorations.Shake;
 
 /// <summary>
-/// Shape of a shake's ramps and of its gradient over time.
+///     Shape of a shake's ramps and of its gradient over time.
 /// </summary>
 public enum ShakeCurve
 {
@@ -20,12 +20,14 @@ public enum ShakeCurve
 }
 
 /// <summary>
-/// How intensity travels across the shake's whole duration, independently of the ramps.
+///     How intensity travels across the shake's whole duration, independently of the ramps.
 /// </summary>
 public enum ShakeGradient
 {
-    /// <summary>Full intensity throughout. The default so that <c>default(ShakeRequest)</c> is inert
-    /// only because its duration is zero, never because of a silently-chosen gradient.</summary>
+    /// <summary>
+    ///     Full intensity throughout. The default so that <c>default(ShakeRequest)</c> is inert
+    ///     only because its duration is zero, never because of a silently-chosen gradient.
+    /// </summary>
     Constant,
 
     /// <summary>Starts at full intensity and falls to nothing - an impact.</summary>
@@ -39,22 +41,28 @@ public enum ShakeGradient
 }
 
 /// <summary>
-/// One shake's envelope. Amplitude at any moment is
-/// <c>Intensity * gradient(progress) * rampUp(elapsed) * rampDown(remaining)</c>, so the gradient
-/// decides the overall arc and the ramps decide how abruptly it starts and stops.
+///     One shake's envelope. Amplitude at any moment is
+///     <c>Intensity * gradient(progress) * rampUp(elapsed) * rampDown(remaining)</c>, so the gradient
+///     decides the overall arc and the ramps decide how abruptly it starts and stops.
 /// </summary>
 public struct ShakeRequest
 {
-    /// <summary>Nothing is scheduled for a non-positive duration; use <see cref="ScreenShake.AddTrauma"/>
-    /// for an instant hit that decays on its own.</summary>
+    /// <summary>
+    ///     Nothing is scheduled for a non-positive duration; use <see cref="ScreenShake.AddTrauma" />
+    ///     for an instant hit that decays on its own.
+    /// </summary>
     public TimeSpan Duration;
 
-    /// <summary>Peak trauma, clamped to [0, 1]. Matches the scale used by
-    /// <see cref="ScreenShake.SetTrauma"/>.</summary>
+    /// <summary>
+    ///     Peak trauma, clamped to [0, 1]. Matches the scale used by
+    ///     <see cref="ScreenShake.SetTrauma" />.
+    /// </summary>
     public float Intensity;
 
-    /// <summary>Fade-in window from the start. Zero means the shake is at full amplitude on the
-    /// first frame.</summary>
+    /// <summary>
+    ///     Fade-in window from the start. Zero means the shake is at full amplitude on the
+    ///     first frame.
+    /// </summary>
     public TimeSpan RampUp;
 
     /// <summary>Fade-out window before the end. Zero means it stops dead.</summary>
@@ -65,8 +73,10 @@ public struct ShakeRequest
     /// <summary>Applied to both ramps and to the gradient.</summary>
     public ShakeCurve Curve;
 
-    /// <summary>Shake rate in Hz; non-positive uses the default. Lower reads as a heavy rumble,
-    /// higher as a rattle.</summary>
+    /// <summary>
+    ///     Shake rate in Hz; non-positive uses the default. Lower reads as a heavy rumble,
+    ///     higher as a rattle.
+    /// </summary>
     public float Frequency;
 
     /// <summary>Peak displacement at full trauma; non-positive uses the default.</summary>
