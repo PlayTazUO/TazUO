@@ -2645,7 +2645,8 @@ def OnIgnoreList(serial: "int") -> "bool":
 
 def Pathfind(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10, run: "bool" = True) -> "bool":
     """
-    Attempt to pathfind to a location.  This will fail with large distances.
+    Attempt to pathfind to a location. Distances greater than 10 tiles use the
+    world-map pathfinder; shorter distances use the local one.
     
     **Example:**
     
@@ -2657,7 +2658,8 @@ def Pathfind(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1, wait: "bo
 
 def PathfindEntity(entity: "int", distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10, run: "bool" = True) -> "bool":
     """
-    Attempt to pathfind to a mobile or item.
+    Attempt to pathfind to a mobile or item. Distances greater than 10 tiles use the
+    world-map pathfinder; shorter distances use the local one.
     
     **Example:**
     
@@ -2698,7 +2700,8 @@ def CancelPathfinding() -> None:
 
 def GetPath(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1) -> "list[ApiPoint3D]":
     """
-    Attempt to build a path to a location.  This will fail with large distances.
+    Attempt to build a path to a location. Distances greater than 10 tiles use the
+    world-map pathfinder; shorter distances use the local one.
     
     **Example:**
     

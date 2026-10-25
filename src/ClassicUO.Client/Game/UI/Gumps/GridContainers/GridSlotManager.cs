@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
@@ -25,6 +26,9 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
         private World _world;
         private GridContainer _gridContainer;
         private bool _bandsActive;
+        private string _regexSearchQuery;
+        private Regex _regexSearch;
+        private bool _regexSearchInvalid;
 
         public Dictionary<int, GridItem> GridSlots => _gridSlots;
         public List<Item> ContainerContents => _containerContents ??= new List<Item>();
@@ -549,6 +553,35 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
         {
             if (item == null)
                 return false;
+
+            // A leading '$' switches the query to a regex (case-insensitive, matching the plain search)
+            if (search.StartsWith('$'))
+            {
+                // Rebuild the matcher only when the query changes; this is called once per item
+                if (!string.Equals(search, _regexSearchQuery, StringComparison.Ordinal))
+                {
+                    _regexSearchQuery = search;
+                    _regexSearch = null;
+                    _regexSearchInvalid = false;
+
+                    try
+                    {
+                        _regexSearch = RegexHelper.GetRegex(search.Substring(1), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Invalid pattern: show no matches rather than falling back to a literal search
+                        _regexSearchInvalid = true;
+                    }
+                }
+
+                if (_regexSearchInvalid || _regexSearch is null)
+                    return false;
+
+                return _regexSearch.IsMatch(item.OPLName ?? string.Empty)
+                    || _regexSearch.IsMatch(item.OPLData ?? string.Empty)
+                    || _regexSearch.IsMatch(item.GetNormalizedName(false) ?? string.Empty);
+            }
 
             if (item.OPLName.ContainsIgnoreCase(search) || item.OPLData.ContainsIgnoreCase(search))
                 return true;
