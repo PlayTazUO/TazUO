@@ -1,6 +1,6 @@
 ---
 title: ApiUiBaseControl
-description: ApiUiBaseControl class documentation
+description: "ApiUiBaseControl class documentation"
 ---
 
 ## Properties
@@ -8,8 +8,7 @@ description: ApiUiBaseControl class documentation
 
 **Type:** `bool`
 
- Weather this control/gump can be moved by dragging this control
-
+Weather this control/gump can be moved by dragging this control
 
 ### `IsVisible`
 
@@ -19,8 +18,7 @@ description: ApiUiBaseControl class documentation
 
 **Type:** `bool`
 
- Check if this control has been disposed(delete/removed/etc)
-
+Check if this control has been disposed(delete/removed/etc)
 
 
 *No fields found.*
@@ -31,9 +29,8 @@ description: ApiUiBaseControl class documentation
 ## Methods
 ### Add
 `(childControl)`
- Adds a child control to this control. Works with gumps too (gump.Add(control)).
- Used in python API
-
+Adds a child control to this control. Works with gumps too (gump.Add(control)).
+Used in python API
 
 **Parameters:**
 
@@ -47,29 +44,26 @@ description: ApiUiBaseControl class documentation
 
 ### GetX
 
- Returns the control's X position.
- Used in python API
+Returns the control's X position.
+Used in python API
 
-
-**Return Type:** `int`
+**Return Type:** `int` - The X coordinate of the control
 
 ---
 
 ### GetY
 
- Returns the control's Y position.
- Used in python API
+Returns the control's Y position.
+Used in python API
 
-
-**Return Type:** `int`
+**Return Type:** `int` - The Y coordinate of the control
 
 ---
 
 ### SetX
 `(x)`
- Sets the control's X position.
- Used in python API
-
+Sets the control's X position.
+Used in python API
 
 **Parameters:**
 
@@ -83,9 +77,8 @@ description: ApiUiBaseControl class documentation
 
 ### SetY
 `(y)`
- Sets the control's Y position.
- Used in python API
-
+Sets the control's Y position.
+Used in python API
 
 **Parameters:**
 
@@ -99,9 +92,8 @@ description: ApiUiBaseControl class documentation
 
 ### SetPos
 `(x, y)`
- Sets the control's X and Y positions.
- Used in python API
-
+Sets the control's X and Y positions.
+Used in python API
 
 **Parameters:**
 
@@ -128,9 +120,8 @@ description: ApiUiBaseControl class documentation
 
 ### SetWidth
 `(width)`
- Sets the control's width.
- Used in python API
-
+Sets the control's width.
+Used in python API
 
 **Parameters:**
 
@@ -144,9 +135,8 @@ description: ApiUiBaseControl class documentation
 
 ### SetHeight
 `(height)`
- Sets the control's height.
- Used in python API
-
+Sets the control's height.
+Used in python API
 
 **Parameters:**
 
@@ -160,9 +150,8 @@ description: ApiUiBaseControl class documentation
 
 ### SetRect
 `(x, y, width, height)`
- Sets the control's position and size in one operation.
- Used in python API
-
+Sets the control's position and size in one operation.
+Used in python API
 
 **Parameters:**
 
@@ -179,9 +168,8 @@ description: ApiUiBaseControl class documentation
 
 ### CenterXInViewPort
 
- Centers a GUMP horizontally in the viewport. Only works on Gump instances.
- Used in python API
-
+Centers a GUMP horizontally in the viewport. Only works on Gump instances.
+Used in python API
 
 **Return Type:** `ApiUiBaseControl`
 
@@ -189,9 +177,8 @@ description: ApiUiBaseControl class documentation
 
 ### CenterYInViewPort
 
- Centers a GUMP vertically in the viewport. Only works on Gump instances.
- Used in python API
-
+Centers a GUMP vertically in the viewport. Only works on Gump instances.
+Used in python API
 
 **Return Type:** `ApiUiBaseControl`
 
@@ -199,19 +186,17 @@ description: ApiUiBaseControl class documentation
 
 ### GetAlpha
 
- Returns the control's Alpha value.
- Used in python API
+Returns the control's Alpha value.
+Used in python API
 
-
-**Return Type:** `float`
+**Return Type:** `float` - The Alpha value of the control
 
 ---
 
 ### SetAlpha
 `(alpha)`
- Sets the control's Alpha value.
- Used in python API
-
+Sets the control's Alpha value.
+Used in python API
 
 **Parameters:**
 
@@ -225,10 +210,9 @@ description: ApiUiBaseControl class documentation
 
 ### SetTooltip
 `(text)`
- Sets a plain text tooltip that is shown when hovering this control.
- Automatically enables mouse input so the tooltip can be triggered by hovering.
- Used in python API
-
+Sets a plain text tooltip that is shown when hovering this control.
+Automatically enables mouse input so the tooltip can be triggered by hovering.
+Used in python API
 
 **Parameters:**
 
@@ -242,10 +226,9 @@ description: ApiUiBaseControl class documentation
 
 ### SetEntityTooltip
 `(serial)`
- Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
- Automatically enables mouse input so the tooltip can be triggered by hovering.
- Used in python API
-
+Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
+Automatically enables mouse input so the tooltip can be triggered by hovering.
+Used in python API
 
 **Parameters:**
 
@@ -259,10 +242,9 @@ description: ApiUiBaseControl class documentation
 
 ### SetAcceptMouseInput
 `(enabled)`
- Sets whether this control accepts mouse input. Mouse input must be enabled for
- hover-based features such as tooltips to work.
- Used in python API
-
+Sets whether this control accepts mouse input. Mouse input must be enabled for
+hover-based features such as tooltips to work.
+Used in python API
 
 **Parameters:**
 
@@ -276,9 +258,8 @@ description: ApiUiBaseControl class documentation
 
 ### ClearTooltip
 
- Clears the tooltip from this control.
- Used in python API
-
+Clears the tooltip from this control.
+Used in python API
 
 **Return Type:** `ApiUiBaseControl`
 
@@ -286,9 +267,8 @@ description: ApiUiBaseControl class documentation
 
 ### Clear
 
- Clears all child controls from this control.
- Used in python API
-
+Clears all child controls from this control.
+Used in python API
 
 **Return Type:** `ApiUiBaseControl`
 
@@ -296,8 +276,7 @@ description: ApiUiBaseControl class documentation
 
 ### Dispose
 
- Close/Destroy the control
-
+Close/Destroy the control
 
 **Return Type:** `void` *(Does not return anything)*
 

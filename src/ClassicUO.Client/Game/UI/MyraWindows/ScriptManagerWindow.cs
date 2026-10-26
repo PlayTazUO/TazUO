@@ -434,8 +434,8 @@ public class ScriptManagerWindow : MyraControl
         {
             var mm = MacroManager.TryGetMacroManager(World.Instance);
             if (mm == null) return;
-            var mac = new Macro(script.FileName);
-            mac.Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, "togglelscript " + script.FileName);
+            var mac = new Macro(script.RelativePath);
+            mac.Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, "togglelscript " + script.RelativePath);
             mm.PushToBack(mac);
             var bg = new MacroButtonGump(World.Instance, mac, 0, 0);
             bg.CenterXInViewPort();

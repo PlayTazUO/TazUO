@@ -3,8 +3,21 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
-## 10/22/26
+## 10/25/26
 * ***Fix:*** A denied step (e.g. walking into a mobile) no longer clears the weather - the server doesn't resend it, so rain or snow vanished until the weather changed
+* ***Feature:*** Lightning lights up the night with a double flash, without changing the server or custom light level - can be turned off in Video > Lighting (`Lightning flash`)
+* ***Legion:*** `API.RequestTarget` and `API.RequestAnyTarget` can now target a world map location - the selected coordinates are available through `API.LastTargetPos` (the returned serial is 0 for a location)
+* ***Feature:*** Added VFX/Shake support to LegionAPI - [P.R 1179](https://github.com/PlayTazUO/TazUO/pull/1179) ([yuval-po](https://github.com/yuval-po))
+* ***Fix:*** Crash on shutdown due to setting NRE - [P.R 1179](https://github.com/PlayTazUO/TazUO/pull/1179) ([yuval-po](https://github.com/yuval-po))
+* ***Feature:*** The Mount, Toggle mount and Set mount macros now accept mount items as well as creatures, supporting servers that mount by double-clicking a mount item in your inventory
+* ***Feature:*** Grid container searches support regular expressions when the query begins with `$` (the `$` is not part of the pattern), matched case-insensitively against item names and tooltips
+* ***Feature:*** Spell indicators can start tracking a cast as soon as the client sends the cast packet, instead of waiting for the server's power words - new off-by-default `Begin spell indicator on cast` option in the Spells options and the Assistant spell indicators tab
+* ***Feature:*** Graphic replacement filters have a per-entry `Enabled` checkbox in the Assistant filters tab - entries can be turned off without deleting them, and existing filters stay enabled after updating
+* ***Fix:*** Logging out no longer crashes with a `NullReferenceException` when the player or profile is already gone (e.g. confirming the quit dialog while the world is shutting down) - the last-equipment snapshot is skipped in that case
+* ***Legion:*** `API.Pathfind`, `API.PathfindEntity` and `API.GetPath` now use the world-map pathfinder when the destination is more than 10 tiles away, so scripts can route long distances like world-map click-to-walk instead of failing
+* ***Fix:*** Clicking the resizable journal no longer steals keyboard focus from the game - arrow-key/WASD movement and Enter to open chat keep working, and a text selection no longer blocks the next key press
+* ***Fix:*** Script macro buttons created from the script manager target the script's folder path, so same-named scripts in different folders no longer run the wrong one
+* ***Fix:*** Effects no longer crash the client when their graphic is outside the static tile table (e.g. lightning's `0x4E20`) - the tiledata lookup now falls back to an empty entry instead of throwing `IndexOutOfRangeException`
 
 ## 10/20/26
 * ***Feature:*** Grid containers draw a second art for item stacks, like the classic container gump

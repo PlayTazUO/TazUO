@@ -423,15 +423,15 @@ namespace ClassicUO.Game.Scenes
             BandageManager.Instance.Dispose();
             DressAgentManager.Instance.Unload();
 
-            ProfileManager.CurrentProfile.GameWindowPosition = new Point(
+            ProfileManager.CurrentProfile?.GameWindowPosition = new Point(
                 Camera.Bounds.X,
                 Camera.Bounds.Y
             );
-            ProfileManager.CurrentProfile.GameWindowSize = new Point(
+            ProfileManager.CurrentProfile?.GameWindowSize = new Point(
                 Camera.Bounds.Width,
                 Camera.Bounds.Height
             );
-            ProfileManager.CurrentProfile.DefaultScale = Camera.Zoom;
+            ProfileManager.CurrentProfile?.DefaultScale = Camera.Zoom;
 
             Client.Game.Audio?.StopMusic();
             Client.Game.Audio?.StopSounds();

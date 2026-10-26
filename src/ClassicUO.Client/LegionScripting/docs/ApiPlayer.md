@@ -1,12 +1,11 @@
 ---
 title: ApiPlayer
-description:  Represents a Python-accessible player character with full stat and equipment data.  Inherits mobile data from <see cref="ApiMobile"/> . 
+description: "Represents a Python-accessible player character with full stat and equipment data. Inherits mobile data from `ApiMobile`."
 ---
 
 ## Class Description
- Represents a Python-accessible player character with full stat and equipment data.
- Inherits mobile data from <see cref="ApiMobile"/> .
-
+Represents a Python-accessible player character with full stat and equipment data.
+Inherits mobile data from `ApiMobile`.
 
 ## Properties
 ### `X`
@@ -25,9 +24,8 @@ description:  Represents a Python-accessible player character with full stat and
 
 **Type:** `ApiPoint3D`
 
- Retrieves the player's current position in the game world.
- This API is most useful in combination with the Legion API's `GetPath`.
-
+Retrieves the player's current position in the game world.
+This API is most useful in combination with the Legion API's `GetPath`.
 
 ### `Strength`
 
@@ -253,9 +251,8 @@ description:  Represents a Python-accessible player character with full stat and
 
 **Type:** `string`
 
- The Python-visible class name of this object.
- Accessible in Python as `obj.__class__` .
-
+The Python-visible class name of this object.
+Accessible in Python as `obj.__class__`.
 
 
 

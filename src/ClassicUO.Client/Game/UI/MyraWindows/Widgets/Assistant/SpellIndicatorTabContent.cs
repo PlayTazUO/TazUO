@@ -425,6 +425,11 @@ public static class SpellIndicatorTabContent
             b => profile.EnableSpellIndicators = b,
             "Enable Spell Indicators",
             "Enable visual spell range indicators that show casting range and area of effect for spells."));
+        root.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.BeginSpellIndicatorOnCast,
+            b => profile.BeginSpellIndicatorOnCast = b,
+            TazLang.Get("mog_combattab_spells_beginspellindicatoroncast"),
+            TazLang.Get("mog_combattab_spells_beginspellindicatoroncasttooltip")));
         root.Widgets.Add(searchRow);
         root.Widgets.Add(spellListPanel);
         root.Widgets.Add(spellEditorPanel);

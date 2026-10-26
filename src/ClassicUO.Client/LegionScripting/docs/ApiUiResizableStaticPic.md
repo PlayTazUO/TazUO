@@ -1,6 +1,6 @@
 ---
 title: ApiUiResizableStaticPic
-description: ApiUiResizableStaticPic class documentation
+description: "ApiUiResizableStaticPic class documentation"
 ---
 
 ## Properties
