@@ -4004,7 +4004,9 @@ public class WorldMapGump : ResizableGump
 
     public override void OnMouseUp(int x, int y, MouseButtonType button)
     {
-        bool allowTarget = _allowPositionalTarget && World.TargetManager.IsTargeting && World.TargetManager.TargetingState == CursorTarget.Position;
+        bool allowTarget = _allowPositionalTarget
+                           && World.TargetManager.IsTargeting
+                           && World.TargetManager.TargetingState is CursorTarget.Position or CursorTarget.Internal;
         if (allowTarget && button == MouseButtonType.Left)
         {
             HandlePositionTarget();

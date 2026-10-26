@@ -656,6 +656,24 @@ namespace ClassicUO.Game.Managers
                 }
             }
 
+            if (TargetingState == CursorTarget.Internal)
+            {
+                // Client-side targeting (e.g. Legion's RequestTarget) must record the location
+                // without answering the server, which is not waiting for a target.
+                if (graphic == 0)
+                {
+                    LastTargetInfo.SetLand(x, y, (sbyte)z);
+                }
+                else
+                {
+                    LastTargetInfo.SetStatic(graphic, x, y, (sbyte)z);
+                }
+
+                ClearTargetingWithoutTargetCancelPacket();
+                Mouse.CancelDoubleClick = true;
+                return;
+            }
+
             LastTargetInfo.SetStatic(graphic, x, y, (sbyte)z);
 
             TargetPacket(graphic, x, y, (sbyte)z);
