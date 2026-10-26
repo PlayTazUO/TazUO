@@ -18,6 +18,7 @@ All notable changes to TazUO will be recorded here.
 * ***Fix:*** Clicking the resizable journal no longer steals keyboard focus from the game - arrow-key/WASD movement and Enter to open chat keep working, and a text selection no longer blocks the next key press
 * ***Fix:*** Script macro buttons created from the script manager target the script's folder path, so same-named scripts in different folders no longer run the wrong one
 * ***Fix:*** Effects no longer crash the client when their graphic is outside the static tile table (e.g. lightning's `0x4E20`) - the tiledata lookup now falls back to an empty entry instead of throwing `IndexOutOfRangeException`
+* ***Fix:*** Drawing an effect whose graphic is outside the static tile table (e.g. lightning) no longer crashes while the world render list is built - the draw-time tiledata lookups use the same safe fallback as effect creation, and so do multis, dropped items and light sources
 
 ## 10/20/26
 * ***Feature:*** Grid containers draw a second art for item stacks, like the classic container gump

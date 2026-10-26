@@ -657,9 +657,9 @@ namespace ClassicUO.Game.Scenes
                         if (gobj is Land land) { }
                         else
                         {
-                            ref StaticTiles itemData = ref Client.Game.UO.FileManager.TileData.StaticData[
+                            ref StaticTiles itemData = ref Client.Game.UO.FileManager.TileData.GetStaticTile(
                                 gobj.Graphic
-                            ];
+                            );
 
                             if (itemData.IsSurface)
                             {

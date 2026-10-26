@@ -673,7 +673,7 @@ namespace ClassicUO.Game.Scenes
                     }
                     else
                     {
-                        ref StaticTiles data = ref Client.Game.UO.FileManager.TileData.StaticData[obj.Graphic];
+                        ref StaticTiles data = ref Client.Game.UO.FileManager.TileData.GetStaticTile(obj.Graphic);
                         light.Id = data.Layer;
                     }
                 }
