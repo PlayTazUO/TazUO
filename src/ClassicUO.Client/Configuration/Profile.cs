@@ -733,6 +733,7 @@ namespace ClassicUO.Configuration
         public int DisplayRadiusDistance { get; set => SetProperty(ref field, value); } = 10;
         public ushort DisplayRadiusHue { get; set => SetProperty(ref field, value); } = 22;
         public bool EnableSpellIndicators { get; set => SetProperty(ref field, value); } = true;
+        public bool BeginSpellIndicatorOnCast { get; set => SetProperty(ref field, value); } = false;
         public bool EnableAutoLoot { get; set => SetProperty(ref field, value); } = false;
         public bool AutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
         public bool EnableAutoSkinning { get; set => SetProperty(ref field, value); } = false;

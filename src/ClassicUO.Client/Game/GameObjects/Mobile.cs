@@ -1237,6 +1237,7 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                 case 0x025D:
+                case 0x025F:
                     {
                         IsFemale = false;
                         Race = RaceType.ELF;
@@ -1245,6 +1246,7 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                 case 0x025E:
+                case 0x0260:
                     {
                         IsFemale = true;
                         Race = RaceType.ELF;
@@ -1253,6 +1255,7 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                 case 0x029A:
+                case 0x02B6:
                     {
                         IsFemale = false;
                         Race = RaceType.GARGOYLE;
@@ -1261,6 +1264,7 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                 case 0x029B:
+                case 0x02B7:
                     {
                         IsFemale = true;
                         Race = RaceType.GARGOYLE;

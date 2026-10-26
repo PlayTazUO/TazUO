@@ -1,6 +1,6 @@
 ---
 title: ApiUiTtfTextInputField
-description: ApiUiTtfTextInputField class documentation
+description: "ApiUiTtfTextInputField class documentation"
 ---
 
 ## Properties

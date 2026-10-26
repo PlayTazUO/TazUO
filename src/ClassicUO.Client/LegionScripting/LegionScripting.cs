@@ -63,18 +63,14 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: playlscript <filename>");
+                        GameActions.Print(world, "Usage: playlscript <path or file name>");
 
                         return;
                     }
 
-                    foreach (ScriptFile f in LoadedScripts)
-                        if (f.FileName == string.Join(" ", a.Skip(1)))
-                        {
-                            PlayScript(f);
-
-                            return;
-                        }
+                    ScriptFile script = FindScript(LoadedScripts, string.Join(" ", a.Skip(1)));
+                    if (script != null)
+                        PlayScript(script);
                 }
             );
 
@@ -84,18 +80,14 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: stoplscript <filename>");
+                        GameActions.Print(world, "Usage: stoplscript <path or file name>");
 
                         return;
                     }
 
-                    foreach (ScriptFile sf in RunningScripts)
-                        if (sf.FileName == string.Join(" ", a.Skip(1)))
-                        {
-                            StopScript(sf);
-
-                            return;
-                        }
+                    ScriptFile script = FindScript(RunningScripts, string.Join(" ", a.Skip(1)));
+                    if (script != null)
+                        StopScript(script);
                 }
             );
 
@@ -105,26 +97,23 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: togglelscript <filename>");
+                        GameActions.Print(world, "Usage: togglelscript <path or file name>");
 
                         return;
                     }
 
-                    foreach (ScriptFile sf in RunningScripts)
-                        if (sf.FileName == string.Join(" ", a.Skip(1)))
-                        {
-                            StopScript(sf);
+                    string identifier = string.Join(" ", a.Skip(1));
+                    ScriptFile running = FindScript(RunningScripts, identifier);
+                    if (running != null)
+                    {
+                        StopScript(running);
 
-                            return;
-                        }
+                        return;
+                    }
 
-                    foreach (ScriptFile f in LoadedScripts)
-                        if (f.FileName == string.Join(" ", a.Skip(1)))
-                        {
-                            PlayScript(f);
-
-                            return;
-                        }
+                    ScriptFile script = FindScript(LoadedScripts, identifier);
+                    if (script != null)
+                        PlayScript(script);
                 }
             );
 
@@ -150,6 +139,27 @@ namespace ClassicUO.LegionScripting
                     GameActions.Print(world, $"Stopped {count} running script(s).");
                 }
             );
+        }
+
+        /// <summary>
+        /// Finds a script in <paramref name="scripts"/> by its relative path first, then by bare file
+        /// name for backward compatibility with macros created before paths were recorded.
+        /// </summary>
+        /// <returns>The matching script, or null when none matches.</returns>
+        private static ScriptFile FindScript(List<ScriptFile> scripts, string identifier)
+        {
+            if (string.IsNullOrEmpty(identifier))
+                return null;
+
+            foreach (ScriptFile script in scripts)
+                if (string.Equals(script.RelativePath, identifier, StringComparison.Ordinal))
+                    return script;
+
+            foreach (ScriptFile script in scripts)
+                if (string.Equals(script.FileName, identifier, StringComparison.Ordinal))
+                    return script;
+
+            return null;
         }
 
         private static void EventSink_JournalEntryAdded(object sender, JournalEntry e)

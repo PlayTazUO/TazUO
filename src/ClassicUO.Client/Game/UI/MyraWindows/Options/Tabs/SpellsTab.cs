@@ -62,6 +62,12 @@ public static class SpellsTab
                     new Accessor<bool>(() => profile.EnableSpellIndicators),
                     search: new SearchMetadata(TazLang.Get("mog_combattab_spells_enablespellindicators"))
                 ),
+                Option.Checkbox(
+                    TazLang.Get("mog_combattab_spells_beginspellindicatoroncast"),
+                    new Accessor<bool>(() => profile.BeginSpellIndicatorOnCast),
+                    tooltip: TazLang.Get("mog_combattab_spells_beginspellindicatoroncasttooltip"),
+                    search: new SearchMetadata(TazLang.Get("mog_combattab_spells_beginspellindicatoroncast"), Keywords: [TazLang.Get("mog_kw_cast")])
+                ),
                 Option.Button(
                     TazLang.Get("mog_combattab_spells_importindicatorsfromurl"),
                     OpenConfigDownloadModal,

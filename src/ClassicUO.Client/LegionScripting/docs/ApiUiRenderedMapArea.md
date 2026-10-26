@@ -1,6 +1,6 @@
 ---
 title: ApiUiRenderedMapArea
-description: ApiUiRenderedMapArea class documentation
+description: "ApiUiRenderedMapArea class documentation"
 ---
 
 ## Properties

@@ -55,7 +55,7 @@ namespace ClassicUO.Game.GameObjects
 
             if(!Client.UnitTestingActive)
             {
-                ref StaticTiles data = ref Client.Game.UO.FileManager.TileData.StaticData[Graphic];
+                ref StaticTiles data = ref Client.Game.UO.FileManager.TileData.GetStaticTile(Graphic);
                 IsPartialHue = data.IsPartialHue;
                 IsTranslucent = data.IsTranslucent;
                 IsLight = data.IsLight;

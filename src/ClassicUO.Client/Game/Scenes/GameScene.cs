@@ -72,9 +72,7 @@ namespace ClassicUO.Game.Scenes
 
         private Point3D _lastSelectedMultiPositionInHouseCustomization;
         private int _lightCount;
-        private readonly LightData[] _lights = new LightData[
-            LightsLoader.MAX_LIGHTS_DATA_INDEX_COUNT
-        ];
+        private readonly LightData[] _lights = new LightData[MAX_LIGHTS_PER_FRAME];
 
         // Drawn opaque tiles that can occlude a light, bucketed by isometric column (X - Y); rebuilt each frame, queried by AddLight.
         private readonly Dictionary<int, List<LightOccluder>> _lightOccluders =
@@ -88,6 +86,13 @@ namespace ClassicUO.Game.Scenes
 
         private uint _timeToPlaceMultiInHouseCustomization;
         private const int MAX_TEXTURE_SIZE = 8192;
+
+        // Light sources collected per frame. Lights are gathered back to front, so once full the ones nearest the camera
+        // are dropped: keep it well above what a crowded, zoomed-out view plus the off-screen light margin can hold.
+        private const int MAX_LIGHTS_PER_FRAME = 1024;
+        // Highest top (Z + height) a tile object may reach and still be drawn: the map's max Z plus the tallest tile, so
+        // tall statics standing near the top of the map aren't cut off.
+        private const int MAX_RENDER_Z = sbyte.MaxValue + byte.MaxValue;
 
         // An occluder d tiles in front of a light must stand ~11*d z-units above it to cover it on screen; slop is the tile-thickness leniency.
         private const int LIGHT_OCCLUSION_STEP = 11;
@@ -418,15 +423,15 @@ namespace ClassicUO.Game.Scenes
             BandageManager.Instance.Dispose();
             DressAgentManager.Instance.Unload();
 
-            ProfileManager.CurrentProfile.GameWindowPosition = new Point(
+            ProfileManager.CurrentProfile?.GameWindowPosition = new Point(
                 Camera.Bounds.X,
                 Camera.Bounds.Y
             );
-            ProfileManager.CurrentProfile.GameWindowSize = new Point(
+            ProfileManager.CurrentProfile?.GameWindowSize = new Point(
                 Camera.Bounds.Width,
                 Camera.Bounds.Height
             );
-            ProfileManager.CurrentProfile.DefaultScale = Camera.Zoom;
+            ProfileManager.CurrentProfile?.DefaultScale = Camera.Zoom;
 
             Client.Game.Audio?.StopMusic();
             Client.Game.Audio?.StopSounds();
@@ -567,7 +572,7 @@ namespace ClassicUO.Game.Scenes
         public void AddLight(GameObject obj, GameObject lightObject, int x, int y)
         {
             if (
-                _lightCount >= LightsLoader.MAX_LIGHTS_DATA_INDEX_COUNT
+                _lightCount >= MAX_LIGHTS_PER_FRAME
                 || !UseLights && !UseAltLights
                 || obj == null
             )
@@ -951,7 +956,7 @@ namespace ClassicUO.Game.Scenes
                         if (firstObj?.IsDestroyed != false)
                             continue;
 
-                        AddTileToRenderList(firstObj, useHandles, 150, maxCotZ, ref playerPos);
+                        AddTileToRenderList(firstObj, useHandles, MAX_RENDER_Z, maxCotZ, ref playerPos);
                     }
                 }
             }

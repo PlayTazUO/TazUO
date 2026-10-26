@@ -14,33 +14,29 @@ class ApiEntity(ApiGameObject):
 
     def ToString(self) -> "str":
         """
-         Returns a readable string representation of the entity.
-         Used when printing or converting the object to a string in Python scripts.
-        
+        Returns a readable string representation of the entity.
+        Used when printing or converting the object to a string in Python scripts.
         """
         pass
 
     def Destroy(self) -> None:
         """
-         This will remove the item from the client, it will reappear if you leave the area and come back.
-         This object will also no longer be available and may cause issues if you try to interact with it further.
-        
+        This will remove the item from the client, it will reappear if you leave the area and come back.
+        This object will also no longer be available and may cause issues if you try to interact with it further.
         """
         pass
 
     def Target(self) -> None:
         """
-         Attempts to target this entity. Only has any effect while the client is waiting for a target selection.
-        
+        Attempts to target this entity. Only has any effect while the client is waiting for a target selection.
         """
         pass
 
     def TargetRel(self, xOffset: "int", yOffset: "int", tilesOnly: "bool" = True) -> None:
         """
-         Attempts to target the spot at an offset from this entity's position, resolving it the same way a
-         click would: the topmost visible object there is targeted, whether that is an entity, a static/multi,
-         or land. Only has any effect while the client is waiting for a target selection.
-        
+        Attempts to target the spot at an offset from this entity's position, resolving it the same way a
+        click would: the topmost visible object there is targeted, whether that is an entity, a static/multi,
+        or land. Only has any effect while the client is waiting for a target selection.
         """
         pass
 
@@ -58,57 +54,55 @@ class ApiGameObject:
 
     def SetOutlineColor(self, htmlColor: "str" = None) -> None:
         """
-         Set an object's outline color using HTML hex colors.
-         Example:
-         ```py
-         API.Player.SetOutlineColor("#105510")
-         API.Player.SetOutlineColor(None)
-         ```
+        Set an object's outline color using HTML hex colors.
         
+        **Example:**
+        
+        ```py
+        API.Player.SetOutlineColor("#105510")
+        API.Player.SetOutlineColor(None)
+        ```
         """
         pass
 
     def SetHue(self, hue: "int") -> None:
         """
-         Set the hue of a game object.
-        
+        Set the hue of a game object.
         """
         pass
 
     def Highlight(self, hue: "int | None" = None) -> None:
         """
-         Highlight this object by setting its hue. The original hue is remembered so it can be restored.
-         Call with `None` to restore the original hue.
-         Example:
-         ```py
-         obj.Highlight(0x0021)
-         obj.Highlight(None)
-         ```
+        Highlight this object by setting its hue. The original hue is remembered so it can be restored.
+        Call with `None` to restore the original hue.
         
+        **Example:**
+        
+        ```py
+        obj.Highlight(0x0021)
+        obj.Highlight(None)
+        ```
         """
         pass
 
     def HasLineOfSightFrom(self, observer: "ApiGameObject" = None) -> "bool":
         """
-         Determines if there is line of sight from the specified observer to this object.
-         If no observer is specified, it defaults to the player.
-        
+        Determines if there is line of sight from the specified observer to this object.
+        If no observer is specified, it defaults to the player.
         """
         pass
 
     def ToString(self) -> "str":
         """
-         Returns a readable string representation of the game object.
-         Used when printing or converting the object to a string in Python scripts.
-        
+        Returns a readable string representation of the game object.
+        Used when printing or converting the object to a string in Python scripts.
         """
         pass
 
     def __repr__(self) -> "str":
         """
-         Returns a detailed string representation of the object.
-         This string is used by Python’s built-in `repr()` function.
-        
+        Returns a detailed string representation of the object.
+        This string is used by Python’s built-in `repr()` function.
         """
         pass
 
@@ -129,23 +123,20 @@ class ApiItem(ApiEntity):
 
     def GetItemData(self) -> "ApiItemData":
         """
-         Get the items ItemData
-        
+        Get the items ItemData
         """
         pass
 
     def GetContainerGump(self) -> "ApiUiBaseControl":
         """
-         If this item is a container ( item.IsContainer ) and is open, this will return the grid container, container gump, or grid loot gump for it.
-        
+        If this item is a container ( item.IsContainer ) and is open, this will return the grid container, container gump, or grid loot gump for it.
         """
         pass
 
     def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10) -> "str":
         """
-         Gets the item name and properties (tooltip text).
-         This returns the name and properties in a single string. You can split it by newline if you want to separate them.
-        
+        Gets the item name and properties (tooltip text).
+        This returns the name and properties in a single string. You can split it by newline if you want to separate them.
         """
         pass
 
@@ -232,23 +223,22 @@ class ApiMobile(ApiEntity):
 
     def Highlight(self, hue: "int | None" = None) -> None:
         """
-         Highlight this mobile and all of its equipped items with the given hue.
-         The original hues are remembered so they can be restored.
-         Call with `None` to restore the mobile and its equipped items to their original hues.
-         Example:
-         ```py
-         mob.Highlight(0x0021)
-         mob.Highlight(None)
-         ```
+        Highlight this mobile and all of its equipped items with the given hue.
+        The original hues are remembered so they can be restored.
+        Call with `None` to restore the mobile and its equipped items to their original hues.
+        Example:
         
+        ```py
+        mob.Highlight(0x0021)
+        mob.Highlight(None)
+        ```
         """
         pass
 
     def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10) -> "str":
         """
-         Gets the mobile name and properties (tooltip text).
-         This returns the name and properties in a single string. You can split it by newline if you want to separate them.
-        
+        Gets the mobile name and properties (tooltip text).
+        This returns the name and properties in a single string. You can split it by newline if you want to separate them.
         """
         pass
 
@@ -346,8 +336,7 @@ class ApiUiAlphaBlendControl(ApiUiBaseControl):
 
     def SetBaseColor(self, r: "int", g: "int", b: "int", a: "int" = 255) -> None:
         """
-         Sets the base color of the alpha blend control using RGBA values (0-255)
-        
+        Sets the base color of the alpha blend control using RGBA values (0-255)
         """
         pass
 
@@ -359,49 +348,43 @@ class ApiUiBaseControl:
 
     def Add(self, childControl: "Any") -> None:
         """
-         Adds a child control to this control. Works with gumps too (gump.Add(control)).
-         Used in python API
-        
+        Adds a child control to this control. Works with gumps too (gump.Add(control)).
+        Used in python API
         """
         pass
 
     def GetX(self) -> "int":
         """
-         Returns the control's X position.
-         Used in python API
-        
+        Returns the control's X position.
+        Used in python API
         """
         pass
 
     def GetY(self) -> "int":
         """
-         Returns the control's Y position.
-         Used in python API
-        
+        Returns the control's Y position.
+        Used in python API
         """
         pass
 
     def SetX(self, x: "int") -> "ApiUiBaseControl":
         """
-         Sets the control's X position.
-         Used in python API
-        
+        Sets the control's X position.
+        Used in python API
         """
         pass
 
     def SetY(self, y: "int") -> "ApiUiBaseControl":
         """
-         Sets the control's Y position.
-         Used in python API
-        
+        Sets the control's Y position.
+        Used in python API
         """
         pass
 
     def SetPos(self, x: "int", y: "int") -> "ApiUiBaseControl":
         """
-         Sets the control's X and Y positions.
-         Used in python API
-        
+        Sets the control's X and Y positions.
+        Used in python API
         """
         pass
 
@@ -413,107 +396,94 @@ class ApiUiBaseControl:
 
     def SetWidth(self, width: "int") -> "ApiUiBaseControl":
         """
-         Sets the control's width.
-         Used in python API
-        
+        Sets the control's width.
+        Used in python API
         """
         pass
 
     def SetHeight(self, height: "int") -> "ApiUiBaseControl":
         """
-         Sets the control's height.
-         Used in python API
-        
+        Sets the control's height.
+        Used in python API
         """
         pass
 
     def SetRect(self, x: "int", y: "int", width: "int", height: "int") -> "ApiUiBaseControl":
         """
-         Sets the control's position and size in one operation.
-         Used in python API
-        
+        Sets the control's position and size in one operation.
+        Used in python API
         """
         pass
 
     def CenterXInViewPort(self) -> "ApiUiBaseControl":
         """
-         Centers a GUMP horizontally in the viewport. Only works on Gump instances.
-         Used in python API
-        
+        Centers a GUMP horizontally in the viewport. Only works on Gump instances.
+        Used in python API
         """
         pass
 
     def CenterYInViewPort(self) -> "ApiUiBaseControl":
         """
-         Centers a GUMP vertically in the viewport. Only works on Gump instances.
-         Used in python API
-        
+        Centers a GUMP vertically in the viewport. Only works on Gump instances.
+        Used in python API
         """
         pass
 
     def GetAlpha(self) -> "float":
         """
-         Returns the control's Alpha value.
-         Used in python API
-        
+        Returns the control's Alpha value.
+        Used in python API
         """
         pass
 
     def SetAlpha(self, alpha: "float") -> "ApiUiBaseControl":
         """
-         Sets the control's Alpha value.
-         Used in python API
-        
+        Sets the control's Alpha value.
+        Used in python API
         """
         pass
 
     def SetTooltip(self, text: "str") -> "ApiUiBaseControl":
         """
-         Sets a plain text tooltip that is shown when hovering this control.
-         Automatically enables mouse input so the tooltip can be triggered by hovering.
-         Used in python API
-        
+        Sets a plain text tooltip that is shown when hovering this control.
+        Automatically enables mouse input so the tooltip can be triggered by hovering.
+        Used in python API
         """
         pass
 
     def SetEntityTooltip(self, serial: "int") -> "ApiUiBaseControl":
         """
-         Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
-         Automatically enables mouse input so the tooltip can be triggered by hovering.
-         Used in python API
-        
+        Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
+        Automatically enables mouse input so the tooltip can be triggered by hovering.
+        Used in python API
         """
         pass
 
     def SetAcceptMouseInput(self, enabled: "bool") -> "ApiUiBaseControl":
         """
-         Sets whether this control accepts mouse input. Mouse input must be enabled for
-         hover-based features such as tooltips to work.
-         Used in python API
-        
+        Sets whether this control accepts mouse input. Mouse input must be enabled for
+        hover-based features such as tooltips to work.
+        Used in python API
         """
         pass
 
     def ClearTooltip(self) -> "ApiUiBaseControl":
         """
-         Clears the tooltip from this control.
-         Used in python API
-        
+        Clears the tooltip from this control.
+        Used in python API
         """
         pass
 
     def Clear(self) -> "ApiUiBaseControl":
         """
-         Clears all child controls from this control.
-         Used in python API
-        
+        Clears all child controls from this control.
+        Used in python API
         """
         pass
 
     def Dispose(self) -> None:
         """
-         Close/Destroy the control
-        
+        Close/Destroy the control
         """
         pass
 
@@ -527,28 +497,25 @@ class ApiUiBaseGump(ApiUiBaseControl, IApiGump):
 
     def SetInScreen(self) -> None:
         """
-         Ensures the gump is fully visible within the screen boundaries.
-         Adjusts the gump's position if it extends beyond the screen edges.
-         Used in python API
-        
+        Ensures the gump is fully visible within the screen boundaries.
+        Adjusts the gump's position if it extends beyond the screen edges.
+        Used in python API
         """
         pass
 
     def CenterYInScreen(self) -> None:
         """
-         Centers the gump vertically within the entire screen.
-         This accounts for the full screen dimensions, including all UI elements.
-         Used in python API
-        
+        Centers the gump vertically within the entire screen.
+        This accounts for the full screen dimensions, including all UI elements.
+        Used in python API
         """
         pass
 
     def CenterXInScreen(self) -> None:
         """
-         Centers the gump horizontally within the entire screen.
-         This accounts for the full screen dimensions, including all UI elements.
-         Used in python API
-        
+        Centers the gump horizontally within the entire screen.
+        This accounts for the full screen dimensions, including all UI elements.
+        Used in python API
         """
         pass
 
@@ -575,25 +542,22 @@ class ApiUiCheckbox(ApiUiBaseControl):
 
     def GetIsChecked(self) -> "bool":
         """
-         Gets the checked state of the checkbox.
-         Used in python API
-        
+        Gets the checked state of the checkbox.
+        Used in python API
         """
         pass
 
     def SetIsChecked(self, isChecked: "bool") -> None:
         """
-         Sets the checked state of the checkbox.
-         Used in python API
-        
+        Sets the checked state of the checkbox.
+        Used in python API
         """
         pass
 
     def GetText(self) -> "str":
         """
-         Gets the text label displayed next to the checkbox.
-         Used in python API
-        
+        Gets the text label displayed next to the checkbox.
+        Used in python API
         """
         pass
 
@@ -602,27 +566,27 @@ class ApiUiControlDropDown(ApiUiBaseControl):
 
     def GetSelectedIndex(self) -> "int":
         """
-         Get the selected index of the dropdown. The first entry is 0.
-        
+        Get the selected index of the dropdown. The first entry is 0.
         """
         pass
 
     def OnDropDownOptionSelected(self, onSelectionChanged: "Any") -> "ApiUiControlDropDown":
         """
-         Add an onSelectionChanged callback to this dropdown control.
-         The callback function will receive the selected index as a parameter.
-         Example:
-         ```py
-         def on_select(index):
-           API.SysMsg(f"Selected index: {index}")
+        Add an onSelectionChanged callback to this dropdown control.
+        The callback function will receive the selected index as a parameter.
         
-         dropdown = API.Gumps.CreateDropDown(100, ["first", "second", "third"], 0)
-         dropdown.OnDropDownOptionSelected(on_select)
+        **Example:**
         
-         while True:
-           API.ProcessCallbacks()
-         ```
+        ```py
+        def on_select(index):
+          API.SysMsg(f"Selected index: {index}")
         
+        dropdown = API.Gumps.CreateDropDown(100, ["first", "second", "third"], 0)
+        dropdown.OnDropDownOptionSelected(on_select)
+        
+        while True:
+          API.ProcessCallbacks()
+        ```
         """
         pass
 
@@ -631,355 +595,373 @@ class ApiUiGump:
 
     def CreateGump(self, acceptMouseInput: "bool" = True, canMove: "bool" = True, keepOpen: "bool" = False) -> "ApiUiBaseGump":
         """
-         Get a blank gump.
-         Example:
-         ```py
-         g = API.Gumps.CreateGump()
-         g.SetRect(100, 100, 200, 200)
-         g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
-         API.Gumps.AddGump(g)
-         ```
+        Get a blank gump.
         
+        **Example:**
+        
+        ```py
+        g = API.Gumps.CreateGump()
+        g.SetRect(100, 100, 200, 200)
+        g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
+        API.Gumps.AddGump(g)
+        ```
         """
         pass
 
     def CreateModernGump(self, x: "int", y: "int", width: "int", height: "int", resizable: "bool" = True, minWidth: "int" = 50, minHeight: "int" = 50, onResized: "Any" = None, keepOpen: "bool" = False) -> "ApiUiNineSliceGump":
         """
-         Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
-         The gump uses the standard modern UI panel texture and border size internally.
-        
+        Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
+        The gump uses the standard modern UI panel texture and border size internally.
         """
         pass
 
     def AddGump(self, g: "Any") -> None:
         """
-         Add a gump to the players screen.
-         Example:
-         ```py
-         g = API.Gumps.CreateGump()
-         g.SetRect(100, 100, 200, 200)
-         g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
-         API.Gumps.AddGump(g)
-         ```
+        Add a gump to the players screen.
         
+        **Example:**
+        
+        ```py
+        g = API.Gumps.CreateGump()
+        g.SetRect(100, 100, 200, 200)
+        g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
+        API.Gumps.AddGump(g)
+        ```
         """
         pass
 
     def CreateGumpCheckbox(self, text: "str" = "", hue: "int" = 0, isChecked: "bool" = False) -> "ApiUiCheckbox":
         """
-         Create a checkbox for gumps.
-          Example:
-         ```py
-         g = API.Gumps.CreateGump()
-         g.SetRect(100, 100, 200, 200)
-         cb = API.Gumps.CreateGumpCheckbox("Check me?!")
-         g.Add(cb)
-         API.Gumps.AddGump(g)
+        Create a checkbox for gumps.
         
-         API.SysMsg("Checkbox checked: " + str(cb.IsChecked))
-         ```
+        **Example:**
         
+        ```py
+        g = API.Gumps.CreateGump()
+        g.SetRect(100, 100, 200, 200)
+        cb = API.Gumps.CreateGumpCheckbox("Check me?!")
+        g.Add(cb)
+        API.Gumps.AddGump(g)
+        
+        API.SysMsg("Checkbox checked: " + str(cb.IsChecked))
+        ```
         """
         pass
 
     def CreateGumpLabel(self, text: "str", hue: "int" = 996) -> "ApiUiLabel":
         """
-         Create a label for a gump.
-         Example:
-         ```py
-         g = API.Gumps.CreateGump()
-         g.SetRect(100, 100, 200, 200)
-         g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
-         API.Gumps.AddGump(g)
-         ```
+        Create a label for a gump.
         
+        **Example:**
+        
+        ```py
+        g = API.Gumps.CreateGump()
+        g.SetRect(100, 100, 200, 200)
+        g.Add(API.Gumps.CreateGumpLabel("Hello World!"))
+        API.Gumps.AddGump(g)
+        ```
         """
         pass
 
     def CreateGumpColorBox(self, opacity: "float" = 0.7, color: "str" = "#000000") -> "ApiUiAlphaBlendControl":
         """
-         Get a transparent color box for gumps.
-         Example:
-         ```py
-         g = API.Gumps.CreateGump()
-         g.SetRect(100, 100, 200, 200)
-         cb = API.Gumps.CreateGumpColorBox(0.5, "#000000")
-         cb.SetWidth(200)
-         cb.SetHeight(200)
-         g.Add(cb)
-         API.Gumps.AddGump(g)
-         ```
+        Get a transparent color box for gumps.
         
+        **Example:**
+        
+        ```py
+        g = API.Gumps.CreateGump()
+        g.SetRect(100, 100, 200, 200)
+        cb = API.Gumps.CreateGumpColorBox(0.5, "#000000")
+        cb.SetWidth(200)
+        cb.SetHeight(200)
+        g.Add(cb)
+        API.Gumps.AddGump(g)
+        ```
         """
         pass
 
     def CreateGumpItemPic(self, graphic: "int", width: "int", height: "int") -> "ApiUiResizableStaticPic":
         """
-         Create a picture of an item.
-         Example:
-         ```py
-         g = API.Gumps.CreateGump()
-         g.SetRect(100, 100, 200, 200)
-         g.Add(API.Gumps.CreateGumpItemPic(0x0E78, 50, 50))
-         API.Gumps.AddGump(g)
-         ```
+        Create a picture of an item.
         
+        **Example:**
+        
+        ```py
+        g = API.Gumps.CreateGump()
+        g.SetRect(100, 100, 200, 200)
+        g.Add(API.Gumps.CreateGumpItemPic(0x0E78, 50, 50))
+        API.Gumps.AddGump(g)
+        ```
         """
         pass
 
     def CreateGumpRenderedMapArea(self, mapIndex: "int", mapX: "int", mapY: "int", mapWidth: "int", mapHeight: "int", x: "int", y: "int", width: "int", height: "int") -> "Any":
         """
-         Create a rendered map area, displaying a region of the world map as a texture.
-         Example:
-         ```py
-         gump = API.Gumps.CreateGump()
-         gump.SetRect(100, 100, 200, 200)
+        Create a rendered map area, displaying a region of the world map as a texture.
         
-         map = API.Gumps.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
-         gump.Add(map)
-         API.Gumps.AddGump(gump)
-         ```
+        **Example:**
         
+        ```py
+        gump = API.Gumps.CreateGump()
+        gump.SetRect(100, 100, 200, 200)
+        
+        map = API.Gumps.CreateGumpRenderedMapArea(0, 1000, 1000, 1100, 1100, 0, 0, 200, 200)
+        gump.Add(map)
+        API.Gumps.AddGump(gump)
+        ```
         """
         pass
 
     def LegionTextureControl(self, textureName: "str", width: "int" = 0, height: "int" = 0) -> "Any":
         """
-         Create an image control that displays a named PNG texture loaded from a ZIP archive.
-         Place the PNG anywhere inside the ZIP (outside gumps/ and art/ folders) and reference it by its path within the archive.
-         Example:
-         ```py
-         # In your zip: icons/sword.png
-         img = API.Gumps.LegionTextureControl("icons/sword.png")
-         img.SetPos(10, 10)
-         g.Add(img)
-         ```
+        Create an image control that displays a named PNG texture loaded from a ZIP archive.
+        Place the PNG anywhere inside the ZIP (outside gumps/ and art/ folders) and reference it by its path within the archive.
         
+        **Example:**
+        
+        ```py
+        # In your zip: icons/sword.png
+        img = API.Gumps.LegionTextureControl("icons/sword.png")
+        img.SetPos(10, 10)
+        g.Add(img)
+        ```
         """
         pass
 
     def CreateGumpButton(self, text: "str" = "", hue: "int" = 996, normal: "int" = 0x00EF, pressed: "int" = 0x00F0, hover: "int" = 0x00EE) -> "ApiUiButton":
         """
-         Create a button for gumps.
-         Example:
-         ```py
-         g = API.Gumps.CreateGump()
-         g.SetRect(100, 100, 200, 200)
-         button = API.Gumps.CreateGumpButton("Click Me!")
-         g.Add(button)
-         API.Gumps.AddGump(g)
+        Create a button for gumps.
         
-         while True:
-           API.SysMsg("Button currently clicked?: " + str(button.IsClicked))
-           API.SysMsg("Button clicked since last check?: " + str(button.HasBeenClicked()))
-           API.Pause(0.2)
-         ```
+        **Example:**
         
+        ```py
+        g = API.Gumps.CreateGump()
+        g.SetRect(100, 100, 200, 200)
+        button = API.Gumps.CreateGumpButton("Click Me!")
+        g.Add(button)
+        API.Gumps.AddGump(g)
+        
+        while True:
+          API.SysMsg("Button currently clicked?: " + str(button.IsClicked))
+          API.SysMsg("Button clicked since last check?: " + str(button.HasBeenClicked()))
+          API.Pause(0.2)
+        ```
         """
         pass
 
     def CreateSimpleButton(self, text: "str", width: "int", height: "int") -> "ApiUiNiceButton":
         """
-         Create a simple button, does not use graphics.
-         Example:
-         ```py
-         g = API.Gumps.CreateGump()
-         g.SetRect(100, 100, 200, 200)
-         button = API.Gumps.CreateSimpleButton("Click Me!", 100, 20)
-         g.Add(button)
-         API.Gumps.AddGump(g)
-         ```
+        Create a simple button, does not use graphics.
         
+        **Example:**
+        
+        ```py
+        g = API.Gumps.CreateGump()
+        g.SetRect(100, 100, 200, 200)
+        button = API.Gumps.CreateSimpleButton("Click Me!", 100, 20)
+        g.Add(button)
+        API.Gumps.AddGump(g)
+        ```
         """
         pass
 
     def CreateGumpRadioButton(self, text: "str" = "", group: "int" = 0, inactive: "int" = 0x00D0, active: "int" = 0x00D1, hue: "int" = 0xFFFF, isChecked: "bool" = False) -> "ApiUiRadioButton":
         """
-         Create a radio button for gumps, use group numbers to only allow one item to be checked at a time.
-         Example:
-         ```py
-         g = API.Gumps.CreateGump()
-         g.SetRect(100, 100, 200, 200)
-         rb = API.Gumps.CreateGumpRadioButton("Click Me!", 1)
-         g.Add(rb)
-         API.Gumps.AddGump(g)
-         API.SysMsg("Radio button checked?: " + str(rb.IsChecked))
-         ```
+        Create a radio button for gumps, use group numbers to only allow one item to be checked at a time.
         
+        **Example:**
+        
+        ```py
+        g = API.Gumps.CreateGump()
+        g.SetRect(100, 100, 200, 200)
+        rb = API.Gumps.CreateGumpRadioButton("Click Me!", 1)
+        g.Add(rb)
+        API.Gumps.AddGump(g)
+        API.SysMsg("Radio button checked?: " + str(rb.IsChecked))
+        ```
         """
         pass
 
     def CreateGumpTextBox(self, text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False, fontSize: "float" = 20) -> "ApiUiTtfTextInputField":
         """
-         Create a text area control.
-         Example:
-         ```py
-         w = 500
-         h = 600
+        Create a text area control.
         
-         gump = API.Gumps.CreateGump(True, True)
-         gump.SetWidth(w)
-         gump.SetHeight(h)
-         gump.CenterXInViewPort()
-         gump.CenterYInViewPort()
+        **Example:**
         
-         bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
-         bg.SetWidth(w)
-         bg.SetHeight(h)
+        ```py
+        w = 500
+        h = 600
         
-         gump.Add(bg)
+        gump = API.Gumps.CreateGump(True, True)
+        gump.SetWidth(w)
+        gump.SetHeight(h)
+        gump.CenterXInViewPort()
+        gump.CenterYInViewPort()
         
-         textbox = API.Gumps.CreateGumpTextBox("Text example", w, h, True)
+        bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
+        bg.SetWidth(w)
+        bg.SetHeight(h)
         
-         gump.Add(textbox)
+        gump.Add(bg)
         
-         API.Gumps.AddGump(gump)
-         ```
+        textbox = API.Gumps.CreateGumpTextBox("Text example", w, h, True)
         
+        gump.Add(textbox)
+        
+        API.Gumps.AddGump(gump)
+        ```
         """
         pass
 
     def CreateGumpTTFLabel(self, text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "left", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
         """
-         Create a TTF label with advanced options.
-         Example:
-         ```py
-         gump = API.Gumps.CreateGump()
-         gump.SetRect(100, 100, 200, 200)
+        Create a TTF label with advanced options.
         
-         ttflabel = API.Gumps.CreateGumpTTFLabel("Example label", 25, "#F100DD", "alagard")
-         ttflabel.SetRect(10, 10, 180, 30)
-         gump.Add(ttflabel)
+        **Example:**
         
-         API.Gumps.AddGump(gump) #Add the gump to the players screen
-         ```
+        ```py
+        gump = API.Gumps.CreateGump()
+        gump.SetRect(100, 100, 200, 200)
         
+        ttflabel = API.Gumps.CreateGumpTTFLabel("Example label", 25, "#F100DD", "alagard")
+        ttflabel.SetRect(10, 10, 180, 30)
+        gump.Add(ttflabel)
+        
+        API.Gumps.AddGump(gump) #Add the gump to the players screen
+        ```
         """
         pass
 
     def CreateGumpSimpleProgressBar(self, width: "int", height: "int", backgroundColor: "str" = "#616161", foregroundColor: "str" = "#212121", value: "int" = 100, max: "int" = 100) -> "ApiUiSimpleProgressBar":
         """
-         Create a progress bar. Can be updated as needed with `bar.SetProgress(current, max)`.
-         Example:
-         ```py
-         gump = API.Gumps.CreateGump()
-         gump.SetRect(100, 100, 400, 200)
+        Create a progress bar. Can be updated as needed with `bar.SetProgress(current, max)`.
         
-         pb = API.Gumps.CreateGumpSimpleProgressBar(400, 200)
-         gump.Add(pb)
+        **Example:**
         
-         API.Gumps.AddGump(gump)
+        ```py
+        gump = API.Gumps.CreateGump()
+        gump.SetRect(100, 100, 400, 200)
         
-         cur = 0
-         max = 100
+        pb = API.Gumps.CreateGumpSimpleProgressBar(400, 200)
+        gump.Add(pb)
         
-         while True:
-             pb.SetProgress(cur, max)
-             if cur >= max:
-                 break
-             cur += 1
-             API.Pause(0.5)
-         ```
+        API.Gumps.AddGump(gump)
         
+        cur = 0
+        max = 100
+        
+        while True:
+            pb.SetProgress(cur, max)
+            if cur >= max:
+                break
+            cur += 1
+            API.Pause(0.5)
+        ```
         """
         pass
 
     def CreateSlider(self, width: "int", min: "int" = 0, max: "int" = 100, value: "int" = 0, x: "int" = 0, y: "int" = 0, showText: "bool" = False) -> "ApiUiSlider":
         """
-         Create a horizontal slider control. Read or update its value with `slider.Value` / `slider.SetValue(value)`.
-         Example:
-         ```py
-         gump = API.Gumps.CreateGump()
-         gump.SetRect(100, 100, 300, 100)
+        Create a horizontal slider control. Read or update its value with `slider.Value` / `slider.SetValue(value)`.
         
-         slider = API.Gumps.CreateSlider(200, 0, 100, 50)
-         gump.Add(slider)
+        **Example:**
         
-         API.Gumps.AddGump(gump)
-         ```
+        ```py
+        gump = API.Gumps.CreateGump()
+        gump.SetRect(100, 100, 300, 100)
         
+        slider = API.Gumps.CreateSlider(200, 0, 100, 50)
+        gump.Add(slider)
+        
+        API.Gumps.AddGump(gump)
+        ```
         """
         pass
 
     def CreateGumpScrollArea(self, x: "int", y: "int", width: "int", height: "int") -> "ApiUiScrollArea":
         """
-         Create a scrolling area, add and position controls to it directly.
-         Example:
-         ```py
-         sa = API.Gumps.CreateGumpScrollArea(0, 60, 200, 140)
-         gump.Add(sa)
+        Create a scrolling area, add and position controls to it directly.
         
-         for i in range(10):
-             label = API.Gumps.CreateGumpTTFLabel(f"Label {i + 1}", 20, "#FFFFFF", "alagard")
-             label.SetRect(5, i * 20, 180, 20)
-             sa.Add(label)
-         ```
+        **Example:**
         
+        ```py
+        sa = API.Gumps.CreateGumpScrollArea(0, 60, 200, 140)
+        gump.Add(sa)
+        
+        for i in range(10):
+            label = API.Gumps.CreateGumpTTFLabel(f"Label {i + 1}", 20, "#FFFFFF", "alagard")
+            label.SetRect(5, i * 20, 180, 20)
+            sa.Add(label)
+        ```
         """
         pass
 
     def CreateGumpPic(self, graphic: "int", x: "int" = 0, y: "int" = 0, hue: "int" = 0) -> "ApiUiGumpPic":
         """
-         Create a gump pic(Use this for gump art, not item art)
-         Example:
-         ```py
-         gumpPic = API.Gumps.CreateGumpPic(0xafb)
-         gump.Add(gumpPic)
+        Create a gump pic(Use this for gump art, not item art)
         
+        **Example:**
+        
+        ```py
+        gumpPic = API.Gumps.CreateGumpPic(0xafb)
+        gump.Add(gumpPic)
         """
         pass
 
     def CreateTiledGumpPic(self, graphic: "int", width: "int", height: "int", hue: "int" = 0) -> "ApiUiTiledGumpPic":
         """
-         Create a gump pic that tiles(repeats) (Use this for gump art, not item art)
-         Example:
-         ```py
-         gumpPic = API.Gumps.CreateTiledGumpPic(0xafb, 100, 100)
-         gump.Add(gumpPic)
+        Create a gump pic that tiles(repeats) (Use this for gump art, not item art)
         
+        **Example:**
+        
+        ```py
+        gumpPic = API.Gumps.CreateTiledGumpPic(0xafb, 100, 100)
+        gump.Add(gumpPic)
         """
         pass
 
     def CreateDropDown(self, width: "int", items: "list[str]", selectedIndex: "int" = 0) -> "ApiUiControlDropDown":
         """
-         Creates a dropdown control (combobox) with the specified width and items.
-        
+        Creates a dropdown control (combobox) with the specified width and items.
         """
         pass
 
     def AddControlOnClick(self, control: "Any", onClick: "Any", leftOnly: "bool" = True) -> "Any":
         """
-         Add an onClick callback to a control.
-         Example:
-         ```py
-         def myfunc:
-           API.SysMsg("Something clicked!")
-         bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
-         API.Gumps.AddControlOnClick(bg, myfunc)
-         while True:
-           API.ProcessCallbacks()
-         ```
+        Add an onClick callback to a control.
         
+        **Example:**
+        
+        ```py
+        def myfunc:
+          API.SysMsg("Something clicked!")
+        bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
+        API.Gumps.AddControlOnClick(bg, myfunc)
+        while True:
+          API.ProcessCallbacks()
+        ```
         """
         pass
 
     def AddControlOnDisposed(self, control: "ApiUiBaseControl", onDispose: "Any") -> "ApiUiBaseControl":
         """
-         Add onDispose(Closed) callback to a control.
-         Example:
-         ```py
-         def onClose():
-             API.Stop()
+        Add onDispose(Closed) callback to a control.
         
-         gump = API.Gumps.CreateGump()
-         gump.SetRect(100, 100, 200, 200)
+        **Example:**
         
-         bg = API.Gumps.CreateGumpColorBox(opacity=0.7, color="#000000")
-         gump.Add(bg.SetRect(0, 0, 200, 200))
+        ```py
+        def onClose():
+            API.Stop()
         
-         API.Gumps.AddControlOnDisposed(gump, onClose)
-         ```
+        gump = API.Gumps.CreateGump()
+        gump.SetRect(100, 100, 200, 200)
         
+        bg = API.Gumps.CreateGumpColorBox(opacity=0.7, color="#000000")
+        gump.Add(bg.SetRect(0, 0, 200, 200))
+        
+        API.Gumps.AddControlOnDisposed(gump, onClose)
+        ```
         """
         pass
 
@@ -1009,17 +991,15 @@ class ApiUiMenuItem:
 
     def ToString(self) -> "str":
         """
-         Returns a readable string representation of the menu item.
-         Used when printing or converting the object to a string in Python scripts.
-        
+        Returns a readable string representation of the menu item.
+        Used when printing or converting the object to a string in Python scripts.
         """
         pass
 
     def __repr__(self) -> "str":
         """
-         Returns a detailed string representation of the object.
-         This string is used by Python’s built-in `repr()` function.
-        
+        Returns a detailed string representation of the object.
+        This string is used by Python’s built-in `repr()` function.
         """
         pass
 
@@ -1042,15 +1022,13 @@ class ApiUiNiceButton(ApiUiBaseControl):
 
     def SetBackgroundColor(self, r: "int | None", g: "int | None", b: "int | None", a: "int | None" = 255) -> None:
         """
-         Sets the background color of the button. Pass null to clear.
-        
+        Sets the background color of the button. Pass null to clear.
         """
         pass
 
     def ClearBackgroundColor(self) -> None:
         """
-         Clears the background color of the button.
-        
+        Clears the background color of the button.
         """
         pass
 
@@ -1060,50 +1038,43 @@ class ApiUiNineSliceGump(ApiUiBaseControl, IApiGump):
 
     def GetHue(self) -> "int":
         """
-         Gets the current hue of the nine-slice gump
-        
+        Gets the current hue of the nine-slice gump
         """
         pass
 
     def SetHue(self, hue: "int") -> None:
         """
-         Sets the hue of the nine-slice gump
-        
+        Sets the hue of the nine-slice gump
         """
         pass
 
     def GetResizable(self) -> "bool":
         """
-         Gets whether the gump is resizable
-        
+        Gets whether the gump is resizable
         """
         pass
 
     def SetResizable(self, resizable: "bool") -> None:
         """
-         Sets whether the gump is resizable
-        
+        Sets whether the gump is resizable
         """
         pass
 
     def GetBorderSize(self) -> "int":
         """
-         Gets the border size of the nine-slice
-        
+        Gets the border size of the nine-slice
         """
         pass
 
     def SetBorderSize(self, borderSize: "int") -> None:
         """
-         Sets the border size of the nine-slice
-        
+        Sets the border size of the nine-slice
         """
         pass
 
     def SetLegionTexture(self, texture: "str", borderSize: "int") -> None:
         """
-         Set the modern gump texture and border size
-        
+        Set the modern gump texture and border size
         """
         pass
 
@@ -1112,24 +1083,22 @@ class ModernNineSliceGump(NineSliceGump):
 
     def SetLegionTexture(self, texture: "str", borderSize: "int") -> None:
         """
-         Set the modern gump texture and border size
-        
+        Set the modern gump texture and border size
         """
         pass
 
     def SetResizeCallback(self, callback: "Any") -> None:
         """
-         Registers a callback to be called when the gump is resized.
-         <remarks>
-         Note that only one callback may be registered at a time. Subsequent calls will replace the previous callback.
-         </remarks>
+        Registers a callback to be called when the gump is resized.
+        <remarks>
+        Note that only one callback may be registered at a time. Subsequent calls will replace the previous callback.
+        </remarks>
         """
         pass
 
     def Dispose(self) -> None:
         """
-         Disposes the gump and releases its internal resources
-        
+        Disposes the gump and releases its internal resources
         """
         pass
 
@@ -1139,19 +1108,17 @@ class ApiUiRadioButton(ApiUiCheckbox):
 
     def GetGroupIndex(self) -> "int":
         """
-         Gets the group index of the radio button.
-         Radio buttons with the same group index are mutually exclusive.
-         Used in python API
-        
+        Gets the group index of the radio button.
+        Radio buttons with the same group index are mutually exclusive.
+        Used in python API
         """
         pass
 
     def SetGroupIndex(self, groupIndex: "int") -> None:
         """
-         Sets the group index of the radio button.
-         Radio buttons with the same group index are mutually exclusive.
-         Used in python API
-        
+        Sets the group index of the radio button.
+        Radio buttons with the same group index are mutually exclusive.
+        Used in python API
         """
         pass
 
@@ -1173,8 +1140,7 @@ class ApiUiSimpleProgressBar(ApiUiBaseControl):
 
     def SetProgress(self, value: "float", max: "float") -> None:
         """
-         Sets the progress value for the progress bar.
-        
+        Sets the progress value for the progress bar.
         """
         pass
 
@@ -1186,36 +1152,35 @@ class ApiUiSlider(ApiUiBaseControl):
 
     def GetValue(self) -> "int":
         """
-         Gets the slider's current value.
-         Used in python API
-        
+        Gets the slider's current value.
+        Used in python API
         """
         pass
 
     def SetValue(self, value: "int") -> "ApiUiSlider":
         """
-         Sets the slider's current value. Values outside MinValue/MaxValue are clamped.
-         Used in python API
-        
+        Sets the slider's current value. Values outside MinValue/MaxValue are clamped.
+        Used in python API
         """
         pass
 
     def OnValueChanged(self, onValueChanged: "Any") -> "ApiUiSlider":
         """
-         Add an onValueChanged callback to this slider, invoked whenever the value changes.
-         The callback function receives the new value as its only argument.
-         Example:
-         ```py
-         def on_change(value):
-           API.SysMsg(f"Slider is now {value}")
+        Add an onValueChanged callback to this slider, invoked whenever the value changes.
+        The callback function receives the new value as its only argument.
         
-         slider = API.Gumps.CreateGumpSlider(200, 0, 100, 50)
-         slider.OnValueChanged(on_change)
+        **Example:**
         
-         while True:
-           API.ProcessCallbacks()
-         ```
+        ```py
+        def on_change(value):
+          API.SysMsg(f"Slider is now {value}")
         
+        slider = API.Gumps.CreateGumpSlider(200, 0, 100, 50)
+        slider.OnValueChanged(on_change)
+        
+        while True:
+          API.ProcessCallbacks()
+        ```
         """
         pass
 
@@ -1265,6 +1230,397 @@ class ApiUserProfile:
     MoveItemDelay: int = None
     AutoLootEnabled: bool = None
 
+class ApiVector2(PyApiObject):
+    ""
+    X: float = None
+    Y: float = None
+
+    def ToString(self) -> "str":
+        """
+        Both axes, so printing one while tuning a layer is readable.
+        """
+        pass
+
+class PyApiObject:
+    ""
+
+    def ToString(self) -> "str":
+        """
+        The object's property values. Nested API objects and sequences expand in place.
+        """
+        pass
+
+    def __repr__(self) -> "str":
+        """
+        The object's string representation.
+        """
+        pass
+
+class ApiEffectProfile(PyApiObject):
+    ""
+    Name: str = None
+    FullScreen: bool = None
+    Layers: list[ApiProfileLayer] = None
+    Fade: ApiFadeSpec | None = None
+    Shake: ApiShakeSpec | None = None
+
+    def AddLayer(self, effect: "ApiLayerEffect", blend: "Any" = ApiVisualEffects.OverlayBlend.Alpha) -> "ApiProfileLayer":
+        """
+        Appends a layer, which is the usual way to build a composition up. At most 4, and each one is a
+        full-screen pass per frame while the effect runs.
+        """
+        pass
+
+class ApiEffectProfileInfo(PyApiObject):
+    ""
+    Id: str = None
+    Name: str = None
+    IsBuiltIn: bool = None
+
+    def ToString(self) -> "str":
+        """
+        Both halves, since neither alone identifies a composition to a reader: names repeat
+        and ids are unreadable.
+        """
+        pass
+
+class ApiPulseSpec(PyApiObject):
+    ""
+    Frequency: float = None
+    Amplitude: float = None
+
+class ApiLayerEffect(PyApiObject):
+    ""
+    Shape: ApiShapeSpec | None = None
+    Noise: ApiNoiseSpec | None = None
+    Strength: float = None
+    Pulse: ApiPulseSpec | None = None
+
+class ApiNoiseSpec(PyApiObject):
+    ""
+    BaseScale: ApiVector2 | None = None
+    BaseScroll: ApiVector2 | None = None
+    BaseChannel = None
+    DetailScale: ApiVector2 | None = None
+    DetailScroll: ApiVector2 | None = None
+    DetailChannel = None
+    Offset: ApiVector2 | None = None
+    WarpStrength: float = None
+    RidgeAmount: float = None
+    Threshold: float = None
+    Softness: float = None
+    FlatFloor: float = None
+
+class ApiProfileLayer(PyApiObject):
+    ""
+    Effect: ApiLayerEffect | None = None
+    Blend = None
+
+class ApiFadeSpec(PyApiObject):
+    ""
+    InSeconds: float = None
+    OutSeconds: float = None
+
+class ApiShakeSpec(PyApiObject):
+    ""
+    Trauma: float = None
+    DurationSeconds: float = None
+    RampUpSeconds: float = None
+    RampDownSeconds: float = None
+    Curve = None
+    Frequency: float = None
+
+class ApiBlurLayer(ApiLayerEffect):
+    ""
+    Radius: float = None
+    Taps = None
+
+class ApiRadialBlurLayer(ApiLayerEffect):
+    ""
+    Zoom: float = None
+    Taps = None
+
+class ApiChromaticLayer(ApiLayerEffect):
+    ""
+    Aberration: float = None
+
+class ApiShakeConfig(PyApiObject):
+    ""
+    Seconds: float = None
+    Intensity: float = None
+    RampUpSeconds: float = None
+    RampDownSeconds: float = None
+    Gradient = None
+    Curve = None
+    Frequency: float = None
+    MaxOffsetPixels: float = None
+    FullScreen: bool = None
+
+class ApiJitterSpec(PyApiObject):
+    ""
+    ReachAmount: float = None
+    FeatherAmount: float = None
+    Scale: ApiVector2 | None = None
+    Scroll: ApiVector2 | None = None
+    Channel = None
+
+class ApiShapeSpec(PyApiObject):
+    ""
+    Center: ApiVector2 | None = None
+    WobbleFreq: ApiVector2 | None = None
+    WobbleAmp: float = None
+    Reach: float = None
+    Feather: float = None
+    EdgeBlend: float = None
+    CornerBias: float = None
+    Jitter: ApiJitterSpec | None = None
+    FocusDir: ApiVector2 | None = None
+    FocusPower: float = None
+    FocusAmount: float = None
+
+class ApiTintLayer(ApiLayerEffect):
+    ""
+    R: int = None
+    G: int = None
+    B: int = None
+    A: int = None
+
+class ApiVisualEffects:
+    ""
+    Enabled: bool = None
+    ShakeEnabled: bool = None
+    SlotsFree: int = None
+
+    class OverlayBlend:
+        Alpha = 0
+        Additive = 1
+
+    class NoiseChannel:
+        Red = 0
+        Green = 1
+        Blue = 2
+        Alpha = 3
+
+    class OverlaySampleTaps:
+        Four = 4
+        Eight = 8
+        Twelve = 12
+        Sixteen = 16
+
+    class ShakeGradient:
+        Constant = 0
+        Decay = 1
+        Swell = 2
+        Pulse = 3
+
+    class ShakeCurve:
+        Linear = 0
+        Smooth = 1
+        EaseIn = 2
+        EaseOut = 3
+
+
+    class Ids:
+        Poison = "1c419034-7c0f-4e65-a3af-81f27a1e0efa"
+        Bleed = "0e778268-d89d-4538-80c6-621ca768a4b2"
+        Fog = "7195989d-5c02-47b8-bcd9-b91aaaafaa99"
+        Drunk = "271f1b8f-13b1-4a4a-acc4-a9784852398b"
+        Concussion = "b7b6a46c-9899-4d6f-8493-cd22d695c0fb"
+        TunnelVision = "b006e04f-3087-4ac7-bdbb-0c903d35792d"
+        Death = "bd6cf532-4dc4-46d7-94eb-bc061ef041da"
+        EarthquakeRumble = "7f67a87a-e30a-441b-9b5a-3a91da98d050"
+
+    def GetProfiles(self) -> "list[ApiEffectProfileInfo]":
+        """
+        List the visual effect compositions this client knows about, shipped and user-authored.
+        
+        **Example:**
+        
+        ```py
+        for info in API.VisualEffects.GetProfiles():
+            API.SysMsg(f"{info.Name} -> {info.Id}")
+        ```
+        """
+        pass
+
+    def GetProfile(self, id: "str") -> "ApiEffectProfile":
+        """
+        Get an editable copy of one of the client's visual effect compositions, as a starting point
+        for a variation on it. The copy is yours - changing it does not touch the client's, and there
+        is no way to save it back.
+        
+        **Example:**
+        
+        ```py
+        effect = API.VisualEffects.GetProfile(API.VisualEffects.Ids.Poison)
+        effect.Layers[0].Effect.Strength = 0.9
+        handle = API.VisualEffects.Start(effect, 5)
+        ```
+        """
+        pass
+
+    def NewProfile(self) -> "ApiEffectProfile":
+        """
+        Build an empty visual effect composition, to add layers to with `AddLayer`.
+        
+        **Example:**
+        
+        ```py
+        effect = API.VisualEffects.NewProfile()
+        tint = API.VisualEffects.NewTintLayer()
+        tint.R, tint.G, tint.B = 150, 0, 0
+        effect.AddLayer(tint)
+        handle = API.VisualEffects.Start(effect, 4)
+        ```
+        """
+        pass
+
+    def NewTintLayer(self) -> "ApiTintLayer":
+        """
+        Build a color layer, set to the client's defaults. The only technique that paints rather
+        than distorting, and so the only one that may sit anywhere in a stack.
+        
+        Like every layer, it costs a full-screen pass per frame while the effect runs.
+        """
+        pass
+
+    def NewBlurLayer(self) -> "ApiBlurLayer":
+        """
+        Build a disk blur layer, set to the client's defaults. Out-of-focus vision.
+        
+        The priciest technique: a full-screen pass per frame, at `Taps` samples per pixel.
+        """
+        pass
+
+    def NewRadialBlurLayer(self) -> "ApiRadialBlurLayer":
+        """
+        Build a zoom blur layer, set to the client's defaults. Reads as vertigo rather than poor
+        focus, because the centre of the screen stays sharp however strong it is.
+        
+        A full-screen pass per frame, at `Taps` samples per pixel.
+        """
+        pass
+
+    def NewChromaticLayer(self) -> "ApiChromaticLayer":
+        """
+        Build a chromatic split layer, set to the client's defaults. The cheapest technique by a wide
+        margin - three samples per pixel - so it is worth reaching for first when something needs to
+        look wrong.
+        """
+        pass
+
+    def NewShakeSpec(self) -> "ApiShakeSpec":
+        """
+        Build the shake a visual effect fires as it arrives, to hang on `ApiEffectProfile.Shake`. For
+        a shake on its own use `NewShakeConfig` instead.
+        """
+        pass
+
+    def NewShakeConfig(self) -> "ApiShakeConfig":
+        """
+        Build a standalone screen shake, for `StartShake`.
+        
+        **Example:**
+        
+        ```py
+        shake = API.VisualEffects.NewShakeConfig()
+        shake.Seconds = 2.5
+        shake.Intensity = 0.8
+        shake.Gradient = API.VisualEffects.ShakeGradient.Decay
+        API.VisualEffects.StartShake(shake)
+        ```
+        """
+        pass
+
+    def NewVector2(self, x: "float" = 0, y: "float" = 0) -> "ApiVector2":
+        """
+        Build a per-axis value pair, for the visual effect knobs that take one.
+        """
+        pass
+
+    def Start(self, profileId: "str", seconds: "float" = 0, intensity: "float" = 1.0) -> "int":
+        """
+        Start one of the client's visual effect compositions by id.
+        
+        A composition raised this way claims the look against the rulebase, so starting poison while
+        the player is poisoned shows one poison rather than two at doubled alpha.
+        
+        Effects do not survive leaving the world: the handle goes stale and nothing comes back on the
+        next login. Stop them yourself, give them a duration, or let the script end - whatever a
+        script leaves running is dropped when it stops.
+        
+        **Example:**
+        
+        ```py
+        handle = API.VisualEffects.Start(API.VisualEffects.Ids.Drunk, 10)
+        API.Pause(2)
+        API.VisualEffects.Stop(handle)
+        ```
+        """
+        pass
+
+    def Start(self, config: "ApiEffectProfile", seconds: "float" = 0, intensity: "float" = 1.0) -> "int":
+        """
+        Start a visual effect the script built itself.
+        
+        Unlike the two by-name forms this claims nothing, because there is no library composition
+        behind it to claim - so two scripts starting identical hand-built effects do composite
+        together, at doubled strength. Editing `config` afterwards cannot reach the running effect;
+        start it again to change it.
+        """
+        pass
+
+    def StartByName(self, name: "str", seconds: "float" = 0, intensity: "float" = 1.0) -> "int":
+        """
+        Start one of the user's own visual effect compositions by name.
+        
+        User-authored compositions only. Every shipped one is named through the client's language file
+        and carries a "(built-in)" suffix, so no name here could reach them on a non-English client -
+        use `Start` with `Ids` for those.
+        """
+        pass
+
+    def Stop(self, handle: "int") -> None:
+        """
+        Stop one visual effect this script started. It fades out rather than cutting.
+        """
+        pass
+
+    def StopAll(self) -> None:
+        """
+        Stop every visual effect this script started. Other scripts' effects, and the ones the
+        player's own state raises, are left alone.
+        """
+        pass
+
+    def StartShake(self, config: "ApiShakeConfig") -> "int":
+        """
+        Shake the screen, with no visual effect attached.
+        
+        **Example:**
+        
+        ```py
+        shake = API.VisualEffects.NewShakeConfig()
+        shake.Seconds = 0.4
+        shake.Intensity = 1.0
+        API.VisualEffects.StartShake(shake)
+        ```
+        """
+        pass
+
+    def StopShake(self, handle: "int") -> None:
+        """
+        Stop one screen shake this script started.
+        """
+        pass
+
+    def StopAllShakes(self) -> None:
+        """
+        Stop every screen shake this script started, including the ones its visual effects fired as
+        they arrived.
+        """
+        pass
+
 Events: EventSinkApiDeclaration = None
 Config: LegionApiConfig = None
 JournalEntries = None
@@ -1283,6 +1639,7 @@ LastSpellName: str = None
 Found: int = None
 Profile: ApiUserProfile = None
 Gumps: ApiUiGump = None
+VisualEffects: ApiVisualEffects = None
 StopRequested: bool = None
 CancellationToken = None
 
@@ -1327,14 +1684,15 @@ class EffectBlendMode:
 
 def ProcessCallbacks() -> None:
     """
-     Use this when you need to wait for players to click buttons.
-     Example:
-     ```py
-     while not API.StopRequested:
-       API.ProcessCallbacks()
-       API.Pause(0.1)
-     ```
+    Use this when you need to wait for players to click buttons.
     
+    **Example:**
+    
+    ```py
+    while not API.StopRequested:
+      API.ProcessCallbacks()
+      API.Pause(0.1)
+    ```
     """
     pass
 
@@ -1343,2333 +1701,2436 @@ def Dispose() -> None:
 
 def OnHotKey(key: "str", callback: "Any" = None) -> None:
     """
-     Register or unregister a Python callback for a hotkey.
-     ### Register:
-     ```py
-     def on_shift_a():
-         API.SysMsg("SHIFT+A pressed!")
-     API.OnHotKey("SHIFT+A", on_shift_a)
-     while not API.StopRequested:
-       API.ProcessCallbacks()
-       API.Pause(0.1)
-     ```
-     ### Unregister:
-     ```py
-     API.OnHotKey("SHIFT+A")
-     ```
-     The <paramref name="key"/> can include modifiers (CTRL, SHIFT, ALT),
-     for example: "CTRL+SHIFT+F1" or "ALT+A".
+    Register or unregister a Python callback for a hotkey.
+    ### Register:
     
+    ```py
+    def on_shift_a():
+        API.SysMsg("SHIFT+A pressed!")
+    API.OnHotKey("SHIFT+A", on_shift_a)
+    while not API.StopRequested:
+      API.ProcessCallbacks()
+      API.Pause(0.1)
+    ```
+    ### Unregister:
+    
+    ```py
+    API.OnHotKey("SHIFT+A")
+    ```
+    The `key` can include modifiers (CTRL, SHIFT, ALT),
+    for example: "CTRL+SHIFT+F1" or "ALT+A".
     """
     pass
 
 def IsKeyPressed(key: "str") -> "bool":
     """
-     Returns true if the given key combination is currently held down.
-     The key format matches `OnHotKey` , e.g. "CTRL+SHIFT+F1" or "A".
-     Extra modifiers beyond those specified do not prevent a match.
-    
+    Returns true if the given key combination is currently held down.
+    The key format matches `OnHotKey`, e.g. "CTRL+SHIFT+F1" or "A".
+    Extra modifiers beyond those specified do not prevent a match.
     """
     pass
 
 def RequestHotkey(prompt: "str" = "Press a hotkey", timeout: "float" = 30) -> "str":
     """
-     Shows the in-game hotkey capture window and waits for the player to pick a key combination.
-     The returned string matches what `OnHotKey` and `IsKeyPressed` accept, so it can be passed
-     straight to them, e.g. "CTRL+SHIFT+F1" or "A".
-     Only keyboard bindings are returned; mouse, wheel, controller and modifier-only captures are
-     rejected. Blocks until the player saves a key or closes the window (or the timeout elapses).
-     Example:
-     ```py
-     key = API.RequestHotkey()
-     if key:
-       API.OnHotKey(key, on_pressed)
-     ```
+    Shows the in-game hotkey capture window and waits for the player to pick a key combination.
+    The returned string matches what `OnHotKey` and `IsKeyPressed` accept, so it can be passed
+    straight to them, e.g. "CTRL+SHIFT+F1" or "A".
+    Only keyboard bindings are returned; mouse, wheel, controller and modifier-only captures are
+    rejected. Blocks until the player saves a key or closes the window (or the timeout elapses).
     
+    **Example:**
+    
+    ```py
+    key = API.RequestHotkey()
+    if key:
+      API.OnHotKey(key, on_pressed)
+    ```
     """
     pass
 
 def ScheduleTimedCallback(delayMs: "int", callback: "Any", timesToRepeat: "int" = -1) -> "int":
     """
-     Schedules a callback to be invoked after a specified delay.
+    Schedules a callback to be invoked after a specified delay.
     
-     Note that as with keyboard hotkeys, you must call `ProcessCallbacks` for the callback to actually be run.
-    
+    Note that as with keyboard hotkeys, you must call `ProcessCallbacks` for the callback to actually be run.
     """
     pass
 
 def RemoveTimedCallback(id: "int") -> None:
     """
-     Removes a previously scheduled timed callback
-    
+    Removes a previously scheduled timed callback
     """
     pass
 
 def SetSharedVar(name: "str", value: "Any") -> None:
     """
-     Set a variable that is shared between scripts.
-     Example:
-     ```py
-     API.SetSharedVar("myVar", 10)
-     ```
+    Set a variable that is shared between scripts.
     
+    **Example:**
+    
+    ```py
+    API.SetSharedVar("myVar", 10)
+    ```
     """
     pass
 
 def GetSharedVar(name: "str") -> "Any":
     """
-     Get the value of a shared variable.
-     Example:
-     ```py
-     myVar = API.GetSharedVar("myVar")
-     if myVar:
-      API.SysMsg(f"myVar is {myVar}")
-     ```
+    Get the value of a shared variable.
     
+    **Example:**
+    
+    ```py
+    myVar = API.GetSharedVar("myVar")
+    if myVar:
+     API.SysMsg(f"myVar is {myVar}")
+    ```
     """
     pass
 
 def RemoveSharedVar(name: "str") -> None:
     """
-     Try to remove a shared variable.
-     Example:
-     ```py
-     API.RemoveSharedVar("myVar")
-     ```
+    Try to remove a shared variable.
     
+    **Example:**
+    
+    ```py
+    API.RemoveSharedVar("myVar")
+    ```
     """
     pass
 
 def ClearSharedVars() -> None:
     """
-     Clear all shared vars.
-     Example:
-     ```py
-     API.ClearSharedVars()
-     ```
+    Clear all shared vars.
     
+    **Example:**
+    
+    ```py
+    API.ClearSharedVars()
+    ```
     """
     pass
 
 def CloseGumps() -> None:
     """
-     Close all gumps created by the API unless marked to remain open.
-    
+    Close all gumps created by the API unless marked to remain open.
     """
     pass
 
 def Attack(serial: "int") -> None:
     """
-     Attack a mobile
-     Example:
-     ```py
-     enemy = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
-     if enemy:
-       API.Attack(enemy)
-     ```
+    Attack a mobile
     
+    **Example:**
+    
+    ```py
+    enemy = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
+    if enemy:
+      API.Attack(enemy)
+    ```
     """
     pass
 
 def SetWarMode(enabled: "bool") -> None:
     """
-     Sets the player's war mode state (peace/war toggle).
-    
+    Sets the player's war mode state (peace/war toggle).
     """
     pass
 
 def BandageSelf() -> "bool":
     """
-     Attempt to bandage yourself. Older clients this will not work, you will need to find a bandage, use it, and target yourself.
-     Example:
-     ```py
-     if player.HitsMax - player.Hits > 10 or player.IsPoisoned:
-       if API.BandageSelf():
-         API.CreateCooldownBar(delay, "Bandaging...", 21)
-         API.Pause(8)
-       else:
-         API.SysMsg("WARNING: No bandages!", 32)
-         break
-     ```
+    Attempt to bandage yourself. Older clients this will not work, you will need to find a bandage, use it, and target yourself.
     
+    **Example:**
+    
+    ```py
+    if player.HitsMax - player.Hits > 10 or player.IsPoisoned:
+      if API.BandageSelf():
+        API.CreateCooldownBar(delay, "Bandaging...", 21)
+        API.Pause(8)
+      else:
+        API.SysMsg("WARNING: No bandages!", 32)
+        break
+    ```
     """
     pass
 
 def ClearLeftHand() -> "ApiItem":
     """
-     If you have an item in your left hand, move it to your backpack
-     Sets API.Found to the item's serial.
-     Example:
-     ```py
-     leftHand = API.ClearLeftHand()
-     if leftHand:
-       API.SysMsg("Cleared left hand: " + leftHand.Name)
-     ```
+    If you have an item in your left hand, move it to your backpack
+    Sets API.Found to the item's serial.
     
+    **Example:**
+    
+    ```py
+    leftHand = API.ClearLeftHand()
+    if leftHand:
+      API.SysMsg("Cleared left hand: " + leftHand.Name)
+    ```
     """
     pass
 
 def ClearRightHand() -> "ApiItem":
     """
-     If you have an item in your right hand, move it to your backpack
-     Sets API.Found to the item's serial.
-     Example:
-     ```py
-     rightHand = API.ClearRightHand()
-     if rightHand:
-       API.SysMsg("Cleared right hand: " + rightHand.Name)
-      ```
+    If you have an item in your right hand, move it to your backpack
+    Sets API.Found to the item's serial.
     
+    **Example:**
+    
+    ```py
+    rightHand = API.ClearRightHand()
+    if rightHand:
+      API.SysMsg("Cleared right hand: " + rightHand.Name)
+    ```
     """
     pass
 
 def ClickObject(serial: "int") -> None:
     """
-     Single click an object
-     Example:
-     ```py
-     API.ClickObject(API.Player)
-     ```
+    Single click an object
     
+    **Example:**
+    
+    ```py
+    API.ClickObject(API.Player)
+    ```
     """
     pass
 
 def UseObject(serial: "int", skipQueue: "bool" = True) -> None:
     """
-     Attempt to use(double click) an object.
-     Example:
-     ```py
-     API.UseObject(API.Backpack)
-     ```
+    Attempt to use(double click) an object.
     
+    **Example:**
+    
+    ```py
+    API.UseObject(API.Backpack)
+    ```
     """
     pass
 
 def Contents(serial: "int") -> "int":
     """
-     Get an item count for the contents of a container
-     Example:
-     ```py
-     count = API.Contents(API.Backpack)
-     if count > 0:
-       API.SysMsg(f"You have {count} items in your backpack")
-     ```
+    Get an item count for the contents of a container
     
+    **Example:**
+    
+    ```py
+    count = API.Contents(API.Backpack)
+    if count > 0:
+      API.SysMsg(f"You have {count} items in your backpack")
+    ```
     """
     pass
 
 def GetSpellsInSpellbook(serial: "int") -> "list[str]":
     """
-     Get the names of all spells scribed into a spellbook.
-     Example:
-     ```py
-     spells = API.GetSpellsInSpellbook(book_serial)
-     if spells:
-       for spell in spells:
-         API.SysMsg(spell)
-     ```
+    Get the names of all spells scribed into a spellbook.
     
+    **Example:**
+    
+    ```py
+    spells = API.GetSpellsInSpellbook(book_serial)
+    if spells:
+      for spell in spells:
+        API.SysMsg(spell)
+    ```
     """
     pass
 
 def ContextMenu(serial: "int", entry: "int") -> None:
     """
-     Send a context menu(right click menu) response.
-     This does not open the menu, you do not need to open the menu first. This handles both in one action.
-     Example:
-     ```py
-     API.ContextMenu(API.Player, 1)
-     ```
+    Send a context menu(right click menu) response.
+    This does not open the menu, you do not need to open the menu first. This handles both in one action.
     
+    **Example:**
+    
+    ```py
+    API.ContextMenu(API.Player, 1)
+    ```
     """
     pass
 
 def ContextMenu(serial: "int", entry: "str", timeout: "float" = 5) -> "bool":
     """
-     Send a context menu(right click menu) response by matching the entry text.
-     This opens the menu, finds the entry whose text matches, and responds with the correct index.
-     The match is case-insensitive and matches the first entry that contains the given text.
-     Example:
-     ```py
-     API.ContextMenu(API.Player, "Open Paperdoll")
-     ```
+    Send a context menu(right click menu) response by matching the entry text.
+    This opens the menu, finds the entry whose text matches, and responds with the correct index.
+    The match is case-insensitive and matches the first entry that contains the given text.
     
+    **Example:**
+    
+    ```py
+    API.ContextMenu(API.Player, "Open Paperdoll")
+    ```
     """
     pass
 
 def MenuResponseCurrent(index: "int", itemGraphic: "int" = 0, itemHue: "int" = 0) -> "bool":
     """
-     Send a response to the currently open menu (uses the latest MenuGump).
-     Useful when menu IDs change every time (e.g., Tracking skill).
-     Returns true if a menu was found and a response was sent.
-    
+    Send a response to the currently open menu (uses the latest MenuGump).
+    Useful when menu IDs change every time (e.g., Tracking skill).
+    Returns true if a menu was found and a response was sent.
     """
     pass
 
 def MenuItemsCurrent() -> "list[ApiUiMenuItem]":
     """
-     Retrieve the current open menu's (uses the latest MenuGump) menu item descriptions.
-     Useful when menu IDs change every time (e.g., Tracking skill).
-    
+    Retrieve the current open menu's (uses the latest MenuGump) menu item descriptions.
+    Useful when menu IDs change every time (e.g., Tracking skill).
     """
     pass
 
 def GrayMenuResponseCurrent(index: "int") -> "bool":
     """
-     Send a response to the currently open gray menu (text list menu).
-     Returns true if a gray menu was found and a response was sent.
-    
+    Send a response to the currently open gray menu (text list menu).
+    Returns true if a gray menu was found and a response was sent.
     """
     pass
 
 def EquipItem(serial: "int") -> None:
     """
-     Attempt to equip an item. Layer is automatically detected.
-     Example:
-     ```py
-     lefthand = API.ClearLeftHand()
-     API.Pause(2)
-     API.EquipItem(lefthand)
-     ```
+    Attempt to equip an item. Layer is automatically detected.
     
+    **Example:**
+    
+    ```py
+    lefthand = API.ClearLeftHand()
+    API.Pause(2)
+    API.EquipItem(lefthand)
+    ```
     """
     pass
 
 def ClearMoveQueue() -> None:
     """
-     Clear the move item que of all items.
-    
+    Clear the move item que of all items.
     """
     pass
 
 def QueueMoveItem(serial: "int", destination: "int", amt: "int" = 0, x: "int" = 0xFFFF, y: "int" = 0xFFFF) -> None:
     """
-     Move an item to another container.
-     Use x, and y if you don't want items stacking in the desination container.
-     Example:
-     ```py
-     items = API.ItemsInContainer(API.Backpack)
+    Move an item to another container.
+    Use x, and y if you don't want items stacking in the desination container.
     
-     API.SysMsg("Target your fish barrel", 32)
-     barrel = API.RequestTarget()
+    **Example:**
     
+    ```py
+    items = API.ItemsInContainer(API.Backpack)
     
-     if len(items) > 0 and barrel:
-         for item in items:
-             data = API.ItemNameAndProps(item)
-             if data and "An Exotic Fish" in data:
-                 API.QueueMoveItem(item, barrel)
-     ```
+    API.SysMsg("Target your fish barrel", 32)
+    barrel = API.RequestTarget()
     
+    if len(items) > 0 and barrel:
+        for item in items:
+            data = API.ItemNameAndProps(item)
+            if data and "An Exotic Fish" in data:
+                API.QueueMoveItem(item, barrel)
+    ```
     """
     pass
 
 def MoveItem(serial: "int", destination: "int", amt: "int" = 0, x: "int" = 0xFFFF, y: "int" = 0xFFFF) -> None:
     """
-     Move an item to another container.
-     Use x, and y if you don't want items stacking in the desination container.
-     Example:
-     ```py
-     items = API.ItemsInContainer(API.Backpack)
+    Move an item to another container.
+    Use x, and y if you don't want items stacking in the desination container.
     
-     API.SysMsg("Target your fish barrel", 32)
-     barrel = API.RequestTarget()
+    **Example:**
     
+    ```py
+    items = API.ItemsInContainer(API.Backpack)
     
-     if len(items) > 0 and barrel:
-         for item in items:
-             data = API.ItemNameAndProps(item)
-             if data and "An Exotic Fish" in data:
-                 API.MoveItem(item, barrel)
-                 API.Pause(0.75)
-     ```
+    API.SysMsg("Target your fish barrel", 32)
+    barrel = API.RequestTarget()
     
+    if len(items) > 0 and barrel:
+        for item in items:
+            data = API.ItemNameAndProps(item)
+            if data and "An Exotic Fish" in data:
+                API.MoveItem(item, barrel)
+                API.Pause(0.75)
+    ```
     """
     pass
 
 def QueueMoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z: "int" = 1337, OSI: "bool" = False) -> None:
     """
-     Move an item to the ground near you.
-     Example:
-     ```py
-     items = API.ItemsInContainer(API.Backpack)
-     for item in items:
-       API.QueueMoveItemOffset(item, 0, 1, 0, 0)
-     ```
+    Move an item to the ground near you.
     
+    **Example:**
+    
+    ```py
+    items = API.ItemsInContainer(API.Backpack)
+    for item in items:
+      API.QueueMoveItemOffset(item, 0, 1, 0, 0)
+    ```
     """
     pass
 
 def MoveItemOffset(serial: "int", amt: "int" = 0, x: "int" = 0, y: "int" = 0, z: "int" = 1337, OSI: "bool" = False) -> None:
     """
-     Move an item to the ground near you.
-     Example:
-     ```py
-     items = API.ItemsInContainer(API.Backpack)
-     for item in items:
-       API.MoveItemOffset(item, 0, 1, 0, 0)
-       API.Pause(0.75)
-     ```
+    Move an item to the ground near you.
     
+    **Example:**
+    
+    ```py
+    items = API.ItemsInContainer(API.Backpack)
+    for item in items:
+      API.MoveItemOffset(item, 0, 1, 0, 0)
+      API.Pause(0.75)
+    ```
     """
     pass
 
 def PickUpToCursor(serial: "int" = 0, amt: "int" = 0) -> None:
     """
-     Picks up an item from the game world and places it onto the mouse cursor.
-    
+    Picks up an item from the game world and places it onto the mouse cursor.
     """
     pass
 
 def DropFromCursor(serial: "int" = 0, x: "int" = 1337, y: "int" = 1337, z: "int" = sbyte.MaxValue, container: "int" = 1337) -> None:
     """
-     Drops an item currently held by the mouse cursor into a container or on the ground at a specified position.
-    
+    Drops an item currently held by the mouse cursor into a container or on the ground at a specified position.
     """
     pass
 
 def GetHeldItem() -> "int":
     """
-     Retrieves serial of the currently held item on the game cursor.
-    
+    Retrieves serial of the currently held item on the game cursor.
     """
     pass
 
 def UseSkill(skillName: "str") -> None:
     """
-     Use a skill.
-     Example:
-     ```py
-     API.UseSkill("Hiding")
-     API.Pause(11)
-     ```
+    Use a skill.
     
+    **Example:**
+    
+    ```py
+    API.UseSkill("Hiding")
+    API.Pause(11)
+    ```
     """
     pass
 
 def CastSpell(spellName: "str") -> None:
     """
-     Attempt to cast a spell by its name.
-     Example:
-     ```py
-     API.CastSpell("Fireball")
-     API.WaitForTarget()
-     API.Target(API.Player)
-     ```
+    Attempt to cast a spell by its name.
     
+    **Example:**
+    
+    ```py
+    API.CastSpell("Fireball")
+    API.WaitForTarget()
+    API.Target(API.Player)
+    ```
     """
     pass
 
 def Dress(name: "str") -> None:
     """
-     Dress from a saved dress configuration.
-     Example:
-     ```py
-     API.Dress("PvP Gear")
-     ```
+    Dress from a saved dress configuration.
     
+    **Example:**
+    
+    ```py
+    API.Dress("PvP Gear")
+    ```
     """
     pass
 
 def Undress(name: "str") -> None:
     """
-     Undress from a saved dress configuration.
-     Example:
-     ```py
-     API.Undress("PvP Gear")
-     ```
+    Undress from a saved dress configuration.
     
+    **Example:**
+    
+    ```py
+    API.Undress("PvP Gear")
+    ```
     """
     pass
 
 def UndressAll(kr: "bool" = False) -> None:
     """
-     Undress all your equipment
-    
+    Undress all your equipment
     """
     pass
 
 def GetAvailableDressOutfits() -> "list[str]":
     """
-     Get all available dress configurations.
-     Example:
-     ```py
-     outfits = API.GetAvailableDressOutfits()
-     if outfits:
-       Dress(outfits[0])
-     ```
+    Get all available dress configurations.
     
+    **Example:**
+    
+    ```py
+    outfits = API.GetAvailableDressOutfits()
+    if outfits:
+      Dress(outfits[0])
+    ```
     """
     pass
 
 def DressItems(serials: "Any", kr: "bool" = False) -> None:
     """
-     Dress items by serial
-     example:
-     ```py
-     serials = [0xabc, 0xdef]
-     API.DressItems(serials, kr=True)
-     ```
+    Dress items by serial
+    example:
     
+    ```py
+    serials = [0xabc, 0xdef]
+    API.DressItems(serials, kr=True)
+    ```
     """
     pass
 
 def Organizer(name: "str", source: "int" = 0, destination: "int" = 0) -> None:
     """
-     Runs an organizer agent to move items between containers.
-     Example:
-     ```py
-     # Run organizer with default containers
-     API.Organizer("MyOrganizer")
+    Runs an organizer agent to move items between containers.
     
-     # Run organizer with specific source and destination
-     API.Organizer("MyOrganizer", 0x40001234, 0x40005678)
-     ```
+    **Example:**
     
+    ```py
+    # Run organizer with default containers
+    API.Organizer("MyOrganizer")
+    
+    # Run organizer with specific source and destination
+    API.Organizer("MyOrganizer", 0x40001234, 0x40005678)
+    ```
     """
     pass
 
 def ClientCommand(command: "str") -> None:
     """
-     Executes a client command as if typed in the game console
-    
+    Executes a client command as if typed in the game console
     """
     pass
 
 def BuffExists(buffName: "str") -> "bool":
     """
-     Check if a buff is active.
-     Example:
-     ```py
-     if API.BuffExists("Bless"):
-       API.SysMsg("You are blessed!")
-     ```
+    Check if a buff is active.
     
+    **Example:**
+    
+    ```py
+    if API.BuffExists("Bless"):
+      API.SysMsg("You are blessed!")
+    ```
     """
     pass
 
 def ActiveBuffs() -> "list[ApiBuff]":
     """
-     Get a list of all buffs that are active.
-     See [Buff](Buff.md) to see what attributes are available.
-     Buff does not get updated after you access it in python, you will need to call this again to get the latest buff data.
-     Example:
-     ```py
-     buffs = API.ActiveBuffs()
-     for buff in buffs:
-         API.SysMsg(buff.Title)
-     ```
+    Get a list of all buffs that are active.
+    See [Buff](Buff.md) to see what attributes are available.
+    Buff does not get updated after you access it in python, you will need to call this again to get the latest buff data.
     
+    **Example:**
+    
+    ```py
+    buffs = API.ActiveBuffs()
+    for buff in buffs:
+        API.SysMsg(buff.Title)
+    ```
     """
     pass
 
 def ActiveSpells() -> "list[int]":
     """
-     Get a list of spell ids for spells that are currently toggled on/active.
-     These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
-     reports as active, the same ones the spell bar highlights.
-     Example:
-     ```py
-     for spellId in API.ActiveSpells():
-         API.SysMsg("Active spell id: " + str(spellId))
-     ```
+    Get a list of spell ids for spells that are currently toggled on/active.
+    These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
+    reports as active, the same ones the spell bar highlights.
     
+    **Example:**
+    
+    ```py
+    for spellId in API.ActiveSpells():
+        API.SysMsg("Active spell id: " + str(spellId))
+    ```
     """
     pass
 
 def ActiveSpellNames() -> "list[str]":
     """
-     Get a list of names for spells that are currently toggled on/active.
-     These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
-     reports as active, the same ones the spell bar highlights.
-     Example:
-     ```py
-     for name in API.ActiveSpellNames():
-         API.SysMsg("Active spell: " + name)
-     ```
+    Get a list of names for spells that are currently toggled on/active.
+    These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
+    reports as active, the same ones the spell bar highlights.
     
+    **Example:**
+    
+    ```py
+    for name in API.ActiveSpellNames():
+        API.SysMsg("Active spell: " + name)
+    ```
     """
     pass
 
 def IsSpellActive(spell: "Any") -> "bool":
     """
-     Check if a toggle spell/move is currently active.
-     You can pass a spell name (for example "Confidence") or a spell id.
-     These are toggle spells/moves that the server reports as active, the same ones the spell bar highlights.
-     Example:
-     ```py
-     if API.IsSpellActive("Confidence"):
-         API.SysMsg("Confidence is active!")
-     ```
+    Check if a toggle spell/move is currently active.
+    You can pass a spell name (for example "Confidence") or a spell id.
+    These are toggle spells/moves that the server reports as active, the same ones the spell bar highlights.
     
+    **Example:**
+    
+    ```py
+    if API.IsSpellActive("Confidence"):
+        API.SysMsg("Confidence is active!")
+    ```
     """
     pass
 
 def SysMsg(message: "str", hue: "int" = 946) -> None:
     """
-     Show a system message(Left side of screen).
-     Example:
-     ```py
-     API.SysMsg("Script started!")
-     ```
+    Show a system message(Left side of screen).
     
+    **Example:**
+    
+    ```py
+    API.SysMsg("Script started!")
+    ```
     """
     pass
 
 def Msg(message: "str") -> None:
     """
-     Say a message outloud.
-     Example:
-     ```py
-     API.Msg("Hello friend!")
-     ```
+    Say a message outloud.
     
+    **Example:**
+    
+    ```py
+    API.Msg("Hello friend!")
+    ```
     """
     pass
 
 def HeadMsg(message: "str", serial: "int", hue: "int" = 1337) -> None:
     """
-     Show a message above a mobile or item, this is only visible to you.
-     Example:
-     ```py
-     API.HeadMsg("Only I can see this!", API.Player)
-     ```
+    Show a message above a mobile or item, this is only visible to you.
     
+    **Example:**
+    
+    ```py
+    API.HeadMsg("Only I can see this!", API.Player)
+    ```
     """
     pass
 
 def PartyMsg(message: "str") -> None:
     """
-     Send a message to your party.
-     Example:
-     ```py
-     API.PartyMsg("The raid begins in 30 second! Wait... we don't have raids, wrong game..")
-     ```
+    Send a message to your party.
     
+    **Example:**
+    
+    ```py
+    API.PartyMsg("The raid begins in 30 second! Wait... we don't have raids, wrong game..")
+    ```
     """
     pass
 
 def GuildMsg(message: "str") -> None:
     """
-     Send your guild a message.
-     Example:
-     ```py
-     API.GuildMsg("Hey guildies, just restocked my vendor, fresh valorite suits available!")
-     ```
+    Send your guild a message.
     
+    **Example:**
+    
+    ```py
+    API.GuildMsg("Hey guildies, just restocked my vendor, fresh valorite suits available!")
+    ```
     """
     pass
 
 def AllyMsg(message: "str") -> None:
     """
-     Send a message to your alliance.
-     Example:
-     ```py
-     API.AllyMsg("Hey allies, just restocked my vendor, fresh valorite suits available!")
-     ```
+    Send a message to your alliance.
     
+    **Example:**
+    
+    ```py
+    API.AllyMsg("Hey allies, just restocked my vendor, fresh valorite suits available!")
+    ```
     """
     pass
 
 def WhisperMsg(message: "str") -> None:
     """
-     Whisper a message.
-     Example:
-     ```py
-     API.WhisperMsg("Psst, bet you didn't see me here..")
-     ```
+    Whisper a message.
     
+    **Example:**
+    
+    ```py
+    API.WhisperMsg("Psst, bet you didn't see me here..")
+    ```
     """
     pass
 
 def YellMsg(message: "str") -> None:
     """
-     Yell a message.
-     Example:
-     ```py
-     API.YellMsg("Vendor restocked, get your fresh feathers!")
-     ```
+    Yell a message.
     
+    **Example:**
+    
+    ```py
+    API.YellMsg("Vendor restocked, get your fresh feathers!")
+    ```
     """
     pass
 
 def EmoteMsg(message: "str") -> None:
     """
-     Emote a message.
-     Example:
-     ```py
-     API.EmoteMsg("laughing")
-     ```
+    Emote a message.
     
+    **Example:**
+    
+    ```py
+    API.EmoteMsg("laughing")
+    ```
     """
     pass
 
 def GlobalMsg(message: "str") -> None:
     """
-     Send a chat message via the global chat msg system ( ,message here ).
-    
+    Send a chat message via the global chat msg system ( ,message here ).
     """
     pass
 
 def PromptResponse(message: "str") -> None:
     """
-     Send a response to a server prompt(Like renaming a rune for example).
-    
+    Send a response to a server prompt(Like renaming a rune for example).
     """
     pass
 
 def FindItem(serial: "int") -> "ApiItem":
     """
-     Try to get an item by its serial.
-     Sets API.Found to the serial of the item found.
-     Example:
-     ```py
-     donkey = API.RequestTarget()
-     item = API.FindItem(donkey)
-     if item:
-       API.SysMsg("Found the donkey!")
-       API.UseObject(item)
-     ```
+    Try to get an item by its serial.
+    Sets API.Found to the serial of the item found.
     
+    **Example:**
+    
+    ```py
+    donkey = API.RequestTarget()
+    item = API.FindItem(donkey)
+    if item:
+      API.SysMsg("Found the donkey!")
+      API.UseObject(item)
+    ```
     """
     pass
 
 def FindType(graphic: "int", container: "int" = 1337, range: "int" = 1337, hue: "int" = 1337, minamount: "int" = 0) -> "ApiItem":
     """
-     Attempt to find an item by type(graphic).
-     Sets API.Found to the serial of the item found.
-     Example:
-     ```py
-     item = API.FindType(0x0EED, API.Backpack)
-     if item:
-       API.SysMsg("Found the item!")
-       API.UseObject(item)
-     ```
+    Attempt to find an item by type(graphic).
+    Sets API.Found to the serial of the item found.
     
+    **Example:**
+    
+    ```py
+    item = API.FindType(0x0EED, API.Backpack)
+    if item:
+      API.SysMsg("Found the item!")
+      API.UseObject(item)
+    ```
     """
     pass
 
 def FindTypeAll(graphic: "int", container: "int" = 1337, range: "int" = 1337, hue: "int" = 1337, minamount: "int" = 0) -> "list[ApiItem]":
     """
-     Return a list of items matching the parameters set.
-     Example:
-     ```py
-     items = API.FindTypeAll(0x0EED, API.Backpack)
-     if items:
-       API.SysMsg("Found " + str(len(items)) + " items!")
-     ```
+    Return a list of items matching the parameters set.
     
+    **Example:**
+    
+    ```py
+    items = API.FindTypeAll(0x0EED, API.Backpack)
+    if items:
+      API.SysMsg("Found " + str(len(items)) + " items!")
+    ```
     """
     pass
 
 def FindLayer(layer: "str", serial: "int" = 1337) -> "ApiItem":
     """
-     Attempt to find an item on a layer.
-     Sets API.Found to the serial of the item found.
-     Example:
-     ```py
-     item = API.FindLayer("Helmet")
-     if item:
-       API.SysMsg("Wearing a helmet!")
-     ```
+    Attempt to find an item on a layer.
+    Sets API.Found to the serial of the item found.
     
+    **Example:**
+    
+    ```py
+    item = API.FindLayer("Helmet")
+    if item:
+      API.SysMsg("Wearing a helmet!")
+    ```
     """
     pass
 
 def GetItemsOnGround(distance: "int" = int.MaxValue, graphic: "int" = 1337) -> "list[ApiItem]":
     """
-     Get all items on the ground within specified range.
-     Example:
-     ```py
-     items = API.GetItemsOnGround(10)  # All items within 10 tiles
-     if items:
-       API.SysMsg("Found " + str(len(items)) + " items on ground!")
-     ```
+    Get all items on the ground within specified range.
     
+    **Example:**
+    
+    ```py
+    items = API.GetItemsOnGround(10)  # All items within 10 tiles
+    if items:
+      API.SysMsg("Found " + str(len(items)) + " items on ground!")
+    ```
     """
     pass
 
 def ItemsInContainer(container: "int", recursive: "bool" = False) -> "list[ApiItem]":
     """
-     Get all items in a container.
-     Example:
-     ```py
-     items = API.ItemsInContainer(API.Backpack)
-     if items:
-       API.SysMsg("Found " + str(len(items)) + " items!")
-       for item in items:
-         API.SysMsg(item.Name)
-         API.Pause(0.5)
-     ```
+    Get all items in a container.
     
+    **Example:**
+    
+    ```py
+    items = API.ItemsInContainer(API.Backpack)
+    if items:
+      API.SysMsg("Found " + str(len(items)) + " items!")
+      for item in items:
+        API.SysMsg(item.Name)
+        API.Pause(0.5)
+    ```
     """
     pass
 
 def UseType(graphic: "int", hue: "int" = 1337, container: "int" = 1337, skipQueue: "bool" = True) -> None:
     """
-     Attempt to use the first item found by graphic(type).
-     Example:
-     ```py
-     API.UseType(0x3434, container=API.Backpack)
-     API.WaitForTarget()
-     API.Target(API.Player)
-     ```
+    Attempt to use the first item found by graphic(type).
     
+    **Example:**
+    
+    ```py
+    API.UseType(0x3434, container=API.Backpack)
+    API.WaitForTarget()
+    API.Target(API.Player)
+    ```
     """
     pass
 
 def CreateCooldownBar(seconds: "float", text: "str", hue: "int") -> None:
     """
-     Create a cooldown bar.
-     Example:
-     ```py
-     API.CreateCooldownBar(5, "Healing", 21)
-     ```
+    Create a cooldown bar.
     
+    **Example:**
+    
+    ```py
+    API.CreateCooldownBar(5, "Healing", 21)
+    ```
     """
     pass
 
 def UpdateCooldown(name: "str", maxValue: "float" = -1, currentValue: "float" = -1) -> None:
     """
-     Updates an existing cooldown bar. Only the provided values are applied.
-     Example:
-     ```py
-     API.UpdateCooldown("Healing", maxValue=10, currentValue=5)
-     ```
+    Updates an existing cooldown bar. Only the provided values are applied.
     
+    **Example:**
+    
+    ```py
+    API.UpdateCooldown("Healing", maxValue=10, currentValue=5)
+    ```
     """
     pass
 
 def RestartCooldown(name: "str") -> None:
     """
-     Restarts the countdown of an existing cooldown bar to its full duration.
-     Example:
-     ```py
-     API.RestartCooldown("Healing")
-     ```
+    Restarts the countdown of an existing cooldown bar to its full duration.
     
+    **Example:**
+    
+    ```py
+    API.RestartCooldown("Healing")
+    ```
     """
     pass
 
 def DeleteCooldown(name: "str") -> None:
     """
-     Deletes an existing cooldown bar.
-     Example:
-     ```py
-     API.DeleteCooldown("Healing")
-     ```
+    Deletes an existing cooldown bar.
     
+    **Example:**
+    
+    ```py
+    API.DeleteCooldown("Healing")
+    ```
     """
     pass
 
 def CooldownExists(name: "str") -> "bool":
     """
-     Checks whether a cooldown bar with the given name exists.
-     Example:
-     ```py
-     if API.CooldownExists("Healing"):
-     ```
+    Checks whether a cooldown bar with the given name exists.
     
+    **Example:**
+    
+    ```py
+    if API.CooldownExists("Healing"):
+    ```
     """
     pass
 
 def CreateEffect(graphic: "int", type: "EffectType" = EffectType.FixedXYZ, source: "int" = 0, target: "int" = 0, hue: "int" = 0, sourceX: "int | None" = None, sourceY: "int | None" = None, sourceZ: "int | None" = None, targetX: "int | None" = None, targetY: "int | None" = None, targetZ: "int | None" = None, duration: "float" = 2, speed: "int" = 0, fixedDirection: "bool" = False, doesExplode: "bool" = False, blendMode: "EffectBlendMode" = EffectBlendMode.Normal) -> None:
     """
-     Creates and displays a graphic effect in the world, the same kind the server sends for spells,
-     projectiles, explosions, etc. This is a purely local, visual effect - no packet is sent and only
-     you see it.
-     The type decides how it behaves: `EffectType.FixedXYZ` and
-     `EffectType.FixedFrom` stay in place, `EffectType.Moving` travels from
-     the source to the target, and `EffectType.Lightning` draws a bolt from the source.
-     Positions come from the source/target serials when given, otherwise from the coordinates, which
-     default to the player's position.
-     Example:
-     ```py
-     # A stationary animation on the tile next to the player, for 2 seconds
-     API.CreateEffect(0x373A, sourceX=API.Player.X + 1, sourceY=API.Player.Y, hue=0x0481)
+    Creates and displays a graphic effect in the world, the same kind the server sends for spells,
+    projectiles, explosions, etc. This is a purely local, visual effect - no packet is sent and only
+    you see it.
+    The type decides how it behaves: `EffectType.FixedXYZ` and
+    `EffectType.FixedFrom` stay in place, `EffectType.Moving` travels from
+    the source to the target, and `EffectType.Lightning` draws a bolt from the source.
+    Positions come from the source/target serials when given, otherwise from the coordinates, which
+    default to the player's position.
     
-     # A projectile fired from the player at the nearest murderer
-     mob = API.NearestMobile([API.Notoriety.Murderer], 8)
-     if mob:
-       API.CreateEffect(0x36D0, type=API.EffectType.Moving, source=API.Player, target=mob)
-     ```
+    **Example:**
     
+    ```py
+    # A stationary animation on the tile next to the player, for 2 seconds
+    API.CreateEffect(0x373A, sourceX=API.Player.X + 1, sourceY=API.Player.Y, hue=0x0481)
+    
+    # A projectile fired from the player at the nearest murderer
+    mob = API.NearestMobile([API.Notoriety.Murderer], 8)
+    if mob:
+      API.CreateEffect(0x36D0, type=API.EffectType.Moving, source=API.Player, target=mob)
+    ```
     """
     pass
 
 def IgnoreObject(serial: "int") -> None:
     """
-     Adds an item or mobile to your ignore list.
-     These are unique lists per script. Ignoring an item in one script, will not affect other running scripts.
-     Example:
-     ```py
-     for item in ItemsInContainer(API.Backpack):
-       if item.Name == "Dagger":
-       API.IgnoreObject(item)
-     ```
+    Adds an item or mobile to your ignore list.
+    These are unique lists per script. Ignoring an item in one script, will not affect other running scripts.
     
+    **Example:**
+    
+    ```py
+    for item in ItemsInContainer(API.Backpack):
+      if item.Name == "Dagger":
+      API.IgnoreObject(item)
+    ```
     """
     pass
 
 def UnIgnoreObject(serial: "int") -> None:
     """
-     Removes an item or mobile from your ignore list.
-     Example:
-     ```py
-     API.UnIgnoreObject(item)
-     ```
+    Removes an item or mobile from your ignore list.
     
+    **Example:**
+    
+    ```py
+    API.UnIgnoreObject(item)
+    ```
     """
     pass
 
 def ClearIgnoreList() -> None:
     """
-     Clears the ignore list. Allowing functions to see those items again.
-     Example:
-     ```py
-     API.ClearIgnoreList()
-     ```
+    Clears the ignore list. Allowing functions to see those items again.
     
+    **Example:**
+    
+    ```py
+    API.ClearIgnoreList()
+    ```
     """
     pass
 
 def OnIgnoreList(serial: "int") -> "bool":
     """
-     Check if a serial is on the ignore list.
-     Example:
-     ```py
-     if API.OnIgnoreList(API.Backpack):
-       API.SysMsg("Currently ignoring backpack")
-     ```
+    Check if a serial is on the ignore list.
     
+    **Example:**
+    
+    ```py
+    if API.OnIgnoreList(API.Backpack):
+      API.SysMsg("Currently ignoring backpack")
+    ```
     """
     pass
 
 def Pathfind(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10, run: "bool" = True) -> "bool":
     """
-     Attempt to pathfind to a location.  This will fail with large distances.
-     Example:
-     ```py
-     API.Pathfind(1414, 1515)
-     ```
+    Attempt to pathfind to a location. The local pathfinder is tried first; if it cannot
+    find a path, the world-map pathfinder is used instead.
     
+    **Example:**
+    
+    ```py
+    API.Pathfind(1414, 1515)
+    ```
     """
     pass
 
 def PathfindEntity(entity: "int", distance: "int" = 1, wait: "bool" = False, timeout: "int" = 10, run: "bool" = True) -> "bool":
     """
-     Attempt to pathfind to a mobile or item.
-     Example:
-     ```py
-     mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
-     if mob:
-       API.PathfindEntity(mob)
-     ```
+    Attempt to pathfind to a mobile or item. The local pathfinder is tried first; if it
+    cannot find a path, the world-map pathfinder is used instead.
     
+    **Example:**
+    
+    ```py
+    mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
+    if mob:
+      API.PathfindEntity(mob)
+    ```
     """
     pass
 
 def Pathfinding() -> "bool":
     """
-     Check if you are already pathfinding.
-     Example:
-     ```py
-     if API.Pathfinding():
-       API.SysMsg("Pathfinding...!")
-       API.Pause(0.25)
-     ```
+    Check if you are already pathfinding.
     
+    **Example:**
+    
+    ```py
+    if API.Pathfinding():
+      API.SysMsg("Pathfinding...!")
+      API.Pause(0.25)
+    ```
     """
     pass
 
 def CancelPathfinding() -> None:
     """
-     Cancel pathfinding.
-     Example:
-     ```py
-     if API.Pathfinding():
-       API.CancelPathfinding()
-     ```
+    Cancel pathfinding.
     
+    **Example:**
+    
+    ```py
+    if API.Pathfinding():
+      API.CancelPathfinding()
+    ```
     """
     pass
 
 def GetPath(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1) -> "list[ApiPoint3D]":
     """
-     Attempt to build a path to a location.  This will fail with large distances.
-     Example:
-     ```py
-     API.RequestTarget()
-     path = API.GetPath(int(API.LastTargetPos.X), int(API.LastTargetPos.Y))
-     if path is not None:
-         for x, y, z in path:
-             tile = API.GetTile(x, y)
-             tile.Hue = 53
-     ```
+    Attempt to build a path to a location. The local pathfinder is tried first; if it
+    cannot find a path, the world-map pathfinder is used instead.
     
+    **Example:**
+    
+    ```py
+    API.RequestTarget()
+    path = API.GetPath(int(API.LastTargetPos.X), int(API.LastTargetPos.Y))
+    if path is not None:
+        for x, y, z in path:
+            tile = API.GetTile(x, y)
+            tile.Hue = 53
+    ```
     """
     pass
 
 def AutoFollow(mobile: "int") -> None:
     """
-     Automatically follow a mobile. This is different from pathfinding. This will continue to follow the mobile.
-     Example:
-     ```py
-     mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
-     if mob:
-       API.AutoFollow(mob)
-     ```
+    Automatically follow a mobile. This is different from pathfinding. This will continue to follow the mobile.
     
+    **Example:**
+    
+    ```py
+    mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
+    if mob:
+      API.AutoFollow(mob)
+    ```
     """
     pass
 
 def CancelAutoFollow() -> None:
     """
-     Cancel auto follow mode.
-     Example:
-     ```py
-     if API.Pathfinding():
-       API.CancelAutoFollow()
-     ```
+    Cancel auto follow mode.
     
+    **Example:**
+    
+    ```py
+    if API.Pathfinding():
+      API.CancelAutoFollow()
+    ```
     """
     pass
 
 def Run(direction: "str") -> None:
     """
-     Run in a direction.
-     Example:
-     ```py
-     API.Run("north")
-     ```
+    Run in a direction.
     
+    **Example:**
+    
+    ```py
+    API.Run("north")
+    ```
     """
     pass
 
 def Walk(direction: "str") -> None:
     """
-     Walk in a direction.
-     Example:
-     ```py
-     API.Walk("north")
-     ```
+    Walk in a direction.
     
+    **Example:**
+    
+    ```py
+    API.Walk("north")
+    ```
     """
     pass
 
 def Turn(direction: "str") -> None:
     """
-     Turn your character a specific direction.
-     Example:
-     ```py
-     API.Turn("north")
-     ```
+    Turn your character a specific direction.
     
+    **Example:**
+    
+    ```py
+    API.Turn("north")
+    ```
     """
     pass
 
 def Rename(serial: "int", name: "str") -> None:
     """
-     Attempt to rename something like a pet.
-     Example:
-     ```py
-     API.Rename(0x12345678, "My Handsome Pet")
-     ```
+    Attempt to rename something like a pet.
     
+    **Example:**
+    
+    ```py
+    API.Rename(0x12345678, "My Handsome Pet")
+    ```
     """
     pass
 
 def Dismount(skipQueue: "bool" = True) -> None:
     """
-     Attempt to dismount if mounted.
-     Example:
-     ```py
-     API.Dismount()
-     ```
+    Attempt to dismount if mounted.
     
+    **Example:**
+    
+    ```py
+    API.Dismount()
+    ```
     """
     pass
 
 def Mount(serial: "int" = 1337, skipQueue: "bool" = True) -> None:
     """
-     Attempt to mount(double click)
-     Example:
-     ```py
-     API.Mount(0x12345678)
-     ```
+    Attempt to mount(double click)
     
+    **Example:**
+    
+    ```py
+    API.Mount(0x12345678)
+    ```
     """
     pass
 
 def SetMount(serial: "int") -> None:
     """
-     This will set your saved mount for this character.
-    
+    This will set your saved mount for this character.
     """
     pass
 
 def WaitForTarget(targetType: "str" = "any", timeout: "float" = 5) -> "bool":
     """
-     Wait for a target cursor.
-     Example:
-     ```py
-     API.WaitForTarget()
-     ```
+    Wait for a target cursor.
     
+    **Example:**
+    
+    ```py
+    API.WaitForTarget()
+    ```
     """
     pass
 
 def Target(serial: "int") -> None:
     """
-     Target an item or mobile.
-     Example:
-     ```py
-     if API.WaitForTarget():
-       API.Target(0x12345678)
-     ```
+    Target an item or mobile.
     
+    **Example:**
+    
+    ```py
+    if API.WaitForTarget():
+      API.Target(0x12345678)
+    ```
     """
     pass
 
 def Target(x: "int", y: "int", z: "int", graphic: "int" = 1337) -> None:
     """
-     Target a location. Include graphic if targeting a static.
-     Example:
-     ```py
-     if API.WaitForTarget():
-       API.Target(1243, 1337, 0)
-      ```
+    Target a location. Include graphic if targeting a static.
     
+    **Example:**
+    
+    ```py
+    if API.WaitForTarget():
+      API.Target(1243, 1337, 0)
+    ```
     """
     pass
 
 def RequestTarget(timeout: "float" = 5) -> "int":
     """
-     Request the player to target something.
-     Example:
-     ```py
-     target = API.RequestTarget()
-     if target:
-       API.SysMsg("Targeted serial: " + str(target))
-     ```
+    Request the player to target something.
     
+    **Example:**
+    
+    ```py
+    target = API.RequestTarget()
+    if target:
+      API.SysMsg("Targeted serial: " + str(target))
+    ```
     """
     pass
 
 def RequestAnyTarget(timeout: "float" = 5) -> "ApiGameObject":
     """
-     Prompts the player to target any object in the game world, including an Item, Mobile, Land tile, Static, or Multi.
-     Waits for the player to select a target within a given timeout period.
-    
+    Prompts the player to target any object in the game world, including an Item, Mobile, Land tile, Static, or Multi.
+    Waits for the player to select a target within a given timeout period.
     """
     pass
 
 def TargetSelf() -> None:
     """
-     Target yourself.
-     Example:
-     ```py
-     API.TargetSelf()
-     ```
+    Target yourself.
     
+    **Example:**
+    
+    ```py
+    API.TargetSelf()
+    ```
     """
     pass
 
 def TargetRel(xOffset: "int", yOffset: "int", tilesOnly: "bool" = True) -> None:
     """
-     Target the spot at an offset from your position, resolving it the same way a click would:
-     the topmost visible object there is targeted, whether that is an entity, a static/multi, or land.
-     Example:
-     ```py
-     API.TargetRel(1, 1)
-     ```
+    Target the spot at an offset from your position, resolving it the same way a click would:
+    the topmost visible object there is targeted, whether that is an entity, a static/multi, or land.
     
+    **Example:**
+    
+    ```py
+    API.TargetRel(1, 1)
+    ```
     """
     pass
 
 def TargetLandRel(xOffset: "int", yOffset: "int") -> None:
     """
-     Target a land tile relative to your position.
-     If this doesn't work, try TargetTileRel instead.
-     Example:
-     ```py
-     API.TargetLand(1, 1)
-     ```
+    Target a land tile relative to your position.
+    If this doesn't work, try TargetTileRel instead.
     
+    **Example:**
+    
+    ```py
+    API.TargetLand(1, 1)
+    ```
     """
     pass
 
 def TargetTileRel(xOffset: "int", yOffset: "int", graphic: "int" = 1337, tilesOnly: "bool" = True) -> None:
     """
-     Target the highest visible object at a tile relative to your location, skipping land.
-     Resolves the spot the same way <see cref="TargetRel"/> does, but never falls back to land.
-     Example:
-     ```py
-     API.TargetTileRel(1, 1)
-     ```
+    Target the highest visible object at a tile relative to your location, skipping land.
+    Resolves the spot the same way `TargetRel` does, but never falls back to land.
     
+    **Example:**
+    
+    ```py
+    API.TargetTileRel(1, 1)
+    ```
     """
     pass
 
 def TargetResource(itemSerial: "int", resource: "int") -> None:
     """
-     This will attempt to use an item and target a resource, some servers may not support this.
-     ```
-     0: ore
-     1: sand
-     2: wood
-     3: graves
-     4: red_mushrooms
-     ```
-     Example:
-     ```py
-     API.TargetResource(MY_SHOVEL_SERIAL, 0)
-     ```
+    This will attempt to use an item and target a resource, some servers may not support this.
     
+    ```
+    0: ore
+    1: sand
+    2: wood
+    3: graves
+    4: red_mushrooms
+    ```
+    
+    **Example:**
+    
+    ```py
+    API.TargetResource(MY_SHOVEL_SERIAL, 0)
+    ```
     """
     pass
 
 def CancelTarget() -> None:
     """
-     Cancel targeting.
-     Example:
-     ```py
-     if API.WaitForTarget():
-       API.CancelTarget()
-       API.SysMsg("Targeting cancelled, april fools made you target something!")
-     ```
+    Cancel targeting.
     
+    **Example:**
+    
+    ```py
+    if API.WaitForTarget():
+      API.CancelTarget()
+      API.SysMsg("Targeting cancelled, april fools made you target something!")
+    ```
     """
     pass
 
 def SetLastTarget(serial: "int | None" = None, x: "int | None" = None, y: "int | None" = None, z: "int | None" = None, graphic: "int | None" = None) -> None:
     """
-     Override the client's last target. Pass a serial for an entity, or a location (x/y/z)
-     for a land tile. Include graphic to mark the location as a static instead.
-     Example:
-     ```py
-     API.SetLastTarget(serial=0x12345678)
-     API.SetLastTarget(x=1243, y=1337, z=0)
-     API.SetLastTarget(x=1243, y=1337, z=0, graphic=0x1)
-     ```
+    Override the client's last target. Pass a serial for an entity, or a location (x/y/z)
+    for a land tile. Include graphic to mark the location as a static instead.
     
+    **Example:**
+    
+    ```py
+    API.SetLastTarget(serial=0x12345678)
+    API.SetLastTarget(x=1243, y=1337, z=0)
+    API.SetLastTarget(x=1243, y=1337, z=0, graphic=0x1)
+    ```
     """
     pass
 
 def PreTarget(serial: "int", targetType: "str" = "neutral") -> None:
     """
-     Sets a pre-target that will be automatically applied when the next targeting request comes from the server.
-     This is useful for automating actions that require targeting, like using bandages or spells.
-     Example:
-     ```py
-     # Pre-target self for healing
-     API.PreTarget(API.Player.Serial, "beneficial")
-     API.UseObject(bandage_item)  # This will automatically target self when targeting request comes
+    Sets a pre-target that will be automatically applied when the next targeting request comes from the server.
+    This is useful for automating actions that require targeting, like using bandages or spells.
     
-     # Pre-target an enemy for attack spells
-     enemy = API.FindMobile(mobile_serial)
-     API.PreTarget(enemy.Serial, "harmful")
-     API.CastSpell("Lightning")  # This will automatically target the enemy
-     ```
+    **Example:**
     
+    ```py
+    # Pre-target self for healing
+    API.PreTarget(API.Player.Serial, "beneficial")
+    API.UseObject(bandage_item)  # This will automatically target self when targeting request comes
+    
+    # Pre-target an enemy for attack spells
+    enemy = API.FindMobile(mobile_serial)
+    API.PreTarget(enemy.Serial, "harmful")
+    API.CastSpell("Lightning")  # This will automatically target the enemy
+    ```
     """
     pass
 
 def CancelPreTarget() -> None:
     """
-     Cancels any active pre-target.
-     Example:
-     ```py
-     API.PreTarget(enemy.Serial, "harmful")
-     # Changed my mind, cancel the pre-target
-     API.CancelPreTarget()
-     ```
+    Cancels any active pre-target.
     
+    **Example:**
+    
+    ```py
+    API.PreTarget(enemy.Serial, "harmful")
+    # Changed my mind, cancel the pre-target
+    API.CancelPreTarget()
+    ```
     """
     pass
 
 def HasTarget(targetType: "str" = "any") -> "bool":
     """
-     Check if the player has a target cursor.
-     Example:
-     ```py
-     if API.HasTarget():
-         API.CancelTarget()
-     ```
+    Check if the player has a target cursor.
     
+    **Example:**
+    
+    ```py
+    if API.HasTarget():
+        API.CancelTarget()
+    ```
     """
     pass
 
 def GetMap() -> "int":
     """
-     Get the current map index.
-     Standard maps are:
-     0 = Fel
-     1 = Tram
-     2 = Ilshenar
-     3 = Malas
-     4 = Tokuno
-     5 = TerMur
-    
+    Get the current map index.
+    Standard maps are:
+    0 = Fel
+    1 = Tram
+    2 = Ilshenar
+    3 = Malas
+    4 = Tokuno
+    5 = TerMur
     """
     pass
 
 def SetSkillLock(skill: "str", up_down_locked: "str") -> None:
     """
-     Set a skills lock status.
-     Example:
-     ```py
-     API.SetSkillLock("Hiding", "locked")
-     ```
+    Set a skills lock status.
     
+    **Example:**
+    
+    ```py
+    API.SetSkillLock("Hiding", "locked")
+    ```
     """
     pass
 
 def SetStatLock(stat: "str", up_down_locked: "str") -> None:
     """
-     Set a skills lock status.
-     Example:
-     ```py
-     API.SetStatLock("str", "locked")
-     ```
+    Set a skills lock status.
     
+    **Example:**
+    
+    ```py
+    API.SetStatLock("str", "locked")
+    ```
     """
     pass
 
 def Logout() -> None:
     """
-     Logout of the game.
-     Example:
-     ```py
-     API.Logout()
-     ```
+    Logout of the game.
     
+    **Example:**
+    
+    ```py
+    API.Logout()
+    ```
     """
     pass
 
 def ItemNameAndProps(serial: "int", wait: "bool" = False, timeout: "int" = 10) -> "str":
     """
-     Gets item name and properties.
-     This returns the name and properties in a single string. You can split it by new line if you want to separate them.
-     Example:
-     ```py
-     data = API.ItemNameAndProps(0x12345678, True)
-     if data:
-       API.SysMsg("Item data: " + data)
-       if "An Exotic Fish" in data:
-         API.SysMsg("Found an exotic fish!")
-     ```
+    Gets item name and properties.
+    This returns the name and properties in a single string. You can split it by new line if you want to separate them.
     
+    **Example:**
+    
+    ```py
+    data = API.ItemNameAndProps(0x12345678, True)
+    if data:
+      API.SysMsg("Item data: " + data)
+      if "An Exotic Fish" in data:
+        API.SysMsg("Found an exotic fish!")
+    ```
     """
     pass
 
 def RequestOPLData(serials: "Any") -> None:
     """
-     Requests Object Property List (OPL) data for the specified serials.
-     If the OPL data doesn't already exist, it will be requested from the server.
-     OPL consists of item name and tooltip text(properties).
-    
+    Requests Object Property List (OPL) data for the specified serials.
+    If the OPL data doesn't already exist, it will be requested from the server.
+    OPL consists of item name and tooltip text(properties).
     """
     pass
 
 def HasGump(ID: "int" = 1337) -> "int":
     """
-     Check if a player has a server gump. Leave blank to check if they have any server gump.
-     Example:
-     ```py
-     if API.HasGump(0x12345678):
-       API.SysMsg("Found a gump!")
-    ```
+    Check if a player has a server gump. Leave blank to check if they have any server gump.
     
+    **Example:**
+    
+    ```py
+    if API.HasGump(0x12345678):
+      API.SysMsg("Found a gump!")
+    ```
     """
     pass
 
 def ReplyGump(button: "int", gump: "int" = 1337, switches: "list[int]" = None, entries: "list[Any]" = None) -> "bool":
     """
-     Reply to a gump.
-     Example:
-     ```py
-     API.ReplyGump(21)
-     API.ReplyGump(1, 0x555, [100])
-     API.ReplyGump(1, 0x555, [100], [(0, "text input")])
-     ```
+    Reply to a gump.
     
+    **Example:**
+    
+    ```py
+    API.ReplyGump(21)
+    API.ReplyGump(1, 0x555, [100])
+    API.ReplyGump(1, 0x555, [100], [(0, "text input")])
+    ```
     """
     pass
 
 def CloseGump(ID: "int" = 1337) -> "bool":
     """
-     Close the last gump open, or a specific gump.
-     Example:
-     ```py
-     API.CloseGump()
-     ```
+    Close the last gump open, or a specific gump.
     
+    **Example:**
+    
+    ```py
+    API.CloseGump()
+    ```
     """
     pass
 
 def ConfigNextGump(serial: "int | None" = None, x: "int | None" = None, y: "int | None" = None, isVisible: "bool | None" = None, autoClose: "bool | None" = None, autoRespond: "bool | None" = None, autoRespondButton: "int | None" = None) -> None:
     """
-     Configure how the next gump should be handled.
-     Example:
-     ```py
-     # Position gump at coordinates
-     API.ConfigNextGump(x=100, y=200)
+    Configure how the next gump should be handled.
     
-     # Auto-close any gump
-     API.ConfigNextGump(autoClose=True)
+    **Example:**
     
-     # Auto-respond to specific gump
-     API.ConfigNextGump(serial=0x12345678, autoRespond=True, autoRespondButton=1)
+    ```py
+    # Position gump at coordinates
+    API.ConfigNextGump(x=100, y=200)
     
-     # Clear configuration
-     API.ConfigNextGump()
+    # Auto-close any gump
+    API.ConfigNextGump(autoClose=True)
     
-     Note: This is only applied once. You cannot stack multiple configs. This is reset after successfully applied and only applies to server-sent gumps.
-     ```
+    # Auto-respond to specific gump
+    API.ConfigNextGump(serial=0x12345678, autoRespond=True, autoRespondButton=1)
     
+    # Clear configuration
+    API.ConfigNextGump()
+    
+    Note: This is only applied once. You cannot stack multiple configs. This is reset after successfully applied and only applies to server-sent gumps.
+    ```
     """
     pass
 
 def GumpContains(text: "str", ID: "int" = 1337) -> "bool":
     """
-     Check if a gump contains a specific text.
-     Example:
-     ```py
-     if API.GumpContains("Hello"):
-       API.SysMsg("Found the text!")
-     ```
+    Check if a gump contains a specific text.
     
+    **Example:**
+    
+    ```py
+    if API.GumpContains("Hello"):
+      API.SysMsg("Found the text!")
+    ```
     """
     pass
 
 def GetGumpContents(ID: "int" = 1337) -> "str":
     """
-     This will return a string of all the text in a server-side gump.
-    
+    This will return a string of all the text in a server-side gump.
     """
     pass
 
 def GetGump(ID: "int" = 1337) -> "ApiUiBaseGump":
     """
-     Get a gump by ID.
-     Example:
-     ```py
-     gump = API.GetGump()
-     if gump:
-       API.SysMsg("Found the gump!")
-       gump.Dispose() #Close it
-     ```
+    Get a gump by ID.
     
+    **Example:**
+    
+    ```py
+    gump = API.GetGump()
+    if gump:
+      API.SysMsg("Found the gump!")
+      gump.Dispose() #Close it
+    ```
     """
     pass
 
 def GetAllGumps() -> "list[Any]":
     """
-     Gets all currently open server-side gumps.
-    
+    Gets all currently open server-side gumps.
     """
     pass
 
 def WaitForGump(ID: "int" = 1337, delay: "float" = 5) -> "bool":
     """
-     Wait for a server-side gump.
-     Example:
-     ```py
-     if API.WaitForGump(1951773915):
-       API.HeadMsg("SUCCESS", API.Player, 62)
-     else:
-      API.HeadMsg("FAILURE", API.Player, 32)
-     ```
+    Wait for a server-side gump.
     
+    **Example:**
+    
+    ```py
+    if API.WaitForGump(1951773915):
+      API.HeadMsg("SUCCESS", API.Player, 62)
+    else:
+     API.HeadMsg("FAILURE", API.Player, 32)
+    ```
     """
     pass
 
 def CloseContextMenus() -> None:
     """
-     Close all menu and context menus open.
-    
+    Close all menu and context menus open.
     """
     pass
 
 def ToggleFly() -> None:
     """
-     Toggle flying if you are a gargoyle.
-     Example:
-     ```py
-     API.ToggleFly()
-     ```
+    Toggle flying if you are a gargoyle.
     
+    **Example:**
+    
+    ```py
+    API.ToggleFly()
+    ```
     """
     pass
 
 def ToggleAbility(ability: "str") -> None:
     """
-     Toggle an ability.
-     Example:
-     ```py
-     if not API.PrimaryAbilityActive():
-       API.ToggleAbility("primary")
-     ```
+    Toggle an ability.
     
+    **Example:**
+    
+    ```py
+    if not API.PrimaryAbilityActive():
+      API.ToggleAbility("primary")
+    ```
     """
     pass
 
 def PrimaryAbilityActive() -> "bool":
     """
-     Check if your primary ability is active.
-     Example:
-     ```py
-     if API.PrimaryAbilityActive():
-       API.SysMsg("Primary ability is active!")
-     ```
+    Check if your primary ability is active.
     
+    **Example:**
+    
+    ```py
+    if API.PrimaryAbilityActive():
+      API.SysMsg("Primary ability is active!")
+    ```
     """
     pass
 
 def SecondaryAbilityActive() -> "bool":
     """
-     Check if your secondary ability is active.
-     Example:
-     ```py
-     if API.SecondaryAbilityActive():
-       API.SysMsg("Secondary ability is active!")
-     ```
+    Check if your secondary ability is active.
     
+    **Example:**
+    
+    ```py
+    if API.SecondaryAbilityActive():
+      API.SysMsg("Secondary ability is active!")
+    ```
     """
     pass
 
 def CurrentAbilityNames() -> "list[str]":
     """
-     Gets your currently available ability names.
+    Gets your currently available ability names.
     
-     The full list of known abilities can be obtained via the `KnownAbilityNames` API
-    
+    The full list of known abilities can be obtained via the `KnownAbilityNames` API
     """
     pass
 
 def KnownAbilityNames() -> "list[str]":
     """
-     Gets an array of all known ability names
-    
+    Gets an array of all known ability names
     """
     pass
 
 def InJournal(msg: "str", clearMatches: "bool" = False) -> "bool":
     """
-     Check if your journal contains a message.
-     Example:
-     ```py
-     if API.InJournal("You have been slain"):
-       API.SysMsg("You have been slain!")
-     ```
+    Check if your journal contains a message.
     
+    **Example:**
+    
+    ```py
+    if API.InJournal("You have been slain"):
+      API.SysMsg("You have been slain!")
+    ```
     """
     pass
 
 def ClearSoundLog() -> None:
     """
-     Clear your sound log (This is specific for each script).
-     Example:
-     ```py
-     API.ClearSoundLog()
-     ```
+    Clear your sound log (This is specific for each script).
     
+    **Example:**
+    
+    ```py
+    API.ClearSoundLog()
+    ```
     """
     pass
 
 def CheckSoundLog(idx: "int") -> "ApiSoundEntry":
     """
-     Check if the sound log contains a given sound and retrieves it.
-     Example:
-     ```py
-     if API.CheckSoundLog(0x13E):
-       API.SysMsg("Chopped wood!")
-     ```
+    Check if the sound log contains a given sound and retrieves it.
     
+    **Example:**
+    
+    ```py
+    if API.CheckSoundLog(0x13E):
+      API.SysMsg("Chopped wood!")
+    ```
     """
     pass
 
 def GetSoundLog(seconds: "float") -> "list[ApiSoundEntry]":
     """
-     Get all the sound logs of the last X seconds.
-     Example:
-     ```py
-     list = API.GetSoundLog(30)
-     if list:
-       for entry in list:
-         entry.ID # Do something with this
-     ```
+    Get all the sound logs of the last X seconds.
     
+    **Example:**
+    
+    ```py
+    list = API.GetSoundLog(30)
+    if list:
+      for entry in list:
+        entry.ID # Do something with this
+    ```
     """
     pass
 
 def PlaySound(index: "int") -> None:
     """
-     Play a sound effect locally (only audible to you).
-     Example:
-     ```py
-     API.PlaySound(0x13E)
-     ```
+    Play a sound effect locally (only audible to you).
     
+    **Example:**
+    
+    ```py
+    API.PlaySound(0x13E)
+    ```
     """
     pass
 
 def InJournalAny(msgs: "list[str]", clearMatches: "bool" = False) -> "bool":
     """
-     Check if the journal contains *any* of the strings in this list.
-     Can be regex, prepend your msgs with $
-     Example:
-     ```py
-     if API.InJournalAny(["You have been slain", "You are dead"]):
-       API.SysMsg("You have been slain or dead!")
-     ```
+    Check if the journal contains *any* of the strings in this list.
+    Can be regex, prepend your msgs with $
     
+    **Example:**
+    
+    ```py
+    if API.InJournalAny(["You have been slain", "You are dead"]):
+      API.SysMsg("You have been slain or dead!")
+    ```
     """
     pass
 
 def GetJournalEntries(seconds: "float", matchingText: "str" = "") -> "list[ApiJournalEntry]":
     """
-     Get all the journal entires in the last X seconds.
-     matchingText supports regex with $ prepended.
-     Example:
-     ```py
-     list = API.GetJournalEntries(30)
-     if list:
-       for entry in list:
-         entry.Text # Do something with this
-     ```
+    Get all the journal entires in the last X seconds.
+    matchingText supports regex with $ prepended.
     
+    **Example:**
+    
+    ```py
+    list = API.GetJournalEntries(30)
+    if list:
+      for entry in list:
+        entry.Text # Do something with this
+    ```
     """
     pass
 
 def ClearJournal(matchingEntries: "str" = "") -> None:
     """
-     Clear your journal(This is specific for each script).
-     Supports regex matching if prefixed with $
-     Example:
-     ```py
-     API.ClearJournal()
-     ```
+    Clear your journal(This is specific for each script).
+    Supports regex matching if prefixed with $
     
+    **Example:**
+    
+    ```py
+    API.ClearJournal()
+    ```
     """
     pass
 
 def Pause(seconds: "float") -> None:
     """
-     Pause the script.
-     Example:
-     ```py
-     API.Pause(5)
-     ```
+    Pause the script.
     
+    **Example:**
+    
+    ```py
+    API.Pause(5)
+    ```
     """
     pass
 
 def Stop() -> None:
     """
-     Stops the current script.
-     Example:
-     ```py
-     API.Stop()
-     ```
+    Stops the current script.
     
+    **Example:**
+    
+    ```py
+    API.Stop()
+    ```
     """
     pass
 
 def OnStop(callback: "Any" = None) -> None:
     """
-     Register an optional callback to run when this script is being stopped.
-     When set, stopping the script will be delayed until this callback has been
-     processed, or until a maximum of 5 seconds have passed.
+    Register an optional callback to run when this script is being stopped.
+    When set, stopping the script will be delayed until this callback has been
+    processed, or until a maximum of 5 seconds have passed.
     
-     Callbacks only run while the script is calling `API.ProcessCallbacks`,
-     so make sure your script keeps calling it (for example in its main loop) for
-     the OnStop callback to actually run before the timeout elapses.
+    Callbacks only run while the script is calling `API.ProcessCallbacks`,
+    so make sure your script keeps calling it (for example in its main loop) for
+    the OnStop callback to actually run before the timeout elapses.
     
-     Example:
-     ```py
-     def on_stop():
-       API.SysMsg("Cleaning up before stopping...")
-     API.OnStop(on_stop)
-     while not API.StopRequested:
-       API.ProcessCallbacks()
-       API.Pause(0.1)
-     ```
-     To unregister, call with no callback:
-     ```py
-     API.OnStop()
-     ```
+    **Example:**
     
+    ```py
+    def on_stop():
+      API.SysMsg("Cleaning up before stopping...")
+    API.OnStop(on_stop)
+    while not API.StopRequested:
+      API.ProcessCallbacks()
+      API.Pause(0.1)
+    ```
+    To unregister, call with no callback:
+    
+    ```py
+    API.OnStop()
+    ```
     """
     pass
 
 def ToggleAutoLoot() -> None:
     """
-     Toggle autolooting on or off.
-     Example:
-     ```py
-     API.ToggleAutoLoot()
-     ```
+    Toggle autolooting on or off.
     
+    **Example:**
+    
+    ```py
+    API.ToggleAutoLoot()
+    ```
     """
     pass
 
 def AutoLootContainer(container: "int") -> None:
     """
-     Use autoloot on a specific container.
-     Example:
-     ```py
-     targ = API.RequestTarget()
-     if targ:
-       API.AutoLootContainer(targ)
-     ```
+    Use autoloot on a specific container.
     
+    **Example:**
+    
+    ```py
+    targ = API.RequestTarget()
+    if targ:
+      API.AutoLootContainer(targ)
+    ```
     """
     pass
 
 def Virtue(virtue: "str") -> None:
     """
-     Use a virtue.
-     Example:
-     ```py
-     API.Virtue("honor")
-     ```
+    Use a virtue.
     
+    **Example:**
+    
+    ```py
+    API.Virtue("honor")
+    ```
     """
     pass
 
 def OpenQuestLog() -> None:
     """
-     Open the quest log gump.
-     Example:
-     ```py
-     API.OpenQuestLog()
-     ```
+    Open the quest log gump.
     
+    **Example:**
+    
+    ```py
+    API.OpenQuestLog()
+    ```
     """
     pass
 
 def OpenHelp() -> None:
     """
-     Open the help menu.
-     Example:
-     ```py
-     API.OpenHelp()
-     ```
+    Open the help menu.
     
+    **Example:**
+    
+    ```py
+    API.OpenHelp()
+    ```
     """
     pass
 
 def NearestEntity(scanType: "ScanType", maxDistance: "int" = 10) -> "ApiEntity":
     """
-     Find the nearest item/mobile based on scan type.
-     Sets API.Found to the serial of the item/mobile.
-     Example:
-     ```py
-     item = API.NearestEntity(API.ScanType.Item, 5)
-     if item:
-       API.SysMsg("Found an item!")
-       API.UseObject(item)
-       # You can use API.FindItem or API.FindMobile(item.Serial) to determine if it's an item or mobile
-     ```
+    Find the nearest item/mobile based on scan type.
+    Sets API.Found to the serial of the item/mobile.
     
+    **Example:**
+    
+    ```py
+    item = API.NearestEntity(API.ScanType.Item, 5)
+    if item:
+      API.SysMsg("Found an item!")
+      API.UseObject(item)
+      # You can use API.FindItem or API.FindMobile(item.Serial) to determine if it's an item or mobile
+    ```
     """
     pass
 
 def NearestMobile(notoriety: "list[Notoriety]", maxDistance: "int" = 10) -> "ApiMobile":
     """
-     Get the nearest mobile by Notoriety.
-     Sets API.Found to the serial of the mobile.
-     Example:
-     ```py
-     mob = API.NearestMobile([API.Notoriety.Murderer, API.Notoriety.Criminal], 7)
-     if mob:
-       API.SysMsg("Found a criminal!")
-       API.Msg("Guards!")
-       API.Attack(mob)
-       ```
+    Get the nearest mobile by Notoriety.
+    Sets API.Found to the serial of the mobile.
     
+    **Example:**
+    
+    ```py
+    mob = API.NearestMobile([API.Notoriety.Murderer, API.Notoriety.Criminal], 7)
+    if mob:
+      API.SysMsg("Found a criminal!")
+      API.Msg("Guards!")
+      API.Attack(mob)
+    ```
     """
     pass
 
 def NearestCorpse(distance: "int" = 3) -> "ApiItem":
     """
-     Get the nearest corpse within a distance.
-     Sets API.Found to the serial of the corpse.
-     Example:
-     ```py
-     corpse = API.NearestCorpse()
-     if corpse:
-       API.SysMsg("Found a corpse!")
-       API.UseObject(corpse)
-     ```
+    Get the nearest corpse within a distance.
+    Sets API.Found to the serial of the corpse.
     
+    **Example:**
+    
+    ```py
+    corpse = API.NearestCorpse()
+    if corpse:
+      API.SysMsg("Found a corpse!")
+      API.UseObject(corpse)
+    ```
     """
     pass
 
 def NearestMobiles(notoriety: "list[Notoriety]", maxDistance: "int" = 10) -> "list[ApiMobile]":
     """
-     Get all mobiles matching Notoriety and distance.
-     Example:
-     ```py
-     mob = API.NearestMobiles([API.Notoriety.Murderer, API.Notoriety.Criminal], 7)
-     if len(mob) > 0:
-       API.SysMsg("Found enemies!")
-       API.Msg("Guards!")
-       API.Attack(mob[0])
-       ```
+    Get all mobiles matching Notoriety and distance.
     
+    **Example:**
+    
+    ```py
+    mob = API.NearestMobiles([API.Notoriety.Murderer, API.Notoriety.Criminal], 7)
+    if len(mob) > 0:
+      API.SysMsg("Found enemies!")
+      API.Msg("Guards!")
+      API.Attack(mob[0])
+    ```
     """
     pass
 
 def FindMobile(serial: "int") -> "ApiMobile":
     """
-     Get a mobile from its serial.
-     Sets API.Found to the serial of the mobile.
-     Example:
-     ```py
-     mob = API.FindMobile(0x12345678)
-     if mob:
-       API.SysMsg("Found the mobile!")
-       API.UseObject(mob)
-     ```
+    Get a mobile from its serial.
+    Sets API.Found to the serial of the mobile.
     
+    **Example:**
+    
+    ```py
+    mob = API.FindMobile(0x12345678)
+    if mob:
+      API.SysMsg("Found the mobile!")
+      API.UseObject(mob)
+    ```
     """
     pass
 
 def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, notoriety: "list[Notoriety]" = None, sortby: "str" = "Distance", name: "str" = None, graphics: "list[int]" = None, minDistance: "int | None" = None, isHuman: "bool | None" = None, isFemale: "bool | None" = None, isGhost: "bool | None" = None, isFriend: "bool | None" = None, poisoned: "bool | None" = None, paralyzed: "bool | None" = None, hasLineOfSight: "bool | None" = None, hues: "list[int]" = None) -> "list[ApiMobile]":
     """
-     Return a list of all mobiles the client is aware of, optionally filtered by graphic, distance, and/or notoriety.
-     Any additional filter is ignored unless supplied.
-     Example:
-     ```py
-     # Get all mobiles
-     mobiles = API.GetAllMobiles()
-     # Get all mobiles with graphic 400
-     humans = API.GetAllMobiles(400)
-     # Get all humans within 5 tiles
-     nearby_humans = API.GetAllMobiles(400, 5)
-     # Get all enemies (murderers and criminals) within 15 tiles
-     enemies = API.GetAllMobiles(distance=15, notoriety=[API.Notoriety.Murderer, API.Notoriety.Criminal])
-     # Get all mobiles sorted by current hits, lowest first
-     sorted_by_hits = API.GetAllMobiles(sortby="hits")
-     # Get all poisonous ogres within 10 tiles in line of sight
-     targets = API.GetAllMobiles(name="ogre", distance=10, poisoned=True, hasLineOfSight=True)
-     # Get only dead friends with a specific hue, at least 2 tiles away
-     ghosts = API.GetAllMobiles(isGhost=True, isFriend=True, minDistance=2, hues=[0x83EA])
-     ```
+    Return a list of all mobiles the client is aware of, optionally filtered by graphic, distance, and/or notoriety.
+    Any additional filter is ignored unless supplied.
     
+    **Example:**
+    
+    ```py
+    # Get all mobiles
+    mobiles = API.GetAllMobiles()
+    # Get all mobiles with graphic 400
+    humans = API.GetAllMobiles(400)
+    # Get all humans within 5 tiles
+    nearby_humans = API.GetAllMobiles(400, 5)
+    # Get all enemies (murderers and criminals) within 15 tiles
+    enemies = API.GetAllMobiles(distance=15, notoriety=[API.Notoriety.Murderer, API.Notoriety.Criminal])
+    # Get all mobiles sorted by current hits, lowest first
+    sorted_by_hits = API.GetAllMobiles(sortby="hits")
+    # Get all poisonous ogres within 10 tiles in line of sight
+    targets = API.GetAllMobiles(name="ogre", distance=10, poisoned=True, hasLineOfSight=True)
+    # Get only dead friends with a specific hue, at least 2 tiles away
+    ghosts = API.GetAllMobiles(isGhost=True, isFriend=True, minDistance=2, hues=[0x83EA])
+    ```
     """
     pass
 
 def GetTile(x: "int", y: "int") -> "ApiGameObject":
     """
-     Get the tile at a location.
-     Example:
-     ```py
-     tile = API.GetTile(1414, 1515)
-     if tile:
-       API.SysMsg(f"Found a tile with graphic: {tile.Graphic}")
-     ```
+    Get the tile at a location.
     
+    **Example:**
+    
+    ```py
+    tile = API.GetTile(1414, 1515)
+    if tile:
+      API.SysMsg(f"Found a tile with graphic: {tile.Graphic}")
+    ```
     """
     pass
 
 def GetStaticsAt(x: "int", y: "int") -> "list[ApiStatic]":
     """
-     Gets all static objects at a specific position (x, y coordinates).
-     This includes trees, vegetation, buildings, and other non-movable scenery.
-     Example:
-     ```py
-     statics = API.GetStaticsAt(1000, 1000)
-     for s in statics:
-         API.SysMsg(f"Static Graphic: {s.Graphic}, Z: {s.Z}")
-     ```
+    Gets all static objects at a specific position (x, y coordinates).
+    This includes trees, vegetation, buildings, and other non-movable scenery.
     
+    **Example:**
+    
+    ```py
+    statics = API.GetStaticsAt(1000, 1000)
+    for s in statics:
+        API.SysMsg(f"Static Graphic: {s.Graphic}, Z: {s.Z}")
+    ```
     """
     pass
 
 def GetStaticsInArea(x1: "int", y1: "int", x2: "int", y2: "int") -> "list[ApiStatic]":
     """
-     Gets all static objects within a rectangular area defined by coordinates.
-     This includes trees, vegetation, buildings, and other non-movable scenery.
-     Example:
-     ```py
-     statics = API.GetStaticsInArea(1000, 1000, 1010, 1010)
-     API.SysMsg(f"Found {len(statics)} statics in area")
-     for s in statics:
-         if s.IsVegetation:
-             API.SysMsg(f"Vegetation Graphic: {s.Graphic} at {s.X}, {s.Y}")
-     ```
+    Gets all static objects within a rectangular area defined by coordinates.
+    This includes trees, vegetation, buildings, and other non-movable scenery.
     
+    **Example:**
+    
+    ```py
+    statics = API.GetStaticsInArea(1000, 1000, 1010, 1010)
+    API.SysMsg(f"Found {len(statics)} statics in area")
+    for s in statics:
+        if s.IsVegetation:
+            API.SysMsg(f"Vegetation Graphic: {s.Graphic} at {s.X}, {s.Y}")
+    ```
     """
     pass
 
 def GetMultisAt(x: "int", y: "int") -> "list[ApiMulti]":
     """
-     Gets all multi objects at a specific position (x, y coordinates).
-     This includes server-side house data.
-     Example:
-     ```py
-     multis = API.GetMultisAt(1000, 1000)
-     for m in multis:
-         API.SysMsg(f"Multi Graphic: {m.Graphic}, Z: {m.Z}")
-     ```
+    Gets all multi objects at a specific position (x, y coordinates).
+    This includes server-side house data.
     
+    **Example:**
+    
+    ```py
+    multis = API.GetMultisAt(1000, 1000)
+    for m in multis:
+        API.SysMsg(f"Multi Graphic: {m.Graphic}, Z: {m.Z}")
+    ```
     """
     pass
 
 def GetMultisInArea(x1: "int", y1: "int", x2: "int", y2: "int") -> "list[ApiMulti]":
     """
-     Gets all multi objects within a rectangular area defined by coordinates.
-     This includes server-side house data.
-     Example:
-     ```py
-     multis = API.GetMultisInArea(1000, 1000, 1010, 1010)
-     API.SysMsg(f"Found {len(multis)} multis in area")
-     for m in multis:
-         API.SysMsg(f"Multi Graphic: {m.Graphic} at {m.X}, {m.Y}")
-     ```
+    Gets all multi objects within a rectangular area defined by coordinates.
+    This includes server-side house data.
     
+    **Example:**
+    
+    ```py
+    multis = API.GetMultisInArea(1000, 1000, 1010, 1010)
+    API.SysMsg(f"Found {len(multis)} multis in area")
+    for m in multis:
+        API.SysMsg(f"Multi Graphic: {m.Graphic} at {m.X}, {m.Y}")
+    ```
     """
     pass
 
 def IsFriend(serial: "int") -> "bool":
     """
-     Check if a mobile is in the friends list.
-     Example:
-     ```py
-     if API.IsFriend(player.Serial):
-         API.SysMsg("This player is your friend!")
-     ```
+    Check if a mobile is in the friends list.
     
+    **Example:**
+    
+    ```py
+    if API.IsFriend(player.Serial):
+        API.SysMsg("This player is your friend!")
+    ```
     """
     pass
 
 def AddFriend(serial: "int") -> "bool":
     """
-     Add a mobile to the friends list by serial number.
-     Example:
-     ```py
-     mobile = API.FindMobile(0x12345)
-     if mobile:
-         API.AddFriend(mobile.Serial)
-     ```
+    Add a mobile to the friends list by serial number.
     
+    **Example:**
+    
+    ```py
+    mobile = API.FindMobile(0x12345)
+    if mobile:
+        API.AddFriend(mobile.Serial)
+    ```
     """
     pass
 
 def RemoveFriend(serial: "int") -> "bool":
     """
-     Remove a mobile from the friends list by serial number.
-     Example:
-     ```py
-     API.RemoveFriend(0x12345)
-     ```
+    Remove a mobile from the friends list by serial number.
     
+    **Example:**
+    
+    ```py
+    API.RemoveFriend(0x12345)
+    ```
     """
     pass
 
 def GetAllFriends() -> "list[int]":
     """
-     Get all friends as an array of serials.
-     Example:
-     ```py
-     friends = API.GetAllFriends()
-     for friend in friends:
-         API.FindMobile(friend)
-     ```
+    Get all friends as an array of serials.
     
+    **Example:**
+    
+    ```py
+    friends = API.GetAllFriends()
+    for friend in friends:
+        API.FindMobile(friend)
+    ```
     """
     pass
 
 def GetPartyMemberSerials() -> "list[int]":
     """
-     Gets a list of serials for all current party members, excluding yourself.
+    Gets a list of serials for all current party members, excluding yourself.
     
-     Note that members may not always have an associated Mobile.
-    
+    Note that members may not always have an associated Mobile.
     """
     pass
 
 def GetPartyLeader() -> "int":
     """
-     Gets the party leader's serial, or 0 if not in a party.
-    
+    Gets the party leader's serial, or 0 if not in a party.
     """
     pass
 
 def CreateGump(acceptMouseInput: "bool" = True, canMove: "bool" = True, keepOpen: "bool" = False) -> "ApiUiBaseGump":
     """
-     Use API.Gumps.CreateGump instead
-    
+    Use API.Gumps.CreateGump instead
     """
     pass
 
 def AddGump(g: "Any") -> None:
     """
-     Use API.Gumps.AddGump instead
-    
+    Use API.Gumps.AddGump instead
     """
     pass
 
 def CreateGumpCheckbox(text: "str" = "", hue: "int" = 0, isChecked: "bool" = False) -> "ApiUiCheckbox":
     """
-     Use API.Gumps.CreateGumpCheckbox instead.
-    
+    Use API.Gumps.CreateGumpCheckbox instead.
     """
     pass
 
 def CreateGumpLabel(text: "str", hue: "int" = 996) -> "ApiUiLabel":
     """
-     Use API.Gumps.CreateGumpLabel instead.
-    
+    Use API.Gumps.CreateGumpLabel instead.
     """
     pass
 
 def CreateGumpColorBox(opacity: "float" = 0.7, color: "str" = "#000000") -> "ApiUiAlphaBlendControl":
     """
-     Use API.Gumps.CreateGumpColorBox instead.
-    
+    Use API.Gumps.CreateGumpColorBox instead.
     """
     pass
 
 def CreateGumpItemPic(graphic: "int", width: "int", height: "int") -> "ApiUiResizableStaticPic":
     """
-     Use API.Gumps.CreateGumpItemPic instead.
-    
+    Use API.Gumps.CreateGumpItemPic instead.
     """
     pass
 
 def CreateGumpButton(text: "str" = "", hue: "int" = 996, normal: "int" = 0x00EF, pressed: "int" = 0x00F0, hover: "int" = 0x00EE) -> "ApiUiButton":
     """
-     Use API.Gumps.CreateGumpButton instead.
-    
+    Use API.Gumps.CreateGumpButton instead.
     """
     pass
 
 def CreateSimpleButton(text: "str", width: "int", height: "int") -> "ApiUiNiceButton":
     """
-     Use API.Gumps.CreateSimpleButton instead.
-    
+    Use API.Gumps.CreateSimpleButton instead.
     """
     pass
 
 def CreateGumpRadioButton(text: "str" = "", group: "int" = 0, inactive: "int" = 0x00D0, active: "int" = 0x00D1, hue: "int" = 0xFFFF, isChecked: "bool" = False) -> "ApiUiRadioButton":
     """
-     Use API.Gumps.CreateGumpRadioButton instead.
-    
+    Use API.Gumps.CreateGumpRadioButton instead.
     """
     pass
 
 def CreateGumpTextBox(text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False, fontSize: "float" = 20) -> "ApiUiTtfTextInputField":
     """
-     Use API.Gumps.CreateGumpTextBox instead.
-    
+    Use API.Gumps.CreateGumpTextBox instead.
     """
     pass
 
 def CreateGumpTTFLabel(text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "left", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
     """
-     Use API.Gumps.CreateGumpTTFLabel instead.
-    
+    Use API.Gumps.CreateGumpTTFLabel instead.
     """
     pass
 
 def CreateGumpSimpleProgressBar(width: "int", height: "int", backgroundColor: "str" = "#616161", foregroundColor: "str" = "#212121", value: "int" = 100, max: "int" = 100) -> "ApiUiSimpleProgressBar":
     """
-     Use API.Gumps.CreateGumpSimpleProgressBar instead.
-    
+    Use API.Gumps.CreateGumpSimpleProgressBar instead.
     """
     pass
 
 def CreateGumpScrollArea(x: "int", y: "int", width: "int", height: "int") -> "ApiUiScrollArea":
     """
-     Use API.Gumps.CreateGumpScrollArea instead.
-    
+    Use API.Gumps.CreateGumpScrollArea instead.
     """
     pass
 
 def CreateGumpPic(graphic: "int", x: "int" = 0, y: "int" = 0, hue: "int" = 0) -> "ApiUiGumpPic":
     """
-     Use API.Gumps.CreateGumpPic instead.
-    
+    Use API.Gumps.CreateGumpPic instead.
     """
     pass
 
 def CreateDropDown(width: "int", items: "list[str]", selectedIndex: "int" = 0) -> "ApiUiControlDropDown":
     """
-     Use API.Gumps.CreateDropDown instead.
-    
+    Use API.Gumps.CreateDropDown instead.
     """
     pass
 
 def CreateModernGump(x: "int", y: "int", width: "int", height: "int", resizable: "bool" = True, minWidth: "int" = 50, minHeight: "int" = 50, onResized: "Any" = None) -> "ApiUiNineSliceGump":
     """
-     Use API.Gumps.CreateModernGump instead.
-    
+    Use API.Gumps.CreateModernGump instead.
     """
     pass
 
 def AddControlOnClick(control: "Any", onClick: "Any", leftOnly: "bool" = True) -> "Any":
     """
-     Use API.Gumps.AddControlOnClick instead.
-    
+    Use API.Gumps.AddControlOnClick instead.
     """
     pass
 
 def AddControlOnDisposed(control: "ApiUiBaseControl", onDispose: "Any") -> "ApiUiBaseControl":
     """
-     Use API.Gumps.AddControlOnDisposed instead.
-    
+    Use API.Gumps.AddControlOnDisposed instead.
     """
     pass
 
 def GetSkill(skill: "str") -> "Skill":
     """
-     Get a skill from the player. See the Skill class for what properties are available: https://github.com/PlayTazUO/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Skill.cs
-     Example:
-     ```py
-     skill = API.GetSkill("Hiding")
-     if skill:
-       API.SysMsg("Skill: " + skill.Name)
-       API.SysMsg("Skill Value: " + str(skill.Value))
-       API.SysMsg("Skill Cap: " + str(skill.Cap))
-       API.SysMsg("Skill Lock: " + str(skill.Lock))
-       ```
+    Get a skill from the player. See the Skill class for what properties are available: https://github.com/PlayTazUO/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Skill.cs
     
+    **Example:**
+    
+    ```py
+    skill = API.GetSkill("Hiding")
+    if skill:
+      API.SysMsg("Skill: " + skill.Name)
+      API.SysMsg("Skill Value: " + str(skill.Value))
+      API.SysMsg("Skill Cap: " + str(skill.Cap))
+      API.SysMsg("Skill Lock: " + str(skill.Lock))
+    ```
     """
     pass
 
 def DisplayRange(distance: "int", hue: "int" = 22) -> None:
     """
-     Show a radius around the player.
-     Example:
-     ```py
-     API.DisplayRange(7, 32)
-     ```
+    Show a radius around the player.
     
+    **Example:**
+    
+    ```py
+    API.DisplayRange(7, 32)
+    ```
     """
     pass
 
 def ToggleScript(scriptPath: "str") -> None:
     """
-     Toggle another script on or off.
-     Example:
-     ```py
-     API.ToggleScript("mygroup/MyScript.py")
-     ```
+    Toggle another script on or off.
     
+    **Example:**
+    
+    ```py
+    API.ToggleScript("mygroup/MyScript.py")
+    ```
     """
     pass
 
 def PlayScript(scriptPath: "str") -> None:
     """
-     Play a legion script.
-     Example:
-     ```py
-     API.PlayScript("mygroup/MyScript.py")
-     ```
+    Play a legion script.
     
+    **Example:**
+    
+    ```py
+    API.PlayScript("mygroup/MyScript.py")
+    ```
     """
     pass
 
 def StopScript(scriptPath: "str") -> None:
     """
-     Stop a legion script.
-     Example:
-     ```py
-     API.StopScript("mygroup/MyScript.py")
-     ```
+    Stop a legion script.
     
+    **Example:**
+    
+    ```py
+    API.StopScript("mygroup/MyScript.py")
+    ```
     """
     pass
 
 def ListRunningScripts() -> "list[str]":
     """
-     Get the paths of all currently running legion scripts.
-     The paths are relative to the LegionScripts folder and can be passed
-     straight back to PlayScript, StopScript, ToggleScript or IsScriptRunning.
-     Example:
-     ```py
-     for path in API.ListRunningScripts():
-         API.SysMsg(path)
-     ```
+    Get the paths of all currently running legion scripts.
+    The paths are relative to the LegionScripts folder and can be passed
+    straight back to PlayScript, StopScript, ToggleScript or IsScriptRunning.
     
+    **Example:**
+    
+    ```py
+    for path in API.ListRunningScripts():
+        API.SysMsg(path)
+    ```
     """
     pass
 
 def IsScriptRunning(scriptPath: "str") -> "bool":
     """
-     Check if a legion script is currently running.
-     Example:
-     ```py
-     if not API.IsScriptRunning("mygroup/MyScript.py"):
-         API.PlayScript("mygroup/MyScript.py")
-     ```
+    Check if a legion script is currently running.
     
+    **Example:**
+    
+    ```py
+    if not API.IsScriptRunning("mygroup/MyScript.py"):
+        API.PlayScript("mygroup/MyScript.py")
+    ```
     """
     pass
 
 def AddMapMarker(name: "str", x: "int" = int.MaxValue, y: "int" = int.MaxValue, map: "int" = int.MaxValue, color: "str" = "purple") -> None:
     """
-     Add a marker to the current World Map (If one is open)
-     Example:
-     ```py
-     API.AddMapMarker("Death")
-     ```
+    Add a marker to the current World Map (If one is open)
     
+    **Example:**
+    
+    ```py
+    API.AddMapMarker("Death")
+    ```
     """
     pass
 
 def RemoveMapMarker(name: "str") -> None:
     """
-     Remove a marker from the world map.
-     Example:
-     ```py
-     API.RemoveMapMarker("Death")
-     ```
+    Remove a marker from the world map.
     
+    **Example:**
+    
+    ```py
+    API.RemoveMapMarker("Death")
+    ```
     """
     pass
 
 def IsProcessingMoveQueue() -> "bool":
     """
-     Check if the move item queue is being processed. You can use this to prevent actions if the queue is being processed.
-     Example:
-     ```py
-     if API.IsProcessingMoveQueue():
-       API.Pause(0.5)
-     ```
+    Check if the move item queue is being processed. You can use this to prevent actions if the queue is being processed.
     
+    **Example:**
+    
+    ```py
+    if API.IsProcessingMoveQueue():
+      API.Pause(0.5)
+    ```
     """
     pass
 
 def IsProcessingUseItemQueue() -> "bool":
     """
-     Check if the use item queue is being processed. You can use this to prevent actions if the queue is being processed.
-     Example:
-     ```py
-     if API.IsProcessingUseItemQueue():
-       API.Pause(0.5)
-     ```
+    Check if the use item queue is being processed. You can use this to prevent actions if the queue is being processed.
     
+    **Example:**
+    
+    ```py
+    if API.IsProcessingUseItemQueue():
+      API.Pause(0.5)
+    ```
     """
     pass
 
 def IsGlobalCooldownActive() -> "bool":
     """
-     Check if the global cooldown is currently active. This applies to actions like moving or using items,
-     and prevents new actions from executing until the cooldown has expired.
+    Check if the global cooldown is currently active. This applies to actions like moving or using items,
+    and prevents new actions from executing until the cooldown has expired.
     
-     Example:
-     ```py
-     if API.IsGlobalCooldownActive():
-         API.Pause(0.5)
-     ```
+    **Example:**
     
+    ```py
+    if API.IsGlobalCooldownActive():
+        API.Pause(0.5)
+    ```
     """
     pass
 
 def SavePersistentVar(name: "str", value: "str", scope: "PersistentVar") -> None:
     """
-     Save a variable that persists between sessions and scripts.
-     Example:
-     ```py
-     API.SavePersistentVar("TotalKills", "5", API.PersistentVar.Char)
-     ```
+    Save a variable that persists between sessions and scripts.
     
+    **Example:**
+    
+    ```py
+    API.SavePersistentVar("TotalKills", "5", API.PersistentVar.Char)
+    ```
     """
     pass
 
 def RemovePersistentVar(name: "str", scope: "PersistentVar") -> None:
     """
-     Delete/remove a persistent variable.
-     Example:
-     ```py
-     API.RemovePersistentVar("TotalKills", API.PersistentVar.Char)
-     ```
+    Delete/remove a persistent variable.
     
+    **Example:**
+    
+    ```py
+    API.RemovePersistentVar("TotalKills", API.PersistentVar.Char)
+    ```
     """
     pass
 
 def GetPersistentVar(name: "str", defaultValue: "str", scope: "PersistentVar") -> "str":
     """
-     Get a persistent variable.
-     Example:
-     ```py
-     API.GetPersistentVar("TotalKills", "0", API.PersistentVar.Char)
-     ```
+    Get a persistent variable.
     
+    **Example:**
+    
+    ```py
+    API.GetPersistentVar("TotalKills", "0", API.PersistentVar.Char)
+    ```
     """
     pass
 
 def MarkTile(x: "int", y: "int", hue: "int", map: "int" = -1) -> None:
     """
-     Mark a tile with a specific hue.
-    
+    Mark a tile with a specific hue.
     """
     pass
 
 def RemoveMarkedTile(x: "int", y: "int", map: "int" = -1) -> None:
     """
-     Remove a marked tile. See MarkTile for more info.
-    
+    Remove a marked tile. See MarkTile for more info.
     """
     pass
 
 def TrackingArrow(x: "int", y: "int", identifier: "int" = 1337) -> None:
     """
-     Create a tracking arrow pointing towards a location.
-     Set x or y to a negative value to close existing tracker arrow.
-     ```py
-     API.TrackingArrow(400, 400)
-     ```
+    Create a tracking arrow pointing towards a location.
+    Set x or y to a negative value to close existing tracker arrow.
     
+    ```py
+    API.TrackingArrow(400, 400)
+    ```
     """
     pass
 
 def GetClilocString(cliloc: "int", englishOnly: "bool" = False) -> "str":
     """
-     Get the string for a cliloc number.
-     Example:
-     ```py
-     text = API.GetClilocString(1020000)
-     if text:
-       API.SysMsg(text)
+    Get the string for a cliloc number.
     
-     # Force English regardless of client language setting
-     text = API.GetClilocString(1020000, englishOnly=True)
-     ```
+    **Example:**
     
+    ```py
+    text = API.GetClilocString(1020000)
+    if text:
+      API.SysMsg(text)
+    
+    # Force English regardless of client language setting
+    text = API.GetClilocString(1020000, englishOnly=True)
+    ```
     """
     pass
 
 def GetClientBounds() -> "Any":
     """
-     Get the bounds of the client game window.
-     This covers the entire window, including all UI and the game world.
-     Coordinates are in screen pixels.
-     Example:
-     ```py
-     bounds = API.GetClientBounds()
-     API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
-     ```
+    Get the bounds of the client game window.
+    This covers the entire window, including all UI and the game world.
+    Coordinates are in screen pixels.
     
+    **Example:**
+    
+    ```py
+    bounds = API.GetClientBounds()
+    API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
+    ```
     """
     pass
 
 def GetViewportBounds() -> "Any":
     """
-     Get the bounds of the game world viewport.
-     This is the area where the game world is rendered, in screen pixel coordinates.
-     Example:
-     ```py
-     vp = API.GetViewportBounds()
-     API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
-     ```
+    Get the bounds of the game world viewport.
+    This is the area where the game world is rendered, in screen pixel coordinates.
     
+    **Example:**
+    
+    ```py
+    vp = API.GetViewportBounds()
+    API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
+    ```
     """
     pass
 
@@ -3678,118 +4139,102 @@ class EventSinkApiDeclaration:
 
     def OnItemCreated(self, callback: "Any") -> None:
         """
-         Invoked when an item is added to the client.
-         The event's argument is the ApiItem.
-        
+        Invoked when an item is added to the client.
+        The event's argument is the ApiItem.
         """
         pass
 
     def OnItemUpdated(self, callback: "Any") -> None:
         """
-         Invoked when an item is already in the client but has been updated.
-         The event's argument is the ApiItem.
-        
+        Invoked when an item is already in the client but has been updated.
+        The event's argument is the ApiItem.
         """
         pass
 
     def OnCorpseCreated(self, callback: "Any") -> None:
         """
-         Invoked when a corpse is added to the client. The event's 'sender' is the corpse Item
-        
+        Invoked when a corpse is added to the client. The event's 'sender' is the corpse Item
         """
         pass
 
     def OnConnected(self, callback: "Any") -> None:
         """
-         Invoked when the player is connected to a server
-        
+        Invoked when the player is connected to a server
         """
         pass
 
     def OnDisconnected(self, callback: "Any") -> None:
         """
-         Invoked when the player is disconnected from the server
-        
+        Invoked when the player is disconnected from the server
         """
         pass
 
     def MessageReceived(self, callback: "Any") -> None:
         """
-         Invoked when any message is received from the server after client processing
-        
+        Invoked when any message is received from the server after client processing
         """
         pass
 
     def RawMessageReceived(self, callback: "Any") -> None:
         """
-         Invoked when any message is received from the server *before* client processing
-        
+        Invoked when any message is received from the server *before* client processing
         """
         pass
 
     def ClilocMessageReceived(self, callback: "Any") -> None:
         """
-         Invoked when a cliloc message is received from the server
-        
+        Invoked when a cliloc message is received from the server
         """
         pass
 
     def JournalEntryAdded(self, callback: "Any") -> None:
         """
-          Invoked when a message is added to the journal
-        
+        Invoked when a message is added to the journal
         """
         pass
 
     def SoundPlayed(self, callback: "Any") -> None:
         """
-         Invoked when the server requests that a sound be played
-        
+        Invoked when the server requests that a sound be played
         """
         pass
 
     def OPLOnReceive(self, callback: "Any") -> None:
         """
-         Invoked when an object's property list data (Tooltip text for items) is received
-        
+        Invoked when an object's property list data (Tooltip text for items) is received
         """
         pass
 
     def OnBuffAdded(self, callback: "Any") -> None:
         """
-         Invoked when a buff is "added" to a player.
-         The event's argument is the ApiBuff.
-        
+        Invoked when a buff is "added" to a player.
+        The event's argument is the ApiBuff.
         """
         pass
 
     def OnBuffRemoved(self, callback: "Any") -> None:
         """
-         Invoked when a buff is "removed" to a player (Called before removal)
-         The event's argument is the ApiBuff.
-        
+        Invoked when a buff is "removed" to a player (Called before removal)
+        The event's argument is the ApiBuff.
         """
         pass
 
     def OnPositionChanged(self, callback: "Any") -> None:
         """
-         Invoked when the player's position is changed
-        
+        Invoked when the player's position is changed
         """
         pass
 
     def OnEntityDamage(self, callback: "Any") -> None:
         """
-         Invoked when any entity in the game receives damage, not necessarily the player.
-        
+        Invoked when any entity in the game receives damage, not necessarily the player.
         """
         pass
 
     def OnOpenContainer(self, callback: "Any") -> None:
         """
-         Invoked when a container is opened.
-         The event's 'sender' is the Item, the event's argument is the item's serial
-        
+        Invoked when a container is opened.
+        The event's 'sender' is the Item, the event's argument is the item's serial
         """
         pass
 
@@ -3801,38 +4246,33 @@ class EventSinkApiDeclaration:
 
     def OnPlayerDeath(self, callback: "Any") -> None:
         """
-         Invoked when the player receives a death packet from the server
-        
+        Invoked when the player receives a death packet from the server
         """
         pass
 
     def OnPathFinding(self, callback: "Any") -> None:
         """
-          Invoked when the player or server tells the client to path find
-          Vector is X, Y, Z, and Distance
-        
+        Invoked when the player or server tells the client to path find
+        Vector is X, Y, Z, and Distance
         """
         pass
 
     def OnSetWeather(self, callback: "Any") -> None:
         """
-         Invoked when the server asks the client to generate some weather
-        
+        Invoked when the server asks the client to generate some weather
         """
         pass
 
     def OnPlayerHitsChanged(self, callback: "Any") -> None:
         """
-         Invoked after the player's hit points have changed.
-        
+        Invoked after the player's hit points have changed.
         """
         pass
 
     def ApiMobileCreated(self, callback: "Any") -> None:
         """
-         Invoked when a mobile is created.
-         The event's sender is null and the argument is an ApiMobile.
-        
+        Invoked when a mobile is created.
+        The event's sender is null and the argument is an ApiMobile.
         """
         pass
 

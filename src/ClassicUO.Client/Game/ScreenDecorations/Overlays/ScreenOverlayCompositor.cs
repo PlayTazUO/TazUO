@@ -465,7 +465,18 @@ internal sealed class ScreenOverlayCompositor
         // the two stopped being the same number. Set to the arithmetic worst case so it only ever
         // bites if the cap is raised - overlays are optional decoration, and silently dropping one
         // to save a fraction of a millisecond is the worse trade.
-        ApplyBudget(_drawOrder, ConcurrencyCap() * OverlayLayerStack.MaxLayers);
+        //
+        // Every partition is counted in, rather than sharing one budget: they sort against each
+        // other, so a shared budget would let the strongest starve the rest. Each source is already
+        // bounded upstream, which leaves this a safety net rather than a binding limit - the right
+        // shape for it. The preview earns its own slot despite being exempt from the user's
+        // concurrency cap: it sorts above everything, so leaving it out would not drop the preview,
+        // it would drop whichever rule overlay the preview displaced.
+        ApplyBudget(
+            _drawOrder,
+            (ConcurrencyCap() + ScreenOverlayManager.ScriptCap + ScreenOverlayManager.PreviewCap)
+            * OverlayLayerStack.MaxLayers
+        );
 
         _drawOrder.Reverse();
     }
@@ -474,18 +485,16 @@ internal sealed class ScreenOverlayCompositor
     {
         List<Guid>? finishedHiding = null;
 
-        foreach (KeyValuePair<Guid, ActiveOverlay> entry in _active)
+        foreach ((Guid key, ActiveOverlay overlay) in _active)
         {
-            ActiveOverlay overlay = entry.Value;
-
             float target = overlay.Hiding ? 0f : 1f;
             float fadeSeconds = overlay.Hiding ? overlay.Profile.Fade.OutSeconds : overlay.Profile.Fade.InSeconds;
             float rate = 1f / MathF.Max(fadeSeconds, MIN_FADE_SECONDS);
 
             overlay.Envelope = MoveTowards(overlay.Envelope, target, rate * dt);
 
-            if (overlay.Hiding && overlay.Envelope <= 0f)
-                (finishedHiding ??= []).Add(entry.Key);
+            if (overlay is { Hiding: true, Envelope: <= 0f })
+                (finishedHiding ??= []).Add(key);
         }
 
         if (finishedHiding == null)
@@ -495,12 +504,27 @@ internal sealed class ScreenOverlayCompositor
             _active.Remove(id);
     }
 
+    /// <summary>
+    /// Steps <paramref name="current"/> toward <paramref name="target"/> by at most
+    /// <paramref name="maxDelta"/>.
+    /// <para>
+    /// Snaps on a non-finite step rather than computing one: <see cref="MathF.Sign(float)"/> throws
+    /// on NaN, and this runs inside the frame's draw, so a single bad fade value would take the
+    /// client down. Authored values are validated upstream - this is the floor under that.
+    /// </para>
+    /// </summary>
+    /// <param name="current">Where the envelope is.</param>
+    /// <param name="target">Where it is heading.</param>
+    /// <param name="maxDelta">Most it may move this frame.</param>
+    /// <returns>The new value.</returns>
     private static float MoveTowards(float current, float target, float maxDelta)
     {
-        if (MathF.Abs(target - current) <= maxDelta)
+        float remaining = target - current;
+
+        if (!float.IsFinite(remaining) || !float.IsFinite(maxDelta) || MathF.Abs(remaining) <= maxDelta)
             return target;
 
-        return current + MathF.Sign(target - current) * maxDelta;
+        return current + MathF.Sign(remaining) * maxDelta;
     }
 
     private void EnsureResources(GraphicsDevice gd)

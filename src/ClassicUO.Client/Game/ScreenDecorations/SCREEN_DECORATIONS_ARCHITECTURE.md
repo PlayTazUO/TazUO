@@ -54,7 +54,14 @@ structs `OverlayShape`, `OverlayJitter`, `OverlayNoise`. Same field names, same 
   `[LocalizedDisplayName]` / `[LocalizedDescription]` metadata.
 - The **renderer struct** is pure GPU wire format and carries no editor metadata, so
   `ClassicUO.Renderer` does not depend on any UI toolkit.
-- `spec.ToParams()` / `Spec.From(in …)` convert. **Add a field to one, add it to both.**
+- The **`Api*` DTO** (`LegionScripting/ApiClasses/`) is the same shape again, for scripts. A third
+  mirror exists because `ScriptFile.SetupPythonScope` injects only `API` into the builtin module, so
+  a script cannot name any type not reachable through `API.` — which rules out the spec types, their
+  enums and XNA `Color`/`Vector2`. It also decouples scripts from spec shapes the migrations keep
+  changing.
+
+`spec.ToParams()` / `Spec.From(in …)` and `dto.ToInternal()` / `Dto.From(…)` convert.
+**Add a field to one, add it to all three** — `ApiEffectDtoParityTests` fails the build if you don't.
 
 `FadeSpec`, `ShakeSpec`, `PulseSpec` are *not* mirrors — no renderer twin.
 
@@ -76,6 +83,12 @@ ramps, so it builds, holds, subsides.
 rectangle the shake displaces. One switch, because an effect that shakes the world while tinting the
 UI reads as two unrelated things. Hence two independent shake accumulators,
 `ScreenShake.Viewport` and `ScreenShake.Window`, each sampled once per frame at its own blit.
+
+Shaped shakes are source-tagged too (`ShakeSource`) and the caps are **independent, not shares of one
+number**: `MAX_RULE_SHAKES` = 8 and `MAX_SCRIPT_SHAKES` = 4 sum to the list ceiling, so a source
+neither evicts nor crowds out another's — past its own allowance it displaces its own quietest. Each
+shake carries a `uint Id` and an owner; `Cancel` requires both, since ids are monotonic small
+integers and a caller holding one could otherwise walk the range and cancel a rule's.
 
 One flat pool, shared by reference. Shipped profiles (`BuiltInProfiles`) resolve from code every
 session and are never stored, so a retuned look reaches everyone using it. Copying one produces an
@@ -122,15 +135,64 @@ and displace the world, so a clean profile draws nothing until asked.
 Reconciles rather than reacts: each pass works out the set of overlays the rules in force call for
 and moves the compositor toward it, so a missed transition cannot strand an overlay.
 
-Pass order: `ExpireLapsedSignals` → `Resolve` (preview first, then first-match) →
-`ApplyConcurrencyCap` → `Reconcile` → schedule next expiry.
+Pass order: `ExpireLapsedSignals` → `Resolve` (preview, then scripts, then first-match) →
+`ApplyConcurrencyCap` **once per source** → `Reconcile` → schedule next expiry.
 
 - **Concurrency cap is applied here, not in the compositor.** Only this class records what it asked
   for (`_showing`), so a drop it cannot see would never be re-asserted. Dropping here retires through
   the normal path — fades out, returns when there is room.
 - **Preview** claims its profile like a rule, so previewing a look a rule already shows draws once,
-  not twice at doubled alpha.
+  not twice at doubled alpha. **Scripts** claim the same way, between the two.
 - Shake fires **on onset only** (`FireOnsetShake`); restating an occurrence must not re-hit.
+
+### Demand sources
+
+`RuleDemand.Source` partitions everything a pass resolves. The three are capped independently,
+because they sort against each other and a shared cap would let the strongest starve the rest:
+
+| Source | Priority | Cap | Claims a look? |
+|---|---|---|---|
+| Preview | 100 | `ScreenOverlayManager.PreviewCap` = 1, singular by construction so nothing enforces it | yes |
+| Script | 50 | `ScreenOverlayManager.ScriptCap` = 4, global across scripts | only if raised from a library profile |
+| Rule | `-(int)Order` ≤ 0 | the user's `MaxConcurrent`, 1–8 | yes |
+
+Worst case is therefore 13 overlays × `MaxLayers` 4 = **52 full-screen shader passes** in one frame,
+which is the number `ScreenOverlayCompositor`'s layer budget is sized to. `PreviewCap` exists for
+that sum alone: the preview is exempt from `MaxConcurrent`, so a budget that left it out would not
+drop the preview (it outranks everything) but whichever rule overlay the preview displaced.
+
+Reaching `ScriptCap` answers 0 rather than throwing: the cap is shared, so a script finds it full
+through another script's doing. `ScriptSlotsFree()` tells that apart from the system being switched
+off, which also answers 0.
+
+`StartScripted` also declines **out of world** (`_inWorld`). Nothing reconciles there, so a demand
+taken would hold a slot, draw nothing, and then arrive all at once on the next world load — one
+onset shake per banked effect. `ScriptSlotsFree()` answers 0 out of world for the same reason. Shake
+is gated by the same fact one level down: `Unwatch()` clears `ScreenShake.Enabled`, which every
+`Trauma` entry point checks, and `ScreenShake.Enabled` starts `false` so a cold client before its
+first world session behaves the same as one that has left.
+
+**Scripted demands** (`Manager/ScriptedOverlayRegistry.cs`) are transient: never persisted, no
+`ScreenDecorationsJsonContext` entry, no migration. `ScriptedDemand` carries a `SourceProfileId` the
+claim is tested against — `EffectProfile.Clone()` stamps a fresh `Guid`, so without it two
+script-raised Poisons would both draw at doubled alpha. A script-*built* config has no source, so it
+neither claims nor is suppressed, and two identical hand-built ones do double up (accepted).
+
+Insertion order decides which of two demands on one look draws; the other stays in the registry and
+takes over on the pass after the first lapses, arriving as a **fresh onset** — fade-in from zero,
+onset shake re-fires. The blink is accepted deliberately.
+
+Compositor slots come from a **pool of `ScriptCap` ids**, handed out round-robin, not minted per
+demand. A slot told to hide stays in the compositor's active set until the fade-out finishes and
+nothing counts those, so a fresh id per start would let a start-stop loop grow that set without
+bound — and it is walked and sorted every frame. Reusing a vacated slot makes the next start replace
+the retiring overlay instead; round-robin picks the one vacated longest ago, whose fade is most
+likely already done.
+
+The whole registry is dropped on the `!wanted` path of `SyncReconciler`, which `Reset()` goes through
+— so handles go stale on leaving the world and nothing is re-asserted on the next load. The other
+teardown is `StopScriptedByOwner`, called from `LegionAPI.Dispose`: without it a timeout-less effect
+outlives the script that raised it with nothing left that could stop it.
 
 Threading: every public entry point marshals to the main thread (`MainThreadQueue`), including the
 settings `PropertyChanged` handler — settings are statically reachable and written from anywhere.
@@ -150,9 +212,11 @@ Draws what it is told and knows nothing about why. Slots keyed by rule ID.
 - Baking happens in `Show()` — i.e. per raise/restate, **never per frame**. The draw loop iterates
   already-baked layers and allocates nothing.
 - One fade envelope per slot, multiplied into each layer's `Appearance.Intensity` at draw.
-- Layer budget `ApplyBudget` = cap × `OverlayLayerStack.MaxLayers`. Drops overlays **whole** and
-  **stops** at the first that does not fit, so a cheap low-priority overlay cannot displace an
-  expensive important one.
+- Layer budget `ApplyBudget` = `(cap + ScriptCap + PreviewCap)` × `OverlayLayerStack.MaxLayers`.
+  Drops overlays **whole** and **stops** at the first that does not fit, so a cheap low-priority
+  overlay cannot displace an expensive important one. Every partition is counted in because they
+  sort against each other; each source is bounded upstream, which leaves this a safety net rather
+  than a binding limit.
 - Two scopes: `Viewport` (under gumps, drawn by `GameScene`) and `FullScreen` (over everything,
   drawn by `GameController`). Scene texture binds to `UltimaBatcher2D.SpareTextureSlot`.
 - `Time` is shared across all layers and wrapped at 3600 s — layers must stay phase-coherent.
@@ -166,6 +230,7 @@ Draws what it is told and knows nothing about why. Slots keyed by rule ID.
 | `ViewportShakeOffset` / `ViewportShakeMarginPixels` | `GameScene` — moves the *crop*, not the destination |
 | `ApplyWindowShake` / `DrawFullScreenOverlays` | `GameController`, at the final blit |
 | `RulesChanged` / `ProfilesChanged` / `SetPreview` / `ClearPreview` | Options tabs and editors |
+| `StartScripted` / `StopScripted` / `StopScriptedByOwner` / `ScriptSlotsFree` | `ApiVisualEffects` — main thread only, so it hops |
 
 Viewport shake moves the source crop inside a margin-padded render target; moving the destination
 would expose the target's unrendered edge.
@@ -240,6 +305,7 @@ stacking layers cannot fix anything the shape mask does wrong.
 | Path | Role |
 |---|---|
 | `Manager/ScreenOverlayManager.cs` | Reconciler. Rule wiring, trigger lifetimes, cap, shake dispatch |
+| `Manager/ScriptedOverlayRegistry.cs` | What scripts are asking for; handle ↔ slot, ordering, expiry |
 | `Manager/OverlayPassScheduler.cs` | When a pass runs |
 | `Manager/WatchedRule.cs` | One rule's live wiring + latest signal; owns subscription lifetime |
 | `Overlays/ScreenOverlayCompositor.cs` | Envelopes, layer budget, draw loop |
@@ -257,9 +323,10 @@ stacking layers cannot fix anything the shape mask does wrong.
 | `ClassicUO.IO/Persistency/Migrations/` | Transport-agnostic schema migration engine (sequencing, JSON format, pipeline) |
 | `ClassicUO.Renderer/Effects/OverlayParams.cs` | Wire format + `Clamp()`. No editor metadata |
 | `ClassicUO.Renderer/shaders/ScreenOverlay.fx` + `.fxc` | The shader. `.fxc` is committed; **nothing detects drift** |
+| `LegionScripting/ApiClasses/Api*` (effect/layer/spec/shake) | Script-facing DTO tier; `ToInternal` is the single validate point |
 | `Game/UI/MyraWindows/Options/Tabs/VisualEffects/` | General / Rules / Profiles tabs |
 | `Game/UI/MyraWindows/Options/Editors/Overlays/` | The layer composer |
-| `tests/ClassicUO.UnitTests/Game/ScreenDecorations/` | Bake equivalence, clamping, rule precedence, cap, budget, preset invariants, localization keys |
+| `tests/ClassicUO.UnitTests/Game/ScreenDecorations/` | Bake equivalence, clamping, rule precedence, caps, budget, preset invariants, localization keys, DTO parity |
 
 ## Gotchas
 
@@ -285,6 +352,8 @@ stacking layers cannot fix anything the shape mask does wrong.
 - Shared trigger instances when parameters compare equal (two rules on `SoundPlayedTrigger` each hook
   `EventSink.SoundPlayed`; harmless, mildly wasteful).
 - User-authored trigger *logic*. Python scripts registering triggers is the eventual cheap path.
+  Scripts can already *raise* an effect directly (`API.VisualEffects.Start`), which is not the same
+  thing: nothing a script passes becomes a rule, and the rulebase is untouched by it.
 - CRUD on layer techniques — fixed set of four; the shader has four.
 - Per-layer fade timing (would land on `ProfileLayer`).
 - `Configuration/…/ScreenDecorations` and `Game/ScreenDecorations` reference each other, and

@@ -23,6 +23,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ClassicUO.Client\ClassicUO.Client.csproj" />
+    <!-- Units also assert docgen output - we call it via code, hence the reference -->
+    <ProjectReference Include="..\..\src\APIToMarkdown\APIToMarkdown.csproj" />
   </ItemGroup>
 
 </Project>
