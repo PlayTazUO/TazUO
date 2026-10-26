@@ -2310,8 +2310,8 @@ namespace ClassicUO.LegionScripting
         public bool OnIgnoreList(uint serial) => _ignoreList.Contains(serial);
 
         /// <summary>
-        /// Attempt to pathfind to a location. Distances greater than 10 tiles use the
-        /// world-map pathfinder; shorter distances use the local one.
+        /// Attempt to pathfind to a location. The local pathfinder is tried first; if it cannot
+        /// find a path, the world-map pathfinder is used instead.
         /// Example:
         /// ```py
         /// API.Pathfind(1414, 1515)
@@ -2327,13 +2327,6 @@ namespace ClassicUO.LegionScripting
         /// <returns>true/false if a path was generated</returns>
         public bool Pathfind(int x, int y, int z = int.MinValue, int distance = 1, bool wait = false, int timeout = 10, bool run = true)
         {
-            bool useWorldMap = OnMain(() =>
-                World?.Player != null &&
-                World.Player.DistanceFrom(new Vector2(x, y)) > LongDistancePathfindThreshold);
-
-            if (useWorldMap)
-                return PathfindLongDistance(x, y, distance, wait, timeout, run);
-
             bool pathFindStatus = OnMain
             (() =>
                 {
@@ -2351,6 +2344,9 @@ namespace ClassicUO.LegionScripting
                     return World.Player.Pathfinder.WalkTo(x, y, z, distance, run);
                 }
             );
+
+            if (!pathFindStatus)
+                return PathfindLongDistance(x, y, distance, wait, timeout, run);
 
             if (!wait)
                 return pathFindStatus;
@@ -2377,8 +2373,8 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
-        /// Attempt to pathfind to a mobile or item. Distances greater than 10 tiles use the
-        /// world-map pathfinder; shorter distances use the local one.
+        /// Attempt to pathfind to a mobile or item. The local pathfinder is tried first; if it
+        /// cannot find a path, the world-map pathfinder is used instead.
         /// Example:
         /// ```py
         /// mob = API.NearestMobile([API.Notoriety.Gray, API.Notoriety.Criminal], 7)
@@ -2396,7 +2392,7 @@ namespace ClassicUO.LegionScripting
         {
             int x = 0, y = 0, z = 0;
 
-            bool useWorldMap = OnMain
+            bool pathFindStatus = OnMain
             (() =>
                 {
                     if (World?.Player == null)
@@ -2410,17 +2406,15 @@ namespace ClassicUO.LegionScripting
                     y = mob.Y;
                     z = mob.Z;
 
-                    return World.Player.DistanceFrom(new Vector2(x, y)) > LongDistancePathfindThreshold;
+                    return World.Player.Pathfinder.WalkTo(x, y, z, distance, run);
                 }
             );
 
             if (x == 0 && y == 0)
                 return false;
 
-            if (useWorldMap)
+            if (!pathFindStatus)
                 return PathfindLongDistance(x, y, distance, wait, timeout, run);
-
-            bool pathFindStatus = OnMain(() => World?.Player?.Pathfinder?.WalkTo(x, y, z, distance, run) == true);
 
             if (!wait)
                 return pathFindStatus;
@@ -2479,8 +2473,8 @@ namespace ClassicUO.LegionScripting
         });
 
         /// <summary>
-        /// Attempt to build a path to a location. Distances greater than 10 tiles use the
-        /// world-map pathfinder; shorter distances use the local one.
+        /// Attempt to build a path to a location. The local pathfinder is tried first; if it
+        /// cannot find a path, the world-map pathfinder is used instead.
         /// Example:
         /// ```py
         /// API.RequestTarget()
@@ -2498,34 +2492,7 @@ namespace ClassicUO.LegionScripting
         /// <returns>Returns a list of positions to reach the goal. Returns null if cannot find path.</returns>
         public IList<ApiPoint3D> GetPath(int x, int y, int z = int.MinValue, int distance = 1)
         {
-            bool useWorldMap = OnMain(() =>
-                World?.Player != null &&
-                World.Player.DistanceFrom(new Vector2(x, y)) > LongDistancePathfindThreshold);
-
-            if (useWorldMap)
-            {
-                List<WorldMapPathfinder.PathPoint> worldPath = ComputeWorldMapPath(x, y, WorldMapPathfindWaitSeconds);
-
-                if (worldPath == null)
-                    return null;
-
-                worldPath = TrimToStopDistance(worldPath, x, y, distance);
-
-                var result = new List<ApiPoint3D>(worldPath.Count + 1);
-
-                OnMain(() =>
-                {
-                    if (World?.Player != null)
-                        result.Add(new ApiPoint3D { X = World.Player.X, Y = World.Player.Y, Z = World.Player.Z });
-                });
-
-                foreach (WorldMapPathfinder.PathPoint p in worldPath)
-                    result.Add(new ApiPoint3D { X = p.X, Y = p.Y, Z = p.Z });
-
-                return result;
-            }
-
-            return OnMain(() =>
+            List<ApiPoint3D> localPath = OnMain(() =>
             {
                 if (World?.Player == null)
                     return null;
@@ -2544,9 +2511,31 @@ namespace ClassicUO.LegionScripting
                     ? null
                     : new List<ApiPoint3D>(path.Select(p => new ApiPoint3D { X = p.X, Y = p.Y, Z = p.Z }));
             });
+
+            if (localPath != null)
+                return localPath;
+
+            List<WorldMapPathfinder.PathPoint> worldPath = ComputeWorldMapPath(x, y, WorldMapPathfindWaitSeconds);
+
+            if (worldPath == null)
+                return null;
+
+            worldPath = TrimToStopDistance(worldPath, x, y, distance);
+
+            var result = new List<ApiPoint3D>(worldPath.Count + 1);
+
+            OnMain(() =>
+            {
+                if (World?.Player != null)
+                    result.Add(new ApiPoint3D { X = World.Player.X, Y = World.Player.Y, Z = World.Player.Z });
+            });
+
+            foreach (WorldMapPathfinder.PathPoint p in worldPath)
+                result.Add(new ApiPoint3D { X = p.X, Y = p.Y, Z = p.Z });
+
+            return result;
         }
 
-        private const int LongDistancePathfindThreshold = 10;
         private const int WorldMapPathfindSnapRadius = 8;
         private const int WorldMapPathfindWaitSeconds = 30;
 

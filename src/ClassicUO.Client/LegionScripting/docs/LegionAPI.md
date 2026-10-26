@@ -1776,8 +1776,8 @@ if API.OnIgnoreList(API.Backpack):
 
 ### Pathfind
 `(x, y, z, distance, wait, timeout, run)`
-Attempt to pathfind to a location. Distances greater than 10 tiles use the
-world-map pathfinder; shorter distances use the local one.
+Attempt to pathfind to a location. The local pathfinder is tried first; if it cannot
+find a path, the world-map pathfinder is used instead.
 
 **Example:**
 
@@ -1803,8 +1803,8 @@ API.Pathfind(1414, 1515)
 
 ### PathfindEntity
 `(entity, distance, wait, timeout, run)`
-Attempt to pathfind to a mobile or item. Distances greater than 10 tiles use the
-world-map pathfinder; shorter distances use the local one.
+Attempt to pathfind to a mobile or item. The local pathfinder is tried first; if it
+cannot find a path, the world-map pathfinder is used instead.
 
 **Example:**
 
@@ -1861,8 +1861,8 @@ if API.Pathfinding():
 
 ### GetPath
 `(x, y, z, distance)`
-Attempt to build a path to a location. Distances greater than 10 tiles use the
-world-map pathfinder; shorter distances use the local one.
+Attempt to build a path to a location. The local pathfinder is tried first; if it
+cannot find a path, the world-map pathfinder is used instead.
 
 **Example:**
 
