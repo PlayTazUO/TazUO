@@ -1230,6 +1230,12 @@ class ApiUserProfile:
     MoveItemDelay: int = None
     AutoLootEnabled: bool = None
 
+    def GetSavedMountSerial(self) -> "int":
+        """
+        Gets the currently saved mount's serial
+        """
+        pass
+
 class ApiVector2(PyApiObject):
     ""
     X: float = None
@@ -3387,7 +3393,7 @@ def GetJournalEntries(seconds: "float", matchingText: "str" = "") -> "list[ApiJo
 
 def ClearJournal(matchingEntries: "str" = "") -> None:
     """
-    Clear your journal(This is specific for each script).
+    Clear your journal (This is specific for each script).
     Supports regex matching if prefixed with $
     
     **Example:**

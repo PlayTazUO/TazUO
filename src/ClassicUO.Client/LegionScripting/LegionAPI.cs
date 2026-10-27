@@ -2560,7 +2560,7 @@ namespace ClassicUO.LegionScripting
 
             bool started = OnMain(() =>
             {
-                var player = World?.Player;
+                PlayerMobile player = World?.Player;
                 if (player?.Pathfinder == null || World.Map == null || WorldMapPathfinder.IsRunning)
                     return false;
 
@@ -2654,7 +2654,7 @@ namespace ClassicUO.LegionScripting
 
             bool started = OnMain(() =>
             {
-                var player = World?.Player;
+                PlayerMobile player = World?.Player;
                 if (player?.Pathfinder == null)
                     return false;
 
@@ -4066,14 +4066,13 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
-        /// Clear your journal(This is specific for each script).
+        /// Clear your journal (This is specific for each script).
         /// Supports regex matching if prefixed with $
         /// Example:
         /// ```py
         /// API.ClearJournal()
         /// ```
         /// </summary>
-        /// <param name=""></param>
         /// <param name="matchingEntries">String or regex to match with. If this is set, only matching entries will be removed.</param>
         public void ClearJournal(string matchingEntries = "")
         {

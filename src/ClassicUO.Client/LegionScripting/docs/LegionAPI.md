@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `10/25/26`.*
+*This was generated on `10/27/26`.*
 
 ## Properties
 ### `Events`
@@ -2935,7 +2935,7 @@ if list:
 
 ### ClearJournal
 `(matchingEntries)`
-Clear your journal(This is specific for each script).
+Clear your journal (This is specific for each script).
 Supports regex matching if prefixed with $
 
 **Example:**

@@ -47,4 +47,11 @@ Does the player have auto loot enabled?
 *No enums found.*
 
 ## Methods
-*No methods found.*
+### GetSavedMountSerial
+
+Gets the currently saved mount's serial
+
+**Return Type:** `uint` - The currently saved mount's serial, or 0, if none was set
+
+---
+
