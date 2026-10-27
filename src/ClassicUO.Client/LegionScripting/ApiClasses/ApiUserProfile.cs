@@ -38,5 +38,5 @@ public class ApiUserProfile
     ///     Gets the currently saved mount's serial
     /// </summary>
     /// <returns>The currently saved mount's serial, or 0, if none was set</returns>
-    public static uint GetSavedMountSerial() => ProfileManager.CurrentProfile?.SavedMountSerial ?? 0;
+    public static uint SavedMountSerial => ProfileManager.CurrentProfile?.SavedMountSerial ?? 0;
 }
