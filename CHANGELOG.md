@@ -3,6 +3,10 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 10/27/26
+* ***Fix:*** Modern windows no longer resize when dragging over whilst holding an item - [P.R 1193](https://github.com/PlayTazUO/TazUO/pull/1193) ([yuval-po](https://github.com/yuval-po))
+* ***Legion:*** `API.Profile.GetSavedMountSerial()` returns the serial saved by `API.SetMount` and the `Set mount` macro, or 0 if none is set - [P.R 1193](https://github.com/PlayTazUO/TazUO/pull/1193) ([yuval-po](https://github.com/yuval-po))
+
 ## 10/26/26
 * ***Fix:*** Fixed the nameplate options gump not reopening after it was closed with right-click while `Stay active` was on - holding the nameplate hotkey now brings it back
 
