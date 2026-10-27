@@ -1,6 +1,6 @@
 ---
 title: ApiUserProfile
-description: ApiUserProfile class documentation
+description: "ApiUserProfile class documentation"
 ---
 
 ## Properties
@@ -8,43 +8,37 @@ description: ApiUserProfile class documentation
 
 **Type:** `string`
 
- Get the current character name
-
+Get the current character name
 
 ### `ServerName`
 
 **Type:** `string`
 
- Get the current server name
-
+Get the current server name
 
 ### `LootBagSerial`
 
 **Type:** `uint`
 
- Serial of the player's loot bag, otherwise 0
-
+Serial of the player's loot bag, otherwise 0
 
 ### `FavoriteBagSerial`
 
 **Type:** `uint`
 
- Serial of the player's favorite move bag, otherwise 0
-
+Serial of the player's favorite move bag, otherwise 0
 
 ### `MoveItemDelay`
 
 **Type:** `int`
 
- The player's move item delay in milliseconds.
-
+The player's move item delay in milliseconds.
 
 ### `AutoLootEnabled`
 
 **Type:** `bool`
 
- Does the player have auto loot enabled?
-
+Does the player have auto loot enabled?
 
 
 *No fields found.*

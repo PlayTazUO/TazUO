@@ -4,14 +4,13 @@ using Microsoft.Xna.Framework;
 namespace ClassicUO.Game.ScreenDecorations.Shake;
 
 /// <summary>
-/// Turns a <see cref="ShakeRequest"/> plus an elapsed time into an amplitude. Kept apart from
-/// <see cref="ScreenShake"/> so the envelope shapes can be reasoned about - and tested - without
-/// the noise tables or the frame loop.
+///     Turns a <see cref="ShakeRequest" /> plus an elapsed time into an amplitude. Apart from
+///     <see cref="ScreenShake" /> so the shapes can be tested without the noise tables or a frame loop.
 /// </summary>
 internal static class ShakeEnvelope
 {
     /// <summary>
-    /// Trauma at <paramref name="elapsedSeconds"/> into the request, or zero once it is spent.
+    ///     Amplitude at <paramref name="elapsedSeconds" /> into the request, 0 to 1, or zero once spent.
     /// </summary>
     public static float Evaluate(in ShakeRequest request, float elapsedSeconds)
     {
@@ -28,8 +27,10 @@ internal static class ShakeEnvelope
         return MathHelper.Clamp(request.Intensity, 0f, 1f) * amplitude;
     }
 
-    /// <param name="distance">Time from the edge the ramp is anchored to.</param>
-    /// <param name="window">Ramp length; non-positive leaves that edge abrupt.</param>
+    /// <summary>
+    ///     One edge's fade factor. <paramref name="distance" /> is measured from the edge the ramp is
+    ///     anchored to; a non-positive <paramref name="window" /> leaves that edge abrupt.
+    /// </summary>
     private static float Ramp(ShakeCurve curve, float distance, float window)
     {
         if (window <= 0f)

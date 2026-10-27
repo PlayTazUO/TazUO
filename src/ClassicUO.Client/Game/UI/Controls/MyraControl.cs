@@ -291,8 +291,14 @@ public class MyraControl : IGui, IDisposable
 
     public virtual bool Draw(UltimaBatcher2D batcher, int x, int y)
     {
-        if (IsDisposed || !IsVisible || _desktop == null || _desktop.Root == null)
+        if (IsDisposed || _desktop == null || _desktop.Root == null)
             return false;
+
+        if (!IsVisible)
+        {
+            _desktop.SynchronizeMouseWheel();
+            return false;
+        }
 
         batcher.FlushBatch(); //Required to draw myra on top of already drawn gumps
 
@@ -307,6 +313,7 @@ public class MyraControl : IGui, IDisposable
             }
             else
             {
+                _desktop.SynchronizeMouseWheel();
                 _desktop.UpdateLayout();
                 _desktop.RenderVisual();
             }

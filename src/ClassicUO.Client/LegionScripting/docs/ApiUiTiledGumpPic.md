@@ -1,6 +1,6 @@
 ---
 title: ApiUiTiledGumpPic
-description: ApiUiTiledGumpPic class documentation
+description: "ApiUiTiledGumpPic class documentation"
 ---
 
 ## Properties

@@ -94,7 +94,8 @@
   </Target>
 
   <ItemGroup>
-    <DocSourceFiles Include="$(ProjectDir)/LegionScripting/ApiClasses/*.cs" />
+    <!-- Recursive: a class's folder under ApiClasses becomes its documentation page's folder. -->
+    <DocSourceFiles Include="$(ProjectDir)/LegionScripting/ApiClasses/**/*.cs" />
     <DocSourceFiles Include="LegionScripting\LegionAPI.cs" />
     <DocSourceFiles Include="$(BaseIntermediateOutputPath)/generated/EventGenerator/**/*.Api.Decl.g.cs" />
   </ItemGroup>

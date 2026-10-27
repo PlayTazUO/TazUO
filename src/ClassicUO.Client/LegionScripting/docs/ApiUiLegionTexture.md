@@ -1,6 +1,6 @@
 ---
 title: ApiUiLegionTexture
-description: ApiUiLegionTexture class documentation
+description: "ApiUiLegionTexture class documentation"
 ---
 
 ## Properties
@@ -8,8 +8,7 @@ description: ApiUiLegionTexture class documentation
 
 **Type:** `string`
 
- The name of the texture being displayed, as it appears in the ZIP archive.
-
+The name of the texture being displayed, as it appears in the ZIP archive.
 
 
 *No fields found.*

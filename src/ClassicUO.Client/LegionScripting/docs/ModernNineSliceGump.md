@@ -1,11 +1,10 @@
 ---
 title: ModernNineSliceGump
-description:  Internal class that extends NineSliceGump to provide callback support 
+description: "Internal class that extends NineSliceGump to provide callback support"
 ---
 
 ## Class Description
- Internal class that extends NineSliceGump to provide callback support
-
+Internal class that extends NineSliceGump to provide callback support
 
 ## Properties
 *No properties found.*
@@ -17,8 +16,7 @@ description:  Internal class that extends NineSliceGump to provide callback supp
 ## Methods
 ### SetLegionTexture
 `(texture, borderSize)`
- Set the modern gump texture and border size
-
+Set the modern gump texture and border size
 
 **Parameters:**
 
@@ -33,10 +31,10 @@ description:  Internal class that extends NineSliceGump to provide callback supp
 
 ### SetResizeCallback
 `(callback)`
- Registers a callback to be called when the gump is resized.
- <remarks>
- Note that only one callback may be registered at a time. Subsequent calls will replace the previous callback.
- </remarks> 
+Registers a callback to be called when the gump is resized.
+<remarks>
+Note that only one callback may be registered at a time. Subsequent calls will replace the previous callback.
+</remarks>
 
 **Parameters:**
 
@@ -50,8 +48,7 @@ description:  Internal class that extends NineSliceGump to provide callback supp
 
 ### Dispose
 
- Disposes the gump and releases its internal resources
-
+Disposes the gump and releases its internal resources
 
 **Return Type:** `void` *(Does not return anything)*
 

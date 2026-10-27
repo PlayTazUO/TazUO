@@ -159,9 +159,11 @@ namespace ClassicUO.Game.Scenes
 
                     if (tileZ > pz14 && _maxZ > tileZ)
                     {
-                        ref StaticTiles itemdata = ref Client.Game.UO.FileManager.TileData.StaticData[
+                        // Effects (e.g. a lightning strike above the player) can carry a graphic the
+                        // local tiledata does not describe; the safe accessor keeps the draw going.
+                        ref StaticTiles itemdata = ref Client.Game.UO.FileManager.TileData.GetStaticTile(
                             obj.Graphic
-                        ];
+                        );
 
                         //if (GameObjectHelper.TryGetStaticData(obj, out var itemdata) && ((ulong) itemdata.Flags & 0x20004) == 0 && (!itemdata.IsRoof || itemdata.IsSurface))
                         if (
@@ -208,9 +210,9 @@ namespace ClassicUO.Game.Scenes
                         {
                             if (!(obj2 is Land))
                             {
-                                ref StaticTiles itemdata = ref Client.Game.UO.FileManager.TileData.StaticData[
+                                ref StaticTiles itemdata = ref Client.Game.UO.FileManager.TileData.GetStaticTile(
                                     obj2.Graphic
-                                ];
+                                );
 
                                 if (((ulong)itemdata.Flags & 0x204) == 0 && itemdata.IsRoof)
                                 {
@@ -381,7 +383,8 @@ namespace ClassicUO.Game.Scenes
             {
                 if (Vector2.Distance(new Vector2(obj.RealScreenPosition.X, obj.RealScreenPosition.Y), playerPos) < ProfileManager.GlobalSettings.CircleOfTransparencyRadius)
                 {
-                    if (obj.Z >= _maxZ)
+                    // _maxZ stays at the map ceiling (127) when nothing is overhead: nothing to hide then.
+                    if (obj.Z >= _maxZ && _maxZ < 127)
                     {
                         obj.AlphaHue = 0;
                         //CalculateAlpha(ref obj.AlphaHue, 0);
@@ -413,7 +416,8 @@ namespace ClassicUO.Game.Scenes
                     }
                 }
             }
-            if (obj.Z >= _maxZ)
+            // _maxZ stays at the map ceiling (127) when nothing is overhead: nothing to hide then.
+            if (obj.Z >= _maxZ && _maxZ < 127)
             {
                 bool changed;
 
@@ -759,7 +763,7 @@ namespace ClassicUO.Game.Scenes
 
                         if (tile.Z > obj.Z && (tile is Static || tile is Multi))
                         {
-                            ref StaticTiles itemData = ref Client.Game.UO.FileManager.TileData.StaticData[tile.Graphic];
+                            ref StaticTiles itemData = ref Client.Game.UO.FileManager.TileData.GetStaticTile(tile.Graphic);
 
                             if (itemData.IsNoShoot || itemData.IsWindow)
                             {
@@ -1277,7 +1281,7 @@ namespace ClassicUO.Game.Scenes
                         {
                             ref StaticTiles itemData = ref (
                                 item.IsMulti
-                                    ? ref Client.Game.UO.FileManager.TileData.StaticData[item.MultiGraphic]
+                                    ? ref Client.Game.UO.FileManager.TileData.GetStaticTile(item.MultiGraphic)
                                     : ref item.ItemData
                             );
 
@@ -1396,7 +1400,7 @@ namespace ClassicUO.Game.Scenes
                         if (
                                             !ProcessAlpha(
                                                 obj,
-                                                ref Client.Game.UO.FileManager.TileData.StaticData[effect.Graphic],
+                                                ref Client.Game.UO.FileManager.TileData.GetStaticTile(effect.Graphic),
                                                 false,
                                                 ref playerScreePos,
                                                 cotZ,

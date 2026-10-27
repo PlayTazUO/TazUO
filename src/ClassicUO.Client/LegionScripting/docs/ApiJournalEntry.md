@@ -1,6 +1,6 @@
 ---
 title: ApiJournalEntry
-description: ApiJournalEntry class documentation
+description: "ApiJournalEntry class documentation"
 ---
 
 ## Properties

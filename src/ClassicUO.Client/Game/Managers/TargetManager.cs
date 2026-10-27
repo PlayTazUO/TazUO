@@ -518,7 +518,7 @@ namespace ClassicUO.Game.Managers
 
                     case CursorTarget.SetMount:
 
-                        if (SerialHelper.IsMobile(serial))
+                        if (SerialHelper.IsMobile(serial) || SerialHelper.IsItem(serial))
                         {
                             ProfileManager.CurrentProfile.SavedMountSerial = serial;
                             Entity mount = _world.Get(serial);
@@ -527,7 +527,7 @@ namespace ClassicUO.Game.Managers
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, "You must target a creature or mount item to set as your mount.", 32);
                         }
 
                         ClearTargetingWithoutTargetCancelPacket();
@@ -582,14 +582,14 @@ namespace ClassicUO.Game.Managers
                 switch (TargetingState)
                 {
                     case CursorTarget.SetMount:
-                        if (SerialHelper.IsMobile(serial))
+                        if (SerialHelper.IsMobile(serial) || SerialHelper.IsItem(serial))
                         {
                             ProfileManager.CurrentProfile.SavedMountSerial = serial;
                             GameActions.Print(_world, $"Mount set (Serial: {serial})", 48);
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, "You must target a creature or mount item to set as your mount.", 32);
                         }
                         ClearTargetingWithoutTargetCancelPacket();
                         return;
@@ -654,6 +654,24 @@ namespace ClassicUO.Game.Managers
                 {
                     z += itemData.Height;
                 }
+            }
+
+            if (TargetingState == CursorTarget.Internal)
+            {
+                // Client-side targeting (e.g. Legion's RequestTarget) must record the location
+                // without answering the server, which is not waiting for a target.
+                if (graphic == 0)
+                {
+                    LastTargetInfo.SetLand(x, y, (sbyte)z);
+                }
+                else
+                {
+                    LastTargetInfo.SetStatic(graphic, x, y, (sbyte)z);
+                }
+
+                ClearTargetingWithoutTargetCancelPacket();
+                Mouse.CancelDoubleClick = true;
+                return;
             }
 
             LastTargetInfo.SetStatic(graphic, x, y, (sbyte)z);
