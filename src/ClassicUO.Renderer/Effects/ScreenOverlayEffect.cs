@@ -49,9 +49,12 @@ public class ScreenOverlayEffect : Effect
         SceneScale = Parameters["SceneScale"];
         SampleRadius = Parameters["SampleRadius"];
         SampleZoom = Parameters["SampleZoom"];
+        SampleSwirl = Parameters["SampleSwirl"];
         SampleAberration = Parameters["SampleAberration"];
 
         Tint = Parameters["Tint"];
+        // Named apart from the technique, which fx_2_0 would otherwise reject as a redefinition.
+        SaturationAmount = Parameters["SaturationAmount"];
         Opacity = Parameters["Opacity"];
         Intensity = Parameters["Intensity"];
         PulseFreq = Parameters["PulseFreq"];
@@ -59,6 +62,7 @@ public class ScreenOverlayEffect : Effect
 
         _tintTechnique = Techniques["T0"];
         _chromaticTechnique = Techniques["Chromatic"];
+        _saturationTechnique = Techniques["Saturation"];
 
         _blurTechniques = TechniquesPerTapCount("Blur");
         _radialTechniques = TechniquesPerTapCount("Radial");
@@ -118,9 +122,11 @@ public class ScreenOverlayEffect : Effect
     public EffectParameter SceneScale { get; }
     public EffectParameter SampleRadius { get; }
     public EffectParameter SampleZoom { get; }
+    public EffectParameter SampleSwirl { get; }
     public EffectParameter SampleAberration { get; }
 
     public EffectParameter Tint { get; }
+    public EffectParameter SaturationAmount { get; }
     public EffectParameter Opacity { get; }
     public EffectParameter Intensity { get; }
     public EffectParameter PulseFreq { get; }
@@ -128,6 +134,7 @@ public class ScreenOverlayEffect : Effect
 
     private readonly EffectTechnique _tintTechnique;
     private readonly EffectTechnique _chromaticTechnique;
+    private readonly EffectTechnique _saturationTechnique;
 
     /// <summary>Blur techniques indexed by tap count, so selection is one array read.</summary>
     private readonly EffectTechnique[] _blurTechniques;
@@ -152,6 +159,7 @@ public class ScreenOverlayEffect : Effect
             OverlaySampleMode.Blur => _blurTechniques[(int)sampling.Taps],
             OverlaySampleMode.Radial => _radialTechniques[(int)sampling.Taps],
             OverlaySampleMode.Chromatic => _chromaticTechnique,
+            OverlaySampleMode.Saturation => _saturationTechnique,
             _ => _tintTechnique
         };
 
@@ -241,9 +249,12 @@ public class ScreenOverlayEffect : Effect
         );
 
         SampleZoom.SetValue(sampling.Zoom);
+        SampleSwirl.SetValue(sampling.Swirl);
 
         // Scales the centre ray, which already carries SceneScale, so it needs no mapping of its
         // own - and must stay isotropic or the split stops following the ray.
         SampleAberration.SetValue(new Vector2(sampling.Aberration, sampling.Aberration));
+
+        SaturationAmount.SetValue(sampling.Saturation);
     }
 }

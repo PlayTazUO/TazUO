@@ -47,10 +47,12 @@ float2 SceneOffset;      // uv of the quad's origin within the scene texture
 float2 SceneScale;       // uv size of the quad within the scene texture
 float2 SampleRadius;     // disk radius for the blur, aspect-corrected so it stays circular
 float  SampleZoom;       // radial blur: how far along the centre ray the taps march
+float  SampleSwirl;      // radial blur: radians the march twists through; 0 = straight rays
 float2 SampleAberration; // chromatic: red/blue separation along the centre ray
 
 // ---- Appearance ------------------------------------------------------------
 float3 Tint;
+float  SaturationAmount; // 1 = frame untouched, 0 = fully grey, >1 = pushed; negative inverts the hue
 float  Opacity;
 float  Intensity;
 float  PulseFreq;
@@ -161,6 +163,22 @@ float2 CentreRay(float2 uv)
     return (uv - EffectiveCenter()) * SceneScale;
 }
 
+// Per-pixel offset in [0,1), applied to every tap's position along its path.
+//
+// Without it a tap count too low for the march distance resolves into distinct ghost copies of the
+// frame rather than a smear, and at high SampleZoom no affordable count avoids that: the taps span
+// the whole ray, so their spacing grows with distance from the centre and the corners band first.
+// Scattering each pixel's taps by up to one full step converts that banding into fine noise, which
+// the eye reads as motion blur instead of as a bug.
+//
+// Hash rather than a texture fetch - it costs no bandwidth, and the noise texture is tiling, so at
+// any frequency coarse enough to sample safely it would correlate across neighbouring pixels and
+// reintroduce structure.
+float TapDither(float2 uv)
+{
+    return frac(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453);
+}
+
 // Golden-angle spiral over a disk: sqrt(t) keeps the points area-uniform rather than bunched at the
 // centre, and the irrational angle step means no tap count lands on a visible rosette. Weighted
 // down toward the rim so the result reads as a soft blur instead of a hard-edged smear of copies.
@@ -175,12 +193,18 @@ float3 SampleDisk(float2 uv, int taps)
     float2 base = SceneUv(uv);
     float3 sum = tex2D(SceneSampler, base).rgb;
     float total = 1.0;
+    float dither = TapDither(uv);
 
     [unroll]
     for (int i = 1; i <= taps; i++)
     {
-        float t = (float)i / (float)taps;
-        float angle = (float)i * 2.39996323;
+        // Offsetting by less than one step keeps t inside (0, 1], so sqrt stays real and the
+        // outermost tap never marches past the radius it was given.
+        float t = ((float)i - dither) / (float)taps;
+
+        // Rotated per pixel as well as spaced per pixel: the spiral's own angle is fixed per tap
+        // index, so dithering only the radius would leave every pixel's taps on the same few spokes.
+        float angle = (float)i * 2.39996323 + dither * 6.28318530718;
         float2 dir = float2(cos(angle), sin(angle)) * sqrt(t);
         float weight = 1.0 - t * 0.5;
 
@@ -191,20 +215,43 @@ float3 SampleDisk(float2 uv, int taps)
     return sum / total;
 }
 
-// Taps march back along the centre ray, so the streaks converge on Center. Zoom blur, and the one
-// that reads as head-spin rather than as out-of-focus. taps is a literal for the same reason as in
-// SampleDisk.
+// Taps march back toward Center, so the streaks converge on it. Zoom blur: head-spin rather than
+// out-of-focus, and with SampleSwirl the march also turns, which is the difference between rushing
+// forward and being pulled down a vortex. taps is a literal for the same reason as in SampleDisk.
+//
+// Offsets are built in aspect-corrected space and converted back on use. A rotation applied to raw
+// screen uv shears on any non-square viewport - the spiral would wind faster across the short axis
+// and the streaks would visibly flatten toward the top and bottom edges.
+//
+// The rotation is stepped rather than evaluated per tap: the angle is linear in i, so one complex
+// multiply advances it. That trades 16 sincos calls per pixel for one, which is the difference
+// between this being affordable at 16 taps and not.
 float3 SampleRadial(float2 uv, int taps)
 {
-    float2 base = SceneUv(uv);
-    float2 ray = CentreRay(uv) * SampleZoom;
-    float3 sum = tex2D(SceneSampler, base).rgb;
+    float2 centre = EffectiveCenter();
+    float2 offset = (uv - centre) * AspectScale;
+    float3 sum = tex2D(SceneSampler, SceneUv(uv)).rgb;
+    float dither = TapDither(uv);
+
+    // Both as (sin, cos). step is uniform across the layer; turn starts at the dither's share of one
+    // step so a pixel's whole spiral is offset along with its tap spacing.
+    float2 step, turn;
+    sincos(SampleSwirl / (float)taps, step.x, step.y);
+    sincos(-SampleSwirl * dither / (float)taps, turn.x, turn.y);
 
     [unroll]
     for (int i = 1; i <= taps; i++)
     {
-        float t = (float)i / (float)taps;
-        sum += tex2Dlod(SceneSampler, float4(base - ray * t, 0, 0)).rgb;
+        turn = float2(turn.x * step.y + turn.y * step.x, turn.y * step.y - turn.x * step.x);
+
+        float t = ((float)i - dither) / (float)taps;
+        float2 turned = float2(
+            offset.x * turn.y - offset.y * turn.x,
+            offset.x * turn.x + offset.y * turn.y
+        );
+
+        float2 tap = centre + turned * (1.0 - SampleZoom * t) / AspectScale;
+        sum += tex2Dlod(SceneSampler, float4(SceneUv(tap), 0, 0)).rgb;
     }
 
     return sum / (float)(taps + 1);
@@ -223,6 +270,20 @@ float3 SampleChromatic(float2 uv)
         tex2D(SceneSampler, base).g,
         tex2D(SceneSampler, base - split).b
     );
+}
+
+// ---- Colour grading --------------------------------------------------------
+
+// Saturation as a lerp away from the frame's own luma. Rec. 709 weights rather than a flat average
+// so a desaturating layer does not lighten blues and darken greens as it drains them. Extrapolating
+// past 1 is what gives the lurid, over-rich look; the result is deliberately left unclamped on the
+// top end so a bright, already-saturated pixel can blow out instead of flattening to a hue-shifted
+// plateau, and only the negative side is clipped, where channels would otherwise go below black.
+float3 ApplySaturation(float3 colour)
+{
+    // Rec 709 Luma coefficients
+    float luma = dot(colour, float3(0.2126, 0.7152, 0.0722));
+    return max(lerp(luma.xxx, colour, SaturationAmount), 0.0);
 }
 
 // Everything the shape and noise machinery contributes, shared by every technique: 0 where the
@@ -305,6 +366,16 @@ float4 chromatic_fragment(PS_INPUT IN) : COLOR0
     return float4(SampleChromatic(IN.TexCoord), alpha);
 }
 
+// Like the sampling techniques, this returns the re-graded frame at the layer's own alpha, so
+// straight-alpha blending resolves to lerp(frame, graded, alpha) and the shape mask doubles as the
+// strength of the grade. One texture fetch, so it is the cheapest technique that reads the scene.
+float4 saturation_fragment(PS_INPUT IN) : COLOR0
+{
+    float alpha = OverlayAlpha(IN.TexCoord);
+    float3 scene = tex2D(SceneSampler, SceneUv(IN.TexCoord)).rgb;
+    return float4(ApplySaturation(scene), alpha);
+}
+
 technique T0
 {
     pass P0
@@ -340,5 +411,14 @@ technique Chromatic
     {
         VertexShader = compile vs_3_0 main_vertex();
         PixelShader = compile ps_3_0 chromatic_fragment();
+    }
+}
+
+technique Saturation
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 main_vertex();
+        PixelShader = compile ps_3_0 saturation_fragment();
     }
 }

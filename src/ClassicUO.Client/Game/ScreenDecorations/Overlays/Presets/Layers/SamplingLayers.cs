@@ -62,14 +62,22 @@ public static class SamplingLayers
     /// <param name="zoom">How far along the centre ray the taps march, as a fraction of the distance
     /// from the centre.</param>
     /// <param name="taps">Samples taken per pixel; the whole cost of the layer.</param>
+    /// <param name="swirl">Radians the march twists through. 0 is a straight ray; raising it winds
+    /// the streaks into a spiral.</param>
     /// <returns>The layer.</returns>
-    public static OverlayLayer Radial(SamplingShape shape, float zoom, OverlaySampleTaps taps = DEFAULT_RADIAL_TAPS) =>
+    public static OverlayLayer Radial(
+        SamplingShape shape,
+        float zoom,
+        OverlaySampleTaps taps = DEFAULT_RADIAL_TAPS,
+        float swirl = 0f
+    ) =>
         Build(
             shape,
             new OverlaySampling
             {
                 Mode = OverlaySampleMode.Radial,
                 Zoom = zoom,
+                Swirl = swirl,
                 Taps = taps
             }
         );
@@ -92,9 +100,26 @@ public static class SamplingLayers
         );
 
     /// <summary>
+    /// Colour pulled toward or away from the frame's own brightness. Drained reads as sickness and
+    /// near-death, pushed as fever. One tap per pixel, the cheapest of the four.
+    /// </summary>
+    /// <param name="shape">Where it applies and how hard.</param>
+    /// <param name="saturation">Where the colour is pulled to: 1 untouched, 0 grey, above 1 pushed,
+    /// below 0 the complement.</param>
+    /// <returns>The layer.</returns>
+    public static OverlayLayer Saturation(SamplingShape shape, float saturation) =>
+        Build(
+            shape,
+            new OverlaySampling
+            {
+                Mode = OverlaySampleMode.Saturation,
+                Saturation = saturation
+            }
+        );
+
+    /// <summary>
     /// The parts every distortion layer shares. Tint is irrelevant - the shader returns sampled
-    /// colour instead of it - and the noise block exists only to modulate strength, so it is flat
-    /// unless the shape asked to swim.
+    /// colour instead of it - and the noise block exists only to modulate strength.
     /// </summary>
     private static OverlayLayer Build(SamplingShape shape, OverlaySampling sampling) =>
         new()
@@ -103,21 +128,7 @@ public static class SamplingLayers
             Params = new OverlayParams
             {
                 Shape = shape.ToShape(),
-                Noise = new OverlayNoise
-                {
-                    BaseScale = _swimScale,
-                    BaseScroll = _swimScroll,
-                    BaseChannel = NoiseChannel.Red,
-                    DetailScale = _swimScale * 2f,
-                    DetailScroll = _swimScroll * 1.6f,
-                    DetailChannel = NoiseChannel.Green,
-                    WarpStrength = 0.20f,
-                    RidgeAmount = 0.00f,
-                    Threshold = 0.45f,
-                    Softness = 0.35f,
-                    // The floor is the steady part of the strength, so swim is what is taken off it.
-                    FlatFloor = 1f - shape.Swim
-                },
+                Noise = NoiseFor(shape.Swim),
                 Appearance = new OverlayAppearance
                 {
                     // Tint is unused - the sampling techniques return scene colour in its place - but
@@ -131,4 +142,43 @@ public static class SamplingLayers
                 Sampling = sampling
             }
         };
+
+    /// <summary>
+    /// The field that breaks up a layer's strength.
+    /// <para>
+    /// A layer with no swim multiplies the field out entirely - <c>FlatFloor</c> 1 makes the
+    /// shader's <c>lerp(field, 1, FlatFloor)</c> exactly 1 - so the frequencies and velocities
+    /// below would be dead values on display in the composer, reading as motion the layer does not
+    /// have. It gets the neutral block instead: same inert result, but nothing in it is a lie.
+    /// </para>
+    /// <para>
+    /// Note the neutral block is the editor's own defaults rather than zeroes. A zero
+    /// <c>Softness</c> would leave the shader evaluating <c>smoothstep(t, t, n)</c>, which is a
+    /// division by zero - harmless while the floor discards it, and NaN across the whole layer the
+    /// moment someone lowers that floor in the composer.
+    /// </para>
+    /// </summary>
+    /// <param name="swim">How much the field is allowed to vary the strength; 0 for none.</param>
+    /// <returns>The noise block.</returns>
+    private static OverlayNoise NoiseFor(float swim)
+    {
+        if (swim <= 0f)
+            return OverlayParams.Default.Noise with { FlatFloor = 1f };
+
+        return new OverlayNoise
+        {
+            BaseScale = _swimScale,
+            BaseScroll = _swimScroll,
+            BaseChannel = NoiseChannel.Red,
+            DetailScale = _swimScale * 2f,
+            DetailScroll = _swimScroll * 1.6f,
+            DetailChannel = NoiseChannel.Green,
+            WarpStrength = 0.20f,
+            RidgeAmount = 0.00f,
+            Threshold = 0.45f,
+            Softness = 0.35f,
+            // The floor is the steady part of the strength, so swim is what is taken off it.
+            FlatFloor = 1f - swim
+        };
+    }
 }

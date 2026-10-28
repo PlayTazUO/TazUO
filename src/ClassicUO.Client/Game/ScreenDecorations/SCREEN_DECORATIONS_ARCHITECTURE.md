@@ -35,11 +35,12 @@ on the type that reads them.
 abstract LayerEffect        // Shape, Noise, Strength, Pulse — every technique masks and swells
 ├── TintEffect        { Tint }
 ├── BlurEffect        { Radius, Taps }
-├── RadialBlurEffect  { Zoom, Taps }
-└── ChromaticEffect   { Aberration }        // fixed 3 taps, one per channel
+├── RadialBlurEffect  { Zoom, Swirl, Taps }   // Swirl 0 = straight rays, >0 = spiral
+├── ChromaticEffect   { Aberration }        // fixed 3 taps, one per channel
+└── SaturationEffect  { Saturation }        // 1 tap; Rec. 709 luma lerp, extrapolates past 1
 ```
 
-Fixed set of four: the shader has four techniques and config cannot describe a fifth.
+Fixed set: one technique per pass compiled into the shader, and config cannot describe another.
 
 `Bake()` flattens to `OverlayParams` (the GPU wire format) and clamps on the way — the safety
 ceilings are not the caller's to skip. `LayerEffectFactory.FromParams` is the inverse, which is how
@@ -238,7 +239,9 @@ would expose the target's unrendered edge.
 ## Shader
 
 `vs_3_0`/`ps_3_0`, `fxc /T fx_2_0`. No `VPOS`, no compute, `clip()` not `discard`. Straight
-(non-premultiplied) alpha out. Recompile after **every** `.fx` edit and commit both files:
+(non-premultiplied) alpha out. Uniforms and techniques share one identifier table, so a technique
+cannot be named after the uniform it reads — hence `technique Saturation` / `float SaturationAmount`
+(`error X3003: redefinition`). Recompile after **every** `.fx` edit and commit both files:
 
 ```sh
 cd src/ClassicUO.Renderer/shaders && wine fxc.exe /T fx_2_0 /O3 /Fo ScreenOverlay.fxc ScreenOverlay.fx
@@ -261,7 +264,11 @@ correcting: the fix is a composition decision.
 
 ## Parameter semantics (the non-obvious half)
 
-- **`Reach`** — how far in the effect extends. **Larger = thicker.**
+- **`Reach`** — how far in the effect extends. **Larger = thicker.** 1 reaches the centre but leaves
+  a hole exactly there (shape distance is 0 at the centre by construction), so **uniform full-screen
+  cover needs `Reach >= 1 + Feather`** — hence `MaxReach` = 2. `DesaturateOverlay` is the reference.
+- **`FlatFloor` is the other half of "uniform".** A layer at full reach with `FlatFloor` 0 is still
+  gated by the noise field and comes out as drifting patches. Both knobs, or neither works.
 - **`Jitter.ReachAmount`** only extends *inward* on the deep half of its field, so raising it raises
   average reach too. Budget against `Reach`.
 - **`Jitter.Scale`** must be **coarser than `Noise.BaseScale`** (else the boundary buzzes at detail
@@ -279,6 +286,12 @@ correcting: the fix is a composition decision.
 - **Screen speed is `Scroll / Scale`, not `Scroll`.** Derive scroll from a target speed.
 - `NoiseChannel`: R = fBm f4, G = fBm f8, **B = ridged fBm**, **A = Worley F2−F1**. B and A are
   fracture-only; either on organic content reads as a microscope slide.
+- **`Swirl`** turns radial from "rushing forward" into "pulled through". Free: the angle is linear
+  in the tap index, so the shader steps the rotation with one complex multiply instead of a sincos
+  per tap. Bounded `[-pi, pi]` - past half a turn the streaks wrap and the ghosting returns.
+- **`Saturation`** is a lerp from the frame's own Rec. 709 luma, not a clamp: 1 is untouched, 0
+  grey, past 1 extrapolates, below 0 is the complement. Only the negative side is clipped (channels
+  would go below black); the top is left to blow out. Bounded `[-1, 3]`.
 - `OverlayParams.Clamp()` enforces `PulseFreq ≤ 3.0` (photosensitive-epilepsy ceiling) **per layer**,
   plus `MaxSampleRadius`, `MaxSampleAberration`, and wobble ceilings. Never bypass. Multi-layer
   composition must not become a route around any of them.
@@ -296,6 +309,8 @@ correcting: the fix is a composition decision.
 | Wispy, no heft | Over-anisotropic (>5:1) + high threshold + wide feather together |
 | Bloody left/right, nothing top/bottom | `EdgeBlend` between 0 and 1 |
 | Distortion replaces a tint instead of smearing it | Sampling layer above a painted one; it reads the pre-pass frame |
+| Distinct ghost copies of the frame, worst at the corners | Tap spacing exceeds a few pixels. Spacing grows with distance from centre, so `SampleZoom` breaks the corners first. `TapDither` scatters it into noise; past that the only fix is less zoom/radius |
+| Smeared scene goes muddy olive/brown | Inherent - a wide blur averages whatever the scene holds. Counter with an **additive** layer, never a painted dark one, which is tunnel vision by definition |
 
 Two general lessons: weight comes from **opacity inside the streaks**, never from coverage; and
 stacking layers cannot fix anything the shape mask does wrong.
@@ -312,6 +327,8 @@ stacking layers cannot fix anything the shape mask does wrong.
 | `Overlays/OverlayLayerStack.cs` | `MaxLayers`, misplaced-sampling warnings |
 | `Overlays/BuiltInProfiles.cs` | Shipped looks + their stable IDs |
 | `Overlays/Presets/` | Tuned compositions the built-in profiles are seeded from |
+| `Overlays/Presets/DesaturateOverlay.cs` | Reference for an even full-screen layer (reach past centre + flat floor) |
+| `Overlays/Presets/TeleportOverlay.cs` | Reference for a one-shot: high radial zoom, no pulse/wobble/swim, fast envelope |
 | `Overlays/ScreenOverlaySource.cs` | The pre-pass frame handed to sampling layers |
 | `Rules/BuiltInRules.cs` | Shipped rules + stable IDs |
 | `Rules/RuleDemand.cs` | Resolved firing rule → what the compositor is handed |
@@ -354,7 +371,7 @@ stacking layers cannot fix anything the shape mask does wrong.
 - User-authored trigger *logic*. Python scripts registering triggers is the eventual cheap path.
   Scripts can already *raise* an effect directly (`API.VisualEffects.Start`), which is not the same
   thing: nothing a script passes becomes a rule, and the rulebase is untouched by it.
-- CRUD on layer techniques — fixed set of four; the shader has four.
+- CRUD on layer techniques — the set is whatever the shader has passes for.
 - Per-layer fade timing (would land on `ProfileLayer`).
 - `Configuration/…/ScreenDecorations` and `Game/ScreenDecorations` reference each other, and
   `EffectProfile`/`OverlayRule` implement UI-owned `IProfile`/`IRule`. Intra-assembly, so no build
@@ -387,7 +404,7 @@ flowchart LR
 
     RULE["OverlayRule<br/>id · profileId · trigger · order"]
     PROF["EffectProfile<br/>layers · fade · shake · scope"]
-    LE["LayerEffect<br/>Tint / Blur / Radial / Chromatic"]
+    LE["LayerEffect<br/>Tint / Blur / Radial / Chromatic / Saturation"]
     SPEC["ShapeSpec · JitterSpec · NoiseSpec<br/><i>authoring mirrors</i>"]
 
     TRG["Trigger<br/>poll or event"]

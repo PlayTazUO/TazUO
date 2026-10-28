@@ -44,6 +44,8 @@ public static class BuiltInProfiles
         public static readonly Guid Concussion = new("b7b6a46c-9899-4d6f-8493-cd22d695c0fb");
         public static readonly Guid TunnelVision = new("b006e04f-3087-4ac7-bdbb-0c903d35792d");
         public static readonly Guid Death = new("bd6cf532-4dc4-46d7-94eb-bc061ef041da");
+        public static readonly Guid Desaturate = new("3f2a9c41-5b8e-4c17-9d60-7ae4c2b8f153");
+        public static readonly Guid Teleport = new("c84d1e07-62fb-4a93-b1d5-0f9e7c36a2db");
         public static readonly Guid EarthquakeRumble = new("7f67a87a-e30a-441b-9b5a-3a91da98d050");
     }
 
@@ -130,6 +132,8 @@ public static class BuiltInProfiles
         ),
         FromPreset(Ids.TunnelVision, BuiltInName(TazLang.Get("visualeffects_tunnelvision", "Tunnel vision")), new TunnelVisionOverlay()),
         FromPreset(Ids.Death, BuiltInName(TazLang.Get("visualeffects_death", "Death")), new DeathOverlay()),
+        FromPreset(Ids.Desaturate, BuiltInName(TazLang.Get("visualeffects_desaturate", "Desaturate")), new DesaturateOverlay()),
+        FromPreset(Ids.Teleport, BuiltInName(TazLang.Get("visualeffects_teleport", "Teleport")), new TeleportOverlay()),
         EarthquakeRumble()
     ];
 

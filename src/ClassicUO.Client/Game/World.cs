@@ -190,64 +190,61 @@ namespace ClassicUO.Game
             get => Map?.Index ?? -1;
             set
             {
-                if (MapIndex != value)
+                if (MapIndex == value)
+                    return;
+
+                int? prevIdx = Map?.Index;
+                InternalMapChangeClear(true);
+
+                if (value < 0 && Map != null)
                 {
-                    InternalMapChangeClear(true);
-
-                    if (value < 0 && Map != null)
-                    {
-                        Map.Destroy();
-                        Map = null;
-
-                        return;
-                    }
-
-                    // Clamp to a valid map index. The server may send an out-of-range
-                    // index (map change is a single byte, so 0-255), which would throw
-                    // IndexOutOfRangeException when the Map is constructed.
-                    if (value < 0 || value >= MapLoader.MAPS_COUNT)
-                    {
-                        value = 0;
-                    }
-
-                    if (Map != null)
-                    {
-                        if (MapIndex >= 0)
-                        {
-                            Map.Destroy();
-                        }
-
-                        ushort x = Player.X;
-                        ushort y = Player.Y;
-                        sbyte z = Player.Z;
-
-                        Map = null;
-
-                        Client.Game.UO.FileManager.Maps.LoadMap(value, ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS));
-                        Map = new Map.Map(this, value);
-
-                        Player.SetInWorldTile(x, y, z);
-                        Player.ClearSteps();
-                    }
-                    else
-                    {
-                        Client.Game.UO.FileManager.Maps.LoadMap(value, ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS));
-                        Map = new Map.Map(this, value);
-                    }
-
-                    // force cursor update when switching map
-                    if (Client.Game.UO.GameCursor != null)
-                    {
-                        Client.Game.UO.GameCursor.Graphic = 0xFFFF;
-                    }
-
-                    // Notify web server of map change
-                    if (Managers.MapWebServerManager.Instance.IsRunning)
-                    {
-                        Utility.Logging.Log.Info($"Map changed to {value}, notifying web server");
-                        Managers.MapWebServerManager.Instance.RegenerateMapPng();
-                    }
+                    Map.Destroy();
+                    Map = null;
+                    EventSink.InvokeOnMapChanged(prevIdx, null);
+                    return;
                 }
+
+                // Clamp to a valid map index. The server may send an out-of-range
+                // index (map change is a single byte, so 0-255), which would throw
+                // IndexOutOfRangeException when the Map is constructed.
+                if (value < 0 || value >= MapLoader.MAPS_COUNT)
+                    value = 0;
+
+                if (Map != null)
+                {
+                    if (MapIndex >= 0)
+                        Map.Destroy();
+
+                    ushort x = Player.X;
+                    ushort y = Player.Y;
+                    sbyte z = Player.Z;
+
+                    Map = null;
+
+                    Client.Game.UO.FileManager.Maps.LoadMap(value, ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS));
+                    Map = new Map.Map(this, value);
+
+                    Player.SetInWorldTile(x, y, z);
+                    Player.ClearSteps();
+                }
+                else
+                {
+                    Client.Game.UO.FileManager.Maps.LoadMap(value, ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS));
+                    Map = new Map.Map(this, value);
+                }
+
+                // force cursor update when switching map
+                if (Client.Game.UO.GameCursor != null)
+                    Client.Game.UO.GameCursor.Graphic = 0xFFFF;
+
+                // Notify web server of map change
+                if (MapWebServerManager.Instance.IsRunning)
+                {
+                    Log.Info($"Map changed to {value}, notifying web server");
+                    MapWebServerManager.Instance.RegenerateMapPng();
+                }
+
+                EventSink.InvokeOnMapChanged(prevIdx, Map?.Index);
             }
         }
 

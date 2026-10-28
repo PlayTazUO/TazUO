@@ -18,7 +18,9 @@ public enum ShippedPreset
     Drunk,
     Concussion,
     TunnelVision,
-    Death
+    Death,
+    Desaturate,
+    Teleport
 }
 
 /// <summary>The one definition of "every preset the client ships", which the built-in profiles are
@@ -38,6 +40,8 @@ public static class ShippedPresetCatalog
             ShippedPreset.Concussion => new ConcussionOverlay(),
             ShippedPreset.TunnelVision => new TunnelVisionOverlay(),
             ShippedPreset.Death => new DeathOverlay(),
+            ShippedPreset.Desaturate => new DesaturateOverlay(),
+            ShippedPreset.Teleport => new TeleportOverlay(),
             _ => throw new ArgumentOutOfRangeException(nameof(preset))
         };
     }
@@ -54,6 +58,8 @@ public static class ShippedPresetCatalog
             ShippedPreset.Concussion => BuiltInProfiles.Ids.Concussion,
             ShippedPreset.TunnelVision => BuiltInProfiles.Ids.TunnelVision,
             ShippedPreset.Death => BuiltInProfiles.Ids.Death,
+            ShippedPreset.Desaturate => BuiltInProfiles.Ids.Desaturate,
+            ShippedPreset.Teleport => BuiltInProfiles.Ids.Teleport,
             _ => throw new ArgumentOutOfRangeException(nameof(preset))
         };
     }

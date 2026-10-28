@@ -169,6 +169,8 @@ Ids rather than names because every shipped composition's name is localized and 
 | `Concussion` | `b7b6a46c-9899-4d6f-8493-cd22d695c0fb` | Hard jolt: a shake, a flash of blur and colour fringing. |
 | `TunnelVision` | `b006e04f-3087-4ac7-bdbb-0c903d35792d` | The view closes in to a narrow circle. |
 | `Death` | `bd6cf532-4dc4-46d7-94eb-bc061ef041da` | Everything drains and darkens. |
+| `Desaturate` | `3f2a9c41-5b8e-4c17-9d60-7ae4c2b8f153` | The whole view drained of colour, evenly. Nothing else. |
+| `Teleport` | `c84d1e07-62fb-4a93-b1d5-0f9e7c36a2db` | Hyperspace jump: streaks converging on a sharp centre, through a dark tunnel. |
 | `EarthquakeRumble` | `7f67a87a-e30a-441b-9b5a-3a91da98d050` | Sustained low rumble. Shake only - nothing is drawn. |
 
 
@@ -273,6 +275,17 @@ margin - three samples per pixel - so it is worth reaching for first when someth
 look wrong.
 
 **Return Type:** `ApiChromaticLayer` - The layer.
+
+---
+
+### NewSaturationLayer
+
+Build a saturation layer, set to the client's defaults - fully drained to grey. Raise
+`Saturation` toward 1 for a partial drain, past 1 to push the colour past its real value.
+
+One sample per pixel: the cheapest technique that reads the frame at all.
+
+**Return Type:** `ApiSaturationLayer` - The layer.
 
 ---
 

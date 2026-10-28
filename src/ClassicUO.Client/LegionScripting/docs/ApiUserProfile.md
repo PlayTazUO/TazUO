@@ -40,6 +40,12 @@ The player's move item delay in milliseconds.
 
 Does the player have auto loot enabled?
 
+### `SavedMountSerial`
+
+**Type:** `uint`
+
+Gets the currently saved mount's serial
+
 
 *No fields found.*
 
@@ -47,11 +53,4 @@ Does the player have auto loot enabled?
 *No enums found.*
 
 ## Methods
-### GetSavedMountSerial
-
-Gets the currently saved mount's serial
-
-**Return Type:** `uint` - The currently saved mount's serial, or 0, if none was set
-
----
-
+*No methods found.*
