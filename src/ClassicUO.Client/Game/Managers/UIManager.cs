@@ -460,7 +460,8 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         public static void AutoSaveGumpPositionIfEnabled(Gump gump)
         {
-            if (gump == null || gump.ServerSerial == 0)
+            // Non-movable gumps are placed by the server; pinning them would freeze a server-chosen spot for good.
+            if (gump == null || gump.ServerSerial == 0 || !gump.CanMove)
                 return;
 
             if (ProfileManager.CurrentProfile?.AutoSaveGumpPositions != true)

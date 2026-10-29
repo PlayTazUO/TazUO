@@ -1,6 +1,6 @@
 ---
 title: ApiUiButton
-description: ApiUiButton class documentation
+description: "ApiUiButton class documentation"
 ---
 
 ## Properties
@@ -12,8 +12,7 @@ description: ApiUiButton class documentation
 
 **Type:** `bool`
 
- Check if the button is currently down(clicked) generally, HasBeenClicked() is a better way to check for button presses.
-
+Check if the button is currently down(clicked) generally, HasBeenClicked() is a better way to check for button presses.
 
 ### `ButtonAction`
 

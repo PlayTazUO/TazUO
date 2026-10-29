@@ -1,6 +1,6 @@
 ---
 title: ApiSoundEntry
-description: Represents a sound entry exposed to Legion scripting.
+description: "Represents a sound entry exposed to Legion scripting."
 ---
 
 ## Class Description

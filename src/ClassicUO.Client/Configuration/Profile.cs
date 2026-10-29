@@ -733,6 +733,7 @@ namespace ClassicUO.Configuration
         public int DisplayRadiusDistance { get; set => SetProperty(ref field, value); } = 10;
         public ushort DisplayRadiusHue { get; set => SetProperty(ref field, value); } = 22;
         public bool EnableSpellIndicators { get; set => SetProperty(ref field, value); } = true;
+        public bool BeginSpellIndicatorOnCast { get; set => SetProperty(ref field, value); } = false;
         public bool EnableAutoLoot { get; set => SetProperty(ref field, value); } = false;
         public bool AutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
         public bool EnableAutoSkinning { get; set => SetProperty(ref field, value); } = false;
@@ -867,6 +868,7 @@ namespace ClassicUO.Configuration
         [JsonConverter(typeof(Point2Converter))] public Point ScriptManagerWindowPosition { get; set; } = Point.Zero;
         [JsonConverter(typeof(Point2Converter))] public Point ScriptManagerWindowSize { get; set; } = Point.Zero;
         public bool CandleFlickerLights { get; set; } = true;
+        public bool LightningFlash { get; set; } = true;
         public string LastLoaded { get; set; }
         public bool TreeToStumpsWithinRadius { get; set; }
         public bool AutoSaveGumpPositions { get; set; }

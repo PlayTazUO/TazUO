@@ -657,9 +657,9 @@ namespace ClassicUO.Game.Scenes
                         if (gobj is Land land) { }
                         else
                         {
-                            ref StaticTiles itemData = ref Client.Game.UO.FileManager.TileData.StaticData[
+                            ref StaticTiles itemData = ref Client.Game.UO.FileManager.TileData.GetStaticTile(
                                 gobj.Graphic
-                            ];
+                            );
 
                             if (itemData.IsSurface)
                             {
@@ -824,20 +824,17 @@ namespace ClassicUO.Game.Scenes
                         }
                         break;
                     case CursorTarget.SetMount:
-                        if (SelectedObject.Object is Mobile m)
+                        if (SelectedObject.Object is Entity entity && (entity is Mobile || entity is Item))
                         {
-                            if (SerialHelper.IsMobile(m))
-                            {
-                                ProfileManager.CurrentProfile.SavedMountSerial = m;
-                                Entity mount = _world.Get(m);
-                                string mountName = mount?.Name ?? "mount";
-                                GameActions.Print(_world, $"Mount set: {mountName} (Serial: {m.Serial})", 48);
-                            }
+                            ProfileManager.CurrentProfile.SavedMountSerial = entity.Serial;
+                            Entity mount = _world.Get(entity.Serial);
+                            string mountName = mount?.Name ?? "mount";
+                            GameActions.Print(_world, $"Mount set: {mountName} (Serial: {entity.Serial})", 48);
                             _world.TargetManager.Reset();
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, "You must target a creature or mount item to set as your mount.", 32);
                         }
 
                         break;

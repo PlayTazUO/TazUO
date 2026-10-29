@@ -116,7 +116,7 @@ namespace ClassicUO.Game.Scenes
                     y = target.Y;
                     z = target.Z;
 
-                    ref StaticTiles staticData = ref Client.Game.UO.FileManager.TileData.StaticData[target.Graphic];
+                    ref StaticTiles staticData = ref Client.Game.UO.FileManager.TileData.GetStaticTile(target.Graphic);
 
                     if (staticData.IsSurface)
                     {

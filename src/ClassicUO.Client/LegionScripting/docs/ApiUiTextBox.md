@@ -1,6 +1,6 @@
 ---
 title: ApiUiTextBox
-description: ApiUiTextBox class documentation
+description: "ApiUiTextBox class documentation"
 ---
 
 ## Properties
