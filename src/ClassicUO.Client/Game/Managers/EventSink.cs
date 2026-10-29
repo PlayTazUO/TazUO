@@ -19,6 +19,7 @@ public class EventSink
     /// <summary>
     ///     Invoked when the current map is changed, such as when moving to a different facet
     /// </summary>
+    [ApiEvent]
     public static event EventHandler<MapChangedEventArgs> MapChanged;
 
     /// <summary>

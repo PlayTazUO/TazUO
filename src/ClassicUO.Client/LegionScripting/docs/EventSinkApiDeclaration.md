@@ -12,6 +12,20 @@ description: "EventSinkApiDeclaration class documentation"
 *No enums found.*
 
 ## Methods
+### MapChanged
+`(callback)`
+Invoked when the current map is changed, such as when moving to a different facet
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `callback` | `object` | ❌ No |  |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
 ### OnItemCreated
 `(callback)`
 Invoked when an item is added to the client.
