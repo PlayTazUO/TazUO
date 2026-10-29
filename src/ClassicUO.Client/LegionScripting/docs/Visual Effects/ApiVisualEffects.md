@@ -170,7 +170,6 @@ Ids rather than names because every shipped composition's name is localized and 
 | `TunnelVision` | `b006e04f-3087-4ac7-bdbb-0c903d35792d` | The view closes in to a narrow circle. |
 | `Death` | `bd6cf532-4dc4-46d7-94eb-bc061ef041da` | Everything drains and darkens. |
 | `Desaturate` | `3f2a9c41-5b8e-4c17-9d60-7ae4c2b8f153` | The whole view drained of colour, evenly. Nothing else. |
-| `Teleport` | `c84d1e07-62fb-4a93-b1d5-0f9e7c36a2db` | Hyperspace jump: streaks converging on a sharp centre, through a dark tunnel. |
 | `EarthquakeRumble` | `7f67a87a-e30a-441b-9b5a-3a91da98d050` | Sustained low rumble. Shake only - nothing is drawn. |
 
 

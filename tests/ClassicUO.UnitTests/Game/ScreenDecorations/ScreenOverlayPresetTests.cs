@@ -154,8 +154,7 @@ public class ScreenOverlayPresetTests
             ShippedPreset.Drunk,
             ShippedPreset.Concussion,
             ShippedPreset.TunnelVision,
-            ShippedPreset.Death,
-            ShippedPreset.Teleport
+            ShippedPreset.Death
         );
     }
 

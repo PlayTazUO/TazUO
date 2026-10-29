@@ -32,8 +32,7 @@ public class SamplingPresetTests
         {
             { ShippedPreset.Fog, OverlaySampleMode.Blur },
             { ShippedPreset.Drunk, OverlaySampleMode.Radial },
-            { ShippedPreset.Concussion, OverlaySampleMode.Chromatic },
-            { ShippedPreset.Teleport, OverlaySampleMode.Radial }
+            { ShippedPreset.Concussion, OverlaySampleMode.Chromatic }
         };
     }
 

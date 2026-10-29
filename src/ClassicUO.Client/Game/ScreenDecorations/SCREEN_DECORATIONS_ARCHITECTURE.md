@@ -328,7 +328,6 @@ stacking layers cannot fix anything the shape mask does wrong.
 | `Overlays/BuiltInProfiles.cs` | Shipped looks + their stable IDs |
 | `Overlays/Presets/` | Tuned compositions the built-in profiles are seeded from |
 | `Overlays/Presets/DesaturateOverlay.cs` | Reference for an even full-screen layer (reach past centre + flat floor) |
-| `Overlays/Presets/TeleportOverlay.cs` | Reference for a one-shot: high radial zoom, no pulse/wobble/swim, fast envelope |
 | `Overlays/ScreenOverlaySource.cs` | The pre-pass frame handed to sampling layers |
 | `Rules/BuiltInRules.cs` | Shipped rules + stable IDs |
 | `Rules/RuleDemand.cs` | Resolved firing rule → what the compositor is handed |

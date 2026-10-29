@@ -1435,7 +1435,6 @@ class ApiVisualEffects:
         TunnelVision = "b006e04f-3087-4ac7-bdbb-0c903d35792d"
         Death = "bd6cf532-4dc4-46d7-94eb-bc061ef041da"
         Desaturate = "3f2a9c41-5b8e-4c17-9d60-7ae4c2b8f153"
-        Teleport = "c84d1e07-62fb-4a93-b1d5-0f9e7c36a2db"
         EarthquakeRumble = "7f67a87a-e30a-441b-9b5a-3a91da98d050"
 
     def GetProfiles(self) -> "list[ApiEffectProfileInfo]":
