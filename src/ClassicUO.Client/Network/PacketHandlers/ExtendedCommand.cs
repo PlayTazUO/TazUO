@@ -291,9 +291,7 @@ internal static class ExtendedCommand
                     //}
 
 
-                    int map = world.MapIndex;
-                    world.MapIndex = -1;
-                    world.MapIndex = map;
+                    world.ReloadMap();
 
                     Log.Trace("Map Patches applied.");
                 }

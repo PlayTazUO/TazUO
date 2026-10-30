@@ -63,6 +63,7 @@ public class ScreenOverlayEffect : Effect
         _tintTechnique = Techniques["T0"];
         _chromaticTechnique = Techniques["Chromatic"];
         _saturationTechnique = Techniques["Saturation"];
+        _saturationFlatTechnique = Techniques["SaturationFlat"];
 
         _blurTechniques = TechniquesPerTapCount("Blur");
         _radialTechniques = TechniquesPerTapCount("Radial");
@@ -137,6 +138,14 @@ public class ScreenOverlayEffect : Effect
     private readonly EffectTechnique _chromaticTechnique;
     private readonly EffectTechnique _saturationTechnique;
 
+    /// <summary>
+    ///     Saturation without the noise machinery behind its mask. Not an optimisation of the one
+    ///     above so much as the only affordable form of it at full reach: every technique's alpha
+    ///     costs three noise fetches, which a vignette's <c>clip()</c> hides and a full-screen layer
+    ///     pays per pixel.
+    /// </summary>
+    private readonly EffectTechnique _saturationFlatTechnique;
+
     /// <summary>Blur techniques indexed by tap count, so selection is one array read.</summary>
     private readonly EffectTechnique[] _blurTechniques;
 
@@ -152,22 +161,22 @@ public class ScreenOverlayEffect : Effect
 
     /// <summary>
     ///     Points <see cref="Effect.CurrentTechnique" /> at the pass implementing
-    ///     <paramref name="sampling" />.
+    ///     <paramref name="p" />.
     ///     <para>
     ///         The tap count selects a technique rather than being uploaded as a uniform: it is the
     ///         bound of an unrolled loop and has to be known when the shader is compiled. See
     ///         SampleDisk in ScreenOverlay.fx for what a uniform bound costs.
     ///     </para>
     /// </summary>
-    /// <param name="sampling">The layer's distortion settings, already clamped.</param>
-    public void SetTechnique(in OverlaySampling sampling)
+    /// <param name="p">The layer's parameters, already clamped.</param>
+    public void SetTechnique(in OverlayParams p)
     {
-        EffectTechnique technique = sampling.Mode switch
+        EffectTechnique technique = p.Sampling.Mode switch
         {
-            OverlaySampleMode.Blur => _blurTechniques[(int)sampling.Taps],
-            OverlaySampleMode.Radial => RadialTechnique(sampling),
+            OverlaySampleMode.Blur => _blurTechniques[(int)p.Sampling.Taps],
+            OverlaySampleMode.Radial => RadialTechnique(p.Sampling),
             OverlaySampleMode.Chromatic => _chromaticTechnique,
-            OverlaySampleMode.Saturation => _saturationTechnique,
+            OverlaySampleMode.Saturation => p.HasFlatAlpha ? _saturationFlatTechnique : _saturationTechnique,
             _ => _tintTechnique
         };
 

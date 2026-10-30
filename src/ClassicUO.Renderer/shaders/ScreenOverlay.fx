@@ -344,6 +344,24 @@ float OverlayAlpha(float2 uv)
     return saturate(mask * field * Opacity * Intensity * pulse);
 }
 
+// OverlayAlpha for a layer whose shape mask is the whole story. Exactly equivalent when FlatFloor
+// is 1 (the field multiplies out) and both jitter amounts are 0 (the boundary and feather are
+// unmoved, and Clamp already floors Feather at the 0.01 used above) - but without the three noise
+// fetches those terms would be built from. No conservative pre-clip either: it existed only to keep
+// pixels away from those fetches.
+//
+// Worth a technique of its own because a vignette hides the waste - its clip() trims most of the
+// screen - while a layer at full reach pays it on every pixel.
+float OverlayAlphaFlat(float2 uv)
+{
+    float mask = ShapeMask(uv, ShapeDistance(uv), Feather);
+    clip(mask - 0.002);
+
+    float pulse = 1.0 + PulseAmp * sin(Time * PulseFreq * 6.28318530718); // 2 pi
+
+    return saturate(mask * Opacity * Intensity * pulse);
+}
+
 float4 main_fragment(PS_INPUT IN) : COLOR0
 {
     return float4(Tint, OverlayAlpha(IN.TexCoord));
@@ -406,6 +424,14 @@ float4 saturation_fragment(PS_INPUT IN) : COLOR0
     return float4(ApplySaturation(scene), alpha);
 }
 
+// Same, for a grade with no noise or jitter driving its mask - which is what a full-screen one is.
+float4 saturation_flat_fragment(PS_INPUT IN) : COLOR0
+{
+    float alpha = OverlayAlphaFlat(IN.TexCoord);
+    float3 scene = tex2D(SceneSampler, SceneUv(IN.TexCoord)).rgb;
+    return float4(ApplySaturation(scene), alpha);
+}
+
 technique T0
 {
     pass P0
@@ -455,5 +481,14 @@ technique Saturation
     {
         VertexShader = compile vs_3_0 main_vertex();
         PixelShader = compile ps_3_0 saturation_fragment();
+    }
+}
+
+technique SaturationFlat
+{
+    pass P0
+    {
+        VertexShader = compile vs_3_0 main_vertex();
+        PixelShader = compile ps_3_0 saturation_flat_fragment();
     }
 }

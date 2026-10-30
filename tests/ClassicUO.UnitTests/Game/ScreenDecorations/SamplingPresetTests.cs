@@ -59,6 +59,10 @@ public class SamplingPresetTests
         p.Noise.BaseScroll.Should().Be(Vector2.Zero);
         p.Noise.DetailScroll.Should().Be(Vector2.Zero);
 
+        // Earns the pass that skips the noise fetches. At full reach nothing clips, so paying for
+        // three discarded fetches here would be a per-pixel cost over the whole viewport.
+        p.HasFlatAlpha.Should().BeTrue();
+
         p.Shape.Jitter.ReachAmount.Should().Be(0f);
         p.Shape.FocusAmount.Should().Be(0f);
         p.Appearance.Opacity.Should().Be(1f);

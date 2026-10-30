@@ -372,6 +372,14 @@ public struct OverlayParams
     };
 
     /// <summary>
+    /// Whether the noise machinery contributes nothing to this layer's alpha, so the shader can take
+    /// a pass that skips its three fetches. A full floor multiplies the field out and zero jitter
+    /// leaves the boundary and feather unmoved.
+    /// </summary>
+    public readonly bool HasFlatAlpha =>
+        Noise.FlatFloor >= 1f && Shape.Jitter.ReachAmount <= 0f && Shape.Jitter.FeatherAmount <= 0f;
+
+    /// <summary>
     /// Enforces the safety and sanity bounds every preset and every runtime override must obey.
     /// Mandatory before upload - never skip this to let a caller "just try a higher value".
     /// </summary>
