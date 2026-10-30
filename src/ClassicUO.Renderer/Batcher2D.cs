@@ -18,6 +18,18 @@ namespace ClassicUO.Renderer
         private static readonly float[] _cornerOffsetX = new float[] { 0.0f, 1.0f, 0.0f, 1.0f };
         private static readonly float[] _cornerOffsetY = new float[] { 0.0f, 0.0f, 1.0f, 1.0f };
 
+        // A PositionNormalTextureColor4 holds all four corners of a quad, so the vertex buffer
+        // reads it as four 48-byte vertices. The layout is declared explicitly rather than through
+        // IVertexType because FNA 26.10 rejects a vertex type whose size does not match its
+        // declaration's stride, and this type is deliberately four vertices wide.
+        private static readonly VertexDeclaration _quadVertexDeclaration = new VertexDeclaration
+        (
+            new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
+            new VertexElement(sizeof(float) * 3, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
+            new VertexElement(sizeof(float) * 6, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0),
+            new VertexElement(sizeof(float) * 9, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 1)
+        );
+
         private const int MAX_SPRITES = 0x800;
         private const int MAX_VERTICES = MAX_SPRITES * 4;
         private const int MAX_INDICES = MAX_SPRITES * 6;
@@ -84,7 +96,7 @@ namespace ClassicUO.Renderer
 
             _textureInfo = new Texture2D[MAX_SPRITES];
             _vertexInfo = new PositionNormalTextureColor4[MAX_SPRITES];
-            _vertexBuffer = new DynamicVertexBuffer(GraphicsDevice, typeof(PositionNormalTextureColor4), MAX_VERTICES, BufferUsage.WriteOnly);
+            _vertexBuffer = new DynamicVertexBuffer(GraphicsDevice, _quadVertexDeclaration, MAX_VERTICES, BufferUsage.WriteOnly);
             _indexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.SixteenBits, MAX_INDICES, BufferUsage.WriteOnly);
             _indexBuffer.SetData(GenerateIndexArray());
 
@@ -1863,7 +1875,7 @@ namespace ClassicUO.Renderer
 
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        private struct PositionNormalTextureColor4 : IVertexType
+        private struct PositionNormalTextureColor4
         {
             public Vector3 Position0;
             public Vector3 Normal0;
@@ -1884,16 +1896,6 @@ namespace ClassicUO.Renderer
             public Vector3 Normal3;
             public Vector3 TextureCoordinate3;
             public Vector3 Hue3;
-
-            VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
-
-            private static readonly VertexDeclaration VertexDeclaration = new VertexDeclaration
-            (
-                new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),                          // position
-                new VertexElement(sizeof(float) * 3, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),            // normal
-                new VertexElement(sizeof(float) * 6, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 0), // tex coord
-                new VertexElement(sizeof(float) * 9, VertexElementFormat.Vector3, VertexElementUsage.TextureCoordinate, 1)  // hue
-            );
 
             public const int SIZE_IN_BYTES = sizeof(float) * 12 * 4;
         }
