@@ -99,8 +99,13 @@ public static class BuiltInProfiles
     /// <returns>The profile, or null if the id is not a shipped one.</returns>
     public static EffectProfile? Find(Guid id)
     {
-        _byId ??= All.ToFrozenDictionary(profile => profile.Id);
-        return _byId.GetValueOrDefault(id);
+        _byId ??= All.ToFrozenDictionary(p => p.Id);
+
+        // Not GetValueOrDefault: that extension takes IReadOnlyDictionary, so the call goes through
+        // the interface and gives up the devirtualized lookup a FrozenDictionary exists for.
+        //
+        // ReSharper disable once CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
+        return _byId.TryGetValue(id, out EffectProfile? profile) ? profile : null;
     }
 
     #endregion

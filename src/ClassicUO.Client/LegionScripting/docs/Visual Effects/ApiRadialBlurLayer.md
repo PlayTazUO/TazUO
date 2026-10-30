@@ -20,9 +20,10 @@ How far along the centre ray the taps march, as a fraction of the distance from
 
 **Type:** `double`
 
-Radians the march twists through on its way to the centre. 0 is a straight ray - plain
-forward motion; raising it winds the streaks into a spiral, negative turns the other way.
-Capped at half a turn when the layer is baked.
+Radians the march twists through on its way to the centre. 0 is a straight ray; raising it
+winds the streaks into a spiral, negative turns the other way. Capped at half a turn when the
+layer is baked. Exactly 0 is free - it takes a cheaper pass - so leave it there unless the
+spiral is wanted.
 
 ### `Taps`
 

@@ -108,8 +108,8 @@ public struct OverlayShape
     /// display a radial shape reaches much further at the corners and the left/right edges than
     /// it does at the top and bottom, so the same value covers noticeably less screen.
     /// <para>
-    /// 1 reaches the centre but leaves a small hole exactly there. For uniform full-screen cover
-    /// take it past 1 - see <see cref="OverlayParams.MaxReach"/>.
+    /// 1 leaves a small hole at the exact centre; uniform full-screen cover needs
+    /// <see cref="OverlayParams.MaxReach"/>.
     /// </para>
     /// </summary>
     public float Reach;
@@ -268,20 +268,16 @@ public struct OverlayParams
     /// image.</summary>
     public const float MaxSampleAberration = 0.05f;
 
-    /// <summary>
-    /// Radial swirl ceiling, in radians - half a turn across the whole march. Past this the streaks
-    /// wrap around the centre and the effect stops reading as travel in any direction; it also puts
-    /// consecutive taps far enough apart angularly to bring back the ghosting the tap dither exists
-    /// to suppress.
-    /// </summary>
+    /// <summary>Radial swirl ceiling, in radians - half a turn across the whole march. Past this the
+    /// streaks wrap around the centre, stop reading as travel, and the tap ghosting returns.</summary>
     public const float MaxSampleSwirl = MathHelper.Pi;
 
-    /// <summary>Saturation floor. At -1 the frame is the exact complement of itself about its own
-    /// luma; below that the complement overshoots black and clips to a flat silhouette.</summary>
+    /// <summary>Saturation floor. -1 is the exact complement about the frame's own luma; below that
+    /// it overshoots black and clips to a flat silhouette.</summary>
     public const float MinSampleSaturation = -1f;
 
-    /// <summary>Saturation ceiling. Past this every pixel with any colour in it at all is clipped
-    /// to a primary, so the frame reads as flat blocks rather than as an over-rich image.</summary>
+    /// <summary>Saturation ceiling. Past this any coloured pixel clips to a primary and the frame
+    /// reads as flat blocks rather than as an over-rich image.</summary>
     public const float MaxSampleSaturation = 3f;
 
     /// <summary>Centre-drift rate ceiling, in Hz. A motion-sickness bound rather than the
@@ -294,11 +290,9 @@ public struct OverlayParams
     public const float MaxWobbleAmp = 0.15f;
 
     /// <summary>
-    /// Reach ceiling. 1 puts the boundary at the shape's centre, which still leaves a point there
-    /// the mask falls to zero at - the shape distance is 0 at the centre by construction, so no
-    /// value at or below 1 can cover the screen without leaving a small hole in the middle. Above 1
-    /// the boundary passes beyond the centre: any <c>Reach >= 1 + Feather</c> is full everywhere,
-    /// which is how a layer asks for the whole screen uniformly rather than as a vignette.
+    /// Reach ceiling. Shape distance is 0 at the centre by construction, so no <c>Reach</c> at or
+    /// below 1 covers the screen without a hole there. <c>Reach >= 1 + Feather</c> is full
+    /// everywhere - how a layer asks for the whole screen rather than for a vignette.
     /// </summary>
     public const float MaxReach = 2f;
 
@@ -371,8 +365,8 @@ public struct OverlayParams
             Swirl = 0f,
             Aberration = 0.01f,
 
-            // Fully drained. The useful default for a technique whose common job is sickness and
-            // near-death; pushing past 1 is the rarer case and worth asking for explicitly.
+            // Fully drained: the common job is sickness and near-death. Pushing past 1 is rarer and
+            // worth asking for explicitly.
             Saturation = 0f
         }
     };

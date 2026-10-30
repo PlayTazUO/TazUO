@@ -150,9 +150,8 @@ public struct ShapeSpec
     /// <see cref="EdgeBlend" />: a radial shape reaches further at the corners and side edges on a
     /// widescreen display, so the same value covers noticeably less.
     /// <para>
-    /// 1 reaches the centre but leaves a small hole exactly there. Past 1 the boundary passes
-    /// beyond it and the layer covers everything evenly, up to
-    /// <see cref="OverlayParams.MaxReach" />.
+    /// 1 leaves a small hole at the exact centre; past 1 the boundary passes beyond it and the layer
+    /// covers everything evenly, up to <see cref="OverlayParams.MaxReach" />.
     /// </para>
     /// </summary>
     [LocalizedDisplayName("visualeffects_shape_reach", "Reach")]

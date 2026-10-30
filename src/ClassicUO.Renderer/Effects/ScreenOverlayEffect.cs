@@ -66,6 +66,7 @@ public class ScreenOverlayEffect : Effect
 
         _blurTechniques = TechniquesPerTapCount("Blur");
         _radialTechniques = TechniquesPerTapCount("Radial");
+        _radialSwirlTechniques = TechniquesPerTapCount("RadialSwirl");
     }
 
     /// <summary>
@@ -143,6 +144,13 @@ public class ScreenOverlayEffect : Effect
     private readonly EffectTechnique[] _radialTechniques;
 
     /// <summary>
+    ///     Radial again, with the swirling march. A separate family because the swirl angle is a
+    ///     uniform: the compiler cannot fold a zero away, so a shared pass would charge every
+    ///     ordinary radial layer for rotation it does not use.
+    /// </summary>
+    private readonly EffectTechnique[] _radialSwirlTechniques;
+
+    /// <summary>
     ///     Points <see cref="Effect.CurrentTechnique" /> at the pass implementing
     ///     <paramref name="sampling" />.
     ///     <para>
@@ -157,7 +165,7 @@ public class ScreenOverlayEffect : Effect
         EffectTechnique technique = sampling.Mode switch
         {
             OverlaySampleMode.Blur => _blurTechniques[(int)sampling.Taps],
-            OverlaySampleMode.Radial => _radialTechniques[(int)sampling.Taps],
+            OverlaySampleMode.Radial => RadialTechnique(sampling),
             OverlaySampleMode.Chromatic => _chromaticTechnique,
             OverlaySampleMode.Saturation => _saturationTechnique,
             _ => _tintTechnique
@@ -168,6 +176,17 @@ public class ScreenOverlayEffect : Effect
         if (!ReferenceEquals(technique, CurrentTechnique))
             CurrentTechnique = technique;
     }
+
+    /// <summary>
+    ///     Straight or swirling march. Exact zero rather than an epsilon: a swirl too small to see is
+    ///     still one the author typed, not an invitation to substitute the cheaper pass.
+    /// </summary>
+    /// <param name="sampling">The layer's distortion settings, already clamped.</param>
+    /// <returns>The radial technique for this layer's tap count.</returns>
+    private EffectTechnique RadialTechnique(in OverlaySampling sampling) =>
+        sampling.Swirl == 0f
+            ? _radialTechniques[(int)sampling.Taps]
+            : _radialSwirlTechniques[(int)sampling.Taps];
 
     /// <summary>
     ///     Uploads one overlay's parameters. <paramref name="p" /> must already be clamped

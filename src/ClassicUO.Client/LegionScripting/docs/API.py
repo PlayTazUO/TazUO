@@ -4153,7 +4153,7 @@ def GetViewportBounds() -> "Any":
 class EventSinkApiDeclaration:
     ""
 
-    def MapChanged(self, callback: "Any") -> None:
+    def OnMapChanged(self, callback: "Any") -> None:
         """
         Invoked when the current map is changed, such as when moving to a different facet
         """

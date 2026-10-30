@@ -12,7 +12,7 @@ description: "EventSinkApiDeclaration class documentation"
 *No enums found.*
 
 ## Methods
-### MapChanged
+### OnMapChanged
 `(callback)`
 Invoked when the current map is changed, such as when moving to a different facet
 

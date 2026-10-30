@@ -83,8 +83,8 @@ public static class SamplingLayers
         );
 
     /// <summary>
-    /// Lens fringing: red and blue pulled apart along the centre ray. The cheapest of the three by a
-    /// wide margin - three taps regardless of strength.
+    /// Lens fringing: red and blue pulled apart along the centre ray. Three taps regardless of
+    /// strength - only <see cref="Saturation"/>, at one, is cheaper.
     /// </summary>
     /// <param name="shape">Where it applies and how hard.</param>
     /// <param name="aberration">Channel separation, as a fraction of the distance from the centre.</param>
@@ -101,7 +101,7 @@ public static class SamplingLayers
 
     /// <summary>
     /// Colour pulled toward or away from the frame's own brightness. Drained reads as sickness and
-    /// near-death, pushed as fever. One tap per pixel, the cheapest of the four.
+    /// near-death, pushed as fever. One tap per pixel - the cheapest sampling layer.
     /// </summary>
     /// <param name="shape">Where it applies and how hard.</param>
     /// <param name="saturation">Where the colour is pulled to: 1 untouched, 0 grey, above 1 pushed,
@@ -144,19 +144,11 @@ public static class SamplingLayers
         };
 
     /// <summary>
-    /// The field that breaks up a layer's strength.
-    /// <para>
-    /// A layer with no swim multiplies the field out entirely - <c>FlatFloor</c> 1 makes the
-    /// shader's <c>lerp(field, 1, FlatFloor)</c> exactly 1 - so the frequencies and velocities
-    /// below would be dead values on display in the composer, reading as motion the layer does not
-    /// have. It gets the neutral block instead: same inert result, but nothing in it is a lie.
-    /// </para>
-    /// <para>
-    /// Note the neutral block is the editor's own defaults rather than zeroes. A zero
-    /// <c>Softness</c> would leave the shader evaluating <c>smoothstep(t, t, n)</c>, which is a
-    /// division by zero - harmless while the floor discards it, and NaN across the whole layer the
-    /// moment someone lowers that floor in the composer.
-    /// </para>
+    /// The field that breaks up a layer's strength. No swim gets the editor's defaults rather than
+    /// the swim block, whose frequencies would show in the composer as motion the layer does not
+    /// have - <c>FlatFloor</c> 1 makes the shader's <c>lerp(field, 1, FlatFloor)</c> exactly 1.
+    /// Defaults rather than zeroes because a zero <c>Softness</c> is <c>smoothstep(t, t, n)</c>,
+    /// which goes NaN across the layer the moment someone lowers that floor.
     /// </summary>
     /// <param name="swim">How much the field is allowed to vary the strength; 0 for none.</param>
     /// <returns>The noise block.</returns>

@@ -91,16 +91,17 @@ public sealed class RadialBlurEffect : LayerEffect
     public float Zoom { get; set; } = OverlayParams.Default.Sampling.Zoom;
 
     /// <summary>
-    /// Radians the march twists through on its way to the centre. 0 is a straight ray - plain
-    /// forward motion; raising it winds the streaks into a spiral. Capped at
-    /// <see cref="OverlayParams.MaxSampleSwirl" />, past which they wrap and stop reading as travel.
+    /// Radians the march twists through on its way to the centre. 0 is a straight ray; raising it
+    /// winds the streaks into a spiral. Capped at <see cref="OverlayParams.MaxSampleSwirl" />, past
+    /// which they wrap and stop reading as travel. Exactly 0 costs nothing - it takes a separate,
+    /// cheaper pass - so leave it there unless the spiral is wanted.
     /// </summary>
     [LocalizedDisplayName("visualeffects_layer_swirl", "Swirl")]
     [LocalizedDescription(
         "visualeffects_layer_swirl_tooltip",
         "Radians the streaks twist through on their way to the centre.\n"
-        + "0 is straight rays - plain forward motion. Raising it winds them\n"
-        + "into a spiral; negative turns the other way."
+        + "0 is straight rays - plain forward motion, and the cheap case.\n"
+        + "Raising it winds them into a spiral; negative turns the other way."
     )]
     public float Swirl { get; set; } = OverlayParams.Default.Sampling.Swirl;
 
@@ -142,9 +143,9 @@ public sealed class RadialBlurEffect : LayerEffect
 }
 
 /// <summary>
-/// Red/blue split along the ray from the shape's centre. Lens fringing. The cheapest technique by a
-/// wide margin - three taps whatever its strength - so it is worth reaching for first when something
-/// needs to look wrong without costing anything.
+/// Red/blue split along the ray from the shape's centre. Lens fringing. Three taps whatever its
+/// strength - only <see cref="SaturationEffect" />, at one, is cheaper - so it is worth reaching for
+/// when something needs to look wrong without costing much.
 /// </summary>
 public sealed class ChromaticEffect : LayerEffect
 {
@@ -200,9 +201,9 @@ public sealed class SaturationEffect : LayerEffect
     internal const string Discriminator = "saturation";
 
     /// <summary>
-    /// Where the colour is pulled to, relative to the frame's own brightness: 1 leaves it untouched,
-    /// 0 drains it to grey, above 1 pushes it past its real colour, and below 0 lands on the
-    /// complement. Bounded by <see cref="OverlayParams.MinSampleSaturation" /> and
+    /// Where the colour is pulled to, relative to the frame's own brightness: 1 untouched, 0 grey,
+    /// above 1 pushed past its real colour, below 0 the complement. Bounded by
+    /// <see cref="OverlayParams.MinSampleSaturation" /> and
     /// <see cref="OverlayParams.MaxSampleSaturation" />.
     /// </summary>
     [LocalizedDisplayName("visualeffects_layer_saturation", "Saturation")]

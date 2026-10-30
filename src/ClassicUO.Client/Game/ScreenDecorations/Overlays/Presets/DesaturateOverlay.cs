@@ -7,21 +7,19 @@ using ClassicUO.Renderer.Effects;
 namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 
 /// <summary>
-/// The whole view drained of colour, evenly. No vignette, no noise and no tint - the one preset
-/// that is purely a colour grade, and the reference for how a layer asks to cover the screen
-/// uniformly rather than as a shape.
+/// The whole view drained of colour, evenly. No vignette, noise or tint - the one purely graded
+/// preset, and the reference for covering the screen uniformly rather than as a shape.
 /// </summary>
 public sealed class DesaturateOverlay : ScreenOverlayPreset
 {
     /// <summary>
-    /// Falloff length. Arbitrary, because at <see cref="OverlayParams.MaxReach" /> the gradient it
-    /// describes sits entirely off screen - kept short only so that a later change to that ceiling
-    /// cannot start to expose it.
+    /// Falloff length. Arbitrary at <see cref="OverlayParams.MaxReach" />, where the gradient sits
+    /// entirely off screen; kept short so lowering that ceiling cannot expose it.
     /// </summary>
     private const float OFF_SCREEN_FEATHER = 0.01f;
 
-    /// <summary>How much of the grade is applied where the layer is at full strength. Below 1 this
-    /// crossfades against the untouched frame, which is a second way to reach a partial drain.</summary>
+    /// <summary>How much of the grade is applied where the layer is at full strength. Below 1 it
+    /// crossfades against the untouched frame - a second route to a partial drain.</summary>
     public float Strength { get; set; } = 1f;
 
     /// <summary>Where the colour is pulled to: 0 is fully grey, 1 would leave the frame alone.</summary>

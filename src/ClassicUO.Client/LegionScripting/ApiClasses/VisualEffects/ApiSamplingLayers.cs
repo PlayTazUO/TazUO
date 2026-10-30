@@ -68,9 +68,10 @@ public class ApiRadialBlurLayer : ApiLayerEffect
     public double Zoom { get; set; } = OverlayParams.Default.Sampling.Zoom;
 
     /// <summary>
-    /// Radians the march twists through on its way to the centre. 0 is a straight ray - plain
-    /// forward motion; raising it winds the streaks into a spiral, negative turns the other way.
-    /// Capped at half a turn when the layer is baked.
+    /// Radians the march twists through on its way to the centre. 0 is a straight ray; raising it
+    /// winds the streaks into a spiral, negative turns the other way. Capped at half a turn when the
+    /// layer is baked. Exactly 0 is free - it takes a cheaper pass - so leave it there unless the
+    /// spiral is wanted.
     /// </summary>
     public double Swirl { get; set; } = OverlayParams.Default.Sampling.Swirl;
 
@@ -110,9 +111,9 @@ public class ApiRadialBlurLayer : ApiLayerEffect
 }
 
 /// <summary>
-/// Red/blue split along the ray from the shape's centre - lens fringing. The cheapest technique by a
-/// wide margin, three taps whatever its strength, so it is worth reaching for first when something
-/// needs to look wrong without costing anything. Build one with `API.VisualEffects.NewChromaticLayer`.
+/// Red/blue split along the ray from the shape's centre - lens fringing. Three taps whatever its
+/// strength; only `ApiSaturationLayer`, at one, is cheaper. Build one with
+/// `API.VisualEffects.NewChromaticLayer`.
 /// </summary>
 public class ApiChromaticLayer : ApiLayerEffect
 {
@@ -148,17 +149,17 @@ public class ApiChromaticLayer : ApiLayerEffect
 
 /// <summary>
 /// Pulls the frame's colour toward or away from its own brightness - drained for sickness and
-/// near-death, pushed for fever and hallucination. One sample per pixel, so it is the cheapest
-/// technique that reads the frame at all. Build one with `API.VisualEffects.NewSaturationLayer`.
+/// near-death, pushed for fever. One sample per pixel: the cheapest technique that reads the frame
+/// at all. Build one with `API.VisualEffects.NewSaturationLayer`.
 /// </summary>
 public class ApiSaturationLayer : ApiLayerEffect
 {
     #region Public accessors
 
     /// <summary>
-    /// Where the colour is pulled to, relative to the frame's own brightness: 1 leaves it untouched,
-    /// 0 drains it to grey, above 1 pushes it past its real colour, and below 0 lands on the
-    /// complement. Capped at -1 and 3 when the layer is baked.
+    /// Where the colour is pulled to, relative to the frame's own brightness: 1 untouched, 0 grey,
+    /// above 1 pushed past its real colour, below 0 the complement. Capped at -1 and 3 when the
+    /// layer is baked.
     /// </summary>
     public double Saturation { get; set; } = OverlayParams.Default.Sampling.Saturation;
 

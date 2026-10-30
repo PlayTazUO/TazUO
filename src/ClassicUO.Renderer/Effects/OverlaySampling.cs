@@ -95,13 +95,9 @@ public struct OverlaySampling
 
     /// <summary>
     /// Radians the radial march twists through on its way to <see cref="OverlayShape.Center"/>.
-    /// 0 leaves the taps on a straight ray - pure forward motion. Raising it winds them into a
-    /// spiral, which is the whole difference between rushing toward something and being pulled
-    /// down a vortex. Capped at <see cref="OverlayParams.MaxSampleSwirl"/>.
-    /// <para>
-    /// Costs the same as no swirl: the angle is linear in the tap index, so the shader advances
-    /// the rotation by one complex multiply per tap rather than evaluating it.
-    /// </para>
+    /// 0 leaves the taps on a straight ray - forward motion; raising it winds them into a spiral,
+    /// which is a vortex rather than a rush. Capped at <see cref="OverlayParams.MaxSampleSwirl"/>.
+    /// Exactly 0 is free - it takes a separate pass; anything else pays per tap.
     /// </summary>
     public float Swirl;
 
@@ -113,14 +109,11 @@ public struct OverlaySampling
     public float Aberration;
 
     /// <summary>
-    /// Where the frame's colour is pulled to, relative to its own Rec. 709 luma: 1 leaves it
-    /// untouched, 0 drains it to grey, above 1 pushes it past its real colour, and below 0 lands on
-    /// the complement. Bounded by <see cref="OverlayParams.MinSampleSaturation"/> and
-    /// <see cref="OverlayParams.MaxSampleSaturation"/>.
-    /// <para>
-    /// Scaled by the layer's alpha like any distortion, so a grading layer at half strength is a
-    /// half-applied grade rather than a half-transparent one.
-    /// </para>
+    /// Where the frame's colour is pulled to, relative to its own Rec. 709 luma: 1 untouched, 0
+    /// grey, above 1 pushed past its real colour, below 0 the complement. Bounded by
+    /// <see cref="OverlayParams.MinSampleSaturation"/> and
+    /// <see cref="OverlayParams.MaxSampleSaturation"/>. Scaled by the layer's alpha, so half
+    /// strength is a half-applied grade rather than a half-transparent one.
     /// </summary>
     public float Saturation;
 

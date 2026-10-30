@@ -22,9 +22,9 @@ public class SamplingPresetTests
 
     /// <summary>
     /// The presets that pair a distortion with colour painted over it. Desaturate is absent on
-    /// purpose: it is a grade and nothing else, so
-    /// <see cref="EachSamplingPresetPaintsOverItsDistortion"/> does not hold for it. Its own
-    /// invariants are asserted in <see cref="DesaturateCoversEveryPixelEvenly"/>.
+    /// purpose - it is a grade and nothing else, so
+    /// <see cref="EachSamplingPresetPaintsOverItsDistortion"/> does not hold for it; see
+    /// <see cref="DesaturateCoversEveryPixelEvenly"/>.
     /// </summary>
     public static TheoryData<ShippedPreset, OverlaySampleMode> SamplingPresets()
     {
@@ -37,9 +37,8 @@ public class SamplingPresetTests
     }
 
     /// <summary>
-    /// Every one of these is a way the preset could silently become a vignette or a blotchy haze
-    /// instead of the even grade it exists to be - and none of them is visible in a screenshot of
-    /// one frame, which is how the mistuning gets shipped.
+    /// Each assertion guards a way the preset could become a vignette or a blotchy haze instead of
+    /// an even grade - none of which shows in a single-frame screenshot.
     /// </summary>
     [Fact]
     public void DesaturateCoversEveryPixelEvenly()
