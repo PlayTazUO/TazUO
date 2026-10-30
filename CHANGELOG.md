@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 
 ## 10/30/26
 * ***Fix:*** The client no longer disappears without a crash report (SIGSEGV on the audio thread) after a few hours of play on Linux - the bundled FAudio mixer had a resampling bug that wrote past its output buffer when the 10ms audio updates were resampled, corrupting the heap until the audio thread faulted; FNA and FAudio are updated to 26.10, which fixes the resample tap overrun
+* ***Fix:*** Duplicate world map marker icons no longer leak GPU memory each time the map is opened - icons with the same name in multiple `MapIcons` folders are now de-duplicated, with the server-specific icon taking precedence and the replaced texture disposed
 
 ## 10/27/26
 * ***Fix:*** Modern windows no longer resize when dragging over whilst holding an item - [P.R 1193](https://github.com/PlayTazUO/TazUO/pull/1193) ([yuval-po](https://github.com/yuval-po))
