@@ -82,7 +82,15 @@ internal sealed class PacketParser
         if (data.IsEmpty)
             return;
 
-        (fromPlugins ? _pluginsBuffer : _buffer).Enqueue(data);
+        // Plugins may inject packets from any thread. ParsePackets/ClearBuffers lock
+        // the CircularBuffer itself, so Enqueue must take the same lock or a concurrent
+        // Dequeue/resize corrupts the buffer state (ArgumentOutOfRangeException in SetCapacity).
+        CircularBuffer buffer = fromPlugins ? _pluginsBuffer : _buffer;
+
+        lock (buffer)
+        {
+            buffer.Enqueue(data);
+        }
     }
 
     public void ClearBuffers()
