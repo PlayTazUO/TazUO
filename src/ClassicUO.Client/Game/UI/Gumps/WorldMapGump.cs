@@ -1944,9 +1944,7 @@ public class WorldMapGump : ResizableGump
                     {
                         Texture2D texture = CurLoader.CreateTextureFromICO_Cur(ms);
 
-                        string iconKey = Path.GetFileNameWithoutExtension(icon).ToLower();
-                        _markerIcons.Add(iconKey, texture);
-                        _markerIconPaths[iconKey] = icon;
+                        RegisterMarkerIcon(texture, icon);
                     }
                     catch (Exception ee)
                     {
@@ -1970,9 +1968,7 @@ public class WorldMapGump : ResizableGump
                     {
                         var texture = Texture2D.FromStream(Client.Game.GraphicsDevice, ms);
 
-                        string iconKey = Path.GetFileNameWithoutExtension(icon).ToLower();
-                        _markerIcons.Add(iconKey, texture);
-                        _markerIconPaths[iconKey] = icon;
+                        RegisterMarkerIcon(texture, icon);
                     }
                     catch (Exception ee)
                     {
@@ -2215,6 +2211,33 @@ public class WorldMapGump : ResizableGump
         }
 
         //);
+    }
+
+    /// <summary>
+    /// Registers a loaded marker icon, replacing any icon with the same name. The same icon name
+    /// can exist in multiple search directories (for example a global icon and a server-specific
+    /// override), so later directories take precedence. The replaced texture must be disposed or
+    /// every reload leaks GPU memory.
+    /// </summary>
+    private static void RegisterMarkerIcon(Texture2D texture, string iconPath)
+    {
+        string iconKey = Path.GetFileNameWithoutExtension(iconPath).ToLower();
+
+        if (_markerIcons.TryGetValue(iconKey, out Texture2D existing))
+        {
+            if (existing != null && !existing.IsDisposed)
+            {
+                existing.Dispose();
+            }
+
+            _markerIcons[iconKey] = texture;
+        }
+        else
+        {
+            _markerIcons.Add(iconKey, texture);
+        }
+
+        _markerIconPaths[iconKey] = iconPath;
     }
 
     private void AddMarkerOnPlayer()
