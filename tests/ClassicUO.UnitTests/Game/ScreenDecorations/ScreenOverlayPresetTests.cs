@@ -89,7 +89,11 @@ public class ScreenOverlayPresetTests
 
     public static TheoryData<ShippedPreset> SingleLayerPresets()
     {
-        return ShippedPresetCatalog.Only(ShippedPreset.TunnelVision, ShippedPreset.Death);
+        return ShippedPresetCatalog.Only(
+            ShippedPreset.TunnelVision,
+            ShippedPreset.Death,
+            ShippedPreset.Desaturate
+        );
     }
 
     /// <summary>

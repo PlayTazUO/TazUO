@@ -149,12 +149,17 @@ public struct ShapeSpec
     /// How far in from the screen edge the effect extends. Larger is thicker. Interacts with
     /// <see cref="EdgeBlend" />: a radial shape reaches further at the corners and side edges on a
     /// widescreen display, so the same value covers noticeably less.
+    /// <para>
+    /// 1 leaves a small hole at the exact centre; past 1 the boundary passes beyond it and the layer
+    /// covers everything evenly, up to <see cref="OverlayParams.MaxReach" />.
+    /// </para>
     /// </summary>
     [LocalizedDisplayName("visualeffects_shape_reach", "Reach")]
     [LocalizedDescription(
         "visualeffects_shape_reach_tooltip",
         "How far in from the screen edge the effect extends.\n"
-        + "Larger is thicker."
+        + "Larger is thicker. 1 reaches the centre but leaves a small hole\n"
+        + "there; above 1 it covers the whole screen evenly."
     )]
     public float Reach;
 

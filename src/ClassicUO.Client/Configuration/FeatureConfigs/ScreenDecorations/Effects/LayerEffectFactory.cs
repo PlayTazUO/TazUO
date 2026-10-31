@@ -22,7 +22,8 @@ public static class LayerEffectFactory
         new TintEffect(),
         new BlurEffect(),
         new RadialBlurEffect(),
-        new ChromaticEffect()
+        new ChromaticEffect(),
+        new SaturationEffect()
     ];
 
     /// <summary>
@@ -65,11 +66,16 @@ public static class LayerEffectFactory
             OverlaySampleMode.Radial => new RadialBlurEffect
             {
                 Zoom = parameters.Sampling.Zoom,
+                Swirl = parameters.Sampling.Swirl,
                 Taps = parameters.Sampling.Taps
             },
             OverlaySampleMode.Chromatic => new ChromaticEffect
             {
                 Aberration = parameters.Sampling.Aberration
+            },
+            OverlaySampleMode.Saturation => new SaturationEffect
+            {
+                Saturation = parameters.Sampling.Saturation
             },
             _ => throw new ArgumentOutOfRangeException(
                 nameof(parameters),

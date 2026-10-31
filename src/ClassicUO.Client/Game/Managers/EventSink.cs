@@ -17,7 +17,20 @@ public class EventSink
     public static void InvokeOnPlayerCreated() => OnPlayerCreated?.Invoke(null, EventArgs.Empty);
 
     /// <summary>
-    /// Invoked when an item is added to the client. The event's 'sender' is the Item
+    ///     Invoked when the current map is changed, such as when moving to a different facet
+    /// </summary>
+    [ApiEvent]
+    public static event EventHandler<MapChangedEventArgs> OnMapChanged;
+
+    /// <summary>
+    ///     Raises the <see cref="OnMapChanged" /> event.
+    /// </summary>
+    /// <param name="prevIdx">The previous map's index</param>
+    /// <param name="newIdx">The new map's index</param>
+    public static void InvokeOnMapChanged(int? prevIdx, int? newIdx) => OnMapChanged?.Invoke(null, new MapChangedEventArgs(prevIdx, newIdx));
+
+    /// <summary>
+    ///     Invoked when an item is added to the client. The event's 'sender' is the Item
     /// </summary>
     internal static event EventHandler<EventArgs> OnItemCreatedInternal;
 
@@ -363,4 +376,14 @@ public class SoundEventArgs(int index, int x, int y) : EventArgs
     public readonly int Y = y;
 
     public DateTime Time = DateTime.Now;
+}
+
+/// <summary>
+/// A map change. Either index is null where there was no map on that side of the change - logout
+/// clears the map, login has none to leave.
+/// </summary>
+public class MapChangedEventArgs(int? prevIdx, int? newIdx) : EventArgs
+{
+    public readonly int? PrevIdx = prevIdx;
+    public readonly int? NewIdx = newIdx;
 }

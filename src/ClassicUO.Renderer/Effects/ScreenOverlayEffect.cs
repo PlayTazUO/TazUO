@@ -49,9 +49,12 @@ public class ScreenOverlayEffect : Effect
         SceneScale = Parameters["SceneScale"];
         SampleRadius = Parameters["SampleRadius"];
         SampleZoom = Parameters["SampleZoom"];
+        SampleSwirl = Parameters["SampleSwirl"];
         SampleAberration = Parameters["SampleAberration"];
 
         Tint = Parameters["Tint"];
+        // Named apart from the technique, which fx_2_0 would otherwise reject as a redefinition.
+        SaturationAmount = Parameters["SaturationAmount"];
         Opacity = Parameters["Opacity"];
         Intensity = Parameters["Intensity"];
         PulseFreq = Parameters["PulseFreq"];
@@ -59,9 +62,12 @@ public class ScreenOverlayEffect : Effect
 
         _tintTechnique = Techniques["T0"];
         _chromaticTechnique = Techniques["Chromatic"];
+        _saturationTechnique = Techniques["Saturation"];
+        _saturationFlatTechnique = Techniques["SaturationFlat"];
 
         _blurTechniques = TechniquesPerTapCount("Blur");
         _radialTechniques = TechniquesPerTapCount("Radial");
+        _radialSwirlTechniques = TechniquesPerTapCount("RadialSwirl");
     }
 
     /// <summary>
@@ -118,9 +124,11 @@ public class ScreenOverlayEffect : Effect
     public EffectParameter SceneScale { get; }
     public EffectParameter SampleRadius { get; }
     public EffectParameter SampleZoom { get; }
+    public EffectParameter SampleSwirl { get; }
     public EffectParameter SampleAberration { get; }
 
     public EffectParameter Tint { get; }
+    public EffectParameter SaturationAmount { get; }
     public EffectParameter Opacity { get; }
     public EffectParameter Intensity { get; }
     public EffectParameter PulseFreq { get; }
@@ -128,6 +136,15 @@ public class ScreenOverlayEffect : Effect
 
     private readonly EffectTechnique _tintTechnique;
     private readonly EffectTechnique _chromaticTechnique;
+    private readonly EffectTechnique _saturationTechnique;
+
+    /// <summary>
+    ///     Saturation without the noise machinery behind its mask. Not an optimisation of the one
+    ///     above so much as the only affordable form of it at full reach: every technique's alpha
+    ///     costs three noise fetches, which a vignette's <c>clip()</c> hides and a full-screen layer
+    ///     pays per pixel.
+    /// </summary>
+    private readonly EffectTechnique _saturationFlatTechnique;
 
     /// <summary>Blur techniques indexed by tap count, so selection is one array read.</summary>
     private readonly EffectTechnique[] _blurTechniques;
@@ -136,22 +153,30 @@ public class ScreenOverlayEffect : Effect
     private readonly EffectTechnique[] _radialTechniques;
 
     /// <summary>
+    ///     Radial again, with the swirling march. A separate family because the swirl angle is a
+    ///     uniform: the compiler cannot fold a zero away, so a shared pass would charge every
+    ///     ordinary radial layer for rotation it does not use.
+    /// </summary>
+    private readonly EffectTechnique[] _radialSwirlTechniques;
+
+    /// <summary>
     ///     Points <see cref="Effect.CurrentTechnique" /> at the pass implementing
-    ///     <paramref name="sampling" />.
+    ///     <paramref name="p" />.
     ///     <para>
     ///         The tap count selects a technique rather than being uploaded as a uniform: it is the
     ///         bound of an unrolled loop and has to be known when the shader is compiled. See
     ///         SampleDisk in ScreenOverlay.fx for what a uniform bound costs.
     ///     </para>
     /// </summary>
-    /// <param name="sampling">The layer's distortion settings, already clamped.</param>
-    public void SetTechnique(in OverlaySampling sampling)
+    /// <param name="p">The layer's parameters, already clamped.</param>
+    public void SetTechnique(in OverlayParams p)
     {
-        EffectTechnique technique = sampling.Mode switch
+        EffectTechnique technique = p.Sampling.Mode switch
         {
-            OverlaySampleMode.Blur => _blurTechniques[(int)sampling.Taps],
-            OverlaySampleMode.Radial => _radialTechniques[(int)sampling.Taps],
+            OverlaySampleMode.Blur => _blurTechniques[(int)p.Sampling.Taps],
+            OverlaySampleMode.Radial => RadialTechnique(p.Sampling),
             OverlaySampleMode.Chromatic => _chromaticTechnique,
+            OverlaySampleMode.Saturation => p.HasFlatAlpha ? _saturationFlatTechnique : _saturationTechnique,
             _ => _tintTechnique
         };
 
@@ -160,6 +185,17 @@ public class ScreenOverlayEffect : Effect
         if (!ReferenceEquals(technique, CurrentTechnique))
             CurrentTechnique = technique;
     }
+
+    /// <summary>
+    ///     Straight or swirling march. Exact zero rather than an epsilon: a swirl too small to see is
+    ///     still one the author typed, not an invitation to substitute the cheaper pass.
+    /// </summary>
+    /// <param name="sampling">The layer's distortion settings, already clamped.</param>
+    /// <returns>The radial technique for this layer's tap count.</returns>
+    private EffectTechnique RadialTechnique(in OverlaySampling sampling) =>
+        sampling.Swirl == 0f
+            ? _radialTechniques[(int)sampling.Taps]
+            : _radialSwirlTechniques[(int)sampling.Taps];
 
     /// <summary>
     ///     Uploads one overlay's parameters. <paramref name="p" /> must already be clamped
@@ -241,9 +277,12 @@ public class ScreenOverlayEffect : Effect
         );
 
         SampleZoom.SetValue(sampling.Zoom);
+        SampleSwirl.SetValue(sampling.Swirl);
 
         // Scales the centre ray, which already carries SceneScale, so it needs no mapping of its
         // own - and must stay isotropic or the split stops following the ray.
         SampleAberration.SetValue(new Vector2(sampling.Aberration, sampling.Aberration));
+
+        SaturationAmount.SetValue(sampling.Saturation);
     }
 }

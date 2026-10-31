@@ -8,7 +8,9 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets.Layers;
 /// shape block. The mask is the distortion strength - it is what the sampled frame is composited at
 /// - so these are the only shape controls a distortion normally needs.
 /// </summary>
-/// <param name="Reach">How far in from the screen edge the distortion extends. 1 covers everything.</param>
+/// <param name="Reach">How far in from the screen edge the distortion extends. 1 leaves a small hole
+/// at the exact centre; past 1 the cover is even everywhere. See
+/// <see cref="ClassicUO.Renderer.Effects.OverlayParams.MaxReach" />.</param>
 /// <param name="Feather">Length of the fade behind that boundary.</param>
 /// <param name="EdgeBlend">0 = radial vignette, 1 = border trim.</param>
 /// <param name="Strength">Peak strength where the mask is full: 1 fully replaces the sharp frame.</param>

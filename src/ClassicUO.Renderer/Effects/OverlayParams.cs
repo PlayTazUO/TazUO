@@ -107,6 +107,10 @@ public struct OverlayShape
     /// to the centre. Larger is thicker. Interacts with <see cref="EdgeBlend"/>: on a widescreen
     /// display a radial shape reaches much further at the corners and the left/right edges than
     /// it does at the top and bottom, so the same value covers noticeably less screen.
+    /// <para>
+    /// 1 leaves a small hole at the exact centre; uniform full-screen cover needs
+    /// <see cref="OverlayParams.MaxReach"/>.
+    /// </para>
     /// </summary>
     public float Reach;
 
@@ -264,6 +268,18 @@ public struct OverlayParams
     /// image.</summary>
     public const float MaxSampleAberration = 0.05f;
 
+    /// <summary>Radial swirl ceiling, in radians - half a turn across the whole march. Past this the
+    /// streaks wrap around the centre, stop reading as travel, and the tap ghosting returns.</summary>
+    public const float MaxSampleSwirl = MathHelper.Pi;
+
+    /// <summary>Saturation floor. -1 is the exact complement about the frame's own luma; below that
+    /// it overshoots black and clips to a flat silhouette.</summary>
+    public const float MinSampleSaturation = -1f;
+
+    /// <summary>Saturation ceiling. Past this any coloured pixel clips to a primary and the frame
+    /// reads as flat blocks rather than as an over-rich image.</summary>
+    public const float MaxSampleSaturation = 3f;
+
     /// <summary>Centre-drift rate ceiling, in Hz. A motion-sickness bound rather than the
     /// flash-hazard one <see cref="MaxPulseFreqHz"/> guards against - past this the pivot swings
     /// fast enough to read as camera shake rather than an unsteady wander.</summary>
@@ -272,6 +288,13 @@ public struct OverlayParams
     /// <summary>Centre-drift range ceiling, in screen uv. Past this the effect's own focal point
     /// visibly tours the screen instead of just feeling unsteady.</summary>
     public const float MaxWobbleAmp = 0.15f;
+
+    /// <summary>
+    /// Reach ceiling. Shape distance is 0 at the centre by construction, so no <c>Reach</c> at or
+    /// below 1 covers the screen without a hole there. <c>Reach >= 1 + Feather</c> is full
+    /// everywhere - how a layer asks for the whole screen rather than for a vignette.
+    /// </summary>
+    public const float MaxReach = 2f;
 
     private const float MIN_FEATHER = 0.01f;
 
@@ -337,9 +360,24 @@ public struct OverlayParams
             Radius = 0.012f,
             Taps = DEFAULT_SAMPLE_TAPS,
             Zoom = 0.15f,
-            Aberration = 0.01f
+
+            // Straight rays. Swirl is an opt-in character change, not a default flavour.
+            Swirl = 0f,
+            Aberration = 0.01f,
+
+            // Fully drained: the common job is sickness and near-death. Pushing past 1 is rarer and
+            // worth asking for explicitly.
+            Saturation = 0f
         }
     };
+
+    /// <summary>
+    /// Whether the noise machinery contributes nothing to this layer's alpha, so the shader can take
+    /// a pass that skips its three fetches. A full floor multiplies the field out and zero jitter
+    /// leaves the boundary and feather unmoved.
+    /// </summary>
+    public readonly bool HasFlatAlpha =>
+        Noise.FlatFloor >= 1f && Shape.Jitter.ReachAmount <= 0f && Shape.Jitter.FeatherAmount <= 0f;
 
     /// <summary>
     /// Enforces the safety and sanity bounds every preset and every runtime override must obey.
@@ -359,7 +397,7 @@ public struct OverlayParams
         Shape.WobbleFreq.Y = MathHelper.Clamp(Shape.WobbleFreq.Y, 0f, MaxWobbleFreqHz);
         Shape.WobbleAmp = MathHelper.Clamp(Shape.WobbleAmp, 0f, MaxWobbleAmp);
 
-        Shape.Reach = MathHelper.Clamp(Shape.Reach, 0f, 1f);
+        Shape.Reach = MathHelper.Clamp(Shape.Reach, 0f, MaxReach);
         Shape.CornerBias = MathHelper.Clamp(Shape.CornerBias, 0f, 1f);
         Shape.FocusAmount = MathHelper.Clamp(Shape.FocusAmount, 0f, 1f);
         Shape.Feather = MathHelper.Max(Shape.Feather, MIN_FEATHER);
@@ -377,7 +415,13 @@ public struct OverlayParams
 
         Sampling.Radius = MathHelper.Clamp(Sampling.Radius, 0f, MaxSampleRadius);
         Sampling.Zoom = MathHelper.Clamp(Sampling.Zoom, 0f, 1f);
+        Sampling.Swirl = MathHelper.Clamp(Sampling.Swirl, -MaxSampleSwirl, MaxSampleSwirl);
         Sampling.Aberration = MathHelper.Clamp(Sampling.Aberration, 0f, MaxSampleAberration);
+        Sampling.Saturation = MathHelper.Clamp(
+            Sampling.Saturation,
+            MinSampleSaturation,
+            MaxSampleSaturation
+        );
 
         // Only the defined counts have a compiled technique, and a profile is hand-editable
         // JSON: an out-of-range value would otherwise reach the technique lookup.
