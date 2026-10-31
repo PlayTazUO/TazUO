@@ -52,16 +52,19 @@ public class ScreenOverlayEffect : Effect
         SampleSwirl = Parameters["SampleSwirl"];
         SampleAberration = Parameters["SampleAberration"];
 
-        Tint = Parameters["Tint"];
-        // Named apart from the technique, which fx_2_0 would otherwise reject as a redefinition.
+        // Both carry a suffix the technique reading them does not: uniforms and techniques share one
+        // identifier table in fx_2_0, which rejects the collision as a redefinition.
+        Tint = Parameters["TintColour"];
         SaturationAmount = Parameters["SaturationAmount"];
         Opacity = Parameters["Opacity"];
         Intensity = Parameters["Intensity"];
         PulseFreq = Parameters["PulseFreq"];
         PulseAmp = Parameters["PulseAmp"];
 
-        _tintTechnique = Techniques["T0"];
+        _tintTechnique = Techniques["Tint"];
+        _tintFlatTechnique = Techniques["TintFlat"];
         _chromaticTechnique = Techniques["Chromatic"];
+        _chromaticFlatTechnique = Techniques["ChromaticFlat"];
         _saturationTechnique = Techniques["Saturation"];
         _saturationFlatTechnique = Techniques["SaturationFlat"];
 
@@ -139,11 +142,24 @@ public class ScreenOverlayEffect : Effect
     private readonly EffectTechnique _saturationTechnique;
 
     /// <summary>
-    ///     Saturation without the noise machinery behind its mask. Not an optimisation of the one
-    ///     above so much as the only affordable form of it at full reach: every technique's alpha
-    ///     costs three noise fetches, which a vignette's <c>clip()</c> hides and a full-screen layer
-    ///     pays per pixel.
+    ///     The same three passes with <c>OverlayAlphaFlat</c> behind them, picked when
+    ///     <see cref="OverlayParams.HasFlatAlpha" /> says the noise machinery cannot change the
+    ///     layer's alpha. Every technique's alpha costs three noise fetches, which a vignette's
+    ///     <c>clip()</c> hides and a layer at full reach pays on every pixel - and these are the
+    ///     passes where that is most of the cost: tint 91 slots/3 fetches against 49/0, chromatic
+    ///     100/6 against 59/3, saturation 96/4 against 54/1.
+    ///     <para>
+    ///         The blur and radial families are deliberately absent. The saving is the same three
+    ///         fetches but a few percent of an already-expensive march, and collecting it would need
+    ///         one variant per tap count.
+    ///     </para>
     /// </summary>
+    private readonly EffectTechnique _tintFlatTechnique;
+
+    /// <inheritdoc cref="_tintFlatTechnique" />
+    private readonly EffectTechnique _chromaticFlatTechnique;
+
+    /// <inheritdoc cref="_tintFlatTechnique" />
     private readonly EffectTechnique _saturationFlatTechnique;
 
     /// <summary>Blur techniques indexed by tap count, so selection is one array read.</summary>
@@ -167,17 +183,23 @@ public class ScreenOverlayEffect : Effect
     ///         bound of an unrolled loop and has to be known when the shader is compiled. See
     ///         SampleDisk in ScreenOverlay.fx for what a uniform bound costs.
     ///     </para>
+    ///     <para>
+    ///         <see cref="OverlayParams.HasFlatAlpha" /> picks between a mode's full and flat passes
+    ///         where it has both - see <see cref="_tintFlatTechnique" />.
+    ///     </para>
     /// </summary>
     /// <param name="p">The layer's parameters, already clamped.</param>
     public void SetTechnique(in OverlayParams p)
     {
+        bool flat = p.HasFlatAlpha;
+
         EffectTechnique technique = p.Sampling.Mode switch
         {
             OverlaySampleMode.Blur => _blurTechniques[(int)p.Sampling.Taps],
             OverlaySampleMode.Radial => RadialTechnique(p.Sampling),
-            OverlaySampleMode.Chromatic => _chromaticTechnique,
-            OverlaySampleMode.Saturation => p.HasFlatAlpha ? _saturationFlatTechnique : _saturationTechnique,
-            _ => _tintTechnique
+            OverlaySampleMode.Chromatic => flat ? _chromaticFlatTechnique : _chromaticTechnique,
+            OverlaySampleMode.Saturation => flat ? _saturationFlatTechnique : _saturationTechnique,
+            _ => flat ? _tintFlatTechnique : _tintTechnique
         };
 
         // Assigning this crosses into FNA3D, so it is worth not repeating for a run of layers
@@ -221,7 +243,12 @@ public class ScreenOverlayEffect : Effect
         // Guarded because the full-screen pass is handed the raw viewport, which is 0x0 while the
         // window is minimized. Square is the neutral answer: nothing is visible at that size anyway,
         // and an Inf uploaded here would still be resident on the frame the window comes back.
-        AspectScale.SetValue(new Vector2(1f, screenSize.X > 0f ? screenSize.Y / screenSize.X : 1f));
+        //
+        // Both axes, not just the divisor: SampleRadialSwirl divides by this, where a zero y is an
+        // Inf of its own and then a NaN against an on-centre pixel's zero offset.
+        bool degenerateViewport = screenSize.X <= 0f || screenSize.Y <= 0f;
+
+        AspectScale.SetValue(new Vector2(1f, degenerateViewport ? 1f : screenSize.Y / screenSize.X));
         Reach.SetValue(p.Shape.Reach);
         Feather.SetValue(p.Shape.Feather);
         EdgeBlend.SetValue(p.Shape.EdgeBlend);

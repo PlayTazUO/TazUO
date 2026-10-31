@@ -291,7 +291,7 @@ internal static class ExtendedCommand
                     //}
 
 
-                    world.ReloadMap();
+                    world.ReloadPatchedMap();
 
                     Log.Trace("Map Patches applied.");
                 }

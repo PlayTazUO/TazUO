@@ -379,8 +379,13 @@ public class SoundEventArgs(int index, int x, int y) : EventArgs
 }
 
 /// <summary>
-/// A map change. Either index is null where there was no map on that side of the change - logout
-/// clears the map, login has none to leave.
+/// A map change. Either index is null where there was no map on that side of it: nothing to leave
+/// on the first change after entering the world, nothing arriving when the map is torn down rather
+/// than replaced.
+/// <para>
+/// Follows <see cref="ClassicUO.Game.World.MapIndex" /> only. Dropping the whole world - logout,
+/// character switch - takes <c>World.Clear()</c> instead, which raises nothing.
+/// </para>
 /// </summary>
 public class MapChangedEventArgs(int? prevIdx, int? newIdx) : EventArgs
 {

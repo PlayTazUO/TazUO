@@ -194,42 +194,65 @@ namespace ClassicUO.Game
                     return;
 
                 int? prevIdx = Map?.Index;
-                SwitchMap(value);
+                SwitchMap(value, true);
 
-                EventSink.InvokeOnMapChanged(prevIdx, Map?.Index);
+                // Against what was actually built, not against the requested index. The server sends
+                // a map change as a single byte, so anything from MAPS_COUNT up is a value no early
+                // return catches but SwitchMap clamps to 0 - which on map 0 is a rebuild that did not
+                // change map and must not be announced as one.
+                int? newIdx = Map?.Index;
+
+                if (newIdx != prevIdx)
+                    EventSink.InvokeOnMapChanged(prevIdx, newIdx);
             }
         }
 
         /// <summary>
         /// Rebuilds the current map in place, for when its files changed under the client - map
-        /// patches arriving after login. Raises no <see cref="EventSink.OnMapChanged" />: the player
-        /// is on the same map before and after.
+        /// patches arriving during login. Drops the world's entities like any map change, and leaves
+        /// the player unlinked from the rebuilt chunks until the next movement update places it.
+        /// <para>
+        /// Raises no <see cref="EventSink.OnMapChanged" />: the player is on the same map before and
+        /// after. For a rebuild that migrates the existing entities across instead of dropping them,
+        /// see <see cref="ReloadCurrentMap" />.
+        /// </para>
         /// </summary>
-        public void ReloadMap()
+        public void ReloadPatchedMap()
         {
             if (MapIndex < 0)
                 return;
 
-            SwitchMap(MapIndex);
+            SwitchMap(MapIndex, false);
         }
 
         /// <summary>
-        /// Tears down the current map and builds <paramref name="index" /> in its place, carrying the
-        /// player across. Raises nothing - whether that counts as a map change is the caller's to say,
-        /// which is the whole reason this is not the <see cref="MapIndex" /> setter.
+        /// Tears down the current map and builds <paramref name="index" /> in its place. Raises
+        /// nothing - whether that counts as a map change is the caller's to say, which is the whole
+        /// reason this is not the <see cref="MapIndex" /> setter.
         /// </summary>
-        /// <param name="index">Map to build. Clamped into range: the server sends this as a single
-        /// byte, and an out-of-range one would throw when the map is constructed.</param>
-        private void SwitchMap(int index)
+        /// <param name="index">Map to build, or negative to tear the current one down and build
+        /// nothing in its place. An index past the last map is clamped: the server sends it as a
+        /// single byte, and an out-of-range one would throw when the map is constructed.</param>
+        /// <param name="carryPlayer">Whether to re-link the player onto the rebuilt map and drop its
+        /// queued steps. Off leaves it unlinked until the next movement update.</param>
+        private void SwitchMap(int index, bool carryPlayer)
         {
             InternalMapChangeClear(true);
 
-            if (index < 0 || index >= MapLoader.MAPS_COUNT)
+            // Teardown, not a switch - and deliberately ahead of the cursor and web-server work
+            // below, neither of which has a map to describe.
+            if (index < 0)
+            {
+                Map?.Destroy();
+                Map = null;
+
+                return;
+            }
+
+            if (index >= MapLoader.MAPS_COUNT)
                 index = 0;
 
-            bool unlockFelucca = ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS);
-
-            if (Map != null)
+            if (carryPlayer && Map != null)
             {
                 Map.Destroy();
 
@@ -238,17 +261,17 @@ namespace ClassicUO.Game
                 sbyte z = Player.Z;
 
                 Map = null;
-
-                Client.Game.UO.FileManager.Maps.LoadMap(index, unlockFelucca);
-                Map = new Map.Map(this, index);
+                BuildMap(index);
 
                 Player.SetInWorldTile(x, y, z);
                 Player.ClearSteps();
             }
             else
             {
-                Client.Game.UO.FileManager.Maps.LoadMap(index, unlockFelucca);
-                Map = new Map.Map(this, index);
+                Map?.Destroy();
+                Map = null;
+
+                BuildMap(index);
             }
 
             // force cursor update when switching map
@@ -261,6 +284,15 @@ namespace ClassicUO.Game
                 Log.Info($"Map changed to {index}, notifying web server");
                 MapWebServerManager.Instance.RegenerateMapPng();
             }
+        }
+
+        /// <summary>Loads a map's files and builds it into <see cref="Map" />.</summary>
+        /// <param name="index">Map to build. Must already be in range.</param>
+        private void BuildMap(int index)
+        {
+            bool unlockFel = ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS);
+            Client.Game.UO.FileManager.Maps.LoadMap(index, unlockFel);
+            Map = new Map.Map(this, index);
         }
 
         public bool InGame => Player != null && Map != null;

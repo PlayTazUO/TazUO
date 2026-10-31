@@ -108,8 +108,9 @@ public struct OverlayShape
     /// display a radial shape reaches much further at the corners and the left/right edges than
     /// it does at the top and bottom, so the same value covers noticeably less screen.
     /// <para>
-    /// 1 leaves a small hole at the exact centre; uniform full-screen cover needs
-    /// <see cref="OverlayParams.MaxReach"/>.
+    /// 1 leaves a small hole at the exact centre, and the fade behind the boundary is still running
+    /// there for a while past that: even cover needs <c>Reach &gt;= 1 + <see cref="Feather"/></c>,
+    /// which is what <see cref="OverlayParams.MaxReach"/> leaves room for.
     /// </para>
     /// </summary>
     public float Reach;

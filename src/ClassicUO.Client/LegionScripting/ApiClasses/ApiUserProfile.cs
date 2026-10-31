@@ -35,8 +35,7 @@ public class ApiUserProfile
     public static bool AutoLootEnabled => ProfileManager.CurrentProfile?.EnableAutoLoot ?? false;
 
     /// <summary>
-    ///     Gets the currently saved mount's serial
+    ///     Gets the currently saved mount's serial, or 0, if none was set
     /// </summary>
-    /// <returns>The currently saved mount's serial, or 0, if none was set</returns>
     public static uint SavedMountSerial => ProfileManager.CurrentProfile?.SavedMountSerial ?? 0;
 }

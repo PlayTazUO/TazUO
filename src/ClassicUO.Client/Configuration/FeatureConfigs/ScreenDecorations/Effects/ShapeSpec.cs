@@ -150,8 +150,9 @@ public struct ShapeSpec
     /// <see cref="EdgeBlend" />: a radial shape reaches further at the corners and side edges on a
     /// widescreen display, so the same value covers noticeably less.
     /// <para>
-    /// 1 leaves a small hole at the exact centre; past 1 the boundary passes beyond it and the layer
-    /// covers everything evenly, up to <see cref="OverlayParams.MaxReach" />.
+    /// 1 leaves a small hole at the exact centre. Passing 1 moves the boundary beyond it but leaves
+    /// the falloff still fading there, so even cover needs <c>Reach &gt;= 1 + <see cref="Feather" /></c>
+    /// - up to <see cref="OverlayParams.MaxReach" />.
     /// </para>
     /// </summary>
     [LocalizedDisplayName("visualeffects_shape_reach", "Reach")]
@@ -159,7 +160,8 @@ public struct ShapeSpec
         "visualeffects_shape_reach_tooltip",
         "How far in from the screen edge the effect extends.\n"
         + "Larger is thicker. 1 reaches the centre but leaves a small hole\n"
-        + "there; above 1 it covers the whole screen evenly."
+        + "there. To cover the screen evenly set it to 1 + Feather or more -\n"
+        + "just above 1 only shrinks the hole."
     )]
     public float Reach;
 

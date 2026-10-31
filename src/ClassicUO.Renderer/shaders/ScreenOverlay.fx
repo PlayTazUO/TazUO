@@ -51,7 +51,9 @@ float  SampleSwirl;      // radial blur: radians the march twists through; 0 = s
 float2 SampleAberration; // chromatic: red/blue separation along the centre ray
 
 // ---- Appearance ------------------------------------------------------------
-float3 Tint;
+// Uniforms and techniques share one identifier table, so neither of these can take the bare name of
+// the technique that reads it (error X3003) - hence the Colour/Amount suffixes.
+float3 TintColour;
 float  SaturationAmount; // 1 = frame untouched, 0 = fully grey, >1 = pushed; negative inverts the hue
 float  Opacity;
 float  Intensity;
@@ -71,7 +73,7 @@ struct PS_INPUT
     float2 TexCoord : TEXCOORD0;
 };
 
-PS_INPUT main_vertex(VS_INPUT IN)
+PS_INPUT quad_vertex(VS_INPUT IN)
 {
     PS_INPUT OUT;
     OUT.Position = mul(IN.Position, MatrixTransform);
@@ -137,15 +139,17 @@ float ShapeMask(float2 uv, float shape, float feather)
 // alpha wants the hard-edged one.
 float NoiseField(float2 uv)
 {
-    float b = dot(tex2D(NoiseSampler, uv * BaseScale + Time * BaseScroll + NoiseOffset), BaseChannel);
+    float baseField = dot(tex2D(NoiseSampler, uv * BaseScale + Time * BaseScroll + NoiseOffset), BaseChannel);
 
-    float2 warped = uv * DetailScale + Time * DetailScroll + NoiseOffset + (b - 0.5) * WarpStrength;
-    float d = dot(tex2D(NoiseSampler, warped), DetailChannel);
+    float2 warped = uv * DetailScale + Time * DetailScroll + NoiseOffset + (baseField - 0.5) * WarpStrength;
+    float detailField = dot(tex2D(NoiseSampler, warped), DetailChannel);
 
-    float n = b * 0.55 + d * 0.45;
+    // Weighted toward the base field: it carries the shape the eye reads, and an even blend lets the
+    // detail break that up into mush.
+    float field = baseField * 0.55 + detailField * 0.45;
 
-    float ridge = 1.0 - abs(n * 2.0 - 1.0);
-    return lerp(n, ridge * ridge, RidgeAmount);
+    float ridge = 1.0 - abs(field * 2.0 - 1.0);
+    return lerp(field, ridge * ridge, RidgeAmount);
 }
 
 // ---- Sampling helpers ------------------------------------------------------
@@ -305,6 +309,8 @@ float3 ApplySaturation(float3 colour)
     return max(lerp(luma.xxx, colour, SaturationAmount), 0.0);
 }
 
+// ---- Alpha -----------------------------------------------------------------
+
 // Everything the shape and noise machinery contributes, shared by every technique: 0 where the
 // effect is absent, up to Opacity where it is fully present. Clips rather than returning 0 so a
 // pixel outside the shape never reaches a texture fetch.
@@ -336,22 +342,21 @@ float OverlayAlpha(float2 uv)
     float mask = ShapeMask(uv, shape + flux * 0.5 * JitterReach, feather);
     clip(mask - 0.002);
 
-    float n = NoiseField(uv);
-    float shaped = smoothstep(Threshold - Softness, Threshold + Softness, n);
+    float noise = NoiseField(uv);
+    float shaped = smoothstep(Threshold - Softness, Threshold + Softness, noise);
     float field = lerp(shaped, 1.0, FlatFloor);
     float pulse = 1.0 + PulseAmp * sin(Time * PulseFreq * 6.28318530718); // 2 pi
 
     return saturate(mask * field * Opacity * Intensity * pulse);
 }
 
-// OverlayAlpha for a layer whose shape mask is the whole story. Exactly equivalent when FlatFloor
-// is 1 (the field multiplies out) and both jitter amounts are 0 (the boundary and feather are
-// unmoved, and Clamp already floors Feather at the 0.01 used above) - but without the three noise
-// fetches those terms would be built from. No conservative pre-clip either: it existed only to keep
-// pixels away from those fetches.
+// OverlayAlpha for a layer whose shape mask is the whole story: no noise fetches, and no
+// conservative pre-clip, which existed only to keep pixels away from them. Exactly equivalent when
+// FlatFloor is 1 (the field multiplies out) and both jitter amounts are 0 (boundary and feather
+// unmoved, and Clamp floors Feather at the 0.01 used above).
 //
-// Worth a technique of its own because a vignette hides the waste - its clip() trims most of the
-// screen - while a layer at full reach pays it on every pixel.
+// Only tint, chromatic and saturation pair with this - the passes where those fetches dominate. On a
+// blur or radial march the saving is a few percent and needs one variant per tap count.
 float OverlayAlphaFlat(float2 uv)
 {
     float mask = ShapeMask(uv, ShapeDistance(uv), Feather);
@@ -362,17 +367,16 @@ float OverlayAlphaFlat(float2 uv)
     return saturate(mask * Opacity * Intensity * pulse);
 }
 
-float4 main_fragment(PS_INPUT IN) : COLOR0
-{
-    return float4(Tint, OverlayAlpha(IN.TexCoord));
-}
+// ---- Fragments -------------------------------------------------------------
 
-// The sampling techniques all return the distorted scene at the layer's own alpha. Straight-alpha
+// The sampling fragments return the distorted scene at the layer's own alpha. Straight-alpha
 // blending then resolves to lerp(sharp, distorted, alpha) against the frame already on screen, so
 // the shape mask doubles as the strength of the distortion at no extra cost.
 //
-// One technique per tap count, stamped out below. The count cannot be a uniform (see SampleDisk),
-// so the caller picks the technique matching the quality it wants and pays exactly that many taps.
+// Each *_flat variant differs from its sibling only in taking OverlayAlphaFlat.
+
+// Blur and the two radial marches need one fragment per tap count: the count cannot be a uniform
+// (see SampleDisk), so every count is stamped out and the CPU picks the one it wants.
 #define BLUR_FRAGMENT(name, taps)                                   \
     float4 name(PS_INPUT IN) : COLOR0                               \
     {                                                               \
@@ -393,6 +397,18 @@ float4 main_fragment(PS_INPUT IN) : COLOR0
         float alpha = OverlayAlpha(IN.TexCoord);                    \
         return float4(SampleRadialSwirl(IN.TexCoord, taps), alpha); \
     }
+
+float4 tint_fragment(PS_INPUT IN) : COLOR0
+{
+    return float4(TintColour, OverlayAlpha(IN.TexCoord));
+}
+
+// Flat-mask tint: no scene fetch and no noise fetch, so the whole pass is arithmetic.
+// Basically a happy-flow for flat-alpha that avoids texture loads. Much cheaper
+float4 tint_flat_fragment(PS_INPUT IN) : COLOR0
+{
+    return float4(TintColour, OverlayAlphaFlat(IN.TexCoord));
+}
 
 BLUR_FRAGMENT(blur4_fragment, 4)
 BLUR_FRAGMENT(blur8_fragment, 8)
@@ -415,6 +431,13 @@ float4 chromatic_fragment(PS_INPUT IN) : COLOR0
     return float4(SampleChromatic(IN.TexCoord), alpha);
 }
 
+// Same split, flat mask: the three channel taps stay, the mask's three go.
+float4 chromatic_flat_fragment(PS_INPUT IN) : COLOR0
+{
+    float alpha = OverlayAlphaFlat(IN.TexCoord);
+    return float4(SampleChromatic(IN.TexCoord), alpha);
+}
+
 // Re-graded frame at the layer's own alpha, so the shape mask doubles as the strength of the grade.
 // One texture fetch: the cheapest technique that reads the scene.
 float4 saturation_fragment(PS_INPUT IN) : COLOR0
@@ -432,63 +455,40 @@ float4 saturation_flat_fragment(PS_INPUT IN) : COLOR0
     return float4(ApplySaturation(scene), alpha);
 }
 
-technique T0
-{
-    pass P0
-    {
-        VertexShader = compile vs_3_0 main_vertex();
-        PixelShader = compile ps_3_0 main_fragment();
-    }
-}
+// ---- Techniques ------------------------------------------------------------
 
-#define SAMPLING_TECHNIQUE(name, fragment) \
-    technique name                         \
-    {                                      \
-        pass P0                            \
-        {                                  \
-            VertexShader = compile vs_3_0 main_vertex(); \
+// Every technique is one pass over the quad, differing only in its fragment. Tint stays first: FNA
+// points CurrentTechnique at the first technique on load.
+#define OVERLAY_TECHNIQUE(name, fragment)                \
+    technique name                                       \
+    {                                                    \
+        pass Single                                      \
+        {                                                \
+            VertexShader = compile vs_3_0 quad_vertex(); \
             PixelShader = compile ps_3_0 fragment();     \
-        }                                  \
+        }                                                \
     }
 
-SAMPLING_TECHNIQUE(Blur4, blur4_fragment)
-SAMPLING_TECHNIQUE(Blur8, blur8_fragment)
-SAMPLING_TECHNIQUE(Blur12, blur12_fragment)
-SAMPLING_TECHNIQUE(Blur16, blur16_fragment)
+OVERLAY_TECHNIQUE(Tint, tint_fragment)
+OVERLAY_TECHNIQUE(TintFlat, tint_flat_fragment)
 
-SAMPLING_TECHNIQUE(Radial4, radial4_fragment)
-SAMPLING_TECHNIQUE(Radial8, radial8_fragment)
-SAMPLING_TECHNIQUE(Radial12, radial12_fragment)
-SAMPLING_TECHNIQUE(Radial16, radial16_fragment)
+OVERLAY_TECHNIQUE(Blur4, blur4_fragment)
+OVERLAY_TECHNIQUE(Blur8, blur8_fragment)
+OVERLAY_TECHNIQUE(Blur12, blur12_fragment)
+OVERLAY_TECHNIQUE(Blur16, blur16_fragment)
 
-SAMPLING_TECHNIQUE(RadialSwirl4, radial_swirl4_fragment)
-SAMPLING_TECHNIQUE(RadialSwirl8, radial_swirl8_fragment)
-SAMPLING_TECHNIQUE(RadialSwirl12, radial_swirl12_fragment)
-SAMPLING_TECHNIQUE(RadialSwirl16, radial_swirl16_fragment)
+OVERLAY_TECHNIQUE(Radial4, radial4_fragment)
+OVERLAY_TECHNIQUE(Radial8, radial8_fragment)
+OVERLAY_TECHNIQUE(Radial12, radial12_fragment)
+OVERLAY_TECHNIQUE(Radial16, radial16_fragment)
 
-technique Chromatic
-{
-    pass P0
-    {
-        VertexShader = compile vs_3_0 main_vertex();
-        PixelShader = compile ps_3_0 chromatic_fragment();
-    }
-}
+OVERLAY_TECHNIQUE(RadialSwirl4, radial_swirl4_fragment)
+OVERLAY_TECHNIQUE(RadialSwirl8, radial_swirl8_fragment)
+OVERLAY_TECHNIQUE(RadialSwirl12, radial_swirl12_fragment)
+OVERLAY_TECHNIQUE(RadialSwirl16, radial_swirl16_fragment)
 
-technique Saturation
-{
-    pass P0
-    {
-        VertexShader = compile vs_3_0 main_vertex();
-        PixelShader = compile ps_3_0 saturation_fragment();
-    }
-}
+OVERLAY_TECHNIQUE(Chromatic, chromatic_fragment)
+OVERLAY_TECHNIQUE(ChromaticFlat, chromatic_flat_fragment)
 
-technique SaturationFlat
-{
-    pass P0
-    {
-        VertexShader = compile vs_3_0 main_vertex();
-        PixelShader = compile ps_3_0 saturation_flat_fragment();
-    }
-}
+OVERLAY_TECHNIQUE(Saturation, saturation_fragment)
+OVERLAY_TECHNIQUE(SaturationFlat, saturation_flat_fragment)

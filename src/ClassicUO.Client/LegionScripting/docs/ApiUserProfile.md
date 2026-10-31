@@ -44,7 +44,7 @@ Does the player have auto loot enabled?
 
 **Type:** `uint`
 
-Gets the currently saved mount's serial
+Gets the currently saved mount's serial, or 0, if none was set
 
 
 *No fields found.*
