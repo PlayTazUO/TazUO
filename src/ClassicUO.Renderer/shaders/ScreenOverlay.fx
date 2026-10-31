@@ -236,7 +236,7 @@ float3 SampleRadial(float2 uv, int taps)
 // SampleRadial with the march turning as it travels - a vortex rather than a rush forward.
 //
 // Its own function, not a branch: SampleSwirl is a uniform, so a shared one would charge every
-// zero-swirl layer for the rotation (277 slots against 132 at 16 taps).
+// zero-swirl layer for the rotation (313 slots against 168 at 16 taps).
 float3 SampleRadialSwirl(float2 uv, int taps)
 {
     float2 centre = EffectiveCenter();
