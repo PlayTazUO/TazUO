@@ -190,65 +190,109 @@ namespace ClassicUO.Game
             get => Map?.Index ?? -1;
             set
             {
-                if (MapIndex != value)
-                {
-                    InternalMapChangeClear(true);
+                if (MapIndex == value)
+                    return;
 
-                    if (value < 0 && Map != null)
-                    {
-                        Map.Destroy();
-                        Map = null;
+                int? prevIdx = Map?.Index;
+                SwitchMap(value, true);
 
-                        return;
-                    }
+                // Against what was actually built, not against the requested index. The server sends
+                // a map change as a single byte, so anything from MAPS_COUNT up is a value no early
+                // return catches but SwitchMap clamps to 0 - which on map 0 is a rebuild that did not
+                // change map and must not be announced as one.
+                int? newIdx = Map?.Index;
 
-                    // Clamp to a valid map index. The server may send an out-of-range
-                    // index (map change is a single byte, so 0-255), which would throw
-                    // IndexOutOfRangeException when the Map is constructed.
-                    if (value < 0 || value >= MapLoader.MAPS_COUNT)
-                    {
-                        value = 0;
-                    }
-
-                    if (Map != null)
-                    {
-                        if (MapIndex >= 0)
-                        {
-                            Map.Destroy();
-                        }
-
-                        ushort x = Player.X;
-                        ushort y = Player.Y;
-                        sbyte z = Player.Z;
-
-                        Map = null;
-
-                        Client.Game.UO.FileManager.Maps.LoadMap(value, ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS));
-                        Map = new Map.Map(this, value);
-
-                        Player.SetInWorldTile(x, y, z);
-                        Player.ClearSteps();
-                    }
-                    else
-                    {
-                        Client.Game.UO.FileManager.Maps.LoadMap(value, ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS));
-                        Map = new Map.Map(this, value);
-                    }
-
-                    // force cursor update when switching map
-                    if (Client.Game.UO.GameCursor != null)
-                    {
-                        Client.Game.UO.GameCursor.Graphic = 0xFFFF;
-                    }
-
-                    // Notify web server of map change
-                    if (Managers.MapWebServerManager.Instance.IsRunning)
-                    {
-                        Utility.Logging.Log.Info($"Map changed to {value}, notifying web server");
-                        Managers.MapWebServerManager.Instance.RegenerateMapPng();
-                    }
-                }
+                if (newIdx != prevIdx)
+                    EventSink.InvokeOnMapChanged(prevIdx, newIdx);
             }
+        }
+
+        /// <summary>
+        /// Rebuilds the current map in place, for when its files changed under the client - map
+        /// patches arriving during login. Drops the world's entities like any map change, and leaves
+        /// the player unlinked from the rebuilt chunks until the next movement update places it.
+        /// <para>
+        /// Raises no <see cref="EventSink.OnMapChanged" />: the player is on the same map before and
+        /// after. For a rebuild that migrates the existing entities across instead of dropping them,
+        /// see <see cref="ReloadCurrentMap" />.
+        /// </para>
+        /// </summary>
+        public void ReloadPatchedMap()
+        {
+            if (MapIndex < 0)
+                return;
+
+            SwitchMap(MapIndex, false);
+        }
+
+        /// <summary>
+        /// Tears down the current map and builds <paramref name="index" /> in its place. Raises
+        /// nothing - whether that counts as a map change is the caller's to say, which is the whole
+        /// reason this is not the <see cref="MapIndex" /> setter.
+        /// </summary>
+        /// <param name="index">Map to build, or negative to tear the current one down and build
+        /// nothing in its place. An index past the last map is clamped: the server sends it as a
+        /// single byte, and an out-of-range one would throw when the map is constructed.</param>
+        /// <param name="carryPlayer">Whether to re-link the player onto the rebuilt map and drop its
+        /// queued steps. Off leaves it unlinked until the next movement update.</param>
+        private void SwitchMap(int index, bool carryPlayer)
+        {
+            InternalMapChangeClear(true);
+
+            // Teardown, not a switch - and deliberately ahead of the cursor and web-server work
+            // below, neither of which has a map to describe.
+            if (index < 0)
+            {
+                Map?.Destroy();
+                Map = null;
+
+                return;
+            }
+
+            if (index >= MapLoader.MAPS_COUNT)
+                index = 0;
+
+            if (carryPlayer && Map != null)
+            {
+                Map.Destroy();
+
+                ushort x = Player.X;
+                ushort y = Player.Y;
+                sbyte z = Player.Z;
+
+                Map = null;
+                BuildMap(index);
+
+                Player.SetInWorldTile(x, y, z);
+                Player.ClearSteps();
+            }
+            else
+            {
+                Map?.Destroy();
+                Map = null;
+
+                BuildMap(index);
+            }
+
+            // force cursor update when switching map
+            if (Client.Game.UO.GameCursor != null)
+                Client.Game.UO.GameCursor.Graphic = 0xFFFF;
+
+            // Notify web server of map change
+            if (MapWebServerManager.Instance.IsRunning)
+            {
+                Log.Info($"Map changed to {index}, notifying web server");
+                MapWebServerManager.Instance.RegenerateMapPng();
+            }
+        }
+
+        /// <summary>Loads a map's files and builds it into <see cref="Map" />.</summary>
+        /// <param name="index">Map to build. Must already be in range.</param>
+        private void BuildMap(int index)
+        {
+            bool unlockFel = ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS);
+            Client.Game.UO.FileManager.Maps.LoadMap(index, unlockFel);
+            Map = new Map.Map(this, index);
         }
 
         public bool InGame => Player != null && Map != null;

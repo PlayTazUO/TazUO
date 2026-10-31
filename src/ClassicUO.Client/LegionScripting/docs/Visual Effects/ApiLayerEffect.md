@@ -7,9 +7,10 @@ description: "One layer of a visual effect composition. The subtype is the techn
 One layer of a visual effect composition. The subtype is the technique, so a technique's knobs
 exist only on the type that reads them - there is no radius on a chromatic layer to mis-set.
 
-Build one with `API.VisualEffects.NewTintLayer`, `API.VisualEffects.NewBlurLayer`, `API.VisualEffects.NewRadialBlurLayer` or
-`API.VisualEffects.NewChromaticLayer`, each of which hands back the client's own defaults for that technique.
-Fixed set of four: the shader has four techniques and there is no way to describe a fifth.
+Build one with `API.VisualEffects.NewTintLayer`, `API.VisualEffects.NewBlurLayer`,
+`API.VisualEffects.NewRadialBlurLayer`, `API.VisualEffects.NewChromaticLayer` or
+`API.VisualEffects.NewSaturationLayer`, each of which hands back the client's own defaults for
+that technique. Fixed set: one per pass compiled into the shader, and no way to describe another.
 
 ## Properties
 ### `Shape`

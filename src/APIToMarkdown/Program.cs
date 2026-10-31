@@ -1069,6 +1069,7 @@ public static partial class GenDoc
             "ApiBlurLayer" => "ApiBlurLayer",
             "ApiRadialBlurLayer" => "ApiRadialBlurLayer",
             "ApiChromaticLayer" => "ApiChromaticLayer",
+            "ApiSaturationLayer" => "ApiSaturationLayer",
             "ApiShapeSpec" => "ApiShapeSpec",
             "ApiJitterSpec" => "ApiJitterSpec",
             "ApiNoiseSpec" => "ApiNoiseSpec",

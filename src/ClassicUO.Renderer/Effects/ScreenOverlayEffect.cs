@@ -49,19 +49,28 @@ public class ScreenOverlayEffect : Effect
         SceneScale = Parameters["SceneScale"];
         SampleRadius = Parameters["SampleRadius"];
         SampleZoom = Parameters["SampleZoom"];
+        SampleSwirl = Parameters["SampleSwirl"];
         SampleAberration = Parameters["SampleAberration"];
 
-        Tint = Parameters["Tint"];
+        // Both carry a suffix the technique reading them does not: uniforms and techniques share one
+        // identifier table in fx_2_0, which rejects the collision as a redefinition.
+        Tint = Parameters["TintColour"];
+        SaturationAmount = Parameters["SaturationAmount"];
         Opacity = Parameters["Opacity"];
         Intensity = Parameters["Intensity"];
         PulseFreq = Parameters["PulseFreq"];
         PulseAmp = Parameters["PulseAmp"];
 
-        _tintTechnique = Techniques["T0"];
+        _tintTechnique = Techniques["Tint"];
+        _tintFlatTechnique = Techniques["TintFlat"];
         _chromaticTechnique = Techniques["Chromatic"];
+        _chromaticFlatTechnique = Techniques["ChromaticFlat"];
+        _saturationTechnique = Techniques["Saturation"];
+        _saturationFlatTechnique = Techniques["SaturationFlat"];
 
         _blurTechniques = TechniquesPerTapCount("Blur");
         _radialTechniques = TechniquesPerTapCount("Radial");
+        _radialSwirlTechniques = TechniquesPerTapCount("RadialSwirl");
     }
 
     /// <summary>
@@ -118,9 +127,11 @@ public class ScreenOverlayEffect : Effect
     public EffectParameter SceneScale { get; }
     public EffectParameter SampleRadius { get; }
     public EffectParameter SampleZoom { get; }
+    public EffectParameter SampleSwirl { get; }
     public EffectParameter SampleAberration { get; }
 
     public EffectParameter Tint { get; }
+    public EffectParameter SaturationAmount { get; }
     public EffectParameter Opacity { get; }
     public EffectParameter Intensity { get; }
     public EffectParameter PulseFreq { get; }
@@ -128,6 +139,28 @@ public class ScreenOverlayEffect : Effect
 
     private readonly EffectTechnique _tintTechnique;
     private readonly EffectTechnique _chromaticTechnique;
+    private readonly EffectTechnique _saturationTechnique;
+
+    /// <summary>
+    ///     The same three passes with <c>OverlayAlphaFlat</c> behind them, picked when
+    ///     <see cref="OverlayParams.HasFlatAlpha" /> says the noise machinery cannot change the
+    ///     layer's alpha. Every technique's alpha costs three noise fetches, which a vignette's
+    ///     <c>clip()</c> hides and a layer at full reach pays on every pixel - and these are the
+    ///     passes where that is most of the cost: tint 91 slots/3 fetches against 49/0, chromatic
+    ///     100/6 against 59/3, saturation 96/4 against 54/1.
+    ///     <para>
+    ///         The blur and radial families are deliberately absent. The saving is the same three
+    ///         fetches but a few percent of an already-expensive march, and collecting it would need
+    ///         one variant per tap count.
+    ///     </para>
+    /// </summary>
+    private readonly EffectTechnique _tintFlatTechnique;
+
+    /// <inheritdoc cref="_tintFlatTechnique" />
+    private readonly EffectTechnique _chromaticFlatTechnique;
+
+    /// <inheritdoc cref="_tintFlatTechnique" />
+    private readonly EffectTechnique _saturationFlatTechnique;
 
     /// <summary>Blur techniques indexed by tap count, so selection is one array read.</summary>
     private readonly EffectTechnique[] _blurTechniques;
@@ -136,23 +169,37 @@ public class ScreenOverlayEffect : Effect
     private readonly EffectTechnique[] _radialTechniques;
 
     /// <summary>
+    ///     Radial again, with the swirling march. A separate family because the swirl angle is a
+    ///     uniform: the compiler cannot fold a zero away, so a shared pass would charge every
+    ///     ordinary radial layer for rotation it does not use.
+    /// </summary>
+    private readonly EffectTechnique[] _radialSwirlTechniques;
+
+    /// <summary>
     ///     Points <see cref="Effect.CurrentTechnique" /> at the pass implementing
-    ///     <paramref name="sampling" />.
+    ///     <paramref name="p" />.
     ///     <para>
     ///         The tap count selects a technique rather than being uploaded as a uniform: it is the
     ///         bound of an unrolled loop and has to be known when the shader is compiled. See
     ///         SampleDisk in ScreenOverlay.fx for what a uniform bound costs.
     ///     </para>
+    ///     <para>
+    ///         <see cref="OverlayParams.HasFlatAlpha" /> picks between a mode's full and flat passes
+    ///         where it has both - see <see cref="_tintFlatTechnique" />.
+    ///     </para>
     /// </summary>
-    /// <param name="sampling">The layer's distortion settings, already clamped.</param>
-    public void SetTechnique(in OverlaySampling sampling)
+    /// <param name="p">The layer's parameters, already clamped.</param>
+    public void SetTechnique(in OverlayParams p)
     {
-        EffectTechnique technique = sampling.Mode switch
+        bool flat = p.HasFlatAlpha;
+
+        EffectTechnique technique = p.Sampling.Mode switch
         {
-            OverlaySampleMode.Blur => _blurTechniques[(int)sampling.Taps],
-            OverlaySampleMode.Radial => _radialTechniques[(int)sampling.Taps],
-            OverlaySampleMode.Chromatic => _chromaticTechnique,
-            _ => _tintTechnique
+            OverlaySampleMode.Blur => _blurTechniques[(int)p.Sampling.Taps],
+            OverlaySampleMode.Radial => RadialTechnique(p.Sampling),
+            OverlaySampleMode.Chromatic => flat ? _chromaticFlatTechnique : _chromaticTechnique,
+            OverlaySampleMode.Saturation => flat ? _saturationFlatTechnique : _saturationTechnique,
+            _ => flat ? _tintFlatTechnique : _tintTechnique
         };
 
         // Assigning this crosses into FNA3D, so it is worth not repeating for a run of layers
@@ -160,6 +207,17 @@ public class ScreenOverlayEffect : Effect
         if (!ReferenceEquals(technique, CurrentTechnique))
             CurrentTechnique = technique;
     }
+
+    /// <summary>
+    ///     Straight or swirling march. Exact zero rather than an epsilon: a swirl too small to see is
+    ///     still one the author typed, not an invitation to substitute the cheaper pass.
+    /// </summary>
+    /// <param name="sampling">The layer's distortion settings, already clamped.</param>
+    /// <returns>The radial technique for this layer's tap count.</returns>
+    private EffectTechnique RadialTechnique(in OverlaySampling sampling) =>
+        sampling.Swirl == 0f
+            ? _radialTechniques[(int)sampling.Taps]
+            : _radialSwirlTechniques[(int)sampling.Taps];
 
     /// <summary>
     ///     Uploads one overlay's parameters. <paramref name="p" /> must already be clamped
@@ -185,7 +243,12 @@ public class ScreenOverlayEffect : Effect
         // Guarded because the full-screen pass is handed the raw viewport, which is 0x0 while the
         // window is minimized. Square is the neutral answer: nothing is visible at that size anyway,
         // and an Inf uploaded here would still be resident on the frame the window comes back.
-        AspectScale.SetValue(new Vector2(1f, screenSize.X > 0f ? screenSize.Y / screenSize.X : 1f));
+        //
+        // Both axes, not just the divisor: SampleRadialSwirl divides by this, where a zero y is an
+        // Inf of its own and then a NaN against an on-centre pixel's zero offset.
+        bool degenerateViewport = screenSize.X <= 0f || screenSize.Y <= 0f;
+
+        AspectScale.SetValue(new Vector2(1f, degenerateViewport ? 1f : screenSize.Y / screenSize.X));
         Reach.SetValue(p.Shape.Reach);
         Feather.SetValue(p.Shape.Feather);
         EdgeBlend.SetValue(p.Shape.EdgeBlend);
@@ -241,9 +304,12 @@ public class ScreenOverlayEffect : Effect
         );
 
         SampleZoom.SetValue(sampling.Zoom);
+        SampleSwirl.SetValue(sampling.Swirl);
 
         // Scales the centre ray, which already carries SceneScale, so it needs no mapping of its
         // own - and must stay isotropic or the split stops following the ray.
         SampleAberration.SetValue(new Vector2(sampling.Aberration, sampling.Aberration));
+
+        SaturationAmount.SetValue(sampling.Saturation);
     }
 }

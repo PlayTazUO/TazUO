@@ -1229,12 +1229,7 @@ class ApiUserProfile:
     FavoriteBagSerial: int = None
     MoveItemDelay: int = None
     AutoLootEnabled: bool = None
-
-    def GetSavedMountSerial(self) -> "int":
-        """
-        Gets the currently saved mount's serial
-        """
-        pass
+    SavedMountSerial: int = None
 
 class ApiVector2(PyApiObject):
     ""
@@ -1344,11 +1339,16 @@ class ApiBlurLayer(ApiLayerEffect):
 class ApiRadialBlurLayer(ApiLayerEffect):
     ""
     Zoom: float = None
+    Swirl: float = None
     Taps = None
 
 class ApiChromaticLayer(ApiLayerEffect):
     ""
     Aberration: float = None
+
+class ApiSaturationLayer(ApiLayerEffect):
+    ""
+    Saturation: float = None
 
 class ApiShakeConfig(PyApiObject):
     ""
@@ -1434,6 +1434,7 @@ class ApiVisualEffects:
         Concussion = "b7b6a46c-9899-4d6f-8493-cd22d695c0fb"
         TunnelVision = "b006e04f-3087-4ac7-bdbb-0c903d35792d"
         Death = "bd6cf532-4dc4-46d7-94eb-bc061ef041da"
+        Desaturate = "3f2a9c41-5b8e-4c17-9d60-7ae4c2b8f153"
         EarthquakeRumble = "7f67a87a-e30a-441b-9b5a-3a91da98d050"
 
     def GetProfiles(self) -> "list[ApiEffectProfileInfo]":
@@ -1512,6 +1513,15 @@ class ApiVisualEffects:
         Build a chromatic split layer, set to the client's defaults. The cheapest technique by a wide
         margin - three samples per pixel - so it is worth reaching for first when something needs to
         look wrong.
+        """
+        pass
+
+    def NewSaturationLayer(self) -> "ApiSaturationLayer":
+        """
+        Build a saturation layer, set to the client's defaults - fully drained to grey. Raise
+        `Saturation` toward 1 for a partial drain, past 1 to push the colour past its real value.
+        
+        One sample per pixel: the cheapest technique that reads the frame at all.
         """
         pass
 
@@ -4142,6 +4152,12 @@ def GetViewportBounds() -> "Any":
 
 class EventSinkApiDeclaration:
     ""
+
+    def OnMapChanged(self, callback: "Any") -> None:
+        """
+        Invoked when the current map is changed, such as when moving to a different facet
+        """
+        pass
 
     def OnItemCreated(self, callback: "Any") -> None:
         """

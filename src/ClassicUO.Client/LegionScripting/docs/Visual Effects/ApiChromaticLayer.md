@@ -1,12 +1,12 @@
 ---
 title: ApiChromaticLayer
-description: "Red/blue split along the ray from the shape's centre - lens fringing. The cheapest technique by a wide margin, three taps whatever its strength, so it is worth reaching for first when something needs to look wrong without costing anything. Build one with `API.VisualEffects.NewChromaticLayer`."
+description: "Red/blue split along the ray from the shape's centre - lens fringing. Three taps whatever its strength; only `ApiSaturationLayer`, at one, is cheaper. Build one with `API.VisualEffects.NewChromaticLayer`."
 ---
 
 ## Class Description
-Red/blue split along the ray from the shape's centre - lens fringing. The cheapest technique by a
-wide margin, three taps whatever its strength, so it is worth reaching for first when something
-needs to look wrong without costing anything. Build one with `API.VisualEffects.NewChromaticLayer`.
+Red/blue split along the ray from the shape's centre - lens fringing. Three taps whatever its
+strength; only `ApiSaturationLayer`, at one, is cheaper. Build one with
+`API.VisualEffects.NewChromaticLayer`.
 
 ## Properties
 ### `Aberration`
