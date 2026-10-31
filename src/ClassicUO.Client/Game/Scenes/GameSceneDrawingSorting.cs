@@ -1399,14 +1399,14 @@ namespace ClassicUO.Game.Scenes
                     case GameEffect effect:
                         // An effect attached to an entity below the roof cut (player and entity under the same roof)
                         // is always drawn, even when the effect itself is raised above the cut. A mobile hidden by a
-                        // surface overhead (upper floor seen from below) is not drawn, so neither are its effects.
+                        // surface overhead (upper floor seen from below) is not drawn, so neither are the effects attached to it.
                         if (
                             effect.Source != null
                             && !effect.Source.IsDestroyed
                             && effect.Source.Z < _maxZ
                         )
                         {
-                            if (effect.Source is Mobile sourceMobile && HasSurfaceOverhead(sourceMobile))
+                            if (!effect.IsMoving && effect.Source is Mobile sourceMobile && HasSurfaceOverhead(sourceMobile))
                             {
                                 continue;
                             }
