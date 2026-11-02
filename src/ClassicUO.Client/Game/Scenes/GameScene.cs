@@ -469,6 +469,7 @@ namespace ClassicUO.Game.Scenes
 
             NameOverHeadManager.Save();
 
+            _world.Macros.StopExecution();
             _world.Macros.Save();
             _world.Macros.Clear();
             HotKeys.Save();
@@ -520,6 +521,10 @@ namespace ClassicUO.Game.Scenes
                 // have been unloaded/replaced; skip the stale teardown then.
                 if (IsDestroyed || Instance != this)
                     return;
+
+                // The world is left intact while the disconnect prompt is up, so without this a macro
+                // would keep running (and sending packets) against a dead connection.
+                _world.Macros.StopExecution();
 
                 if (DisconnectionRequested)
                 {
