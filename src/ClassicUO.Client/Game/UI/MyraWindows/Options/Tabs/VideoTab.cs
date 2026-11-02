@@ -42,7 +42,10 @@ public static class VideoTab
             .AddTab(
                 TazLang.Get("mog_videotab_visualeffects_label", "Visual Effects"),
                 VisualEffectsTab.GetContent,
-                new SearchMetadata() // Empty metadata to disable search; profile editors don't render well in the results page.
+                new SearchMetadata(
+                    TazLang.Get("mog_videotab_visualeffects_label", "Visual Effects"),
+                    Keywords: [TazLang.Get("mog_kw_overhead"), TazLang.Get("mog_kw_overlay", "overlay"), TazLang.Get("mog_kw_postprocessing"), TazLang.Get("mog_kw_rule")]
+                )
             )
             .AddTab(
                 TazLang.Get("mog_videotab_misc_label"),

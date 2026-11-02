@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
@@ -22,10 +23,24 @@ internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<Opt
     public bool InheritsSearch { get; set; } = true;
 
     /// <summary>
+    /// This fragment's own name. Contributes a breadcrumb segment for a plain fragment, or the
+    /// result row's caption when <see cref="IsSearchGroup"/> is set. Typically a visual container's
+    /// caption, so the breadcrumb matches what the user already reads on the page.
+    /// </summary>
+    public string? Label { get; set; }
+
+    /// <summary>
     /// When <see langword="true"/>, a search hit against any descendant returns this fragment
     /// as a single rendered unit rather than individual leaf entries.
     /// </summary>
     public bool IsSearchGroup { get; private set; }
+
+    /// <summary>
+    /// How this fragment offers itself in search results when it is a search group. Defaults to
+    /// <see cref="SearchPresentation.Navigate"/>: a group's size depends on its child count, and
+    /// several wrap editors that only work alongside their page's toolbar.
+    /// </summary>
+    public SearchPresentation Presentation { get; set; } = SearchPresentation.Navigate;
 
     /// <summary>
     /// Renders the fragment's container widget. Each call returns a new widget instance.
@@ -33,55 +48,24 @@ internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<Opt
     public Widget Render() => renderFactory();
 
     /// <inheritdoc/>
-    public IEnumerable<OptionEntry> Match(SearchMetadata search)
+    public IEnumerable<SearchEntry> Index(OptionIndexContext context)
     {
-        SearchMetadata? searchParams = InheritsSearch ? SearchMetadata.Merge(Search, search) : Search;
-        if (searchParams == null)
-            yield break;
+        SearchMetadata? own = InheritsSearch ? SearchMetadata.Merge(Search, context.Inherited) : Search;
 
         if (IsSearchGroup)
         {
-            if (children.Any(c => c.Match(searchParams).Any()))
-                yield return new OptionEntry(Render, Search);
+            SearchEntry? entry = BuildGroupEntry(context, own);
+
+            if (entry != null)
+                yield return entry;
+
             yield break;
         }
 
-        foreach (OptionEntry entry in children.SelectMany(c => c.Match(searchParams)))
+        OptionIndexContext childContext = context.Descend(Label).WithInherited(own);
+
+        foreach (SearchEntry entry in children.SelectMany(child => child.Index(childContext)))
             yield return entry;
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null)
-    {
-        if (IsSearchGroup)
-        {
-            SearchMetadata? ownMeta = InheritsSearch ? SearchMetadata.Merge(Search, inheritedSearch) : Search;
-            SearchMetadata? groupMeta = children
-                .SelectMany(c => c.GetOptions(null))
-                .Select(e => e.Search)
-                .OfType<SearchMetadata>()
-                .Aggregate(ownMeta, DeepMerge);
-            yield return new OptionEntry(Render, groupMeta ?? new SearchMetadata());
-            yield break;
-        }
-
-        SearchMetadata? merged = InheritsSearch ? SearchMetadata.Merge(Search, inheritedSearch) : Search;
-        foreach (OptionEntry entry in children.SelectMany(c => c.GetOptions(merged)))
-            yield return entry;
-    }
-
-    /// <summary>
-    /// Like <see cref="SearchMetadata.Merge"/> but concatenates both <c>SearchText</c> values
-    /// so that any descendant label remains substring-searchable from the group entry.
-    /// </summary>
-    private static SearchMetadata DeepMerge(SearchMetadata? a, SearchMetadata b)
-    {
-        string? combinedText = a?.SearchText == null ? b.SearchText
-            : b.SearchText == null ? a.SearchText
-            : $"{a.SearchText} {b.SearchText}";
-        string[] tags = [.. a?.Tags ?? [], .. b.Tags ?? []];
-        string[] keywords = [.. a?.Keywords ?? [], .. b.Keywords ?? []];
-        return new SearchMetadata(combinedText, tags.Distinct().ToArray(), keywords.Distinct().ToArray());
     }
 
     /// <summary>Marks this fragment as a search group and returns itself for fluent chaining</summary>
@@ -105,5 +89,89 @@ internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<Opt
     {
         Search = search;
         return this;
+    }
+
+    /// <summary>Sets this fragment's breadcrumb name and returns itself for fluent chaining</summary>
+    /// <param name="label">The name to expose</param>
+    /// <returns>This fragment, for fluent chaining</returns>
+    public OptionFragment WithLabel(string? label)
+    {
+        Label = label;
+        return this;
+    }
+
+    /// <summary>Marks this fragment as hostable inside a search result row and returns itself</summary>
+    public OptionFragment AsInlineable()
+    {
+        Presentation = SearchPresentation.Inline;
+        return this;
+    }
+
+    /// <summary>
+    /// Marks this fragment as navigate-only, so search results link to its real page instead of
+    /// hosting it, and returns itself
+    /// </summary>
+    public OptionFragment AsLinkOnly()
+    {
+        Presentation = SearchPresentation.Navigate;
+        return this;
+    }
+
+    /// <summary>
+    /// Collapses the whole subtree into one entry whose match text spans every descendant label, so
+    /// the group surfaces for a query naming any of its children while still presenting as a unit.
+    /// </summary>
+    /// <param name="context">The accumulated path and inherited metadata</param>
+    /// <param name="own">This fragment's effective metadata</param>
+    /// <returns>The group entry, or <see langword="null"/> when nothing names it</returns>
+    private SearchEntry? BuildGroupEntry(OptionIndexContext context, SearchMetadata? own)
+    {
+        SearchMetadata? merged = children
+            .SelectMany(child => child.Index(new OptionIndexContext(SearchPath.Empty)))
+            .Select(ToMetadata)
+            .Aggregate(own, DeepMerge);
+
+        // An explicitly authored label outranks the one derived from the container/binder,
+        // which in turn outranks borrowing the first child's.
+        string? label = Search?.Label ?? Label ?? merged?.Label;
+
+        if (string.IsNullOrEmpty(label))
+            return null;
+
+        return new SearchEntry(
+            label,
+            context.Path,
+            MatchText: merged?.SearchText,
+            Keywords: merged?.NormalizedKeywords is { Length: > 0 } keywords ? keywords : null,
+            InlineFactory: Render,
+            Presentation: Presentation
+        );
+    }
+
+    /// <summary>Projects an already-flattened descendant back into metadata for merging</summary>
+    private static SearchMetadata ToMetadata(SearchEntry entry) =>
+        new(entry.MatchText ?? entry.Label, Keywords: entry.Keywords?.ToArray())
+        {
+            Label = entry.Label
+        };
+
+    /// <summary>
+    /// Like <see cref="SearchMetadata.Merge"/> but concatenates both <c>SearchText</c> values
+    /// so that any descendant label remains substring-searchable from the group entry.
+    /// <see cref="SearchMetadata.Label"/> is not concatenated - the accumulator's own name wins, and
+    /// a group with no name of its own borrows its first child's.
+    /// </summary>
+    private static SearchMetadata DeepMerge(SearchMetadata? a, SearchMetadata b)
+    {
+        string? combinedText = a?.SearchText == null ? b.SearchText
+            : b.SearchText == null ? a.SearchText
+            : $"{a.SearchText} {b.SearchText}";
+        string[] tags = [.. a?.Tags ?? [], .. b.Tags ?? []];
+        string[] keywords = [.. a?.Keywords ?? [], .. b.Keywords ?? []];
+
+        return new SearchMetadata(combinedText, tags.Distinct().ToArray(), keywords.Distinct().ToArray())
+        {
+            Label = a?.Label ?? b.Label
+        };
     }
 }

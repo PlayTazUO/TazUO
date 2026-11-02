@@ -7,6 +7,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
 
@@ -361,12 +362,23 @@ internal static class Option
 
     /// <summary>
     /// Creates an entry whose widget is produced by an arbitrary factory,
-    /// with optional search metadata
+    /// with optional search metadata.
+    /// <para>
+    /// Defaults to navigate-only in search results: a custom widget can be any size, and several
+    /// are editors that only work alongside their own page's toolbar and selection state. Pass
+    /// <paramref name="inlineable"/> for a custom widget that really is just a small control.
+    /// Omitting <paramref name="search"/> leaves the entry out of the index entirely.
+    /// </para>
     /// </summary>
     /// <param name="render">Factory that produces the custom widget</param>
     /// <param name="search">Optional search metadata for this entry</param>
+    /// <param name="inlineable">Whether the widget may be hosted directly in a search result row</param>
     /// <returns>An <see cref="OptionEntry"/> wrapping the custom widget</returns>
-    public static OptionEntry Custom(Func<Widget> render, SearchMetadata? search = null) => new(render, search);
+    public static OptionEntry Custom(Func<Widget> render, SearchMetadata? search = null, bool inlineable = false) =>
+        new(render, search)
+        {
+            Presentation = inlineable ? SearchPresentation.Inline : SearchPresentation.Navigate
+        };
 
     /// <summary>Creates a non-searchable vertical spacer entry</summary>
     /// <returns>An <see cref="OptionEntry"/> wrapping a small spacer widget</returns>

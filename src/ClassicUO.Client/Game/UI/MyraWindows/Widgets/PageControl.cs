@@ -67,6 +67,37 @@ public class PageControl : Container
     public bool RetainSizeWhenPaging { get; set; }
 
     /// <summary>
+    /// Optional names for the pages, parallel to the page list. The control bar shows page numbers,
+    /// not names, so these exist only so a caller holding a path of labels can locate a page - see
+    /// <see cref="TrySelectByLabel"/>.
+    /// </summary>
+    public IReadOnlyList<string> PageLabels { get; set; } = [];
+
+    /// <summary>Selects the page whose entry in <see cref="PageLabels"/> matches <paramref name="label"/></summary>
+    /// <param name="label">The page name to look for</param>
+    /// <returns>Whether a matching page was found and selected</returns>
+    public bool TrySelectByLabel(string label)
+    {
+        if (string.IsNullOrEmpty(label))
+            return false;
+
+        for (int i = 0; i < PageLabels.Count && i < _pages.Count; i++)
+        {
+            if (!string.Equals(PageLabels[i], label, StringComparison.Ordinal))
+                continue;
+
+            CurrentPage = i;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>The widget on the current page, or <see langword="null"/> when there are no pages</summary>
+    public Widget CurrentPageContent => _pages.Count == 0 ? null : _pages[CurrentPage];
+
+    /// <summary>
     /// Pins the content panel to an explicit size so the control does not jump on navigation.
     /// The caller should pass the maximum effective page size so no page overflows.
     /// </summary>

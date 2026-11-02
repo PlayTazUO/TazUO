@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
 
@@ -38,5 +39,95 @@ public static class MyraExtensions
         foreach (Widget child in children)
             panel.Widgets.Add(child);
         return panel;
+    }
+
+    /// <summary>
+    /// Walks the widget tree beneath <paramref name="root"/>, breadth first.
+    /// <para>
+    /// Myra's composites do not share one base class, so each has to be handled: <see cref="Container"/>
+    /// holds children, <see cref="ContentControl"/> (a <see cref="ScrollViewer"/>, an option item) holds
+    /// a single <c>Content</c>, and <see cref="TabControl"/> keeps per-tab content on its items. Both
+    /// of the latter derive from <see cref="Widget"/> rather than <see cref="Container"/>, so missing
+    /// either silently truncates the walk at the first scroller or tab.
+    /// </para>
+    /// </summary>
+    /// <param name="root">The widget to walk beneath; not itself yielded</param>
+    /// <returns>Every reachable descendant</returns>
+    public static IEnumerable<Widget> Descendants(this Widget root)
+    {
+        Queue<Widget> pending = new();
+        pending.Enqueue(root);
+
+        while (pending.Count > 0)
+        {
+            Widget current = pending.Dequeue();
+
+            if (!ReferenceEquals(current, root))
+                yield return current;
+
+            foreach (Widget child in current.ChildWidgets())
+                pending.Enqueue(child);
+        }
+    }
+
+    /// <summary>
+    /// Finds the nearest descendant of type <typeparamref name="T"/>, or <paramref name="root"/>
+    /// itself when it already is one.
+    /// </summary>
+    /// <typeparam name="T">The widget type to look for</typeparam>
+    /// <param name="root">The widget to search from</param>
+    /// <returns>The match, or <see langword="null"/> when there is none</returns>
+    public static T FindSelfOrDescendant<T>(this Widget root) where T : Widget
+    {
+        if (root is T self)
+            return self;
+
+        foreach (Widget descendant in root.Descendants())
+        {
+            if (descendant is T match)
+                return match;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// The widgets directly beneath <paramref name="widget"/>.
+    /// <para>
+    /// Myra's composites share no common base, so each shape has to be handled: a
+    /// <see cref="Container"/> holds children, a <see cref="ContentControl"/> (a
+    /// <see cref="ScrollViewer"/>, an option item) holds a single <c>Content</c>, and a
+    /// <see cref="TabControl"/> keeps per-tab content on its items. The latter two derive from
+    /// <see cref="Widget"/> rather than <see cref="Container"/>, so missing either silently
+    /// truncates any walk at the first scroller or tab.
+    /// </para>
+    /// </summary>
+    /// <param name="widget">The widget whose children are wanted</param>
+    /// <returns>Its immediate children; empty for a leaf</returns>
+    public static IEnumerable<Widget> ChildWidgets(this Widget widget)
+    {
+        switch (widget)
+        {
+            case Container container:
+                foreach (Widget child in container.Widgets)
+                    yield return child;
+
+                break;
+
+            case ContentControl content when content.Content != null:
+                yield return content.Content;
+
+                break;
+        }
+
+        if (widget is not TabControl tabs)
+            yield break;
+
+        // An unbuilt tab has no content yet and simply contributes nothing.
+        foreach (TabItem item in tabs.Items)
+        {
+            if (item.Content != null)
+                yield return item.Content;
+        }
     }
 }

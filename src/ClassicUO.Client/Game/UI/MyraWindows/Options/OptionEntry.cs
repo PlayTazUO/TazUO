@@ -2,15 +2,20 @@
 
 using System;
 using System.Collections.Generic;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
 /// <summary>
 /// A leaf node in the options tree: wraps a lazily-created widget and carries
-/// <see cref="SearchMetadata"/> so the search system can locate it
+/// <see cref="SearchMetadata"/> so the search system can locate it.
+/// <para>
+/// An entry with no <see cref="SearchMetadata.Label"/> is deliberately unsearchable - spacers and
+/// decorative content pass no metadata and are skipped by <see cref="Index"/>.
+/// </para>
 /// </summary>
-/// <param name="RenderFactory">Factory invoked once to create the underlying widget</param>
+/// <param name="RenderFactory">Factory invoked to create the underlying widget; returns a new instance per call</param>
 /// <param name="Search">Search metadata that controls when this entry appears in search results</param>
 internal sealed record OptionEntry(Func<Widget> RenderFactory, SearchMetadata? Search = null) : IOptionSource
 {
@@ -18,29 +23,65 @@ internal sealed record OptionEntry(Func<Widget> RenderFactory, SearchMetadata? S
     public bool InheritsSearch { get; set; } = true;
 
     /// <summary>
+    /// Whether this entry's widget is compact enough to be edited directly in a search result row.
+    /// Defaults to <see cref="SearchPresentation.Inline"/> because the typed <c>Option.*</c>
+    /// factories all produce a label plus a single bounded control; <c>Option.Custom</c> opts out,
+    /// as do entries whose editor needs its own page's surrounding state.
+    /// </summary>
+    public SearchPresentation Presentation { get; set; } = SearchPresentation.Inline;
+
+    /// <summary>
     /// Renders the option widget by invoking the factory. Each call returns a new widget instance.
     /// </summary>
     public Widget Render() => RenderFactory();
 
-    /// <summary>
-    /// Yields this entry if its own <see cref="Search"/> metadata matches <paramref name="search"/>
-    /// </summary>
-    /// <param name="search">The search criteria to evaluate</param>
-    /// <returns>This entry if it matches; otherwise an empty sequence</returns>
-    public IEnumerable<OptionEntry> Match(SearchMetadata search)
+    /// <inheritdoc/>
+    public IEnumerable<SearchEntry> Index(OptionIndexContext context)
     {
-        if (Search?.Matches(search) == true)
-            yield return this;
+        SearchMetadata? merged = InheritsSearch ? SearchMetadata.Merge(Search, context.Inherited) : Search;
+
+        if (merged?.Label is not { Length: > 0 } label)
+            yield break;
+
+        yield return new SearchEntry(
+            label,
+            context.Path,
+            MatchText: merged.SearchText,
+            Keywords: BuildKeywords(merged),
+            InlineFactory: RenderFactory,
+            Presentation: Presentation
+        );
+    }
+
+    /// <summary>Marks this entry as editable inside a search result row and returns itself</summary>
+    public OptionEntry AsInlineable()
+    {
+        Presentation = SearchPresentation.Inline;
+        return this;
     }
 
     /// <summary>
-    /// Returns this entry with its search metadata merged with <paramref name="inheritedSearch"/>
-    /// when <see cref="InheritsSearch"/> is <see langword="true"/>
+    /// Marks this entry as navigate-only, so search results link to its real page instead of
+    /// hosting it, and returns itself
     /// </summary>
-    /// <param name="inheritedSearch">Search metadata propagated from a parent node</param>
-    /// <returns>A copy of this entry carrying the merged metadata</returns>
-    public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null)
+    public OptionEntry AsLinkOnly()
     {
-        yield return this with { Search = InheritsSearch ? SearchMetadata.Merge(Search, inheritedSearch) : Search };
+        Presentation = SearchPresentation.Navigate;
+        return this;
+    }
+
+    /// <summary>
+    /// Keywords and tags both act as alternate search terms. Tags used to carry structural position
+    /// as well, but the indexed path does that now, so they are folded in as plain synonyms.
+    /// </summary>
+    private static IReadOnlyList<string>? BuildKeywords(SearchMetadata metadata)
+    {
+        string[] keywords = metadata.NormalizedKeywords;
+        string[] tags = metadata.NormalizedTags;
+
+        if (keywords.Length == 0)
+            return tags.Length == 0 ? null : tags;
+
+        return tags.Length == 0 ? keywords : [.. keywords, .. tags];
     }
 }

@@ -5,6 +5,7 @@ using ClassicUO.Game.Managers.EnhancedMap;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
@@ -18,22 +19,47 @@ public static class MiscTab
     /// <summary>Returns the paged option group containing miscellaneous settings pages</summary>
     internal static IOptionSource GetContent() => GetPages();
 
-    private static OptionPageGroup GetPages() => new(
-        new SearchMetadata(
-            Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")],
-            Tags: [TazLang.Get("mog_kw_misc")]
-        ),
-        GetPage1,
-        GetPage2,
-        GetPage3,
-        GetExperimentalSection
-    ) { MinWidth = 600, MinHeight = 300 };
+    private static OptionPageGroup GetPages() => new OptionPageGroup(
+            new SearchMetadata(
+                Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")],
+                Tags: [TazLang.Get("mog_kw_misc")]
+            )
+        )
+        .AddPage(GetPage1, TazLang.Get("mog_misctab_page_general"))
+        .AddPage(GetPage2, TazLang.Get("mog_misctab_page_system"))
+        .AddPage(GetPage3, TazLang.Get("mog_misctab_page_advanced"))
+        .AddPage(GetExperimentalSection, TazLang.Get("mog_misctab_page_experimental"))
+        .WithSize(minWidth: 600, minHeight: 300);
 
     private static OptionFragment GetPage1()
     {
         Profile profile = ProfileManager.CurrentProfile;
 
         return OptionsUi.Vertical(
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = TazLang.Get("mog_searchellipses") },
+                Option.LComboBox(
+                    TazLang.Get("optsearch_inline_label"),
+                    new Accessor<SearchInlineMode>(
+                        () => profile.OptionsSearchInlineMode,
+                        mode =>
+                        {
+                            profile.OptionsSearchInlineMode = mode;
+                            // Results already on screen won't re-measure on their own.
+                            UIManager.ForEach<OptionsWindow>(window => window.RefreshInlinePresentation());
+                        }
+                    ),
+                    optionLocalizationPrefix: "optsearch_inline_",
+                    tooltip: TazLang.Get("optsearch_inline_tooltip"),
+                    search: new SearchMetadata(TazLang.Get("optsearch_inline_label"), Keywords: [TazLang.Get("optsearch_kw_search")])
+                ),
+                Option.Checkbox(
+                    TazLang.Get("optsearch_attribution_label"),
+                    new Accessor<bool>(() => profile.OptionsSearchShowAttribution),
+                    tooltip: TazLang.Get("optsearch_attribution_tooltip"),
+                    search: new SearchMetadata(TazLang.Get("optsearch_attribution_label"), Keywords: [TazLang.Get("optsearch_kw_search")])
+                )
+            ),
             Option.Checkbox(
                 TazLang.Get("mog_general_hidescreenshotmessage"),
                 new Accessor<bool>(() => profile.HideScreenshotStoredInMessage),

@@ -26,6 +26,7 @@ using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Game.UI.MyraWindows;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 
 namespace ClassicUO.Configuration
 {
@@ -473,6 +474,8 @@ namespace ClassicUO.Configuration
         public bool DisableAutoFollowAlt { get; set => SetProperty(ref field, value); } = false;
         [JsonConverter(typeof(Point2Converter))] public Point ResizeJournalSize { get; set => SetProperty(ref field, value); } = new(410, 350);
         [JsonConverter(typeof(NullablePoint2Converter))] public Point? OptionsWindowsSize { get; set => SetProperty(ref field, value); }
+        public SearchInlineMode OptionsSearchInlineMode { get; set => SetProperty(ref field, value); } = SearchInlineMode.Balanced;
+        public bool OptionsSearchShowAttribution { get; set => SetProperty(ref field, value); }
         public bool FollowingMode { get; set => SetProperty(ref field, value); } = false;
         public uint FollowingTarget { get; set => SetProperty(ref field, value); }
         public bool NamePlateHealthBar { get; set => SetProperty(ref field, value); } = true;

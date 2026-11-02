@@ -1,0 +1,205 @@
+#nullable enable
+
+using System;
+using ClassicUO.Configuration;
+using ClassicUO.Game.UI.MyraWindows.Theme;
+using Microsoft.Xna.Framework;
+using Myra.Graphics2D;
+using Myra.Graphics2D.UI;
+
+namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
+
+/// <summary>
+///     One result row: either the entry's live editor, hosted as-is, or its name beside a link to the
+///     page that owns it.
+///     <para>
+///         An inlined editor already draws its own caption, so the row adds none - doing otherwise
+///         prints the setting's name twice.
+///     </para>
+///     <para>
+///         The row keeps one persistent host and swaps only its child when the presentation changes,
+///         so re-deciding on a window resize does not destroy a control the user is typing into - see
+///         <see cref="HoldsKeyboardFocus" />.
+///     </para>
+/// </summary>
+internal sealed class SearchResultRow : Panel
+{
+    #region Members
+
+    #region Consts/Readonly
+
+    private readonly Panel _host = new();
+    private readonly SearchEntry _entry;
+    private readonly Action<SearchEntry>? _onActivate;
+    private readonly string? _attribution;
+
+    #endregion
+
+    #region Mutables
+
+    private Point? _inlineSize;
+    private bool? _isInline;
+
+    #endregion
+
+    #endregion
+
+    #region Public Accessors
+
+    /// <summary>The hit this row displays</summary>
+    public SearchHit Hit { get; }
+
+    /// <summary>Whether the row currently hosts the entry's live editor rather than a link</summary>
+    public bool IsInline => _isInline == true;
+
+    #endregion
+
+    #region Ctor
+
+    /// <param name="hit">The hit to display</param>
+    /// <param name="showAttribution">
+    ///     Whether to explain a match that did not come from the label. Off by default, since it
+    ///     competes for the same horizontal space as the editor.
+    /// </param>
+    /// <param name="onActivate">Invoked when the user follows this row to its own page</param>
+    public SearchResultRow(SearchHit hit, bool showAttribution, Action<SearchEntry>? onActivate)
+    {
+        Hit = hit;
+        _entry = hit.Entry;
+        _onActivate = onActivate;
+        _attribution = showAttribution && TryBuildAttribution(hit, out string text) ? text : null;
+
+        Padding = new Thickness(MyraStyle.STANDARD_SPACING, 2, MyraStyle.STANDARD_SPACING, 2);
+        HorizontalAlignment = HorizontalAlignment.Stretch;
+
+        _host.HorizontalAlignment = HorizontalAlignment.Stretch;
+        Widgets.Add(_host);
+    }
+
+    #endregion
+
+    #region Public Methods
+
+    /// <summary>
+    ///     Decides how this row should present itself given the space available, and rebuilds only if
+    ///     that changed.
+    /// </summary>
+    /// <param name="availableWidth">Width the row has to work with</param>
+    /// <param name="threshold">
+    ///     Fraction of <paramref name="availableWidth" /> an editor may claim and still be inlined.
+    ///     Zero disables inlining outright.
+    /// </param>
+    /// <param name="hysteresis">
+    ///     Extra slack applied to an already-inlined row before it is demoted, so rows do not
+    ///     oscillate while the window edge is being dragged.
+    /// </param>
+    /// <param name="keyboardFocus">The widget holding keyboard focus, so a row being typed into is left alone</param>
+    /// <returns>Whether the row was rebuilt</returns>
+    public bool ApplyPresentation(int availableWidth, double threshold, double hysteresis, Widget? keyboardFocus)
+    {
+        bool wanted = ShouldInline(availableWidth, threshold, hysteresis);
+
+        if (_isInline == wanted)
+            return false;
+
+        if (_isInline != null && HoldsKeyboardFocus(keyboardFocus))
+            return false;
+
+        _isInline = wanted;
+        _host.Widgets.Clear();
+        _host.Widgets.Add(wanted ? BuildInline() : BuildNavigate());
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Whether <paramref name="focused" /> sits inside this row. Rebuilding disposes the hosted
+    ///     widget, which would silently drop a caret mid-edit.
+    /// </summary>
+    /// <param name="focused">The currently focused widget, if any</param>
+    /// <returns>Whether focus is inside this row</returns>
+    public bool HoldsKeyboardFocus(Widget? focused)
+    {
+        for (Widget? widget = focused; widget != null; widget = widget.Parent)
+        {
+            if (ReferenceEquals(widget, _host))
+                return true;
+        }
+
+        return false;
+    }
+
+    #endregion
+
+    #region Private Methods
+
+    /// <summary>
+    ///     The editor as it appears on its own page, caption and all. Attribution is appended rather
+    ///     than replacing anything, since the editor owns the rest of the row.
+    /// </summary>
+    private Widget BuildInline()
+    {
+        Widget editor = _entry.InlineFactory!();
+
+        if (_attribution == null)
+            return editor;
+
+        return new SpaceBetweenRow(editor, BuildAttributionLabel(), MyraStyle.STANDARD_SPACING * 2);
+    }
+
+    private Widget BuildNavigate()
+    {
+        var labels = new VerticalStackPanel { VerticalAlignment = VerticalAlignment.Center };
+        labels.Widgets.Add(new MyraLabel(_entry.Label, MyraLabel.TextStyle.P) { Wrap = false, SingleLine = true });
+
+        if (_attribution != null)
+            labels.Widgets.Add(BuildAttributionLabel());
+
+        var link = new LinkLabel(
+            TazLang.Get("optsearch_open_in_page"),
+            () => _onActivate?.Invoke(_entry)
+        )
+        {
+            Wrap = false,
+            SingleLine = true,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        return new SpaceBetweenRow(labels, link, MyraStyle.STANDARD_SPACING * 2);
+    }
+
+    private MyraLabel BuildAttributionLabel() => MyraLabel.Hint(_attribution!);
+
+    private bool ShouldInline(int availableWidth, double threshold, double hysteresis)
+    {
+        if (!_entry.CanInline || threshold <= 0d || availableWidth <= 0)
+            return false;
+
+        // The editor's natural size doesn't change with the window, so measure it once; only the
+        // budget it is compared against moves.
+        _inlineSize ??= _entry.InlineFactory!().Measure(new Point(int.MaxValue / 2, int.MaxValue / 2));
+
+        double allowance = availableWidth * (IsInline ? threshold + hysteresis : threshold);
+
+        return _inlineSize.Value.X <= allowance;
+    }
+
+    /// <summary>
+    ///     Explains a hit whose visible label has nothing to do with the query - a keyword match, or
+    ///     a hit that only landed because an ancestor's name or a sibling's label matched.
+    /// </summary>
+    private static bool TryBuildAttribution(SearchHit hit, out string attribution)
+    {
+        attribution = hit.Field switch
+        {
+            SearchField.Keyword or SearchField.Path when !string.IsNullOrEmpty(hit.MatchedTerm) =>
+                TazLang.Get("optsearch_matched_via", [hit.MatchedTerm!]),
+            SearchField.MatchText => TazLang.Get("optsearch_matched_related"),
+            _ => string.Empty
+        };
+
+        return attribution.Length > 0;
+    }
+
+    #endregion
+}
