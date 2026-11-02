@@ -2,7 +2,6 @@
 
 using System;
 using ClassicUO.Configuration;
-using ClassicUO.Game.UI.MyraWindows.Theme;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
@@ -51,6 +50,18 @@ internal sealed class SearchResultRow : Panel
 
     /// <summary>Whether the row currently hosts the entry's live editor rather than a link</summary>
     public bool IsInline => _isInline == true;
+
+    /// <summary>
+    ///     Size offset applied to the row's text, from the user's configured UI font size. Applies to
+    ///     the hosted editor too, so an inlined control matches the rows around it.
+    /// </summary>
+    public int FontOffset { get; init; }
+
+    /// <summary>
+    ///     Width this row loses to indentation and container padding before any of it reaches the
+    ///     editor, subtracted from the budget the inline guard works against.
+    /// </summary>
+    public int IndentReserve { get; init; }
 
     #endregion
 
@@ -139,7 +150,7 @@ internal sealed class SearchResultRow : Panel
     /// </summary>
     private Widget BuildInline()
     {
-        Widget editor = _entry.InlineFactory!();
+        Widget editor = _entry.InlineFactory!().ApplyUiFontOffset(FontOffset);
 
         if (_attribution == null)
             return editor;
@@ -150,7 +161,10 @@ internal sealed class SearchResultRow : Panel
     private Widget BuildNavigate()
     {
         var labels = new VerticalStackPanel { VerticalAlignment = VerticalAlignment.Center };
-        labels.Widgets.Add(new MyraLabel(_entry.Label, MyraLabel.TextStyle.P) { Wrap = false, SingleLine = true });
+        var name = new MyraLabel(_entry.Label, MyraLabel.TextStyle.P) { Wrap = false, SingleLine = true };
+
+        name.Font = MyraStyle.GetUiFont(FontOffset);
+        labels.Widgets.Add(name);
 
         if (_attribution != null)
             labels.Widgets.Add(BuildAttributionLabel());
@@ -165,6 +179,8 @@ internal sealed class SearchResultRow : Panel
             VerticalAlignment = VerticalAlignment.Center
         };
 
+        link.Font = MyraStyle.GetUiFont(FontOffset);
+
         return new SpaceBetweenRow(labels, link, MyraStyle.STANDARD_SPACING * 2);
     }
 
@@ -172,12 +188,17 @@ internal sealed class SearchResultRow : Panel
 
     private bool ShouldInline(int availableWidth, double threshold, double hysteresis)
     {
+        availableWidth -= IndentReserve;
+
         if (!_entry.CanInline || threshold <= 0d || availableWidth <= 0)
             return false;
 
-        // The editor's natural size doesn't change with the window, so measure it once; only the
-        // budget it is compared against moves.
-        _inlineSize ??= _entry.InlineFactory!().Measure(new Point(int.MaxValue / 2, int.MaxValue / 2));
+        // Measured at the size it will actually be drawn at. Measuring the unscaled editor
+        // reported a width the row never needed, which demoted rows that fit perfectly well.
+        // The result doesn't change with the window, so it is measured once; only the budget moves.
+        _inlineSize ??= _entry.InlineFactory!()
+            .ApplyUiFontOffset(FontOffset)
+            .Measure(new Point(int.MaxValue / 2, int.MaxValue / 2));
 
         double allowance = availableWidth * (IsInline ? threshold + hysteresis : threshold);
 

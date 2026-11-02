@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FontStashSharp;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
 
@@ -129,5 +130,40 @@ public static class MyraExtensions
             if (item.Content != null)
                 yield return item.Content;
         }
+    }
+
+    /// <summary>
+    /// Re-sizes the body text inside an already-built widget tree, for a context that wants the
+    /// same controls drawn smaller - a dense results list, say.
+    /// <para>
+    /// Only labels currently drawn in the UI font are touched. A glyph label uses the symbol font
+    /// and a styled heading uses its own size; retargeting either would either blank the glyph or
+    /// flatten a deliberate hierarchy, so both are left alone.
+    /// </para>
+    /// </summary>
+    /// <param name="root">The widget whose labels should be re-sized; itself included</param>
+    /// <param name="offset">Size offset from the user's configured UI font size</param>
+    /// <returns><paramref name="root"/>, for chaining</returns>
+    public static Widget ApplyUiFontOffset(this Widget root, int offset)
+    {
+        if (offset == 0)
+            return root;
+
+        SpriteFontBase body = MyraStyle.UiFont;
+        SpriteFontBase scaled = MyraStyle.GetUiFont(offset);
+
+        if (ReferenceEquals(body, scaled))
+            return root;
+
+        if (root is Label self && ReferenceEquals(self.Font, body))
+            self.Font = scaled;
+
+        foreach (Widget descendant in root.Descendants())
+        {
+            if (descendant is Label label && ReferenceEquals(label.Font, body))
+                label.Font = scaled;
+        }
+
+        return root;
     }
 }

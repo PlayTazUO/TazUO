@@ -36,7 +36,11 @@ public class Expander : VerticalStackPanel
     /// <summary>Matches the property grid's expander mark.</summary>
     private const int GLYPH_SIZE = StyleConstantsDefaults.RESET_ICON_FONT_SIZE;
 
-    private const int DEFAULT_INDENT = 14;
+    /// <summary>
+    ///     Horizontal inset applied to the content per nesting level. Public so a caller laying out
+    ///     against the remaining width can account for what the indent costs it.
+    /// </summary>
+    public const int DEFAULT_INDENT = 14;
 
     private readonly MyraLabel _glyph = MyraLabel.Symbol(GLYPH_EXPANDED, GLYPH_SIZE);
     private readonly HorizontalStackPanel _headerRow;
@@ -165,8 +169,9 @@ public class Expander : VerticalStackPanel
 
         _headerPanel = new Panel
         {
-            // A container with no background lets input fall through it, so the header would not be
-            // clickable at all - see Container.InputFallsThrough.
+            // A container with no background lets input fall through it, so with
+            // ToggleOnHeaderClick set the header would not be clickable at all - see
+            // Container.InputFallsThrough. Clear it only when the twisty is the sole toggle.
             Background = new SolidBrush(MyraTheme.Current.PanelFill),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Padding = new Thickness(MyraStyle.STANDARD_SPACING, 1, MyraStyle.STANDARD_SPACING, 1)

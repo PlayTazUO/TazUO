@@ -12,7 +12,6 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
-using Myra.Events;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
@@ -56,6 +55,7 @@ public class OptionsWindow : MyraControl
 
     /// <summary>Fallback rail width, matching the category buttons' own minimum.</summary>
     private const int RAIL_WIDTH_FALLBACK = 125;
+
 
     /// <summary>
     ///     Resize fires once per mouse-move tick, and re-deciding a row's presentation rebuilds its
@@ -117,24 +117,13 @@ public class OptionsWindow : MyraControl
 
     private readonly SearchResultTree _resultTree = new();
 
-    private readonly MyraInputBox _searchField = new()
+    private readonly SearchBar _searchBar = new(new SearchBarProps { HintText = TazLang.Get("mog_searchellipses") })
     {
-        TextVerticalAlignment = VerticalAlignment.Center,
-        Margin = new Thickness(MyraStyle.STANDARD_SPACING, 0, MyraStyle.STANDARD_SPACING, MyraStyle.STANDARD_SPACING),
-        Padding = new Thickness(MyraStyle.STANDARD_SPACING, 5, MyraStyle.STANDARD_SPACING, 5)
-    };
-
-    private readonly MyraLabel _resultCountLabel = new(string.Empty, MyraLabel.TextStyle.P)
-    {
-        Wrap = false,
-        SingleLine = true,
-        VerticalAlignment = VerticalAlignment.Center,
-        Margin = new Thickness(0, 0, MyraStyle.STANDARD_SPACING, 0)
+        Margin = new Thickness(MyraStyle.STANDARD_SPACING, 0, MyraStyle.STANDARD_SPACING, MyraStyle.STANDARD_SPACING)
     };
 
     private ScrollViewer? _categoryScroller;
     private IconButton _backButton = null!;
-    private IconButton _clearButton = null!;
     private IconButton _forwardButton = null!;
 
     #endregion
@@ -374,8 +363,19 @@ public class OptionsWindow : MyraControl
             glyphSize: StyleConstantsDefaults.RESET_ICON_FONT_SIZE
         );
 
-        _searchField.HintText = TazLang.Get("mog_searchellipses");
-        _searchField.TextChangedByUser += SearchFieldOnTextChangedByUser;
+        _searchBar.QueryChanged += (_, query) =>
+        {
+            _pendingSearchText = query;
+            _searchDebounceTimer = Environment.TickCount;
+            _searchPending = true;
+        };
+
+        _searchBar.Cleared += (_, _) =>
+        {
+            _pendingSearchText = string.Empty;
+            _searchPending = false;
+            ApplySearchText(string.Empty);
+        };
 
         var toolbar = new HorizontalStackPanel
         {
@@ -384,22 +384,11 @@ public class OptionsWindow : MyraControl
             VerticalAlignment = VerticalAlignment.Center
         };
 
-        _clearButton = new IconButton(
-            "✕",
-            ClearSearch,
-            TazLang.Get("optsearch_clear"),
-            glyphSize: StyleConstantsDefaults.RESET_ICON_FONT_SIZE
-        );
-
         toolbar.Widgets.Add(_backButton);
         toolbar.Widgets.Add(_forwardButton);
-        toolbar.Widgets.Add(_searchField);
-        toolbar.Widgets.Add(_clearButton);
-        toolbar.Widgets.Add(_resultCountLabel);
+        toolbar.Widgets.Add(_searchBar);
 
-        UpdateClearButton();
-
-        StackPanel.SetProportionType(_searchField, ProportionType.Fill);
+        StackPanel.SetProportionType(_searchBar, ProportionType.Fill);
 
         _history.Changed += (_, _) => UpdateNavigationButtons();
         UpdateNavigationButtons();
@@ -411,28 +400,6 @@ public class OptionsWindow : MyraControl
     {
         _backButton.Enabled = _history.CanGoBack;
         _forwardButton.Enabled = _history.CanGoForward;
-    }
-
-    /// <summary>
-    ///     The clear button only means anything with a query in the box, so it is hidden rather than
-    ///     disabled - a permanently greyed control beside the field is just noise.
-    /// </summary>
-    private void UpdateClearButton() => _clearButton.Visible = !string.IsNullOrEmpty(_searchField.Text);
-
-    /// <summary>
-    ///     Empties the query box and returns to the last page, matching what typing the query away
-    ///     by hand does.
-    /// </summary>
-    private void ClearSearch()
-    {
-        _searchField.Text = null;
-        _searchField.HintText = TazLang.Get("mog_searchellipses");
-
-        _pendingSearchText = string.Empty;
-        _searchPending = false;
-
-        UpdateClearButton();
-        ApplySearchText(string.Empty);
     }
 
     private void GoBack()
@@ -455,15 +422,6 @@ public class OptionsWindow : MyraControl
         SelectedCategoryChanged += (_, _) => unstyledButton.IsPressed = _currentCategory == category;
 
         return ApplyTabStyleToButton(unstyledButton);
-    }
-
-    private void SearchFieldOnTextChangedByUser(object? sender, ValueChangedEventArgs<string> e)
-    {
-        _pendingSearchText = e.NewValue?.Trim() ?? string.Empty;
-        _searchDebounceTimer = Environment.TickCount;
-        _searchPending = true;
-
-        UpdateClearButton();
     }
 
     /// <summary>
@@ -526,15 +484,7 @@ public class OptionsWindow : MyraControl
 
     private void ShowResults(OptionsView view)
     {
-        if (_searchField.Text != view.Query)
-        {
-            _searchField.Text = view.Query;
-            // Assigning Text re-runs setters that redraw the hint; without this the hint is lost
-            // even though the property itself hasn't changed.
-            _searchField.HintText = TazLang.Get("mog_searchellipses");
-        }
-
-        UpdateClearButton();
+        _searchBar.Query = view.Query ?? string.Empty;
 
         IReadOnlyList<SearchHit> hits = _searchIndex.Search(view.Query);
 
@@ -555,7 +505,7 @@ public class OptionsWindow : MyraControl
         if (restoredOffset > 0)
             Defer(() => _resultTree.SetScrollOffset(restoredOffset));
 
-        _resultCountLabel.Text = TazLang.Get("optsearch_results_count", [hits.Count.ToString()]);
+        _searchBar.SetResultText(TazLang.Get("optsearch_results_count", [hits.Count.ToString()]));
 
         if (_optionsStack.Widgets.Count != 1 || !ReferenceEquals(_optionsStack.Widgets[0], _resultTree))
         {
@@ -580,7 +530,10 @@ public class OptionsWindow : MyraControl
             return;
 
         ShowCategory(path[0]);
-        UpdateClearButton();
+
+        // A page has no query behind it; the bar follows the location rather than the other way round.
+        _searchBar.Query = string.Empty;
+        _searchBar.SetResultText(null);
 
         Widget current = _optionsPanel;
 
@@ -603,6 +556,13 @@ public class OptionsWindow : MyraControl
         WatchTabControls();
 
         _lastPagePath = CurrentPath();
+
+        // Selecting a category records only the category, but the page it lands on has tabs already
+        // selected. Without writing the resolved location back, returning to this entry would
+        // restore the category and leave whatever tabs happen to be showing - which looks exactly
+        // like back doing nothing.
+        if (_lastPagePath.Length > path.Length && _lastPagePath.StartsWith(path))
+            view.Path = _lastPagePath;
     }
 
     /// <summary>

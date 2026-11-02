@@ -28,8 +28,16 @@ internal sealed class OptionsView
     /// </summary>
     public string? Query { get; set; }
 
-    /// <summary>The breadcrumb to open when this is a page view</summary>
-    public SearchPath Path { get; init; }
+    /// <summary>
+    /// The breadcrumb to open when this is a page view.
+    /// <para>
+    /// Settable because a navigation can be under-specified at the moment it is recorded: selecting
+    /// a category says nothing about which tabs are showing inside it. The window resolves the full
+    /// location once the page is on screen and writes it back here, so returning to this entry
+    /// restores the tabs rather than only the category.
+    /// </para>
+    /// </summary>
+    public SearchPath Path { get; set; }
 
     /// <summary>Paths of the groups the user had collapsed in the results list</summary>
     public HashSet<string> Collapsed { get; } = [];

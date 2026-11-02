@@ -80,14 +80,23 @@ public class MyraLabel : Label
     /// <param name="text">The hint text.</param>
     /// <param name="color">Optional colour; the theme's disabled text when omitted.</param>
     /// <returns>The label, single-line and vertically centred.</returns>
-    public static MyraLabel Hint(string text, Color? color = null) =>
-        new(text, MyraStyle.HintFontSizeOffset)
+    public static MyraLabel Hint(string text, Color? color = null)
+    {
+        // Built on the body style and then shrunk, rather than from the bare font constructor:
+        // that path applies no stylesheet, so the label would carry none of the padding or
+        // centring its neighbours have and would sit high against them.
+        var label = new MyraLabel(text, TextStyle.P)
         {
             Wrap = false,
             SingleLine = true,
             VerticalAlignment = VerticalAlignment.Center,
             TextColor = color ?? MyraTheme.Current.DisabledText
         };
+
+        label.Font = MyraStyle.GetUiFont(MyraStyle.HintFontSizeOffset);
+
+        return label;
+    }
 
     /// <summary>
     /// Default size for a symbol glyph. Matches the property grid's expander and reset marks, which

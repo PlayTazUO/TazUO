@@ -6,6 +6,7 @@ using FontStashSharp;
 using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
+using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -79,6 +80,14 @@ public class IconButton : BasicButton
     /// beside.</summary>
     private const int DEFAULT_GLYPH_SIZE = 24;
 
+    /// <summary>
+    /// Hover and press fills for a borderless button - just enough to read as live. Applied via
+    /// <c>Color * factor</c>, which premultiplies: a literal <c>new Color(255, 255, 255, 30)</c> has
+    /// colour channels above its alpha, which the premultiplied blend draws as solid white.
+    /// </summary>
+    private const float FLAT_HOVER_STRENGTH = 0.12f;
+    private const float FLAT_PRESSED_STRENGTH = 0.22f;
+
     private readonly Label _label;
 
     #endregion
@@ -134,6 +143,50 @@ public class IconButton : BasicButton
     #endregion
 
     #region Public methods
+
+    /// <summary>
+    /// Builds a chrome-less icon button: the bare glyph, no border or resting fill. For an icon
+    /// that sits inside another control - a clear chip in a text field, an inline dismiss - where
+    /// a border would read as a second, nested control rather than as an affordance on the first.
+    /// </summary>
+    /// <param name="glyph">The glyph to draw, from the symbol font.</param>
+    /// <param name="onClick">Invoked on click.</param>
+    /// <param name="tooltip">Optional tooltip. Worth supplying: a bare glyph has nothing else naming it.</param>
+    /// <param name="size">Button width and height.</param>
+    /// <param name="glyphSize">Point size the glyph is drawn at.</param>
+    /// <returns>The button.</returns>
+    public static IconButton Flat(
+        string glyph,
+        Action onClick,
+        string? tooltip = null,
+        int size = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
+        int glyphSize = DEFAULT_GLYPH_SIZE
+    ) => new IconButton(glyph, onClick, tooltip, size, glyphSize).MakeBorderless();
+
+    /// <summary>
+    /// Strips the button chrome from an existing button, leaving the bare glyph. Prefer
+    /// <see cref="Flat"/> when building one; this is for a button handed to you already made. For an icon that sits inside another
+    /// control - a clear chip in a text field - where a border would read as a second, nested
+    /// control rather than as an affordance on the first.
+    /// <para>
+    /// A faint hover and press fill are kept: with nothing at all the glyph gives no sign it is
+    /// interactive. Input is unaffected either way, since only <see cref="Container"/> treats a
+    /// null background as a reason to let clicks through.
+    /// </para>
+    /// </summary>
+    /// <returns>This button, for chaining.</returns>
+    public IconButton MakeBorderless()
+    {
+        Background = null;
+        Border = null;
+        BorderThickness = new Thickness(0);
+        FocusedBackground = null;
+
+        OverBackground = new SolidBrush(Color.White * FLAT_HOVER_STRENGTH);
+        PressedBackground = new SolidBrush(Color.Black * FLAT_PRESSED_STRENGTH);
+
+        return this;
+    }
 
     /// <summary>
     /// Swaps the glyph and its size together, for a button whose icon changes with its state - a

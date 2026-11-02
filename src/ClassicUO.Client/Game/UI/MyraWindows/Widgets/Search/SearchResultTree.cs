@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using ClassicUO.Game.UI.MyraWindows.Theme;
 using Microsoft.Xna.Framework;
+using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
 
@@ -35,6 +36,21 @@ public sealed class SearchResultTree : ScrollViewer
     ///     edge is dragged.
     /// </summary>
     private const double INLINE_HYSTERESIS = 0.1;
+
+    /// <summary>
+    ///     Result text is drawn below the user's configured size: this is a dense index of settings
+    ///     rather than a page of them, and the rows read better tighter. Offsets, not absolute sizes,
+    ///     so the user's own choice still drives it.
+    /// </summary>
+    private const int CRUMB_FONT_OFFSET = -1;
+    private const int ROW_FONT_OFFSET = -2;
+
+    /// <summary>Breathing room so rows are not flush against the window edge.</summary>
+    private const int CONTENT_PADDING_X = 8;
+    private const int CONTENT_PADDING_Y = 4;
+
+    /// <summary>Gap between a breadcrumb segment and its separator.</summary>
+    private const int CRUMB_SPACING = 2;
 
     private readonly VerticalStackPanel _stack = new() { Spacing = 1 };
     private readonly HashSet<string> _collapsed = [];
@@ -89,6 +105,7 @@ public sealed class SearchResultTree : ScrollViewer
         Content = _stack;
         HorizontalAlignment = HorizontalAlignment.Stretch;
         VerticalAlignment = VerticalAlignment.Stretch;
+        Padding = new Thickness(CONTENT_PADDING_X, CONTENT_PADDING_Y, CONTENT_PADDING_X, CONTENT_PADDING_Y);
     }
 
     #endregion
@@ -161,9 +178,11 @@ public sealed class SearchResultTree : ScrollViewer
             ToggleOnHeaderClick = false
         };
 
-        // One flat header fill at every depth. Tinting per level made the headers read as
-        // alternating grid rows rather than as a breadcrumb; the indent already shows the nesting.
-        expander.Header.Background = new SolidBrush(MyraTheme.Current.PanelFill);
+        // No header fill at all. Even one flat tint differs from the panel behind it, which
+        // striped the list; the twisty and the indent already show the structure. Safe to clear
+        // only because the twisty is the sole toggle here - a header that handles its own clicks
+        // needs a background to receive them.
+        expander.Header.Background = null;
         expander.SetExpandedSilently(!_collapsed.Contains(group.Path.Text));
 
         string key = group.Path.Text;
@@ -176,7 +195,7 @@ public sealed class SearchResultTree : ScrollViewer
         };
 
         foreach (SearchHit hit in group.Hits)
-            expander.Items.Add(BuildRow(hit));
+            expander.Items.Add(BuildRow(hit, depth + 1));
 
         foreach (SearchResultGroup child in group.Children)
             expander.Items.Add(BuildGroup(child, depth + 1));
@@ -189,7 +208,7 @@ public sealed class SearchResultTree : ScrollViewer
         var stack = new VerticalStackPanel { Spacing = 1, HorizontalAlignment = HorizontalAlignment.Stretch };
 
         foreach (SearchHit hit in group.Hits)
-            stack.Widgets.Add(BuildRow(hit));
+            stack.Widgets.Add(BuildRow(hit, 0));
 
         return stack;
     }
@@ -200,7 +219,7 @@ public sealed class SearchResultTree : ScrollViewer
     /// </summary>
     private Widget BuildHeaderContent(SearchResultGroup group)
     {
-        var crumbs = new HorizontalStackPanel { Spacing = 0, VerticalAlignment = VerticalAlignment.Center };
+        var crumbs = new HorizontalStackPanel { Spacing = CRUMB_SPACING, VerticalAlignment = VerticalAlignment.Center };
         int ancestors = group.Path.Length - group.Segments.Count;
 
         for (int i = 0; i < group.Segments.Count; i++)
@@ -212,7 +231,7 @@ public sealed class SearchResultTree : ScrollViewer
 
             // Every segment at every depth gets the same treatment - a breadcrumb is one
             // continuous trail, so varying the size by depth just looks like inconsistency.
-            crumbs.Widgets.Add(new LinkLabel(
+            var crumb = new LinkLabel(
                 group.Segments[i],
                 () => NavigationRequested?.Invoke(this, target)
             )
@@ -220,7 +239,10 @@ public sealed class SearchResultTree : ScrollViewer
                 Wrap = false,
                 SingleLine = true,
                 VerticalAlignment = VerticalAlignment.Center
-            });
+            };
+
+            crumb.Font = MyraStyle.GetUiFont(CRUMB_FONT_OFFSET);
+            crumbs.Widgets.Add(crumb);
         }
 
         return new SpaceBetweenRow(
@@ -232,9 +254,15 @@ public sealed class SearchResultTree : ScrollViewer
 
     private static MyraLabel BuildSeparator() => MyraLabel.Hint(SearchPath.SEPARATOR);
 
-    private Widget BuildRow(SearchHit hit)
+    private Widget BuildRow(SearchHit hit, int depth)
     {
-        var row = new SearchResultRow(hit, ShowAttribution, OnRowActivated);
+        var row = new SearchResultRow(hit, ShowAttribution, OnRowActivated)
+        {
+            FontOffset = ROW_FONT_OFFSET,
+            // Each nesting level insets the row, so a deep row has measurably less to work with
+            // than the list as a whole. Without this the guard budgets for width the row never had.
+            IndentReserve = depth * Expander.DEFAULT_INDENT + CONTENT_PADDING_X * 2
+        };
 
         _rows.Add(row);
 

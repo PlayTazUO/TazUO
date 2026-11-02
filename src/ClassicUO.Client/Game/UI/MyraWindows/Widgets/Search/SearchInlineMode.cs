@@ -14,13 +14,13 @@ public enum SearchInlineMode
     /// </summary>
     Never,
 
-    /// <summary>Inline only clearly small controls</summary>
+    /// <summary>Inline only controls that leave plenty of the row spare</summary>
     Conservative,
 
     /// <summary>Inline anything that comfortably fits</summary>
     Balanced,
 
-    /// <summary>Inline anything that fits at all</summary>
+    /// <summary>Inline anything that fits at all, edge to edge</summary>
     Aggressive
 }
 
@@ -36,9 +36,9 @@ public static class SearchInlineModeExtensions
     public static double ToThreshold(this SearchInlineMode mode) =>
         mode switch
         {
-            SearchInlineMode.Conservative => 0.40,
-            SearchInlineMode.Balanced => 0.65,
-            SearchInlineMode.Aggressive => 0.95,
+            SearchInlineMode.Conservative => 0.55,
+            SearchInlineMode.Balanced => 0.80,
+            SearchInlineMode.Aggressive => 1.00,
             _ => 0d
         };
 }
