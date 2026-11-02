@@ -270,7 +270,7 @@ internal sealed class ScreenOverlayCompositor
                     sceneBound = true;
                 }
 
-                _effect.SetTechnique(p.Sampling);
+                _effect.SetTechnique(p);
                 _effect.Apply(p, _time, screenSize, globalIntensity, sceneMap);
 
                 batcher.Begin(_effect);

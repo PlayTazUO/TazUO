@@ -50,9 +50,10 @@ public class ApiPulseSpec : PyApiObject
 /// One layer of a visual effect composition. The subtype is the technique, so a technique's knobs
 /// exist only on the type that reads them - there is no radius on a chromatic layer to mis-set.
 /// <para>
-/// Build one with `API.VisualEffects.NewTintLayer`, `API.VisualEffects.NewBlurLayer`, `API.VisualEffects.NewRadialBlurLayer` or
-/// `API.VisualEffects.NewChromaticLayer`, each of which hands back the client's own defaults for that technique.
-/// Fixed set of four: the shader has four techniques and there is no way to describe a fifth.
+/// Build one with `API.VisualEffects.NewTintLayer`, `API.VisualEffects.NewBlurLayer`,
+/// `API.VisualEffects.NewRadialBlurLayer`, `API.VisualEffects.NewChromaticLayer` or
+/// `API.VisualEffects.NewSaturationLayer`, each of which hands back the client's own defaults for
+/// that technique. Fixed set: one per pass compiled into the shader, and no way to describe another.
 /// </para>
 /// </summary>
 public abstract class ApiLayerEffect : PyApiObject
@@ -88,7 +89,7 @@ public abstract class ApiLayerEffect : PyApiObject
     /// <param name="effect">The layer to copy.</param>
     /// <returns>The DTO.</returns>
     /// <exception cref="ArgumentException">The layer is a technique this tier does not mirror,
-    /// which can only mean a fifth was added without extending the DTOs.</exception>
+    /// which can only mean one was added without extending the DTOs.</exception>
     internal static ApiLayerEffect From(LayerEffect effect)
     {
         ApiLayerEffect projected = effect switch
@@ -97,8 +98,9 @@ public abstract class ApiLayerEffect : PyApiObject
             BlurEffect blur => ApiBlurLayer.FromBlur(blur),
             RadialBlurEffect radial => ApiRadialBlurLayer.FromRadial(radial),
             ChromaticEffect chromatic => ApiChromaticLayer.FromChromatic(chromatic),
-            // Not a script's doing: it can only mean the client gained a fifth technique without
-            // this tier being extended to match. Says so, or a script author hunts their own code.
+            SaturationEffect saturation => ApiSaturationLayer.FromSaturation(saturation),
+            // Not a script's doing: it can only mean the client gained a technique without this tier
+            // being extended to match. Says so, or a script author hunts their own code.
             _ => throw new ArgumentException(
                 $"This effect uses a layer type the scripting API does not know about yet "
                 + $"({effect.GetType().Name}). This is a gap in the client, not in your script - "

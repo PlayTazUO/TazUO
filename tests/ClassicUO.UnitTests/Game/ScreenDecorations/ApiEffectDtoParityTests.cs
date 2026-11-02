@@ -71,6 +71,7 @@ public class ApiEffectDtoParityTests
         new(typeof(ApiBlurLayer), typeof(BlurEffect), MirroredOnly: ["TechniqueName"]),
         new(typeof(ApiRadialBlurLayer), typeof(RadialBlurEffect), MirroredOnly: ["TechniqueName"]),
         new(typeof(ApiChromaticLayer), typeof(ChromaticEffect), MirroredOnly: ["TechniqueName"]),
+        new(typeof(ApiSaturationLayer), typeof(SaturationEffect), MirroredOnly: ["TechniqueName"]),
 
         // Name is what the composer calls a row. A script-built composition is never listed anywhere.
         new(typeof(ApiProfileLayer), typeof(ProfileLayer), MirroredOnly: ["Name"]),

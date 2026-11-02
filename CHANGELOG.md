@@ -3,9 +3,15 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 11/02/26
+* ***Feature:*** The chat window is now a resizable modern (Myra) window, matching the rest of the client UI - channel selection, double-click to join, leave and create all work as before
+* ***Fix:*** Running macros now stop when you log out or disconnect - previously a macro could keep firing actions while the logout request was pending and resume after logging back in
+* ***Fix:*** Login popup messages can now be dismissed with Enter or numpad Enter, just like clicking the OK button
+
 ## 10/31/26
-* ***Fix:*** Effects attached to a mobile or item (e.g. a quest marker over an NPC's head) are no longer cut away with the roof when the player is inside the same building
-* ***Fix:*** Spell effects on an upper floor (e.g. heal) no longer flash on the floors below
+* ***Feature:*** Added Saturation as a VFX technique - [P.R 1195](https://github.com/PlayTazUO/TazUO/pull/1195) ([yuval-po](https://github.com/yuval-po))
+* ***Legion:*** Added `OnMapChanged` event - [P.R 1195](https://github.com/PlayTazUO/TazUO/pull/1195) ([yuval-po](https://github.com/yuval-po))
+* ***Misc:*** Improved performance of some VFX techniques - [P.R 1195](https://github.com/PlayTazUO/TazUO/pull/1195) ([yuval-po](https://github.com/yuval-po))
 
 ## 10/30/26
 * ***Fix:*** The client no longer disappears without a crash report (SIGSEGV on the audio thread) after a few hours of play on Linux - the bundled FAudio mixer had a resampling bug that wrote past its output buffer when the 10ms audio updates were resampled, corrupting the heap until the audio thread faulted; FNA and FAudio are updated to 26.10, which fixes the resample tap overrun

@@ -35,11 +35,12 @@ on the type that reads them.
 abstract LayerEffect        // Shape, Noise, Strength, Pulse — every technique masks and swells
 ├── TintEffect        { Tint }
 ├── BlurEffect        { Radius, Taps }
-├── RadialBlurEffect  { Zoom, Taps }
-└── ChromaticEffect   { Aberration }        // fixed 3 taps, one per channel
+├── RadialBlurEffect  { Zoom, Swirl, Taps }   // Swirl 0 = straight rays, >0 = spiral
+├── ChromaticEffect   { Aberration }        // fixed 3 taps, one per channel
+└── SaturationEffect  { Saturation }        // 1 tap; Rec. 709 luma lerp, extrapolates past 1
 ```
 
-Fixed set of four: the shader has four techniques and config cannot describe a fifth.
+Fixed set: one technique per pass compiled into the shader, and config cannot describe another.
 
 `Bake()` flattens to `OverlayParams` (the GPU wire format) and clamps on the way — the safety
 ceilings are not the caller's to skip. `LayerEffectFactory.FromParams` is the inverse, which is how
@@ -238,7 +239,9 @@ would expose the target's unrendered edge.
 ## Shader
 
 `vs_3_0`/`ps_3_0`, `fxc /T fx_2_0`. No `VPOS`, no compute, `clip()` not `discard`. Straight
-(non-premultiplied) alpha out. Recompile after **every** `.fx` edit and commit both files:
+(non-premultiplied) alpha out. Uniforms and techniques share one identifier table, so a technique
+cannot be named after the uniform it reads (`error X3003`) — hence the suffixes on `TintColour`
+and `SaturationAmount`. Recompile after **every** `.fx` edit and commit both files:
 
 ```sh
 cd src/ClassicUO.Renderer/shaders && wine fxc.exe /T fx_2_0 /O3 /Fo ScreenOverlay.fxc ScreenOverlay.fx
@@ -250,38 +253,63 @@ MojoShader translates D3D9 bytecode to GL at runtime and **dynamic loop bounds d
 Loops are `[unroll]` with literal bounds, so every tap count is separately compiled — which is why
 `OverlaySampleTaps` is a closed enum (4/8/12/16) and must never become a free number.
 
+Two corollaries, both about per-pixel values inside those unrolled loops. **A uniform parked at its
+neutral value still costs what a live one does** — `SampleSwirl` 0 is a straight ray the compiler
+cannot fold away, which is why `Radial{N}` and `RadialSwirl{N}` are separate families chosen on the
+CPU. And **anything built only from the loop counter stays constant until a per-pixel value touches
+it**: `SampleDisk`'s tap offset and weight fold to literals, so mixing a dither in turns every one
+of them runtime — far dearer there than on the radial march, whose per-tap work is already runtime.
+Diff a `/Fc` listing either side of the change; identical-looking one-line edits price orders apart.
+
 Pixel flow (order preserves the early-out): shape distance (no fetches) → conservative `clip` →
 1 fetch jitter field (displaces boundary *and* modulates feather) → exact `clip` → 2 fetches, base
 field then detail field domain-warped by it → threshold → alpha.
+
+Those 3 fetches belong to the alpha, not the technique, so every pass pays them — a vignette's
+`clip` hides most of that, a layer at full reach pays per pixel. `OverlayAlphaFlat` short-circuits
+the lot, and `SetTechnique` takes it whenever `OverlayParams.HasFlatAlpha` says the noise cannot
+affect the alpha anyway. Only tint, chromatic and saturation have the parallel pass: those are cheap
+enough that the fetches dominate, while on a blur or radial march the saving is a few percent and
+would need one variant per tap count.
+
+Equivalence rests on one coupling worth knowing before touching either side — the flat path hands
+`Feather` to `ShapeMask` raw where `OverlayAlpha` wraps it in `max(…, 0.01)`, so `Clamp`'s
+`MIN_FEATHER` must stay at or above that shader literal. `OverlayFlatAlphaTests` pins it.
 
 Sampling layers read the frame as it stood **before** the overlay pass. A sampling layer must sit
 *below* whatever it should affect, and two sampling layers in one profile do not compose — the
 second re-reads the original frame and overwrites the first. `OverlayLayerStack` warns rather than
 correcting: the fix is a composition decision.
 
-## Parameter semantics (the non-obvious half)
+## Parameter traps
 
-- **`Reach`** — how far in the effect extends. **Larger = thicker.**
-- **`Jitter.ReachAmount`** only extends *inward* on the deep half of its field, so raising it raises
-  average reach too. Budget against `Reach`.
-- **`Jitter.Scale`** must be **coarser than `Noise.BaseScale`** (else the boundary buzzes at detail
-  frequency) but its **X must still cycle several times across the screen** (else each edge gets one
-  gentle bulge and stays visibly rectangular). Both failures were observed.
-- **`FlatFloor`** — solid fill *under* the noise. Any value > 0 makes the shape mask render its own
-  geometry. Must be exactly 0 for anything that should read as streaks.
-- **`Threshold`** higher = sparser. **`Softness`** small = hard surface, large = cloud.
-- **`WarpStrength`** is the gas↔fluid dial. Poison ≈0.35, fluid ≤0.08.
-- **`RidgeAmount`** is counterintuitive twice: it peaks at the field's *median*, so raising it makes
-  a layer cover **more**, and what it draws are **outlines** → bordered cells.
-- **`EdgeBlend`** 0 = radial, 1 = border. **Do not use intermediate values to weight corners** — the
-  radial term is width-normalised, so on 16:9 it lands almost entirely on the left/right edges. Use
-  `CornerBias`, which is per-axis.
-- **Screen speed is `Scroll / Scale`, not `Scroll`.** Derive scroll from a target speed.
-- `NoiseChannel`: R = fBm f4, G = fBm f8, **B = ridged fBm**, **A = Worley F2−F1**. B and A are
-  fracture-only; either on organic content reads as a microscope slide.
-- `OverlayParams.Clamp()` enforces `PulseFreq ≤ 3.0` (photosensitive-epilepsy ceiling) **per layer**,
-  plus `MaxSampleRadius`, `MaxSampleAberration`, and wobble ceilings. Never bypass. Multi-layer
-  composition must not become a route around any of them.
+What each parameter *means* is on the type that declares it — `ShapeSpec`, `NoiseSpec`,
+`OverlaySampling` — and in the editor tooltips. Only what no single field's doc can carry is here.
+
+- **Full-screen cover takes two knobs, not one.** `Reach >= 1 + Feather`, since shape distance is 0
+  at the centre and anything less leaves a hole or a live fade there; *and* `FlatFloor` 1, or the
+  noise field gates the cover into drifting patches. `DesaturateOverlay` is the reference.
+- **Cross-field constraints.** `Jitter.Scale` must be coarser than `Noise.BaseScale`, or the boundary
+  buzzes at detail frequency — while still cycling several times across X, or each edge gets one
+  gentle bulge and stays visibly rectangular. `Jitter.ReachAmount` extends inward only on its field's
+  deep half, so it raises *average* reach: budget it against `Reach`. Screen speed is
+  `Scroll / Scale`, never `Scroll` alone.
+- **`EdgeBlend` is a switch, not a blend.** Intermediate values look like a corner weight, but the
+  radial term is width-normalised, so on 16:9 they land almost entirely on the left and right edges.
+  `CornerBias` is the per-axis control that exists for this.
+- **`RidgeAmount` is counterintuitive twice.** It peaks at the field's *median*, so raising it makes a
+  layer cover more — and what it draws is outlines, hence bordered cells.
+- **`FlatFloor` above 0 makes the shape mask draw its own geometry**, so anything that should read as
+  discrete streaks needs exactly 0. `WarpStrength` is the gas↔fluid dial, the biggest single lever on
+  whether a layer reads as vapour or liquid.
+- **`Swirl` 0 is free and anything else is not** — it switches technique family (see Shader). With it
+  on, taps rotate far enough to leave the quad, so `SampleRadialSwirl` clamps each one into the drawn
+  rectangle; the sampler's own clamp guards the scene texture, which a viewport layer is nowhere near.
+- **The `Clamp()` ceilings are safety, not taste.** `PulseFreq` is a photosensitive-epilepsy bound
+  and the wobble ones are motion sickness. Enforced per layer, and composition must never become a
+  route around them.
+- `NoiseChannel`: R and G are fBm, **B is ridged and A is Worley**. The latter two are fracture-only;
+  either on organic content reads as a microscope slide.
 
 ## Failure modes already hit — don't re-derive
 
@@ -296,6 +324,8 @@ correcting: the fix is a composition decision.
 | Wispy, no heft | Over-anisotropic (>5:1) + high threshold + wide feather together |
 | Bloody left/right, nothing top/bottom | `EdgeBlend` between 0 and 1 |
 | Distortion replaces a tint instead of smearing it | Sampling layer above a painted one; it reads the pre-pass frame |
+| Distinct ghost copies of the frame, worst at the corners | Tap spacing too wide. It grows with distance from centre, so `SampleZoom` breaks corners first. Raise `Taps`, or lower zoom/radius — the straight marches are deliberately undithered (see Shader) |
+| Smeared scene goes muddy olive/brown | Inherent — a wide blur averages whatever the scene holds. Counter with an **additive** layer, never a painted dark one (that is tunnel vision) |
 
 Two general lessons: weight comes from **opacity inside the streaks**, never from coverage; and
 stacking layers cannot fix anything the shape mask does wrong.
@@ -312,6 +342,7 @@ stacking layers cannot fix anything the shape mask does wrong.
 | `Overlays/OverlayLayerStack.cs` | `MaxLayers`, misplaced-sampling warnings |
 | `Overlays/BuiltInProfiles.cs` | Shipped looks + their stable IDs |
 | `Overlays/Presets/` | Tuned compositions the built-in profiles are seeded from |
+| `Overlays/Presets/DesaturateOverlay.cs` | Reference for an even full-screen layer (reach past centre + flat floor) |
 | `Overlays/ScreenOverlaySource.cs` | The pre-pass frame handed to sampling layers |
 | `Rules/BuiltInRules.cs` | Shipped rules + stable IDs |
 | `Rules/RuleDemand.cs` | Resolved firing rule → what the compositor is handed |
@@ -354,7 +385,7 @@ stacking layers cannot fix anything the shape mask does wrong.
 - User-authored trigger *logic*. Python scripts registering triggers is the eventual cheap path.
   Scripts can already *raise* an effect directly (`API.VisualEffects.Start`), which is not the same
   thing: nothing a script passes becomes a rule, and the rulebase is untouched by it.
-- CRUD on layer techniques — fixed set of four; the shader has four.
+- CRUD on layer techniques — the set is whatever the shader has passes for.
 - Per-layer fade timing (would land on `ProfileLayer`).
 - `Configuration/…/ScreenDecorations` and `Game/ScreenDecorations` reference each other, and
   `EffectProfile`/`OverlayRule` implement UI-owned `IProfile`/`IRule`. Intra-assembly, so no build
@@ -387,7 +418,7 @@ flowchart LR
 
     RULE["OverlayRule<br/>id · profileId · trigger · order"]
     PROF["EffectProfile<br/>layers · fade · shake · scope"]
-    LE["LayerEffect<br/>Tint / Blur / Radial / Chromatic"]
+    LE["LayerEffect<br/>Tint / Blur / Radial / Chromatic / Saturation"]
     SPEC["ShapeSpec · JitterSpec · NoiseSpec<br/><i>authoring mirrors</i>"]
 
     TRG["Trigger<br/>poll or event"]

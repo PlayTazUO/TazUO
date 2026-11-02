@@ -19,6 +19,7 @@ public class OverlaySamplingTests
     [InlineData(OverlaySampleMode.Blur)]
     [InlineData(OverlaySampleMode.Radial)]
     [InlineData(OverlaySampleMode.Chromatic)]
+    [InlineData(OverlaySampleMode.Saturation)]
     public void EveryDistortionModeReadsTheScene(OverlaySampleMode mode)
     {
         new OverlaySampling { Mode = mode }.ReadsScene.Should().BeTrue();

@@ -69,6 +69,7 @@ public class LayerEffectBakeTests
         new BlurEffect().Bake().Sampling.Mode.Should().Be(OverlaySampleMode.Blur);
         new RadialBlurEffect().Bake().Sampling.Mode.Should().Be(OverlaySampleMode.Radial);
         new ChromaticEffect().Bake().Sampling.Mode.Should().Be(OverlaySampleMode.Chromatic);
+        new SaturationEffect().Bake().Sampling.Mode.Should().Be(OverlaySampleMode.Saturation);
     }
 
     /// <summary>
@@ -105,6 +106,23 @@ public class LayerEffectBakeTests
 
         new BlurEffect { Radius = 10f }.Bake().Sampling.Radius.Should().Be(OverlayParams.MaxSampleRadius);
         new ChromaticEffect { Aberration = 10f }.Bake().Sampling.Aberration.Should().Be(OverlayParams.MaxSampleAberration);
+
+        new SaturationEffect { Saturation = 50f }.Bake()
+            .Sampling.Saturation.Should()
+            .Be(OverlayParams.MaxSampleSaturation);
+
+        new SaturationEffect { Saturation = -50f }.Bake()
+            .Sampling.Saturation.Should()
+            .Be(OverlayParams.MinSampleSaturation);
+
+        // Symmetric: a spiral winds either way, so the floor is the negated ceiling rather than 0.
+        new RadialBlurEffect { Swirl = 99f }.Bake()
+            .Sampling.Swirl.Should()
+            .Be(OverlayParams.MaxSampleSwirl);
+
+        new RadialBlurEffect { Swirl = -99f }.Bake()
+            .Sampling.Swirl.Should()
+            .Be(-OverlayParams.MaxSampleSwirl);
     }
 
     /// <summary>

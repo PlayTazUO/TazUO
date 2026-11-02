@@ -171,6 +171,9 @@ public class ApiVisualEffects(LegionAPI api)
         /// <summary>Everything drains and darkens.</summary>
         public const string Death = "bd6cf532-4dc4-46d7-94eb-bc061ef041da";
 
+        /// <summary>The whole view drained of colour, evenly. Nothing else.</summary>
+        public const string Desaturate = "3f2a9c41-5b8e-4c17-9d60-7ae4c2b8f153";
+
         /// <summary>Sustained low rumble. Shake only - nothing is drawn.</summary>
         public const string EarthquakeRumble = "7f67a87a-e30a-441b-9b5a-3a91da98d050";
     }
@@ -307,6 +310,14 @@ public class ApiVisualEffects(LegionAPI api)
     /// </summary>
     /// <returns>The layer.</returns>
     public ApiChromaticLayer NewChromaticLayer() => new();
+
+    /// <summary>
+    ///     Build a saturation layer, set to the client's defaults - fully drained to grey. Raise
+    ///     `Saturation` toward 1 for a partial drain, past 1 to push the colour past its real value.
+    ///     <para>One sample per pixel: the cheapest technique that reads the frame at all.</para>
+    /// </summary>
+    /// <returns>The layer.</returns>
+    public ApiSaturationLayer NewSaturationLayer() => new();
 
     /// <summary>
     ///     Build the shake a visual effect fires as it arrives, to hang on `ApiEffectProfile.Shake`. For

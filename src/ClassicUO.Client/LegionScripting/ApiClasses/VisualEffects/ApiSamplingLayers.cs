@@ -67,6 +67,14 @@ public class ApiRadialBlurLayer : ApiLayerEffect
     /// `ApiShapeSpec.Center`.</summary>
     public double Zoom { get; set; } = OverlayParams.Default.Sampling.Zoom;
 
+    /// <summary>
+    /// Radians the march twists through on its way to the centre. 0 is a straight ray; raising it
+    /// winds the streaks into a spiral, negative turns the other way. Capped at half a turn when the
+    /// layer is baked. Exactly 0 is free - it takes a cheaper pass - so leave it there unless the
+    /// spiral is wanted.
+    /// </summary>
+    public double Swirl { get; set; } = OverlayParams.Default.Sampling.Swirl;
+
     /// <summary>Samples taken per pixel. Fewer than a disk blur needs: radial taps land on a line
     /// rather than spreading over an area, so the gaps between them are far less visible.</summary>
     public ApiVisualEffects.OverlaySampleTaps Taps { get; set; } = ApiVisualEffects.OverlaySampleTaps.Eight;
@@ -79,7 +87,12 @@ public class ApiRadialBlurLayer : ApiLayerEffect
     /// <param name="radial">The layer to copy.</param>
     /// <returns>The DTO.</returns>
     internal static ApiRadialBlurLayer FromRadial(RadialBlurEffect radial) =>
-        new() { Zoom = radial.Zoom, Taps = (ApiVisualEffects.OverlaySampleTaps)radial.Taps };
+        new()
+        {
+            Zoom = radial.Zoom,
+            Swirl = radial.Swirl,
+            Taps = (ApiVisualEffects.OverlaySampleTaps)radial.Taps
+        };
 
     #endregion
 
@@ -90,6 +103,7 @@ public class ApiRadialBlurLayer : ApiLayerEffect
         new RadialBlurEffect
         {
             Zoom = VfxInputValidator.Number(Zoom, nameof(Zoom)),
+            Swirl = VfxInputValidator.Number(Swirl, nameof(Swirl)),
             Taps = (OverlaySampleTaps)VfxInputValidator.Defined(Taps, nameof(Taps))
         };
 
@@ -97,9 +111,9 @@ public class ApiRadialBlurLayer : ApiLayerEffect
 }
 
 /// <summary>
-/// Red/blue split along the ray from the shape's centre - lens fringing. The cheapest technique by a
-/// wide margin, three taps whatever its strength, so it is worth reaching for first when something
-/// needs to look wrong without costing anything. Build one with `API.VisualEffects.NewChromaticLayer`.
+/// Red/blue split along the ray from the shape's centre - lens fringing. Three taps whatever its
+/// strength; only `ApiSaturationLayer`, at one, is cheaper. Build one with
+/// `API.VisualEffects.NewChromaticLayer`.
 /// </summary>
 public class ApiChromaticLayer : ApiLayerEffect
 {
@@ -129,6 +143,43 @@ public class ApiChromaticLayer : ApiLayerEffect
     /// <inheritdoc />
     private protected override LayerEffect CreateInternal() =>
         new ChromaticEffect { Aberration = VfxInputValidator.Number(Aberration, nameof(Aberration)) };
+
+    #endregion
+}
+
+/// <summary>
+/// Pulls the frame's colour toward or away from its own brightness - drained for sickness and
+/// near-death, pushed for fever. One sample per pixel: the cheapest technique that reads the frame
+/// at all. Build one with `API.VisualEffects.NewSaturationLayer`.
+/// </summary>
+public class ApiSaturationLayer : ApiLayerEffect
+{
+    #region Public accessors
+
+    /// <summary>
+    /// Where the colour is pulled to, relative to the frame's own brightness: 1 untouched, 0 grey,
+    /// above 1 pushed past its real colour, below 0 the complement. Capped at -1 and 3 when the
+    /// layer is baked.
+    /// </summary>
+    public double Saturation { get; set; } = OverlayParams.Default.Sampling.Saturation;
+
+    #endregion
+
+    #region Internal methods
+
+    /// <summary>Projects an authored saturation grade into a DTO.</summary>
+    /// <param name="saturation">The layer to copy.</param>
+    /// <returns>The DTO.</returns>
+    internal static ApiSaturationLayer FromSaturation(SaturationEffect saturation) =>
+        new() { Saturation = saturation.Saturation };
+
+    #endregion
+
+    #region Protected methods
+
+    /// <inheritdoc />
+    private protected override LayerEffect CreateInternal() =>
+        new SaturationEffect { Saturation = VfxInputValidator.Number(Saturation, nameof(Saturation)) };
 
     #endregion
 }
