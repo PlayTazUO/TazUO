@@ -153,7 +153,12 @@ namespace ClassicUO.Game
                     break;
             }
 
-            if (CurrentWeather.HasValue)
+            // A count of 0 ends the weather like a stop packet does.
+            if (Count == 0)
+            {
+                OnWeatherStopped();
+            }
+            else if (CurrentWeather.HasValue)
             {
                 OnWeatherStarted(CurrentWeather.Value);
             }
@@ -197,6 +202,14 @@ namespace ClassicUO.Game
             {
                 if (CurrentCount == 0)
                 {
+                    // The weather ran out on its own: that is its stop, and it is over, so the same weather
+                    // arriving again starts anew instead of being dropped as already active.
+                    if (CurrentWeather.HasValue)
+                    {
+                        OnWeatherStopped();
+                        Reset();
+                    }
+
                     return;
                 }
 
