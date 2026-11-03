@@ -666,6 +666,8 @@ namespace ClassicUO.Game.Managers
 
         public static void Add(IGui gump, bool front = true)
         {
+            MainThreadQueue.DebugAssertIsMt();
+
             if (gump.IsDisposed)
                 return;
 
@@ -723,6 +725,8 @@ namespace ClassicUO.Game.Managers
 
         public static void Clear()
         {
+            MainThreadQueue.DebugAssertIsMt();
+
             // Snapshot before disposing: a gump's Dispose can add or remove gumps (event
             // handlers, anchoring, scripts), which would invalidate a live enumeration of Gumps.
             var snapshot = new IGui[Gumps.Count];
@@ -790,6 +794,8 @@ namespace ClassicUO.Game.Managers
         /// <returns>True if any instances existed</returns>
         public static bool ForEach<T>(Action<T> action, uint? serial = null) where T : IGui
         {
+            MainThreadQueue.DebugAssertIsMt();
+
             IGui[] snapshot;
             int count;
 
@@ -987,6 +993,8 @@ namespace ClassicUO.Game.Managers
 
         public static void MakeTopMostGump(IGui gump)
         {
+            MainThreadQueue.DebugAssertIsMt();
+
             if (gump != null && gump?.RootParent != null)
             {
                 gump = gump.RootParent;
