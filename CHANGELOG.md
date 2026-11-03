@@ -4,7 +4,7 @@ All notable changes to TazUO will be recorded here.
 ---
 
 ## 11/03/26
-* ***Fix:*** Overheads above a mobile no longer overlap: the simple healthbar, the name, the nameplate and the HP percentage now stack from the top of the drawn sprite, mounted or not - the HP percentage no longer covers the nameplate's bars or the simple healthbar, and the player's and party members' nameplates no longer sit on the head with the name drawn below the bars
+* ***Fix:*** Overheads above a mobile no longer overlap: the simple healthbar, the name, the nameplate and the HP percentage now stack from the top of the drawn sprite, mounted or not - the HP percentage no longer covers the nameplate's bars or the simple healthbar, and the player's and party members' nameplates no longer sit on the head with the name drawn below the bars - [P.R 1205](https://github.com/PlayTazUO/TazUO/pull/1205) ([DavideRei](https://github.com/DavideRei))
 
 ## 11/02/26
 * ***Feature:*** The chat window is now a resizable modern (Myra) window, matching the rest of the client UI - channel selection, double-click to join, leave and create all work as before
