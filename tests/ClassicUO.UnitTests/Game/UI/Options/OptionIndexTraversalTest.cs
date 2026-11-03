@@ -41,6 +41,35 @@ namespace ClassicUO.UnitTests.Game.UI.Options
         }
 
         [Fact]
+        public void A_Leaf_With_No_Label_Stays_Skipped_Under_Labelled_Metadata()
+        {
+            // The case that matters in practice: spacers sit inside a fragment carrying its
+            // section's metadata. Inheriting that label would index every spacer under the
+            // section's name and surface them as blank result rows.
+            var spacer = new OptionEntry(() => null);
+            var section = new OptionFragment(() => null, [spacer, Leaf("Sound volume")])
+                .WithSearch(new SearchMetadata("Sounds", Keywords: ["audio", "music"]));
+
+            List<SearchEntry> entries = Index(section, "Sounds");
+
+            entries.Should().ContainSingle();
+            entries[0].Label.Should().Be("Sound volume");
+        }
+
+        [Fact]
+        public void Match_Text_And_Keywords_Are_Still_Inherited()
+        {
+            // Only the label is withheld; the rest is what makes a section findable by its own name.
+            var section = new OptionFragment(() => null, [Leaf("Sound volume")])
+                .WithSearch(new SearchMetadata("Sounds", Keywords: ["audio"]));
+
+            SearchEntry entry = Index(section, "Sounds")[0];
+
+            entry.Keywords.Should().Contain("audio");
+            entry.MatchText.Should().Be("Sound volume");
+        }
+
+        [Fact]
         public void A_Leaf_Defaults_To_Inline_And_Custom_Content_Does_Not()
         {
             Index(Leaf("Light level"), "Video")[0].Presentation.Should().Be(SearchPresentation.Inline);

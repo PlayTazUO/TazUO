@@ -246,8 +246,14 @@ public class OptionsWindow : MyraControl
     {
         if (_history.Current is { IsSearch: true } current)
         {
+            // Retyping stays on the same view, so its scroll and collapse state have to be folded
+            // back in first - ShowResults restores from the entry, and would otherwise re-expand
+            // everything the user just collapsed on every keystroke.
+            CaptureCurrentViewState();
+
             current.Query = query;
             Restore(current);
+
             return;
         }
 
@@ -365,7 +371,7 @@ public class OptionsWindow : MyraControl
 
         _searchBar.QueryChanged += (_, query) =>
         {
-            _pendingSearchText = query;
+            _pendingSearchText = query.Trim();
             _searchDebounceTimer = Environment.TickCount;
             _searchPending = true;
         };
@@ -404,14 +410,31 @@ public class OptionsWindow : MyraControl
 
     private void GoBack()
     {
+        LeaveCurrentView();
+
         if (_history.TryGoBack(out OptionsView view))
             Restore(view);
     }
 
     private void GoForward()
     {
+        LeaveCurrentView();
+
         if (_history.TryGoForward(out OptionsView view))
             Restore(view);
+    }
+
+    /// <summary>
+    ///     Common preamble for an explicit history move: snapshot what the current view is showing,
+    ///     and drop any keystroke still inside the debounce window so it cannot fire into the view
+    ///     being navigated to.
+    /// </summary>
+    private void LeaveCurrentView()
+    {
+        CaptureCurrentViewState();
+
+        _searchPending = false;
+        _pendingSearchText = string.Empty;
     }
 
     private ButtonBase2 GetCategoryButton(string category)
@@ -513,8 +536,12 @@ public class OptionsWindow : MyraControl
             _optionsStack.Widgets.Add(_resultTree);
         }
 
-        // Results span categories, so no single rail entry is current.
+        // Results span categories, so no single rail entry is current. The previous category's
+        // controls stay constructed but are no longer on screen, so drop the map with it: a
+        // selection raised on one of them would otherwise be recorded as a page navigation while
+        // the user is looking at search results.
         _currentCategory = string.Empty;
+        ForgetTabControls();
         SelectedCategoryChanged?.Invoke(this, string.Empty);
     }
 
@@ -531,7 +558,11 @@ public class OptionsWindow : MyraControl
 
         ShowCategory(path[0]);
 
-        // A page has no query behind it; the bar follows the location rather than the other way round.
+        // A page has no query behind it; the bar follows the location rather than the other way
+        // round. Any keystroke still inside the debounce window is dropped with it - otherwise it
+        // fires moments later and drags the user into results for a query that is no longer shown.
+        _searchPending = false;
+        _pendingSearchText = string.Empty;
         _searchBar.Query = string.Empty;
         _searchBar.SetResultText(null);
 
@@ -605,8 +636,7 @@ public class OptionsWindow : MyraControl
         if (_currentCategory == category && ReferenceEquals(FirstStackChild(), _optionsPanel))
             return;
 
-        _watchedTabControls.Clear();
-        _tabControlPaths.Clear();
+        ForgetTabControls();
 
         _optionsStack.Widgets.Clear();
         _optionsStack.Widgets.Add(_optionsPanel);
@@ -638,6 +668,19 @@ public class OptionsWindow : MyraControl
             return;
 
         MapTabControls(_optionsPanel, new SearchPath(_currentCategory));
+    }
+
+    /// <summary>
+    ///     Drops every tab-control subscription and its recorded location, for when the controls
+    ///     they refer to are about to be replaced or are no longer on screen.
+    /// </summary>
+    private void ForgetTabControls()
+    {
+        foreach (MyraTabControl tabs in _watchedTabControls)
+            tabs.SelectedIndexChanged -= OnNestedTabSelected;
+
+        _watchedTabControls.Clear();
+        _tabControlPaths.Clear();
     }
 
     /// <summary>

@@ -62,7 +62,10 @@ public sealed class SearchBar : HorizontalStackPanel
 
     #region Events
 
-    /// <summary>Raised on every edit the user makes. Not debounced.</summary>
+    /// <summary>
+    ///     Raised on every edit the user makes, carrying the box's text verbatim. Neither debounced
+    ///     nor trimmed - when to act and what counts as the query are the consumer's decisions.
+    /// </summary>
     public event EventHandler<string>? QueryChanged;
 
     /// <summary>Raised when the clear chip is used, after the box has been emptied</summary>
@@ -75,13 +78,19 @@ public sealed class SearchBar : HorizontalStackPanel
     /// <summary>
     ///     The current query. Assigning does not raise <see cref="QueryChanged" />, so a consumer can
     ///     push state back into the bar without re-entering its own handler.
+    ///     <para>
+    ///         Comparison ignores surrounding whitespace, so writing back a trimmed copy of what the
+    ///         user typed is a no-op. Assigning at all would reset the caret to the start - Myra's
+    ///         text box treats any non-user write as a fresh value - which mangles the next keystroke
+    ///         while someone is still typing.
+    ///     </para>
     /// </summary>
     public string Query
     {
         get => _input.Text ?? string.Empty;
         set
         {
-            if ((_input.Text ?? string.Empty) == (value ?? string.Empty))
+            if (string.Equals((_input.Text ?? string.Empty).Trim(), (value ?? string.Empty).Trim(), StringComparison.Ordinal))
                 return;
 
             _input.Text = value;
@@ -123,7 +132,7 @@ public sealed class SearchBar : HorizontalStackPanel
         _input.TextChangedByUser += (_, args) =>
         {
             UpdateClearButton();
-            QueryChanged?.Invoke(this, args.NewValue?.Trim() ?? string.Empty);
+            QueryChanged?.Invoke(this, args.NewValue ?? string.Empty);
         };
 
         // The field and the chip share a cell so the chip sits inside the box rather than beside it.

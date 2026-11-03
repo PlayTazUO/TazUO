@@ -167,6 +167,18 @@ namespace ClassicUO.UnitTests.Game.UI.Search
         }
 
         [Fact]
+        public void A_Blank_Entry_Is_Never_Produced_For_A_Query_Matching_Its_Section()
+        {
+            // Guards the shape of the bug: a section-level query must not return rows that have
+            // nothing of their own to show.
+            var index = new SearchIndex();
+            index.Add(Entry("Sound volume", new SearchPath("Sounds"), keywords: ["audio"]));
+
+            foreach (SearchHit hit in index.Search("audio"))
+                hit.Entry.Label.Should().NotBeNullOrWhiteSpace();
+        }
+
+        [Fact]
         public void A_Fuzzy_Query_Still_Finds_A_Misspelled_Label()
         {
             var index = new SearchIndex();

@@ -41,8 +41,14 @@ public record SearchMetadata(string? SearchText = null, string[]? Tags = null, s
     public string[] NormalizedKeywords => Split(Keywords);
 
     /// <summary>
-    /// Combines two instances, keeping the innermost <see cref="SearchText"/> and
-    /// <see cref="Label"/> and deduplicating the combined tag and keyword sets
+    /// Combines two instances, keeping the innermost <see cref="SearchText"/> and deduplicating the
+    /// combined tag and keyword sets.
+    /// <para>
+    /// <see cref="Label"/> is deliberately <b>not</b> inherited: it names one specific option, so
+    /// taking an ancestor's would give a name to everything that has none of its own - spacers and
+    /// decorative widgets would be indexed under their section's title and surface as blank rows.
+    /// Match text and keywords still propagate, since those are only ever matched against.
+    /// </para>
     /// </summary>
     /// <param name="a">The inner metadata; its text and label take precedence</param>
     /// <param name="b">The outer metadata merged into the result</param>
@@ -58,7 +64,7 @@ public record SearchMetadata(string? SearchText = null, string[]? Tags = null, s
             concatKeywords.Distinct().ToArray()
         )
         {
-            Label = a?.Label ?? b?.Label
+            Label = a?.Label
         };
     }
 
