@@ -22,6 +22,47 @@ namespace ClassicUO.Game.GameObjects
         private int _startCharacterWaistY;
         private int _startCharacterKneesY;
         private TextBox _nameText;
+        // Smooths the sprite top under the overhead stack so it doesn't bounce with every animation frame.
+        private OverheadAnchorSmoother _overheadStackSmoother;
+        // Top of the overhead stack relative to the walk-interpolated anchor, so it stays valid as the camera moves.
+        private int _overheadStackTopOffset;
+        private uint _overheadStackTick;
+        private bool _hasOverheadStack;
+        private int _namePlateHeight;
+        private uint _namePlateTick;
+
+        // A value not refreshed for this long belongs to a mobile no longer drawn.
+        private const uint OVERHEAD_STACK_STALE_MS = 250;
+
+        /// <summary>
+        /// Top of what this mobile draws above itself (sprite, simple healthbar, name), in world coordinates.
+        /// Overheads drawn later in the frame (HP percentage, nameplate) stack above it.
+        /// </summary>
+        /// <param name="topY">World Y of the stack top.</param>
+        /// <returns>False when the mobile was not drawn recently; fall back to its animation dimensions.</returns>
+        internal bool TryGetOverheadStackTop(out int topY)
+        {
+            topY = RealScreenPosition.Y + (int)(Offset.Y - Offset.Z) + _overheadStackTopOffset;
+
+            return _hasOverheadStack && Time.Ticks - _overheadStackTick <= OVERHEAD_STACK_STALE_MS;
+        }
+
+        /// <summary>
+        /// Records that this mobile's nameplate was drawn, so the HP percentage can sit above it.
+        /// </summary>
+        /// <param name="height">Nameplate height in screen pixels.</param>
+        internal void SetNamePlateDrawn(int height)
+        {
+            _namePlateHeight = height;
+            _namePlateTick = Time.Ticks;
+        }
+
+        /// <summary>
+        /// Height of this mobile's nameplate in screen pixels, or 0 when none is drawn.
+        /// </summary>
+        /// <returns>The height recorded by the last nameplate draw, if recent.</returns>
+        internal int GetNamePlateHeight() =>
+            _namePlateTick != 0 && Time.Ticks - _namePlateTick <= OVERHEAD_STACK_STALE_MS ? _namePlateHeight : 0;
 
         // Extra vertical space to reserve above the overhead name/title so speech and
         // damage text drawn by other systems (Mobile.UpdateTextCoordsV, OverheadDamage)
@@ -498,9 +539,9 @@ namespace ClassicUO.Game.GameObjects
                 }
             }
             
-            // drawY + FrameInfo.Y is the top of the drawn sprite.
-            int spriteTopY = drawY + FrameInfo.Y;
-            
+            // drawY + FrameInfo.Y is the top of the drawn sprite; the simple healthbar and name stack on it.
+            int spriteTopY = drawY - _overheadStackSmoother.Step(Math.Max(0, -FrameInfo.Y));
+
             if (profile.ShowMobileHealthbar)
             {
                 spriteTopY -= 5;
@@ -528,8 +569,13 @@ namespace ClassicUO.Game.GameObjects
                 else
                 {
                     _nameText.Draw(batcher, drawX - (_nameText.Width >> 1), spriteTopY - _nameText.Height, depth);
+                    spriteTopY -= _nameText.Height;
                 }
             }
+
+            _overheadStackTopOffset = spriteTopY - (RealScreenPosition.Y + (int)(Offset.Y - Offset.Z));
+            _overheadStackTick = Time.Ticks;
+            _hasOverheadStack = true;
 
             FrameInfo.X = Math.Abs(FrameInfo.X);
             FrameInfo.Y = Math.Abs(FrameInfo.Y);

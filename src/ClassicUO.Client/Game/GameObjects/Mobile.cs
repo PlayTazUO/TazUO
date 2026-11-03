@@ -47,9 +47,8 @@ namespace ClassicUO.Game.GameObjects
         private ushort _animationRepeateMode = 1;
         private ushort _animationRepeatModeCount = 1;
 
-        // Smooths the per-frame animation offset that anchors overhead text so it doesn't jitter (-1 = uninitialized).
-        private float _smoothedTextAnimOffset = -1f;
-        private uint _lastTextCoordUpdate;
+        // Smooths the per-frame animation offset that anchors overhead text so it doesn't jitter.
+        private OverheadAnchorSmoother _textAnimSmoother;
 
         public Mobile(World world, uint serial) : base(world, serial)
         {
@@ -1147,7 +1146,7 @@ namespace ClassicUO.Game.GameObjects
 
             // height/centerY change every animation frame and bounce the text; smooth the anchor so it glides instead of jumping.
             int targetAnimOffset = height + centerY + 8;
-            int smoothedAnimOffset = SmoothTextAnimOffset(targetAnimOffset);
+            int smoothedAnimOffset = _textAnimSmoother.Step(targetAnimOffset);
 
             p.X += (int)Offset.X + 22;
             p.Y += (int)(Offset.Y - Offset.Z - smoothedAnimOffset);
@@ -1186,32 +1185,6 @@ namespace ClassicUO.Game.GameObjects
             }
 
             FixTextCoordinatesInScreen();
-        }
-
-        // Frame-rate independent exponential smoothing of the text anchor offset; advances at most once per game tick.
-        private int SmoothTextAnimOffset(int target)
-        {
-            // First use or a large jump (mount/dismount, morph, graphic swap): snap instead of sliding across the gap.
-            if (_smoothedTextAnimOffset < 0f || Math.Abs(target - _smoothedTextAnimOffset) > 40f)
-            {
-                _smoothedTextAnimOffset = target;
-                _lastTextCoordUpdate = Time.Ticks;
-                return target;
-            }
-
-            uint now = Time.Ticks;
-            float dt = (now - _lastTextCoordUpdate) / 1000f;
-
-            if (dt > 0f)
-            {
-                // ~200ms to converge; higher speed = snappier, lower = smoother.
-                const float SPEED = 12f;
-                float t = 1f - MathF.Exp(-SPEED * dt);
-                _smoothedTextAnimOffset += (target - _smoothedTextAnimOffset) * t;
-                _lastTextCoordUpdate = now;
-            }
-
-            return (int)MathF.Round(_smoothedTextAnimOffset);
         }
 
         public override void CheckGraphicChange(byte animIndex = 0)
