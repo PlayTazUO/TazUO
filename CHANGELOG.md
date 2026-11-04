@@ -2,6 +2,8 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/04/26
+* ***Fix:*** Modifier-only inputs not recognized by the `IsKeyPressed` API - [P.R 1207](https://github.com/PlayTazUO/TazUO/pull/1207) ([yuval-po](https://github.com/yuval-po))
 
 ## 11/03/26
 * ***Fix:*** Application crash due to off-thread usage of certain chat related functions - [P.R 1206](https://github.com/PlayTazUO/TazUO/pull/1206) ([yuval-po](https://github.com/yuval-po))
