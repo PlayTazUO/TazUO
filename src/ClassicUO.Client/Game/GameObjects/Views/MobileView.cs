@@ -50,7 +50,7 @@ namespace ClassicUO.Game.GameObjects
         /// <summary>
         /// Records that this mobile's nameplate was drawn, so the HP percentage can sit above it.
         /// </summary>
-        /// <param name="height">Nameplate height in screen pixels.</param>
+        /// <param name="height">Nameplate height in screen pixels, or 0 when the plate is hidden this draw.</param>
         internal void SetNamePlateDrawn(int height)
         {
             _namePlateHeight = height;
@@ -58,11 +58,16 @@ namespace ClassicUO.Game.GameObjects
         }
 
         /// <summary>
-        /// Height of this mobile's nameplate in screen pixels, or 0 when none is drawn.
+        /// Height of this mobile's nameplate in screen pixels, as its last draw recorded it.
         /// </summary>
-        /// <returns>The height recorded by the last nameplate draw, if recent.</returns>
-        internal int GetNamePlateHeight() =>
-            _namePlateTick != 0 && Time.Ticks - _namePlateTick <= OVERHEAD_STACK_STALE_MS ? _namePlateHeight : 0;
+        /// <param name="height">Plate height, or 0 when the plate is hidden.</param>
+        /// <returns>False when no nameplate draw was recorded recently, so the height is unknown.</returns>
+        internal bool TryGetNamePlateHeight(out int height)
+        {
+            height = _namePlateHeight;
+
+            return _namePlateTick != 0 && Time.Ticks - _namePlateTick <= OVERHEAD_STACK_STALE_MS;
+        }
 
         // Extra vertical space to reserve above the overhead name/title so speech and
         // damage text drawn by other systems (Mobile.UpdateTextCoordsV, OverheadDamage)

@@ -43,7 +43,7 @@ namespace ClassicUO.Game.UI.Gumps
         // Space between the nameplate and what the mobile draws over itself.
         private const int STACK_GAP = 2;
         // Without the split layout, all three resource bars fill the plate and the name goes this far below.
-        private const int NAME_BELOW_BARS_OFFSET = 20;
+        private const int NAME_BELOW_BARS_OFFSET = 22;
         private static readonly Dictionary<long, int[]> RoundedRectangleInsetCache = new();
         private const int MIN_NAMEPLATE_WIDTH = 60;
         private const int NAMEPLATE_HORIZONTAL_PADDING = 4;

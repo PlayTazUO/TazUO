@@ -128,24 +128,23 @@ namespace ClassicUO.Game.Managers
                                     p1 = camera.WorldToScreen(p1);
                                 }
 
-                                // The nameplate sits on the same stack top and grows upward by its height, in
-                                // screen pixels; in the zoom-scaled pass the text is placed in world units.
-                                int namePlateHeight = mobile.GetNamePlateHeight();
-
-                                if (namePlateHeight > 0)
-                                {
-                                    int plateOffset = namePlateHeight + OVERHEAD_GAP;
-                                    p1.Y -= scaleWithZoom ? (int)(plateOffset * camera.Zoom) : plateOffset;
-                                }
-
                                 p1.X -= (mobile.HitsTexture.Width >> 1) + 5;
                                 p1.Y -= mobile.HitsTexture.Height;
 
+                                // Displaying handles means nameplates are on: they stack on the same top.
                                 if (mobile.ObjectHandlesStatus == ObjectHandlesStatus.DISPLAYING)
                                 {
-                                    // Displaying handles means a nameplate: a fixed allowance for it, unless its
-                                    // measured height already lifted the text above.
-                                    if (namePlateHeight == 0)
+                                    if (mobile.TryGetNamePlateHeight(out int namePlateHeight))
+                                    {
+                                        // Measured in screen pixels; the zoom-scaled pass places text in world units.
+                                        // Zero means the plate is hidden, so the text stays on the stack top.
+                                        if (namePlateHeight > 0)
+                                        {
+                                            int plateOffset = namePlateHeight + OVERHEAD_GAP;
+                                            p1.Y -= scaleWithZoom ? (int)(plateOffset * camera.Zoom) : plateOffset;
+                                        }
+                                    }
+                                    else
                                     {
                                         p1.Y -= Constants.OBJECT_HANDLES_GUMP_HEIGHT + 5;
                                     }
