@@ -688,7 +688,8 @@ namespace ClassicUO.Game.UI.Gumps
         /// </summary>
         private Point GetPosition(Mobile m, int height, int centerY)
         {
-            int x = (int)(m.RealScreenPosition.X + m.Offset.X + 22 + 5);
+            // Tile center, where the sprite, simple healthbar and HP percentage are centered too.
+            int x = (int)(m.RealScreenPosition.X + m.Offset.X + 22);
 
             if (m.TryGetOverheadStackTop(out int stackTopY))
             {

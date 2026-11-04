@@ -22,8 +22,8 @@ namespace ClassicUO.Game.GameObjects
         private int _startCharacterWaistY;
         private int _startCharacterKneesY;
         private TextBox _nameText;
-        // Smooths the sprite top under the overhead stack so it doesn't bounce with every animation frame.
-        private OverheadAnchorSmoother _overheadStackSmoother;
+        // Keeps the overhead stack still while the sprite top moves with every animation frame.
+        private OverheadStackAnchor _overheadStackAnchor;
         // Top of the overhead stack relative to the walk-interpolated anchor, so it stays valid as the camera moves.
         private int _overheadStackTopOffset;
         private uint _overheadStackTick;
@@ -545,7 +545,9 @@ namespace ClassicUO.Game.GameObjects
             }
             
             // drawY + FrameInfo.Y is the top of the drawn sprite; the simple healthbar and name stack on it.
-            int spriteTopY = drawY - _overheadStackSmoother.Step(Math.Max(0, -FrameInfo.Y));
+            uint lookKey = ((uint)graphic << 16) | (mount != null ? mount.Graphic : 0u);
+            bool isActionFrame = AnimationFromServer && _animationGroup != 0xFF;
+            int spriteTopY = drawY - _overheadStackAnchor.Update(Math.Max(0, -FrameInfo.Y), lookKey, !isActionFrame);
 
             if (profile.ShowMobileHealthbar)
             {
