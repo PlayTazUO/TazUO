@@ -108,6 +108,11 @@ namespace ClassicUO.Game.Managers
 
         public void Load()
         {
+            // A macro can still be mid-run when the scene changes (logout, disconnect, reconnect). The
+            // action chain it points at is about to be replaced, so drop the execution state instead of
+            // letting it resume against the freshly loaded macros on the next login.
+            StopExecution();
+
             string path = Path.Combine(ProfileManager.ProfilePath, "macros.xml");
 
             if (!File.Exists(path))

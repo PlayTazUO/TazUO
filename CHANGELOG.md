@@ -2,6 +2,16 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/04/26
+* ***Fix:*** Modifier-only inputs not recognized by the `IsKeyPressed` API - [P.R 1207](https://github.com/PlayTazUO/TazUO/pull/1207) ([yuval-po](https://github.com/yuval-po))
+
+## 11/03/26
+* ***Fix:*** Application crash due to off-thread usage of certain chat related functions - [P.R 1206](https://github.com/PlayTazUO/TazUO/pull/1206) ([yuval-po](https://github.com/yuval-po))
+
+## 11/02/26
+* ***Feature:*** The chat window is now a resizable modern (Myra) window, matching the rest of the client UI - channel selection, double-click to join, leave and create all work as before
+* ***Fix:*** Running macros now stop when you log out or disconnect - previously a macro could keep firing actions while the logout request was pending and resume after logging back in
+* ***Fix:*** Login popup messages can now be dismissed with Enter or numpad Enter, just like clicking the OK button
 
 ## 10/31/26
 * ***Feature:*** Added Saturation as a VFX technique - [P.R 1195](https://github.com/PlayTazUO/TazUO/pull/1195) ([yuval-po](https://github.com/yuval-po))

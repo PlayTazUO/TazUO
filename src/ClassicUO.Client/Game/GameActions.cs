@@ -439,10 +439,10 @@ internal static class GameActions
     /// <returns>False if no chat was open</returns>
     internal static bool CloseChat()
     {
-        Gump g = UIManager.GetGump<ChatGump>();
-        if (g != null)
+        ChatWindow window = UIManager.GetGump<ChatWindow>();
+        if (window != null)
         {
-            g.Dispose();
+            window.Dispose();
             return true;
         }
         return false;
@@ -452,16 +452,16 @@ internal static class GameActions
     {
         if (world.ChatManager.ChatIsEnabled == ChatStatus.Enabled)
         {
-            ChatGump chatGump = UIManager.GetGump<ChatGump>();
+            ChatWindow chatWindow = UIManager.GetGump<ChatWindow>();
 
-            if (chatGump == null)
+            if (chatWindow == null)
             {
-                UIManager.Add(new ChatGump(world));
+                UIManager.Add(new ChatWindow(world));
             }
             else
             {
-                chatGump.SetInScreen();
-                chatGump.BringOnTop();
+                chatWindow.SetInScreen();
+                chatWindow.BringOnTop();
             }
         }
         else if (world.ChatManager.ChatIsEnabled == ChatStatus.EnabledUserRequest)
@@ -1275,6 +1275,11 @@ internal static class GameActions
     {
         if (world == null)
             return;
+
+        // Logout can be a request the server answers later, leaving the game scene (and therefore the
+        // macro tick) alive for a while. Stop here instead of letting a macro keep firing actions while
+        // the character is on its way out.
+        world.Macros.StopExecution();
 
         // The player or profile can already be gone when the confirmation is answered during
         // teardown (or a script calls this from outside the game); skip the snapshot then.

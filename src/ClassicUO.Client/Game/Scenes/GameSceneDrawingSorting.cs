@@ -1397,16 +1397,40 @@ namespace ClassicUO.Game.Scenes
                         }
 
                     case GameEffect effect:
+                        // An effect attached to an entity below the roof cut (player and entity under the same roof)
+                        // is always drawn, even when the effect itself is raised above the cut. A mobile hidden by a
+                        // surface overhead (upper floor seen from below) is not drawn, so neither are the effects attached to it.
                         if (
-                                            !ProcessAlpha(
-                                                obj,
-                                                ref Client.Game.UO.FileManager.TileData.GetStaticTile(effect.Graphic),
-                                                false,
-                                                ref playerScreePos,
-                                                cotZ,
-                                                out _
-                                            )
-                                        )
+                            effect.Source != null
+                            && !effect.Source.IsDestroyed
+                            && effect.Source.Z < _maxZ
+                        )
+                        {
+                            if (!effect.IsMoving && effect.Source is Mobile sourceMobile && HasSurfaceOverhead(sourceMobile))
+                            {
+                                continue;
+                            }
+
+                            obj.AlphaHue = 0xFF;
+                        }
+                        else if (obj.Z >= _maxZ && _maxZ < 127)
+                        {
+                            // Hidden at once: an effect is born opaque, and fading it out like a static would flash
+                            // it for a few frames on the floors below.
+                            obj.AlphaHue = 0;
+
+                            continue;
+                        }
+                        else if (
+                            !ProcessAlpha(
+                                obj,
+                                ref Client.Game.UO.FileManager.TileData.GetStaticTile(effect.Graphic),
+                                false,
+                                ref playerScreePos,
+                                cotZ,
+                                out _
+                            )
+                        )
                         {
                             continue;
                         }

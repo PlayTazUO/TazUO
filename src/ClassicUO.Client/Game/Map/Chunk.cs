@@ -304,7 +304,15 @@ namespace ClassicUO.Game.Map
 
                     goto default;
 
-                case GameEffect _:
+                case GameEffect effect:
+                    // An effect raised above the entity it is attached to (e.g. a quest marker over an NPC's head) sorts
+                    // at that entity's height: at its own it lands above the roof and is cut away with it when the
+                    // player is inside. From outside the roof still covers it.
+                    if (effect.Source != null && !effect.Source.IsDestroyed && effect.Z > effect.Source.Z)
+                    {
+                        priorityZ = effect.Source.Z;
+                    }
+
                     priorityZ += 2;
 
                     break;
