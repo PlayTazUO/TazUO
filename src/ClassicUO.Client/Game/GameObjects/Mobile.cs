@@ -1117,6 +1117,19 @@ namespace ClassicUO.Game.GameObjects
             int alwaysHP = ProfileManager.CurrentProfile.MobileHPShowWhen;
             int mode = ProfileManager.CurrentProfile.MobileHPType;
 
+            bool hitsShown = health
+                && HitsTexture != null
+                && mode != 1
+                && (alwaysHP >= 1 && Hits != HitsMax || alwaysHP == 0);
+
+            if (TryGetOverheadTextBottom(hitsShown, out int textBottomY))
+            {
+                // Texts are placed upward from anchor.Y - offY: offset the anchor so the first sits on the stack.
+                PlaceTexts(last, new Point(RealScreenPosition.X + (int)Offset.X + 22, textBottomY + offY), offY);
+
+                return;
+            }
+
             Point p = RealScreenPosition;
 
             if (IsGargoyle && IsFlyingAnimationEnabled)
@@ -1157,16 +1170,22 @@ namespace ClassicUO.Game.GameObjects
                 p.Y -= Constants.OBJECT_HANDLES_GUMP_HEIGHT;
             }
 
-            if (
-                health
-                && HitsTexture != null
-                && mode != 1
-                && (alwaysHP >= 1 && Hits != HitsMax || alwaysHP == 0)
-            )
+            if (hitsShown)
             {
                 p.Y -= HitsTexture.Height;
             }
 
+            PlaceTexts(last, p, offY);
+        }
+
+        /// <summary>
+        /// Stacks the overhead texts upward from <paramref name="anchor"/>, newest at the bottom.
+        /// </summary>
+        /// <param name="last">Newest text; earlier ones are reached through <c>Previous</c>.</param>
+        /// <param name="anchor">World point the texts are centered on and stacked up from.</param>
+        /// <param name="offY">Space already taken above the anchor before the first text.</param>
+        private void PlaceTexts(TextObject last, Point anchor, int offY)
+        {
             for (; last != null; last = (TextObject)last.Previous)
             {
                 if (last.TextBox != null && !last.TextBox.IsDisposed)
@@ -1179,8 +1198,8 @@ namespace ClassicUO.Game.GameObjects
                     last.OffsetY = offY;
                     offY += last.TextBox.Height;
 
-                    last.RealScreenPosition.X = p.X - (last.TextBox.Width >> 1);
-                    last.RealScreenPosition.Y = p.Y - offY;
+                    last.RealScreenPosition.X = anchor.X - (last.TextBox.Width >> 1);
+                    last.RealScreenPosition.Y = anchor.Y - offY;
                 }
             }
 

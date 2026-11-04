@@ -33,6 +33,8 @@ namespace ClassicUO.Game.GameObjects
 
         // A value not refreshed for this long belongs to a mobile no longer drawn.
         private const uint OVERHEAD_STACK_STALE_MS = 250;
+        // Space between stacked overheads.
+        private const int OVERHEAD_GAP = 2;
 
         /// <summary>
         /// Top of what this mobile draws above itself (sprite, simple healthbar, name), in world coordinates.
@@ -67,6 +69,43 @@ namespace ClassicUO.Game.GameObjects
             height = _namePlateHeight;
 
             return _namePlateTick != 0 && Time.Ticks - _namePlateTick <= OVERHEAD_STACK_STALE_MS;
+        }
+
+        /// <summary>
+        /// World Y right above everything stacked over this mobile (sprite, simple healthbar, name, nameplate,
+        /// HP percentage), where its overhead texts start.
+        /// </summary>
+        /// <param name="hitsShown">Whether the HP percentage is drawn above the nameplate.</param>
+        /// <param name="bottomY">World Y for the bottom of the first overhead text.</param>
+        /// <returns>False when the mobile was not drawn recently; fall back to its animation dimensions.</returns>
+        private bool TryGetOverheadTextBottom(bool hitsShown, out int bottomY)
+        {
+            if (!TryGetOverheadStackTop(out bottomY))
+            {
+                return false;
+            }
+
+            // Plate and HP heights are screen pixels; scale them to the world units the texts are placed in.
+            float zoom = Client.Game.Scene.Camera.Zoom;
+
+            if (ObjectHandlesStatus == ObjectHandlesStatus.DISPLAYING)
+            {
+                int plateHeight = TryGetNamePlateHeight(out int measured) ? measured : Constants.OBJECT_HANDLES_GUMP_HEIGHT;
+
+                if (plateHeight > 0)
+                {
+                    bottomY -= (int)((plateHeight + OVERHEAD_GAP) * zoom);
+                }
+            }
+
+            if (hitsShown)
+            {
+                bool hitsScaleWithZoom = ProfileManager.CurrentProfile.OverheadsScaleWithZoom;
+                int hitsHeight = HitsTexture.Height + OVERHEAD_GAP;
+                bottomY -= hitsScaleWithZoom ? hitsHeight : (int)(hitsHeight * zoom);
+            }
+
+            return true;
         }
 
         // Extra vertical space to reserve above the overhead name/title so speech and
