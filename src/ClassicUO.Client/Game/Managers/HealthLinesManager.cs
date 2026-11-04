@@ -112,7 +112,7 @@ namespace ClassicUO.Game.Managers
                             if (mobile.HitsPercentage != 0)
                             {
                                 Point p1 = p;
-                                p1.Y = GetHitsTextBottomY(mobile, p.Y, animations);
+                                p1.Y = GetHitsTextBottomY(mobile, animations);
 
                                 // When scaling with zoom, this overhead pass is drawn through a batcher
                                 // begun with Camera.ViewTransformMatrix (see GameScene.DrawOverheads), so
@@ -208,7 +208,7 @@ namespace ClassicUO.Game.Managers
         /// World Y where the bottom of the HP percentage text goes: just above what the mobile drew over itself
         /// (sprite, simple healthbar, name), or from its animation dimensions when it was not drawn recently.
         /// </summary>
-        private static int GetHitsTextBottomY(Mobile mobile, int anchorY, Renderer.Animations.Animations animations)
+        private static int GetHitsTextBottomY(Mobile mobile, Renderer.Animations.Animations animations)
         {
             if (mobile.TryGetOverheadStackTop(out int stackTopY))
             {
@@ -228,7 +228,11 @@ namespace ClassicUO.Game.Managers
                 out int height
             );
 
-            int y = anchorY - (height + centerY + 8 + 22) - mobile.NameOverheadTextExtraHeight;
+            // Same fallback as the nameplate's (NameOverheadGump.GetPosition), so the text ends right above the plate.
+            int y = (int)(mobile.RealScreenPosition.Y
+                          + (mobile.Offset.Y - mobile.Offset.Z)
+                          - (height + centerY + 15) * mobile.Scale)
+                    - mobile.NameOverheadTextExtraHeight;
 
             if (mobile.IsGargoyle && mobile.IsFlyingAnimationEnabled)
             {

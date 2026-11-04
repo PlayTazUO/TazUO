@@ -566,7 +566,8 @@ namespace ClassicUO.Game.GameObjects
                             Notoriety.GetHue(NotorietyFlag), 
                             TextBox.RTLOptions.DefaultCenterStroked(profile.OverheadChatWidth));
                 }
-                else
+
+                if (_nameText != null)
                 {
                     _nameText.Draw(batcher, drawX - (_nameText.Width >> 1), spriteTopY - _nameText.Height, depth);
                     spriteTopY -= _nameText.Height;

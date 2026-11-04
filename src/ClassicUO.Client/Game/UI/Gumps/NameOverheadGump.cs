@@ -858,6 +858,9 @@ namespace ClassicUO.Game.UI.Gumps
                     return false;
                 }
 
+                // No plate until this draw places one: hidden or off-screen plates must not lift the HP percentage.
+                m.SetNamePlateDrawn(0);
+
                 if (NameOverHeadManager.HasSearchFilter)
                 {
                     string oplName = null;
