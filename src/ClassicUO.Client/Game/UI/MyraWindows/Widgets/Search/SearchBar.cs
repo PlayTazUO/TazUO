@@ -110,22 +110,24 @@ public sealed class SearchBar : HorizontalStackPanel
 
     #region Ctor
 
-    /// <param name="props">Display options</param>
-    public SearchBar(SearchBarProps props = default)
+    /// <param name="props">Display options; the type's own defaults when omitted</param>
+    public SearchBar(SearchBarProps? props = null)
     {
-        _props = props;
+        // Not `props = default`: the defaults above are field initialisers, which only run in the
+        // record's parameterless constructor. `default` would zero every one of them.
+        _props = props ?? new SearchBarProps();
 
         Spacing = MyraStyle.STANDARD_SPACING;
         HorizontalAlignment = HorizontalAlignment.Stretch;
         VerticalAlignment = VerticalAlignment.Center;
 
-        _input.HintText = props.HintText;
+        _input.HintText = _props.HintText;
         _input.TextVerticalAlignment = VerticalAlignment.Center;
         _input.HorizontalAlignment = HorizontalAlignment.Stretch;
         _input.Padding = new Thickness(
             MyraStyle.STANDARD_SPACING,
             5,
-            props.ShowClearButton ? CLEAR_CHIP_RESERVE : MyraStyle.STANDARD_SPACING,
+            _props.ShowClearButton ? CLEAR_CHIP_RESERVE : MyraStyle.STANDARD_SPACING,
             5
         );
 
@@ -139,7 +141,7 @@ public sealed class SearchBar : HorizontalStackPanel
         var field = new Panel { HorizontalAlignment = HorizontalAlignment.Stretch };
         field.Widgets.Add(_input);
 
-        if (props.ShowClearButton)
+        if (_props.ShowClearButton)
         {
             // Flat, because it sits inside the field: a bordered button there reads as a second
             // control nested in the box rather than as an affordance on it.
@@ -161,12 +163,12 @@ public sealed class SearchBar : HorizontalStackPanel
         Widgets.Add(field);
         SetProportionType(field, ProportionType.Fill);
 
-        if (props.ShowResultCount)
+        if (_props.ShowResultCount)
         {
-            _resultCount = MyraLabel.Hint(string.Empty, props.ResultCountColor);
+            _resultCount = MyraLabel.Hint(string.Empty, _props.ResultCountColor);
 
-            if (props.ResultCountFontOffset != int.MinValue)
-                _resultCount.Font = MyraStyle.GetUiFont(props.ResultCountFontOffset);
+            if (_props.ResultCountFontOffset != int.MinValue)
+                _resultCount.Font = MyraStyle.GetUiFont(_props.ResultCountFontOffset);
 
             _resultCount.Margin = new Thickness(0, 0, MyraStyle.STANDARD_SPACING, 0);
             Widgets.Add(_resultCount);

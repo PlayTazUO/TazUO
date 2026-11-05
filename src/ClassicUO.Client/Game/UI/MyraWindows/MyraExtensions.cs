@@ -136,9 +136,15 @@ public static class MyraExtensions
     /// Re-sizes the body text inside an already-built widget tree, for a context that wants the
     /// same controls drawn smaller - a dense results list, say.
     /// <para>
-    /// Only labels currently drawn in the UI font are touched. A glyph label uses the symbol font
-    /// and a styled heading uses its own size; retargeting either would either blank the glyph or
-    /// flatten a deliberate hierarchy, so both are left alone.
+    /// Only labels currently drawn in the UI font are touched, identified by font instance - a
+    /// glyph label uses the symbol font, and a heading drawn at its own size uses that size, so
+    /// retargeting either would blank the glyph or flatten a deliberate hierarchy.
+    /// </para>
+    /// <para>
+    /// A heading that happens to be body-sized is indistinguishable from body text by this test -
+    /// the font cache hands out one instance per name and size - and is re-sized along with it.
+    /// Intentional: such a heading reads as body text to the user too, and leaving it at full size
+    /// inside a shrunk tree is what would look wrong.
     /// </para>
     /// </summary>
     /// <param name="root">The widget whose labels should be re-sized; itself included</param>

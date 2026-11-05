@@ -90,6 +90,12 @@ public class IconButton : BasicButton
 
     private readonly Label _label;
 
+    /// <summary>
+    /// Holds off re-centring while a batch of glyph properties is assigned - see
+    /// <see cref="SetGlyphAndSize" />.
+    /// </summary>
+    private bool _deferRefresh;
+
     #endregion
 
     #region Ctor
@@ -132,12 +138,7 @@ public class IconButton : BasicButton
         Margin = new Thickness(0);
         VerticalAlignment = VerticalAlignment.Center;
 
-        // Assigned through the backing fields, so a single Refresh does the work rather than one
-        // per property.
-        Glyph = glyph;
-        GlyphSize = glyphSize;
-
-        Refresh();
+        SetGlyphAndSize(glyph, glyphSize);
     }
 
     #endregion
@@ -190,7 +191,7 @@ public class IconButton : BasicButton
 
     /// <summary>
     /// Swaps the glyph and its size together, for a button whose icon changes with its state - a
-    /// minimize/restore toggle, say - without re-centring twice.
+    /// minimize/restore toggle, say - re-centring once for the pair.
     /// </summary>
     /// <param name="glyph">The new glyph.</param>
     /// <param name="glyphSize">The new point size.</param>
@@ -199,10 +200,7 @@ public class IconButton : BasicButton
         if (Glyph == glyph && GlyphSize == glyphSize)
             return;
 
-        Glyph = glyph;
-        GlyphSize = glyphSize;
-
-        Refresh();
+        SetGlyphAndSize(glyph, glyphSize);
     }
 
     #endregion
@@ -217,8 +215,34 @@ public class IconButton : BasicButton
     /// symbol's horizontal bearings are no more reliable than its vertical ones.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// Assigns both glyph properties as one change. Each setter re-centres on its own, so the pair
+    /// would otherwise measure the glyph twice - once against a size about to be replaced.
+    /// </summary>
+    /// <param name="glyph">The glyph to draw.</param>
+    /// <param name="glyphSize">Point size to draw it at.</param>
+    private void SetGlyphAndSize(string glyph, int glyphSize)
+    {
+        _deferRefresh = true;
+
+        try
+        {
+            Glyph = glyph;
+            GlyphSize = glyphSize;
+        }
+        finally
+        {
+            _deferRefresh = false;
+        }
+
+        Refresh();
+    }
+
     private void Refresh()
     {
+        if (_deferRefresh)
+            return;
+
         SpriteFontBase font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, GlyphSize);
 
         _label.Font = font;

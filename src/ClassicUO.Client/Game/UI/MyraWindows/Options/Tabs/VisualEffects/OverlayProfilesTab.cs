@@ -1,6 +1,8 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Linq;
+using ClassicUO.Configuration;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Effects;
 using ClassicUO.Configuration.FeatureConfigs.ScreenDecorations.Profiles;
@@ -18,23 +20,46 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs.VisualEffects;
 /// </summary>
 internal static class OverlayProfilesTab
 {
+    #region Private members
+
+    private static string ProfileKeywords => TazLang.Get("visualeffects_kw_profile");
+
+    #endregion
+
     #region Internal methods
 
     /// <summary>Returns the profile library and composer as an option source.</summary>
     /// <returns>The option source.</returns>
     internal static IOptionSource GetContent()
     {
-        OptionFragment panel = OptionsUi.Vertical(Option.Custom(BuildEditor));
+        string label = TazLang.Get("visualeffects_profiles", "Profiles");
 
-        // The composer doesn't render meaningfully in the search results page.
-        panel.InheritsSearch = false;
-
-        return panel;
+        // One navigate-only entry for the whole library: the composer doesn't render meaningfully in
+        // a result row, and an unnamed group contributes nothing to the index at all - which left
+        // the library unreachable by search.
+        return OptionsUi.Vertical(Option.Custom(BuildEditor))
+            .AsSearchGroup()
+            .AsLinkOnly()
+            .WithSearch(new SearchMetadata(BuildMatchText(label), Keywords: [ProfileKeywords]) { Label = label });
     }
 
     #endregion
 
     #region Private methods
+
+    /// <summary>
+    /// Match fuel for the single entry the library contributes: the name of every look it holds,
+    /// shipped and authored alike, so searching for an effect by name reaches the page that edits
+    /// it. Never displayed, which is what lets it be a blob.
+    /// </summary>
+    /// <param name="label">The tab's own name, so the entry answers to it too.</param>
+    /// <returns>The match text.</returns>
+    private static string BuildMatchText(string label)
+    {
+        IEnumerable<string> names = DecorationSettings.Current.Overlays.AllProfiles().Select(profile => profile.Name);
+
+        return string.Join(' ', names.Prepend(label));
+    }
 
     private static Widget BuildEditor()
     {

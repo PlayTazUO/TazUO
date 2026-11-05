@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Theme;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
@@ -52,9 +53,18 @@ public sealed class SearchResultTree : ScrollViewer
     /// <summary>Gap between a breadcrumb segment and its separator.</summary>
     private const int CRUMB_SPACING = 2;
 
+    /// <summary>Gap above the empty-state message, so it does not sit flush against the query box.</summary>
+    private const int EMPTY_STATE_SPACING = 8;
+
     private readonly VerticalStackPanel _stack = new() { Spacing = 1 };
     private readonly HashSet<string> _collapsed = [];
     private readonly List<SearchResultRow> _rows = [];
+
+    /// <summary>
+    ///     Held by the tree rather than by its rows: rows are rebuilt per query, and re-measuring
+    ///     every editor on every keystroke is the single most expensive thing search does.
+    /// </summary>
+    private readonly InlineSizeCache _inlineSizes = new();
 
     #endregion
 
@@ -123,6 +133,12 @@ public sealed class SearchResultTree : ScrollViewer
 
         _stack.Widgets.Clear();
         _rows.Clear();
+
+        if (hits.Count == 0)
+        {
+            _stack.Widgets.Add(BuildEmptyState());
+            return;
+        }
 
         foreach (SearchResultGroup group in SearchResultGroup.Build(hits))
             _stack.Widgets.Add(BuildGroup(group, 0));
@@ -254,9 +270,23 @@ public sealed class SearchResultTree : ScrollViewer
 
     private static MyraLabel BuildSeparator() => MyraLabel.Hint(SearchPath.SEPARATOR);
 
+    /// <summary>
+    ///     What a query with no matches shows. An empty panel reads as a list that failed to render
+    ///     rather than as an answer to the query.
+    /// </summary>
+    private static Widget BuildEmptyState()
+    {
+        MyraLabel message = MyraLabel.Hint(TazLang.Get("optsearch_no_results"));
+
+        message.HorizontalAlignment = HorizontalAlignment.Center;
+        message.Margin = new Thickness(0, EMPTY_STATE_SPACING, 0, 0);
+
+        return message;
+    }
+
     private Widget BuildRow(SearchHit hit, int depth)
     {
-        var row = new SearchResultRow(hit, ShowAttribution, OnRowActivated)
+        var row = new SearchResultRow(hit, ShowAttribution, OnRowActivated, _inlineSizes)
         {
             FontOffset = ROW_FONT_OFFSET,
             // Each nesting level insets the row, so a deep row has measurably less to work with

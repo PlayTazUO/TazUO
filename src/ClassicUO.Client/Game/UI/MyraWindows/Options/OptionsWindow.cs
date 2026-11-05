@@ -182,8 +182,7 @@ public class OptionsWindow : MyraControl
             _resizePending = true;
         };
 
-        if (_categories.Count > 0)
-            NavigateTo(new SearchPath(_categories[0].Label));
+        NavigateTo(FirstCategoryPath());
     }
 
     #endregion
@@ -228,8 +227,11 @@ public class OptionsWindow : MyraControl
 
         var view = new OptionsView { Path = path };
 
-        _history.Push(view);
+        // Restored before pushed: an under-specified path - a bare category, say - is rewritten by
+        // ShowPage to the page it actually landed on, and pushing beforehand would compare the
+        // unresolved path and record an entry that back then appears to do nothing.
         Restore(view);
+        _history.Push(view);
     }
 
     /// <summary>Opens the options at the given breadcrumb segments</summary>
@@ -461,12 +463,19 @@ public class OptionsWindow : MyraControl
 
         SearchPath fallback = LastVisitedPage();
 
-        NavigateTo(fallback.IsEmpty ? new SearchPath(_categories[0].Label) : fallback);
+        NavigateTo(fallback.IsEmpty ? FirstCategoryPath() : fallback);
     }
 
     /// <summary>The most recent non-search location, used when the query box is cleared</summary>
     private SearchPath LastVisitedPage() =>
         _currentCategory.NotNullNotEmpty() ? CurrentPath() : _lastPagePath;
+
+    /// <summary>
+    ///     The first registered category's location, or empty when nothing registered - a tab whose
+    ///     content threw while being built leaves the window with no categories at all.
+    /// </summary>
+    private SearchPath FirstCategoryPath() =>
+        _categories.Count > 0 ? new SearchPath(_categories[0].Label) : SearchPath.Empty;
 
     /// <summary>
     ///     Folds the results list's live scroll offset and collapse set back into the current history
@@ -528,7 +537,10 @@ public class OptionsWindow : MyraControl
         if (restoredOffset > 0)
             Defer(() => _resultTree.SetScrollOffset(restoredOffset));
 
-        _searchBar.SetResultText(TazLang.Get("optsearch_results_count", [hits.Count.ToString()]));
+        // The tree states an empty result itself, so the count beside the box would only repeat it.
+        _searchBar.SetResultText(
+            hits.Count > 0 ? TazLang.Get("optsearch_results_count", [hits.Count.ToString()]) : null
+        );
 
         if (_optionsStack.Widgets.Count != 1 || !ReferenceEquals(_optionsStack.Widgets[0], _resultTree))
         {
@@ -759,6 +771,11 @@ public class OptionsWindow : MyraControl
 
         CaptureCurrentViewState();
         _history.Push(new OptionsView { Path = path });
+
+        // Clearing the query box returns to the last page, which is now this tab rather than
+        // whichever one the category landed on.
+        _lastPagePath = path;
+
         UpdateNavigationButtons();
     }
 
@@ -864,6 +881,9 @@ public class OptionsWindow : MyraControl
     {
         if (_history.Current is { IsSearch: true } search)
         {
+            // Restore reads scroll and collapse state off the entry, so what the user has since
+            // done to the live list has to be folded back in first.
+            CaptureCurrentViewState();
             Restore(search);
             return;
         }

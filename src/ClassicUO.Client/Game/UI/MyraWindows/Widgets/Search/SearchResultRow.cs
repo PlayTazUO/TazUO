@@ -31,12 +31,18 @@ internal sealed class SearchResultRow : Panel
     private readonly SearchEntry _entry;
     private readonly Action<SearchEntry>? _onActivate;
     private readonly string? _attribution;
+    private readonly InlineSizeCache _inlineSizes;
 
     #endregion
 
     #region Mutables
 
-    private Point? _inlineSize;
+    /// <summary>
+    ///     The editor built while measuring, held only until this round of
+    ///     <see cref="ApplyPresentation" /> has decided whether to host it.
+    /// </summary>
+    private Widget? _measuredEditor;
+
     private bool? _isInline;
 
     #endregion
@@ -73,11 +79,21 @@ internal sealed class SearchResultRow : Panel
     ///     competes for the same horizontal space as the editor.
     /// </param>
     /// <param name="onActivate">Invoked when the user follows this row to its own page</param>
-    public SearchResultRow(SearchHit hit, bool showAttribution, Action<SearchEntry>? onActivate)
+    /// <param name="inlineSizes">
+    ///     Shared editor measurements. Owned by the list rather than the row so it survives the row
+    ///     being discarded on the next query.
+    /// </param>
+    public SearchResultRow(
+        SearchHit hit,
+        bool showAttribution,
+        Action<SearchEntry>? onActivate,
+        InlineSizeCache inlineSizes
+    )
     {
         Hit = hit;
         _entry = hit.Entry;
         _onActivate = onActivate;
+        _inlineSizes = inlineSizes;
         _attribution = showAttribution && TryBuildAttribution(hit, out string text) ? text : null;
 
         Padding = new Thickness(MyraStyle.STANDARD_SPACING, 2, MyraStyle.STANDARD_SPACING, 2);
@@ -110,17 +126,25 @@ internal sealed class SearchResultRow : Panel
     {
         bool wanted = ShouldInline(availableWidth, threshold, hysteresis);
 
-        if (_isInline == wanted)
-            return false;
+        try
+        {
+            if (_isInline == wanted)
+                return false;
 
-        if (_isInline != null && HoldsKeyboardFocus(keyboardFocus))
-            return false;
+            if (_isInline != null && HoldsKeyboardFocus(keyboardFocus))
+                return false;
 
-        _isInline = wanted;
-        _host.Widgets.Clear();
-        _host.Widgets.Add(wanted ? BuildInline() : BuildNavigate());
+            _isInline = wanted;
+            _host.Widgets.Clear();
+            _host.Widgets.Add(wanted ? BuildInline() : BuildNavigate());
 
-        return true;
+            return true;
+        }
+        finally
+        {
+            // Measuring may have built an editor this row did not end up hosting.
+            _measuredEditor = null;
+        }
     }
 
     /// <summary>
@@ -150,7 +174,9 @@ internal sealed class SearchResultRow : Panel
     /// </summary>
     private Widget BuildInline()
     {
-        Widget editor = _entry.InlineFactory!().ApplyUiFontOffset(FontOffset);
+        // The copy built while measuring, when measuring built one: an editor's widget tree is the
+        // bulk of a row's cost, so building a second of the same one is worth avoiding.
+        Widget editor = _measuredEditor ?? _entry.InlineFactory!().ApplyUiFontOffset(FontOffset);
 
         if (_attribution == null)
             return editor;
@@ -193,16 +219,11 @@ internal sealed class SearchResultRow : Panel
         if (!_entry.CanInline || threshold <= 0d || availableWidth <= 0)
             return false;
 
-        // Measured at the size it will actually be drawn at. Measuring the unscaled editor
-        // reported a width the row never needed, which demoted rows that fit perfectly well.
-        // The result doesn't change with the window, so it is measured once; only the budget moves.
-        _inlineSize ??= _entry.InlineFactory!()
-            .ApplyUiFontOffset(FontOffset)
-            .Measure(new Point(int.MaxValue / 2, int.MaxValue / 2));
-
+        // The editor's size doesn't change with the window, so only the budget moves.
+        Point size = _inlineSizes.GetSize(_entry, FontOffset, out _measuredEditor);
         double allowance = availableWidth * (IsInline ? threshold + hysteresis : threshold);
 
-        return _inlineSize.Value.X <= allowance;
+        return size.X <= allowance;
     }
 
     /// <summary>

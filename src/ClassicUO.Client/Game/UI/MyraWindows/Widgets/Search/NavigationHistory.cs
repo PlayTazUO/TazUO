@@ -87,19 +87,30 @@ public sealed class NavigationHistory<T>
 
     /// <summary>
     ///     Appends <paramref name="entry" /> at the cursor, discarding any forward history.
-    ///     A push equal to the current entry is ignored, so re-selecting where you already are
-    ///     doesn't fill the history with repeats.
+    ///     A push equal to the current entry adds no second copy, so re-selecting where you already
+    ///     are doesn't fill the history with repeats - but it still discards the forward tail, since
+    ///     arriving somewhere again is a navigation and what lay ahead of the old arrival is no
+    ///     longer where the user is heading.
     /// </summary>
     /// <param name="entry">The state to record</param>
     public void Push(T entry)
     {
-        if (_cursor >= 0 && _comparer.Equals(_entries[_cursor], entry))
-            return;
-
+        bool repeatsCurrent = _cursor >= 0 && _comparer.Equals(_entries[_cursor], entry);
         int forwardStart = _cursor + 1;
+        bool hadForward = forwardStart < _entries.Count;
 
-        if (forwardStart < _entries.Count)
+        if (hadForward)
             _entries.RemoveRange(forwardStart, _entries.Count - forwardStart);
+
+        if (repeatsCurrent)
+        {
+            // The stored entry is kept rather than overwritten: it carries whatever view state was
+            // captured into it, which the incoming copy does not have.
+            if (hadForward)
+                Changed?.Invoke(this, EventArgs.Empty);
+
+            return;
+        }
 
         _entries.Add(entry);
 
@@ -124,6 +135,7 @@ public sealed class NavigationHistory<T>
             return false;
 
         _entries[_cursor] = entry;
+        Changed?.Invoke(this, EventArgs.Empty);
 
         return true;
     }
