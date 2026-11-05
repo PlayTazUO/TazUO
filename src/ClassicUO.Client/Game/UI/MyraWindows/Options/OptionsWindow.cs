@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
@@ -11,6 +12,7 @@ using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
@@ -89,10 +91,23 @@ public class OptionsWindow : MyraControl
     /// </summary>
     private SearchPath _lastPagePath;
     private string _pendingSearchText = string.Empty;
-    private double _searchDebounceTimer;
+
+    /// <summary>
+    ///     Debounce stamps, taken from <see cref="Time.Ticks" /> rather than
+    ///     <see cref="Environment.TickCount" />: the latter is signed and wraps to
+    ///     <see cref="int.MinValue" /> after ~25 days of uptime, which turns an elapsed check into a
+    ///     hugely negative number and stalls the debounce for good. Unsigned subtraction wraps
+    ///     correctly, so the comparison survives it.
+    /// </summary>
+    private uint _searchDebounceTimer;
+    private uint _resizeDebounceTimer;
+
     private bool _searchPending;
-    private double _resizeDebounceTimer;
     private bool _resizePending;
+
+    // TEMP DIAGNOSTICS
+    private int _resizeEventCount;
+    private long _frameCount;
 
     /// <summary>
     ///     Set while the window is reproducing a history entry, so the selections it drives don't
@@ -178,8 +193,13 @@ public class OptionsWindow : MyraControl
 
         _rootWindow.SizeChanged += (_, _) =>
         {
-            _resizeDebounceTimer = Environment.TickCount;
+            _resizeDebounceTimer = Time.Ticks;
             _resizePending = true;
+
+            // TEMP DIAGNOSTICS
+            _resizeEventCount++;
+
+            FreezeResultsWhileDragging();
         };
 
         NavigateTo(FirstCategoryPath());
@@ -197,17 +217,34 @@ public class OptionsWindow : MyraControl
     {
         base.Update();
 
-        if (_searchPending && Environment.TickCount - _searchDebounceTimer >= SEARCH_DEBOUNCE_MS)
+        if (_searchPending && Time.Ticks - _searchDebounceTimer >= SEARCH_DEBOUNCE_MS)
         {
             _searchPending = false;
             ApplySearchText(_pendingSearchText);
         }
 
-        if (_resizePending && Environment.TickCount - _resizeDebounceTimer >= RESIZE_DEBOUNCE_MS)
+        if (_resizePending && Time.Ticks - _resizeDebounceTimer >= RESIZE_DEBOUNCE_MS)
         {
             _resizePending = false;
-            RefreshInlinePresentation();
+
+            // TEMP DIAGNOSTICS
+            uint waited = Time.Ticks - _resizeDebounceTimer;
+            long start = Stopwatch.GetTimestamp();
+            _resultTree.IsLayoutFrozen = false;
+            int changed = RefreshInlinePresentation();
+            double elapsedMs = (Stopwatch.GetTimestamp() - start) * 1000d / Stopwatch.Frequency;
+
+            Log.Trace(
+                $"[optsearch] resize pass: {elapsedMs:F1}ms, {changed}/{_resultTree.RowCount} rows rebuilt, "
+                + $"{_resizeEventCount} size events since last pass, waited {waited}ms, width {_resultTree.AvailableWidth}"
+            );
+
+            _resizeEventCount = 0;
         }
+
+        // TEMP DIAGNOSTICS: how much per-frame work the drag itself costs, independent of the pass.
+        if (_frameCount++ % 120 == 0 && _resultTree.RowCount > 0)
+            Log.Trace($"[optsearch] frame {_frameCount}, rows {_resultTree.RowCount}, pending {_resizePending}");
     }
 
     /// <summary>
@@ -374,7 +411,7 @@ public class OptionsWindow : MyraControl
         _searchBar.QueryChanged += (_, query) =>
         {
             _pendingSearchText = query.Trim();
-            _searchDebounceTimer = Environment.TickCount;
+            _searchDebounceTimer = Time.Ticks;
             _searchPending = true;
         };
 
@@ -516,6 +553,10 @@ public class OptionsWindow : MyraControl
 
     private void ShowResults(OptionsView view)
     {
+        // A drag still in progress when the query changed leaves the list frozen, and its debounced
+        // pass may never run - it bails once the view is no longer a search.
+        _resultTree.IsLayoutFrozen = false;
+
         _searchBar.Query = view.Query ?? string.Empty;
 
         IReadOnlyList<SearchHit> hits = _searchIndex.Search(view.Query);
@@ -812,14 +853,32 @@ public class OptionsWindow : MyraControl
     ///     Re-decides inline versus link for the visible results against the current window size and
     ///     the configured threshold. A no-op unless search results are showing.
     /// </summary>
-    internal void RefreshInlinePresentation()
+    internal int RefreshInlinePresentation()
     {
         if (_history.Current is not { IsSearch: true })
-            return;
+            return 0;
 
         _resultTree.AvailableWidth = ResultsWidth();
         _resultTree.InlineThreshold = CurrentInlineThreshold();
-        _resultTree.ApplyPresentation();
+
+        return _resultTree.ApplyPresentation();
+    }
+
+    /// <summary>
+    ///     Holds the results list's layout still for the duration of a window drag. The rows stay on
+    ///     screen and keep drawing; the debounced pass in <see cref="Update" /> thaws them and reflows
+    ///     once, at the size the window actually ended up.
+    ///     <para>
+    ///         Re-measuring 90 rows costs around 12ms a frame - most of the budget - and the drag
+    ///         re-measures them on every one of its frames. See
+    ///         <see cref="SearchResultTree.IsLayoutFrozen" /> for why Myra's own measure cache does
+    ///         not spare us that.
+    ///     </para>
+    /// </summary>
+    private void FreezeResultsWhileDragging()
+    {
+        if (_history.Current is { IsSearch: true })
+            _resultTree.IsLayoutFrozen = true;
     }
 
     /// <summary>

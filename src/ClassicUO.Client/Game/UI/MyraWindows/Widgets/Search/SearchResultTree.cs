@@ -68,6 +68,16 @@ public sealed class SearchResultTree : ScrollViewer
 
     #endregion
 
+    #region Mutables
+
+    /// <summary>
+    ///     The size reported by the last measure that actually ran, replayed while
+    ///     <see cref="IsLayoutFrozen" /> is set. Null until the list has been measured once.
+    /// </summary>
+    private Point? _settledSize;
+
+    #endregion
+
     #endregion
 
     #region Events
@@ -100,11 +110,47 @@ public sealed class SearchResultTree : ScrollViewer
     /// <summary>Number of hits currently displayed</summary>
     public int ResultCount { get; private set; }
 
+    /// <summary>Number of rows built for the current results, i.e. how many a presentation pass walks</summary>
+    public int RowCount => _rows.Count;
+
     /// <summary>
     ///     Paths of the collapsed groups. Mutable so a caller can restore a snapshot before calling
     ///     <see cref="SetResults" />.
     /// </summary>
     public ISet<string> CollapsedPaths => _collapsed;
+
+    /// <summary>
+    ///     Freezes the list's layout: measure reports the size it last settled on, and the rows keep
+    ///     the bounds they were last arranged into. They stay on screen and keep drawing; they simply
+    ///     stop reflowing.
+    ///     <para>
+    ///         Meant for the span of a window drag. Myra re-measures this whole subtree every frame -
+    ///         its own measure cache cannot help, because the cached available size is recorded after
+    ///         padding and border are subtracted but compared against the value before them, so any
+    ///         widget with padding misses every time - and the cost is linear in row count.
+    ///     </para>
+    ///     <para>
+    ///         While frozen the list is cropped rather than reflowed if the window shrinks, and
+    ///         hit-testing uses the stale bounds. Both are only observable mid-drag, while the pointer
+    ///         belongs to the resize handle.
+    ///     </para>
+    /// </summary>
+    public bool IsLayoutFrozen
+    {
+        get => field;
+        set
+        {
+            if (field == value)
+                return;
+
+            field = value;
+
+            // Thawing has to re-run the layout that was skipped: nothing marked the subtree dirty
+            // while it was frozen, so Myra has no reason to revisit it.
+            if (!value)
+                InvalidateMeasure();
+        }
+    }
 
     #endregion
 
@@ -173,6 +219,33 @@ public sealed class SearchResultTree : ScrollViewer
     /// <summary>Restores a vertical scroll offset captured by <see cref="GetScrollOffset" /></summary>
     /// <param name="offset">The offset in pixels; clamped by the scroller</param>
     public void SetScrollOffset(int offset) => ScrollPosition = new Point(ScrollPosition.X, Math.Max(offset, 0));
+
+    #endregion
+
+    #region Protected Methods
+
+    /// <inheritdoc />
+    protected override Point InternalMeasure(Point availableSize)
+    {
+        if (IsLayoutFrozen && _settledSize.HasValue)
+            return _settledSize.Value;
+
+        Point measured = base.InternalMeasure(availableSize);
+        _settledSize = measured;
+
+        return measured;
+    }
+
+    /// <inheritdoc />
+    protected override void InternalArrange()
+    {
+        // Re-arranging re-measures the content, which is the cost being avoided; the rows keep the
+        // bounds they already have.
+        if (IsLayoutFrozen)
+            return;
+
+        base.InternalArrange();
+    }
 
     #endregion
 

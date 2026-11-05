@@ -37,12 +37,6 @@ internal sealed class SearchResultRow : Panel
 
     #region Mutables
 
-    /// <summary>
-    ///     The editor built while measuring, held only until this round of
-    ///     <see cref="ApplyPresentation" /> has decided whether to host it.
-    /// </summary>
-    private Widget? _measuredEditor;
-
     private bool? _isInline;
 
     #endregion
@@ -126,25 +120,17 @@ internal sealed class SearchResultRow : Panel
     {
         bool wanted = ShouldInline(availableWidth, threshold, hysteresis);
 
-        try
-        {
-            if (_isInline == wanted)
-                return false;
+        if (_isInline == wanted)
+            return false;
 
-            if (_isInline != null && HoldsKeyboardFocus(keyboardFocus))
-                return false;
+        if (_isInline != null && HoldsKeyboardFocus(keyboardFocus))
+            return false;
 
-            _isInline = wanted;
-            _host.Widgets.Clear();
-            _host.Widgets.Add(wanted ? BuildInline() : BuildNavigate());
+        _isInline = wanted;
+        _host.Widgets.Clear();
+        _host.Widgets.Add(wanted ? BuildInline() : BuildNavigate());
 
-            return true;
-        }
-        finally
-        {
-            // Measuring may have built an editor this row did not end up hosting.
-            _measuredEditor = null;
-        }
+        return true;
     }
 
     /// <summary>
@@ -174,9 +160,7 @@ internal sealed class SearchResultRow : Panel
     /// </summary>
     private Widget BuildInline()
     {
-        // The copy built while measuring, when measuring built one: an editor's widget tree is the
-        // bulk of a row's cost, so building a second of the same one is worth avoiding.
-        Widget editor = _measuredEditor ?? _entry.InlineFactory!().ApplyUiFontOffset(FontOffset);
+        Widget editor = _entry.InlineFactory!().ApplyUiFontOffset(FontOffset);
 
         if (_attribution == null)
             return editor;
@@ -220,7 +204,7 @@ internal sealed class SearchResultRow : Panel
             return false;
 
         // The editor's size doesn't change with the window, so only the budget moves.
-        Point size = _inlineSizes.GetSize(_entry, FontOffset, out _measuredEditor);
+        Point size = _inlineSizes.GetSize(_entry, FontOffset);
         double allowance = availableWidth * (IsInline ? threshold + hysteresis : threshold);
 
         return size.X <= allowance;

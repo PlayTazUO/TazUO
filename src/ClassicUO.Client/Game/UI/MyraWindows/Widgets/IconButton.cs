@@ -208,14 +208,6 @@ public class IconButton : BasicButton
     #region Private methods
 
     /// <summary>
-    /// Re-measures the glyph and seats it in the middle of the button.
-    /// <para>
-    /// The label is sized to the button and draws from the top of its own bounds, so the offset is
-    /// the gap that would put the ink box's centre on the button's centre. Both axes, because a
-    /// symbol's horizontal bearings are no more reliable than its vertical ones.
-    /// </para>
-    /// </summary>
-    /// <summary>
     /// Assigns both glyph properties as one change. Each setter re-centres on its own, so the pair
     /// would otherwise measure the glyph twice - once against a size about to be replaced.
     /// </summary>
@@ -238,6 +230,14 @@ public class IconButton : BasicButton
         Refresh();
     }
 
+    /// <summary>
+    /// Re-measures the glyph and seats it in the middle of the button.
+    /// <para>
+    /// The label is sized to the button and draws from the top of its own bounds, so the offset is
+    /// the gap that would put the ink box's centre on the button's centre. Both axes, because a
+    /// symbol's horizontal bearings are no more reliable than its vertical ones.
+    /// </para>
+    /// </summary>
     private void Refresh()
     {
         if (_deferRefresh)

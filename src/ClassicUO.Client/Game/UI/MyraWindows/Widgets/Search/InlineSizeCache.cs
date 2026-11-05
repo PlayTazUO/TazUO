@@ -1,9 +1,10 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
-using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 
@@ -24,7 +25,7 @@ internal sealed class InlineSizeCache
 {
     #region Members
 
-    private readonly Dictionary<(SearchEntry Entry, int FontOffset), Point> _sizes = new();
+    private readonly Dictionary<(SearchEntry Entry, int FontOffset), Point> _sizes = new(EntryIdentityComparer.Instance);
 
     /// <summary>
     ///     The UI font every cached size was measured against. A measurement is only valid for the
@@ -41,13 +42,8 @@ internal sealed class InlineSizeCache
     /// </summary>
     /// <param name="entry">The entry to measure; must be able to inline</param>
     /// <param name="fontOffset">Size offset the editor will be drawn at</param>
-    /// <param name="built">
-    ///     The editor built in order to measure it, or <see langword="null" /> on a cache hit. Handed
-    ///     back so a caller that goes on to host the editor can use this one rather than building a
-    ///     second copy of the same tree.
-    /// </param>
     /// <returns>The editor's measured size</returns>
-    public Point GetSize(SearchEntry entry, int fontOffset, out Widget? built)
+    public Point GetSize(SearchEntry entry, int fontOffset)
     {
         SpriteFontBase font = MyraStyle.UiFont;
 
@@ -57,20 +53,42 @@ internal sealed class InlineSizeCache
             _measuredWith = font;
         }
 
-        built = null;
-
         if (_sizes.TryGetValue((entry, fontOffset), out Point cached))
             return cached;
 
         // Measured at the size it will actually be drawn at. Measuring the unscaled editor reports
         // a width the row never needs, which demotes rows that fit perfectly well.
-        built = entry.InlineFactory!().ApplyUiFontOffset(fontOffset);
-
-        Point size = built.Measure(new Point(int.MaxValue / 2, int.MaxValue / 2));
+        //
+        // The widget built here is measured and dropped rather than handed back for hosting: a
+        // measured instance carries Myra's cached measurement, taken against an unbounded width,
+        // and the host's scroller does not always hand it a different one to force a recompute.
+        Point size = entry.InlineFactory!()
+            .ApplyUiFontOffset(fontOffset)
+            .Measure(new Point(int.MaxValue / 2, int.MaxValue / 2));
 
         _sizes[(entry, fontOffset)] = size;
 
         return size;
+    }
+
+    #endregion
+
+    #region Private types
+
+    /// <summary>
+    ///     Identity equality for the entry half of the key. Entries are index-level singletons, so
+    ///     reference identity is exact - and a record's generated hash walks every member, including
+    ///     a group entry's match text, which is a concatenation of every descendant label.
+    /// </summary>
+    private sealed class EntryIdentityComparer : IEqualityComparer<(SearchEntry Entry, int FontOffset)>
+    {
+        public static readonly EntryIdentityComparer Instance = new();
+
+        public bool Equals((SearchEntry Entry, int FontOffset) left, (SearchEntry Entry, int FontOffset) right) =>
+            ReferenceEquals(left.Entry, right.Entry) && left.FontOffset == right.FontOffset;
+
+        public int GetHashCode((SearchEntry Entry, int FontOffset) key) =>
+            HashCode.Combine(RuntimeHelpers.GetHashCode(key.Entry), key.FontOffset);
     }
 
     #endregion

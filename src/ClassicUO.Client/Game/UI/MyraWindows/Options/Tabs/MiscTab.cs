@@ -37,7 +37,7 @@ public static class MiscTab
 
         return OptionsUi.Vertical(
             OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = TazLang.Get("mog_searchellipses") },
+                new VisualContainerProps { LabelText = TazLang.Get("optsearch_section_label") },
                 Option.LComboBox(
                     TazLang.Get("optsearch_inline_label"),
                     new Accessor<SearchInlineMode>(
@@ -55,7 +55,19 @@ public static class MiscTab
                 ),
                 Option.Checkbox(
                     TazLang.Get("optsearch_attribution_label"),
-                    new Accessor<bool>(() => profile.OptionsSearchShowAttribution),
+                    new Accessor<bool>(
+                        () => profile.OptionsSearchShowAttribution,
+                        show =>
+                        {
+                            profile.OptionsSearchShowAttribution = show;
+
+                            // Each result row reads attribution once, when it is built, so the rows
+                            // on screen have to be rebuilt. Deferred because this checkbox can be
+                            // one of them: rebuilding the list from inside its own click handler
+                            // would destroy the widget currently dispatching the event.
+                            UIManager.ForEach<OptionsWindow>(window => window.Defer(window.RefreshCurrentContent));
+                        }
+                    ),
                     tooltip: TazLang.Get("optsearch_attribution_tooltip"),
                     search: new SearchMetadata(TazLang.Get("optsearch_attribution_label"), Keywords: [TazLang.Get("optsearch_kw_search")])
                 )

@@ -24,8 +24,9 @@ internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<Opt
 
     /// <summary>
     /// This fragment's own name. Contributes a breadcrumb segment for a plain fragment, or the
-    /// result row's caption when <see cref="IsSearchGroup"/> is set. Typically a visual container's
-    /// caption, so the breadcrumb matches what the user already reads on the page.
+    /// result row's caption when <see cref="IsSearchGroup"/> is set - where it outranks
+    /// <see cref="SearchMetadata.Label"/>. Typically a visual container's caption or a gating
+    /// checkbox's, so both breadcrumb and caption match what the user already reads on the page.
     /// </summary>
     public string? Label { get; set; }
 
@@ -131,9 +132,12 @@ internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<Opt
             .Select(ToMetadata)
             .Aggregate(own, DeepMerge);
 
-        // An explicitly authored label outranks the one derived from the container/binder,
-        // which in turn outranks borrowing the first child's.
-        string? label = Search?.Label ?? Label ?? merged?.Label;
+        // The container/binder's own name wins: it is the caption the user already reads on the
+        // page, so a result row naming the group anything else is a row they cannot place. Metadata
+        // ranks below it because SearchMetadata.Label defaults to SearchText - passing match text
+        // positionally would otherwise retitle the group, which is how three separate groups came
+        // to be captioned after their tab. Override a caption with WithLabel, not with metadata.
+        string? label = Label ?? Search?.Label ?? merged?.Label;
 
         if (string.IsNullOrEmpty(label))
             return null;

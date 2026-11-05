@@ -181,7 +181,7 @@ public sealed class SearchIndex
             {
                 best = match;
                 field = SearchField.Path;
-                matchedTerm = entry.Path.Leaf;
+                matchedTerm = BestMatchingSegment(entry.Path, query);
             }
         }
 
@@ -200,6 +200,37 @@ public sealed class SearchIndex
         return best.IsMatch
             ? new SearchHit(entry, best.Score, field, matchedTerm, best.Spans)
             : null;
+    }
+
+    /// <summary>
+    ///     The breadcrumb segment the query actually hit, for attribution.
+    ///     <para>
+    ///         Scoring runs against the whole breadcrumb, so the winning segment is not necessarily
+    ///         the leaf: querying <c>visual</c> for something under <c>Video › Visual Effects ›
+    ///         General</c> would otherwise report "matched: General", a term that doesn't contain the
+    ///         query. A query spanning a separator matches no single segment and so names none.
+    ///     </para>
+    /// </summary>
+    /// <param name="path">The entry's breadcrumb</param>
+    /// <param name="query">The user's query</param>
+    /// <returns>The best-matching segment, or <see langword="null" /> when none matches on its own</returns>
+    private string? BestMatchingSegment(SearchPath path, string query)
+    {
+        string? bestSegment = null;
+        double bestScore = 0d;
+
+        foreach (string segment in path.Segments)
+        {
+            SearchMatch match = _strategy.Match(segment, query);
+
+            if (!match.IsMatch || match.Score <= bestScore)
+                continue;
+
+            bestScore = match.Score;
+            bestSegment = segment;
+        }
+
+        return bestSegment;
     }
 
     private void InvalidateCache()
