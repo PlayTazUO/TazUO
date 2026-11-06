@@ -2,6 +2,10 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/05/26
+* ***Fix:*** `API.CastSpell` no longer crashes the client with a `NullReferenceException` when called with `None` or an empty spell name - the cast is skipped, and spell-name lookup now tolerates missing names
+* ***Fix:*** Stopping a Legion script while it was still starting up no longer crashes the client with an unhandled `ThreadInterruptedException` - the stop is now caught during script setup, so the script is not executed and shuts down normally
+
 ## 11/04/26
 * ***Fix:*** Modifier-only inputs not recognized by the `IsKeyPressed` API - [P.R 1207](https://github.com/PlayTazUO/TazUO/pull/1207) ([yuval-po](https://github.com/yuval-po))
 

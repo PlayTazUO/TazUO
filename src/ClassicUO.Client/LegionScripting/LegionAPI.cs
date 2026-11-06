@@ -1404,6 +1404,11 @@ namespace ClassicUO.LegionScripting
         /// <param name="spellName">This can be a partial match. Fireba will cast Fireball.</param>
         public void CastSpell(string spellName) => OnMain(() =>
         {
+            if (string.IsNullOrWhiteSpace(spellName))
+                return;
+
+            spellName = spellName.Trim();
+
             if(!GameActions.CastSpellByName(spellName, false))
                 GameActions.CastSpellByName(spellName);
         });
