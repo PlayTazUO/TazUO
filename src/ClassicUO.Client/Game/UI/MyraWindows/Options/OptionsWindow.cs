@@ -328,15 +328,27 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>
-    ///     An entry activated from search results navigates to the page that owns it. The entry's own
-    ///     label is appended so the deepest navigable boundary is reached even when the leaf itself
-    ///     is a tab or page.
+    ///     An entry activated from search results navigates to the page that owns it and then points
+    ///     the setting out, so the user lands on the thing they picked rather than on a page that
+    ///     merely contains it. The entry's own label is appended to the path so the deepest navigable
+    ///     boundary is reached even when the leaf itself is a tab or page.
     /// </summary>
     private Action BuildActivation(SearchEntry entry)
     {
         SearchPath target = entry.FullPath;
+        string label = entry.Label;
 
-        return () => NavigateTo(target);
+        return () =>
+        {
+            NavigateTo(target);
+
+            // TEMP DIAGNOSTICS
+            ClassicUO.Utility.Logging.Log.Trace($"[opthl] open '{label}' at '{target.Text}'");
+
+            // The navigation has built the page but nothing has laid it out yet; the highlighter
+            // waits for the target to have bounds before scrolling to it.
+            _highlight.Start(_optionsPanel, label);
+        };
     }
 
     private void Build()
@@ -363,7 +375,6 @@ public class OptionsWindow : MyraControl
         _mainArea.AddWidget(_optionsStack, 1, 1);
 
         _resultTree.NavigationRequested += (_, path) => NavigateTo(path);
-        _resultTree.EntryActivated += (_, entry) => OpenEntry(entry);
 
         foreach (OptionCategory category in _categories)
             categoryPanel.Widgets.Add(GetCategoryButton(category.Label));
@@ -515,23 +526,6 @@ public class OptionsWindow : MyraControl
 
         foreach (string collapsed in _resultTree.CollapsedPaths)
             current.Collapsed.Add(collapsed);
-    }
-
-    /// <summary>
-    ///     Opens the page owning <paramref name="entry" /> and points the setting out on arrival, so
-    ///     the user lands on the thing they picked rather than on a page holding it somewhere.
-    /// </summary>
-    /// <param name="entry">The result the user followed</param>
-    private void OpenEntry(SearchEntry entry)
-    {
-        // TEMP DIAGNOSTICS
-        ClassicUO.Utility.Logging.Log.Trace($"[opthl] open '{entry.Label}' at '{entry.Path.Text}'");
-
-        NavigateTo(entry.Path);
-
-        // The navigation has built the page but nothing has laid it out yet; the highlighter waits
-        // for the target to have bounds before it scrolls to it.
-        _highlight.Start(_optionsPanel, entry.Label);
     }
 
     /// <summary>Reproduces <paramref name="view" /> in the content area without touching history</summary>

@@ -95,17 +95,14 @@ public sealed class SearchResultTree : ScrollViewer
     #region Events
 
     /// <summary>
-    ///     Raised when the user clicks a breadcrumb segment on a group header. The argument is the
-    ///     path to open. A result row raises <see cref="EntryActivated" /> instead, which carries
-    ///     which setting was chosen as well as where it lives.
+    ///     Raised when the user activates a result that must be navigated to, or clicks a breadcrumb
+    ///     segment on a group header. The argument is the path to open.
+    ///     <para>
+    ///         Only reached for an entry that carries no <see cref="SearchEntry.OnActivate" /> of its
+    ///         own, which takes precedence.
+    ///     </para>
     /// </summary>
     public event EventHandler<SearchPath>? NavigationRequested;
-
-    /// <summary>
-    ///     Raised when the user follows a result row to the page that owns it. Carries the entry, so
-    ///     a consumer can point the setting out on arrival rather than only opening its page.
-    /// </summary>
-    public event EventHandler<SearchEntry>? EntryActivated;
 
     #endregion
 
@@ -378,7 +375,7 @@ public sealed class SearchResultTree : ScrollViewer
             return;
         }
 
-        EntryActivated?.Invoke(this, entry);
+        NavigationRequested?.Invoke(this, entry.Path);
     }
 
     #endregion

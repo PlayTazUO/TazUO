@@ -12,8 +12,8 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
 /// <summary>
-///     Points out one setting on a freshly opened page: scrolls it into view, tints it, and fades the
-///     tint away.
+///     Points out one setting on a freshly opened page: scrolls it into view, then swells a tint over
+///     it a couple of times and leaves it alone.
 ///     <para>
 ///         For arriving from a search result, where the page alone doesn't say which of its settings
 ///         was asked for. The cue clears itself: a highlight that waits to be dismissed is one more
@@ -31,11 +31,26 @@ internal sealed class OptionHighlight
 
     #region Consts/Readonly
 
-    /// <summary>Peak tint alpha: enough to catch the eye, not enough to obscure the setting.</summary>
-    private const float PEAK_ALPHA = 0.35f;
+    /// <summary>
+    ///     Tint alpha at the top of a pulse: enough to catch the eye, not enough to obscure the
+    ///     setting. Higher than a steady tint would need, since the peak is only passed through.
+    /// </summary>
+    private const float PEAK_ALPHA = 0.45f;
 
-    private const uint HOLD_MS = 400;
-    private const uint FADE_MS = 900;
+    /// <summary>
+    ///     Half a pulse - the tint fades in over this and back out over the same. No hold at full:
+    ///     arriving at or leaving full strength abruptly is what made the cue read as blinking.
+    /// </summary>
+    private const uint HALF_PULSE_MS = 1200;
+
+    /// <summary>
+    ///     Pulses before the cue gives up. Two, because one that is missed is missed for good, and a
+    ///     second swell re-attracts the eye without the tint ever sitting there steadily.
+    /// </summary>
+    private const uint PULSES = 2;
+
+    private const uint PULSE_MS = HALF_PULSE_MS * 2;
+    private const uint TOTAL_MS = PULSE_MS * PULSES;
 
     /// <summary>Room left above the target so it doesn't land flush against the viewport edge.</summary>
     private const int SCROLL_MARGIN = 12;
@@ -126,7 +141,7 @@ internal sealed class OptionHighlight
 
         uint elapsed = Time.Ticks - _startTick;
 
-        if (elapsed >= HOLD_MS + FADE_MS)
+        if (elapsed >= TOTAL_MS)
         {
             // TEMP DIAGNOSTICS
             Log.Trace("[opthl] done");
@@ -264,15 +279,21 @@ internal sealed class OptionHighlight
         return caption;
     }
 
-    /// <summary>Full tint while the eye arrives, then off quickly enough not to linger as decoration</summary>
+    /// <summary>
+    ///     A sine-squared swell per pulse: nothing, up to <see cref="PEAK_ALPHA" /> at the halfway
+    ///     point, back to nothing.
+    ///     <para>
+    ///         Squared because its slope is zero at both ends, so consecutive pulses meet without a
+    ///         corner and the whole cue arrives and leaves without a visible edge anywhere. A linear
+    ///         ramp has the right shape but kinks at every boundary, which is what reads as a blink.
+    ///     </para>
+    /// </summary>
     private static float AlphaAt(uint elapsedMs)
     {
-        if (elapsedMs <= HOLD_MS)
-            return PEAK_ALPHA;
+        float phase = elapsedMs % PULSE_MS / (float)PULSE_MS;
+        float swell = MathF.Sin(MathF.PI * phase);
 
-        float remaining = 1f - (elapsedMs - HOLD_MS) / (float)FADE_MS;
-
-        return PEAK_ALPHA * remaining * remaining;
+        return PEAK_ALPHA * swell * swell;
     }
 
     #endregion
