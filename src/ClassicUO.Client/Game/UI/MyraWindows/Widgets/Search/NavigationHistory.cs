@@ -16,6 +16,35 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 /// <typeparam name="T">The navigation state type. Equality is used to collapse duplicate pushes.</typeparam>
 public sealed class NavigationHistory<T>
 {
+    #region Ctor
+
+    /// <param name="capacity">Maximum retained entries; must be positive</param>
+    /// <param name="comparer">
+    ///     Equality used to suppress a push that repeats the current entry. Defaults to
+    ///     <see cref="EqualityComparer{T}.Default" />.
+    /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="capacity" /> is not positive</exception>
+    public NavigationHistory(int capacity = DEFAULT_CAPACITY, IEqualityComparer<T>? comparer = null)
+    {
+        if (capacity <= 0)
+            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be positive.");
+
+        Capacity = capacity;
+        _comparer = comparer ?? EqualityComparer<T>.Default;
+    }
+
+    #endregion
+
+    #region Events
+
+    /// <summary>
+    ///     Raised whenever the cursor or the entry list changes, so navigation affordances can
+    ///     refresh their enabled state.
+    /// </summary>
+    public event EventHandler? Changed;
+
+    #endregion
+
     #region Members
 
     #region Consts/Readonly
@@ -35,16 +64,6 @@ public sealed class NavigationHistory<T>
 
     #endregion
 
-    #region Events
-
-    /// <summary>
-    ///     Raised whenever the cursor or the entry list changes, so navigation affordances can
-    ///     refresh their enabled state.
-    /// </summary>
-    public event EventHandler? Changed;
-
-    #endregion
-
     #region Public Accessors
 
     /// <summary>Maximum retained entries. Pushing past this drops the oldest.</summary>
@@ -61,25 +80,6 @@ public sealed class NavigationHistory<T>
 
     /// <summary>Whether any entry has been pushed</summary>
     public bool IsEmpty => _entries.Count == 0;
-
-    #endregion
-
-    #region Ctor
-
-    /// <param name="capacity">Maximum retained entries; must be positive</param>
-    /// <param name="comparer">
-    ///     Equality used to suppress a push that repeats the current entry. Defaults to
-    ///     <see cref="EqualityComparer{T}.Default" />.
-    /// </param>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="capacity" /> is not positive</exception>
-    public NavigationHistory(int capacity = DEFAULT_CAPACITY, IEqualityComparer<T>? comparer = null)
-    {
-        if (capacity <= 0)
-            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be positive.");
-
-        Capacity = capacity;
-        _comparer = comparer ?? EqualityComparer<T>.Default;
-    }
 
     #endregion
 

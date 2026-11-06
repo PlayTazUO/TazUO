@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
@@ -12,7 +11,6 @@ using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility;
-using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
@@ -79,6 +77,12 @@ public class OptionsWindow : MyraControl
     private readonly Dictionary<MyraTabControl, SearchPath> _tabControlPaths = new();
     private readonly MyraGrid _mainArea = new();
 
+    /// <summary>
+    ///     Points out the setting a search result was followed to. Driven from <see cref="Update" />
+    ///     and cancelled whenever the content area is rebuilt under it.
+    /// </summary>
+    private readonly OptionHighlight _highlight = new();
+
     #endregion
 
     #region Mutables
@@ -105,9 +109,6 @@ public class OptionsWindow : MyraControl
     private bool _searchPending;
     private bool _resizePending;
 
-    // TEMP DIAGNOSTICS
-    private int _resizeEventCount;
-    private long _frameCount;
 
     /// <summary>
     ///     Set while the window is reproducing a history entry, so the selections it drives don't
@@ -196,9 +197,6 @@ public class OptionsWindow : MyraControl
             _resizeDebounceTimer = Time.Ticks;
             _resizePending = true;
 
-            // TEMP DIAGNOSTICS
-            _resizeEventCount++;
-
             FreezeResultsWhileDragging();
         };
 
@@ -226,25 +224,12 @@ public class OptionsWindow : MyraControl
         if (_resizePending && Time.Ticks - _resizeDebounceTimer >= RESIZE_DEBOUNCE_MS)
         {
             _resizePending = false;
-
-            // TEMP DIAGNOSTICS
-            uint waited = Time.Ticks - _resizeDebounceTimer;
-            long start = Stopwatch.GetTimestamp();
             _resultTree.IsLayoutFrozen = false;
-            int changed = RefreshInlinePresentation();
-            double elapsedMs = (Stopwatch.GetTimestamp() - start) * 1000d / Stopwatch.Frequency;
 
-            Log.Trace(
-                $"[optsearch] resize pass: {elapsedMs:F1}ms, {changed}/{_resultTree.RowCount} rows rebuilt, "
-                + $"{_resizeEventCount} size events since last pass, waited {waited}ms, width {_resultTree.AvailableWidth}"
-            );
-
-            _resizeEventCount = 0;
+            RefreshInlinePresentation();
         }
 
-        // TEMP DIAGNOSTICS: how much per-frame work the drag itself costs, independent of the pass.
-        if (_frameCount++ % 120 == 0 && _resultTree.RowCount > 0)
-            Log.Trace($"[optsearch] frame {_frameCount}, rows {_resultTree.RowCount}, pending {_resizePending}");
+        _highlight.Update();
     }
 
     /// <summary>
@@ -378,6 +363,7 @@ public class OptionsWindow : MyraControl
         _mainArea.AddWidget(_optionsStack, 1, 1);
 
         _resultTree.NavigationRequested += (_, path) => NavigateTo(path);
+        _resultTree.EntryActivated += (_, entry) => OpenEntry(entry);
 
         foreach (OptionCategory category in _categories)
             categoryPanel.Widgets.Add(GetCategoryButton(category.Label));
@@ -531,9 +517,29 @@ public class OptionsWindow : MyraControl
             current.Collapsed.Add(collapsed);
     }
 
+    /// <summary>
+    ///     Opens the page owning <paramref name="entry" /> and points the setting out on arrival, so
+    ///     the user lands on the thing they picked rather than on a page holding it somewhere.
+    /// </summary>
+    /// <param name="entry">The result the user followed</param>
+    private void OpenEntry(SearchEntry entry)
+    {
+        // TEMP DIAGNOSTICS
+        ClassicUO.Utility.Logging.Log.Trace($"[opthl] open '{entry.Label}' at '{entry.Path.Text}'");
+
+        NavigateTo(entry.Path);
+
+        // The navigation has built the page but nothing has laid it out yet; the highlighter waits
+        // for the target to have bounds before it scrolls to it.
+        _highlight.Start(_optionsPanel, entry.Label);
+    }
+
     /// <summary>Reproduces <paramref name="view" /> in the content area without touching history</summary>
     private void Restore(OptionsView view)
     {
+        // Whatever is being pointed at is about to be rebuilt or scrolled away from.
+        _highlight.Cancel();
+
         _restoring = true;
 
         try
@@ -853,15 +859,14 @@ public class OptionsWindow : MyraControl
     ///     Re-decides inline versus link for the visible results against the current window size and
     ///     the configured threshold. A no-op unless search results are showing.
     /// </summary>
-    internal int RefreshInlinePresentation()
+    internal void RefreshInlinePresentation()
     {
         if (_history.Current is not { IsSearch: true })
-            return 0;
+            return;
 
         _resultTree.AvailableWidth = ResultsWidth();
         _resultTree.InlineThreshold = CurrentInlineThreshold();
-
-        return _resultTree.ApplyPresentation();
+        _resultTree.ApplyPresentation();
     }
 
     /// <summary>
@@ -969,6 +974,7 @@ public class OptionsWindow : MyraControl
     /// </summary>
     public override void Dispose()
     {
+        _highlight.Cancel();
         ScreenOverlayManager.Instance.ClearPreview();
         base.Dispose();
         GC.SuppressFinalize(this);

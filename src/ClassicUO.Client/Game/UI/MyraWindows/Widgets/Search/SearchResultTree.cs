@@ -3,10 +3,8 @@
 using System;
 using System.Collections.Generic;
 using ClassicUO.Configuration;
-using ClassicUO.Game.UI.MyraWindows.Theme;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
-using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
@@ -27,6 +25,18 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 /// </summary>
 public sealed class SearchResultTree : ScrollViewer
 {
+    #region Ctor
+
+    public SearchResultTree()
+    {
+        Content = _stack;
+        HorizontalAlignment = HorizontalAlignment.Stretch;
+        VerticalAlignment = VerticalAlignment.Stretch;
+        Padding = new Thickness(CONTENT_PADDING_X, CONTENT_PADDING_Y, CONTENT_PADDING_X, CONTENT_PADDING_Y);
+    }
+
+    #endregion
+
     #region Members
 
     #region Consts/Readonly
@@ -44,10 +54,12 @@ public sealed class SearchResultTree : ScrollViewer
     ///     so the user's own choice still drives it.
     /// </summary>
     private const int CRUMB_FONT_OFFSET = -1;
+
     private const int ROW_FONT_OFFSET = -2;
 
     /// <summary>Breathing room so rows are not flush against the window edge.</summary>
     private const int CONTENT_PADDING_X = 8;
+
     private const int CONTENT_PADDING_Y = 4;
 
     /// <summary>Gap between a breadcrumb segment and its separator.</summary>
@@ -83,10 +95,17 @@ public sealed class SearchResultTree : ScrollViewer
     #region Events
 
     /// <summary>
-    ///     Raised when the user activates a result that must be navigated to, or clicks a breadcrumb
-    ///     segment on a group header. The argument is the path to open.
+    ///     Raised when the user clicks a breadcrumb segment on a group header. The argument is the
+    ///     path to open. A result row raises <see cref="EntryActivated" /> instead, which carries
+    ///     which setting was chosen as well as where it lives.
     /// </summary>
     public event EventHandler<SearchPath>? NavigationRequested;
+
+    /// <summary>
+    ///     Raised when the user follows a result row to the page that owns it. Carries the entry, so
+    ///     a consumer can point the setting out on arrival rather than only opening its page.
+    /// </summary>
+    public event EventHandler<SearchEntry>? EntryActivated;
 
     #endregion
 
@@ -110,8 +129,6 @@ public sealed class SearchResultTree : ScrollViewer
     /// <summary>Number of hits currently displayed</summary>
     public int ResultCount { get; private set; }
 
-    /// <summary>Number of rows built for the current results, i.e. how many a presentation pass walks</summary>
-    public int RowCount => _rows.Count;
 
     /// <summary>
     ///     Paths of the collapsed groups. Mutable so a caller can restore a snapshot before calling
@@ -154,18 +171,6 @@ public sealed class SearchResultTree : ScrollViewer
 
     #endregion
 
-    #region Ctor
-
-    public SearchResultTree()
-    {
-        Content = _stack;
-        HorizontalAlignment = HorizontalAlignment.Stretch;
-        VerticalAlignment = VerticalAlignment.Stretch;
-        Padding = new Thickness(CONTENT_PADDING_X, CONTENT_PADDING_Y, CONTENT_PADDING_X, CONTENT_PADDING_Y);
-    }
-
-    #endregion
-
     #region Public Methods
 
     /// <summary>
@@ -204,10 +209,8 @@ public sealed class SearchResultTree : ScrollViewer
         int changed = 0;
 
         foreach (SearchResultRow row in _rows)
-        {
             if (row.ApplyPresentation(AvailableWidth, InlineThreshold, INLINE_HYSTERESIS, focused))
                 changed++;
-        }
 
         return changed;
     }
@@ -323,12 +326,7 @@ public sealed class SearchResultTree : ScrollViewer
             var crumb = new LinkLabel(
                 group.Segments[i],
                 () => NavigationRequested?.Invoke(this, target)
-            )
-            {
-                Wrap = false,
-                SingleLine = true,
-                VerticalAlignment = VerticalAlignment.Center
-            };
+            ) { Wrap = false, SingleLine = true, VerticalAlignment = VerticalAlignment.Center };
 
             crumb.Font = MyraStyle.GetUiFont(CRUMB_FONT_OFFSET);
             crumbs.Widgets.Add(crumb);
@@ -349,7 +347,7 @@ public sealed class SearchResultTree : ScrollViewer
     /// </summary>
     private static Widget BuildEmptyState()
     {
-        MyraLabel message = MyraLabel.Hint(TazLang.Get("optsearch_no_results"));
+        var message = MyraLabel.Hint(TazLang.Get("optsearch_no_results"));
 
         message.HorizontalAlignment = HorizontalAlignment.Center;
         message.Margin = new Thickness(0, EMPTY_STATE_SPACING, 0, 0);
@@ -380,7 +378,7 @@ public sealed class SearchResultTree : ScrollViewer
             return;
         }
 
-        NavigationRequested?.Invoke(this, entry.Path);
+        EntryActivated?.Invoke(this, entry);
     }
 
     #endregion

@@ -20,6 +20,13 @@ internal class OptionItem : ContentControl
     private readonly string _searchText;
     private readonly bool _skipSearch;
 
+    /// <summary>
+    /// The option's primary search text, which is its visible caption for every
+    /// <see cref="OptionsFactory"/> entry. Exposed so a caller holding a search result can find the
+    /// item it refers to without matching against the captions of the widgets inside it.
+    /// </summary>
+    public string SearchText => _searchText;
+
     /// <inheritdoc/>
     public override Widget Content
     {

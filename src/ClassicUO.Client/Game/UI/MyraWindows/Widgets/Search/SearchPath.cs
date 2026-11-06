@@ -68,10 +68,8 @@ public readonly struct SearchPath : IEquatable<SearchPath>
         List<string> kept = [];
 
         foreach (string? segment in segments)
-        {
             if (!string.IsNullOrWhiteSpace(segment))
                 kept.Add(segment!);
-        }
 
         _segments = kept.ToArray();
         _text = string.Join(SEPARATOR, _segments);
@@ -93,7 +91,7 @@ public readonly struct SearchPath : IEquatable<SearchPath>
             return this;
 
         int length = Length;
-        var extended = new string[length + 1];
+        string[] extended = new string[length + 1];
 
         if (length > 0)
             Array.Copy(_segments!, extended, length);
@@ -119,7 +117,7 @@ public readonly struct SearchPath : IEquatable<SearchPath>
         if (count == Length)
             return this;
 
-        var head = new string[count];
+        string[] head = new string[count];
         Array.Copy(_segments!, head, count);
 
         return new SearchPath(head, string.Join(SEPARATOR, head));
@@ -137,10 +135,8 @@ public readonly struct SearchPath : IEquatable<SearchPath>
             return false;
 
         for (int i = 0; i < other.Length; i++)
-        {
             if (!string.Equals(_segments![i], other._segments![i], StringComparison.Ordinal))
                 return false;
-        }
 
         return true;
     }
@@ -171,9 +167,15 @@ public readonly struct SearchPath : IEquatable<SearchPath>
     /// <inheritdoc />
     public override string ToString() => Text;
 
-    public static bool operator ==(SearchPath left, SearchPath right) => left.Equals(right);
+    public static bool operator ==(SearchPath left, SearchPath right)
+    {
+        return left.Equals(right);
+    }
 
-    public static bool operator !=(SearchPath left, SearchPath right) => !left.Equals(right);
+    public static bool operator !=(SearchPath left, SearchPath right)
+    {
+        return !left.Equals(right);
+    }
 
     #endregion
 }

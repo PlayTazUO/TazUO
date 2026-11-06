@@ -18,6 +18,22 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 /// </summary>
 public sealed class SearchIndex
 {
+    #region Ctor
+
+    /// <param name="strategy">
+    ///     Matcher used for every field. Defaults to substring-then-fuzzy
+    ///     (<see cref="ContainsThenLevenshteinSearchStrategy" />).
+    /// </param>
+    public SearchIndex(ISearchStrategy? strategy = null)
+    {
+        _strategy = strategy ?? new ContainsThenLevenshteinSearchStrategy();
+    }
+
+    #endregion
+
+    /// <summary>Pairs a hit with its index position so sorting can fall back to declared order</summary>
+    private readonly record struct ScoredIndex(SearchHit Hit, int Order);
+
     #region Members
 
     #region Consts/Readonly
@@ -28,6 +44,7 @@ public sealed class SearchIndex
     ///     the catch-all match text ranks lowest because it is a blob of inherited terms.
     /// </summary>
     private const double LABEL_WEIGHT = 1.0;
+
     private const double KEYWORD_WEIGHT = 0.45;
     private const double PATH_WEIGHT = 0.5;
     private const double MATCH_TEXT_WEIGHT = 0.3;
@@ -53,19 +70,6 @@ public sealed class SearchIndex
 
     /// <summary>Number of indexed entries</summary>
     public int Count => _entries.Count;
-
-    #endregion
-
-    #region Ctor
-
-    /// <param name="strategy">
-    ///     Matcher used for every field. Defaults to substring-then-fuzzy
-    ///     (<see cref="ContainsThenLevenshteinSearchStrategy" />).
-    /// </param>
-    public SearchIndex(ISearchStrategy? strategy = null)
-    {
-        _strategy = strategy ?? new ContainsThenLevenshteinSearchStrategy();
-    }
 
     #endregion
 
@@ -156,7 +160,6 @@ public sealed class SearchIndex
         string? matchedTerm = null;
 
         if (entry.Keywords != null)
-        {
             foreach (string keyword in entry.Keywords)
             {
                 if (string.IsNullOrWhiteSpace(keyword))
@@ -171,7 +174,6 @@ public sealed class SearchIndex
                 field = SearchField.Keyword;
                 matchedTerm = keyword;
             }
-        }
 
         if (!entry.Path.IsEmpty)
         {
@@ -206,8 +208,12 @@ public sealed class SearchIndex
     ///     The breadcrumb segment the query actually hit, for attribution.
     ///     <para>
     ///         Scoring runs against the whole breadcrumb, so the winning segment is not necessarily
-    ///         the leaf: querying <c>visual</c> for something under <c>Video › Visual Effects ›
-    ///         General</c> would otherwise report "matched: General", a term that doesn't contain the
+    ///         the leaf: querying <c>visual</c> for something under
+    ///         <c>
+    ///             Video › Visual Effects ›
+    ///             General
+    ///         </c>
+    ///         would otherwise report "matched: General", a term that doesn't contain the
     ///         query. A query spanning a separator matches no single segment and so names none.
     ///     </para>
     /// </summary>
@@ -250,7 +256,4 @@ public sealed class SearchIndex
     }
 
     #endregion
-
-    /// <summary>Pairs a hit with its index position so sorting can fall back to declared order</summary>
-    private readonly record struct ScoredIndex(SearchHit Hit, int Order);
 }

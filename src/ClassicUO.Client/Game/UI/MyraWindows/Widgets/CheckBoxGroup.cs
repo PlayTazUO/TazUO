@@ -39,6 +39,9 @@ public class CheckBoxGroup : Panel
         Spacing = MyraStyle.STANDARD_SPACING,
     };
 
+    /// <summary>The gating checkbox's caption, i.e. the name this group goes by</summary>
+    public string PrimaryLabel => _primaryControlProp.Label;
+
     public CheckBoxGroup(PropertyBinder controlProp, params Widget[] widgets)
     {
         ArgumentNullException.ThrowIfNull(controlProp);

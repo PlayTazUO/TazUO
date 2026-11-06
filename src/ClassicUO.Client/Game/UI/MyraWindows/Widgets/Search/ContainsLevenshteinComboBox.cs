@@ -10,6 +10,10 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 
 public class ContainsLevenshteinComboBox<T> : ScoredSearchComboBox<T>
 {
+    public ContainsLevenshteinComboBox(string styleName = Stylesheet.DefaultStyleName) : base(new ContainsThenLevenshteinSearchStrategy(), styleName)
+    {
+    }
+
     /// <summary>
     ///     Deliberately shadows the base's interface-typed property with the concrete strategy, so
     ///     its knobs (MaxDistance, MinScore, CaseSensitive, ...) are reachable without a cast.
@@ -19,10 +23,6 @@ public class ContainsLevenshteinComboBox<T> : ScoredSearchComboBox<T>
     ///     with. Null once the strategy has been replaced with an unrelated one.
     /// </summary>
     public new ContainsThenLevenshteinSearchStrategy? Strategy => base.Strategy as ContainsThenLevenshteinSearchStrategy;
-
-    public ContainsLevenshteinComboBox(string styleName = Stylesheet.DefaultStyleName) : base(new ContainsThenLevenshteinSearchStrategy(), styleName)
-    {
-    }
 }
 
 public class ContainsLevenshteinComboBox : ContainsLevenshteinComboBox<string>

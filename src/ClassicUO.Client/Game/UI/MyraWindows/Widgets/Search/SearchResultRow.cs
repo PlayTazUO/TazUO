@@ -23,6 +23,40 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 /// </summary>
 internal sealed class SearchResultRow : Panel
 {
+    #region Ctor
+
+    /// <param name="hit">The hit to display</param>
+    /// <param name="showAttribution">
+    ///     Whether to explain a match that did not come from the label. Off by default, since it
+    ///     competes for the same horizontal space as the editor.
+    /// </param>
+    /// <param name="onActivate">Invoked when the user follows this row to its own page</param>
+    /// <param name="inlineSizes">
+    ///     Shared editor measurements. Owned by the list rather than the row so it survives the row
+    ///     being discarded on the next query.
+    /// </param>
+    public SearchResultRow(
+        SearchHit hit,
+        bool showAttribution,
+        Action<SearchEntry>? onActivate,
+        InlineSizeCache inlineSizes
+    )
+    {
+        Hit = hit;
+        _entry = hit.Entry;
+        _onActivate = onActivate;
+        _inlineSizes = inlineSizes;
+        _attribution = showAttribution && TryBuildAttribution(hit, out string text) ? text : null;
+
+        Padding = new Thickness(MyraStyle.STANDARD_SPACING, 2, MyraStyle.STANDARD_SPACING, 2);
+        HorizontalAlignment = HorizontalAlignment.Stretch;
+
+        _host.HorizontalAlignment = HorizontalAlignment.Stretch;
+        Widgets.Add(_host);
+    }
+
+    #endregion
+
     #region Members
 
     #region Consts/Readonly
@@ -62,40 +96,6 @@ internal sealed class SearchResultRow : Panel
     ///     editor, subtracted from the budget the inline guard works against.
     /// </summary>
     public int IndentReserve { get; init; }
-
-    #endregion
-
-    #region Ctor
-
-    /// <param name="hit">The hit to display</param>
-    /// <param name="showAttribution">
-    ///     Whether to explain a match that did not come from the label. Off by default, since it
-    ///     competes for the same horizontal space as the editor.
-    /// </param>
-    /// <param name="onActivate">Invoked when the user follows this row to its own page</param>
-    /// <param name="inlineSizes">
-    ///     Shared editor measurements. Owned by the list rather than the row so it survives the row
-    ///     being discarded on the next query.
-    /// </param>
-    public SearchResultRow(
-        SearchHit hit,
-        bool showAttribution,
-        Action<SearchEntry>? onActivate,
-        InlineSizeCache inlineSizes
-    )
-    {
-        Hit = hit;
-        _entry = hit.Entry;
-        _onActivate = onActivate;
-        _inlineSizes = inlineSizes;
-        _attribution = showAttribution && TryBuildAttribution(hit, out string text) ? text : null;
-
-        Padding = new Thickness(MyraStyle.STANDARD_SPACING, 2, MyraStyle.STANDARD_SPACING, 2);
-        HorizontalAlignment = HorizontalAlignment.Stretch;
-
-        _host.HorizontalAlignment = HorizontalAlignment.Stretch;
-        Widgets.Add(_host);
-    }
 
     #endregion
 
@@ -142,10 +142,8 @@ internal sealed class SearchResultRow : Panel
     public bool HoldsKeyboardFocus(Widget? focused)
     {
         for (Widget? widget = focused; widget != null; widget = widget.Parent)
-        {
             if (ReferenceEquals(widget, _host))
                 return true;
-        }
 
         return false;
     }
@@ -182,12 +180,7 @@ internal sealed class SearchResultRow : Panel
         var link = new LinkLabel(
             TazLang.Get("optsearch_open_in_page"),
             () => _onActivate?.Invoke(_entry)
-        )
-        {
-            Wrap = false,
-            SingleLine = true,
-            VerticalAlignment = VerticalAlignment.Center
-        };
+        ) { Wrap = false, SingleLine = true, VerticalAlignment = VerticalAlignment.Center };
 
         link.Font = MyraStyle.GetUiFont(FontOffset);
 
