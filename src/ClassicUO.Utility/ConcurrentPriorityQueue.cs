@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace ClassicUO.Utility;
@@ -44,14 +45,24 @@ public class ConcurrentPriorityQueue<TElement, TPriority>
     /// Clear all items of a specific priority
     /// </summary>
     /// <param name="priority"></param>
-    public void ClearByPriority(TPriority priority)
+    public void ClearByPriority(TPriority priority) =>
+        Retain((_, queuedPriority) => !EqualityComparer<TPriority>.Default.Equals(queuedPriority, priority));
+
+    /// <summary>
+    /// Remove all items matching <paramref name="predicate"/>, preserving the priority and
+    /// insertion order of the remaining items.
+    /// </summary>
+    /// <param name="predicate">Return true to remove the item.</param>
+    public void RemoveWhere(Predicate<TElement> predicate) => Retain((element, _) => !predicate(element));
+
+    private void Retain(Func<TElement, TPriority, bool> keep)
     {
         lock (_lock)
         {
             var itemsToKeep = new List<(TElement Element, TPriority Priority, long Sequence)>();
 
             while (_queue.TryDequeue(out TElement element, out (TPriority Priority, long Sequence) compositePriority))
-                if (!EqualityComparer<TPriority>.Default.Equals(compositePriority.Priority, priority))
+                if (keep(element, compositePriority.Priority))
                     itemsToKeep.Add((element, compositePriority.Priority, compositePriority.Sequence));
 
             foreach ((TElement Element, TPriority Priority, long Sequence) item in itemsToKeep) _queue.Enqueue(item.Element, (item.Priority, item.Sequence));
