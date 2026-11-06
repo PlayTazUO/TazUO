@@ -7,6 +7,7 @@ All notable changes to TazUO will be recorded here.
 * ***Fix:*** `API.CastSpell` no longer crashes the client with a `NullReferenceException` when called with `None` or an empty spell name - the cast is skipped, and spell-name lookup now tolerates missing names
 * ***Fix:*** Stopping a Legion script while it was still starting up no longer crashes the client with an unhandled `ThreadInterruptedException` - the stop is now caught during script setup, so the script is not executed and shuts down normally
 * ***Feature:*** The grid container loot icon now opens the item selection menu on single click - Alt + Click selects everything, and Ctrl + Click toggles single-click looting
+* ***Fix:*** The UseSkill macro list now shows skill names from the client's data files, so custom or renamed skills match the skills menu - the stored macro values keep their existing enum ordering, so saved macros still work
 
 ## 11/04/26
 * ***Fix:*** Modifier-only inputs not recognized by the `IsKeyPressed` API - [P.R 1207](https://github.com/PlayTazUO/TazUO/pull/1207) ([yuval-po](https://github.com/yuval-po))
