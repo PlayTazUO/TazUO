@@ -435,22 +435,26 @@ public partial class GridContainer : ResizableGump
             };
             _quickDropBackpack.MouseUp += (sender, e) =>
             {
-                if (e.Button == MouseButtonType.Left && _quickDropBackpack.MouseIsOver)
+                if (e.Button != MouseButtonType.Left || !_quickDropBackpack.MouseIsOver)
+                    return;
+
+                if (Client.Game.UO.GameCursor.ItemHold.Enabled)
                 {
-                    if (Client.Game.UO.GameCursor.ItemHold.Enabled)
-                    {
-                        GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, 0xFFFF, 0xFFFF, 0, World.Player.Backpack);
-                    }
-                    else if (_isCorpse)
-                    {
-                        ProfileManager.CurrentProfile.CorpseSingleClickLoot ^= true;
-                        _quickDropBackpack.SetTooltip(QuickLootTooltip);
-                    }
-                    else
-                    {
-                        _quickLootThisContainer ^= true;
-                        _quickDropBackpack.SetTooltip(QuickLootTooltip);
-                    }
+                    GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, 0xFFFF, 0xFFFF, 0, World.Player.Backpack);
+                }
+                else if (Keyboard.Ctrl)
+                {
+                    ToggleSingleClickLoot();
+                }
+                else if (Keyboard.Alt)
+                {
+                    SelectItemsForMultiMove(_ => true);
+                }
+                else
+                {
+                    // Rebuild on every open so the entry lists reflect the container's current contents.
+                    _quickDropBackpack.ContextMenu = GenQuickLootContextMenu();
+                    _quickDropBackpack.ContextMenu?.Show();
                 }
             };
             _quickDropBackpack.MouseEnter += (sender, e) => { _quickDropBackpack.Hue = 0x34; };
@@ -713,20 +717,7 @@ public partial class GridContainer : ResizableGump
             control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_refreshhighlights", "Refresh item highlights"), GridHighlightData.RecheckMatchStatus));
 
             var multiMoveMenu = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove", "Multi Move"));
-            multiMoveMenu.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectall", "Select all"), () => SelectItemsForMultiMove(_ => true)));
-
-            var selectByLayer = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbylayer", "Select by layer"));
-            PopulateMultiMoveLayerEntries(selectByLayer);
-            multiMoveMenu.Add(selectByLayer);
-
-            var selectByGraphic = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbygraphic", "Select by graphic"));
-            PopulateMultiMoveGraphicEntries(selectByGraphic);
-            multiMoveMenu.Add(selectByGraphic);
-
-            var selectByName = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbyname", "Select by name"));
-            PopulateMultiMoveNameEntries(selectByName);
-            multiMoveMenu.Add(selectByName);
-
+            AddMultiMoveSelectEntries(multiMoveMenu.Add);
             control.Add(multiMoveMenu);
 
             control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_renamecontainer", "Rename container"), () =>
@@ -758,6 +749,45 @@ public partial class GridContainer : ResizableGump
             UpdateContainerNameLabel();
         }
     #nullable disable
+
+        /// <summary>
+        /// Context menu shown by clicking the quick loot icon. Mirrors the item selection entries from the
+        /// Multi Move submenu in the container controls menu.
+        /// </summary>
+        private ContextMenuControl GenQuickLootContextMenu()
+        {
+            var control = new ContextMenuControl(this);
+            AddMultiMoveSelectEntries(control.Add);
+            return control;
+        }
+
+        private void ToggleSingleClickLoot()
+        {
+            if (_isCorpse)
+                ProfileManager.CurrentProfile.CorpseSingleClickLoot ^= true;
+            else
+                _quickLootThisContainer ^= true;
+
+            _quickDropBackpack.SetTooltip(QuickLootTooltip);
+        }
+
+        /// <summary>Adds the item selection entries shared by the Multi Move submenu and the quick loot icon menu.</summary>
+        private void AddMultiMoveSelectEntries(Action<ContextMenuItemEntry> add)
+        {
+            add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectall", "Select all"), () => SelectItemsForMultiMove(_ => true)));
+
+            var selectByLayer = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbylayer", "Select by layer"));
+            PopulateMultiMoveLayerEntries(selectByLayer);
+            add(selectByLayer);
+
+            var selectByGraphic = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbygraphic", "Select by graphic"));
+            PopulateMultiMoveGraphicEntries(selectByGraphic);
+            add(selectByGraphic);
+
+            var selectByName = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbyname", "Select by name"));
+            PopulateMultiMoveNameEntries(selectByName);
+            add(selectByName);
+        }
 
         private ContextMenuControl GenSortContextMenu()
         {
