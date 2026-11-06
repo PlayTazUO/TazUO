@@ -959,7 +959,7 @@ internal static class GameActions
             if (ProfileManager.CurrentProfile.QueueManualItemMoves && !force)
             {
                 Client.Game.UO.GameCursor.ItemHold.Clear();
-                ObjectActionQueue.Instance.Enqueue(new MoveRequest(serial, container, (ushort)amount, x, y, z).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                ObjectActionQueue.Instance.Enqueue(new MoveRequest(serial, container, (ushort)amount, x, y, z).ToObjectActionQueueItem(), ActionPriority.ManualMoveItem);
                 return;
             }
 

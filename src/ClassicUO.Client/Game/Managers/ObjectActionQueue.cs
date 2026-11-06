@@ -177,6 +177,7 @@ public enum ActionPriority
     UseItem,
     UnequipItem, //Unequip item to make room for equipping - must run before EquipItem
     EquipItem,
+    ManualMoveItem, //A move the player initiated - must run before queued/automated moves
     MoveItem,
     LootItemHigh,   //Auto-loot: High priority items (still lower than manual moves)
     LootItemMedium, //Auto-loot: Normal priority items
