@@ -103,8 +103,8 @@ public partial class GridContainer : ResizableGump
             get
             {
                 if (_isCorpse)
-                    return TazLang.Get("gridcontainer_quickloot_corpse_tooltip", new string[] { QuickLootStatus });
-                return TazLang.Get("gridcontainer_quickloot_container_tooltip", new string[] { GetEnabledDisabledText(_quickLootThisContainer) });
+                    return TazLang.Get("gridcontainer_quickloot_corpse_tooltip_v2", new string[] { QuickLootStatus });
+                return TazLang.Get("gridcontainer_quickloot_container_tooltip_v2", new string[] { GetEnabledDisabledText(_quickLootThisContainer) });
             }
 
         }
@@ -421,13 +421,13 @@ public partial class GridContainer : ResizableGump
             };
             _openRegularGump.MouseEnter += (sender, e) => { _openRegularGump.Graphic = regularGumpIcon == null ? (ushort)1210 : (ushort)5840; };
             _openRegularGump.MouseExit += (sender, e) => { _openRegularGump.Graphic = regularGumpIcon == null ? (ushort)1209 : (ushort)5839; };
-            _openRegularGump.SetTooltip(TazLang.Get("gridcontainer_controls_tooltip",
+            _openRegularGump.SetTooltip(TazLang.Get("gridcontainer_controls_tooltip_v2",
                 "/c[orange]Grid Container Controls:/cd\n" +
                 "Ctrl + Click to lock an item in place\n" +
                 "Alt + Click to toggle selection for multi-move\n" +
                 "Alt + Double Click to select all similar items\n" +
                 "Shift + Click to add an item to your auto loot list\n" +
-                "Sort and single click looting can be enabled with the icons on the right side"));
+                "Sort options are on the right side. The loot icon opens item selection with a click, Alt + Click selects everything, and Ctrl + Click toggles single click looting"));
             _quickDropBackpack = new ResizableStaticPic(World.Player?.Backpack?.DisplayedGraphic ?? 0, 20, 20)
             {
                 X = Width - _openRegularGump.Width - 20 - _borderWidth,
