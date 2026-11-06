@@ -2,6 +2,9 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/06/26
+* ***Fix:*** The weather start message shows again when the same weather returns after the previous one ended on its own timer or with a zero-intensity packet - those endings now count as a stop. With the classic weather, the same weather arriving after its timer ran out is no longer dropped as still active
+
 ## 11/05/26
 * ***Feature:*** The Tinkerer's Art, Land, and Texture tabs now have a Target button - targeting an object jumps straight to its art, land, or texture entry, including land tiles and objects standing on them
 * ***Fix:*** `API.CastSpell` no longer crashes the client with a `NullReferenceException` when called with `None` or an empty spell name - the cast is skipped, and spell-name lookup now tolerates missing names
