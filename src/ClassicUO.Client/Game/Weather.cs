@@ -50,6 +50,7 @@ namespace ClassicUO.Game
 
             if (Type == WeatherType.WT_INVALID_0 || Type == WeatherType.WT_INVALID_1)
             {
+                OnWeatherStopped();
                 _timer = 0;
                 CurrentWeather = null;
 
@@ -57,21 +58,25 @@ namespace ClassicUO.Game
             }
 
             bool showMessage = Count > 0;
+            bool printMessage = ShouldPrintStartMessage(type);
 
             switch (type)
             {
                 case WeatherType.WT_RAIN:
                     if (showMessage)
                     {
-                        GameActions.Print
-                        (
-                            _world,
-                            TazLang.Get("it_begins_to_rain"),
-                            1154,
-                            MessageType.System,
-                            3,
-                            false
-                        );
+                        if (printMessage)
+                        {
+                            GameActions.Print
+                            (
+                                _world,
+                                TazLang.Get("it_begins_to_rain"),
+                                1154,
+                                MessageType.System,
+                                3,
+                                false
+                            );
+                        }
 
                         CurrentWeather = type;
                     }
@@ -81,15 +86,18 @@ namespace ClassicUO.Game
                 case WeatherType.WT_STORM_APPROACH:
                     if (showMessage)
                     {
-                        GameActions.Print
-                        (
-                            _world,
-                            TazLang.Get("afierce_storm_approaches"),
-                            1154,
-                            MessageType.System,
-                            3,
-                            false
-                        );
+                        if (printMessage)
+                        {
+                            GameActions.Print
+                            (
+                                _world,
+                                TazLang.Get("afierce_storm_approaches"),
+                                1154,
+                                MessageType.System,
+                                3,
+                                false
+                            );
+                        }
 
                         CurrentWeather = type;
 
@@ -101,15 +109,18 @@ namespace ClassicUO.Game
                 case WeatherType.WT_SNOW:
                     if (showMessage)
                     {
-                        GameActions.Print
-                        (
-                            _world,
-                            TazLang.Get("it_begins_to_snow"),
-                            1154,
-                            MessageType.System,
-                            3,
-                            false
-                        );
+                        if (printMessage)
+                        {
+                            GameActions.Print
+                            (
+                                _world,
+                                TazLang.Get("it_begins_to_snow"),
+                                1154,
+                                MessageType.System,
+                                3,
+                                false
+                            );
+                        }
 
                         CurrentWeather = type;
 
@@ -121,15 +132,18 @@ namespace ClassicUO.Game
                 case WeatherType.WT_STORM_BREWING:
                     if (showMessage)
                     {
-                        GameActions.Print
-                        (
-                            _world,
-                            TazLang.Get("astorm_is_brewing"),
-                            1154,
-                            MessageType.System,
-                            3,
-                            false
-                        );
+                        if (printMessage)
+                        {
+                            GameActions.Print
+                            (
+                                _world,
+                                TazLang.Get("astorm_is_brewing"),
+                                1154,
+                                MessageType.System,
+                                3,
+                                false
+                            );
+                        }
 
                         CurrentWeather = type;
 
@@ -137,6 +151,11 @@ namespace ClassicUO.Game
                     }
 
                     break;
+            }
+
+            if (CurrentWeather.HasValue)
+            {
+                OnWeatherStarted(CurrentWeather.Value);
             }
 
             _windTimer = 0;
