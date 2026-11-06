@@ -196,10 +196,6 @@ public static class GumpBrowserTabContent
         jumpRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_gump_goto", "Go to:"), MyraLabel.TextStyle.P));
         jumpRow.Widgets.Add(jumpBox);
         jumpRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_gump_jump", "Jump"), DoJump));
-        jumpRow.Widgets.Add(TinkererTargeting.CreateButton(
-            entity => JumpTo(entity.Graphic),
-            TazLang.Get("tinkerer_gump_target_tooltip", "Target an object to jump to its gump graphic.")
-        ));
         leftColumn.Widgets.Add(jumpRow);
 
         // Pagination controls

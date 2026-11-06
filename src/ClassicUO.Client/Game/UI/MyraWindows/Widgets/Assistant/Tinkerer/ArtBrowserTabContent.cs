@@ -178,10 +178,10 @@ public static class ArtBrowserTabContent
         }
 
         /// <summary>Jumps to the targeted object's art, previewing it in the object's hue.</summary>
-        private void TargetArt(Entity entity)
+        private void TargetArt(GameObject picked)
         {
-            _hue = entity.Hue;
-            JumpTo(entity.Graphic);
+            _hue = picked.Hue;
+            JumpTo(picked.Graphic);
         }
 
         /// <summary>
