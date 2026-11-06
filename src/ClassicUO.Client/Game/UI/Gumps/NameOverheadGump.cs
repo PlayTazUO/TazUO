@@ -40,6 +40,10 @@ namespace ClassicUO.Game.UI.Gumps
         private bool _useSplitLayout;
         private static int currentHeight = 22;
         private static readonly int COLLISION_SPACING = 8;
+        // Space between the nameplate and what the mobile draws over itself.
+        private const int STACK_GAP = 2;
+        // Without the split layout, all three resource bars fill the plate and the name goes this far below.
+        private const int NAME_BELOW_BARS_OFFSET = 22;
         private static readonly Dictionary<long, int[]> RoundedRectangleInsetCache = new();
         private const int MIN_NAMEPLATE_WIDTH = 60;
         private const int NAMEPLATE_HORIZONTAL_PADDING = 4;
@@ -670,16 +674,30 @@ namespace ClassicUO.Game.UI.Gumps
                     out int height
                 );
 
+                // Same position used while it isn't locked (see Draw): any difference makes the nameplate move off
+                // the mouse as soon as it is over it, then back under it, and so on (fast flickering).
                 _lockedPosition = GetPosition(m, height, centerY);
             }
 
             base.OnMouseOver(x, y);
         }
 
+        /// <summary>
+        /// World point the nameplate's bottom center sits on: just above what the mobile drew over itself
+        /// (sprite, simple healthbar, name), or from its animation dimensions when it was not drawn recently.
+        /// </summary>
         private Point GetPosition(Mobile m, int height, int centerY)
         {
+            // Tile center, where the sprite, simple healthbar and HP percentage are centered too.
+            int x = (int)(m.RealScreenPosition.X + m.Offset.X + 22);
+
+            if (m.TryGetOverheadStackTop(out int stackTopY))
+            {
+                return new Point(x, stackTopY - STACK_GAP);
+            }
+
             Point p = new(
-                (int)(m.RealScreenPosition.X + m.Offset.X + 22 + 5),
+                x,
                 (int)(m.RealScreenPosition.Y
                       + (m.Offset.Y - m.Offset.Z)
                       - (height + centerY + 15) * m.Scale
@@ -691,6 +709,9 @@ namespace ClassicUO.Game.UI.Gumps
                                   : 0
                       )
                     ));
+
+            // Leave room for the name/title drawn above the mobile ("Always show name/title above mobiles").
+            p.Y -= m.NameOverheadTextExtraHeight;
 
             return p;
         }
@@ -838,6 +859,9 @@ namespace ClassicUO.Game.UI.Gumps
                     return false;
                 }
 
+                // No plate until this draw places one: hidden or off-screen plates must not lift the HP percentage.
+                m.SetNamePlateDrawn(0);
+
                 if (NameOverHeadManager.HasSearchFilter)
                 {
                     string oplName = null;
@@ -902,7 +926,7 @@ namespace ClassicUO.Game.UI.Gumps
                     Point pos = GetPosition(m, height, centerY);
 
                     x = pos.X;
-                    y = pos.Y - m.NameOverheadTextExtraHeight;
+                    y = pos.Y;
                 }
             }
             else if (SerialHelper.IsItem(LocalSerial))
@@ -943,9 +967,10 @@ namespace ClassicUO.Game.UI.Gumps
                     + (bounds.Height >> 1);
             }
 
+            int nameOverhang = GetNameOverhang(nameplateEntity);
             Point p = Client.Game.Scene.Camera.WorldToScreen(new Point(x, y));
             x = p.X - (Width >> 1);
-            y = p.Y - (Height);// >> 1);
+            y = p.Y - (Height + nameOverhang);
 
             Camera camera = Client.Game.Scene.Camera;
             x += camera.Bounds.X;
@@ -967,6 +992,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             X = x;
             Y = y;
+
+            (nameplateEntity as Mobile)?.SetNamePlateDrawn(Height + nameOverhang);
 
             Rectangle nameBounds = GetNamePlateBackgroundBounds(x, y);
             int cornerRadius = GetCornerRadius(nameBounds.Width, nameBounds.Height);
@@ -1021,7 +1048,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (!_useSplitLayout)
                         {
-                            textY += 20;
+                            textY += NAME_BELOW_BARS_OFFSET;
                         }
                     }
                 }
@@ -1037,6 +1064,28 @@ namespace ClassicUO.Game.UI.Gumps
             bool result = _text.Draw(batcher, textX, textDrawY, textColor);
             DrawWordOfDeathIcon(batcher, textMobile, nameBounds, textDrawY);
             return result;
+        }
+
+        /// <summary>
+        /// How far the name is drawn below the plate's bounds: without the split layout, the player and party
+        /// members get all three resource bars filling the plate and the name under them.
+        /// </summary>
+        /// <returns>Pixels past the plate's bottom edge; 0 when the name is inside the plate.</returns>
+        private int GetNameOverhang(Entity entity)
+        {
+            if (_useSplitLayout || !ProfileManager.CurrentProfile.NamePlateHealthBar || entity is not Mobile m)
+            {
+                return 0;
+            }
+
+            if (m is not PlayerMobile && !World.Party.Contains(m.Serial))
+            {
+                return 0;
+            }
+
+            int textBottom = NAME_BELOW_BARS_OFFSET + 2 + (int)_textDrawOffset.Y + _text.Height;
+
+            return Math.Max(0, textBottom - Height);
         }
 
         private Rectangle GetResourceBarBounds(int x, int y, int barIndex, int barCount)

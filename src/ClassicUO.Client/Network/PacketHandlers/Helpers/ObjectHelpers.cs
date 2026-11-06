@@ -23,7 +23,8 @@ public static class ObjectHelpers
         Flags flagss,
         int UNK,
         byte type,
-        ushort UNK_2
+        ushort UNK_2,
+        float? scale = null
     )
     {
         Mobile mobile = null;
@@ -78,6 +79,9 @@ public static class ObjectHelpers
                 mobile.Z = z;
                 mobile.Flags = flagss;
             }
+
+            if (scale.HasValue)
+                mobile.Scale = scale.Value;
 
             // Servers re-send object updates (0x78/0x25) for in-range objects even when nothing
             // changed. Skip the step enqueue, tile re-insert and events below when the update is

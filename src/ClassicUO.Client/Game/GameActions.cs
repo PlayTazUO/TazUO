@@ -1250,9 +1250,12 @@ internal static class GameActions
     /// <param name="name">Can be a partial match</param>
     internal static bool CastSpellByName(string name, bool partialMatch = true)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            return false;
+
         name = name.Trim();
 
-        if (!string.IsNullOrEmpty(name) && SpellDefinition.TryGetSpellFromName(name, out SpellDefinition spellDef, partialMatch))
+        if (SpellDefinition.TryGetSpellFromName(name, out SpellDefinition spellDef, partialMatch))
         {
             // Record action for script recording
             ScriptRecorder.Instance.RecordCastSpell(name);

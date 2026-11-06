@@ -2,6 +2,7 @@
 using System;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
+using ClassicUO.Game.GameObjects;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
@@ -213,6 +214,10 @@ public static class TextureBrowserTabContent
         jumpRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_texture_goto", "Go to:"), MyraLabel.TextStyle.P));
         jumpRow.Widgets.Add(jumpBox);
         jumpRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_texture_jump", "Jump"), DoJump));
+        jumpRow.Widgets.Add(TinkererTargeting.CreateButton(
+            picked => JumpTo(GetTextureForTarget(picked)),
+            TazLang.Get("tinkerer_texture_target_tooltip", "Target a land tile to jump to its texture.")
+        ));
         leftColumn.Widgets.Add(jumpRow);
 
         // Pagination controls
@@ -262,6 +267,21 @@ public static class TextureBrowserTabContent
     private static string BuildCellTooltip(int id)
     {
         return TazLang.Get("tinkerer_texture_tooltip", new[] { id.ToString(), $"0x{id:X4}" });
+    }
+
+    /// <summary>
+    /// Returns the texture id used by the land under the targeted object, or -1 when the target has no
+    /// land tile.
+    /// </summary>
+    private static int GetTextureForTarget(GameObject picked)
+    {
+        int landGraphic = TinkererTargeting.GetLandGraphic(picked);
+        LandTiles[]? landData = Client.Game.UO.FileManager?.TileData?.LandData;
+
+        if (landGraphic < 0 || landData == null || landGraphic >= landData.Length)
+            return -1;
+
+        return landData[landGraphic].TexID;
     }
 
     /// <summary>

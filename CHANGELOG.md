@@ -2,10 +2,18 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/05/26
+* ***Feature:*** The Tinkerer's Art, Land, and Texture tabs now have a Target button - targeting an object jumps straight to its art, land, or texture entry, including land tiles and objects standing on them
+* ***Fix:*** `API.CastSpell` no longer crashes the client with a `NullReferenceException` when called with `None` or an empty spell name - the cast is skipped, and spell-name lookup now tolerates missing names
+* ***Fix:*** Stopping a Legion script while it was still starting up no longer crashes the client with an unhandled `ThreadInterruptedException` - the stop is now caught during script setup, so the script is not executed and shuts down normally
+* ***Feature:*** The grid container loot icon now opens the item selection menu on single click - Alt + Click selects everything, and Ctrl + Click toggles single-click looting
+* ***Fix:*** The UseSkill macro list now shows skill names from the client's data files, so custom or renamed skills match the skills menu - the stored macro values keep their existing enum ordering, so saved macros still work
+
 ## 11/04/26
 * ***Fix:*** Modifier-only inputs not recognized by the `IsKeyPressed` API - [P.R 1207](https://github.com/PlayTazUO/TazUO/pull/1207) ([yuval-po](https://github.com/yuval-po))
 
 ## 11/03/26
+* ***Fix:*** Overheads above a mobile no longer overlap: the simple healthbar, the name, the nameplate and the HP percentage now stack from the top of the drawn sprite, mounted or not - the HP percentage no longer covers the nameplate's bars or the simple healthbar, and the player's and party members' nameplates no longer sit on the head with the name drawn below the bars - [P.R 1205](https://github.com/PlayTazUO/TazUO/pull/1205) ([DavideRei](https://github.com/DavideRei))
 * ***Fix:*** Application crash due to off-thread usage of certain chat related functions - [P.R 1206](https://github.com/PlayTazUO/TazUO/pull/1206) ([yuval-po](https://github.com/yuval-po))
 
 ## 11/02/26
@@ -63,6 +71,7 @@ All notable changes to TazUO will be recorded here.
 * ***Fix:*** Music volume changes (including unchecking `Enable Music`) now apply to the track already playing when `Reproduce sounds in background` is enabled
 * ***Fix:*** Mobiles and corpses whose body has no second death animation (common on custom creatures and mounts) no longer turn invisible when they die running - they fall back to the first death animation
 * ***Fix:*** Non-movable server gumps (e.g. a region name shown over the viewport) always open where the server places them - a position remembered from earlier in the session, saved in the profile at logout, or pinned by "save all gump positions automatically" no longer overrides it, and that option no longer pins non-movable gumps
+* ***Fix:*** The weather start message (e.g. "It begins to rain") no longer repeats when the server resends the same weather or the player crosses a short clear stretch - it shows again only when that weather returns more than a minute after stopping
 
 ## 10/16/26
 * ***Feature:*** Added an in-game visual editor for Xml Gumps - open it with the `xmleditor` command or the top bar's Xml Gumps menu. It lists every element, lets you add, duplicate, delete and reorder them, and edits each attribute in a property panel (with hue and graphic pickers).

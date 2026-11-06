@@ -499,11 +499,11 @@ namespace ClassicUO.LegionScripting
 
         private static void ExecutePythonScript(ScriptFile script)
         {
-            script.SetupPythonEngine();
-            script.SetupPythonScope();
-
             try
             {
+                script.SetupPythonEngine();
+                script.SetupPythonScope();
+
                 ScriptSource source = script.PythonEngine.CreateScriptSourceFromString(script.FileContentsJoined, script.FullPath, SourceCodeKind.File);
                 source?.Execute(script.PythonScope);
             }
