@@ -397,7 +397,7 @@ public static class MacrosTabContent
                 for (int si = 0; si < subCount; si++)
                 {
                     subValues[si] = (MacroSubType)(si + subOffset);
-                    subNames[si] = subValues[si].ToString();
+                    subNames[si] = Macro.GetSubTypeName(capturedAction.Code, subValues[si]);
                 }
 
                 // The gump-list macro types (Open/Close/Minimize/Maximize/ToggleGump) show a list
