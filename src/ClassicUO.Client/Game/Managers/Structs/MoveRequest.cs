@@ -1,6 +1,7 @@
 ﻿using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Network;
 
 namespace ClassicUO.Game.Managers.Structs;
@@ -58,6 +59,8 @@ public readonly struct MoveRequest
 
     public void Execute()
     {
+        ObjectActionQueue.Instance.OnMoveStarted(this);
+
         AsyncNetClient.Socket.Send_PickUpRequest(Serial, Amount);
 
         if(_moveType == MoveType.Move)
@@ -96,7 +99,99 @@ public static class MoveRequestExtensions
 {
     public static MoveRequest? ToLootBag(this Item item) => MoveRequest.ToLootBag(item.Serial);
 
-    public static ObjectActionQueueItem ToObjectActionQueueItem(this MoveRequest moveRequest) => new(moveRequest.Execute);
+    public static ObjectActionQueueItem ToObjectActionQueueItem(this MoveRequest moveRequest) =>
+        new(moveRequest.Execute)
+        {
+            Serial = moveRequest.Serial
+        };
+}
+
+/// <summary>
+/// Snapshot of the item state just before a queued move is sent to the server. If the server
+/// rejects the move, this is used to put the item back where it came from because queued moves
+/// do not populate <see cref="ItemHold"/> the way a manual drag does.
+/// </summary>
+public readonly struct ItemMoveSource
+{
+    public uint Serial { get; init; }
+    public uint Container { get; init; }
+    public ushort Graphic { get; init; }
+    public ushort Hue { get; init; }
+    public ushort Amount { get; init; }
+    public Flags Flags { get; init; }
+    public Layer Layer { get; init; }
+    public ushort X { get; init; }
+    public ushort Y { get; init; }
+    public sbyte Z { get; init; }
+
+    public static ItemMoveSource Capture(Item item) =>
+        new()
+        {
+            Serial = item.Serial,
+            Container = item.Container,
+            Graphic = item.Graphic,
+            Hue = item.Hue,
+            Amount = item.Amount,
+            Flags = item.Flags,
+            Layer = item.Layer,
+            X = item.X,
+            Y = item.Y,
+            Z = item.Z
+        };
+
+    /// <summary>
+    /// Restore the item from this snapshot, moving it back into its original container or tile.
+    /// </summary>
+    public void Restore(World world)
+    {
+        Item item = world.Items.Get(Serial);
+
+        // Pickup was rejected before the item left its place, so the client's model is still correct.
+        if (item != null && !item.IsDestroyed && item.Container == Container && item.X == X && item.Y == Y && item.Z == Z)
+            return;
+
+        item = world.GetOrCreateItem(Serial);
+        item.Graphic = Graphic;
+        item.Hue = Hue;
+        item.Amount = Amount;
+        item.Flags = Flags;
+        item.Layer = Layer;
+        item.X = X;
+        item.Y = Y;
+        item.Z = Z;
+        item.CheckGraphicChange();
+
+        if (SerialHelper.IsValid(Container))
+        {
+            Entity container = world.Get(Container);
+
+            if (container == null)
+            {
+                world.RemoveItem(item, true);
+                return;
+            }
+
+            world.RemoveItemFromContainer(item);
+            item.Container = Container;
+            container.PushToBack(item);
+
+            if (SerialHelper.IsMobile(container.Serial))
+            {
+                UIManager.GetGump<PaperDollGump>(Container)?.RequestUpdateContents();
+                UIManager.GetGump<ModernPaperdoll>(Container)?.RequestUpdateContents();
+            }
+            else
+            {
+                UIManager.GetGump<ContainerGump>(Container)?.RequestUpdateContents();
+                UIManager.GetGump<GridContainer>(Container)?.RequestUpdateContents();
+            }
+        }
+        else
+        {
+            world.RemoveItemFromContainer(item);
+            item.SetInWorldTile(X, Y, Z);
+        }
+    }
 }
 
 public enum MoveType

@@ -2,6 +2,9 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/06/26
+* ***Fix:*** Item moves rejected by the server now remove the item from the move queue and return it to where it came from - queued loot/organizer/script moves no longer keep retrying a rejected item or leave it stuck after a denied pickup or drop
+
 ## 11/05/26
 * ***Feature:*** The Tinkerer's Art, Land, and Texture tabs now have a Target button - targeting an object jumps straight to its art, land, or texture entry, including land tiles and objects standing on them
 * ***Fix:*** `API.CastSpell` no longer crashes the client with a `NullReferenceException` when called with `None` or an empty spell name - the cast is skipped, and spell-name lookup now tolerates missing names
