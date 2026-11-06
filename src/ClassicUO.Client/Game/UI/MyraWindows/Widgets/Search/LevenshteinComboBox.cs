@@ -6,10 +6,6 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 
 public class LevenshteinComboBox<T> : ScoredSearchComboBox<T>
 {
-    public LevenshteinComboBox(string styleName = Stylesheet.DefaultStyleName) : base(new LevenshteinSearchStrategy(), styleName)
-    {
-    }
-
     /// <summary>
     ///     Shadows the base's interface-typed property with the concrete strategy. Resolved from the
     ///     base property on every read rather than cached at construction: the strategy can be
@@ -32,6 +28,10 @@ public class LevenshteinComboBox<T> : ScoredSearchComboBox<T>
             if (Strategy is { } strategy)
                 strategy.MaxDistance = value;
         }
+    }
+
+    public LevenshteinComboBox(string styleName = Stylesheet.DefaultStyleName) : base(new LevenshteinSearchStrategy(), styleName)
+    {
     }
 }
 

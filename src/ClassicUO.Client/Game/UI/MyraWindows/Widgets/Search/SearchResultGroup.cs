@@ -15,6 +15,42 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 /// </summary>
 public sealed class SearchResultGroup
 {
+    #region Public Accessors
+
+    /// <summary>
+    ///     This node's own segment labels. Usually one, but a chain of segments with nothing else in
+    ///     it is collapsed into a single node so a lone setting doesn't cost several indent levels -
+    ///     such a node displays as <c>Visual Effects › Overlay Rules</c>.
+    /// </summary>
+    public IReadOnlyList<string> Segments { get; private set; }
+
+    /// <summary>Full path to this node, used as the collapse-state key and for navigation</summary>
+    public SearchPath Path { get; private set; }
+
+    /// <summary>Deeper groups beneath this one, best-scoring first</summary>
+    public IReadOnlyList<SearchResultGroup> Children => _children;
+
+    /// <summary>Hits that live directly at this node, in index order</summary>
+    public IReadOnlyList<SearchHit> Hits => _hits;
+
+    /// <summary>Total hits at this node and everywhere below it</summary>
+    public int TotalHits { get; private set; }
+
+    /// <summary>Best score at this node or below, which is what orders siblings</summary>
+    public double BestScore { get; private set; }
+
+    /// <summary>Joined <see cref="Segments" />, as displayed on the group header</summary>
+    public string DisplayName => string.Join(SearchPath.SEPARATOR, Segments);
+
+    #endregion
+
+    #region Members
+
+    private readonly List<SearchResultGroup> _children = [];
+    private readonly List<SearchHit> _hits = [];
+
+    #endregion
+
     #region Ctor
 
     private SearchResultGroup(SearchPath path, string segment)
@@ -68,42 +104,6 @@ public sealed class SearchResultGroup
 
         return roots;
     }
-
-    #endregion
-
-    #region Members
-
-    private readonly List<SearchResultGroup> _children = [];
-    private readonly List<SearchHit> _hits = [];
-
-    #endregion
-
-    #region Public Accessors
-
-    /// <summary>
-    ///     This node's own segment labels. Usually one, but a chain of segments with nothing else in
-    ///     it is collapsed into a single node so a lone setting doesn't cost several indent levels -
-    ///     such a node displays as <c>Visual Effects › Overlay Rules</c>.
-    /// </summary>
-    public IReadOnlyList<string> Segments { get; private set; }
-
-    /// <summary>Full path to this node, used as the collapse-state key and for navigation</summary>
-    public SearchPath Path { get; private set; }
-
-    /// <summary>Deeper groups beneath this one, best-scoring first</summary>
-    public IReadOnlyList<SearchResultGroup> Children => _children;
-
-    /// <summary>Hits that live directly at this node, in index order</summary>
-    public IReadOnlyList<SearchHit> Hits => _hits;
-
-    /// <summary>Total hits at this node and everywhere below it</summary>
-    public int TotalHits { get; private set; }
-
-    /// <summary>Best score at this node or below, which is what orders siblings</summary>
-    public double BestScore { get; private set; }
-
-    /// <summary>Joined <see cref="Segments" />, as displayed on the group header</summary>
-    public string DisplayName => string.Join(SearchPath.SEPARATOR, Segments);
 
     #endregion
 

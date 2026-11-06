@@ -14,18 +14,6 @@ public class ContainsThenLevenshteinSearchStrategy : CompositeSearchStrategy
     private readonly SubstringSearchStrategy _contains;
     private readonly LevenshteinSearchStrategy _levenshtein;
 
-    public ContainsThenLevenshteinSearchStrategy()
-        : this(new SubstringSearchStrategy(), new LevenshteinSearchStrategy { PerTokenBest = true })
-    {
-    }
-
-    private ContainsThenLevenshteinSearchStrategy(SubstringSearchStrategy contains, LevenshteinSearchStrategy levenshtein)
-        : base(contains, levenshtein)
-    {
-        _contains = contains;
-        _levenshtein = levenshtein;
-    }
-
     public bool CaseSensitive
     {
         get => _contains.CaseSensitive;
@@ -46,6 +34,18 @@ public class ContainsThenLevenshteinSearchStrategy : CompositeSearchStrategy
     {
         get => _levenshtein.MinScore;
         set => _levenshtein.MinScore = value;
+    }
+
+    public ContainsThenLevenshteinSearchStrategy()
+        : this(new SubstringSearchStrategy(), new LevenshteinSearchStrategy { PerTokenBest = true })
+    {
+    }
+
+    private ContainsThenLevenshteinSearchStrategy(SubstringSearchStrategy contains, LevenshteinSearchStrategy levenshtein)
+        : base(contains, levenshtein)
+    {
+        _contains = contains;
+        _levenshtein = levenshtein;
     }
 
     /// <summary>

@@ -17,19 +17,6 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 /// </summary>
 public readonly struct SearchPath : IEquatable<SearchPath>
 {
-    #region Members
-
-    /// <summary>Separator used by <see cref="Text" /> and <see cref="ToString" /></summary>
-    public const string SEPARATOR = " › ";
-
-    /// <summary>The empty path, matching a node with no ancestors</summary>
-    public static readonly SearchPath Empty = new([], string.Empty);
-
-    private readonly string[]? _segments;
-    private readonly string? _text;
-
-    #endregion
-
     #region Public Accessors
 
     /// <summary>Number of segments in this path</summary>
@@ -50,6 +37,19 @@ public readonly struct SearchPath : IEquatable<SearchPath>
     /// <summary>The segment at <paramref name="index" />, outermost first</summary>
     /// <exception cref="IndexOutOfRangeException">Thrown when <paramref name="index" /> is out of range</exception>
     public string this[int index] => (_segments ?? throw new IndexOutOfRangeException())[index];
+
+    #endregion
+
+    #region Members
+
+    /// <summary>Separator used by <see cref="Text" /> and <see cref="ToString" /></summary>
+    public const string SEPARATOR = " › ";
+
+    /// <summary>The empty path, matching a node with no ancestors</summary>
+    public static readonly SearchPath Empty = new([], string.Empty);
+
+    private readonly string[]? _segments;
+    private readonly string? _text;
 
     #endregion
 

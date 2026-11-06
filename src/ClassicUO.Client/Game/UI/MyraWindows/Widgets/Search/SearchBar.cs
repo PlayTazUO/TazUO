@@ -41,6 +41,72 @@ public record struct SearchBarProps()
 /// </summary>
 public sealed class SearchBar : HorizontalStackPanel
 {
+    #region Events
+
+    /// <summary>
+    ///     Raised on every edit the user makes, carrying the box's text verbatim. Neither debounced
+    ///     nor trimmed - when to act and what counts as the query are the consumer's decisions.
+    /// </summary>
+    public event EventHandler<string>? QueryChanged;
+
+    /// <summary>Raised when the clear chip is used, after the box has been emptied</summary>
+    public event EventHandler? Cleared;
+
+    #endregion
+
+    #region Public Accessors
+
+    /// <summary>
+    ///     The current query. Assigning does not raise <see cref="QueryChanged" />, so a consumer can
+    ///     push state back into the bar without re-entering its own handler.
+    ///     <para>
+    ///         Comparison ignores surrounding whitespace, so writing back a trimmed copy of what the
+    ///         user typed is a no-op. Assigning at all would reset the caret to the start - Myra's
+    ///         text box treats any non-user write as a fresh value - which mangles the next keystroke
+    ///         while someone is still typing.
+    ///     </para>
+    /// </summary>
+    public string Query
+    {
+        get => Input.Text ?? string.Empty;
+        set
+        {
+            if (string.Equals((Input.Text ?? string.Empty).Trim(), (value ?? string.Empty).Trim(), StringComparison.Ordinal))
+                return;
+
+            Input.Text = value;
+
+            // Assigning Text re-runs setters that redraw the placeholder; without this it is lost
+            // even though the property itself has not changed.
+            Input.HintText = _props.HintText;
+
+            UpdateClearButton();
+        }
+    }
+
+    /// <summary>The underlying text box, for a consumer that needs to focus it</summary>
+    public MyraInputBox Input { get; } = new();
+
+    #endregion
+
+    #region Members
+
+    #region Consts/Readonly
+
+    /// <summary>Room reserved on the right of the field so text cannot run under the clear chip.</summary>
+    private const int CLEAR_CHIP_RESERVE = 22;
+
+    private const int CLEAR_CHIP_GLYPH_SIZE = 16;
+    private const int CLEAR_CHIP_SIZE = 18;
+
+    private readonly SearchBarProps _props;
+    private readonly MyraLabel? _resultCount;
+    private readonly IconButton? _clearButton;
+
+    #endregion
+
+    #endregion
+
     #region Ctor
 
     /// <param name="props">Display options; the type's own defaults when omitted</param>
@@ -112,82 +178,6 @@ public sealed class SearchBar : HorizontalStackPanel
 
     #endregion
 
-    #region Private Methods
-
-    /// <summary>
-    ///     The chip only means anything with something to clear, so it is hidden rather than
-    ///     disabled - a permanently greyed control inside the field is just noise.
-    /// </summary>
-    private void UpdateClearButton() => _clearButton?.Visible = !string.IsNullOrEmpty(Input.Text);
-
-    #endregion
-
-    #region Members
-
-    #region Consts/Readonly
-
-    /// <summary>Room reserved on the right of the field so text cannot run under the clear chip.</summary>
-    private const int CLEAR_CHIP_RESERVE = 22;
-
-    private const int CLEAR_CHIP_GLYPH_SIZE = 16;
-    private const int CLEAR_CHIP_SIZE = 18;
-
-    private readonly SearchBarProps _props;
-    private readonly MyraLabel? _resultCount;
-    private readonly IconButton? _clearButton;
-
-    #endregion
-
-    #endregion
-
-    #region Events
-
-    /// <summary>
-    ///     Raised on every edit the user makes, carrying the box's text verbatim. Neither debounced
-    ///     nor trimmed - when to act and what counts as the query are the consumer's decisions.
-    /// </summary>
-    public event EventHandler<string>? QueryChanged;
-
-    /// <summary>Raised when the clear chip is used, after the box has been emptied</summary>
-    public event EventHandler? Cleared;
-
-    #endregion
-
-    #region Public Accessors
-
-    /// <summary>
-    ///     The current query. Assigning does not raise <see cref="QueryChanged" />, so a consumer can
-    ///     push state back into the bar without re-entering its own handler.
-    ///     <para>
-    ///         Comparison ignores surrounding whitespace, so writing back a trimmed copy of what the
-    ///         user typed is a no-op. Assigning at all would reset the caret to the start - Myra's
-    ///         text box treats any non-user write as a fresh value - which mangles the next keystroke
-    ///         while someone is still typing.
-    ///     </para>
-    /// </summary>
-    public string Query
-    {
-        get => Input.Text ?? string.Empty;
-        set
-        {
-            if (string.Equals((Input.Text ?? string.Empty).Trim(), (value ?? string.Empty).Trim(), StringComparison.Ordinal))
-                return;
-
-            Input.Text = value;
-
-            // Assigning Text re-runs setters that redraw the placeholder; without this it is lost
-            // even though the property itself has not changed.
-            Input.HintText = _props.HintText;
-
-            UpdateClearButton();
-        }
-    }
-
-    /// <summary>The underlying text box, for a consumer that needs to focus it</summary>
-    public MyraInputBox Input { get; } = new();
-
-    #endregion
-
     #region Public Methods
 
     /// <summary>Sets the text shown beside the box, or hides it when <paramref name="text" /> is empty</summary>
@@ -210,6 +200,16 @@ public sealed class SearchBar : HorizontalStackPanel
         UpdateClearButton();
         Cleared?.Invoke(this, EventArgs.Empty);
     }
+
+    #endregion
+
+    #region Private Methods
+
+    /// <summary>
+    ///     The chip only means anything with something to clear, so it is hidden rather than
+    ///     disabled - a permanently greyed control inside the field is just noise.
+    /// </summary>
+    private void UpdateClearButton() => _clearButton?.Visible = !string.IsNullOrEmpty(Input.Text);
 
     #endregion
 }

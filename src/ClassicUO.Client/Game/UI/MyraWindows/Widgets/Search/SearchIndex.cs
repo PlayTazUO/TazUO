@@ -18,21 +18,15 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 /// </summary>
 public sealed class SearchIndex
 {
-    #region Ctor
+    #region Public Accessors
 
-    /// <param name="strategy">
-    ///     Matcher used for every field. Defaults to substring-then-fuzzy
-    ///     (<see cref="ContainsThenLevenshteinSearchStrategy" />).
-    /// </param>
-    public SearchIndex(ISearchStrategy? strategy = null)
-    {
-        _strategy = strategy ?? new ContainsThenLevenshteinSearchStrategy();
-    }
+    /// <summary>Every indexed entry, in insertion order</summary>
+    public IReadOnlyList<SearchEntry> Entries => _entries;
+
+    /// <summary>Number of indexed entries</summary>
+    public int Count => _entries.Count;
 
     #endregion
-
-    /// <summary>Pairs a hit with its index position so sorting can fall back to declared order</summary>
-    private readonly record struct ScoredIndex(SearchHit Hit, int Order);
 
     #region Members
 
@@ -63,13 +57,16 @@ public sealed class SearchIndex
 
     #endregion
 
-    #region Public Accessors
+    #region Ctor
 
-    /// <summary>Every indexed entry, in insertion order</summary>
-    public IReadOnlyList<SearchEntry> Entries => _entries;
-
-    /// <summary>Number of indexed entries</summary>
-    public int Count => _entries.Count;
+    /// <param name="strategy">
+    ///     Matcher used for every field. Defaults to substring-then-fuzzy
+    ///     (<see cref="ContainsThenLevenshteinSearchStrategy" />).
+    /// </param>
+    public SearchIndex(ISearchStrategy? strategy = null)
+    {
+        _strategy = strategy ?? new ContainsThenLevenshteinSearchStrategy();
+    }
 
     #endregion
 
@@ -254,6 +251,13 @@ public sealed class SearchIndex
 
         return byScore != 0 ? byScore : left.Order.CompareTo(right.Order);
     }
+
+    #endregion
+
+    #region Private types
+
+    /// <summary>Pairs a hit with its index position so sorting can fall back to declared order</summary>
+    private readonly record struct ScoredIndex(SearchHit Hit, int Order);
 
     #endregion
 }

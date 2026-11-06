@@ -26,37 +26,6 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 /// </summary>
 public class Expander : VerticalStackPanel
 {
-    #region Members
-
-    #region Consts/Readonly
-
-    private const string GLYPH_EXPANDED = "⮟";
-    private const string GLYPH_COLLAPSED = "⮞";
-
-    /// <summary>Matches the property grid's expander mark.</summary>
-    private const int GLYPH_SIZE = StyleConstantsDefaults.RESET_ICON_FONT_SIZE;
-
-    /// <summary>
-    ///     Horizontal inset applied to the content per nesting level. Public so a caller laying out
-    ///     against the remaining width can account for what the indent costs it.
-    /// </summary>
-    public const int DEFAULT_INDENT = 14;
-
-    private readonly MyraLabel _glyph = MyraLabel.Symbol(GLYPH_EXPANDED, GLYPH_SIZE);
-    private readonly HorizontalStackPanel _headerRow;
-    private readonly Panel _headerPanel;
-    private readonly VerticalStackPanel _content = new();
-
-    #endregion
-
-    #region Mutables
-
-    private Widget? _headerContent;
-
-    #endregion
-
-    #endregion
-
     #region Events
 
     /// <summary>Raised after <see cref="IsExpanded" /> changes, however it was changed</summary>
@@ -147,6 +116,37 @@ public class Expander : VerticalStackPanel
             _content.Margin = new Thickness(value, 0, 0, 0);
         }
     } = DEFAULT_INDENT;
+
+    #endregion
+
+    #region Members
+
+    #region Consts/Readonly
+
+    private const string GLYPH_EXPANDED = "⮟";
+    private const string GLYPH_COLLAPSED = "⮞";
+
+    /// <summary>Matches the property grid's expander mark.</summary>
+    private const int GLYPH_SIZE = StyleConstantsDefaults.RESET_ICON_FONT_SIZE;
+
+    /// <summary>
+    ///     Horizontal inset applied to the content per nesting level. Public so a caller laying out
+    ///     against the remaining width can account for what the indent costs it.
+    /// </summary>
+    public const int DEFAULT_INDENT = 14;
+
+    private readonly MyraLabel _glyph = MyraLabel.Symbol(GLYPH_EXPANDED, GLYPH_SIZE);
+    private readonly HorizontalStackPanel _headerRow;
+    private readonly Panel _headerPanel;
+    private readonly VerticalStackPanel _content = new();
+
+    #endregion
+
+    #region Mutables
+
+    private Widget? _headerContent;
+
+    #endregion
 
     #endregion
 

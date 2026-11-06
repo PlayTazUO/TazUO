@@ -23,6 +23,18 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 /// </summary>
 internal sealed class InlineSizeCache
 {
+    #region Members
+
+    private readonly Dictionary<(SearchEntry Entry, int FontOffset), Point> _sizes = new(EntryIdentityComparer.Instance);
+
+    /// <summary>
+    ///     The UI font every cached size was measured against. A measurement is only valid for the
+    ///     font that produced it, so a font or size change invalidates the lot.
+    /// </summary>
+    private SpriteFontBase? _measuredWith;
+
+    #endregion
+
     #region Public Methods
 
     /// <summary>
@@ -78,18 +90,6 @@ internal sealed class InlineSizeCache
         public int GetHashCode((SearchEntry Entry, int FontOffset) key) =>
             HashCode.Combine(RuntimeHelpers.GetHashCode(key.Entry), key.FontOffset);
     }
-
-    #endregion
-
-    #region Members
-
-    private readonly Dictionary<(SearchEntry Entry, int FontOffset), Point> _sizes = new(EntryIdentityComparer.Instance);
-
-    /// <summary>
-    ///     The UI font every cached size was measured against. A measurement is only valid for the
-    ///     font that produced it, so a font or size change invalidates the lot.
-    /// </summary>
-    private SpriteFontBase? _measuredWith;
 
     #endregion
 }

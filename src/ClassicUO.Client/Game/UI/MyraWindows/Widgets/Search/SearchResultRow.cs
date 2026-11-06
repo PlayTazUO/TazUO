@@ -23,6 +23,48 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 /// </summary>
 internal sealed class SearchResultRow : Panel
 {
+    #region Public Accessors
+
+    /// <summary>The hit this row displays</summary>
+    public SearchHit Hit { get; }
+
+    /// <summary>Whether the row currently hosts the entry's live editor rather than a link</summary>
+    public bool IsInline => _isInline == true;
+
+    /// <summary>
+    ///     Size offset applied to the row's text, from the user's configured UI font size. Applies to
+    ///     the hosted editor too, so an inlined control matches the rows around it.
+    /// </summary>
+    public int FontOffset { get; init; }
+
+    /// <summary>
+    ///     Width this row loses to indentation and container padding before any of it reaches the
+    ///     editor, subtracted from the budget the inline guard works against.
+    /// </summary>
+    public int IndentReserve { get; init; }
+
+    #endregion
+
+    #region Members
+
+    #region Consts/Readonly
+
+    private readonly Panel _host = new();
+    private readonly SearchEntry _entry;
+    private readonly Action<SearchEntry>? _onActivate;
+    private readonly string? _attribution;
+    private readonly InlineSizeCache _inlineSizes;
+
+    #endregion
+
+    #region Mutables
+
+    private bool? _isInline;
+
+    #endregion
+
+    #endregion
+
     #region Ctor
 
     /// <param name="hit">The hit to display</param>
@@ -54,48 +96,6 @@ internal sealed class SearchResultRow : Panel
         _host.HorizontalAlignment = HorizontalAlignment.Stretch;
         Widgets.Add(_host);
     }
-
-    #endregion
-
-    #region Members
-
-    #region Consts/Readonly
-
-    private readonly Panel _host = new();
-    private readonly SearchEntry _entry;
-    private readonly Action<SearchEntry>? _onActivate;
-    private readonly string? _attribution;
-    private readonly InlineSizeCache _inlineSizes;
-
-    #endregion
-
-    #region Mutables
-
-    private bool? _isInline;
-
-    #endregion
-
-    #endregion
-
-    #region Public Accessors
-
-    /// <summary>The hit this row displays</summary>
-    public SearchHit Hit { get; }
-
-    /// <summary>Whether the row currently hosts the entry's live editor rather than a link</summary>
-    public bool IsInline => _isInline == true;
-
-    /// <summary>
-    ///     Size offset applied to the row's text, from the user's configured UI font size. Applies to
-    ///     the hosted editor too, so an inlined control matches the rows around it.
-    /// </summary>
-    public int FontOffset { get; init; }
-
-    /// <summary>
-    ///     Width this row loses to indentation and container padding before any of it reaches the
-    ///     editor, subtracted from the budget the inline guard works against.
-    /// </summary>
-    public int IndentReserve { get; init; }
 
     #endregion
 

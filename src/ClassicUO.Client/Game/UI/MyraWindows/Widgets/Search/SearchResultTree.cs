@@ -25,73 +25,6 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 /// </summary>
 public sealed class SearchResultTree : ScrollViewer
 {
-    #region Ctor
-
-    public SearchResultTree()
-    {
-        Content = _stack;
-        HorizontalAlignment = HorizontalAlignment.Stretch;
-        VerticalAlignment = VerticalAlignment.Stretch;
-        Padding = new Thickness(CONTENT_PADDING_X, CONTENT_PADDING_Y, CONTENT_PADDING_X, CONTENT_PADDING_Y);
-    }
-
-    #endregion
-
-    #region Members
-
-    #region Consts/Readonly
-
-    /// <summary>
-    ///     Slack added to <see cref="InlineThreshold" /> before an already-inlined row is demoted.
-    ///     Without it, a row sitting exactly on the threshold flips back and forth while the window
-    ///     edge is dragged.
-    /// </summary>
-    private const double INLINE_HYSTERESIS = 0.1;
-
-    /// <summary>
-    ///     Result text is drawn below the user's configured size: this is a dense index of settings
-    ///     rather than a page of them, and the rows read better tighter. Offsets, not absolute sizes,
-    ///     so the user's own choice still drives it.
-    /// </summary>
-    private const int CRUMB_FONT_OFFSET = -1;
-
-    private const int ROW_FONT_OFFSET = -2;
-
-    /// <summary>Breathing room so rows are not flush against the window edge.</summary>
-    private const int CONTENT_PADDING_X = 8;
-
-    private const int CONTENT_PADDING_Y = 4;
-
-    /// <summary>Gap between a breadcrumb segment and its separator.</summary>
-    private const int CRUMB_SPACING = 2;
-
-    /// <summary>Gap above the empty-state message, so it does not sit flush against the query box.</summary>
-    private const int EMPTY_STATE_SPACING = 8;
-
-    private readonly VerticalStackPanel _stack = new() { Spacing = 1 };
-    private readonly HashSet<string> _collapsed = [];
-    private readonly List<SearchResultRow> _rows = [];
-
-    /// <summary>
-    ///     Held by the tree rather than by its rows: rows are rebuilt per query, and re-measuring
-    ///     every editor on every keystroke is the single most expensive thing search does.
-    /// </summary>
-    private readonly InlineSizeCache _inlineSizes = new();
-
-    #endregion
-
-    #region Mutables
-
-    /// <summary>
-    ///     The size reported by the last measure that actually ran, replayed while
-    ///     <see cref="IsLayoutFrozen" /> is set. Null until the list has been measured once.
-    /// </summary>
-    private Point? _settledSize;
-
-    #endregion
-
-    #endregion
-
     #region Events
 
     /// <summary>
@@ -164,6 +97,73 @@ public sealed class SearchResultTree : ScrollViewer
             if (!value)
                 InvalidateMeasure();
         }
+    }
+
+    #endregion
+
+    #region Members
+
+    #region Consts/Readonly
+
+    /// <summary>
+    ///     Slack added to <see cref="InlineThreshold" /> before an already-inlined row is demoted.
+    ///     Without it, a row sitting exactly on the threshold flips back and forth while the window
+    ///     edge is dragged.
+    /// </summary>
+    private const double INLINE_HYSTERESIS = 0.1;
+
+    /// <summary>
+    ///     Result text is drawn below the user's configured size: this is a dense index of settings
+    ///     rather than a page of them, and the rows read better tighter. Offsets, not absolute sizes,
+    ///     so the user's own choice still drives it.
+    /// </summary>
+    private const int CRUMB_FONT_OFFSET = -1;
+
+    private const int ROW_FONT_OFFSET = -2;
+
+    /// <summary>Breathing room so rows are not flush against the window edge.</summary>
+    private const int CONTENT_PADDING_X = 8;
+
+    private const int CONTENT_PADDING_Y = 4;
+
+    /// <summary>Gap between a breadcrumb segment and its separator.</summary>
+    private const int CRUMB_SPACING = 2;
+
+    /// <summary>Gap above the empty-state message, so it does not sit flush against the query box.</summary>
+    private const int EMPTY_STATE_SPACING = 8;
+
+    private readonly VerticalStackPanel _stack = new() { Spacing = 1 };
+    private readonly HashSet<string> _collapsed = [];
+    private readonly List<SearchResultRow> _rows = [];
+
+    /// <summary>
+    ///     Held by the tree rather than by its rows: rows are rebuilt per query, and re-measuring
+    ///     every editor on every keystroke is the single most expensive thing search does.
+    /// </summary>
+    private readonly InlineSizeCache _inlineSizes = new();
+
+    #endregion
+
+    #region Mutables
+
+    /// <summary>
+    ///     The size reported by the last measure that actually ran, replayed while
+    ///     <see cref="IsLayoutFrozen" /> is set. Null until the list has been measured once.
+    /// </summary>
+    private Point? _settledSize;
+
+    #endregion
+
+    #endregion
+
+    #region Ctor
+
+    public SearchResultTree()
+    {
+        Content = _stack;
+        HorizontalAlignment = HorizontalAlignment.Stretch;
+        VerticalAlignment = VerticalAlignment.Stretch;
+        Padding = new Thickness(CONTENT_PADDING_X, CONTENT_PADDING_Y, CONTENT_PADDING_X, CONTENT_PADDING_Y);
     }
 
     #endregion

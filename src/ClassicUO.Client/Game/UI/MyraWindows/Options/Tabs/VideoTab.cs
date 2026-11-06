@@ -40,11 +40,11 @@ public static class VideoTab
                 new SearchMetadata(TazLang.Get("mog_videotab_shadows_label"), Keywords: [TazLang.Get("mog_kw_shadow"), TazLang.Get("mog_kw_static"), TazLang.Get("mog_kw_terrain")])
             )
             .AddTab(
-                TazLang.Get("mog_videotab_visualeffects_label", "Visual Effects"),
+                TazLang.Get("mog_videotab_visualeffects_label"),
                 VisualEffectsTab.GetContent,
                 new SearchMetadata(
-                    TazLang.Get("mog_videotab_visualeffects_label", "Visual Effects"),
-                    Keywords: [TazLang.Get("mog_kw_overhead"), TazLang.Get("mog_kw_overlay", "overlay"), TazLang.Get("mog_kw_postprocessing"), TazLang.Get("mog_kw_rule")]
+                    TazLang.Get("mog_videotab_visualeffects_label"),
+                    Keywords: [TazLang.Get("mog_kw_overhead"), TazLang.Get("mog_kw_overlay"), TazLang.Get("mog_kw_postprocessing"), TazLang.Get("mog_kw_rule")]
                 )
             )
             .AddTab(
