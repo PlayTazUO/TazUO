@@ -210,6 +210,10 @@ public static class LandBrowserTabContent
         jumpRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_land_goto", "Go to:"), MyraLabel.TextStyle.P));
         jumpRow.Widgets.Add(jumpBox);
         jumpRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_land_jump", "Jump"), DoJump));
+        jumpRow.Widgets.Add(TinkererTargeting.CreateButton(
+            picked => JumpTo(TinkererTargeting.GetLandGraphic(picked)),
+            TazLang.Get("tinkerer_land_target_tooltip", "Target a land tile to jump to its land graphic.")
+        ));
         leftColumn.Widgets.Add(jumpRow);
 
         // Pagination controls
