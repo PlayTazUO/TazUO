@@ -3,6 +3,7 @@ All notable changes to TazUO will be recorded here.
 
 ---
 ## 11/05/26
+* ***Feature:*** The Tinkerer's Art, Land, and Texture tabs now have a Target button - targeting an object jumps straight to its art, land, or texture entry, including land tiles and objects standing on them
 * ***Fix:*** `API.CastSpell` no longer crashes the client with a `NullReferenceException` when called with `None` or an empty spell name - the cast is skipped, and spell-name lookup now tolerates missing names
 * ***Fix:*** Stopping a Legion script while it was still starting up no longer crashes the client with an unhandled `ThreadInterruptedException` - the stop is now caught during script setup, so the script is not executed and shuts down normally
 * ***Feature:*** The grid container loot icon now opens the item selection menu on single click - Alt + Click selects everything, and Ctrl + Click toggles single-click looting
