@@ -209,6 +209,81 @@ namespace ClassicUO.UnitTests.Game.UI.Options
         }
 
         [Fact]
+        public void A_Whitespace_Only_Label_Is_Skipped()
+        {
+            // A localization that blanks a key would otherwise index a row with nothing to read.
+            var blank = new OptionEntry(() => null, new SearchMetadata("   "));
+
+            Index(blank, "Video").Should().BeEmpty();
+        }
+
+        [Fact]
+        public void A_Search_Group_Named_Only_By_Whitespace_Is_Skipped()
+        {
+            var group = new OptionFragment(() => null, [Leaf("Border width")])
+                .AsSearchGroup()
+                .WithLabel("   ");
+
+            Index(group, "Interface").Should().BeEmpty();
+        }
+
+        [Fact]
+        public void A_Leaf_Matches_On_Tags_As_Well_As_Keywords()
+        {
+            var leaf = new OptionEntry(() => null, new SearchMetadata("Speech hue", Tags: ["chat"], Keywords: ["talk"]));
+
+            Index(leaf, "Chat").Single().Keywords.Should().Contain("chat").And.Contain("talk");
+        }
+
+        [Fact]
+        public void A_Search_Group_Matches_On_Tags_As_Well_As_Keywords()
+        {
+            // The group path used to read keywords alone, so the same metadata found a plain entry
+            // but not a grouped one.
+            var group = new OptionFragment(() => null, [Leaf("Border width")])
+                .AsSearchGroup()
+                .WithLabel("Grid highlighting")
+                .WithSearch(new SearchMetadata("Grid highlighting", Tags: ["grid"], Keywords: ["outline"]));
+
+            SearchEntry entry = Index(group, "Interface").Single();
+
+            entry.Keywords.Should().Contain("grid").And.Contain("outline");
+        }
+
+        [Fact]
+        public void A_Nested_Search_Group_Keeps_Its_Own_Name_In_The_Enclosing_Match_Text()
+        {
+            // A nested group carries its children's labels in its match text but not its own, so
+            // taking only the match text left the outer group unable to answer a query naming it.
+            var inner = new OptionFragment(() => null, [Leaf("Hide if full health")])
+                .AsSearchGroup()
+                .WithLabel("Nameplate health bar");
+
+            var outer = new OptionFragment(() => null, [inner])
+                .AsSearchGroup()
+                .WithLabel("Nameplates");
+
+            SearchEntry entry = Index(outer, "Interface").Single();
+
+            entry.Label.Should().Be("Nameplates");
+            entry.MatchText.Should().Contain("Nameplate health bar").And.Contain("Hide if full health");
+        }
+
+        [Fact]
+        public void Category_Synonyms_Reach_A_Leaf_Without_Naming_It()
+        {
+            // Mirrors how the window seeds a category: metadata carrying synonyms and no label, so
+            // one blob covers every setting underneath without retitling any of them.
+            var tabs = new OptionTabGroup().AddTab("Lighting", () => Leaf("Light level"));
+            var category = new OptionIndexContext(new SearchPath("Video"), new SearchMetadata(Keywords: ["graphics,gfx"]));
+
+            SearchEntry entry = tabs.Index(category).Single();
+
+            entry.Label.Should().Be("Light level");
+            entry.Keywords.Should().Contain("graphics").And.Contain("gfx");
+        }
+
+        [Fact]
         public void A_Node_That_Does_Not_Inherit_Ignores_Ancestor_Metadata()
         {
             var leaf = new OptionEntry(() => null, new SearchMetadata("Light level")) { InheritsSearch = false };

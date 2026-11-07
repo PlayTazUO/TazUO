@@ -264,14 +264,17 @@ public sealed class SearchResultTree : ScrollViewer
         {
             // The header carries breadcrumb links; a click there must follow the link, not fold the
             // group. The twisty remains the toggle.
-            ToggleOnHeaderClick = false
+            ToggleOnHeaderClick = false,
+            Header =
+            {
+                // No header fill at all. Even one flat tint differs from the panel behind it, which
+                // striped the list; the twisty and the indent already show the structure. Safe to clear
+                // only because the twisty is the sole toggle here - a header that handles its own clicks
+                // needs a background to receive them.
+                Background = null
+            }
         };
 
-        // No header fill at all. Even one flat tint differs from the panel behind it, which
-        // striped the list; the twisty and the indent already show the structure. Safe to clear
-        // only because the twisty is the sole toggle here - a header that handles its own clicks
-        // needs a background to receive them.
-        expander.Header.Background = null;
         expander.SetExpandedSilently(!_collapsed.Contains(group.Path.Text));
 
         string key = group.Path.Text;
@@ -292,7 +295,7 @@ public sealed class SearchResultTree : ScrollViewer
         return expander;
     }
 
-    private Widget BuildRowStack(SearchResultGroup group)
+    private VerticalStackPanel BuildRowStack(SearchResultGroup group)
     {
         var stack = new VerticalStackPanel { Spacing = 1, HorizontalAlignment = HorizontalAlignment.Stretch };
 
@@ -306,7 +309,7 @@ public sealed class SearchResultTree : ScrollViewer
     ///     The header's breadcrumb and hit count. Segments are links rather than buttons: a row of
     ///     boxed buttons reads as a toolbar, not as a location.
     /// </summary>
-    private Widget BuildHeaderContent(SearchResultGroup group)
+    private SpaceBetweenRow BuildHeaderContent(SearchResultGroup group)
     {
         var crumbs = new HorizontalStackPanel { Spacing = CRUMB_SPACING, VerticalAlignment = VerticalAlignment.Center };
         int ancestors = group.Path.Length - group.Segments.Count;
@@ -323,9 +326,14 @@ public sealed class SearchResultTree : ScrollViewer
             var crumb = new LinkLabel(
                 group.Segments[i],
                 () => NavigationRequested?.Invoke(this, target)
-            ) { Wrap = false, SingleLine = true, VerticalAlignment = VerticalAlignment.Center };
+            )
+            {
+                Wrap = false,
+                SingleLine = true,
+                VerticalAlignment = VerticalAlignment.Center,
+                Font = MyraStyle.GetUiFont(CRUMB_FONT_OFFSET)
+            };
 
-            crumb.Font = MyraStyle.GetUiFont(CRUMB_FONT_OFFSET);
             crumbs.Widgets.Add(crumb);
         }
 
@@ -342,7 +350,7 @@ public sealed class SearchResultTree : ScrollViewer
     ///     What a query with no matches shows. An empty panel reads as a list that failed to render
     ///     rather than as an answer to the query.
     /// </summary>
-    private static Widget BuildEmptyState()
+    private static MyraLabel BuildEmptyState()
     {
         var message = MyraLabel.Hint(TazLang.Get("optsearch_no_results"));
 
@@ -352,7 +360,7 @@ public sealed class SearchResultTree : ScrollViewer
         return message;
     }
 
-    private Widget BuildRow(SearchHit hit, int depth)
+    private SearchResultRow BuildRow(SearchHit hit, int depth)
     {
         var row = new SearchResultRow(hit, ShowAttribution, OnRowActivated, _inlineSizes)
         {

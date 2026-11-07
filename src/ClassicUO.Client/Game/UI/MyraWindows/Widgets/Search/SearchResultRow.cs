@@ -172,12 +172,16 @@ internal sealed class SearchResultRow : Panel
         return new SpaceBetweenRow(editor, BuildAttributionLabel(), MyraStyle.STANDARD_SPACING * 2);
     }
 
-    private Widget BuildNavigate()
+    private SpaceBetweenRow BuildNavigate()
     {
         var labels = new VerticalStackPanel { VerticalAlignment = VerticalAlignment.Center };
-        var name = new MyraLabel(_entry.Label, MyraLabel.TextStyle.P) { Wrap = false, SingleLine = true };
+        var name = new MyraLabel(_entry.Label, MyraLabel.TextStyle.P)
+        {
+            Wrap = false,
+            SingleLine = true,
+            Font = MyraStyle.GetUiFont(FontOffset)
+        };
 
-        name.Font = MyraStyle.GetUiFont(FontOffset);
         labels.Widgets.Add(name);
 
         if (_attribution != null)
@@ -186,9 +190,13 @@ internal sealed class SearchResultRow : Panel
         var link = new LinkLabel(
             TazLang.Get("optsearch_open_in_page"),
             () => _onActivate?.Invoke(_entry)
-        ) { Wrap = false, SingleLine = true, VerticalAlignment = VerticalAlignment.Center };
-
-        link.Font = MyraStyle.GetUiFont(FontOffset);
+        )
+        {
+            Wrap = false,
+            SingleLine = true,
+            VerticalAlignment = VerticalAlignment.Center,
+            Font = MyraStyle.GetUiFont(FontOffset)
+        };
 
         return new SpaceBetweenRow(labels, link, MyraStyle.STANDARD_SPACING * 2);
     }

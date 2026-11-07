@@ -138,6 +138,9 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
 - Profile or reason through cost before committing to an approach.
 - No frame budget exists — never argue a cost is fine because it fits one. Assume weak hardware:
   make per-frame work cheap, or measure it.
+- CA1859: private/internal returns, fields and locals take the concrete type, not an interface —
+  unless the broader type is deliberate (a seam expected to vary). Info-severity, so
+  builds never print it; elevate and check before claiming clean.
 
 ### UI
 - Keep layout responsive: `WrapPanel`, no fixed `Width`/`Height` boxes. Resizable windows already

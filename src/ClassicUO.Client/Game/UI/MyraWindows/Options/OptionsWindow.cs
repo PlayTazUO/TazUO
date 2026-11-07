@@ -441,7 +441,7 @@ public class OptionsWindow : MyraControl
     /// <summary>
     ///     Builds the row holding the back and forward buttons, the query box, and the result count.
     /// </summary>
-    private Widget BuildToolbar()
+    private HorizontalStackPanel BuildToolbar()
     {
         _backButton = new IconButton(
             "◀",
