@@ -146,7 +146,7 @@ internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<Opt
             label,
             context.Path,
             MatchText: merged?.SearchText,
-            Keywords: merged?.NormalizedKeywords is { Length: > 0 } keywords ? keywords : null,
+            Keywords: merged?.MatchTerms,
             InlineFactory: Render,
             Presentation: Presentation
         );

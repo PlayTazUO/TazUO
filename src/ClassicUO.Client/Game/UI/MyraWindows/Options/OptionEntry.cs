@@ -47,7 +47,7 @@ internal sealed record OptionEntry(Func<Widget> RenderFactory, SearchMetadata? S
             label,
             context.Path,
             MatchText: merged.SearchText,
-            Keywords: BuildKeywords(merged),
+            Keywords: merged.MatchTerms,
             InlineFactory: RenderFactory,
             Presentation: Presentation
         );
@@ -68,20 +68,5 @@ internal sealed record OptionEntry(Func<Widget> RenderFactory, SearchMetadata? S
     {
         Presentation = SearchPresentation.Navigate;
         return this;
-    }
-
-    /// <summary>
-    /// Keywords and tags both act as alternate search terms. Tags used to carry structural position
-    /// as well, but the indexed path does that now, so they are folded in as plain synonyms.
-    /// </summary>
-    private static IReadOnlyList<string>? BuildKeywords(SearchMetadata metadata)
-    {
-        string[] keywords = metadata.NormalizedKeywords;
-        string[] tags = metadata.NormalizedTags;
-
-        if (keywords.Length == 0)
-            return tags.Length == 0 ? null : tags;
-
-        return tags.Length == 0 ? keywords : [.. keywords, .. tags];
     }
 }

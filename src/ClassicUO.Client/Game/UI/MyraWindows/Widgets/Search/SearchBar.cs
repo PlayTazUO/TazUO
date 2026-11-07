@@ -63,7 +63,9 @@ public sealed class SearchBar : HorizontalStackPanel
     ///         Comparison ignores surrounding whitespace, so writing back a trimmed copy of what the
     ///         user typed is a no-op. Assigning at all would reset the caret to the start - Myra's
     ///         text box treats any non-user write as a fresh value - which mangles the next keystroke
-    ///         while someone is still typing.
+    ///         while someone is still typing. Clearing is exempt: an empty assignment always empties
+    ///         the field, since a box holding only whitespace trims to the same value and would
+    ///         otherwise keep its clear chip over a view that is no longer a search.
     ///     </para>
     /// </summary>
     public string Query
@@ -71,10 +73,17 @@ public sealed class SearchBar : HorizontalStackPanel
         get => Input.Text ?? string.Empty;
         set
         {
-            if (string.Equals((Input.Text ?? string.Empty).Trim(), (value ?? string.Empty).Trim(), StringComparison.Ordinal))
+            string current = Input.Text ?? string.Empty;
+            string incoming = value ?? string.Empty;
+
+            bool unchanged = incoming.Length == 0
+                ? current.Length == 0
+                : string.Equals(current.Trim(), incoming.Trim(), StringComparison.Ordinal);
+
+            if (unchanged)
                 return;
 
-            Input.Text = value;
+            Input.Text = incoming;
 
             // Assigning Text re-runs setters that redraw the placeholder; without this it is lost
             // even though the property itself has not changed.

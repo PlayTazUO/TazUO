@@ -41,6 +41,26 @@ public record SearchMetadata(string? SearchText = null, string[]? Tags = null, s
     public string[] NormalizedKeywords => Split(Keywords);
 
     /// <summary>
+    /// Keywords and tags folded into one synonym set. Tags used to carry structural position as
+    /// well, but the indexed path does that now, so both are plain alternate search terms and an
+    /// entry built from either has to match the same queries.
+    /// </summary>
+    /// <value>The combined terms, or <see langword="null"/> when there are none</value>
+    public IReadOnlyList<string>? MatchTerms
+    {
+        get
+        {
+            string[] keywords = NormalizedKeywords;
+            string[] tags = NormalizedTags;
+
+            if (keywords.Length == 0)
+                return tags.Length == 0 ? null : tags;
+
+            return tags.Length == 0 ? keywords : [.. keywords, .. tags];
+        }
+    }
+
+    /// <summary>
     /// Combines two instances, keeping the innermost <see cref="SearchText"/> and deduplicating the
     /// combined tag and keyword sets.
     /// <para>

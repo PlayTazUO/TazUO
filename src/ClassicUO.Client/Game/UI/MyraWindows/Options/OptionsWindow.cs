@@ -275,7 +275,15 @@ public class OptionsWindow : MyraControl
             // everything the user just collapsed on every keystroke.
             CaptureCurrentViewState();
 
+            bool queryChanged = !string.Equals(current.Query, query, StringComparison.Ordinal);
+
             current.Query = query;
+
+            // A different query is a different list: keeping the offset would open the narrower
+            // result set scrolled past its own top-ranked hits. Only back and forward restore one.
+            if (queryChanged)
+                current.ScrollOffset = 0;
+
             Restore(current);
 
             return;
@@ -308,6 +316,10 @@ public class OptionsWindow : MyraControl
     ///     Registers a top-level category and folds its subtree into the search index, with the
     ///     category's own label seeding each entry's breadcrumb.
     /// </summary>
+    /// <remarks>
+    ///     Note that window construction is effectively static, meaning runtime addition of nested settings, like
+    ///     new VFX rules, will not be indexed/searchable until the window is closed and reopened.
+    /// </remarks>
     /// <param name="category">The category label, shown on the navigation rail</param>
     /// <param name="source">The category's content</param>
     private void AddOptionSource(string category, IOptionSource source)
@@ -578,11 +590,11 @@ public class OptionsWindow : MyraControl
         _resultTree.SetResults(hits);
 
         // The scroller clamps against a maximum it only knows after layout, so restoring the
-        // offset now would silently snap it to zero.
+        // offset now would silently snap it to zero. Applied even when zero: SetResults leaves the
+        // live scroll position alone, so a reset has to be written out to take effect.
         int restoredOffset = view.ScrollOffset;
 
-        if (restoredOffset > 0)
-            Defer(() => _resultTree.SetScrollOffset(restoredOffset));
+        Defer(() => _resultTree.SetScrollOffset(restoredOffset));
 
         // The tree states an empty result itself, so the count beside the box would only repeat it.
         _searchBar.SetResultText(
@@ -808,6 +820,10 @@ public class OptionsWindow : MyraControl
         if (_restoring || sender is not MyraTabControl tabs)
             return;
 
+        // The cue is pointing into the tab content that just went off screen, and would otherwise
+        // keep pulsing there for the rest of its run.
+        _highlight.Cancel();
+
         if (!_tabControlPaths.TryGetValue(tabs, out SearchPath basePath) || tabs.SelectedItem?.Text is not { } label)
             return;
 
@@ -856,6 +872,23 @@ public class OptionsWindow : MyraControl
         _currentCategory.NotNullNotEmpty()
             ? ExtendWithSelections(new SearchPath(_currentCategory), _optionsPanel)
             : SearchPath.Empty;
+
+    /// <summary>
+    ///     Rebuilds the visible result rows, preserving scroll and collapse state. A no-op unless
+    ///     search results are showing, which is what separates it from
+    ///     <see cref="RefreshCurrentContent" />: a setting that only changes how results are drawn
+    ///     must not rebuild a whole category when the user happens to be on a page.
+    /// </summary>
+    internal void RefreshSearchResults()
+    {
+        if (_history.Current is not { IsSearch: true } search)
+            return;
+
+        // Restore reads scroll and collapse state off the entry, so what the user has since done
+        // to the live list has to be folded back in first.
+        CaptureCurrentViewState();
+        Restore(search);
+    }
 
     /// <summary>
     ///     Re-decides inline versus link for the visible results against the current window size and
@@ -945,12 +978,9 @@ public class OptionsWindow : MyraControl
     // their accessors so the values on screen agree with the applied profile.
     internal void RefreshCurrentContent()
     {
-        if (_history.Current is { IsSearch: true } search)
+        if (_history.Current is { IsSearch: true })
         {
-            // Restore reads scroll and collapse state off the entry, so what the user has since
-            // done to the live list has to be folded back in first.
-            CaptureCurrentViewState();
-            Restore(search);
+            RefreshSearchResults();
             return;
         }
 

@@ -68,7 +68,7 @@ public static class MiscTab
                             // on screen have to be rebuilt. Deferred because this checkbox can be
                             // one of them: rebuilding the list from inside its own click handler
                             // would destroy the widget currently dispatching the event.
-                            UIManager.ForEach<OptionsWindow>(window => window.Defer(window.RefreshCurrentContent));
+                            UIManager.ForEach<OptionsWindow>(window => window.Defer(window.RefreshSearchResults));
                         }
                     ),
                     tooltip: TazLang.Get("optsearch_attribution_tooltip"),
