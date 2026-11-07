@@ -139,7 +139,7 @@ internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<Opt
         // to be captioned after their tab. Override a caption with WithLabel, not with metadata.
         string? label = Label ?? Search?.Label ?? merged?.Label;
 
-        if (string.IsNullOrEmpty(label))
+        if (string.IsNullOrWhiteSpace(label))
             return null;
 
         return new SearchEntry(
@@ -152,12 +152,22 @@ internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<Opt
         );
     }
 
-    /// <summary>Projects an already-flattened descendant back into metadata for merging</summary>
-    private static SearchMetadata ToMetadata(SearchEntry entry) =>
-        new(entry.MatchText ?? entry.Label, Keywords: entry.Keywords?.ToArray())
-        {
-            Label = entry.Label
-        };
+    /// <summary>
+    /// Projects an already-flattened descendant back into metadata for merging.
+    /// <para>
+    /// Label and match text are both folded into the result's search text. A descendant that is
+    /// itself a group carries its children's labels in its match text but not its own, so taking
+    /// only the match text left the enclosing group unable to answer a query naming that group.
+    /// </para>
+    /// </summary>
+    private static SearchMetadata ToMetadata(SearchEntry entry)
+    {
+        string? text = entry.MatchText == null || entry.MatchText == entry.Label
+            ? entry.Label
+            : $"{entry.Label} {entry.MatchText}";
+
+        return new SearchMetadata(text, Keywords: entry.Keywords?.ToArray()) { Label = entry.Label };
+    }
 
     /// <summary>
     /// Like <see cref="SearchMetadata.Merge"/> but concatenates both <c>SearchText</c> values

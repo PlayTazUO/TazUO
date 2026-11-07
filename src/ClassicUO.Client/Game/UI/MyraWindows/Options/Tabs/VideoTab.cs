@@ -288,9 +288,12 @@ public static class VideoTab
             label,
             new Accessor<bool>(() => ProfileManager.CurrentProfile.EnableMousewheelScaleZoom),
             tooltip,
+            // Labelled with the caption actually rendered, binding and all: the highlight cue matches
+            // a widget by its visible name, so the undecorated string found nothing to point at. It
+            // stays a keyword, so the generic phrasing still matches.
             new SearchMetadata(
-                TazLang.Get("mog_videotab_zoom_zoomwheel_no_hotkey"),
-                Keywords: [TazLang.Get("mog_kw_wheel")]
+                label,
+                Keywords: [TazLang.Get("mog_kw_wheel"), TazLang.Get("mog_videotab_zoom_zoomwheel_no_hotkey")]
             )
         );
     }

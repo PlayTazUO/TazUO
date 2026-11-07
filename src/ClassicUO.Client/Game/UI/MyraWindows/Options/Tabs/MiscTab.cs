@@ -74,6 +74,8 @@ public static class MiscTab
                     tooltip: TazLang.Get("optsearch_attribution_tooltip"),
                     search: new SearchMetadata(TazLang.Get("optsearch_attribution_label"), Keywords: [TazLang.Get("optsearch_kw_search")])
                 )
+            ).WithSearch(
+                new SearchMetadata(TazLang.Get("optsearch_section_label"), Keywords: [TazLang.Get("optsearch_kw_search")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_general_hidescreenshotmessage"),

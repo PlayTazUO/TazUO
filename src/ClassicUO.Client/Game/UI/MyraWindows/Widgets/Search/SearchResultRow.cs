@@ -198,7 +198,10 @@ internal sealed class SearchResultRow : Panel
 
         // The editor's size doesn't change with the window, so only the budget moves.
         Point size = _inlineSizes.GetSize(_entry, FontOffset);
-        double allowance = availableWidth * (IsInline ? threshold + hysteresis : threshold);
+
+        // Capped at the row: Aggressive already allows the full width, so the hysteresis slack on an
+        // already-inlined row would otherwise keep an editor that no longer fits.
+        double allowance = Math.Min(availableWidth * (IsInline ? threshold + hysteresis : threshold), availableWidth);
 
         return size.X <= allowance;
     }

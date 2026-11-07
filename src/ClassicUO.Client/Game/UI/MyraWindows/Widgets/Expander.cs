@@ -3,7 +3,7 @@
 using System;
 using System.Collections.ObjectModel;
 using ClassicUO.Game.UI.MyraWindows.Theme;
-using Microsoft.Xna.Framework;
+using Myra.Events;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
@@ -218,7 +218,17 @@ public class Expander : VerticalStackPanel
 
     #region Private Methods
 
-    private void OnToggleTouched(object? sender, EventArgs e) => Toggle();
+    /// <remarks>
+    ///     Primary button only - Myra routes right and middle clicks to the same handler, and neither
+    ///     should collapse a group.
+    /// </remarks>
+    private void OnToggleTouched(object? sender, TouchEventArgs e)
+    {
+        if (e.Button != TouchButton.Left)
+            return;
+
+        Toggle();
+    }
 
     #endregion
 }

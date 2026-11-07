@@ -174,10 +174,8 @@ internal static class SpeechTab
          .WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_overhead")]));
     }
 
-    private static OptionFragment GetOverheadSuppressionSection()
-    {
-
-        return OptionsUi.VisualContainer(
+    private static OptionFragment GetOverheadSuppressionSection() =>
+        OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = TazLang.Get("mog_chattab_speech_disableoverheadmessages") },
             OptionsUi.Horizontal(CreateMessageTypeCheckboxes())
         ).WithSearch(
@@ -193,7 +191,6 @@ internal static class SpeechTab
                 ]
             )
         );
-    }
 
     private static OptionFragment CreateMessageTypeCheckboxes()
     {
@@ -209,7 +206,8 @@ internal static class SpeechTab
                     LocalizeMessageType(mType),
                     new Accessor<bool>(
                         () => MessageTypeFilter.IsEnabled(profile.DisabledOverheadMessageTypes, mType),
-                        enabled => MessageTypeFilter.SetEnabled(profile.DisabledOverheadMessageTypes, mType, enabled)
+                        enabled => profile.DisabledOverheadMessageTypes =
+                            MessageTypeFilter.SetEnabled(profile.DisabledOverheadMessageTypes, mType, enabled)
                     ),
                     mType.ToString()
                 )

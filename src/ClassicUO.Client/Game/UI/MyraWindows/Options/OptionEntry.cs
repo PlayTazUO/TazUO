@@ -40,7 +40,9 @@ internal sealed record OptionEntry(Func<Widget> RenderFactory, SearchMetadata? S
     {
         SearchMetadata? merged = InheritsSearch ? SearchMetadata.Merge(Search, context.Inherited) : Search;
 
-        if (merged?.Label is not { Length: > 0 } label)
+        // Whitespace counts as no label: a localization that blanks a key would otherwise index a
+        // row with nothing to read in it.
+        if (merged?.Label is not { } label || string.IsNullOrWhiteSpace(label))
             yield break;
 
         yield return new SearchEntry(

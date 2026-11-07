@@ -98,8 +98,15 @@ public class LinkLabel : MyraLabel
     #region Public Methods
 
     /// <inheritdoc />
+    /// <remarks>
+    ///     Myra routes right and middle clicks here as well, so the button is checked: a right-click
+    ///     anywhere in the options is a close gesture, not a navigation.
+    /// </remarks>
     public override void OnTouchDown(TouchEventArgs args)
     {
+        if (args.Button != TouchButton.Left)
+            return;
+
         base.OnTouchDown(args);
 
         _activate();
