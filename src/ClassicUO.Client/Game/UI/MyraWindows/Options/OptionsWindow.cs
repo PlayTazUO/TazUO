@@ -87,7 +87,18 @@ public class OptionsWindow : MyraControl
 
     #region Mutables
 
+    /// <summary>
+    ///     Category whose rail entry is current, empty while search results are showing. Distinct from
+    ///     <see cref="_builtCategory" />: results own the content area but no rail entry.
+    /// </summary>
     private string _currentCategory = string.Empty;
+
+    /// <summary>
+    ///     Category whose widgets are currently built into <see cref="_optionsPanel" />. Survives a
+    ///     trip through search, so coming back can re-parent the panel instead of re-rendering it and
+    ///     resetting every page and nested tab.
+    /// </summary>
+    private string _builtCategory = string.Empty;
 
     /// <summary>
     ///     Where the user last was before search took over the content area. Search blanks the
@@ -557,14 +568,42 @@ public class OptionsWindow : MyraControl
     /// </summary>
     private void CaptureCurrentViewState()
     {
-        if (_history.Current is not { IsSearch: true } current)
+        if (_history.Current is not { } current)
             return;
+
+        if (!current.IsSearch)
+        {
+            CapturePageLocation(current);
+            return;
+        }
 
         current.ScrollOffset = _resultTree.GetScrollOffset();
         current.Collapsed.Clear();
 
         foreach (string collapsed in _resultTree.CollapsedPaths)
             current.Collapsed.Add(collapsed);
+    }
+
+    /// <summary>
+    ///     Re-reads a page view's location off the screen before it is left.
+    ///     <para>
+    ///         The location is written when the view is opened, but paging and tabbing within it are
+    ///         not navigations and record nothing - so without this, returning to the entry replays
+    ///         where the user arrived rather than where they ended up.
+    ///     </para>
+    /// </summary>
+    /// <param name="view">The page view to update</param>
+    private void CapturePageLocation(OptionsView view)
+    {
+        if (CurrentPath() is not { IsEmpty: false } live)
+            return;
+
+        // Guarded against a view for some other category: the panel on screen is the authority only
+        // for the category it is actually showing.
+        if (view.Path.IsEmpty || !string.Equals(view.Path[0], live[0], StringComparison.Ordinal))
+            return;
+
+        view.Path = live;
     }
 
     /// <summary>Reproduces <paramref name="view" /> in the content area without touching history</summary>
@@ -649,14 +688,7 @@ public class OptionsWindow : MyraControl
             return;
 
         ShowCategory(path[0]);
-
-        // A page has no query behind it; the bar follows the location rather than the other way
-        // round. Any keystroke still inside the debounce window is dropped with it - otherwise it
-        // fires moments later and drags the user into results for a query that is no longer shown.
-        _searchPending = false;
-        _pendingSearchText = string.Empty;
-        _searchBar.Query = string.Empty;
-        _searchBar.SetResultText(null);
+        ClearPendingSearch();
 
         Widget current = _optionsPanel;
 
@@ -725,30 +757,67 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>Renders a top-level category into the content area, replacing whatever was there</summary>
+    /// <summary>
+    ///     Brings <paramref name="category" /> on screen, building its content only if it is not
+    ///     already built.
+    ///     <para>
+    ///         Built-ness is tracked separately from rail selection. Showing search results swaps the
+    ///         results tree in for the options panel without disturbing the panel's contents, so
+    ///         returning to the same category only has to re-parent the panel - re-rendering it would
+    ///         hand back a fresh <see cref="PageControl" /> on its first page and fresh tab controls on
+    ///         their first tabs, losing wherever the user actually was.
+    ///     </para>
+    /// </summary>
+    /// <param name="category">The category label to show</param>
     private void ShowCategory(string category)
     {
-        if (_currentCategory == category && ReferenceEquals(FirstStackChild(), _optionsPanel))
-            return;
+        bool alreadyBuilt = _builtCategory == category && _optionsPanel.Widgets.Count > 0;
 
-        ForgetTabControls();
-
-        _optionsStack.Widgets.Clear();
-        _optionsStack.Widgets.Add(_optionsPanel);
-
-        _optionsPanel.Widgets.Clear();
-
-        _currentCategory = category;
-
-        if (_categoriesByLabel.TryGetValue(category, out OptionCategory? resolved))
+        if (!ReferenceEquals(FirstStackChild(), _optionsPanel))
         {
-            foreach (IOptionSource source in resolved.Sources)
-                _optionsPanel.Widgets.Add(source.Render());
+            _optionsStack.Widgets.Clear();
+            _optionsStack.Widgets.Add(_optionsPanel);
         }
 
+        if (!alreadyBuilt)
+        {
+            // The subscriptions refer to controls this rebuild is about to discard.
+            ForgetTabControls();
+
+            _optionsPanel.Widgets.Clear();
+
+            if (_categoriesByLabel.TryGetValue(category, out OptionCategory? resolved))
+            {
+                foreach (IOptionSource source in resolved.Sources)
+                    _optionsPanel.Widgets.Add(source.Render());
+            }
+
+            _builtCategory = category;
+        }
+
+        // Both assignments run on either path: results clear the rail selection without touching what
+        // is built, so coming back has to restore the selection and light the button up again.
+        _currentCategory = category;
         SelectedCategoryChanged?.Invoke(this, category);
     }
 
     private Widget? FirstStackChild() => _optionsStack.Widgets.Count > 0 ? _optionsStack.Widgets[0] : null;
+
+    /// <summary>
+    ///     Empties the search box and abandons any keystroke still inside the debounce window.
+    ///     <para>
+    ///         Every path that lands the user on a page owes this: the bar follows the location rather
+    ///         than the other way round, and a pending query left armed fires moments later and drags
+    ///         them into results for a query that is no longer on screen.
+    ///     </para>
+    /// </summary>
+    private void ClearPendingSearch()
+    {
+        _searchPending = false;
+        _pendingSearchText = string.Empty;
+        _searchBar.Query = string.Empty;
+        _searchBar.SetResultText(null);
+    }
 
     /// <summary>
     ///     Walks the rendered tree recording where each tab control sits and subscribing to it, so a
@@ -845,6 +914,10 @@ public class OptionsWindow : MyraControl
         // keep pulsing there for the rest of its run.
         _highlight.Cancel();
 
+        // Selecting a tab is landing on a page, so a query typed moments ago must not still fire and
+        // replace the tab that was just clicked.
+        ClearPendingSearch();
+
         if (!_tabControlPaths.TryGetValue(tabs, out SearchPath basePath) || tabs.SelectedItem?.Text is not { } label)
             return;
 
@@ -865,23 +938,74 @@ public class OptionsWindow : MyraControl
         UpdateNavigationButtons();
     }
 
-    /// <summary>Appends the selected tab at each level beneath <paramref name="root" /></summary>
+    /// <summary>
+    ///     Appends what is selected at each level beneath <paramref name="root" /> - the chosen tab,
+    ///     and the shown page where the page group names its pages.
+    ///     <para>
+    ///         Pages are walked as well as tabs because the path is the only record of where the user
+    ///         is: a page group whose pages are named can be returned to, and without recording it a
+    ///         replayed history entry lands on the group's first page. An unnamed page is descended
+    ///         through without contributing a segment, since there is no label to come back by.
+    ///     </para>
+    /// </summary>
     private static SearchPath ExtendWithSelections(SearchPath path, Widget? root)
     {
         Widget? current = root;
 
         while (current != null)
         {
-            List<MyraTabControl> nested = NearestTabControls(current);
-
-            if (nested.Count == 0 || nested[0].SelectedItem?.Text is not { } label)
+            if (NearestNavigable(current) is not { } navigable)
                 break;
 
-            path = path.Push(label);
-            current = nested[0].SelectedContent;
+            switch (navigable)
+            {
+                case MyraTabControl tabs when tabs.SelectedItem?.Text is { Length: > 0 } tabLabel:
+                    path = path.Push(tabLabel);
+                    current = tabs.SelectedContent;
+                    continue;
+
+                case PageControl pages:
+                    if (pages.CurrentPageLabel is { Length: > 0 } pageLabel)
+                        path = path.Push(pageLabel);
+
+                    current = pages.CurrentPageContent;
+                    continue;
+            }
+
+            // Navigable but unnamed, so nothing can be recorded for it or beneath it.
+            break;
         }
 
         return path;
+    }
+
+    /// <summary>
+    ///     The nearest tab or page control beneath <paramref name="root" />, or <see langword="null" />
+    ///     when there is none. Breadth-first and stopping at the first hit, so the result is the one
+    ///     the user's route actually passes through.
+    /// </summary>
+    private static Widget? NearestNavigable(Widget root)
+    {
+        if (root is MyraTabControl or PageControl)
+            return root;
+
+        Queue<Widget> pending = new();
+
+        foreach (Widget child in root.ChildWidgets())
+            pending.Enqueue(child);
+
+        while (pending.Count > 0)
+        {
+            Widget current = pending.Dequeue();
+
+            if (current is MyraTabControl or PageControl)
+                return current;
+
+            foreach (Widget child in current.ChildWidgets())
+                pending.Enqueue(child);
+        }
+
+        return null;
     }
 
     /// <summary>

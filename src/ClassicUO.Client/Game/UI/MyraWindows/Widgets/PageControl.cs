@@ -73,6 +73,14 @@ public class PageControl : Container
     /// </summary>
     public IReadOnlyList<string> PageLabels { get; set; } = [];
 
+    /// <summary>
+    /// Name of the page currently shown, or <see langword="null"/> when it has none. The counterpart
+    /// to <see cref="TrySelectByLabel"/>: a caller recording where the user is needs the label that
+    /// would bring them back.
+    /// </summary>
+    public string CurrentPageLabel =>
+        CurrentPage >= 0 && CurrentPage < PageLabels.Count ? PageLabels[CurrentPage] : null;
+
     /// <summary>Selects the page whose entry in <see cref="PageLabels"/> matches <paramref name="label"/></summary>
     /// <param name="label">The page name to look for</param>
     /// <returns>Whether a matching page was found and selected</returns>

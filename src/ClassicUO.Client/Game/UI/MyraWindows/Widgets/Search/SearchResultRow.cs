@@ -61,6 +61,12 @@ internal sealed class SearchResultRow : Panel
 
     private bool? _isInline;
 
+    /// <summary>
+    ///     Width the attribution takes beside an inlined editor, measured on first use. Negative until
+    ///     then; the text and font are fixed for the row's lifetime, so one measurement holds.
+    /// </summary>
+    private int _attributionReserve = -1;
+
     #endregion
 
     #endregion
@@ -189,9 +195,33 @@ internal sealed class SearchResultRow : Panel
 
     private MyraLabel BuildAttributionLabel() => MyraLabel.Hint(_attribution!);
 
+    /// <summary>
+    ///     Width left for the editor itself, after the row's indentation and anything that shares the
+    ///     row with it.
+    /// </summary>
+    private int EditorBudget(int availableWidth) => availableWidth - IndentReserve - AttributionReserve();
+
+    /// <summary>
+    ///     Measured width of the attribution plus the gap before it, or zero when the row shows none.
+    /// </summary>
+    private int AttributionReserve()
+    {
+        if (_attributionReserve >= 0)
+            return _attributionReserve;
+
+        if (_attribution == null)
+            return _attributionReserve = 0;
+
+        int width = BuildAttributionLabel().Measure(new Point(int.MaxValue / 2, int.MaxValue / 2)).X;
+
+        return _attributionReserve = width + MyraStyle.STANDARD_SPACING * 2;
+    }
+
     private bool ShouldInline(int availableWidth, double threshold, double hysteresis)
     {
-        availableWidth -= IndentReserve;
+        // The attribution sits beside the editor in the same row, so an editor measured against the
+        // undiminished width would fit on its own and overflow once the attribution is drawn too.
+        availableWidth = EditorBudget(availableWidth);
 
         if (!_entry.CanInline || threshold <= 0d || availableWidth <= 0)
             return false;
