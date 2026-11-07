@@ -216,12 +216,14 @@ public static class MiscTab
             ),
             Option.Checkbox(
                 TazLang.Get("mog_tazuo_enableasyncmaploading"),
-                profile.EnableASyncMapLoading,
-                newValue =>
-                {
-                    profile.EnableASyncMapLoading = newValue;
-                    GameScene.Instance?.ASyncMapLoading = newValue;
-                },
+                new Accessor<bool>(
+                    () => profile.EnableASyncMapLoading,
+                    newValue =>
+                    {
+                        profile.EnableASyncMapLoading = newValue;
+                        GameScene.Instance?.ASyncMapLoading = newValue;
+                    }
+                ),
                 search: new SearchMetadata(
                     TazLang.Get("mog_tazuo_enableasyncmaploading"),
                     Keywords: [TazLang.Get("mog_kw_map"), TazLang.Get("mog_kw_thread"), TazLang.Get("mog_kw_advanced")]

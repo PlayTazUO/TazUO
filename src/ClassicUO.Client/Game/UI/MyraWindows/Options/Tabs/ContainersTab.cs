@@ -18,10 +18,8 @@ public static class ContainersTab
     /// <summary>Returns the tab group containing original-containers and grid-containers sub-tabs</summary>
     internal static IOptionSource GetContent() => GetContainerMenuTabs();
 
-    private static OptionTabGroup GetContainerMenuTabs()
-    {
-
-        return new OptionTabGroup()
+    private static OptionTabGroup GetContainerMenuTabs() =>
+        new OptionTabGroup()
             .AddTab(
                 TazLang.Get("mog_containers_labelgeneral"),
                 GetGeneralContainerSection,
@@ -37,7 +35,6 @@ public static class ContainersTab
                 GetGridContainerSection,
                 new SearchMetadata(TazLang.Get("mog_containers_labelgridcontainers"), Keywords: [TazLang.Get("mog_kw_grid")])
             );
-    }
 
     private static IOptionSource GetGeneralContainerSection()
     {
@@ -96,14 +93,13 @@ public static class ContainersTab
             content.Add(
                 Option.ComboBox(
                     TazLang.Get("mog_containers_characterbackpackstyle"),
-                    profile.BackpackStyle,
+                    new Accessor<int>(() => profile.BackpackStyle),
                     [
                         TazLang.Get("mog_containers_backpackopt_default"),
                         TazLang.Get("mog_containers_backpackopt_suede"),
                         TazLang.Get("mog_containers_backpackopt_polarbear"),
                         TazLang.Get("mog_containers_backpackopt_ghoulskin")
                     ],
-                    i => profile.BackpackStyle = i,
                     search: new SearchMetadata(
                         TazLang.Get("mog_containers_characterbackpackstyle"),
                         Keywords: [TazLang.Get("mog_kw_container"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_character")]
@@ -147,14 +143,13 @@ public static class ContainersTab
                 new PropertyBinder(new Accessor<bool>(() => profile.OverrideContainerLocation), TazLang.Get("mog_containers_overridecontainergumplocations")),
                 Option.ComboBox(
                     TazLang.Get("mog_containers_overrideposition"),
-                    profile.OverrideContainerLocationSetting,
+                    new Accessor<int>(() => profile.OverrideContainerLocationSetting),
                     [
                         TazLang.Get("mog_containers_positionopt_nearcontainer"),
                         TazLang.Get("mog_containers_positionopt_topright"),
                         TazLang.Get("mog_containers_positionopt_lastdraggedposition"),
                         TazLang.Get("mog_containers_remembereachcontainer")
                     ],
-                    i => profile.OverrideContainerLocationSetting = i,
                     search: new SearchMetadata(TazLang.Get("mog_containers_overrideposition"), Keywords: [TazLang.Get("mog_kw_position")])
                 )
             ).WithSearch(new SearchMetadata(TazLang.Get("mog_containers_labeloriginalcontainers"), Tags: [TazLang.Get("mog_kw_container")], Keywords: [TazLang.Get("mog_kw_container"), TazLang.Get("mog_kw_override"), TazLang.Get("mog_kw_location")]))
@@ -215,20 +210,21 @@ public static class ContainersTab
             ),
             Option.ComboBox(
                 TazLang.Get("gridcontainer_defaultview", "Default container view"),
-                profile.GridContainerViewMode,
+                new Accessor<int>(
+                    () => profile.GridContainerViewMode,
+                    i =>
+                    {
+                        profile.GridContainerViewMode = i;
+                        GridContainer.UpdateAllGridContainers();
+                    }
+                ),
                 [TazLang.Get("gridcontainer_view_grid_short", "Grid"), TazLang.Get("gridcontainer_view_list_short", "List")],
-                i =>
-                {
-                    profile.GridContainerViewMode = i;
-                    GridContainer.UpdateAllGridContainers();
-                },
                 search: new SearchMetadata(TazLang.Get("gridcontainer_defaultview", "Default container view"), Keywords: [TazLang.Get("mog_kw_view"), TazLang.Get("mog_kw_grid")])
             ),
             Option.ComboBox(
                 TazLang.Get("mog_tazuo_searchstyle"),
-                profile.GridContainerSearchMode,
+                new Accessor<int>(() => profile.GridContainerSearchMode),
                 [TazLang.Get("mog_tazuo_onlyshow"), TazLang.Get("mog_tazuo_highlight")],
-                i => profile.GridContainerSearchMode = i,
                 search: new SearchMetadata(TazLang.Get("mog_tazuo_searchstyle"), Keywords: [TazLang.Get("mog_kw_search"), TazLang.Get("mog_kw_style")])
             ),
             Option.Checkbox(
@@ -282,13 +278,15 @@ public static class ContainersTab
             new VisualContainerProps { LabelText = TazLang.Get("mog_containers_labelgridcontainerstyling") },
             Option.ComboBox(
                 TazLang.Get("mog_tazuo_containerstyle"),
-                profile.Grid_BorderStyle,
+                new Accessor<int>(
+                    () => profile.Grid_BorderStyle,
+                    i =>
+                    {
+                        profile.Grid_BorderStyle = i;
+                        GridContainer.UpdateAllGridContainers();
+                    }
+                ),
                 Enum.GetNames<BorderStyle>(),
-                i =>
-                {
-                    profile.Grid_BorderStyle = i;
-                    GridContainer.UpdateAllGridContainers();
-                },
                 search: new SearchMetadata(TazLang.Get("mog_tazuo_containerstyle"), Keywords: [TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_border")])
             ),
             Option.Slider(

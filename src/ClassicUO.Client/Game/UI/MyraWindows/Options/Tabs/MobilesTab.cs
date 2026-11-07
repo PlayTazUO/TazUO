@@ -61,12 +61,11 @@ public static class MobilesTab
                     ),
                     Option.ComboBox(
                         TazLang.Get("mog_general_corpseopenoptions"),
-                        profile.CorpseOpenOptions,
+                        new Accessor<int>(() => profile.CorpseOpenOptions),
                         [
                             TazLang.Get("mog_general_corpseoptnone"), TazLang.Get("mog_general_corpseoptnottarg"), TazLang.Get("mog_general_corpseoptnothiding"),
                             TazLang.Get("mog_general_corpseoptboth")
                         ],
-                        i => profile.CorpseOpenOptions = i,
                         search: new SearchMetadata(TazLang.Get("mog_general_corpseopenoptions"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_type")])
                     )
                 ).WithSearch(new SearchMetadata(TazLang.Get("mog_mobilestab_misc_corpseopening"), [TazLang.Get("mog_kw_misc")], [TazLang.Get("mog_kw_corpse")])),
@@ -110,14 +109,13 @@ public static class MobilesTab
             ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_highlight"), TazLang.Get("mog_kw_invulnerable")])),
             Option.ComboBox(
                 TazLang.Get("mog_mobilestab_highlighting_auraunderfeet"),
-                profile.AuraUnderFeetType,
+                new Accessor<int>(() => profile.AuraUnderFeetType),
                 [
                     TazLang.Get("mog_general_auraoptdisabled"),
                     TazLang.Get("mog_general_aurooptwarmode"),
                     TazLang.Get("mog_general_auraoptctrlshift"),
                     TazLang.Get("mog_general_auraoptalways")
                 ],
-                i => profile.AuraUnderFeetType = i,
                 search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_auraunderfeet"), Keywords: [TazLang.Get("mog_kw_aura")])
             ),
             OptionsUi.CheckBoxGroup(

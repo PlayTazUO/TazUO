@@ -10,10 +10,8 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 public static class InterfaceTab
 {
     /// <summary>Returns the tab group containing all interface sub-tabs</summary>
-    internal static IOptionSource GetContent()
-    {
-
-        return new OptionTabGroup(search: new SearchMetadata(Tags: [TazLang.Get("mog_kw_interface")]))
+    internal static IOptionSource GetContent() =>
+        new OptionTabGroup(search: new SearchMetadata(Tags: [TazLang.Get("mog_kw_interface")]))
             .AddTab(
                 TazLang.Get("mog_buttoncontainers"),
                 ContainersTab.GetContent,
@@ -54,5 +52,4 @@ public static class InterfaceTab
                 CooldownBarsTab.GetContent,
                 new SearchMetadata(TazLang.Get("mog_cooldownstab_cooldownbarslabel"), [TazLang.Get("mog_kw_cooldown"), TazLang.Get("mog_kw_timer")])
             );
-    }
 }
