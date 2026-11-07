@@ -153,7 +153,11 @@ internal static class SpeechTab
                 TazLang.Get("mog_tazuo_overheadtextwidth"),
                 0,
                 600,
-                new Accessor<int>(() => profile.OverheadChatWidth)
+                new Accessor<int>(() => profile.OverheadChatWidth),
+                search: new SearchMetadata(
+                    TazLang.Get("mog_tazuo_overheadtextwidth"),
+                    Keywords: [TazLang.Get("mog_kw_overhead"), TazLang.Get("mog_kw_text"), TazLang.Get("mog_kw_width")]
+                )
             ),
             Option.Checkbox(
                 TazLang.Get("mog_tazuo_disablemouseinteractionsforoverheadtext"),
@@ -170,14 +174,23 @@ internal static class SpeechTab
          .WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_overhead")]));
     }
 
-    private static OptionFragment GetOverheadSuppressionSection()
-    {
-
-        return OptionsUi.VisualContainer(
+    private static OptionFragment GetOverheadSuppressionSection() =>
+        OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = TazLang.Get("mog_chattab_speech_disableoverheadmessages") },
             OptionsUi.Horizontal(CreateMessageTypeCheckboxes())
+        ).WithSearch(
+            // On the section, not the boxes: those are generated from the MessageType enum, so a new
+            // message type inherits these instead of needing its own metadata.
+            new SearchMetadata(
+                Keywords:
+                [
+                    TazLang.Get("mog_kw_overhead"),
+                    TazLang.Get("mog_kw_message"),
+                    TazLang.Get("mog_kw_suppress"),
+                    TazLang.Get("mog_kw_hide")
+                ]
+            )
         );
-    }
 
     private static OptionFragment CreateMessageTypeCheckboxes()
     {
@@ -193,7 +206,8 @@ internal static class SpeechTab
                     LocalizeMessageType(mType),
                     new Accessor<bool>(
                         () => MessageTypeFilter.IsEnabled(profile.DisabledOverheadMessageTypes, mType),
-                        enabled => MessageTypeFilter.SetEnabled(profile.DisabledOverheadMessageTypes, mType, enabled)
+                        enabled => profile.DisabledOverheadMessageTypes =
+                            MessageTypeFilter.SetEnabled(profile.DisabledOverheadMessageTypes, mType, enabled)
                     ),
                     mType.ToString()
                 )

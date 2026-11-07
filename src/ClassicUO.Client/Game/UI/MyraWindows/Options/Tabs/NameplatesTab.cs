@@ -27,20 +27,23 @@ public static class NameplatesTab
     private static OptionTabGroup GetNameplatesMenuTabs() =>
         new OptionTabGroup()
             .AddTab(TazLang.Get("mog_buttongeneral"), GetGeneralNameplatesSubTabContent, new SearchMetadata(TazLang.Get("mog_buttongeneral"), Keywords: [TazLang.Get("mog_kw_general")]))
-            .AddTab(TazLang.Get("mog_buttonprofiles"), GetProfilesSubTabContentSource,
-                new SearchMetadata()); // Empty metadata to disable search; Doesn't render well in the results page.
+            .AddTab(
+                TazLang.Get("mog_buttonprofiles"),
+                GetProfilesSubTabContentSource,
+                new SearchMetadata(TazLang.Get("mog_buttonprofiles"), Keywords: [TazLang.Get("mog_kw_profile"), TazLang.Get("mog_kw_preset"), TazLang.Get("mog_kw_nameplate")])
+            );
 
     #region Profiles
 
-    private static IOptionSource GetProfilesSubTabContentSource()
-    {
-        // The profile editor is not 'searchable' right now since it doesn't really fit well in the search results page.
-        OptionFragment panel = OptionsUi.Vertical(
-            Option.Custom(GetProfilesSubTabContent)
+    private static IOptionSource GetProfilesSubTabContentSource() =>
+        // The editor is too large and too dependent on its own surroundings to host in a result row,
+        // so it is findable but navigate-only - which is Option.Custom's default.
+        OptionsUi.Vertical(
+            Option.Custom(
+                GetProfilesSubTabContent,
+                new SearchMetadata(TazLang.Get("mog_buttonprofiles"), Keywords: [TazLang.Get("mog_kw_profile"), TazLang.Get("mog_kw_preset")])
+            )
         );
-        panel.InheritsSearch = false;
-        return panel;
-    }
 
     private static Widget GetProfilesSubTabContent()
     {
@@ -395,7 +398,11 @@ public static class NameplatesTab
                 ),
                 Option.Checkbox(
                     TazLang.Get("nameplate_notorietytext"),
-                    NameplateSetting<bool>(() => profile.NamePlateUseNotorietyText)
+                    NameplateSetting<bool>(() => profile.NamePlateUseNotorietyText),
+                    search: new SearchMetadata(
+                        TazLang.Get("nameplate_notorietytext"),
+                        Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_color"), TazLang.Get("mog_kw_name")]
+                    )
                 ),
                 Option.Slider(
                     TazLang.Get("mog_kw_size"),
@@ -447,7 +454,17 @@ public static class NameplatesTab
                 new VisualContainerProps { LabelText = TazLang.Get("mog_kw_healthbar") },
                 Option.Checkbox(
                     TazLang.Get("nameplate_showmissinghealth"),
-                    NameplateSetting<bool>(() => profile.NamePlateShowMissingHealth)
+                    NameplateSetting<bool>(() => profile.NamePlateShowMissingHealth),
+                    search: new SearchMetadata(
+                        TazLang.Get("nameplate_showmissinghealth"),
+                        Keywords:
+                        [
+                            TazLang.Get("mog_kw_health"),
+                            TazLang.Get("mog_kw_hp"),
+                            TazLang.Get("mog_kw_mana"),
+                            TazLang.Get("mog_kw_stamina")
+                        ]
+                    )
                 ),
                 Option.LComboBox(
                     TazLang.Get("mog_kw_mode"),

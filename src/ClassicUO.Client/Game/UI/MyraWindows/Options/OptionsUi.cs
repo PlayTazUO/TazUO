@@ -47,17 +47,19 @@ internal static class OptionsUi
     /// Creates an <see cref="OptionFragment"/> that wraps its children in a
     /// <see cref="VisualContainer"/> with a styled border and optional label
     /// </summary>
-    /// <param name="props">Visual container display properties (label, link, spacing)</param>
+    /// <param name="props">Visual container display properties (label, link, spacing). Its
+    /// <see cref="VisualContainerProps.LabelText"/> doubles as the breadcrumb segment for the
+    /// children, so search paths read the same as the captions on screen.</param>
     /// <param name="children">The option slots to display inside the container</param>
     /// <returns>An option fragment backed by a <see cref="VisualContainer"/></returns>
     public static OptionFragment VisualContainer(
         VisualContainerProps props,
         params OptionContent[] children
     ) =>
-        new(
+        new OptionFragment(
             () => new VisualContainer(props, children.Select(c => c.Render()).ToArray()),
             children
-        );
+        ).WithLabel(props.LabelText);
 
     /// <summary>
     /// Creates an <see cref="OptionFragment"/> that wraps its children in a
@@ -74,5 +76,5 @@ internal static class OptionsUi
         new OptionFragment(
             () => new CheckBoxGroup(controlProp, children.Select(c => c.Render()).ToArray()),
             children
-        ).AsSearchGroup();
+        ).AsSearchGroup().WithLabel(controlProp.Label);
 }

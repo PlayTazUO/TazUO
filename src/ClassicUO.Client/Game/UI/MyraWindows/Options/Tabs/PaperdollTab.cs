@@ -9,9 +9,8 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 public class PaperdollTab
 {
     /// <summary>Returns the option fragments for equip-on-drop behavior and modern-paperdoll enable/disable and styling</summary>
-    internal static IOptionSource GetContent()
-    {
-        return OptionsUi.Vertical(
+    internal static IOptionSource GetContent() =>
+        OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(
                     new Accessor<bool>(() => ProfileManager.GlobalSettings.SwapEquippedOnPaperdollDrop),
@@ -40,7 +39,6 @@ public class PaperdollTab
             )),
             GetModernPaperdollSection()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_buttonpaperdoll"), [TazLang.Get("mog_kw_paperdoll"), TazLang.Get("mog_kw_character"), TazLang.Get("mog_kw_equipment")]));
-    }
 
     private static OptionFragment GetModernPaperdollSection()
     {

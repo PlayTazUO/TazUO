@@ -95,9 +95,8 @@ public class CooldownBarRule : IRule, INotifyPropertyChanged
     /// Projects this rule into a persistable <see cref="CooldownBarConfigEntry"/>
     /// </summary>
     /// <returns>A new entry mirroring this rule's current values</returns>
-    public CooldownBarConfigEntry ToEntry()
-    {
-        return new CooldownBarConfigEntry
+    public CooldownBarConfigEntry ToEntry() =>
+        new()
         {
             Hue = Hue,
             Label = Name,
@@ -107,7 +106,6 @@ public class CooldownBarRule : IRule, INotifyPropertyChanged
             ReplaceIfExists = ReplaceExisting,
             SkipIfExists = SkipIfExists
         };
-    }
 
     /// <inheritdoc/>
     public event PropertyChangedEventHandler PropertyChanged;

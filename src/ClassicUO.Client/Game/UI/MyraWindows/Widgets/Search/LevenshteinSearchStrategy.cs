@@ -10,7 +10,10 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 
 public partial class LevenshteinSearchStrategy : ISearchStrategy
 {
-    /// <summary>Default ceiling on the edit distance a match may have, before <see cref="GetMaxDistanceForQueryLength"/> narrows it further.</summary>
+    /// <summary>
+    ///     Default ceiling on the edit distance a match may have, before <see cref="GetMaxDistanceForQueryLength" />
+    ///     narrows it further.
+    /// </summary>
     public const int DEFAULT_MAX_DISTANCE = 4;
 
     private static readonly Regex _wordBoundaryRegex = WordBoundaryRegex();
@@ -22,9 +25,9 @@ public partial class LevenshteinSearchStrategy : ISearchStrategy
     public bool CaseSensitive { get; set; }
 
     /// <summary>
-    /// Splits a candidate into the tokens compared individually when <see cref="PerTokenBest"/>
-    /// is set. Defaults to word-boundary splitting so punctuation doesn't get glued onto
-    /// adjacent words the way a plain whitespace split would.
+    ///     Splits a candidate into the tokens compared individually when <see cref="PerTokenBest" />
+    ///     is set. Defaults to word-boundary splitting so punctuation doesn't get glued onto
+    ///     adjacent words the way a plain whitespace split would.
     /// </summary>
     public Func<string, IEnumerable<string>> Tokenizer { get; set; } = WordBoundaryTokenizer;
 
@@ -85,9 +88,9 @@ public partial class LevenshteinSearchStrategy : ISearchStrategy
     }
 
     /// <summary>
-    /// Edit budget allowed for a query of <paramref name="queryLength"/> characters, before
-    /// <see cref="MaxDistance"/> is applied as a ceiling on top. These thresholds are the
-    /// authoritative definition of the default fuzziness curve.
+    ///     Edit budget allowed for a query of <paramref name="queryLength" /> characters, before
+    ///     <see cref="MaxDistance" /> is applied as a ceiling on top. These thresholds are the
+    ///     authoritative definition of the default fuzziness curve.
     /// </summary>
     private static int AutoFuzziness(int queryLength) => queryLength switch
     {

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
@@ -10,6 +11,10 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 /// A discriminated union that holds either a raw <see cref="Widget"/>, an <see cref="OptionEntry"/>,
 /// an <see cref="OptionFragment"/>, or an <see cref="OptionTabGroup"/> at a position in an option layout.
 /// Implicit conversions eliminate explicit wrapping at every call site.
+/// <para>
+/// A raw widget contributes nothing to search - it has no metadata to match on. Wrap it in
+/// <see cref="Option.Custom"/> with metadata to make it findable.
+/// </para>
 /// </summary>
 internal struct OptionContent : IOptionSource
 {
@@ -40,37 +45,13 @@ internal struct OptionContent : IOptionSource
             _ => throw new InvalidOperationException("Invalid content type")
         };
 
-    /// <summary>
-    /// Delegates to the wrapped <see cref="IOptionSource"/> and returns its matching entries,
-    /// or an empty sequence if the wrapped object is a raw widget
-    /// </summary>
-    /// <param name="search">The search criteria to evaluate</param>
-    /// <returns>Matching option entries</returns>
-    public IEnumerable<OptionEntry> Match(SearchMetadata search) =>
+    /// <inheritdoc/>
+    public IEnumerable<SearchEntry> Index(OptionIndexContext context) =>
         _content switch
         {
-            IOptionSource source => GetMatches(source, search),
+            IOptionSource source => source.Index(context.WithInherited(GetSearch(context.Inherited))),
             _ => []
         };
-
-    /// <summary>
-    /// Delegates to the wrapped <see cref="IOptionSource"/> and returns all leaf entries,
-    /// or an empty sequence if the wrapped object is a raw widget
-    /// </summary>
-    /// <param name="inheritedSearch">Search metadata propagated from a parent node</param>
-    /// <returns>All leaf entries with their merged metadata</returns>
-    public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null) =>
-        _content switch
-        {
-            IOptionSource source => source.GetOptions(GetSearch(inheritedSearch)),
-            _ => []
-        };
-
-    private IEnumerable<OptionEntry> GetMatches(IOptionSource source, SearchMetadata search)
-    {
-        SearchMetadata? finalSearch = GetSearch(search);
-        return finalSearch == null ? [] : source.Match(finalSearch);
-    }
 
     private SearchMetadata? GetSearch(SearchMetadata? inheritedSearch) => InheritsSearch ? SearchMetadata.Merge(Search, inheritedSearch) : Search;
 
