@@ -94,7 +94,14 @@ public class PageControl : Container
         return false;
     }
 
-    /// <summary>The widget on the current page, or <see langword="null"/> when there are no pages</summary>
+    /// <summary>
+    /// The widget on the current page, or <see langword="null"/> when there are no pages.
+    /// <para>
+    /// Nullable despite the unannotated return type - this file is not <c>#nullable enable</c>, and
+    /// enabling it would require annotating the control's deferred-built fields. Callers must
+    /// null-check.
+    /// </para>
+    /// </summary>
     public Widget CurrentPageContent => _pages.Count == 0 ? null : _pages[CurrentPage];
 
     /// <summary>

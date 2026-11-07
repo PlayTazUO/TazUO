@@ -10,8 +10,9 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 /// One entry in the options window's navigation history: either a page at some breadcrumb, or the
 /// search results for a query.
 /// <para>
-/// Holds location plus view state - collapse set, scroll offset - but never widgets, so a rebuild
-/// triggered by a profile preset or a theme change can't strand the history on disposed controls.
+/// Holds location plus a search view's state - collapse set, scroll offset - but never widgets, so
+/// a rebuild triggered by a profile preset or a theme change can't strand the history on disposed
+/// controls.
 /// </para>
 /// </summary>
 internal sealed class OptionsView
@@ -42,7 +43,11 @@ internal sealed class OptionsView
     /// <summary>Paths of the groups the user had collapsed in the results list</summary>
     public HashSet<string> Collapsed { get; } = [];
 
-    /// <summary>Vertical scroll offset to restore</summary>
+    /// <summary>
+    /// Vertical scroll offset of the results list to restore. Search views only - a page view
+    /// scrolls in the window's own scroller, which is also what the highlight cue drives, so
+    /// restoring a page offset would fight the scroll-to-setting that follows a search result.
+    /// </summary>
     public int ScrollOffset { get; set; }
 
     /// <summary>Whether this view shows search results rather than a page</summary>

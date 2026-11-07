@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
@@ -12,7 +13,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 /// A lazy-loading <see cref="ContentControl"/> that defers widget creation until first render
 /// and supports text- and tag-based search filtering
 /// </summary>
-internal class OptionItem : ContentControl
+internal class OptionItem : ContentControl, IHighlightTarget
 {
     private readonly SingleItemLayout<Widget> _layout;
     private string? _tags;
@@ -26,6 +27,9 @@ internal class OptionItem : ContentControl
     /// item it refers to without matching against the captions of the widgets inside it.
     /// </summary>
     public string SearchText => _searchText;
+
+    /// <inheritdoc/>
+    public string HighlightLabel => _searchText;
 
     /// <inheritdoc/>
     public override Widget Content

@@ -35,6 +35,14 @@ ClassicUO.sln
 - **Discord SDK**: Discord rich presence integration
 
 
+## Solution Design
+
+- Prefer zero-maintenance/self-aligning solutions (marker interface, single choke point, data-driven)
+  over hyper-specific/hardcoded ones (literal type lists, name matching, per-case branches). Exception:
+  the complexity gap is large.
+- Falling back to hyper-specificity → say so explicitly, up front, before writing it.
+- Any highly specific/hardcoded solution or workaround → state it as such when presenting it.
+
 ## Code Style Rules
 
 Applies to new code. Don't refactor existing code to match unless asked.

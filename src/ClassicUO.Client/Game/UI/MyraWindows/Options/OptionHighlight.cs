@@ -2,7 +2,6 @@
 
 using System;
 using ClassicUO.Game.UI.MyraWindows.Theme;
-using ClassicUO.Utility.Logging;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
@@ -95,15 +94,7 @@ internal sealed class OptionHighlight
         Cancel();
 
         if (string.IsNullOrEmpty(label) || FindTarget(pageRoot, label) is not { } target)
-        {
-            // TEMP DIAGNOSTICS
-            Log.Trace($"[opthl] no target for '{label}' under {pageRoot.GetType().Name}");
-
             return;
-        }
-
-        // TEMP DIAGNOSTICS
-        Log.Trace($"[opthl] target '{label}' -> {target.GetType().Name}, bounds {target.Bounds}");
 
         _target = target;
         _borrowedFrom = target.Background;
@@ -131,21 +122,12 @@ internal sealed class OptionHighlight
 
             _placed = true;
             _startTick = Time.Ticks;
-
-            // TEMP DIAGNOSTICS
-            Log.Trace(
-                $"[opthl] placed after {LAYOUT_WAIT_FRAMES - _waitFrames} frames, bounds {_target.Bounds}, "
-                + $"scroller {(NearestScroller(_target)?.GetType().Name ?? "none")}"
-            );
         }
 
         uint elapsed = Time.Ticks - _startTick;
 
         if (elapsed >= TOTAL_MS)
         {
-            // TEMP DIAGNOSTICS
-            Log.Trace("[opthl] done");
-
             Cancel();
             return;
         }
@@ -226,10 +208,10 @@ internal sealed class OptionHighlight
     /// <summary>
     ///     The setting named <paramref name="label" />.
     ///     <para>
-    ///         Matched on the option's own name rather than on any caption inside it:
-    ///         <see cref="OptionItem.SearchText" /> and <see cref="CheckBoxGroup.PrimaryLabel" /> are
-    ///         the very strings the index was built from, so the comparison is exact. A rendered
-    ///         caption is not - an editor may draw its name itself, decorate it, or not draw one.
+    ///         Matched on a widget's own declared name - <see cref="IHighlightTarget.HighlightLabel" />
+    ///         is the very string the index was built from, so the comparison is exact. A rendered
+    ///         caption is not - an editor may draw its name itself, decorate it, or not draw one -
+    ///         hence the caption fallback below.
     ///     </para>
     ///     <para>
     ///         Matched by name rather than by identity because the indexing pass and the render pass
@@ -237,20 +219,30 @@ internal sealed class OptionHighlight
     ///         so there is no shared handle to carry from one to the other. Duplicate names on one
     ///         page resolve to the first, which is still a setting by that name.
     ///     </para>
+    ///     <para>
+    ///         Searched live-only, so a sibling tab holding the same name cannot win the match: its
+    ///         cached content outlives the selection that built it but has no parent and no bounds,
+    ///         and a target there can never be placed - the cue would simply never appear.
+    ///     </para>
     /// </summary>
     private static Widget? FindTarget(Widget pageRoot, string label)
     {
+        Widget? sectionMatch = null;
         Widget? captionMatch = null;
 
-        foreach (Widget descendant in pageRoot.Descendants())
+        foreach (Widget descendant in pageRoot.Descendants(liveOnly: true))
         {
             switch (descendant)
             {
-                case OptionItem item when string.Equals(item.SearchText, label, StringComparison.Ordinal):
-                    return item;
+                case IHighlightTarget named when string.Equals(named.HighlightLabel, label, StringComparison.Ordinal):
+                    if (named.HighlightScope == HighlightScope.Setting)
+                        return (Widget)named;
 
-                case CheckBoxGroup group when string.Equals(group.PrimaryLabel, label, StringComparison.Ordinal):
-                    return group;
+                    // A section encloses what it contains, so the walk reaches it first. Recorded
+                    // rather than returned, to leave a setting of the same name free to win.
+                    sectionMatch ??= (Widget)named;
+
+                    break;
 
                 // Kept as a fallback for a widget built outside the option factories, but only used
                 // if nothing names itself - an owner is always the better target than its text.
@@ -261,18 +253,25 @@ internal sealed class OptionHighlight
             }
         }
 
+        if (sectionMatch != null)
+            return sectionMatch;
+
         return captionMatch == null ? null : EnclosingOption(captionMatch);
     }
 
     /// <summary>
     ///     The row a caption belongs to, so the tint covers the setting and its editor rather than
-    ///     just its text. Falls back to the caption for anything not built by the option factories.
+    ///     just its text. Falls back to the caption for anything that names no owner of its own.
     /// </summary>
+    /// <remarks>
+    ///     Stops at a setting, never at a section: a stray caption inside a framed group would
+    ///     otherwise light the entire group up.
+    /// </remarks>
     private static Widget EnclosingOption(Widget caption)
     {
         for (Widget? widget = caption; widget != null; widget = widget.Parent)
         {
-            if (widget is OptionItem or CheckBoxGroup)
+            if (widget is IHighlightTarget { HighlightScope: HighlightScope.Setting })
                 return widget;
         }
 

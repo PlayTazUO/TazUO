@@ -29,7 +29,7 @@ public class PropertyBinder
     }
 }
 
-public class CheckBoxGroup : Panel
+public class CheckBoxGroup : Panel, IHighlightTarget
 {
     private readonly PropertyBinder _primaryControlProp;
     private readonly VerticalStackPanel _primaryPanel = new();
@@ -41,6 +41,9 @@ public class CheckBoxGroup : Panel
 
     /// <summary>The gating checkbox's caption, i.e. the name this group goes by</summary>
     public string PrimaryLabel => _primaryControlProp.Label;
+
+    /// <inheritdoc/>
+    public string HighlightLabel => PrimaryLabel;
 
     public CheckBoxGroup(PropertyBinder controlProp, params Widget[] widgets)
     {

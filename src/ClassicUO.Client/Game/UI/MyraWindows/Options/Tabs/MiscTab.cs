@@ -45,8 +45,11 @@ public static class MiscTab
                         mode =>
                         {
                             profile.OptionsSearchInlineMode = mode;
-                            // Results already on screen won't re-measure on their own.
-                            UIManager.ForEach<OptionsWindow>(window => window.RefreshInlinePresentation());
+                            // Results already on screen won't re-measure on their own. Deferred
+                            // because this combo can be one of them: re-presenting the list from
+                            // inside SelectedIndexChanged would destroy the widget dispatching it,
+                            // while the desktop still holds its open dropdown.
+                            UIManager.ForEach<OptionsWindow>(window => window.Defer(window.RefreshInlinePresentation));
                         }
                     ),
                     optionLocalizationPrefix: "optsearch_inline_",

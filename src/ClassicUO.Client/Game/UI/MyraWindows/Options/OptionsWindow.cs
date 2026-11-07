@@ -39,7 +39,7 @@ public class OptionsWindow : MyraControl
     private const int MIN_HEIGHT = 250;
     private const int MIN_WIDTH = 350;
 
-    private const int MAX_HEIGHT = 850;
+    private const int MAX_HEIGHT = 1050;
     private const int MAX_WIDTH = 1200;
 
     private const int SEARCH_DEBOUNCE_MS = 500;
@@ -342,9 +342,6 @@ public class OptionsWindow : MyraControl
         {
             NavigateTo(target);
 
-            // TEMP DIAGNOSTICS
-            ClassicUO.Utility.Logging.Log.Trace($"[opthl] open '{label}' at '{target.Text}'");
-
             // The navigation has built the page but nothing has laid it out yet; the highlighter
             // waits for the target to have bounds before scrolling to it.
             _highlight.Start(_optionsPanel, label);
@@ -374,7 +371,16 @@ public class OptionsWindow : MyraControl
         _optionsStack.Widgets.Add(_optionsPanel);
         _mainArea.AddWidget(_optionsStack, 1, 1);
 
-        _resultTree.NavigationRequested += (_, path) => NavigateTo(path);
+        _resultTree.NavigationRequested += (_, path) =>
+        {
+            NavigateTo(path);
+
+            // A crumb names whatever the user clicked - a category, a tab, a section. Pointing the
+            // cue at it covers the section case; a tab is its own feedback once selected, and
+            // FindTarget simply finds nothing for it.
+            if (path.Leaf is { Length: > 0 } segment)
+                _highlight.Start(_optionsPanel, segment);
+        };
 
         foreach (OptionCategory category in _categories)
             categoryPanel.Widgets.Add(GetCategoryButton(category.Label));
@@ -666,7 +672,9 @@ public class OptionsWindow : MyraControl
 
         // Materialised first: selecting a tab builds its content into the very collection the
         // walk is enumerating, which would otherwise throw part-way through a navigation.
-        List<Widget> candidates = [.. root.Descendants()];
+        // Live-only: a control cached inside an unselected tab is not on the user's route to the
+        // segment, and selecting a segment inside one would move a page nobody is looking at.
+        List<Widget> candidates = [.. root.Descendants(liveOnly: true)];
 
         foreach (Widget descendant in candidates)
         {
@@ -949,14 +957,33 @@ public class OptionsWindow : MyraControl
         if (!_categoriesByLabel.TryGetValue(_currentCategory, out OptionCategory? resolved))
             return;
 
+        // The cue points into a widget this rebuild is about to replace.
+        _highlight.Cancel();
+
         for (int i = 0; i < resolved.Sources.Count && i < _optionsPanel.Widgets.Count; i++)
         {
             // Rebuilding the category would reset nested tabs to their first page.
             if (_optionsPanel.Widgets[i] is MyraTabControl tabs)
+            {
                 tabs.RefreshSelectedContent();
-            else
-                _optionsPanel.Widgets[i] = resolved.Sources[i].Render();
+                continue;
+            }
+
+            // A replaced PageControl is a fresh one showing its first page, so the page the user
+            // was on has to be carried across the swap.
+            int page = _optionsPanel.Widgets[i] is PageControl paged ? paged.CurrentPage : 0;
+            Widget rendered = resolved.Sources[i].Render();
+
+            if (rendered is PageControl renderedPages)
+                renderedPages.CurrentPage = page;
+
+            _optionsPanel.Widgets[i] = rendered;
         }
+
+        // Whatever tab controls the rebuilt content holds are new objects; the subscriptions went
+        // out with the widgets they were on.
+        ForgetTabControls();
+        WatchTabControls();
     }
 
     #endregion

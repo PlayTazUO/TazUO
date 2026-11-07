@@ -53,8 +53,9 @@ public static class MyraExtensions
     /// </para>
     /// </summary>
     /// <param name="root">The widget to walk beneath; not itself yielded</param>
+    /// <param name="liveOnly">Skips the contents of unselected tabs; see <see cref="ChildWidgets"/></param>
     /// <returns>Every reachable descendant</returns>
-    public static IEnumerable<Widget> Descendants(this Widget root)
+    public static IEnumerable<Widget> Descendants(this Widget root, bool liveOnly = false)
     {
         Queue<Widget> pending = new();
         pending.Enqueue(root);
@@ -66,7 +67,7 @@ public static class MyraExtensions
             if (!ReferenceEquals(current, root))
                 yield return current;
 
-            foreach (Widget child in current.ChildWidgets())
+            foreach (Widget child in current.ChildWidgets(liveOnly))
                 pending.Enqueue(child);
         }
     }
@@ -104,8 +105,16 @@ public static class MyraExtensions
     /// </para>
     /// </summary>
     /// <param name="widget">The widget whose children are wanted</param>
+    /// <param name="liveOnly">
+    /// Restricts a tab control to the selected tab's content. A tab keeps its content cached once
+    /// built - and the first tab is built the moment the control is populated - but only the
+    /// selected one is parented and laid out, so the rest are off-screen widgets with no parent and
+    /// no bounds. Pass <see langword="true"/> when the walk looks for something to point at, click
+    /// or scroll to; leave it <see langword="false"/> when every built widget has to be touched
+    /// regardless of what is showing.
+    /// </param>
     /// <returns>Its immediate children; empty for a leaf</returns>
-    public static IEnumerable<Widget> ChildWidgets(this Widget widget)
+    public static IEnumerable<Widget> ChildWidgets(this Widget widget, bool liveOnly = false)
     {
         switch (widget)
         {
@@ -123,6 +132,14 @@ public static class MyraExtensions
 
         if (widget is not TabControl tabs)
             yield break;
+
+        if (liveOnly)
+        {
+            if (tabs.SelectedItem?.Content is { } live)
+                yield return live;
+
+            yield break;
+        }
 
         // An unbuilt tab has no content yet and simply contributes nothing.
         foreach (TabItem item in tabs.Items)
