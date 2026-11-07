@@ -149,6 +149,41 @@ namespace ClassicUO.UnitTests.Game.UI.Search
         }
 
         [Fact]
+        public void TruncateForward_Drops_The_Forward_Tail_Without_Moving_The_Cursor()
+        {
+            var history = new NavigationHistory<string>();
+
+            history.Push("a");
+            history.Push("b");
+            history.Push("c");
+            history.TryGoBack(out _);
+
+            history.Current.Should().Be("b");
+            history.CanGoForward.Should().BeTrue();
+
+            history.TruncateForward();
+
+            history.Current.Should().Be("b");
+            history.CanGoForward.Should().BeFalse();
+            history.CanGoBack.Should().BeTrue();
+        }
+
+        [Fact]
+        public void TruncateForward_Is_A_Silent_No_Op_With_Nothing_Ahead()
+        {
+            var history = new NavigationHistory<string>();
+            int raised = 0;
+
+            history.Push("a");
+            history.Changed += (_, _) => raised++;
+
+            history.TruncateForward();
+
+            raised.Should().Be(0);
+            history.Current.Should().Be("a");
+        }
+
+        [Fact]
         public void Custom_Comparer_Drives_Deduplication()
         {
             var history = new NavigationHistory<string>(comparer: StringComparer.OrdinalIgnoreCase);

@@ -3,6 +3,7 @@
 using System;
 using ClassicUO.Game.UI.MyraWindows.Theme;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
@@ -88,12 +89,28 @@ internal sealed class OptionHighlight
     ///     cue is better than a tint on the wrong setting.
     /// </summary>
     /// <param name="pageRoot">The page just navigated to</param>
+    /// <param name="path">
+    ///     The breadcrumb the caption was found under, its own label last. Its section segments narrow
+    ///     the search, which is what separates two settings sharing a name - <c>Mode</c>, <c>Type</c>
+    ///     and <c>Size</c> repeat across sections of one page.
+    /// </param>
     /// <param name="label">The setting's visible caption, as the search result displayed it</param>
-    public void Start(Widget pageRoot, string label)
+    public void Start(Widget pageRoot, SearchPath path, string label)
     {
         Cancel();
 
-        if (string.IsNullOrEmpty(label) || FindTarget(pageRoot, label) is not { } target)
+        if (string.IsNullOrEmpty(label))
+            return;
+
+        Widget scoped = NarrowToSections(pageRoot, path);
+        Widget? target = FindTarget(scoped, label);
+
+        // Widened back out rather than giving up: the breadcrumb may name a section that is not a
+        // widget of its own, and pointing at a setting of the right name beats pointing at nothing.
+        if (target == null && !ReferenceEquals(scoped, pageRoot))
+            target = FindTarget(pageRoot, label);
+
+        if (target == null)
             return;
 
         _target = target;
@@ -200,6 +217,44 @@ internal sealed class OptionHighlight
         {
             if (widget is ScrollViewer scroller)
                 return scroller;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    ///     Narrows <paramref name="pageRoot" /> to the innermost section the breadcrumb names, so a
+    ///     label is matched within the section that owns it rather than across the whole page.
+    ///     <para>
+    ///         The leaf is skipped: it is the setting's own name, which is what
+    ///         <see cref="FindTarget" /> is looking for. Segments naming a category, tab or page match
+    ///         no section and simply leave the root where it is - they have already been navigated to.
+    ///     </para>
+    /// </summary>
+    /// <param name="pageRoot">The page to narrow</param>
+    /// <param name="path">The breadcrumb, the setting's own label last</param>
+    /// <returns>The innermost matched section, or <paramref name="pageRoot" /> when none matched</returns>
+    private static Widget NarrowToSections(Widget pageRoot, SearchPath path)
+    {
+        Widget root = pageRoot;
+
+        for (int depth = 0; depth < path.Length - 1; depth++)
+        {
+            if (FindSection(root, path[depth]) is { } section)
+                root = section;
+        }
+
+        return root;
+    }
+
+    /// <summary>The section named <paramref name="label" /> beneath <paramref name="root" />, if any</summary>
+    private static Widget? FindSection(Widget root, string label)
+    {
+        foreach (Widget descendant in root.Descendants(liveOnly: true))
+        {
+            if (descendant is IHighlightTarget { HighlightScope: HighlightScope.Section } named
+                && string.Equals(named.HighlightLabel, label, StringComparison.Ordinal))
+                return descendant;
         }
 
         return null;

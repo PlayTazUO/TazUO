@@ -290,10 +290,16 @@ public class OptionsWindow : MyraControl
 
             current.Query = query;
 
-            // A different query is a different list: keeping the offset would open the narrower
-            // result set scrolled past its own top-ranked hits. Only back and forward restore one.
             if (queryChanged)
+            {
+                // A different query is a different list: keeping the offset would open the narrower
+                // result set scrolled past its own top-ranked hits. Only back and forward restore one.
                 current.ScrollOffset = 0;
+
+                // Whatever was ahead was reached from the old query, so forward would jump to a page
+                // the user is no longer working from.
+                _history.TruncateForward();
+            }
 
             Restore(current);
 
@@ -388,7 +394,7 @@ public class OptionsWindow : MyraControl
 
             // The navigation has built the page but nothing has laid it out yet; the highlighter
             // waits for the target to have bounds before scrolling to it.
-            _highlight.Start(_optionsPanel, label);
+            _highlight.Start(_optionsPanel, target, label);
         };
     }
 
@@ -423,7 +429,7 @@ public class OptionsWindow : MyraControl
             // cue at it covers the section case; a tab is its own feedback once selected, and
             // FindTarget simply finds nothing for it.
             if (path.Leaf is { Length: > 0 } segment)
-                _highlight.Start(_optionsPanel, segment);
+                _highlight.Start(_optionsPanel, path, segment);
         };
 
         foreach (OptionCategory category in _categories)

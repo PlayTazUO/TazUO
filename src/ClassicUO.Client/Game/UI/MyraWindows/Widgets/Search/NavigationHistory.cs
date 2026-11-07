@@ -140,6 +140,27 @@ public sealed class NavigationHistory<T>
         return true;
     }
 
+    /// <summary>
+    ///     Discards everything ahead of the cursor without moving it.
+    ///     <para>
+    ///         For a view whose location changes in place, where <see cref="ReplaceCurrent" /> alone
+    ///         would leave a forward entry that belongs to the location the user has just left -
+    ///         retyping a search, say. <see cref="Push" /> does this as part of arriving somewhere;
+    ///         this is the same rule for a change that records no new entry.
+    ///     </para>
+    /// </summary>
+    public void TruncateForward()
+    {
+        int forwardStart = _cursor + 1;
+
+        if (forwardStart >= _entries.Count)
+            return;
+
+        _entries.RemoveRange(forwardStart, _entries.Count - forwardStart);
+
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
     /// <summary>Moves the cursor back one entry</summary>
     /// <param name="entry">The entry navigated to, when this returns <see langword="true" /></param>
     /// <returns>Whether the cursor moved</returns>

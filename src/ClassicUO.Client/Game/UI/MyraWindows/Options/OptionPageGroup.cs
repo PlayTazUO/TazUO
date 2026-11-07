@@ -44,6 +44,13 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
     /// <param name="label">
     /// Optional breadcrumb name for the page. The <see cref="PageControl"/> itself shows page
     /// numbers rather than names, so this exists purely to locate the page's options in search.
+    /// <para>
+    /// <b>A label is a page's only identity.</b> Blank, and the page contributes no breadcrumb
+    /// segment and <see cref="PageControl.TrySelectByLabel"/> can never select it, so every search
+    /// result inside it opens the group's first page instead - and two blank-labelled pages in one
+    /// group are indistinguishable in the index. Name every page in a group where any is named, and
+    /// never let a localization blank the key.
+    /// </para>
     /// </param>
     /// <returns>This group</returns>
     public OptionPageGroup AddPage(Func<IOptionSource> contentFactory, string? label = null)
