@@ -66,7 +66,6 @@ internal static class OverlayRulesTab
     {
         IEnumerable<string> triggers = TriggerCatalog.Instance.All.Select(definition => definition.DisplayName);
         IEnumerable<string> ruleNames = DecorationSettings.Current.Overlays.ResolveRules().Select(rule => rule.Name);
-
         return string.Join(' ', triggers.Concat(ruleNames).Prepend(label));
     }
 

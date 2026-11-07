@@ -57,7 +57,6 @@ internal static class OverlayProfilesTab
     private static string BuildMatchText(string label)
     {
         IEnumerable<string> names = DecorationSettings.Current.Overlays.AllProfiles().Select(profile => profile.Name);
-
         return string.Join(' ', names.Prepend(label));
     }
 
