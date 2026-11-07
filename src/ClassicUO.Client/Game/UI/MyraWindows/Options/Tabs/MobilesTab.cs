@@ -210,7 +210,17 @@ public static class MobilesTab
                     TazLang.Get("mog_tazuo_regularplayeropacity"),
                     0,
                     100,
-                    new Accessor<int>(() => profile.PlayerConstantAlpha)
+                    new Accessor<int>(() => profile.PlayerConstantAlpha),
+                    search: new SearchMetadata(
+                        TazLang.Get("mog_tazuo_regularplayeropacity"),
+                        Keywords:
+                        [
+                            TazLang.Get("mog_kw_opacity"),
+                            TazLang.Get("mog_kw_alpha"),
+                            TazLang.Get("mog_kw_transparency"),
+                            TazLang.Get("mog_kw_player")
+                        ]
+                    )
                 ),
                 Option.HuePicker(
                     TazLang.Get("mog_tazuo_hiddenplayerhue"),

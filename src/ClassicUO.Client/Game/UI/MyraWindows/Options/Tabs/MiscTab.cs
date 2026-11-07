@@ -219,7 +219,11 @@ public static class MiscTab
                 {
                     profile.EnableASyncMapLoading = newValue;
                     GameScene.Instance?.ASyncMapLoading = newValue;
-                }
+                },
+                search: new SearchMetadata(
+                    TazLang.Get("mog_tazuo_enableasyncmaploading"),
+                    Keywords: [TazLang.Get("mog_kw_map"), TazLang.Get("mog_kw_thread"), TazLang.Get("mog_kw_advanced")]
+                )
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = TazLang.Get("mog_misctab_housingtransparency"), LabelLink = "https://tazuo.org/wiki/tazuotrasparenthouses/" },

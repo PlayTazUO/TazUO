@@ -72,7 +72,11 @@ public static class ContainersTab
             GetNormalContainersScalingSection(),
             Option.Button(
                 TazLang.Get("mog_containers_rebuildcontainerstxt"),
-                () => World.Instance.ContainerManager.BuildContainerFile(true)
+                () => World.Instance.ContainerManager.BuildContainerFile(true),
+                new SearchMetadata(
+                    TazLang.Get("mog_containers_rebuildcontainerstxt"),
+                    Keywords: [TazLang.Get("mog_kw_rebuild"), TazLang.Get("mog_kw_container")]
+                )
             )
         };
 
@@ -80,7 +84,11 @@ public static class ContainersTab
             content.Add(
                 Option.Checkbox(
                     TazLang.Get("mog_containers_uselargecontainergumps"),
-                    new Accessor<bool>(() => profile.UseLargeContainerGumps)
+                    new Accessor<bool>(() => profile.UseLargeContainerGumps),
+                    search: new SearchMetadata(
+                        TazLang.Get("mog_containers_uselargecontainergumps"),
+                        Keywords: [TazLang.Get("mog_kw_container"), TazLang.Get("mog_kw_gump"), TazLang.Get("mog_kw_size")]
+                    )
                 )
             );
 
@@ -95,7 +103,11 @@ public static class ContainersTab
                         TazLang.Get("mog_containers_backpackopt_polarbear"),
                         TazLang.Get("mog_containers_backpackopt_ghoulskin")
                     ],
-                    i => profile.BackpackStyle = i
+                    i => profile.BackpackStyle = i,
+                    search: new SearchMetadata(
+                        TazLang.Get("mog_containers_characterbackpackstyle"),
+                        Keywords: [TazLang.Get("mog_kw_container"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_character")]
+                    )
                 )
             );
 

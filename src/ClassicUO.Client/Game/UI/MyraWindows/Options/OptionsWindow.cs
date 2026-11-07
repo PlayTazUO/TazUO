@@ -303,14 +303,31 @@ public class OptionsWindow : MyraControl
 
     private void SetupOptions()
     {
-        AddOptionSource(TazLang.Get("mog_gameplaytab_gameplaylabel"), GameplayTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_kw_interface"), InterfaceTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_labelchatandtext"), ChatTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_videotab_label"), VideoTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_soundtab_label"), SoundsTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_misctab_label"), MiscTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_kw_profile"), ProfileTab.GetContent());
+        // The second metadata argument is the category's synonym set. A category label is already
+        // matched as a breadcrumb segment, so these only have to cover the words that are not in
+        // it - "graphics" for Video, "audio" for Sound - which no individual setting can carry.
+        AddOptionSource(
+            TazLang.Get("mog_gameplaytab_gameplaylabel"),
+            GameplayTab.GetContent(),
+            CategorySynonyms("optsearch_cat_gameplay")
+        );
+
+        AddOptionSource(TazLang.Get("mog_kw_interface"), InterfaceTab.GetContent(), CategorySynonyms("optsearch_cat_interface"));
+        AddOptionSource(TazLang.Get("mog_labelchatandtext"), ChatTab.GetContent(), CategorySynonyms("optsearch_cat_chat"));
+        AddOptionSource(TazLang.Get("mog_videotab_label"), VideoTab.GetContent(), CategorySynonyms("optsearch_cat_video"));
+        AddOptionSource(TazLang.Get("mog_soundtab_label"), SoundsTab.GetContent(), CategorySynonyms("optsearch_cat_sound"));
+        AddOptionSource(TazLang.Get("mog_misctab_label"), MiscTab.GetContent(), CategorySynonyms("optsearch_cat_misc"));
+        AddOptionSource(TazLang.Get("mog_kw_profile"), ProfileTab.GetContent(), CategorySynonyms("optsearch_cat_profile"));
     }
+
+    /// <summary>
+    ///     Reads a category's comma-separated synonym list. Carries no label or match text, so it
+    ///     only ever adds match terms - an inherited label would name every spacer beneath it.
+    /// </summary>
+    /// <param name="languageKey">Language key holding the comma-separated synonyms</param>
+    /// <returns>Metadata carrying nothing but the synonyms</returns>
+    private static SearchMetadata CategorySynonyms(string languageKey) =>
+        new(Keywords: [TazLang.Get(languageKey)]);
 
     /// <summary>
     ///     Registers a top-level category and folds its subtree into the search index, with the
@@ -322,7 +339,11 @@ public class OptionsWindow : MyraControl
     /// </remarks>
     /// <param name="category">The category label, shown on the navigation rail</param>
     /// <param name="source">The category's content</param>
-    private void AddOptionSource(string category, IOptionSource source)
+    /// <param name="search">
+    ///     Metadata every entry in the subtree inherits. Used for synonyms the category label does
+    ///     not contain, so one blob covers settings that would each have to repeat it.
+    /// </param>
+    private void AddOptionSource(string category, IOptionSource source, SearchMetadata? search = null)
     {
         if (!_categoriesByLabel.TryGetValue(category, out OptionCategory? existing))
         {
@@ -333,7 +354,7 @@ public class OptionsWindow : MyraControl
 
         existing.Sources.Add(source);
 
-        var context = new OptionIndexContext(new SearchPath(category));
+        var context = new OptionIndexContext(new SearchPath(category), search);
 
         foreach (SearchEntry entry in source.Index(context))
             _searchIndex.Add(entry with { OnActivate = BuildActivation(entry) });

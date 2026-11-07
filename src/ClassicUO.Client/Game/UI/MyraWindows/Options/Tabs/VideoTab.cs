@@ -44,7 +44,14 @@ public static class VideoTab
                 VisualEffectsTab.GetContent,
                 new SearchMetadata(
                     TazLang.Get("mog_videotab_visualeffects_label"),
-                    Keywords: [TazLang.Get("mog_kw_overhead"), TazLang.Get("mog_kw_overlay"), TazLang.Get("mog_kw_postprocessing"), TazLang.Get("mog_kw_rule")]
+                    Keywords:
+                    [
+                        TazLang.Get("mog_kw_overhead"),
+                        TazLang.Get("mog_kw_overlay"),
+                        TazLang.Get("mog_kw_postprocessing"),
+                        TazLang.Get("mog_kw_rule"),
+                        TazLang.Get("visualeffects_kw_effects")
+                    ]
                 )
             )
             .AddTab(
