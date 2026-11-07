@@ -2,6 +2,9 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/07/26
+* ***Feature:*** Complete rewrite of options search results page for a vastly improved experience - [P.R 1216](https://github.com/PlayTazUO/TazUO/pull/1216) ([yuval-po](https://github.com/yuval-po)) 
+
 ## 11/05/26
 * ***Feature:*** The Tinkerer's Art, Land, and Texture tabs now have a Target button - targeting an object jumps straight to its art, land, or texture entry, including land tiles and objects standing on them
 * ***Fix:*** `API.CastSpell` no longer crashes the client with a `NullReferenceException` when called with `None` or an empty spell name - the cast is skipped, and spell-name lookup now tolerates missing names
