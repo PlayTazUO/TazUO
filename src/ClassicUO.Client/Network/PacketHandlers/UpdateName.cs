@@ -16,7 +16,7 @@ internal static class UpdateName
             return;
 
         uint serial = p.ReadUInt32BE();
-        string name = p.ReadASCII();
+        string name = p.ReadNameASCII();
 
         WMapEntity wme = world.WMapManager.GetEntity(serial);
 

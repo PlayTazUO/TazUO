@@ -13,6 +13,31 @@ namespace ClassicUO.Utility
     {
         private static readonly char[] _dots = { '.', ',', ';', '!' };
 
+        /// <summary>
+        /// Maps bytes 0x80..0xFF to their Windows-1251 code points. 0x98 is
+        /// unassigned in Windows-1251 and is kept as the matching control
+        /// character so it can be detected as invalid.
+        /// </summary>
+        private static readonly char[] _cp1251High =
+        {
+            '\u0402', '\u0403', '\u201A', '\u0453', '\u201E', '\u2026', '\u2020', '\u2021',
+            '\u20AC', '\u2030', '\u0409', '\u2039', '\u040A', '\u040C', '\u040B', '\u040F',
+            '\u0452', '\u2018', '\u2019', '\u201C', '\u201D', '\u2022', '\u2013', '\u2014',
+            '\u0098', '\u2122', '\u0459', '\u203A', '\u045A', '\u045C', '\u045B', '\u045F',
+            '\u00A0', '\u040E', '\u045E', '\u0408', '\u00A4', '\u0490', '\u00A6', '\u00A7',
+            '\u0401', '\u00A9', '\u0404', '\u00AB', '\u00AC', '\u00AD', '\u00AE', '\u0407',
+            '\u00B0', '\u00B1', '\u0406', '\u0456', '\u0491', '\u00B5', '\u00B6', '\u00B7',
+            '\u0451', '\u2116', '\u0454', '\u00BB', '\u0458', '\u0405', '\u0455', '\u0457',
+            '\u0410', '\u0411', '\u0412', '\u0413', '\u0414', '\u0415', '\u0416', '\u0417',
+            '\u0418', '\u0419', '\u041A', '\u041B', '\u041C', '\u041D', '\u041E', '\u041F',
+            '\u0420', '\u0421', '\u0422', '\u0423', '\u0424', '\u0425', '\u0426', '\u0427',
+            '\u0428', '\u0429', '\u042A', '\u042B', '\u042C', '\u042D', '\u042E', '\u042F',
+            '\u0430', '\u0431', '\u0432', '\u0433', '\u0434', '\u0435', '\u0436', '\u0437',
+            '\u0438', '\u0439', '\u043A', '\u043B', '\u043C', '\u043D', '\u043E', '\u043F',
+            '\u0440', '\u0441', '\u0442', '\u0443', '\u0444', '\u0445', '\u0446', '\u0447',
+            '\u0448', '\u0449', '\u044A', '\u044B', '\u044C', '\u044D', '\u044E', '\u044F',
+        };
+
         public static IEnumerable<byte> StringToCp1252Bytes(string s, int length = -1)
         {
             length = length > 0 ? Math.Min(length, s.Length) : s.Length;
@@ -29,7 +54,9 @@ namespace ClassicUO.Utility
 
             for (int i = 0; i < strCp1252.Length; ++i)
             {
-                sb.Append(char.ConvertFromUtf32(Cp1252ToUnicode(strCp1252[i])));
+                // Every CP1252 code point maps to a single BMP char, so append it
+                // directly instead of allocating a string per byte via ConvertFromUtf32.
+                sb.Append((char)Cp1252ToUnicode(strCp1252[i]));
             }
 
             string str = sb.ToString();
@@ -38,6 +65,136 @@ namespace ClassicUO.Utility
 
             return str;
         }
+
+        public static string Cp1251ToString(ReadOnlySpan<byte> strCp1251)
+        {
+            var sb = new ValueStringBuilder(strCp1251.Length);
+
+            for (int i = 0; i < strCp1251.Length; ++i)
+            {
+                byte b = strCp1251[i];
+                sb.Append(b < 0x80 ? (char)b : _cp1251High[b - 0x80]);
+            }
+
+            string str = sb.ToString();
+
+            sb.Dispose();
+
+            return str;
+        }
+
+        /// <summary>
+        /// Decodes an entity name. The protocol declares names as Windows-1252, but
+        /// some shards (typically Russian/Ukrainian) send Windows-1251 bytes instead.
+        /// Both code pages map almost every byte to a character, so the wrong choice
+        /// produces mojibake instead of an error. Decode with both and keep the result
+        /// with the fewest invalid/implausible characters.
+        /// </summary>
+        public static string DecodeName(ReadOnlySpan<byte> data)
+        {
+            if (data.IsEmpty)
+                return string.Empty;
+
+            bool hasHighByte = false;
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (data[i] >= 0x80)
+                {
+                    hasHighByte = true;
+
+                    break;
+                }
+            }
+
+            // ASCII-only names are identical in both code pages.
+            if (!hasHighByte)
+                return Cp1252ToString(data);
+
+            string cp1252 = Cp1252ToString(data);
+            string cp1251 = Cp1251ToString(data);
+
+            int invalid1252 = CountInvalidNameChars(cp1252, out int latin1252, out int cyrillic1252, out int accentedLatin1252);
+            int invalid1251 = CountInvalidNameChars(cp1251, out _, out int cyrillic1251, out _);
+
+            if (invalid1251 < invalid1252)
+                return cp1251;
+
+            if (invalid1252 < invalid1251)
+                return cp1252;
+
+            // Tie: Windows-1252 is the protocol default. However, a name made mostly
+            // of accented Latin letters is the signature of Cyrillic text decoded with
+            // the wrong code page, so prefer Windows-1251 when it yields real Cyrillic.
+            int plainLatin1252 = latin1252 - accentedLatin1252;
+
+            if (cyrillic1251 > 0 && cyrillic1252 == 0 && accentedLatin1252 > plainLatin1252)
+                return cp1251;
+
+            return cp1252;
+        }
+
+        private static int CountInvalidNameChars(string text, out int latinLetters, out int cyrillicLetters, out int accentedLatinLetters)
+        {
+            int invalid = 0;
+            latinLetters = 0;
+            cyrillicLetters = 0;
+            accentedLatinLetters = 0;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+
+                switch (char.GetUnicodeCategory(c))
+                {
+                    case UnicodeCategory.Control:
+                    case UnicodeCategory.Format:
+                    case UnicodeCategory.Surrogate:
+                    case UnicodeCategory.OtherNotAssigned:
+                        invalid++;
+
+                        continue;
+                }
+
+                if (c == '\uFFFD')
+                {
+                    invalid++;
+
+                    continue;
+                }
+
+                if (IsCyrillicLetter(c))
+                {
+                    cyrillicLetters++;
+
+                    continue;
+                }
+
+                if (char.IsLetter(c))
+                {
+                    latinLetters++;
+
+                    if (c >= '\u00C0' && c <= '\u00FF')
+                        accentedLatinLetters++;
+
+                    continue;
+                }
+
+                if (!char.IsDigit(c) && !char.IsWhiteSpace(c) && !char.IsPunctuation(c) && !char.IsSymbol(c))
+                    invalid++;
+            }
+
+            // A name mixing Latin and Cyrillic letters is almost always mis-decoded.
+            invalid += Math.Min(latinLetters, cyrillicLetters);
+
+            return invalid;
+        }
+
+        private static bool IsCyrillicLetter(char c) =>
+            (c >= '\u0400' && c <= '\u052F')
+            || (c >= '\u2DE0' && c <= '\u2DFF')
+            || (c >= '\uA640' && c <= '\uA69F')
+            || (c >= '\u1C80' && c <= '\u1C8F');
 
         /// <summary>
         /// Converts a unicode code point into a cp1252 code point

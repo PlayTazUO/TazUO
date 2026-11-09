@@ -294,7 +294,7 @@ namespace ClassicUO.IO
             return v;
         }
 
-        private string ReadRawString(int length, int sizeT, bool safe)
+        private string ReadRawString(int length, int sizeT, bool safe, bool decodeName = false)
         {
             if (length == 0 || Position + sizeT > Length)
             {
@@ -332,7 +332,9 @@ namespace ClassicUO.IO
             }
             else
             {
-                result = StringHelper.Cp1252ToString(slice.Slice(0, size));
+                result = decodeName
+                    ? StringHelper.DecodeName(slice.Slice(0, size))
+                    : StringHelper.Cp1252ToString(slice.Slice(0, size));
 
                 if (safe)
                 {
@@ -376,6 +378,14 @@ namespace ClassicUO.IO
         public string ReadASCII(bool safe = false) => ReadRawString(-1, 1, safe);//return ReadString(StringHelper.Cp1252Encoding, -1, 1, safe);
 
         public string ReadASCII(int length, bool safe = false) => ReadRawString(length, 1, safe);//return ReadString(StringHelper.Cp1252Encoding, length, 1, safe);
+
+        /// <summary>
+        ///     Reads an entity name. Names are declared as Windows-1252 by the protocol, but
+        ///     some shards send Windows-1251, so the code page is detected from the bytes.
+        /// </summary>
+        public string ReadNameASCII(bool safe = false) => ReadRawString(-1, 1, safe, true);
+
+        public string ReadNameASCII(int length, bool safe = false) => ReadRawString(length, 1, safe, true);
 
         public string ReadUnicodeBE(bool safe = false) => ReadString(Encoding.BigEndianUnicode, -1, 2, safe);
 

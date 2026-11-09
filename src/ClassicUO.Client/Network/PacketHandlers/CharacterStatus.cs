@@ -22,7 +22,7 @@ internal static class CharacterStatus
 
         string oldName = entity.Name;
         ushort oldHits = entity.Hits;
-        entity.Name = p.ReadASCII(30);
+        entity.Name = p.ReadNameASCII(30);
         entity.Hits = p.ReadUInt16BE();
         entity.HitsMax = p.ReadUInt16BE();
 
