@@ -12,7 +12,58 @@ public class ObjectActionQueue : ConcurrentPriorityQueue<ObjectActionQueueItem, 
 
     public int GetCurrentQueuedCount => _queue.Count;
 
+    private ItemMoveSource? _pendingMove;
+
     private ObjectActionQueue() { }
+
+    /// <summary>
+    /// Cancel every queued action that moves <paramref name="serial"/>.
+    /// </summary>
+    /// <remarks>
+    /// Called when the server rejects a move (packet 0x27) so the rest of the queue does not keep
+    /// trying to move an item the server refused to hand over.
+    /// </remarks>
+    public void CancelMovesFor(uint serial)
+    {
+        if (serial == 0) return;
+
+        RemoveWhere(item => item.Serial == serial);
+    }
+
+    /// <summary>
+    /// The location of the most recent item move sent to the server that has not been confirmed yet.
+    /// </summary>
+    /// <remarks>
+    /// Queued moves send the pickup/drop packets without populating <see cref="ItemHold"/> (unlike a
+    /// manual drag), so this snapshot is what lets the deny handler put a rejected item back.
+    /// </remarks>
+    public bool TryGetPendingMove(out ItemMoveSource source)
+    {
+        if (_pendingMove.HasValue)
+        {
+            source = _pendingMove.Value;
+            return true;
+        }
+
+        source = default;
+        return false;
+    }
+
+    /// <summary>
+    /// Forget the pending move. When <paramref name="serial"/> is non-zero the pending move is only
+    /// cleared if it belongs to that item.
+    /// </summary>
+    public void ClearPendingMove(uint serial = 0)
+    {
+        if (_pendingMove.HasValue && (serial == 0 || _pendingMove.Value.Serial == serial))
+            _pendingMove = null;
+    }
+
+    internal void OnMoveStarted(MoveRequest moveRequest)
+    {
+        Item item = World.Instance.Items.Get(moveRequest.Serial);
+        _pendingMove = item != null ? ItemMoveSource.Capture(item) : null;
+    }
 
     public void Update()
     {
@@ -60,6 +111,12 @@ public class ObjectActionQueueItem(Action action, Action<ObjectActionQueueItem> 
     public bool Canceled { get; private set; }
 
     /// <summary>
+    /// Item serial this action moves, or zero when the action does not target a specific item.
+    /// Used to cancel queued moves for an item the server refused.
+    /// </summary>
+    public uint Serial { get; init; }
+
+    /// <summary>
     /// Evaluated by the queue after <see cref="Action"/> runs to decide whether this item
     /// starts the shared <see cref="GlobalActionCooldown"/>. Returning false runs the item
     /// but skips the cooldown, so self-throttled actions (e.g. a bandage heal that didn't
@@ -74,7 +131,10 @@ public class ObjectActionQueueItem(Action action, Action<ObjectActionQueueItem> 
         new(() =>
         {
             moveRequest.Execute();
-        });
+        })
+        {
+            Serial = moveRequest.Serial
+        };
 
     public static ObjectActionQueueItem QuickLoot(uint serial) => World.Instance.Items.TryGetValue(serial, out Item item) ? QuickLoot(item) : null;
 
@@ -117,6 +177,7 @@ public enum ActionPriority
     UseItem,
     UnequipItem, //Unequip item to make room for equipping - must run before EquipItem
     EquipItem,
+    ManualMoveItem, //A move the player initiated - must run before queued/automated moves
     MoveItem,
     LootItemHigh,   //Auto-loot: High priority items (still lower than manual moves)
     LootItemMedium, //Auto-loot: Normal priority items

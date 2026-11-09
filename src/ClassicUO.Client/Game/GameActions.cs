@@ -965,13 +965,19 @@ internal static class GameActions
             int amount = Client.Game.UO.GameCursor.ItemHold.Enabled ? Client.Game.UO.GameCursor.ItemHold.Amount : -1;
             ScriptRecorder.Instance.RecordDragDrop(sourceSerial, container, amount, x, y);
 
-            Client.Game.UO.GameCursor.ItemHold.Enabled = false;
-            Client.Game.UO.GameCursor.ItemHold.Dropped = true;
+            // Only mirror the drop onto the hold when we were actually holding the item. Forced
+            // drops sent by the move queue never populate ItemHold, and marking a stale hold as
+            // dropped would make the deny handler treat unrelated rejections as manual moves.
+            if (Client.Game.UO.GameCursor.ItemHold.Enabled)
+            {
+                Client.Game.UO.GameCursor.ItemHold.Enabled = false;
+                Client.Game.UO.GameCursor.ItemHold.Dropped = true;
+            }
 
             if (ProfileManager.CurrentProfile.QueueManualItemMoves && !force)
             {
                 Client.Game.UO.GameCursor.ItemHold.Clear();
-                ObjectActionQueue.Instance.Enqueue(new MoveRequest(serial, container, (ushort)amount, x, y, z).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                ObjectActionQueue.Instance.Enqueue(new MoveRequest(serial, container, (ushort)amount, x, y, z).ToObjectActionQueueItem(), ActionPriority.ManualMoveItem);
                 return;
             }
 
