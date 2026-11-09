@@ -30,6 +30,8 @@ internal static class OverlayRulesTab
 
     private const int BUILT_IN_GLYPH_SIZE = 16;
 
+    private static string RuleKeywords => TazLang.Get("visualeffects_kw_rule");
+
     #endregion
 
     #region Internal methods
@@ -38,17 +40,34 @@ internal static class OverlayRulesTab
     /// <returns>The option source.</returns>
     internal static IOptionSource GetContent()
     {
-        OptionFragment panel = OptionsUi.Vertical(Option.Custom(BuildRulebase));
+        string label = TazLang.Get("visualeffects_rules", "Rules");
 
-        // A table with its own toolbar does not render meaningfully in the search results page.
-        panel.InheritsSearch = false;
-
-        return panel;
+        // One navigate-only entry for the whole table: a table with its own toolbar does not render
+        // meaningfully in a result row, and an unnamed group contributes nothing to the index at
+        // all - which left the rulebase unreachable by search.
+        return OptionsUi.Vertical(Option.Custom(BuildRulebase))
+            .AsSearchGroup()
+            .AsLinkOnly()
+            .WithSearch(new SearchMetadata(BuildMatchText(label), Keywords: [RuleKeywords]) { Label = label });
     }
 
     #endregion
 
     #region Private methods
+
+    /// <summary>
+    /// Match fuel for the single entry the rulebase contributes: every trigger the catalog offers and
+    /// every rule name in the table, so a query naming either reaches this page. Never displayed,
+    /// which is what lets it be a blob.
+    /// </summary>
+    /// <param name="label">The tab's own name, so the entry answers to it too.</param>
+    /// <returns>The match text.</returns>
+    private static string BuildMatchText(string label)
+    {
+        IEnumerable<string> triggers = TriggerCatalog.Instance.All.Select(definition => definition.DisplayName);
+        IEnumerable<string> ruleNames = DecorationSettings.Current.Overlays.ResolveRules().Select(rule => rule.Name);
+        return string.Join(' ', triggers.Concat(ruleNames).Prepend(label));
+    }
 
     private static Widget BuildRulebase()
     {
