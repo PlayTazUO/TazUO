@@ -2062,47 +2062,7 @@ public class WorldMapGump : ResizableGump
                     // CSV files share the exact same line format as user markers (.usr),
                     // so they can be edited and saved back to their own path losslessly.
                     markerFile.IsEditable = true;
-
-                    using (var reader = new StreamReader(File.Open(mapFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
-                        while (!reader.EndOfStream)
-                        {
-                            string line = reader.ReadLine();
-
-                            if (string.IsNullOrEmpty(line))
-                                continue;
-
-                            string[] splits = line.Split(',');
-
-                            if (splits.Length <= 1)
-                                continue;
-
-                            WMapMarker marker;
-
-                            try
-                            {
-                                marker = new WMapMarker
-                                {
-                                    X = int.Parse(splits[0]),
-                                    Y = int.Parse(splits[1]),
-                                    MapId = int.Parse(splits[2]),
-                                    Name = splits[3],
-                                    MarkerIconName = MarkerIconKey.Normalize(splits[4]),
-                                    Color = GetColor(splits[5]),
-                                    ZoomIndex = splits.Length == 7 ? int.Parse(splits[6]) : 3
-                                };
-                            }
-                            catch (Exception ex)
-                            {
-                                skippedMarkers++;
-                                Log.Warn($"Skipping malformed marker line in {Path.GetFileName(mapFile)}: \"{line}\" ({ex.Message})");
-                                continue;
-                            }
-
-                            if (_markerIcons.TryGetValue(marker.MarkerIconName, out Texture2D value))
-                                marker.MarkerIcon = value;
-
-                            markerFile.Markers.Add(marker);
-                        }
+                    markerFile.Markers = LoadCsvMarkers(mapFile, out skippedMarkers);
                 }
 
                 if (markerFile.Markers.Count > 0)
@@ -2354,6 +2314,71 @@ public class WorldMapGump : ResizableGump
     /// Load User Markers to List of Markers
     /// </summary>
     /// <returns>List of loaded Markers</returns>
+    /// <summary>
+    ///     Loads markers from a CSV marker file, shaped <c>x,y,mapIndex,name,icon,color[,zoom]</c>.
+    /// </summary>
+    /// <remarks>
+    ///     The map index is a real client map index, unlike a UOAM <c>.map</c> facet, so it is used
+    ///     as written. A blank line is skipped rather than ending the file: markers already read must
+    ///     not be discarded, and a trailing blank line is ordinary in a hand-edited file.
+    /// </remarks>
+    /// <param name="mapFilePath">Full path of the file to read.</param>
+    /// <param name="skippedLines">Count of malformed lines that were dropped.</param>
+    /// <returns>Markers in file order; empty when the file holds none.</returns>
+    /// <exception cref="IOException">The file could not be read.</exception>
+    private static List<WMapMarker> LoadCsvMarkers(string mapFilePath, out int skippedLines)
+    {
+        var markers = new List<WMapMarker>();
+        skippedLines = 0;
+
+        using var reader = new StreamReader(File.Open(mapFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+
+        while (!reader.EndOfStream)
+        {
+            string line = reader.ReadLine();
+
+            if (string.IsNullOrEmpty(line))
+                continue;
+
+            string[] splits = line.Split(',');
+
+            if (splits.Length <= 1)
+                continue;
+
+            WMapMarker marker;
+
+            try
+            {
+                marker = new WMapMarker
+                {
+                    X = int.Parse(splits[0]),
+                    Y = int.Parse(splits[1]),
+                    MapId = int.Parse(splits[2]),
+                    Name = splits[3],
+                    MarkerIconName = MarkerIconKey.Normalize(splits[4]),
+                    Color = GetColor(splits[5]),
+                    // Kept alongside Color: the serializer writes ColorName back out, so leaving it
+                    // null turns a saved marker's colour into an empty field that reloads as white.
+                    ColorName = splits[5],
+                    ZoomIndex = splits.Length == 7 ? int.Parse(splits[6]) : 3
+                };
+            }
+            catch (Exception ex)
+            {
+                skippedLines++;
+                Log.Warn($"Skipping malformed marker line in {Path.GetFileName(mapFilePath)}: \"{line}\" ({ex.Message})");
+                continue;
+            }
+
+            if (_markerIcons.TryGetValue(marker.MarkerIconName, out Texture2D value))
+                marker.MarkerIcon = value;
+
+            markers.Add(marker);
+        }
+
+        return markers;
+    }
+
     internal static List<WMapMarker> LoadUserMarkers() => LoadUserMarkers(out _);
 
     /// <summary>
