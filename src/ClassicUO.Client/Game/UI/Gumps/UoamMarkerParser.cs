@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using ClassicUO.Assets;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using static ClassicUO.Game.UI.Gumps.WorldMapGump;
@@ -42,6 +43,19 @@ public static partial class UoamMarkerParser
 
     /// <summary>UOAM files carry no zoom information, so every marker gets the mid zoom level.</summary>
     private const int DEFAULT_ZOOM_INDEX = 3;
+
+    /// <summary>
+    ///     Facet UOAM writes for Britannia's shared geometry, drawn on both Felucca and Trammel.
+    /// </summary>
+    /// <remarks>
+    ///     UOAM's facet list is the client's map list with this one extra entry prepended - its
+    ///     string table reads "Both Felucca and Trammel", "Felucca", "Trammel", "Ilshenar", "Malas",
+    ///     "Tokuno" - which is why every other facet sits exactly one above its map index.
+    /// </remarks>
+    private const int SHARED_BRITANNIA_FACET = 0;
+
+    private const int FELUCCA_MAP_INDEX = 0;
+    private const int TRAMMEL_MAP_INDEX = 1;
 
     /// <summary>
     ///     A marker line: sign ('-' meaning UOAM had the icon hidden), icon name, separator, three
@@ -91,12 +105,8 @@ public static partial class UoamMarkerParser
             if (line is null)
                 continue;
 
-            UoamLineResult result = ParseLine(line, out WMapMarker? marker, out string? failureReason);
-
             // We explicitly ignore the 'Ignore' result - We don't even want to log non-marker lines.
-            if (result == UoamLineResult.Parsed)
-                markers.Add(marker!);
-            else if (result == UoamLineResult.Malformed)
+            if (ParseLine(line, markers, out string? failureReason) == UoamLineResult.Malformed)
             {
                 skippedLines++;
                 Log.Warn($"Skipping malformed marker line in {Path.GetFileName(mapFilePath)}: \"{line}\" ({failureReason})");
@@ -107,20 +117,22 @@ public static partial class UoamMarkerParser
     }
 
     /// <summary>
-    ///     Parses one UOAM line, shaped <c>+Icon Name: X Y MapId Marker Name</c>.
+    ///     Parses one UOAM line, shaped <c>+Icon Name: X Y MapId Marker Name</c>, appending every
+    ///     marker it yields.
     /// </summary>
     /// <param name="line">Line to parse; blank lines and the file header are reported as ignorable.</param>
-    /// <param name="marker">
-    ///     Parsed marker, set only when the result is <see cref="UoamLineResult.Parsed" />. Its
+    /// <param name="markers">
+    ///     Receives the parsed markers, appended in map order and left untouched unless the result is
+    ///     <see cref="UoamLineResult.Parsed" />. One line usually yields one marker, but UOAM's shared
+    ///     Britannia facet yields two - the same place on Felucca and on Trammel. Each marker's
     ///     <see cref="WMapMarker.MarkerIcon" /> is left null for the caller to resolve.
     /// </param>
     /// <param name="failureReason">
     ///     Why the line was rejected, set only when the result is <see cref="UoamLineResult.Malformed" />.
     /// </param>
-    /// <returns>Whether the line produced a marker, carried none, or was malformed.</returns>
-    public static UoamLineResult ParseLine(string line, out WMapMarker? marker, out string? failureReason)
+    /// <returns>Whether the line produced markers, carried none, or was malformed.</returns>
+    public static UoamLineResult ParseLine(string line, ICollection<WMapMarker> markers, out string? failureReason)
     {
-        marker = null;
         failureReason = null;
 
         // Guard only against indexing/matching nothing; the pattern itself rejects non-marker lines.
@@ -135,18 +147,25 @@ public static partial class UoamMarkerParser
         // The pattern guarantees digits, so a failure here can only be an out-of-range value.
         if (!int.TryParse(match.Groups["x"].ValueSpan, out int x)
             || !int.TryParse(match.Groups["y"].ValueSpan, out int y)
-            || !int.TryParse(match.Groups["mapId"].ValueSpan, out int mapId))
+            || !int.TryParse(match.Groups["mapId"].ValueSpan, out int facet))
         {
             failureReason = "coordinate or map ID outside the range of a 32-bit integer";
 
             return UoamLineResult.Malformed;
         }
 
-        marker = new WMapMarker
+        if (!TryResolveMapIndex(facet, out int mapIndex, out bool sharedAcrossFelAndTram))
+        {
+            failureReason = $"facet {facet} names no map this client knows (expected 0-{MapLoader.MAPS_COUNT})";
+
+            return UoamLineResult.Malformed;
+        }
+
+        var marker = new WMapMarker
         {
             X = x,
             Y = y,
-            MapId = mapId,
+            MapId = mapIndex,
             Name = match.Groups["name"].Value.Trim(),
             Color = Color.White,
             ZoomIndex = DEFAULT_ZOOM_INDEX,
@@ -155,12 +174,60 @@ public static partial class UoamMarkerParser
             MarkerIconName = MarkerIconKey.Normalize(match.Groups["icon"].Value)
         };
 
+        markers.Add(marker);
+
+        // A marker holds a single map, so the facet covering both Britannia maps needs a second one.
+        if (sharedAcrossFelAndTram)
+            markers.Add(CopyOntoMap(marker, TRAMMEL_MAP_INDEX));
+
         return UoamLineResult.Parsed;
     }
 
     #endregion
 
     #region Private methods
+
+    /// <summary>
+    ///     Translates a UOAM facet into the map index the client uses.
+    /// </summary>
+    /// <param name="facet">Facet field as written in the marker line.</param>
+    /// <param name="mapIndex">
+    ///     Resolved map index; Felucca for <see cref="SHARED_BRITANNIA_FACET" />, whose Trammel twin is
+    ///     reported through <paramref name="sharedAcrossFelAndTram" /> instead.
+    /// </param>
+    /// <param name="sharedAcrossFelAndTram">True when the facet covers both Britannia maps.</param>
+    /// <returns>
+    ///     False when the facet names no map this client has, which keeps a bad facet from becoming an
+    ///     out-of-range map index downstream.
+    /// </returns>
+    private static bool TryResolveMapIndex(int facet, out int mapIndex, out bool sharedAcrossFelAndTram)
+    {
+        sharedAcrossFelAndTram = facet == SHARED_BRITANNIA_FACET;
+
+        // The shared facet occupies slot 0 of UOAM's list, so every real facet is one above its map.
+        mapIndex = sharedAcrossFelAndTram ? FELUCCA_MAP_INDEX : facet - 1;
+
+        return mapIndex >= 0 && mapIndex < MapLoader.MAPS_COUNT;
+    }
+
+    /// <summary>
+    ///     Copies a marker onto another map, used to give the shared Britannia facet its second home.
+    /// </summary>
+    /// <param name="source">Marker to copy.</param>
+    /// <param name="mapIndex">Map index the copy belongs to.</param>
+    /// <returns>An independent marker identical to <paramref name="source" /> but on another map.</returns>
+    private static WMapMarker CopyOntoMap(WMapMarker source, int mapIndex) => new()
+    {
+        X = source.X,
+        Y = source.Y,
+        MapId = mapIndex,
+        Name = source.Name,
+        Color = source.Color,
+        ColorName = source.ColorName,
+        ZoomIndex = source.ZoomIndex,
+        MarkerIcon = source.MarkerIcon,
+        MarkerIconName = source.MarkerIconName
+    };
 
     /// <summary>
     ///     Decides why a line failed <see cref="MARKER_LINE_PATTERN" />, separating lines that never

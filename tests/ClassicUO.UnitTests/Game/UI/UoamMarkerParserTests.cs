@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using ClassicUO.Game.UI.Gumps;
 using FluentAssertions;
 using Xunit;
@@ -19,6 +20,21 @@ namespace ClassicUO.UnitTests.Game.UI;
 /// </summary>
 public class UoamMarkerParserTests
 {
+    /// <summary>
+    /// Parses one line and hands back its first marker. Most lines yield exactly one; the shared
+    /// Britannia facet yields two, and the tests that care about the pair assert on the collection
+    /// form directly rather than through here.
+    /// </summary>
+    private static UoamLineResult ParseSingle(string line, out WorldMapGump.WMapMarker? marker, out string? failureReason)
+    {
+        var markers = new List<WorldMapGump.WMapMarker>();
+        UoamLineResult result = UoamMarkerParser.ParseLine(line, markers, out failureReason);
+
+        marker = markers.Count > 0 ? markers[0] : null;
+
+        return result;
+    }
+
     #region Icon names are kept whole
 
     /// <summary>
@@ -39,7 +55,7 @@ public class UoamMarkerParserTests
     [InlineData("-illusionists guild: 4626 1207 0 Masters of Illusion", "illusionists guild")]
     public void MultiWordIconNamesSurviveWhole(string line, string expectedIconName)
     {
-        UoamMarkerParser.ParseLine(line, out WorldMapGump.WMapMarker? marker, out _)
+        ParseSingle(line, out WorldMapGump.WMapMarker? marker, out _)
             .Should().Be(UoamLineResult.Parsed);
 
         marker!.MarkerIconName.Should().Be(expectedIconName);
@@ -51,7 +67,7 @@ public class UoamMarkerParserTests
     [InlineData("-treasure: 1 2 0 Chest", "treasure")]
     public void SingleWordIconNamesAreLowercased(string line, string expectedIconName)
     {
-        UoamMarkerParser.ParseLine(line, out WorldMapGump.WMapMarker? marker, out _)
+        ParseSingle(line, out WorldMapGump.WMapMarker? marker, out _)
             .Should().Be(UoamLineResult.Parsed);
 
         marker!.MarkerIconName.Should().Be(expectedIconName);
@@ -73,7 +89,7 @@ public class UoamMarkerParserTests
         {
             CultureInfo.CurrentCulture = new CultureInfo(culture);
 
-            UoamMarkerParser.ParseLine("+Island: 1496 472 0 Dagger Isle", out WorldMapGump.WMapMarker? marker, out _)
+            ParseSingle("+Island: 1496 472 0 Dagger Isle", out WorldMapGump.WMapMarker? marker, out _)
                 .Should().Be(UoamLineResult.Parsed);
 
             marker!.MarkerIconName.Should().Be("island");
@@ -87,7 +103,7 @@ public class UoamMarkerParserTests
     [Fact]
     public void IconNameIsNeverTruncatedAtItsFirstSpace()
     {
-        UoamMarkerParser.ParseLine(
+        ParseSingle(
             "-point of interest: 237 48 3 alchemy workshop + rifts",
             out WorldMapGump.WMapMarker? marker,
             out _
@@ -104,7 +120,7 @@ public class UoamMarkerParserTests
     [Fact]
     public void NameKeepsPunctuationAndEmbeddedSigns()
     {
-        UoamMarkerParser.ParseLine(
+        ParseSingle(
             "-point of interest: 237 48 3 alchemy workshop + rifts",
             out WorldMapGump.WMapMarker? marker,
             out _
@@ -117,7 +133,7 @@ public class UoamMarkerParserTests
     [Fact]
     public void TrailingWhitespaceIsTrimmedFromName()
     {
-        UoamMarkerParser.ParseLine(
+        ParseSingle(
             "+champion: 1645 1108 3 Champ \"Lord Oaks and the Forest Queen\" ",
             out WorldMapGump.WMapMarker? marker,
             out _
@@ -129,7 +145,7 @@ public class UoamMarkerParserTests
     [Fact]
     public void SpacingInsideNameIsPreserved()
     {
-        UoamMarkerParser.ParseLine("+inn: 1 2 0 Double  Spaced  Name", out WorldMapGump.WMapMarker? marker, out _);
+        ParseSingle("+inn: 1 2 0 Double  Spaced  Name", out WorldMapGump.WMapMarker? marker, out _);
 
         marker!.Name.Should().Be("Double  Spaced  Name");
     }
@@ -143,7 +159,7 @@ public class UoamMarkerParserTests
     [InlineData("+teleporter: 787 1537 3")]
     public void UnlabeledMarkersParseWithAnEmptyName(string line)
     {
-        UoamMarkerParser.ParseLine(line, out WorldMapGump.WMapMarker? marker, out _)
+        ParseSingle(line, out WorldMapGump.WMapMarker? marker, out _)
             .Should().Be(UoamLineResult.Parsed);
 
         marker!.Name.Should().BeEmpty();
@@ -157,7 +173,7 @@ public class UoamMarkerParserTests
     [Fact]
     public void ParsesCoordinatesAndMapIdFromReferenceLine()
     {
-        UoamMarkerParser.ParseLine(
+        ParseSingle(
                 "+Minax's Fortress: 5778 3376 1 Minax's Fortress",
                 out WorldMapGump.WMapMarker? marker,
                 out _
@@ -166,7 +182,7 @@ public class UoamMarkerParserTests
 
         marker!.X.Should().Be(5778);
         marker.Y.Should().Be(3376);
-        marker.MapId.Should().Be(1);
+        marker.MapId.Should().Be(0, "UOAM facet 1 is Felucca, which the client indexes as map 0");
         marker.Name.Should().Be("Minax's Fortress");
         marker.ZoomIndex.Should().Be(3);
     }
@@ -182,7 +198,7 @@ public class UoamMarkerParserTests
     [InlineData("+rune:\t100 200 0 Tab")]
     public void SeparatorPaddingDoesNotShiftCoordinates(string line)
     {
-        UoamMarkerParser.ParseLine(line, out WorldMapGump.WMapMarker? marker, out _)
+        ParseSingle(line, out WorldMapGump.WMapMarker? marker, out _)
             .Should().Be(UoamLineResult.Parsed);
 
         marker!.X.Should().Be(100);
@@ -193,9 +209,148 @@ public class UoamMarkerParserTests
     [Fact]
     public void IconNameIsTrimmedOfSeparatorPadding()
     {
-        UoamMarkerParser.ParseLine("+ point of interest : 1 2 0 Padded", out WorldMapGump.WMapMarker? marker, out _);
+        ParseSingle("+ point of interest : 1 2 0 Padded", out WorldMapGump.WMapMarker? marker, out _);
 
         marker!.MarkerIconName.Should().Be("point of interest");
+    }
+
+    #endregion
+
+    #region Facet to map index
+
+    /// <summary>
+    /// UOAM's facet list is the client's map list with "Both Felucca and Trammel" prepended at slot
+    /// 0, so every real facet sits one above its map index. Verified against uoam.exe: the region
+    /// lookup decrements the facet before testing it against 2/3/4 for Ilshenar/Malas/Tokuno.
+    /// </summary>
+    [Theory]
+    [InlineData(1, 0)] // Felucca
+    [InlineData(2, 1)] // Trammel
+    [InlineData(3, 2)] // Ilshenar
+    [InlineData(4, 3)] // Malas
+    [InlineData(5, 4)] // Tokuno
+    public void FacetIsTranslatedToTheMapIndexOneBelowIt(int facet, int expectedMapIndex)
+    {
+        ParseSingle($"+rune: 100 200 {facet} Name", out WorldMapGump.WMapMarker? marker, out _)
+            .Should().Be(UoamLineResult.Parsed);
+
+        marker!.MapId.Should().Be(expectedMapIndex);
+    }
+
+    /// <summary>
+    /// Facet 0 is not Felucca - it is Britannia's shared geometry, belonging to both Felucca and
+    /// Trammel. Leaving it on map 0 alone is what left Trammel with no markers at all.
+    /// </summary>
+    [Fact]
+    public void SharedBritanniaFacetYieldsBothBritanniaMaps()
+    {
+        var markers = new List<WorldMapGump.WMapMarker>();
+
+        UoamMarkerParser.ParseLine("+bank: 1425 1690 0 The First Bank of Britain", markers, out _)
+            .Should().Be(UoamLineResult.Parsed);
+
+        markers.Select(marker => marker.MapId).Should()
+            .Equal(new[] { 0, 1 }, "the shared facet covers Felucca and Trammel, in that order");
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    public void NonSharedFacetsYieldExactlyOneMarker(int facet)
+    {
+        var markers = new List<WorldMapGump.WMapMarker>();
+
+        UoamMarkerParser.ParseLine($"+rune: 100 200 {facet} Name", markers, out _)
+            .Should().Be(UoamLineResult.Parsed);
+
+        markers.Should().ContainSingle();
+    }
+
+    [Fact]
+    public void SharedBritanniaFacetYieldsOneMarkerPerBritanniaMapOnLoad()
+    {
+        string path = WriteTempMapFile(["3", "+bank: 1425 1690 0 The First Bank of Britain"]);
+
+        try
+        {
+            List<WorldMapGump.WMapMarker> markers = UoamMarkerParser.LoadFile(path, out int skippedLines);
+
+            skippedLines.Should().Be(0);
+            markers.Should().HaveCount(2);
+            markers.Select(marker => marker.MapId).Should().Equal(0, 1);
+            markers.Should().OnlyContain(marker => marker.Name == "The First Bank of Britain");
+            markers.Should().OnlyContain(marker => marker.X == 1425 && marker.Y == 1690);
+            markers[0].Should().NotBeSameAs(markers[1], "the twin must be an independent marker");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// A facet naming no map must be rejected rather than becoming an out-of-range map index that
+    /// downstream code would use to index the map tables.
+    /// </summary>
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(-2)]
+    [InlineData(7)]
+    [InlineData(99)]
+    [InlineData(2147483647)]
+    public void FacetNamingNoKnownMapIsMalformed(int facet)
+    {
+        UoamLineResult result = ParseSingle(
+            $"+rune: 100 200 {facet} Name",
+            out WorldMapGump.WMapMarker? marker,
+            out string? reason
+        );
+
+        result.Should().Be(UoamLineResult.Malformed);
+        marker.Should().BeNull();
+        reason.Should().NotBeNullOrWhiteSpace();
+    }
+
+    /// <summary>No accepted facet may produce a map index outside the client's map table.</summary>
+    [Fact]
+    public void AcceptedFacetsAlwaysYieldAnIndexableMap()
+    {
+        for (int facet = -5; facet <= 20; facet++)
+        {
+            UoamLineResult result = ParseSingle(
+                $"+rune: 10 20 {facet} Name",
+                out WorldMapGump.WMapMarker? marker,
+                out _
+            );
+
+            if (result != UoamLineResult.Parsed)
+            {
+                continue;
+            }
+
+            marker!.MapId.Should().BeGreaterThanOrEqualTo(0);
+            marker.MapId.Should().BeLessThan(ClassicUO.Assets.MapLoader.MAPS_COUNT, $"facet {facet}");
+        }
+    }
+
+    /// <summary>
+    /// Real reference markers, placed by landmark: Haven is Trammel-only, the champion spawns and
+    /// Ocllo are Felucca-only, and Doom is in Malas.
+    /// </summary>
+    [Theory]
+    [InlineData("-town: 3664 2558 2 Haven", 1)]                        // Trammel
+    [InlineData("+bank: 3734 2259 1 Bank of Ocllo", 0)]                // Felucca
+    [InlineData("+point of interest: 63 1447 3 alchemy room", 2)]      // Ilshenar
+    [InlineData("+point of interest: 1984 1367 4 Armoury of Souls", 3)] // Malas
+    public void ReferenceLandmarksLandOnTheirRealMap(string line, int expectedMapIndex)
+    {
+        ParseSingle(line, out WorldMapGump.WMapMarker? marker, out _)
+            .Should().Be(UoamLineResult.Parsed);
+
+        marker!.MapId.Should().Be(expectedMapIndex);
     }
 
     #endregion
@@ -216,7 +371,7 @@ public class UoamMarkerParserTests
     [InlineData("+point of interest")]
     public void MarkerLineWithoutUsableSeparatorIsReportedNotThrown(string line)
     {
-        UoamLineResult result = UoamMarkerParser.ParseLine(
+        UoamLineResult result = ParseSingle(
             line,
             out WorldMapGump.WMapMarker? marker,
             out string? reason
@@ -236,7 +391,7 @@ public class UoamMarkerParserTests
     [InlineData("+rune: 1.5 2.5 0 Not integers")]
     public void UnparseableFieldsAreReportedAsMalformed(string line)
     {
-        UoamLineResult result = UoamMarkerParser.ParseLine(
+        UoamLineResult result = ParseSingle(
             line,
             out WorldMapGump.WMapMarker? marker,
             out string? reason
@@ -254,7 +409,7 @@ public class UoamMarkerParserTests
     [Fact]
     public void NegativeCoordinatesAreAccepted()
     {
-        UoamMarkerParser.ParseLine("+rune: -5 -6 0 Below origin", out WorldMapGump.WMapMarker? marker, out _)
+        ParseSingle("+rune: -5 -6 0 Below origin", out WorldMapGump.WMapMarker? marker, out _)
             .Should().Be(UoamLineResult.Parsed);
 
         marker!.X.Should().Be(-5);
@@ -281,7 +436,7 @@ public class UoamMarkerParserTests
     [InlineData("-rune: ")]
     public void NoInputEscapesAsAnException(string line)
     {
-        Action parse = () => UoamMarkerParser.ParseLine(line, out _, out _);
+        Action parse = () => ParseSingle(line, out _, out _);
 
         parse.Should().NotThrow();
     }
@@ -299,7 +454,7 @@ public class UoamMarkerParserTests
     [InlineData("   ")]
     public void NonMarkerLinesAreIgnoredWithoutCountingAsMalformed(string line)
     {
-        UoamMarkerParser.ParseLine(line, out WorldMapGump.WMapMarker? marker, out _)
+        ParseSingle(line, out WorldMapGump.WMapMarker? marker, out _)
             .Should().Be(UoamLineResult.Ignored);
 
         marker.Should().BeNull();
@@ -310,7 +465,7 @@ public class UoamMarkerParserTests
     [InlineData("+rune: 100")]
     public void MarkerLinesWithNoCoordinateFieldsAreIgnored(string line)
     {
-        UoamMarkerParser.ParseLine(line, out WorldMapGump.WMapMarker? marker, out _)
+        ParseSingle(line, out WorldMapGump.WMapMarker? marker, out _)
             .Should().Be(UoamLineResult.Ignored);
 
         marker.Should().BeNull();
@@ -334,6 +489,12 @@ public class UoamMarkerParserTests
         "-warriors guild: 1939 2739 0 The Brotherhood of Trinsic",
     ];
 
+    /// <summary>
+    /// Reference lines using UOAM's shared Britannia facet; each becomes two markers.
+    /// </summary>
+    private static readonly int SharedFacetLineCount =
+        ReferenceFileLines.Count(line => Regex.IsMatch(line, @"^[+-][^:]*:\s*-?\d+\s+-?\d+\s+0(\s|$)"));
+
     private static string WriteTempMapFile(IEnumerable<string> lines, string newLine = "\r\n")
     {
         string path = Path.Combine(Path.GetTempPath(), $"uoam-test-{Guid.NewGuid():N}.map");
@@ -356,7 +517,10 @@ public class UoamMarkerParserTests
             List<WorldMapGump.WMapMarker> markers = UoamMarkerParser.LoadFile(path, out int skippedLines);
 
             skippedLines.Should().Be(0);
-            markers.Should().HaveCount(ReferenceFileLines.Length - 1, "the \"3\" header is not a marker");
+            markers.Should().HaveCount(
+                ReferenceFileLines.Length - 1 + SharedFacetLineCount,
+                "the \"3\" header is not a marker, and each shared-facet line yields a Trammel twin"
+            );
             markers.Select(marker => marker.MarkerIconName).Should().NotContain("point");
             markers.Should().OnlyContain(
                 marker => marker.MarkerIcon == null,
@@ -384,14 +548,23 @@ public class UoamMarkerParserTests
                 "point of interest",
                 "point of interest",
                 "body of water",
+                "body of water",
                 "minax's fortress",
                 "champion",
+                "warriors guild",
                 "warriors guild"
             );
 
             markers[0].Name.Should().BeEmpty();
             markers[2].Name.Should().Be("alchemy room");
-            markers[6].Name.Should().Be("Champ \"Lord Oaks and the Forest Queen\"");
+            markers.Should().ContainSingle(marker => marker.Name == "Champ \"Lord Oaks and the Forest Queen\"");
+
+            // The shared facet's pair differs only by map, and the Felucca copy comes first.
+            List<WorldMapGump.WMapMarker> bodyOfWater =
+                markers.Where(marker => marker.MarkerIconName == "body of water").ToList();
+
+            bodyOfWater.Select(marker => marker.MapId).Should().Equal(0, 1);
+            bodyOfWater.Select(marker => marker.Name).Should().Equal("Arrow's Point Bay", "Arrow's Point Bay");
         }
         finally
         {
@@ -420,9 +593,9 @@ public class UoamMarkerParserTests
             List<WorldMapGump.WMapMarker> markers = UoamMarkerParser.LoadFile(path, out int skippedLines);
 
             skippedLines.Should().Be(3);
-            markers.Should().HaveCount(3);
+            markers.Should().HaveCount(4, "the shared-facet \"Body of Water\" line yields a Trammel twin");
             markers.Select(marker => marker.MarkerIconName).Should()
-                .Equal("teleporter", "point of interest", "body of water");
+                .Equal("teleporter", "point of interest", "body of water", "body of water");
         }
         finally
         {

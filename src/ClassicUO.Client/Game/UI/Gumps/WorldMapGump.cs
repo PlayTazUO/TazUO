@@ -2069,7 +2069,7 @@ public class WorldMapGump : ResizableGump
                             string line = reader.ReadLine();
 
                             if (string.IsNullOrEmpty(line))
-                                return;
+                                continue;
 
                             string[] splits = line.Split(',');
 
