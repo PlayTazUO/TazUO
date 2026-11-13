@@ -2,8 +2,14 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## 11/06/26
+## 11/13/26
 * ***Fix:*** The weather start message shows again when the same weather returns after the previous one ended on its own timer or with a zero-intensity packet - those endings now count as a stop. With the classic weather, the same weather arriving after its timer ran out is no longer dropped as still active
+
+## 11/09/26
+* ***Fix:*** Item moves rejected by the server now remove the item from the move queue and return it to where it came from - queued loot/organizer/script moves no longer keep retrying a rejected item or leave it stuck after a denied pickup or drop
+
+## 11/07/26
+* ***Feature:*** Complete rewrite of options search results page for a vastly improved experience - [P.R 1216](https://github.com/PlayTazUO/TazUO/pull/1216) ([yuval-po](https://github.com/yuval-po)) 
 
 ## 11/05/26
 * ***Feature:*** The Tinkerer's Art, Land, and Texture tabs now have a Target button - targeting an object jumps straight to its art, land, or texture entry, including land tiles and objects standing on them

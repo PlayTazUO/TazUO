@@ -8,8 +8,15 @@ using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
-public class MyraCheckButton : CheckButton
+public class MyraCheckButton : CheckButton, IHighlightTarget
 {
+    /// <inheritdoc/>
+    /// <remarks>
+    ///     Read off the caption widget rather than stored: the text-less overload has no caption
+    ///     at all, and a caller may replace <see cref="Myra.Graphics2D.UI.ContentControl.Content"/>.
+    /// </remarks>
+    public string? HighlightLabel => (Content as Myra.Graphics2D.UI.Label)?.Text;
+
     /// <summary>
     ///     This includes a label
     /// </summary>

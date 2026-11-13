@@ -41,16 +41,14 @@ public static class HealthBarsTab
                         new PropertyBinder(new Accessor<bool>(() => profile.ShowMobilesHP), TazLang.Get("mog_mobilestab_highlighting_showmobilehp")),
                         Option.ComboBox(
                             TazLang.Get("mog_mobilestab_highlighting_mobilehptype"),
-                            profile.MobileHPType,
+                            new Accessor<int>(() => profile.MobileHPType),
                             [TazLang.Get("mog_general_hptypeperc"), TazLang.Get("mog_general_hptypebar"), TazLang.Get("mog_general_hptypenboth")],
-                            i => profile.MobileHPType = i,
                             search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_mobilehptype"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_type")])
                         ),
                         Option.ComboBox(
                             TazLang.Get("mog_mobilestab_highlighting_hpshowwhen"),
-                            profile.MobileHPShowWhen,
+                            new Accessor<int>(() => profile.MobileHPShowWhen),
                             [TazLang.Get("mog_general_hpshowwhen_always"), TazLang.Get("mog_general_hpshowwhen_less100"), TazLang.Get("mog_general_hpshowwhen_smart")],
-                            i => profile.MobileHPShowWhen = i,
                             search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_hpshowwhen"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_show")])
                         )
                     ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health")])),
@@ -124,10 +122,10 @@ public static class HealthBarsTab
                 new Accessor<bool>(() => profile.SaveHealthbars),
                 search: new SearchMetadata(TazLang.Get("mog_general_savehpbars"), Keywords: [TazLang.Get("mog_kw_save")])
             ),
-            Option.ComboBox(TazLang.Get("mog_general_closehpgumpswhen"), profile.CloseHealthBarType, [
+            Option.ComboBox(TazLang.Get("mog_general_closehpgumpswhen"), new Accessor<int>(() => profile.CloseHealthBarType), [
                     TazLang.Get("mog_general_closehpoptdisable"), TazLang.Get("mog_general_closehpoptoor"),
                     TazLang.Get("mog_general_closehpoptdead"), TazLang.Get("mog_general_closehpoptboth")
-                ], b => profile.CloseHealthBarType = b,
+                ],
                 search: new SearchMetadata(TazLang.Get("mog_general_closehpgumpswhen"), Keywords: [TazLang.Get("mog_kw_close")])
             ),
             Option.Checkbox(
@@ -197,8 +195,7 @@ public static class HealthBarsTab
             commit(newValue);
         });
 
-        MyraCheckButton anchor = MyraCheckButton.CreatePropBoundCheckButton(
-            new Accessor<bool>(() => profile.AnchorHealthBarsForLastAttack), anchorLabel);
+        var anchor = MyraCheckButton.CreatePropBoundCheckButton(new Accessor<bool>(() => profile.AnchorHealthBarsForLastAttack), anchorLabel);
         anchor.Margin = new Thickness(20, 0, 0, 0);
         anchor.Enabled = profile.StackHealthBarsForLastAttack;
 
@@ -235,50 +232,46 @@ public static class HealthBarsTab
                 ),
                 Option.ComboBox(
                     TazLang.Get("mog_general_dragkeymod"),
-                    profile.DragSelectModifierKey,
+                    new Accessor<int>(() => profile.DragSelectModifierKey),
                     [
                         TazLang.Get("mog_general_sharednone"),
                         TazLang.Get("mog_general_sharedctrl"),
                         TazLang.Get("mog_general_sharedshift"),
                         TazLang.Get("mog_general_sharedalt")
                     ],
-                    i => profile.DragSelectModifierKey = i,
                     search: new SearchMetadata(TazLang.Get("mog_general_dragkeymod"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_modifier")])
                 ),
                 Option.ComboBox(
                     TazLang.Get("mog_general_dragplayersonly"),
-                    profile.DragSelect_PlayersModifier,
+                    new Accessor<int>(() => profile.DragSelect_PlayersModifier),
                     [
                         TazLang.Get("mog_general_sharednone"),
                         TazLang.Get("mog_general_sharedctrl"),
                         TazLang.Get("mog_general_sharedshift"),
                         TazLang.Get("mog_general_sharedalt")
                     ],
-                    i => profile.DragSelect_PlayersModifier = i,
                     search: new SearchMetadata(TazLang.Get("mog_general_dragplayersonly"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_player")])
                 ),
                 Option.ComboBox(
                     TazLang.Get("mog_general_dragmobsonly"),
-                    profile.DragSelect_MonstersModifier,
+                    new Accessor<int>(() => profile.DragSelect_MonstersModifier),
                     [
                         TazLang.Get("mog_general_sharednone"),
                         TazLang.Get("mog_general_sharedctrl"),
                         TazLang.Get("mog_general_sharedshift"),
                         TazLang.Get("mog_general_sharedalt")
                     ],
-                    i => profile.DragSelect_MonstersModifier = i,
                     search: new SearchMetadata(TazLang.Get("mog_general_dragmobsonly"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_monster")])
                 ),
                 Option.ComboBox(
                     TazLang.Get("mog_general_dragnameplatesonly"),
-                    profile.DragSelect_NameplateModifier,
+                    new Accessor<int>(() => profile.DragSelect_NameplateModifier),
                     [
                         TazLang.Get("mog_general_sharednone"),
                         TazLang.Get("mog_general_sharedctrl"),
                         TazLang.Get("mog_general_sharedshift"),
                         TazLang.Get("mog_general_sharedalt")
                     ],
-                    i => profile.DragSelect_NameplateModifier = i,
                     search: new SearchMetadata(TazLang.Get("mog_general_dragnameplatesonly"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_nameplate")])
                 ),
                 Option.InputField(

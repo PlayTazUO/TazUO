@@ -77,8 +77,7 @@ public static class SpellsTab
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_combattab_spells_spelllabel"), Tags: [TazLang.Get("mog_kw_spell"), TazLang.Get("mog_kw_magic")]));
     }
 
-    private static void OpenConfigDownloadModal()
-    {
+    private static void OpenConfigDownloadModal() =>
         UIManager.Add
         (
             new PromptPopupWindow
@@ -92,7 +91,6 @@ public static class SpellsTab
                 "https://github.com/PlayTazUO/TazUO/raw/refs/heads/dev/src/ClassicUO.Client/Game/Managers/DefaultSpellIndicatorConfig.json"
             ) { X = (ScaleHelper.LogicalWindowWidth >> 1) - 50, Y = (ScaleHelper.LogicalWindowHeight >> 1) - 50 }
         );
-    }
 
     private static async Task OnDownloadConfirmed(string url)
     {

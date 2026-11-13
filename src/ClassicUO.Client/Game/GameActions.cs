@@ -179,18 +179,36 @@ internal static class GameActions
         return true;
     }
 
+    /// <param name="page">
+    /// Legacy page index from the options gump this window replaced. The indices have no counterpart
+    /// in the current layout, so it is ignored; use <see cref="ShowNewOptionsGump(string[])"/> to open
+    /// at a known location.
+    /// </param>
     internal static void OpenSettings(World world, int page = 0) => ShowNewOptionsGump();
 
     /// <summary>
-    /// Creates or opens the options window
+    /// Creates or opens the options window, optionally navigating straight to a location within it
     /// </summary>
-    public static void ShowNewOptionsGump()
+    /// <param name="openAt">
+    /// Breadcrumb segments to open at, outermost first, e.g. <c>Video</c>, <c>Lighting</c>. Segments
+    /// past the deepest navigable boundary are ignored. Pass nothing to leave the window where it is.
+    /// </param>
+    public static void ShowNewOptionsGump(params string[] openAt)
     {
         NewOptionsWindow existing = UIManager.GetGump<NewOptionsWindow>();
+
         if (existing == null)
-            UIManager.Add(new NewOptionsWindow());
+        {
+            existing = new NewOptionsWindow();
+            UIManager.Add(existing);
+        }
         else
+        {
             existing.BringOnTop();
+        }
+
+        if (openAt is { Length: > 0 })
+            existing.NavigateTo(openAt);
     }
 
     internal static void OpenStatusBar(World world)
@@ -947,13 +965,19 @@ internal static class GameActions
             int amount = Client.Game.UO.GameCursor.ItemHold.Enabled ? Client.Game.UO.GameCursor.ItemHold.Amount : -1;
             ScriptRecorder.Instance.RecordDragDrop(sourceSerial, container, amount, x, y);
 
-            Client.Game.UO.GameCursor.ItemHold.Enabled = false;
-            Client.Game.UO.GameCursor.ItemHold.Dropped = true;
+            // Only mirror the drop onto the hold when we were actually holding the item. Forced
+            // drops sent by the move queue never populate ItemHold, and marking a stale hold as
+            // dropped would make the deny handler treat unrelated rejections as manual moves.
+            if (Client.Game.UO.GameCursor.ItemHold.Enabled)
+            {
+                Client.Game.UO.GameCursor.ItemHold.Enabled = false;
+                Client.Game.UO.GameCursor.ItemHold.Dropped = true;
+            }
 
             if (ProfileManager.CurrentProfile.QueueManualItemMoves && !force)
             {
                 Client.Game.UO.GameCursor.ItemHold.Clear();
-                ObjectActionQueue.Instance.Enqueue(new MoveRequest(serial, container, (ushort)amount, x, y, z).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                ObjectActionQueue.Instance.Enqueue(new MoveRequest(serial, container, (ushort)amount, x, y, z).ToObjectActionQueueItem(), ActionPriority.ManualMoveItem);
                 return;
             }
 

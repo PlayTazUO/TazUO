@@ -83,8 +83,7 @@ public static class GameplayTab
         return OptionsUi.Vertical(
             Option.Checkbox(
                 TazLang.Get("mog_gameplaytab_terrain_hideroof"),
-                !profile.DrawRoofs,
-                b => profile.DrawRoofs = !b,
+                new Accessor<bool>(() => !profile.DrawRoofs, hide => profile.DrawRoofs = !hide),
                 search: new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_hideroof"), Keywords: [TazLang.Get("mog_kw_roof")])
             ),
             Option.Checkbox(
@@ -104,9 +103,8 @@ public static class GameplayTab
             ),
             Option.ComboBox(
                 TazLang.Get("mog_gameplaytab_terrain_magicfieldtype"),
-                profile.FieldsType,
+                new Accessor<int>(() => profile.FieldsType),
                 [TazLang.Get("mog_general_magicfieldopt_normal"), TazLang.Get("mog_general_magicfieldopt_static"), TazLang.Get("mog_general_magicfieldopt_tile")],
-                i => profile.FieldsType = i,
                 search: new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_magicfieldtype"), Keywords: [TazLang.Get("mog_kw_magic"), TazLang.Get("mog_kw_field")])
             ),
             Option.Checkbox(

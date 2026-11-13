@@ -354,17 +354,17 @@ namespace ClassicUO.Game.UI.Gumps
                                moveItem.Amount,
                                groundX,
                                groundY,
-                               groundZ + (sbyte)(itemData.Height == 0xFF ? 0 : itemData.Height)).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                               groundZ + (sbyte)(itemData.Height == 0xFF ? 0 : itemData.Height)).ToObjectActionQueueItem(), ActionPriority.ManualMoveItem);
                             enqueued = true;
                             break;
 
                         case ProcessType.Container:
-                            ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, containerId, moveItem.Amount).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                            ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, containerId, moveItem.Amount).ToObjectActionQueueItem(), ActionPriority.ManualMoveItem);
                             enqueued = true;
                             break;
 
                         case ProcessType.Mobile:
-                            ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, mobileId, moveItem.Amount).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                            ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, mobileId, moveItem.Amount).ToObjectActionQueueItem(), ActionPriority.ManualMoveItem);
                             enqueued = true;
                             break;
 
@@ -373,7 +373,7 @@ namespace ClassicUO.Game.UI.Gumps
                                tradeId,
                                moveItem.Amount,
                                RandomHelper.GetValue(0, 20),
-                               RandomHelper.GetValue(0, 20)).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                               RandomHelper.GetValue(0, 20)).ToObjectActionQueueItem(), ActionPriority.ManualMoveItem);
                             enqueued = true;
                             break;
 

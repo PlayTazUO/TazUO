@@ -38,17 +38,32 @@ public static class VisualEffectsTab
     private static string IntensityKeyword => TazLang.Get("visualeffects_kw_intensity", "intensity");
     private static string EffectsKeyword => TazLang.Get("visualeffects_kw_effects", "effects");
 
+    private static string ScreenKeywords => TazLang.Get("visualeffects_kw_screen");
+    private static string RuleKeywords => TazLang.Get("visualeffects_kw_rule");
+    private static string ProfileKeywords => TazLang.Get("visualeffects_kw_profile");
+
+    /// <summary>Terms someone looking for the photosensitivity gate would actually type.</summary>
+    private static string PseKeywords => TazLang.Get("visualeffects_kw_pse");
+
     #endregion
 
     #region Internal methods
 
     /// <summary>Returns the tab group: the system switches, the rules, and the profile library.</summary>
     /// <returns>The option source.</returns>
-    internal static IOptionSource GetContent() =>
-        new OptionTabGroup()
-            .AddTab(TazLang.Get("visualeffects_general", "General"), GetGeneralSubTabContent)
-            .AddTab(TazLang.Get("visualeffects_rules", "Rules"), OverlayRulesTab.GetContent, new SearchMetadata())
-            .AddTab(TazLang.Get("visualeffects_profiles", "Profiles"), OverlayProfilesTab.GetContent, new SearchMetadata());
+    internal static IOptionSource GetContent()
+    {
+        string general = TazLang.Get("visualeffects_general", "General");
+        string rules = TazLang.Get("visualeffects_rules", "Rules");
+        string profiles = TazLang.Get("visualeffects_profiles", "Profiles");
+
+        // Each tab names itself: without metadata of its own a tab contributes nothing but its
+        // breadcrumb segment, so nothing inside it answers a query naming the tab.
+        return new OptionTabGroup()
+            .AddTab(general, GetGeneralSubTabContent, new SearchMetadata(general, [general], [ScreenKeywords]))
+            .AddTab(rules, OverlayRulesTab.GetContent, new SearchMetadata(rules, [rules], [RuleKeywords]))
+            .AddTab(profiles, OverlayProfilesTab.GetContent, new SearchMetadata(profiles, [profiles], [ProfileKeywords]));
+    }
 
     #endregion
 
@@ -102,7 +117,7 @@ public static class VisualEffectsTab
                         )
                     )
                 ).WithSearch(new SearchMetadata(shake, Keywords: [ShakeKeyword, EffectsKeyword]))
-            ).WithSearch(new SearchMetadata(master, Keywords: [OverlayKeyword, ShakeKeyword, EffectsKeyword]))
+            ).WithSearch(new SearchMetadata(master, Keywords: [OverlayKeyword, ShakeKeyword, EffectsKeyword, PseKeywords]))
         );
     }
 

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
@@ -10,7 +11,8 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 /// <summary>
 /// An <see cref="IOptionSource"/> that presents multiple pages of options using a
 /// <see cref="PageControl"/>, where each page is produced by a separate factory.
-/// All pages participate in search as if they were a flat union.
+/// A labelled page contributes a breadcrumb segment; unlabelled pages are transparent, so their
+/// contents appear directly under the group's own path.
 /// </summary>
 /// <param name="search">Optional search metadata for this group</param>
 internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSource
@@ -39,10 +41,37 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
 
     /// <summary>Appends a page to this group and returns this group for fluent chaining</summary>
     /// <param name="contentFactory">Factory that produces the page's option source</param>
+    /// <param name="label">
+    /// Optional breadcrumb name for the page. The <see cref="PageControl"/> itself shows page
+    /// numbers rather than names, so this exists purely to locate the page's options in search.
+    /// <para>
+    /// <b>A label is a page's only identity.</b> Blank, and the page contributes no breadcrumb
+    /// segment and <see cref="PageControl.TrySelectByLabel"/> can never select it, so every search
+    /// result inside it opens the group's first page instead - and two blank-labelled pages in one
+    /// group are indistinguishable in the index. Name every page in a group where any is named, and
+    /// never let a localization blank the key.
+    /// </para>
+    /// </param>
     /// <returns>This group</returns>
-    public OptionPageGroup AddPage(Func<IOptionSource> contentFactory)
+    public OptionPageGroup AddPage(Func<IOptionSource> contentFactory, string? label = null)
     {
-        _pages.Add(new OptionPageDefinition(contentFactory));
+        _pages.Add(new OptionPageDefinition(contentFactory, label));
+        return this;
+    }
+
+    /// <summary>Sets the rendered control's size bounds and returns this group for fluent chaining</summary>
+    /// <param name="minWidth">Minimum width, or <see langword="null"/> to leave unset</param>
+    /// <param name="minHeight">Minimum height, or <see langword="null"/> to leave unset</param>
+    /// <param name="maxWidth">Maximum width, or <see langword="null"/> to leave unset</param>
+    /// <param name="maxHeight">Maximum height, or <see langword="null"/> to leave unset</param>
+    /// <returns>This group</returns>
+    public OptionPageGroup WithSize(int? minWidth = null, int? minHeight = null, int? maxWidth = null, int? maxHeight = null)
+    {
+        MinWidth = minWidth ?? MinWidth;
+        MinHeight = minHeight ?? MinHeight;
+        MaxWidth = maxWidth ?? MaxWidth;
+        MaxHeight = maxHeight ?? MaxHeight;
+
         return this;
     }
 
@@ -53,25 +82,17 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
     public Widget Render() => BuildPageControl();
 
     /// <inheritdoc/>
-    public IEnumerable<OptionEntry> Match(SearchMetadata search)
+    public IEnumerable<SearchEntry> Index(OptionIndexContext context)
     {
-        SearchMetadata? finalSearch = GetSearchMeta(search);
-        if (finalSearch == null)
-            yield break;
+        SearchMetadata? search = GetSearchMeta(context.Inherited);
 
         foreach (OptionPageDefinition page in _pages)
-            foreach (OptionEntry entry in page.ContentFactory().Match(finalSearch))
-                yield return entry;
-    }
+        {
+            OptionIndexContext pageContext = context.Descend(page.Label).WithInherited(search);
 
-    /// <inheritdoc/>
-    public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null)
-    {
-        SearchMetadata? search = GetSearchMeta(inheritedSearch);
-
-        foreach (OptionPageDefinition page in _pages)
-            foreach (OptionEntry entry in page.ContentFactory().GetOptions(search))
+            foreach (SearchEntry entry in page.ContentFactory().Index(pageContext))
                 yield return entry;
+        }
     }
 
     private SearchMetadata? GetSearchMeta(SearchMetadata? inheritedSearch) => InheritsSearch ? SearchMetadata.Merge(Search, inheritedSearch) : Search;
@@ -80,12 +101,17 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
     private PageControl BuildPageControl()
     {
         var widgets = new Widget[_pages.Count];
+        var labels = new string[_pages.Count];
 
         for (int i = 0; i < _pages.Count; i++)
+        {
             widgets[i] = _pages[i].ContentFactory().Render();
+            labels[i] = _pages[i].Label ?? string.Empty;
+        }
 
         return new PageControl(widgets)
         {
+            PageLabels = labels,
             RetainSizeWhenPaging = true,
             MinHeight = MinHeight,
             MinWidth = MinWidth,
@@ -94,5 +120,5 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
         };
     }
 
-    private readonly record struct OptionPageDefinition(Func<IOptionSource> ContentFactory);
+    private readonly record struct OptionPageDefinition(Func<IOptionSource> ContentFactory, string? Label);
 }

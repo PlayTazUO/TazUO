@@ -6,6 +6,7 @@ using FontStashSharp;
 using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
+using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -79,7 +80,21 @@ public class IconButton : BasicButton
     /// beside.</summary>
     private const int DEFAULT_GLYPH_SIZE = 24;
 
+    /// <summary>
+    /// Hover and press fills for a borderless button - just enough to read as live. Applied via
+    /// <c>Color * factor</c>, which premultiplies: a literal <c>new Color(255, 255, 255, 30)</c> has
+    /// colour channels above its alpha, which the premultiplied blend draws as solid white.
+    /// </summary>
+    private const float FLAT_HOVER_STRENGTH = 0.12f;
+    private const float FLAT_PRESSED_STRENGTH = 0.22f;
+
     private readonly Label _label;
+
+    /// <summary>
+    /// Holds off re-centring while a batch of glyph properties is assigned - see
+    /// <see cref="SetGlyphAndSize" />.
+    /// </summary>
+    private bool _deferRefresh;
 
     #endregion
 
@@ -123,12 +138,7 @@ public class IconButton : BasicButton
         Margin = new Thickness(0);
         VerticalAlignment = VerticalAlignment.Center;
 
-        // Assigned through the backing fields, so a single Refresh does the work rather than one
-        // per property.
-        Glyph = glyph;
-        GlyphSize = glyphSize;
-
-        Refresh();
+        SetGlyphAndSize(glyph, glyphSize);
     }
 
     #endregion
@@ -136,8 +146,52 @@ public class IconButton : BasicButton
     #region Public methods
 
     /// <summary>
+    /// Builds a chrome-less icon button: the bare glyph, no border or resting fill. For an icon
+    /// that sits inside another control - a clear chip in a text field, an inline dismiss - where
+    /// a border would read as a second, nested control rather than as an affordance on the first.
+    /// </summary>
+    /// <param name="glyph">The glyph to draw, from the symbol font.</param>
+    /// <param name="onClick">Invoked on click.</param>
+    /// <param name="tooltip">Optional tooltip. Worth supplying: a bare glyph has nothing else naming it.</param>
+    /// <param name="size">Button width and height.</param>
+    /// <param name="glyphSize">Point size the glyph is drawn at.</param>
+    /// <returns>The button.</returns>
+    public static IconButton Flat(
+        string glyph,
+        Action onClick,
+        string? tooltip = null,
+        int size = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
+        int glyphSize = DEFAULT_GLYPH_SIZE
+    ) => new IconButton(glyph, onClick, tooltip, size, glyphSize).MakeBorderless();
+
+    /// <summary>
+    /// Strips the button chrome from an existing button, leaving the bare glyph. Prefer
+    /// <see cref="Flat"/> when building one; this is for a button handed to you already made. For an icon that sits inside another
+    /// control - a clear chip in a text field - where a border would read as a second, nested
+    /// control rather than as an affordance on the first.
+    /// <para>
+    /// A faint hover and press fill are kept: with nothing at all the glyph gives no sign it is
+    /// interactive. Input is unaffected either way, since only <see cref="Container"/> treats a
+    /// null background as a reason to let clicks through.
+    /// </para>
+    /// </summary>
+    /// <returns>This button, for chaining.</returns>
+    public IconButton MakeBorderless()
+    {
+        Background = null;
+        Border = null;
+        BorderThickness = new Thickness(0);
+        FocusedBackground = null;
+
+        OverBackground = new SolidBrush(Color.White * FLAT_HOVER_STRENGTH);
+        PressedBackground = new SolidBrush(Color.Black * FLAT_PRESSED_STRENGTH);
+
+        return this;
+    }
+
+    /// <summary>
     /// Swaps the glyph and its size together, for a button whose icon changes with its state - a
-    /// minimize/restore toggle, say - without re-centring twice.
+    /// minimize/restore toggle, say - re-centring once for the pair.
     /// </summary>
     /// <param name="glyph">The new glyph.</param>
     /// <param name="glyphSize">The new point size.</param>
@@ -146,15 +200,35 @@ public class IconButton : BasicButton
         if (Glyph == glyph && GlyphSize == glyphSize)
             return;
 
-        Glyph = glyph;
-        GlyphSize = glyphSize;
-
-        Refresh();
+        SetGlyphAndSize(glyph, glyphSize);
     }
 
     #endregion
 
     #region Private methods
+
+    /// <summary>
+    /// Assigns both glyph properties as one change. Each setter re-centres on its own, so the pair
+    /// would otherwise measure the glyph twice - once against a size about to be replaced.
+    /// </summary>
+    /// <param name="glyph">The glyph to draw.</param>
+    /// <param name="glyphSize">Point size to draw it at.</param>
+    private void SetGlyphAndSize(string glyph, int glyphSize)
+    {
+        _deferRefresh = true;
+
+        try
+        {
+            Glyph = glyph;
+            GlyphSize = glyphSize;
+        }
+        finally
+        {
+            _deferRefresh = false;
+        }
+
+        Refresh();
+    }
 
     /// <summary>
     /// Re-measures the glyph and seats it in the middle of the button.
@@ -166,6 +240,9 @@ public class IconButton : BasicButton
     /// </summary>
     private void Refresh()
     {
+        if (_deferRefresh)
+            return;
+
         SpriteFontBase font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, GlyphSize);
 
         _label.Font = font;
