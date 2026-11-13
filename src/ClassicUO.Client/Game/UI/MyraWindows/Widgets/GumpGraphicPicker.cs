@@ -95,7 +95,9 @@ public sealed class GumpGraphicPicker : IndexedComboPicker
         if (file?.Entries == null)
             return entries;
 
-        int count = Math.Min(file.Entries.Length, GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT);
+        // What the picker stores is a ushort, so the gumps past 0xFFFF the archive may hold are left out
+        // rather than listed and then silently truncated.
+        int count = Math.Min(file.Entries.Length, Math.Min(GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT, ushort.MaxValue + 1));
 
         for (int id = 0; id < count; id++)
         {

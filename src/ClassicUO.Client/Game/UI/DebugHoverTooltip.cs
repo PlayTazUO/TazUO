@@ -476,7 +476,7 @@ namespace ClassicUO.Game.UI
             return new Preview(info.Texture, info.UV, ShaderHueTranslator.GetHueVector(0));
         }
 
-        private static Preview GumpPreview(ushort graphic, int hue)
+        private static Preview GumpPreview(uint graphic, int hue)
         {
             ref readonly SpriteInfo info = ref Client.Game.UO.Gumps.GetGump(graphic);
 
