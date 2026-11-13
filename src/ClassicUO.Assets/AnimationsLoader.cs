@@ -607,7 +607,8 @@ namespace ClassicUO.Assets
                         ushort newGraphic = (ushort)defReader.ReadInt();
                         int gump = defReader.ReadInt();
 
-                        if (gump > ushort.MaxValue)
+                        // Gump numbers run past 0xFFFF (the standard female equip gumps 69971..69985).
+                        if (gump >= GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT)
                         {
                             continue;
                         }
@@ -628,7 +629,7 @@ namespace ClassicUO.Assets
                             _equipConv[body] = (dict = new Dictionary<ushort, EquipConvData>());
                         }
 
-                        dict[graphic] = new EquipConvData(newGraphic, (ushort)gump, color);
+                        dict[graphic] = new EquipConvData(newGraphic, (uint)gump, color);
                     }
                 }
             }
@@ -1860,7 +1861,7 @@ namespace ClassicUO.Assets
 
     public struct EquipConvData : IEquatable<EquipConvData>
     {
-        public EquipConvData(ushort graphic, ushort gump, ushort color)
+        public EquipConvData(ushort graphic, uint gump, ushort color)
         {
             Graphic = graphic;
             Gump = gump;
@@ -1868,7 +1869,7 @@ namespace ClassicUO.Assets
         }
 
         public ushort Graphic;
-        public ushort Gump;
+        public uint Gump;
         public ushort Color;
 
         public override int GetHashCode() => (Graphic, Gump, Color).GetHashCode();

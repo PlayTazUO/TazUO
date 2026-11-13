@@ -226,7 +226,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        private ushort GetEquipmentGumpId(ushort animID)
+        private uint GetEquipmentGumpId(ushort animID)
         {
             int offset = _isFemale ? Constants.FEMALE_GUMP_OFFSET : Constants.MALE_GUMP_OFFSET;
 
@@ -247,20 +247,20 @@ namespace ClassicUO.Game.UI.Controls
                     }
                     else
                     {
-                        animID = data.Gump;
+                        animID = (ushort)data.Gump;
                     }
                 }
             }
 
             // Check if the gump exists, otherwise try the other gender
             int requested = animID + offset;
-            if (requested > GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT ||
-                Client.Game.UO.Gumps.GetGump((ushort)requested).Texture == null)
+            if (requested >= GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT ||
+                Client.Game.UO.Gumps.GetGump((uint)requested).Texture == null)
             {
                 offset = _isFemale ? Constants.MALE_GUMP_OFFSET : Constants.FEMALE_GUMP_OFFSET;
             }
 
-            return (ushort)(animID + offset);
+            return (uint)(animID + offset);
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
@@ -328,7 +328,7 @@ namespace ClassicUO.Game.UI.Controls
             {
                 if (_equipment.TryGetValue(layer, out EquipmentEntry entry))
                 {
-                    ushort gumpId = GetEquipmentGumpId(entry.AnimID);
+                    uint gumpId = GetEquipmentGumpId(entry.AnimID);
                     DrawGump(batcher, gumpId, entry.Hue, x, y, entry.IsPartialHue);
                 }
             }
@@ -336,7 +336,7 @@ namespace ClassicUO.Game.UI.Controls
             return base.Draw(batcher, x, y);
         }
 
-        private void DrawGump(UltimaBatcher2D batcher, ushort gumpId, ushort hue, int x, int y, bool isPartialHue)
+        private void DrawGump(UltimaBatcher2D batcher, uint gumpId, ushort hue, int x, int y, bool isPartialHue)
         {
             ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(gumpId);
 
