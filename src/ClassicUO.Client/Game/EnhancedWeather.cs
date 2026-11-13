@@ -346,7 +346,12 @@ namespace ClassicUO.Game
                     break;
             }
 
-            if (CurrentWeather.HasValue)
+            // A count of 0 ends the weather like a stop packet does.
+            if (Count == 0)
+            {
+                OnWeatherStopped();
+            }
+            else if (CurrentWeather.HasValue)
             {
                 OnWeatherStarted(CurrentWeather.Value);
             }
@@ -743,6 +748,7 @@ namespace ClassicUO.Game
                 if (CurrentCount == 0)
                 {
                     // Time for the weather has passed and all weather effects have disappeared
+                    OnWeatherStopped();
                     Reset();
                     return;
                 }
