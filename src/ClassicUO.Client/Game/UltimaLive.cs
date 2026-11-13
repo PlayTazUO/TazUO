@@ -323,7 +323,8 @@ namespace ClassicUO.Game
                     maps.ApplyServerMapDefinitions(defs);
 
                     if (activeMap >= 0 &&
-                        (activeMap >= maps.MapBlocksSize.GetLength(0) ||
+                        (world.HasLoadablePendingMap ||
+                         activeMap >= maps.MapBlocksSize.GetLength(0) ||
                          maps.MapBlocksSize[activeMap, 0] != beforeW || maps.MapBlocksSize[activeMap, 1] != beforeH))
                     {
                         world.ReloadCurrentMap();

@@ -1353,7 +1353,7 @@ namespace ClassicUO.Game.Scenes
 
         public override bool Draw(UltimaBatcher2D batcher)
         {
-            if (!_world.InGame)
+            if (!_world.InGame || _world.IsAwaitingPendingMap)
             {
                 // No world/light targets are rendered on this path, so nothing discards the screen
                 // target - draw the background directly (GameController skips it for this scene).

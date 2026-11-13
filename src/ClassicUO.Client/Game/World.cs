@@ -185,11 +185,31 @@ namespace ClassicUO.Game
         public CoolDownBarManager CoolDownBarManager { get; }
 
 
+        // Server-requested map past MAPS_COUNT (login sends it before the map definitions); -1 when none.
+        private int _pendingMapIndex = -1;
+        private uint _pendingMapSinceTicks;
+
+        private const uint PENDING_MAP_RENDER_HOLD_MS = 3000;
+
+        /// <summary>Whether a pending map is now loadable, so <see cref="ReloadCurrentMap" /> will switch to it.</summary>
+        public bool HasLoadablePendingMap => _pendingMapIndex >= 0 && _pendingMapIndex < MapLoader.MAPS_COUNT;
+
+        /// <summary>Whether the current map is a map-0 stand-in for a pending map and should not be drawn yet.</summary>
+        public bool IsAwaitingPendingMap =>
+            _pendingMapIndex >= 0 && Time.Ticks - _pendingMapSinceTicks < PENDING_MAP_RENDER_HOLD_MS;
+
         public int MapIndex
         {
             get => Map?.Index ?? -1;
             set
             {
+                int pending = value >= MapLoader.MAPS_COUNT ? value : -1;
+
+                if (pending != _pendingMapIndex)
+                    _pendingMapSinceTicks = Time.Ticks;
+
+                _pendingMapIndex = pending;
+
                 if (MapIndex == value)
                     return;
 
@@ -297,12 +317,25 @@ namespace ClassicUO.Game
 
         public bool InGame => Player != null && Map != null;
 
+        /// <summary>
+        /// Rebuilds the current map, keeping its entities, after the map definitions changed. Switches to the
+        /// pending map instead when <see cref="HasLoadablePendingMap" /> is set.
+        /// </summary>
         public void ReloadCurrentMap()
         {
             if (Map == null)
                 return;
 
-            int index = Map.Index;
+            int previousIndex = Map.Index;
+            int index = previousIndex;
+
+            if (HasLoadablePendingMap)
+            {
+                index = _pendingMapIndex;
+                Log.Trace($"Map {index} became loadable {Time.Ticks - _pendingMapSinceTicks}ms after the server switched to it");
+            }
+
+            _pendingMapIndex = -1;
 
             if (index < 0 || index >= MapLoader.MAPS_COUNT)
                 index = 0;
@@ -327,6 +360,14 @@ namespace ClassicUO.Game
             if (Client.Game.UO.GameCursor != null)
             {
                 Client.Game.UO.GameCursor.Graphic = 0xFFFF;
+            }
+
+            if (index != previousIndex)
+            {
+                EventSink.InvokeOnMapChanged(previousIndex, index);
+
+                if (MapWebServerManager.Instance.IsRunning)
+                    MapWebServerManager.Instance.RegenerateMapPng();
             }
         }
 
@@ -1079,6 +1120,7 @@ namespace ClassicUO.Game
             Player = null;
             Map?.Destroy();
             Map = null;
+            _pendingMapIndex = -1;
             Light.Overall = Light.RealOverall = 0;
             Light.Personal = Light.RealPersonal = 0;
             ClientLockedFeatures.SetFlags(0);
