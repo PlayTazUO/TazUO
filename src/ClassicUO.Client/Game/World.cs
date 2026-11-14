@@ -204,6 +204,11 @@ namespace ClassicUO.Game
             get => Map?.Index ?? -1;
             set
             {
+                // The server can repeat the map change at login. On a stand-in, rebuilding it would drop
+                // every entity received since, and the server does not send them again.
+                if (Map != null && value == _requestedMapIndex)
+                    return;
+
                 _requestedMapIndex = value;
                 _requestedMapTicks = Time.Ticks;
 
