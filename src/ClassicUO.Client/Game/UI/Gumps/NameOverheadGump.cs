@@ -993,7 +993,8 @@ namespace ClassicUO.Game.UI.Gumps
             X = x;
             Y = y;
 
-            (nameplateEntity as Mobile)?.SetNamePlateDrawn(Height + nameOverhang);
+            // The gap below the plate is part of its footprint: what stacks above adds its own gap on top.
+            (nameplateEntity as Mobile)?.SetNamePlateDrawn(Height + nameOverhang + STACK_GAP);
 
             Rectangle nameBounds = GetNamePlateBackgroundBounds(x, y);
             int cornerRadius = GetCornerRadius(nameBounds.Width, nameBounds.Height);
