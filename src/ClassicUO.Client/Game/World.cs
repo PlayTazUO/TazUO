@@ -185,30 +185,27 @@ namespace ClassicUO.Game
         public CoolDownBarManager CoolDownBarManager { get; }
 
 
-        // Server-requested map past MAPS_COUNT (login sends it before the map definitions); -1 when none.
-        private int _pendingMapIndex = -1;
-        private uint _pendingMapSinceTicks;
+        // The map the server last asked for. Login sends it before the dynamic map definitions, so a map
+        // past MAPS_COUNT is first built as map 0 and only switched to once its files are loaded.
+        private int _requestedMapIndex = -1;
+        private uint _requestedMapTicks;
 
-        private const uint PENDING_MAP_RENDER_HOLD_MS = 3000;
+        /// <summary>Whether the current map stands in for a requested map whose files are now loaded.</summary>
+        public bool HasLoadablePendingMap =>
+            InGame && Map.Index != _requestedMapIndex && _requestedMapIndex >= 0 &&
+            Client.Game.UO.FileManager.Maps.GetMapFile(_requestedMapIndex) != null;
 
-        /// <summary>Whether a pending map is now loadable, so <see cref="ReloadCurrentMap" /> will switch to it.</summary>
-        public bool HasLoadablePendingMap => _pendingMapIndex >= 0 && _pendingMapIndex < MapLoader.MAPS_COUNT;
-
-        /// <summary>Whether the current map is a map-0 stand-in for a pending map and should not be drawn yet.</summary>
+        /// <summary>Whether the current map stands in for the requested one and should not be drawn yet (at most 3s).</summary>
         public bool IsAwaitingPendingMap =>
-            _pendingMapIndex >= 0 && Time.Ticks - _pendingMapSinceTicks < PENDING_MAP_RENDER_HOLD_MS;
+            InGame && Map.Index != _requestedMapIndex && Time.Ticks - _requestedMapTicks < 3000;
 
         public int MapIndex
         {
             get => Map?.Index ?? -1;
             set
             {
-                int pending = value >= MapLoader.MAPS_COUNT ? value : -1;
-
-                if (pending != _pendingMapIndex)
-                    _pendingMapSinceTicks = Time.Ticks;
-
-                _pendingMapIndex = pending;
+                _requestedMapIndex = value;
+                _requestedMapTicks = Time.Ticks;
 
                 if (MapIndex == value)
                     return;
@@ -319,7 +316,7 @@ namespace ClassicUO.Game
 
         /// <summary>
         /// Rebuilds the current map, keeping its entities, after the map definitions changed. Switches to the
-        /// pending map instead when <see cref="HasLoadablePendingMap" /> is set.
+        /// requested map instead when <see cref="HasLoadablePendingMap" /> is set.
         /// </summary>
         public void ReloadCurrentMap()
         {
@@ -327,15 +324,7 @@ namespace ClassicUO.Game
                 return;
 
             int previousIndex = Map.Index;
-            int index = previousIndex;
-
-            if (HasLoadablePendingMap)
-            {
-                index = _pendingMapIndex;
-                Log.Trace($"Map {index} became loadable {Time.Ticks - _pendingMapSinceTicks}ms after the server switched to it");
-            }
-
-            _pendingMapIndex = -1;
+            int index = HasLoadablePendingMap ? _requestedMapIndex : previousIndex;
 
             if (index < 0 || index >= MapLoader.MAPS_COUNT)
                 index = 0;
@@ -1120,7 +1109,6 @@ namespace ClassicUO.Game
             Player = null;
             Map?.Destroy();
             Map = null;
-            _pendingMapIndex = -1;
             Light.Overall = Light.RealOverall = 0;
             Light.Personal = Light.RealPersonal = 0;
             ClientLockedFeatures.SetFlags(0);

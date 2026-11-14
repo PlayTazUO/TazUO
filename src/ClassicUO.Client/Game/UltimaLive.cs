@@ -419,6 +419,9 @@ namespace ClassicUO.Game
 
                         world.Map?.ClearStreamBlockCache();
                         _pendingChunkReloads.Clear();
+
+                        if (world.HasLoadablePendingMap)
+                            world.ReloadCurrentMap();
                     }
 
                     break;
