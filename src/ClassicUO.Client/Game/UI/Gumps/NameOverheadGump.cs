@@ -21,7 +21,9 @@ namespace ClassicUO.Game.UI.Gumps
     public class NameOverheadGump : Gump
     {
         private AlphaBlendControl _background;
-        private Point _lockedPosition,
+        // While hovered, where the plate sits relative to its mobile's anchor: relative so the plate keeps following
+        // the mobile as it or the player walks, fixed so it doesn't bob out from under the mouse with the animation.
+        private Point _lockedOffset,
             _lastLeftMousePositionDown;
         private bool _positionLocked,
             _leftMouseIsDown,
@@ -658,28 +660,44 @@ namespace ClassicUO.Game.UI.Gumps
 
                 _positionLocked = true;
 
-                Client.Game.UO.Animations.GetAnimationDimensions(
-                    m.AnimIndex,
-                    m.GetGraphicForAnimation(),
-                    /*(byte) m.GetDirectionForAnimation()*/
-                    0,
-                    /*Mobile.GetGroupForAnimation(m, isParent:true)*/
-                    0,
-                    m.IsMounted,
-                    /*(byte) m.AnimIndex*/
-                    0,
-                    out int centerX,
-                    out int centerY,
-                    out int width,
-                    out int height
-                );
-
                 // Same position used while it isn't locked (see Draw): any difference makes the nameplate move off
                 // the mouse as soon as it is over it, then back under it, and so on (fast flickering).
-                _lockedPosition = GetPosition(m, height, centerY);
+                Point position = GetMobilePosition(m);
+                Point anchor = GetMobileAnchor(m);
+                _lockedOffset = new Point(position.X - anchor.X, position.Y - anchor.Y);
             }
 
             base.OnMouseOver(x, y);
+        }
+
+        /// <summary>
+        /// The mobile's walk-interpolated draw anchor. <see cref="Entity.RealScreenPosition"/> is relative to the
+        /// player, so a point kept across frames must be stored against this anchor, never as an absolute point.
+        /// </summary>
+        private static Point GetMobileAnchor(Mobile m) => new(
+            (int)(m.RealScreenPosition.X + m.Offset.X),
+            (int)(m.RealScreenPosition.Y + m.Offset.Y - m.Offset.Z)
+        );
+
+        /// <summary>
+        /// World point the nameplate's bottom center sits on this frame.
+        /// </summary>
+        private Point GetMobilePosition(Mobile m)
+        {
+            Client.Game.UO.Animations.GetAnimationDimensions(
+                m.AnimIndex,
+                m.GetGraphicForAnimation(),
+                0,
+                0,
+                m.IsMounted,
+                0,
+                out _,
+                out int centerY,
+                out _,
+                out int height
+            );
+
+            return GetPosition(m, height, centerY);
         }
 
         /// <summary>
@@ -900,34 +918,20 @@ namespace ClassicUO.Game.UI.Gumps
 
                 }
 
+                Point pos;
+
                 if (_positionLocked)
                 {
-                    x = _lockedPosition.X;
-                    y = _lockedPosition.Y;
+                    Point anchor = GetMobileAnchor(m);
+                    pos = new Point(anchor.X + _lockedOffset.X, anchor.Y + _lockedOffset.Y);
                 }
                 else
                 {
-                    Client.Game.UO.Animations.GetAnimationDimensions(
-                        m.AnimIndex,
-                        m.GetGraphicForAnimation(),
-                        /*(byte) m.GetDirectionForAnimation()*/
-                        0,
-                        /*Mobile.GetGroupForAnimation(m, isParent:true)*/
-                        0,
-                        m.IsMounted,
-                        /*(byte) m.AnimIndex*/
-                        0,
-                        out int centerX,
-                        out int centerY,
-                        out int width,
-                        out int height
-                    );
-
-                    Point pos = GetPosition(m, height, centerY);
-
-                    x = pos.X;
-                    y = pos.Y;
+                    pos = GetMobilePosition(m);
                 }
+
+                x = pos.X;
+                y = pos.Y;
             }
             else if (SerialHelper.IsItem(LocalSerial))
             {
