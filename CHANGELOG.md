@@ -2,6 +2,9 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/14/26
+* ***Fix:*** Hovering another mobile's nameplate while walking no longer detaches it - the plate stays above its mobile instead of sticking under the mouse and sliding away - [P.R 1220](https://github.com/PlayTazUO/TazUO/pull/1220) ([DavideRei](https://github.com/DavideRei))
+
 ## 11/13/26
 * ***Fix:*** The weather start message shows again when the same weather returns after the previous one ended on its own timer or with a zero-intensity packet - those endings now count as a stop. With the classic weather, the same weather arriving after its timer ran out is no longer dropped as still active
 
