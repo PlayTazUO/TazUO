@@ -14,6 +14,8 @@ Audience is users reading release notes, not reviewers reading the diff.
    tests, docs, comment churn.
 3. Apply the eligibility test, write the body.
 4. Check `CHANGELOG.md` has a matching entry, right PR number and author.
+5. Write the body to a `.md`; end with its absolute path on its own line, clickable, even
+   when also shown inline.
 
 ## Structure
 
@@ -51,6 +53,9 @@ migration and serialization internals.
 - Terse, not cryptic. Full sentences, no padding.
 - A named feature owns its details. One bullet, not a spec.
 - Fixes lead with the symptom. No statable symptom → probably ineligible.
+- Obvious symptom → name it and stop. No worked examples, bundled filenames or counts;
+  "empty lines in `.csv` files no longer abort loading" is the whole bullet. Spend words
+  only where the symptom is hard to picture.
 - No file paths, line numbers, or class names the user never types.
 - Group related small changes into one line.
 
