@@ -2059,8 +2059,20 @@ public class WorldMapGump : ResizableGump
     /// override), so later directories take precedence. The replaced texture must be disposed or
     /// every reload leaks GPU memory.
     /// </summary>
+    /// <param name="texture">
+    ///     The decoded icon. The decoders report an unsupported file by returning null rather than
+    ///     throwing, and such a file must not evict the icon a previous directory registered under
+    ///     the same name.
+    /// </param>
+    /// <param name="iconPath">Full path the icon was read from.</param>
     private static void RegisterMarkerIcon(Texture2D texture, string iconPath)
     {
+        if (texture == null)
+        {
+            Log.Error($"Marker icon {iconPath} could not be decoded, keeping any icon already registered under its name");
+            return;
+        }
+
         string iconKey = MarkerIconKey.Normalize(Path.GetFileNameWithoutExtension(iconPath));
 
         if (_markerIcons.TryGetValue(iconKey, out Texture2D existing))
@@ -2228,6 +2240,15 @@ public class WorldMapGump : ResizableGump
 
         if (mapMarkerFile == null)
             return;
+
+        // Removal rewrites the whole file from memory, so it is only safe once the file actually
+        // loaded - a file that failed to load is held empty and non-editable, and writing that
+        // emptiness back would delete every marker still on disk.
+        if (!mapMarkerFile.IsEditable)
+        {
+            GameActions.Print(_world, TazLang.Get("user_markers_not_loaded"), Constants.HUE_WARN);
+            return;
+        }
 
         // The file is rewritten from what should remain, and the in-memory list only follows once
         // that write lands - a failed write would otherwise drop the marker from the map while
