@@ -14,6 +14,8 @@ Audience is users reading release notes, not reviewers reading the diff.
    tests, docs, comment churn.
 3. Apply the eligibility test, write the body.
 4. Check `CHANGELOG.md` has a matching entry, right PR number and author.
+5. Write the body to a `.md` and end with its full absolute path on its own line, so the
+   terminal renders it clickable. Always, even when also shown inline.
 
 ## Structure
 
