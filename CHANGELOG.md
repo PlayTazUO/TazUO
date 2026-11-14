@@ -3,6 +3,9 @@ All notable changes to TazUO will be recorded here.
 
 ---
 
+## 11/14/26
+* ***Fix:*** Multiple bug fixes pertaining to marker file loading - [P.R 1222](https://github.com/PlayTazUO/TazUO/pull/1222) ([yuval-po](https://github.com/yuval-po)) 
+
 ## 11/09/26
 * ***Fix:*** Item moves rejected by the server now remove the item from the move queue and return it to where it came from - queued loot/organizer/script moves no longer keep retrying a rejected item or leave it stuck after a denied pickup or drop
 
