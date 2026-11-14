@@ -2,6 +2,9 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/18/26
+* ***Feature:*** New `Hovered nameplates follow their mobile` option in the nameplate settings, off by default - when on, a hovered nameplate keeps following its mobile while you or it walks, instead of staying under the mouse - [P.R 1220](https://github.com/PlayTazUO/TazUO/pull/1220) ([DavideRei](https://github.com/DavideRei))
+
 ## 11/16/26
 * ***Fix:*** Autoloot no longer re-scans every item in a corpse for each item event and no longer re-scans every in-range corpse on every step - opening many corpses no longer causes noticeable stalls
 * ***Fix:*** Item moves rejected by the server now report completion for the canceled queued actions, so autoloot no longer leaves items marked as in-flight or gets stuck on its pending count
