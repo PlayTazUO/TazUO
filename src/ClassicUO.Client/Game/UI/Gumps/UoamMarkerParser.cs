@@ -33,9 +33,40 @@ public enum UoamLineResult
 ///     Reads UOAM-format <c>.map</c> marker files.
 /// </summary>
 /// <remarks>
+///     <para>
+///     One marker per line. The first line of a file is a version stamp (<c>3</c> in every known
+///     file) and is ignored like any other line carrying no leading sign.
+///     </para>
+///     <code>
+///      -point of interest:  1234  5678  3  Some Marker Name
+///      ^ ^^^^^^^^^^^^^^^^ ^  ^^^^  ^^^^  ^  ^^^^^^^^^^^^^^^^
+///      |        |         |   |     |    |         |
+///      |        |         |   |     |    |         +-- name   optional; taken verbatim, only its
+///      |        |         |   |     |    |                    outer padding trimmed
+///      |        |         |   |     |    +------------ facet  see table below
+///      |        |         |   |     +----------------- Y
+///      |        |         |   +---------------------- X
+///      |        |         +------------------------- ':' then optional spaces/tabs
+///      |        +---------------------------------- icon name; may contain spaces
+///      +------------------------------------------ sign: '+' shown, '-' hidden in UOAM
+///     </code>
+///     <para>
+///     A facet is not a map index. UOAM's map list carries one extra leading entry, so every facet
+///     sits one above the map it names:
+///     </para>
+///     <code>
+///      facet 0  ->  Felucca AND Trammel   ("Both Felucca and Trammel"; yields two markers)
+///      facet 1  ->  map 0   Felucca
+///      facet 2  ->  map 1   Trammel
+///      facet 3  ->  map 2   Ilshenar
+///      facet 4  ->  map 3   Malas
+///      facet 5  ->  map 4   Tokuno
+///     </code>
+///     <para>
 ///     Free of graphics and of any <see cref="WorldMapGump" /> state by design, so it stays usable
 ///     headless. Callers resolve the icon texture themselves from
 ///     <see cref="WMapMarker.MarkerIconName" />.
+///     </para>
 /// </remarks>
 public static partial class UoamMarkerParser
 {
