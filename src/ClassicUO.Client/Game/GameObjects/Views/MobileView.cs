@@ -52,7 +52,9 @@ namespace ClassicUO.Game.GameObjects
         /// <summary>
         /// Records that this mobile's nameplate was drawn, so the HP percentage can sit above it.
         /// </summary>
-        /// <param name="height">Nameplate height in screen pixels, or 0 when the plate is hidden this draw.</param>
+        /// <param name="height">
+        /// Screen pixels the nameplate takes above the stack, gap below it included; 0 when hidden this draw.
+        /// </param>
         internal void SetNamePlateDrawn(int height)
         {
             _namePlateHeight = height;
@@ -60,9 +62,9 @@ namespace ClassicUO.Game.GameObjects
         }
 
         /// <summary>
-        /// Height of this mobile's nameplate in screen pixels, as its last draw recorded it.
+        /// Screen pixels this mobile's nameplate takes above the stack, as its last draw recorded it.
         /// </summary>
-        /// <param name="height">Plate height, or 0 when the plate is hidden.</param>
+        /// <param name="height">Plate footprint, gap below it included, or 0 when the plate is hidden.</param>
         /// <returns>False when no nameplate draw was recorded recently, so the height is unknown.</returns>
         internal bool TryGetNamePlateHeight(out int height)
         {
