@@ -188,16 +188,13 @@ namespace ClassicUO.Game
         // The map the server last asked for. Login sends it before the dynamic map definitions, so a map
         // past MAPS_COUNT is first built as map 0 and only switched to once its files are loaded.
         private int _requestedMapIndex = -1;
-        private uint _requestedMapTicks;
 
-        /// <summary>Whether the current map stands in for a requested map whose files are now loaded.</summary>
-        public bool HasLoadablePendingMap =>
-            InGame && Map.Index != _requestedMapIndex && _requestedMapIndex >= 0 &&
-            Client.Game.UO.FileManager.Maps.GetMapFile(_requestedMapIndex) != null;
+        /// <summary>Whether the current map only stands in for the requested one, so it should not be drawn.</summary>
+        public bool IsAwaitingRequestedMap => InGame && Map.Index != _requestedMapIndex;
 
-        /// <summary>Whether the current map stands in for the requested one and should not be drawn yet (at most 3s).</summary>
-        public bool IsAwaitingPendingMap =>
-            InGame && Map.Index != _requestedMapIndex && Time.Ticks - _requestedMapTicks < 3000;
+        /// <summary>Whether the requested map's files are now loaded, so <see cref="ReloadCurrentMap" /> will switch to it.</summary>
+        public bool HasLoadableRequestedMap =>
+            IsAwaitingRequestedMap && Client.Game.UO.FileManager.Maps.GetMapFile(_requestedMapIndex) != null;
 
         public int MapIndex
         {
@@ -210,7 +207,6 @@ namespace ClassicUO.Game
                     return;
 
                 _requestedMapIndex = value;
-                _requestedMapTicks = Time.Ticks;
 
                 if (MapIndex == value)
                     return;
@@ -321,7 +317,7 @@ namespace ClassicUO.Game
 
         /// <summary>
         /// Rebuilds the current map, keeping its entities, after the map definitions changed. Switches to the
-        /// requested map instead when <see cref="HasLoadablePendingMap" /> is set.
+        /// requested map instead when <see cref="HasLoadableRequestedMap" /> is set.
         /// </summary>
         public void ReloadCurrentMap()
         {
@@ -329,7 +325,7 @@ namespace ClassicUO.Game
                 return;
 
             int previousIndex = Map.Index;
-            int index = HasLoadablePendingMap ? _requestedMapIndex : previousIndex;
+            int index = HasLoadableRequestedMap ? _requestedMapIndex : previousIndex;
 
             if (index < 0 || index >= MapLoader.MAPS_COUNT)
                 index = 0;

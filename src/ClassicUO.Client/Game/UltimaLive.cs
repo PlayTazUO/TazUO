@@ -323,7 +323,7 @@ namespace ClassicUO.Game
                     maps.ApplyServerMapDefinitions(defs);
 
                     if (activeMap >= 0 &&
-                        (world.HasLoadablePendingMap ||
+                        (world.HasLoadableRequestedMap ||
                          activeMap >= maps.MapBlocksSize.GetLength(0) ||
                          maps.MapBlocksSize[activeMap, 0] != beforeW || maps.MapBlocksSize[activeMap, 1] != beforeH))
                     {
@@ -420,7 +420,7 @@ namespace ClassicUO.Game
                         world.Map?.ClearStreamBlockCache();
                         _pendingChunkReloads.Clear();
 
-                        if (world.HasLoadablePendingMap)
+                        if (world.HasLoadableRequestedMap)
                             world.ReloadCurrentMap();
                     }
 
