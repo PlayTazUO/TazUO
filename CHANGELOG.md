@@ -2,6 +2,9 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/14/26
+* ***Fix:*** Overhead texts (speech, the name label shown when a mobile comes into view) no longer slide behind the nameplate when zoomed in with `Scale overheads with zoom` off, and they and the HP percentage now leave a small gap above the nameplate instead of touching its edge - [P.R 1221](https://github.com/PlayTazUO/TazUO/pull/1221) ([DavideRei](https://github.com/DavideRei))
+
 ## 11/13/26
 * ***Fix:*** The weather start message shows again when the same weather returns after the previous one ended on its own timer or with a zero-intensity packet - those endings now count as a stop. With the classic weather, the same weather arriving after its timer ran out is no longer dropped as still active
 
