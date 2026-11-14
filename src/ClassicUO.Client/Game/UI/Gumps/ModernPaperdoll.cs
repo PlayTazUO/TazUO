@@ -513,7 +513,7 @@ namespace ClassicUO.Game.UI.Gumps
                 this.item = item;
             }
 
-            private static ushort GetAnimID(ushort graphic, ushort animID, bool isfemale)
+            private static uint GetAnimID(ushort graphic, ushort animID, bool isfemale)
             {
                 int offset = isfemale ? Constants.FEMALE_GUMP_OFFSET : Constants.MALE_GUMP_OFFSET;
 
@@ -535,18 +535,18 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                         else
                         {
-                            animID = data.Gump;
+                            animID = (ushort)data.Gump;
                         }
                     }
                 }
 
-                if (animID + offset > GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT || Client.Game.UO.Gumps.GetGump((ushort)(animID + offset)).Texture == null)
+                if (animID + offset >= GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT || Client.Game.UO.Gumps.GetGump((uint)(animID + offset)).Texture == null)
                 {
                     // inverse
                     offset = isfemale ? Constants.MALE_GUMP_OFFSET : Constants.FEMALE_GUMP_OFFSET;
                 }
 
-                return (ushort)(animID + offset);
+                return (uint)(animID + offset);
             }
 
             public override bool Draw(UltimaBatcher2D batcher, int x, int y)

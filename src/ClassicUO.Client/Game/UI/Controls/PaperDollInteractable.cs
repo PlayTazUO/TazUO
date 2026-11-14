@@ -261,7 +261,7 @@ namespace ClassicUO.Game.UI.Controls
                         continue;
                     }
 
-                    ushort id = GetAnimID(
+                    uint id = GetAnimID(
                         mobile.Graphic,
                         equipItem.Graphic,
                         equipItem.ItemData.AnimID,
@@ -297,7 +297,7 @@ namespace ClassicUO.Game.UI.Controls
                     && Client.Game.UO.GameCursor.ItemHold.ItemData.AnimID != 0
                 )
                 {
-                    ushort id = GetAnimID(
+                    uint id = GetAnimID(
                         mobile.Graphic,
                         Client.Game.UO.GameCursor.ItemHold.Graphic,
                         Client.Game.UO.GameCursor.ItemHold.ItemData.AnimID,
@@ -506,7 +506,7 @@ namespace ClassicUO.Game.UI.Controls
 
         public void RequestUpdate() => _updateUi = true;
 
-        protected static ushort GetAnimID(ushort mobileGraphic, ushort itemGraphic, ushort animID, bool isfemale)
+        protected static uint GetAnimID(ushort mobileGraphic, ushort itemGraphic, ushort animID, bool isfemale)
         {
             int offset = isfemale ? Constants.FEMALE_GUMP_OFFSET : Constants.MALE_GUMP_OFFSET;
 
@@ -540,7 +540,7 @@ namespace ClassicUO.Game.UI.Controls
                     }
                     else
                     {
-                        animID = data.Gump;
+                        animID = (ushort)data.Gump;
                     }
                 }
             }
@@ -549,7 +549,7 @@ namespace ClassicUO.Game.UI.Controls
             {
                 if (tileArtInfo.TryGetAppearance(mobileGraphic, out uint appareanceId))
                 {
-                    ushort gumpId = (ushort)(Constants.MALE_GUMP_OFFSET + appareanceId);
+                    uint gumpId = (uint)(Constants.MALE_GUMP_OFFSET + appareanceId);
                     if (Client.Game.UO.Gumps.GetGump(gumpId).Texture != null)
                     {
                         Log.Info($"Equip conversion through tileart.uop done: old {animID} -> new {appareanceId}");
@@ -560,15 +560,15 @@ namespace ClassicUO.Game.UI.Controls
 
             _ = IsAnimExistsInGump(animID, ref offset, isfemale);
 
-            return (ushort)(animID + offset);
+            return (uint)(animID + offset);
         }
 
         private static bool IsAnimExistsInGump(ushort animID, ref int offset, bool isFemale)
         {
             int requested = animID + offset;
             if (
-                    requested > GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT
-                    || Client.Game.UO.Gumps.GetGump((ushort)(requested)).Texture == null
+                    requested >= GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT
+                    || Client.Game.UO.Gumps.GetGump((uint)requested).Texture == null
                 )
             {
                 // inverse
@@ -576,7 +576,7 @@ namespace ClassicUO.Game.UI.Controls
                 requested = animID + offset;
             }
 
-            if (Client.Game.UO.Gumps.GetGump((ushort)(requested)).Texture == null)
+            if (Client.Game.UO.Gumps.GetGump((uint)requested).Texture == null)
             {
                 return false;
             }
@@ -594,7 +594,7 @@ namespace ClassicUO.Game.UI.Controls
                 uint serial,
                 int x,
                 int y,
-                ushort graphic,
+                uint graphic,
                 ushort hue,
                 Layer layer
             ) : base(x, y, graphic, hue)
