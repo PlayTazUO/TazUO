@@ -61,7 +61,9 @@ namespace ClassicUO.Game.UI.Controls
                 Width = spriteInfo.UV.Width;
                 Height = spriteInfo.UV.Height;
 
-                IsPartialHue = !_is_gump && Client.Game.UO.FileManager.TileData.StaticData[value].IsPartialHue;
+                // A custom or newer item graphic can exceed the loaded tiledata (a truncated or
+                // non-standard file), so look it up through the bounds-checked accessor.
+                IsPartialHue = !_is_gump && Client.Game.UO.FileManager.TileData.GetStaticTile(value).IsPartialHue;
             }
         }
 
