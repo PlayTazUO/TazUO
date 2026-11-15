@@ -164,6 +164,35 @@ public class CrashSuggestedFixTests
     }
 
     [Fact]
+    public void Get_MacSdlSignatureBlock_ReturnsQuarantineAdvice()
+    {
+        const string dylibPath = "/Users/example/Desktop/UO/TazUO/osx-arm64/libSDL3.0.dylib";
+
+        var exception = new DllNotFoundException(
+            "Unable to load shared library 'libSDL3.0.dylib' or one of its dependencies. In order to help diagnose loading problems, consider setting the DYLD_PRINT_LIBRARIES environment variable:\n" +
+            $"dlopen({dylibPath}, 0x0001): tried: '{dylibPath}' (code signature in <FF660143-30CD-3D6D-BA7A-351D2D3C9E31> '{dylibPath}' not valid for use in process: library load disallowed by system policy)");
+
+        string fix = CrashSuggestedFix.Get(exception);
+
+        fix.Should().NotBeNullOrWhiteSpace();
+        fix.Should().Contain("macOS");
+        fix.Should().Contain("Reinstall");
+        fix.Should().Contain("comes with all the libraries it needs");
+        fix.Should().Contain("quarantine");
+        fix.Should().Contain("xattr");
+        fix.Should().Contain("libSDL3.0.dylib");
+    }
+
+    [Fact]
+    public void Get_UnrelatedDllNotFound_ReturnsNull()
+    {
+        var exception = new DllNotFoundException(
+            "Unable to load DLL 'foo.dll' or one of its dependencies: The specified module could not be found.");
+
+        CrashSuggestedFix.Get(exception).Should().BeNull();
+    }
+
+    [Fact]
     public void Get_FontStashInt32MapCrash_ReturnsScriptThreadAdvice()
     {
         Exception exception = new IndexOutOfRangeException();

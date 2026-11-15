@@ -98,6 +98,9 @@ internal static class CrashSuggestedFix
             if (TryGetMissingAssemblyCrashFix(exception, out string assemblyFix))
                 return assemblyFix;
 
+            if (TryGetMacLibrarySignatureBlockCrashFix(exception, out string macLibraryFix))
+                return macLibraryFix;
+
             if (TryGetPolicyBlockedFileCrashFix(exception, out string policyBlockedFix))
                 return policyBlockedFix;
 
@@ -627,6 +630,64 @@ internal static class CrashSuggestedFix
     }
 
     /// <summary>
+    ///     Recognizes macOS refusing to load a bundled native library (for example
+    ///     <c>libSDL3.0.dylib</c>) because its code signature is not acceptable to the process -
+    ///     the loader reports "library load disallowed by system policy" and "code signature ...
+    ///     not valid for use in process". This happens when the downloaded TazUO folder is still
+    ///     quarantined or was expanded/copied in a way that broke the library's signature, so
+    ///     Gatekeeper blocks it even though the file is present.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetMacLibrarySignatureBlockCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        foreach (Exception candidate in EnumerateExceptionChain(e))
+        {
+            if (candidate is not DllNotFoundException dllNotFoundException)
+                continue;
+
+            // ToString() includes the full dlopen() diagnostics, which are where macOS puts
+            // the signature/policy reason. Scope the match to macOS libraries: the library
+            // name changes with SDL versions, so the loader's complaint is more reliable.
+            string details = dllNotFoundException.ToString();
+
+            if (string.IsNullOrEmpty(details) ||
+                !details.Contains(".dylib") ||
+                !details.Contains("library load disallowed by system policy"))
+                continue;
+
+            string libraryName = ExtractQuotedLibraryName(dllNotFoundException);
+            string librarySubject = string.IsNullOrEmpty(libraryName) ? "one of its bundled libraries" : $"its {libraryName} library";
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"TazUO could not start because macOS refused to load {librarySubject}.");
+            sb.AppendLine(
+                "The library file is present, but macOS rejected it with 'code signature ... not valid for use in process' / 'library load disallowed by system policy'.");
+            sb.AppendLine(
+                "This usually means the TazUO folder is still marked as downloaded from the internet (quarantined), or it was copied or extracted in a way that broke the file's code signature.");
+            sb.AppendLine("TazUO comes with all the libraries it needs, so reinstalling it restores a complete, correctly signed copy.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. Reinstall TazUO using the launcher and let it finish - it ships with all required libraries, including SDL3, so this restores the missing or blocked files.");
+            sb.AppendLine("2. If the problem persists, open Terminal and remove the quarantine flag from the whole TazUO folder, then start TazUO again:");
+            sb.AppendLine("     xattr -dr com.apple.quarantine \"/path/to/TazUO\"");
+            sb.AppendLine("   Replace /path/to/TazUO with the folder path shown in the error above (for example your Desktop or Downloads folder).");
+            sb.AppendLine("3. Re-download TazUO with the launcher and extract/open it with Finder's built-in Archive Utility rather than a third-party tool.");
+            sb.AppendLine("4. Move the TazUO folder to your Applications folder instead of running it from the Desktop, Downloads, an external drive or a network share.");
+            sb.AppendLine("5. If you built TazUO yourself, re-sign the app from Terminal and then repeat step 2:");
+            sb.AppendLine("     codesign --force --deep --sign - \"/path/to/TazUO\"");
+            sb.AppendLine("6. If macOS still blocks it, check System Settings -> Privacy & Security for a message about TazUO and allow it, and make sure no security tool is modifying the files.");
+            fix = sb.ToString();
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     ///     Recognizes a Windows application control policy block (0x800711C7) no matter which
     ///     exception type surfaces it. Managed assemblies raise a <see cref="FileLoadException" />
     ///     with the HRESULT set, while native libraries (for example FNA3D.dll at startup) raise
@@ -678,26 +739,37 @@ internal static class CrashSuggestedFix
     }
 
     /// <summary>
-    ///     Pulls the library name out of a <see cref="DllNotFoundException" /> message. Both the
-    ///     runtime and FNA's FNADllMap raise these with the name between single quotes
-    ///     ("Unable to load DLL 'FNA3D.dll' or one of its dependencies: ..."); the surrounding
-    ///     words are runtime-generated, so the quotes are a reliable delimiter. Returns null
-    ///     when the pattern is absent rather than guessing a name.
+    ///     Pulls the library name out of a <see cref="DllNotFoundException" /> message. The
+    ///     runtime and FNA's FNADllMap raise these with the name between single quotes on
+    ///     Windows ("Unable to load DLL 'FNA3D.dll' or one of its dependencies: ...") and on
+    ///     Unix ("Unable to load shared library 'libSDL3.0.dylib' or one of its dependencies:
+    ///     ..."); the surrounding words are runtime-generated, so the quotes are a reliable
+    ///     delimiter. Returns null when the pattern is absent rather than guessing a name.
     /// </summary>
     /// <param name="e">Exception under inspection.</param>
     /// <returns>The quoted library name, or null when the message does not follow the pattern.</returns>
     private static string ExtractQuotedLibraryName(Exception e)
     {
-        const string openQuote = "Unable to load DLL '";
+        const string windowsPrefix = "Unable to load DLL '";
+        const string unixPrefix = "Unable to load shared library '";
+
         string message = e.Message;
 
-        if (string.IsNullOrEmpty(message) ||
-            !message.StartsWith(openQuote, StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrEmpty(message))
             return null;
 
-        int closeQuote = message.IndexOf('\'', openQuote.Length);
+        string prefix;
 
-        return closeQuote < 0 ? null : message.Substring(openQuote.Length, closeQuote - openQuote.Length);
+        if (message.StartsWith(windowsPrefix, StringComparison.OrdinalIgnoreCase))
+            prefix = windowsPrefix;
+        else if (message.StartsWith(unixPrefix, StringComparison.OrdinalIgnoreCase))
+            prefix = unixPrefix;
+        else
+            return null;
+
+        int closeQuote = message.IndexOf('\'', prefix.Length);
+
+        return closeQuote < 0 ? null : message.Substring(prefix.Length, closeQuote - prefix.Length);
     }
 
     /// <summary>
