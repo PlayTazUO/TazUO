@@ -40,7 +40,8 @@ namespace ClassicUO.Game.UI.Gumps
         private bool _useSplitLayout;
         private static int currentHeight = 22;
         private static readonly int COLLISION_SPACING = 8;
-        // Space between the nameplate and what the mobile draws over itself.
+        // Screen pixels between the nameplate and what the mobile draws over itself. Applied after the world to screen
+        // conversion, so the gap drawn and the footprint recorded for the overheads above match at any zoom.
         private const int STACK_GAP = 2;
         // Without the split layout, all three resource bars fill the plate and the name goes this far below.
         private const int NAME_BELOW_BARS_OFFSET = 22;
@@ -683,8 +684,9 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
         /// <summary>
-        /// World point the nameplate's bottom center sits on: just above what the mobile drew over itself
-        /// (sprite, simple healthbar, name), or from its animation dimensions when it was not drawn recently.
+        /// World point the nameplate's footprint (plate plus <see cref="STACK_GAP"/>) starts from: the top of what the
+        /// mobile drew over itself (sprite, simple healthbar, name), or from its animation dimensions when it was not
+        /// drawn recently.
         /// </summary>
         private Point GetPosition(Mobile m, int height, int centerY)
         {
@@ -693,7 +695,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (m.TryGetOverheadStackTop(out int stackTopY))
             {
-                return new Point(x, stackTopY - STACK_GAP);
+                return new Point(x, stackTopY);
             }
 
             Point p = new(
@@ -967,10 +969,12 @@ namespace ClassicUO.Game.UI.Gumps
                     + (bounds.Height >> 1);
             }
 
-            int nameOverhang = GetNameOverhang(nameplateEntity);
+            // Screen pixels the plate takes above its anchor; for a mobile, the gap below it is part of that footprint
+            // and what stacks above (overhead texts, HP percentage) adds its own gap on top.
+            int footprint = Height + GetNameOverhang(nameplateEntity) + (nameplateEntity is Mobile ? STACK_GAP : 0);
             Point p = Client.Game.Scene.Camera.WorldToScreen(new Point(x, y));
             x = p.X - (Width >> 1);
-            y = p.Y - (Height + nameOverhang);
+            y = p.Y - footprint;
 
             Camera camera = Client.Game.Scene.Camera;
             x += camera.Bounds.X;
@@ -993,8 +997,7 @@ namespace ClassicUO.Game.UI.Gumps
             X = x;
             Y = y;
 
-            // The gap below the plate is part of its footprint: what stacks above adds its own gap on top.
-            (nameplateEntity as Mobile)?.SetNamePlateDrawn(Height + nameOverhang + STACK_GAP);
+            (nameplateEntity as Mobile)?.SetNamePlateDrawn(footprint);
 
             Rectangle nameBounds = GetNamePlateBackgroundBounds(x, y);
             int cornerRadius = GetCornerRadius(nameBounds.Width, nameBounds.Height);
