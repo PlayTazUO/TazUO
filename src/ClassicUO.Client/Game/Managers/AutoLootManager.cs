@@ -900,13 +900,18 @@ namespace ClassicUO.Game.Managers
 
             public bool Match(Item compareTo)
             {
-                if (Graphic != -1 && Graphic != compareTo.Graphic) return false;
+                // There's an inherent type mismatch here - graphic is ushort but stored as int.
+                // Additionally, new configs may have serialized -1 - current code does not allow this
+                // but leaving in the -1 here for backwards compatability.
+                //
+                // The comparison to ushort.MaxValue may misclassify items with graphic 0xFFFF but honestly, good enough for now.
+                if (Graphic != -1 && Graphic != ushort.MaxValue && Graphic != compareTo.Graphic)
+                    return false;
 
-                if (!HueCheck(compareTo.Hue)) return false;
+                if (!HueCheck(compareTo.Hue))
+                    return false;
 
-                if (RegexMatch && !RegexCheck(compareTo.World, compareTo)) return false;
-
-                return true;
+                return !RegexMatch || RegexCheck(compareTo.World, compareTo);
             }
 
             private bool HueCheck(ushort value)
