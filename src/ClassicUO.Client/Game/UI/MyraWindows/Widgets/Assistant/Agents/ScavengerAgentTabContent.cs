@@ -28,6 +28,7 @@ public static class ScavengerAgentTabContent
         ];
 
         var root = new VerticalStackPanel { Spacing = 6 };
+        string invalidRegexMessage = TazLang.Get("scavenger_invalid_regex", "Invalid regex pattern. The regex field was cleared.");
 
         // Enable Scavenger + Set Grab Bag
         var topRow = new HorizontalStackPanel { Spacing = 8 };
@@ -236,10 +237,22 @@ public static class ScavengerAgentTabContent
                         Height = 80,
                         Tooltip = TazLang.Get("scavenger_entry_regex_tooltip", "Regex to match against item name and properties.")
                     };
-                    new MyraDialog(TazLang.Get("scavenger_entry_editregex", "Edit Regex"), regexInput, ok =>
-                    {
-                        if (ok) entry.RegexSearch = regexInput.Text;
-                    });
+                    new MyraDialog(TazLang.Get("scavenger_entry_editregex", "Edit Regex"), regexInput,
+                        ok =>
+                        {
+                            if (ok)
+                                entry.RegexSearch = regexInput.Text;
+                        },
+                        () =>
+                        {
+                            if (RegexHelper.IsValid(regexInput.Text))
+                                return true;
+
+                            GameActions.Print(invalidRegexMessage, Constants.HUE_ERROR);
+                            regexInput.Text = string.Empty;
+
+                            return false;
+                        });
                 }), dataRow, 3);
 
                 // Priority cycle: < label >
@@ -391,6 +404,14 @@ public static class ScavengerAgentTabContent
 
                 if (!MyraInputBox.TryParseHue(newHueBox.Text, out ushort hue))
                     hue = ushort.MaxValue;
+
+                if (!RegexHelper.IsValid(newRegexBox.Text))
+                {
+                    GameActions.Print(invalidRegexMessage, Constants.HUE_ERROR);
+                    newRegexBox.Text = "";
+
+                    return;
+                }
 
                 ScavengerManager.ScavengerEntry? entry = ScavengerManager.Instance.AddScavengerEntry(graphic, hue, newNameBox.Text);
                 if (entry == null) return;
