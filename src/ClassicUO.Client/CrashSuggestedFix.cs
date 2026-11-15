@@ -71,6 +71,9 @@ internal static class CrashSuggestedFix
             if (TryGetFontRenderingCrashFix(exception, out string fontFix))
                 return fontFix;
 
+            if (TryGetLegionScriptCrashFix(exception, out string scriptFix))
+                return scriptFix;
+
             if (TryGetPluginCrashFix(exception, out string pluginFix))
                 return pluginFix;
 
@@ -353,6 +356,48 @@ internal static class CrashSuggestedFix
             "2. In custom scripts, avoid printing messages or creating gumps/controls directly - use the provided API (for example API.SysMsg) which safely marshals the work onto the main thread.");
         sb.AppendLine("3. Try reproducing without any scripts running to confirm a script is the cause.");
         sb.AppendLine("4. If it still crashes with no scripts, please report it with this crash log so it can be investigated.");
+        fix = sb.ToString();
+        return true;
+    }
+
+    /// <summary>
+    ///     Recognizes a crash that unwound out of a Legion script's own code. IronPython wraps
+    ///     every Python function that is used as a .NET delegate (mouse handlers, hotkeys, timers,
+    ///     event callbacks, ...) in a generated <c>_Scripting_</c> adapter, so a <c>_Scripting_</c>
+    ///     frame in the stack means the script was running when the exception was thrown - the
+    ///     fault is in the script, not in TazUO's own game code.
+    /// </summary>
+    /// <param name="e">Exception under inspection.</param>
+    /// <param name="fix">Set to the suggested fix text when recognized.</param>
+    /// <returns>True if the crash was recognized.</returns>
+    private static bool TryGetLegionScriptCrashFix(Exception e, out string fix)
+    {
+        fix = null;
+
+        // ToString() on the top-level exception includes the stack traces of any inner
+        // (and aggregated) exceptions, so we can inspect the whole chain in one string.
+        string details = e.ToString();
+
+        if (string.IsNullOrEmpty(details))
+            return false;
+
+        // The generated delegate adapters are always named _Scripting_, so this also covers
+        // callbacks invoked from client code rather than from the script's own thread.
+        if (!details.Contains("_Scripting_"))
+            return false;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("A Legion script crashed TazUO.");
+        sb.AppendLine(
+            "The error above was thrown by script code that was running at the time. The stack trace shows an IronPython callback (a function the script registered for a click, hotkey, timer or event), so this is a problem in that script rather than in TazUO itself.");
+        sb.AppendLine();
+        sb.AppendLine("Suggested fixes:");
+        sb.AppendLine("1. Update the script to its latest version, or stop using it temporarily, then restart TazUO.");
+        sb.AppendLine("2. Start your scripts one at a time to find the one that causes the crash.");
+        sb.AppendLine(
+            "3. If you wrote the script, wrap the code that runs from callbacks in try/except, and use the provided API methods (for example API.Events, API.OnHotKey or API.Gumps.AddControlOnClick) instead of hooking client events directly.");
+        sb.AppendLine("4. If the script came from someone else, report this crash log to its author.");
+
         fix = sb.ToString();
         return true;
     }

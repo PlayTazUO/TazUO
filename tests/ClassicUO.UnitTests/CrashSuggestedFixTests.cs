@@ -48,6 +48,33 @@ public class CrashSuggestedFixTests
     }
 
     [Fact]
+    public void Get_ScriptDelegateCrash_ReturnsScriptAdvice()
+    {
+        Exception exception = CreateExceptionWithStackTrace(
+            "   at IronPython.Runtime.Binding.PythonGetMemberBinder.FastErrorGet`1.GetError(CallSite site, TSelfType target, CodeContext context)\n" +
+            "   at Microsoft.Scripting.Interpreter.Interpreter.Run(InterpretedFrame frame)\n" +
+            "   at _Scripting_(Object[], Object, MouseEventArgs)\n" +
+            "   at ClassicUO.Game.Managers.UIManager.OnMouseButtonUp(MouseButtonType button) in UIManager.cs:line 314");
+
+        string fix = CrashSuggestedFix.Get(exception);
+
+        fix.Should().NotBeNullOrWhiteSpace();
+        fix.Should().Contain("Legion script");
+        fix.Should().Contain("TazUO");
+    }
+
+    [Fact]
+    public void Get_IronPythonFramesWithoutScriptDelegate_ReturnsNull()
+    {
+        Exception exception = CreateExceptionWithStackTrace(
+            "   at IronPython.Runtime.Binding.PythonGetMemberBinder.FastErrorGet`1.GetError(CallSite site, TSelfType target, CodeContext context)\n" +
+            "   at Microsoft.Scripting.Interpreter.Interpreter.Run(InterpretedFrame frame)\n" +
+            "   at ClassicUO.Game.Managers.MainThreadQueue.ProcessQueue()");
+
+        CrashSuggestedFix.Get(exception).Should().BeNull();
+    }
+
+    [Fact]
     public void Get_MainThreadCrash_ReturnsNull()
     {
         Exception exception = CreateExceptionWithStackTrace(
