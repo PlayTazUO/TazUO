@@ -22,6 +22,7 @@ public static class AutoLootAgentTabContent
         Profile? profile = ProfileManager.CurrentProfile;
 
         var root = new VerticalStackPanel { Spacing = 6 };
+        string invalidRegexMessage = TazLang.Get("autoloot_invalid_regex", "Invalid regex pattern. The regex field was cleared.");
 
         // Enable Auto Loot + Set Grab Bag
         var topRow = new HorizontalStackPanel { Spacing = 8 };
@@ -308,10 +309,22 @@ public static class AutoLootAgentTabContent
                         Height = 80,
                         Tooltip = "Regex to match against item name and properties."
                     };
-                    new MyraDialog("Edit Regex", regexInput, ok =>
-                    {
-                        if (ok) entry.RegexSearch = regexInput.Text;
-                    });
+                    new MyraDialog("Edit Regex", regexInput,
+                        ok =>
+                        {
+                            if (ok)
+                                entry.RegexSearch = regexInput.Text;
+                        },
+                        () =>
+                        {
+                            if (RegexHelper.IsValid(regexInput.Text))
+                                return true;
+
+                            GameActions.Print(invalidRegexMessage, Constants.HUE_ERROR);
+                            regexInput.Text = string.Empty;
+
+                            return false;
+                        });
                 }), dataRow, 3);
 
                 // Priority cycle: < label >
@@ -455,6 +468,14 @@ public static class AutoLootAgentTabContent
 
                 if (!MyraInputBox.TryParseHue(newHueBox.Text, out ushort hue))
                     hue = ushort.MaxValue;
+
+                if (!RegexHelper.IsValid(newRegexBox.Text))
+                {
+                    GameActions.Print(invalidRegexMessage, Constants.HUE_ERROR);
+                    newRegexBox.Text = "";
+
+                    return;
+                }
 
                 AutoLootManager.AutoLootConfigEntry? entry = AutoLootManager.Instance.AddAutoLootEntry((ushort)graphic, hue, newNameBox.Text);
                 if (entry == null) return;

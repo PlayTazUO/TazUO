@@ -91,7 +91,10 @@ public partial class ScriptFile : IDisposable
 
         string cleanPath = path.Replace(System.IO.Path.DirectorySeparatorChar, '/');
         string cleanBasePath = LegionScripting.ScriptPath.Replace(System.IO.Path.DirectorySeparatorChar, '/');
-        cleanPath = cleanPath.Substring(cleanPath.IndexOf(cleanBasePath, StringComparison.Ordinal) + cleanBasePath.Length);
+        int rootIndex = cleanPath.IndexOf(cleanBasePath, StringComparison.OrdinalIgnoreCase);
+
+        // Only strip the root when it is actually part of the path, otherwise leave it alone.
+        cleanPath = rootIndex >= 0 ? cleanPath.Substring(rootIndex + cleanBasePath.Length) : cleanPath;
 
         if (cleanPath.Length > 0)
         {

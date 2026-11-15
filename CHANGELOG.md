@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## 11/15/26
 * ***Fix:*** Autolooter does not recognize the 'Any' (-1) graphic filter sentinel - [P.R 1224](https://github.com/PlayTazUO/TazUO/pull/1224) ([yuval-po](https://github.com/yuval-po)) 
+* ***Fix:*** An invalid regex in an auto loot or scavenger entry no longer crashes the client - a pattern that cannot compile is logged and treated as never matching, and entering one in the regex editor now shows an in-game warning and clears the field
+* ***Fix:*** Paperdoll equipment no longer crashes the client when an equipped item's graphic is outside the static tile table (e.g. custom art or a PNG art override) - the tiledata lookup now falls back to an empty entry instead of throwing `IndexOutOfRangeException`
+* ***Fix:*** Login no longer crashes with `DirectoryNotFoundException` when the `LegionScripts` folder is missing, locked or on an unreachable drive - failed folder scans and unreadable script files are logged as warnings and skipped, so the remaining scripts still load
 
 ## 11/14/26
 * ***Fix:*** Multiple bug fixes pertaining to marker file loading - [P.R 1222](https://github.com/PlayTazUO/TazUO/pull/1222) ([yuval-po](https://github.com/yuval-po)) 

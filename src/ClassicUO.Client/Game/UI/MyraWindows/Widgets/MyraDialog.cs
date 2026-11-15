@@ -14,13 +14,19 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 public class MyraDialog : MyraControl
 {
     private readonly Action<bool>? _onClose;
+    private readonly Func<bool>? _canClose;
 
     /// <param name="title">Window title bar text.</param>
     /// <param name="content">Widget to display above the OK/Cancel buttons.</param>
     /// <param name="onClose">Called with <c>true</c> on OK, <c>false</c> on Cancel/close.</param>
-    public MyraDialog(string title, Widget content, Action<bool>? onClose = null) : base(title)
+    /// <param name="canClose">
+    /// Optional gate checked before OK closes the dialog. Return <c>false</c> to keep it open,
+    /// such as after reporting invalid input.
+    /// </param>
+    public MyraDialog(string title, Widget content, Action<bool>? onClose = null, Func<bool>? canClose = null) : base(title)
     {
         _onClose = onClose;
+        _canClose = canClose;
 
         var layout = new VerticalStackPanel
         {
@@ -47,6 +53,9 @@ public class MyraDialog : MyraControl
 
     private void OnOk()
     {
+        if (_canClose?.Invoke() == false)
+            return;
+
         _disposeRequested = true;
         _onClose?.Invoke(true);
     }
