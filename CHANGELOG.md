@@ -3,6 +3,7 @@ All notable changes to TazUO will be recorded here.
 
 ---
 ## 11/15/26
+* ***Fix:*** Changing the size of a Legion API scroll area now resizes and repositions its scrollbar for both the classic and modern scroll areas - previously the bar kept its old position and height after `SetWidth`/`SetHeight`
 * ***Fix:*** Autolooter does not recognize the 'Any' (-1) graphic filter sentinel - [P.R 1224](https://github.com/PlayTazUO/TazUO/pull/1224) ([yuval-po](https://github.com/yuval-po)) 
 * ***Fix:*** An invalid regex in an auto loot or scavenger entry no longer crashes the client - a pattern that cannot compile is logged and treated as never matching, and entering one in the regex editor now shows an in-game warning and clears the field
 * ***Fix:*** Paperdoll equipment no longer crashes the client when an equipped item's graphic is outside the static tile table (e.g. custom art or a PNG art override) - the tiledata lookup now falls back to an empty entry instead of throwing `IndexOutOfRangeException`
