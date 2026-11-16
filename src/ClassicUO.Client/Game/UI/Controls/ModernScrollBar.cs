@@ -24,11 +24,11 @@ namespace ClassicUO.Game.UI.Controls
         public Color ButtonPressedColor { get; set; } = new Color(50, 50, 50, 255);
         public Color ArrowColor { get; set; } = new Color(220, 220, 220, 255);
 
-        public void UpdateHeight(int newHeight)
+        public override void UpdateHeight(int newHeight)
         {
             if (Height != newHeight)
             {
-                Height = newHeight;
+                base.UpdateHeight(newHeight);
                 UpdateScrollBarGeometry();
             }
         }

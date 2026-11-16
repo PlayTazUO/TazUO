@@ -202,7 +202,8 @@ namespace ClassicUO.Game.UI.Controls
 
         private void CalculateScrollBarMaxValue()
         {
-            _scrollBar.Height = ScrollMaxHeight >= 0 ? ScrollMaxHeight : Height;
+            _scrollBar.UpdateHeight(ScrollMaxHeight >= 0 ? ScrollMaxHeight : Height);
+            UpdateScrollbarPosition();
             bool maxValue = _scrollBar.Value == _scrollBar.MaxValue && _scrollBar.MaxValue != 0;
 
             int startX = 0, startY = 0, endX = 0, endY = 0;

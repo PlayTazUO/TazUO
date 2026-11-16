@@ -55,6 +55,27 @@ namespace ClassicUO.Game.UI.Controls
             _emptySpace.Height = Height - (gumpInfoDown.UV.Height + gumpInfoUp.UV.Height);
         }
 
+        public override void UpdateHeight(int newHeight)
+        {
+            if (Height == newHeight)
+            {
+                return;
+            }
+
+            base.UpdateHeight(newHeight);
+
+            ref readonly SpriteInfo gumpInfoUp = ref Client.Game.UO.Gumps.GetGump(BUTTON_UP_0);
+            ref readonly SpriteInfo gumpInfoDown = ref Client.Game.UO.Gumps.GetGump(BUTTON_DOWN_0);
+
+            _rectDownButton = new Rectangle(
+                0,
+                Height - gumpInfoDown.UV.Height,
+                gumpInfoDown.UV.Width,
+                gumpInfoDown.UV.Height
+            );
+            _emptySpace.Height = Height - (gumpInfoDown.UV.Height + gumpInfoUp.UV.Height);
+        }
+
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
             if (Height <= 0 || !IsVisible)
