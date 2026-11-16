@@ -27,6 +27,8 @@ internal static class EnterWorld
             world.MapIndex = 0;
 
         world.Player.SetInWorldTile(x, y, z);
+        if (world.HasLoadableRequestedMap)
+            world.ReloadCurrentMap();
         world.Player.Direction = (Direction)(p.ReadUInt8() & 0x7);
         world.RangeSize.X = x;
         world.RangeSize.Y = y;

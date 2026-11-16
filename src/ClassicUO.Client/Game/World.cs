@@ -185,11 +185,29 @@ namespace ClassicUO.Game
         public CoolDownBarManager CoolDownBarManager { get; }
 
 
+        // The map the server last asked for. Login sends it before the dynamic map definitions, so a map
+        // past MAPS_COUNT is first built as map 0 and only switched to once its files are loaded.
+        private int _requestedMapIndex = -1;
+
+        /// <summary>Whether the current map only stands in for the requested one, so it should not be drawn.</summary>
+        public bool IsAwaitingRequestedMap => InGame && Map.Index != _requestedMapIndex;
+
+        /// <summary>Whether the requested map's files are now loaded, so <see cref="ReloadCurrentMap" /> will switch to it.</summary>
+        public bool HasLoadableRequestedMap =>
+            IsAwaitingRequestedMap && Client.Game.UO.FileManager.Maps.GetMapFile(_requestedMapIndex) != null;
+
         public int MapIndex
         {
             get => Map?.Index ?? -1;
             set
             {
+                // The server can repeat the map change at login. On a stand-in, rebuilding it would drop
+                // every entity received since, and the server does not send them again.
+                if (Map != null && value == _requestedMapIndex)
+                    return;
+
+                _requestedMapIndex = value;
+
                 if (MapIndex == value)
                     return;
 
@@ -297,12 +315,17 @@ namespace ClassicUO.Game
 
         public bool InGame => Player != null && Map != null;
 
+        /// <summary>
+        /// Rebuilds the current map, keeping its entities, after the map definitions changed. Switches to the
+        /// requested map instead when <see cref="HasLoadableRequestedMap" /> is set.
+        /// </summary>
         public void ReloadCurrentMap()
         {
             if (Map == null)
                 return;
 
-            int index = Map.Index;
+            int previousIndex = Map.Index;
+            int index = HasLoadableRequestedMap ? _requestedMapIndex : previousIndex;
 
             if (index < 0 || index >= MapLoader.MAPS_COUNT)
                 index = 0;
@@ -327,6 +350,14 @@ namespace ClassicUO.Game
             if (Client.Game.UO.GameCursor != null)
             {
                 Client.Game.UO.GameCursor.Graphic = 0xFFFF;
+            }
+
+            if (index != previousIndex)
+            {
+                EventSink.InvokeOnMapChanged(previousIndex, index);
+
+                if (MapWebServerManager.Instance.IsRunning)
+                    MapWebServerManager.Instance.RegenerateMapPng();
             }
         }
 
