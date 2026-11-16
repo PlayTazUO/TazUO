@@ -1124,8 +1124,10 @@ namespace ClassicUO.Game.GameObjects
 
             if (TryGetOverheadTextBottom(hitsShown, out int textBottomY))
             {
-                // Texts are placed upward from anchor.Y - offY: offset the anchor so the first sits on the stack.
-                PlaceTexts(last, new Point(RealScreenPosition.X + (int)Offset.X + 22, textBottomY + offY), offY);
+                // The bottom already clears the nameplate, so no space is reserved for it. Reserving it and moving the
+                // anchor down to compensate only cancels out at zoom 1: overheads drawn unscaled rebuild their anchor
+                // from that offset and slide onto the nameplate when zoomed in.
+                PlaceTexts(last, new Point(RealScreenPosition.X + (int)Offset.X + 22, textBottomY), 0);
 
                 return;
             }
