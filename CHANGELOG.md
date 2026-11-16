@@ -3,6 +3,8 @@ All notable changes to TazUO will be recorded here.
 
 ---
 ## 11/16/26
+* ***Fix:*** Autoloot no longer re-scans every item in a corpse for each item event and no longer re-scans every in-range corpse on every step - opening many corpses no longer causes noticeable stalls
+* ***Fix:*** Item moves rejected by the server now report completion for the canceled queued actions, so autoloot no longer leaves items marked as in-flight or gets stuck on its pending count
 * ***Feature:*** The sound filter's recently played list now keeps the last 30 sounds instead of 5, shown in a scrollable area with the most recent at the top
 * ***Legion:*** Added `API.Gumps.AddGumpOnMoved` to run a callback after a gump is dragged to a new position - the callback is debounced so it fires once the gump settles
 
