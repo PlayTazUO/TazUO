@@ -35,7 +35,7 @@ namespace ClassicUO.Game.Managers
         /// <summary>
         /// Index, Name
         /// </summary>
-        public LimitedFIFOCollection<(int, string)> LastPlayedSounds { get; } = new(15);
+        public LimitedFIFOCollection<(int, string)> LastPlayedSounds { get; } = new(30);
         public LimitedFIFOCollection<(int, string)> LastPlayedMusic { get; } = new(5);
 
         public void Initialize()

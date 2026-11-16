@@ -111,7 +111,7 @@ public static class SoundFilterTabContent
             var rowsPanel = new VerticalStackPanel { Spacing = 2 };
 
             int c = 0;
-            foreach ((int, string) sound in Client.Game.Audio.LastPlayedSounds.GetItems())
+            foreach ((int, string) sound in Client.Game.Audio.LastPlayedSounds.GetItems().Reverse())
             {
                 c++;
 

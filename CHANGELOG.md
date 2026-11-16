@@ -3,7 +3,7 @@ All notable changes to TazUO will be recorded here.
 
 ---
 ## 11/16/26
-* ***Feature:*** The sound filter's recently played list now keeps the last 15 sounds instead of 5, shown in a scrollable area
+* ***Feature:*** The sound filter's recently played list now keeps the last 30 sounds instead of 5, shown in a scrollable area with the most recent at the top
 
 ## 11/15/26
 * ***Fix:*** Changing the size of a Legion API scroll area now resizes and repositions its scrollbar for both the classic and modern scroll areas - previously the bar kept its old position and height after `SetWidth`/`SetHeight`
