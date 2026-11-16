@@ -631,3 +631,34 @@ API.Gumps.AddControlOnDisposed(gump, onClose)
 
 ---
 
+### AddGumpOnMoved
+`(gump, onMoved)`
+Add an onMoved callback to a gump. The callback fires after the gump has been dragged to a new position.
+
+**Example:**
+
+```py
+def onMoved():
+    API.SysMsg(f"Gump moved to {gump.GetX()}, {gump.GetY()}")
+
+gump = API.Gumps.CreateGump()
+gump.SetRect(100, 100, 200, 200)
+
+API.Gumps.AddGumpOnMoved(gump, onMoved)
+API.Gumps.AddGump(gump)
+
+while True:
+  API.ProcessCallbacks()
+```
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `gump` | `ApiUiBaseControl` | ❌ No | The gump listening for movement |
+| `onMoved` | `object` | ❌ No | The callback function |
+
+**Return Type:** `ApiUiBaseControl` - Returns the gump so methods can be chained.
+
+---
+

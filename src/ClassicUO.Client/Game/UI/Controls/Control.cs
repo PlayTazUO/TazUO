@@ -588,6 +588,11 @@ namespace ClassicUO.Game.UI.Controls
 
     internal event EventHandler FocusEnter, FocusLost, Disposed;
 
+    /// <summary>
+    /// Raised after this control has been moved by dragging. The new position is already applied.
+    /// </summary>
+    internal event EventHandler Moved;
+
     internal event EventHandler<KeyboardEventArgs> KeyDown, KeyUp;
 
     internal event EventHandler<SDL.SDL_GamepadButton> ControllerButtonUp, ControllerButtonDown;
@@ -851,6 +856,7 @@ namespace ClassicUO.Game.UI.Controls
         x = x - X - ParentX;
         y = y - Y - ParentY;
         OnMove(x, y);
+        Moved?.Invoke(this, EventArgs.Empty);
     }
 
     public virtual void OnMouseDown(int x, int y, MouseButtonType button) =>

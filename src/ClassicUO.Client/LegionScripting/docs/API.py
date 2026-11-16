@@ -965,6 +965,28 @@ class ApiUiGump:
         """
         pass
 
+    def AddGumpOnMoved(self, gump: "ApiUiBaseControl", onMoved: "Any") -> "ApiUiBaseControl":
+        """
+        Add an onMoved callback to a gump. The callback fires after the gump has been dragged to a new position.
+        
+        **Example:**
+        
+        ```py
+        def onMoved():
+            API.SysMsg(f"Gump moved to {gump.GetX()}, {gump.GetY()}")
+        
+        gump = API.Gumps.CreateGump()
+        gump.SetRect(100, 100, 200, 200)
+        
+        API.Gumps.AddGumpOnMoved(gump, onMoved)
+        API.Gumps.AddGump(gump)
+        
+        while True:
+          API.ProcessCallbacks()
+        ```
+        """
+        pass
+
 class ApiUiGumpPic(ApiUiBaseControl):
     ""
     Graphic: int = None
