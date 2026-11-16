@@ -117,6 +117,10 @@ public class JsonSaveConflictTests : IDisposable
         raised.Should().NotBeNull();
         raised.Changes.Should().ContainSingle()
             .Which.Should().Be(new JsonValueChange("$.salutation", JsonChangeKind.Changed, "\"theirs\"", "\"mine\""));
+
+        // The full report needs both documents as they were compared, not just the differences.
+        raised.DiskJson.Should().Contain("theirs");
+        raised.LocalJson.Should().Contain("mine");
     }
 
     private string FilePath => Path.Combine(_directory, MigratingSave.TestFileName);

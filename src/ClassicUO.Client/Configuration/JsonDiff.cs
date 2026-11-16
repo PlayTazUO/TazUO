@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.Json.Nodes;
 
 namespace ClassicUO.Configuration;
@@ -122,5 +123,66 @@ internal static class JsonDiff
         string text = node.ToJsonString().Replace('\n', ' ').Replace('\r', ' ');
 
         return text.Length <= MAX_VALUE_LENGTH ? text : string.Concat(text.AsSpan(0, MAX_VALUE_LENGTH), "…");
+    }
+
+    /// <summary>
+    ///     Renders a change path the way a person would say it rather than as JSONPath:
+    ///     <c>$.hotkeys[2].key</c> becomes <c>hotkeys #3 › key</c>. Used by both the prompt and the
+    ///     full-diff report so the field is named the same way in each.
+    /// </summary>
+    /// <param name="path">A path produced by <see cref="Compare" />.</param>
+    public static string PathLabel(string path)
+    {
+        string body = path.StartsWith("$.", StringComparison.Ordinal) ? path[2..] : path;
+
+        if (body == "$" || body.Length == 0)
+            return "root";
+
+        var builder = new StringBuilder(body.Length + 8);
+
+        for (int i = 0; i < body.Length; i++)
+        {
+            char value = body[i];
+
+            if (value == '.')
+            {
+                builder.Append(" › ");
+                continue;
+            }
+
+            if (value == '[')
+            {
+                int close = body.IndexOf(']', i);
+
+                if (close > i)
+                {
+                    // Array indices are shown 1-based: users count the first item as one.
+                    builder.Append(" #");
+                    ReadOnlySpan<char> index = body.AsSpan(i + 1, close - i - 1);
+
+                    if (int.TryParse(index, out int number))
+                        builder.Append(number + 1);
+                    else
+                        builder.Append(index);
+
+                    i = close;
+                    continue;
+                }
+            }
+
+            if (value == '_')
+            {
+                builder.Append(' ');
+                continue;
+            }
+
+            // Split camelCase so a serialized property name reads as words.
+            if (i > 0 && char.IsUpper(value) && char.IsLower(body[i - 1]))
+                builder.Append(' ');
+
+            builder.Append(value);
+        }
+
+        return builder.ToString();
     }
 }

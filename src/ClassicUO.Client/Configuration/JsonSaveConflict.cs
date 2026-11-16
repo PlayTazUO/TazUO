@@ -14,11 +14,20 @@ public sealed class JsonSaveConflict
 {
     private readonly Action<bool> _resolve;
 
-    internal JsonSaveConflict(string filePath, DateTime diskModifiedUtc, IReadOnlyList<JsonValueChange> changes, Action<bool> resolve)
+    internal JsonSaveConflict(
+        string filePath,
+        DateTime diskModifiedUtc,
+        IReadOnlyList<JsonValueChange> changes,
+        string? diskJson,
+        string? localJson,
+        Action<bool> resolve
+    )
     {
         FilePath = filePath;
         DiskModifiedUtc = diskModifiedUtc;
         Changes = changes;
+        DiskJson = diskJson;
+        LocalJson = localJson;
         _resolve = resolve;
     }
 
@@ -34,6 +43,19 @@ public sealed class JsonSaveConflict
     ///     still answerable without it.
     /// </summary>
     public IReadOnlyList<JsonValueChange> Changes { get; }
+
+    /// <summary>
+    ///     The on-disk document, brought to the current shape and version, as it was when the
+    ///     conflict was raised. Used to build the full-diff report. Null when it could not be read,
+    ///     migrated, or parsed.
+    /// </summary>
+    public string? DiskJson { get; }
+
+    /// <summary>
+    ///     This client's document, shaped the same way as <see cref="DiskJson" /> and captured at the
+    ///     same moment. Null when the comparison could not be made.
+    /// </summary>
+    public string? LocalJson { get; }
 
     /// <summary>
     ///     Answers the conflict. <c>true</c> overwrites the disk file with this instance's version,
