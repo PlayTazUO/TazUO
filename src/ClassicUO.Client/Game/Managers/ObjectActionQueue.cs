@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers.Structs;
@@ -27,7 +28,22 @@ public class ObjectActionQueue : ConcurrentPriorityQueue<ObjectActionQueueItem, 
     {
         if (serial == 0) return;
 
-        RemoveWhere(item => item.Serial == serial);
+        List<ObjectActionQueueItem> canceled = null;
+
+        RemoveWhere(item =>
+        {
+            if (item.Serial != serial) return false;
+
+            (canceled ??= new List<ObjectActionQueueItem>()).Add(item);
+
+            return true;
+        });
+
+        if (canceled == null) return;
+
+        // Removed items never reach Update(), so run their completion callbacks now.
+        foreach (ObjectActionQueueItem item in canceled)
+            item.AfterInvoked?.Invoke(item);
     }
 
     /// <summary>
