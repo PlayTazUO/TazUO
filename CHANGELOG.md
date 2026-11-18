@@ -3,7 +3,7 @@ All notable changes to TazUO will be recorded here.
 
 ---
 ## 11/18/26
-* ***Fix:*** Scrollbars on scaled gumps (such as the advanced skills gump) no longer sit too far to the right - the bar's reserved gutter is now scaled with the gump instead of being overwritten with an unscaled offset every frame
+* ***Fix:*** Scrollbars on the shop and skills gumps no longer sit too far to the right - the bar position was being recomputed every frame from the padded scroll area width, and the offset is now scaled with the gump so scaled gumps stay aligned too
 
 ## 11/16/26
 * ***Fix:*** Autoloot no longer re-scans every item in a corpse for each item event and no longer re-scans every in-range corpse on every step - opening many corpses no longer causes noticeable stalls
