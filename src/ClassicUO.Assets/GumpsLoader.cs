@@ -13,8 +13,9 @@ namespace ClassicUO.Assets
 {
     public sealed class GumpsLoader : UOFileLoader
     {
-        // 0x12000, as UOFiddler (Gumps32): the standard client has equip gumps past 0xFFFF
-        // (female 60000 + AnimID 9971..9985), and custom gump archives may hold more than 65,536 entries.
+        // 0x12000, as UOFiddler (Gumps32): custom archives may hold more than 65,536 entries. The standard
+        // archive has a few gumps past 0xFFFF too (69971..69985), though no standard item reaches them through
+        // 60000 + AnimID.
         public const int MAX_GUMP_DATA_INDEX_COUNT = 0x12000;
 
         /// <summary>

@@ -607,7 +607,7 @@ namespace ClassicUO.Assets
                         ushort newGraphic = (ushort)defReader.ReadInt();
                         int gump = defReader.ReadInt();
 
-                        // Gump numbers run past 0xFFFF (the standard female equip gumps 69971..69985).
+                        // Gump numbers may run past 0xFFFF, up to the loader's limit.
                         if (gump >= GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT)
                         {
                             continue;

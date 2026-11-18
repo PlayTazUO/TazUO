@@ -228,39 +228,29 @@ namespace ClassicUO.Game.UI.Controls
 
         private uint GetEquipmentGumpId(ushort animID)
         {
-            int offset = _isFemale ? Constants.FEMALE_GUMP_OFFSET : Constants.MALE_GUMP_OFFSET;
+            uint offset = PaperDollInteractable.GetEquipGumpOffset(_isFemale);
 
             Client.Game.UO.Animations.ConvertBodyIfNeeded(ref _bodyGraphic);
 
+            uint anim = animID;
+
             if (Client.Game.UO.FileManager.Animations.EquipConversions.TryGetValue(
-                _bodyGraphic,
-                out Dictionary<ushort, EquipConvData> dict))
+                    _bodyGraphic,
+                    out Dictionary<ushort, EquipConvData> dict)
+                && dict.TryGetValue(animID, out EquipConvData data))
             {
-                if (dict.TryGetValue(animID, out EquipConvData data))
-                {
-                    if (data.Gump > Constants.MALE_GUMP_OFFSET)
-                    {
-                        animID = (ushort)(
-                            data.Gump >= Constants.FEMALE_GUMP_OFFSET
-                                ? data.Gump - Constants.FEMALE_GUMP_OFFSET
-                                : data.Gump - Constants.MALE_GUMP_OFFSET);
-                    }
-                    else
-                    {
-                        animID = (ushort)data.Gump;
-                    }
-                }
+                anim = PaperDollInteractable.GetEquipConvAnimID(data);
             }
 
             // Check if the gump exists, otherwise try the other gender
-            int requested = animID + offset;
+            uint requested = anim + offset;
             if (requested >= GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT ||
-                Client.Game.UO.Gumps.GetGump((uint)requested).Texture == null)
+                Client.Game.UO.Gumps.GetGump(requested).Texture == null)
             {
-                offset = _isFemale ? Constants.MALE_GUMP_OFFSET : Constants.FEMALE_GUMP_OFFSET;
+                offset = PaperDollInteractable.GetEquipGumpOffset(!_isFemale);
             }
 
-            return (uint)(animID + offset);
+            return anim + offset;
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
