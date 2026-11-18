@@ -94,10 +94,12 @@ namespace ClassicUO.Game.UI.Controls
 
         public void UpdateScrollbarPosition()
         {
+            // Width is in final (possibly scaled) space, so the reserved gutter must be
+            // scaled by the bar's own scale too or the bar drifts right on scaled gumps.
             if (_isNormalScroll)
-                _scrollBar.X = Width - SCROLLBAR_WIDTH;
+                _scrollBar.X = Width - ScaleHelper.Scaled(SCROLLBAR_WIDTH, _scrollBar.InternalScale);
             else
-                _scrollBar.X = Width - 19;
+                _scrollBar.X = Width - ScaleHelper.Scaled(19, _scrollBar.InternalScale);
         }
 
         public void ResetScrollbarPosition() => _scrollBar?.ResetScrollPosition();
