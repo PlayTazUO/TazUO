@@ -552,6 +552,15 @@ public static class NameplatesTab
                     TazLang.Get("mog_tazuo_avoidoverlap"),
                     NameplateSetting<bool>(() => profile.NamePlateAvoidOverlap),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_avoidoverlap"), Keywords: [TazLang.Get("mog_kw_overlap"), TazLang.Get("mog_kw_avoid")])
+                ),
+                Option.Checkbox(
+                    TazLang.Get("mog_tazuo_hoverfollowsmobile"),
+                    new Accessor<bool>(() => profile.NamePlateHoverFollowsMobile),
+                    TazLang.Get("nameplate_hoverfollowsmobile_tooltip"),
+                    new SearchMetadata(
+                        TazLang.Get("mog_tazuo_hoverfollowsmobile"),
+                        Keywords: [TazLang.Get("mog_kw_hover"), TazLang.Get("mog_kw_follow"), TazLang.Get("mog_kw_mouse")]
+                    )
                 )
             )
         );

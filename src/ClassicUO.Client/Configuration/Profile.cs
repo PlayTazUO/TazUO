@@ -485,6 +485,8 @@ namespace ClassicUO.Configuration
         public bool NamePlateHideAtFullHealthInWarmode { get; set => SetProperty(ref field, value); }
         public byte NamePlateBorderOpacity { get; set => SetProperty(ref field, value); } = 50;
         public bool NamePlateAvoidOverlap { get; set => SetProperty(ref field, value); }
+        // Off keeps a hovered plate fixed under the mouse, easier to click to target than one that walks away.
+        public bool NamePlateHoverFollowsMobile { get; set => SetProperty(ref field, value); }
         public bool NamePlateUseFixedWidth { get; set => SetProperty(ref field, value); }
         public int NamePlateFixedWidth { get; set => SetProperty(ref field, Math.Clamp(value, 60, 300)); } = 120;
         public bool NamePlateUseFixedHealthBarWidth { get; set => SetProperty(ref field, value); }

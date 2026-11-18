@@ -21,9 +21,11 @@ namespace ClassicUO.Game.UI.Gumps
     public class NameOverheadGump : Gump
     {
         private AlphaBlendControl _background;
-        // While hovered, where the plate sits relative to its mobile's anchor: relative so the plate keeps following
-        // the mobile as it or the player walks, fixed so it doesn't bob out from under the mouse with the animation.
+        // While hovered, where the plate sits relative to its mobile's anchor, fixed so it doesn't bob out from under
+        // the mouse with the animation. The anchor is the one taken at lock time, or the current one when the plate
+        // follows its mobile (NamePlateHoverFollowsMobile).
         private Point _lockedOffset,
+            _lockedAnchor,
             _lastLeftMousePositionDown;
         private bool _positionLocked,
             _leftMouseIsDown,
@@ -664,8 +666,8 @@ namespace ClassicUO.Game.UI.Gumps
                 // Same position used while it isn't locked (see Draw): any difference makes the nameplate move off
                 // the mouse as soon as it is over it, then back under it, and so on (fast flickering).
                 Point position = GetMobilePosition(m);
-                Point anchor = GetMobileAnchor(m);
-                _lockedOffset = new Point(position.X - anchor.X, position.Y - anchor.Y);
+                _lockedAnchor = GetMobileAnchor(m);
+                _lockedOffset = new Point(position.X - _lockedAnchor.X, position.Y - _lockedAnchor.Y);
             }
 
             base.OnMouseOver(x, y);
@@ -924,7 +926,11 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (_positionLocked)
                 {
-                    Point anchor = GetMobileAnchor(m);
+                    // The lock-time anchor keeps the plate where the mouse found it, so it is easy to click to target
+                    // while the player or the mobile walks.
+                    Point anchor = ProfileManager.CurrentProfile.NamePlateHoverFollowsMobile
+                        ? GetMobileAnchor(m)
+                        : _lockedAnchor;
                     pos = new Point(anchor.X + _lockedOffset.X, anchor.Y + _lockedOffset.Y);
                 }
                 else
