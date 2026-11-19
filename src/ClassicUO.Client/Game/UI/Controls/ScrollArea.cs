@@ -26,7 +26,7 @@ namespace ClassicUO.Game.UI.Controls
         /// Width of the flag-style scrollbar gump. Used only to lay the flag out,
         /// since the flag bar does not report a width on this control.
         /// </summary>
-        private const int FLAG_SCROLLBAR_WIDTH = 19;
+        private const int FLAG_SCROLLBAR_WIDTH = 16;
 
         /// <summary>
         /// Extra width appended to a flag scroll area so the flag has room past the content.
