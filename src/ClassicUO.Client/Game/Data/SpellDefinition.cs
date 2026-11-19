@@ -223,6 +223,11 @@ namespace ClassicUO.Game.Data
 
         public static bool TryGetSpellFromName(string spellName, out SpellDefinition spell, bool partialMatch = true)
         {
+            spell = null;
+
+            if (string.IsNullOrWhiteSpace(spellName))
+                return false;
+
             var allSpells = GetAllSpells();
 
             if (partialMatch)
@@ -230,7 +235,11 @@ namespace ClassicUO.Game.Data
                 string lower = spellName.ToLower();
                 foreach (SpellDefinition def in allSpells)
                 {
-                    if (def.Name.ToLower().Contains(lower) || def.GetLocalizedName().ToLower().Contains(lower))
+                    if (def == null)
+                        continue;
+
+                    if ((def.Name?.ToLower().Contains(lower) ?? false) ||
+                        (def.GetLocalizedName()?.ToLower().Contains(lower) ?? false))
                     {
                         spell = def;
                         return true;
@@ -241,8 +250,11 @@ namespace ClassicUO.Game.Data
             {
                 foreach (SpellDefinition def in allSpells)
                 {
-                    if (def.Name.Equals(spellName, StringComparison.InvariantCultureIgnoreCase) ||
-                        def.GetLocalizedName().Equals(spellName, StringComparison.InvariantCultureIgnoreCase))
+                    if (def == null)
+                        continue;
+
+                    if (string.Equals(def.Name, spellName, StringComparison.InvariantCultureIgnoreCase) ||
+                        string.Equals(def.GetLocalizedName(), spellName, StringComparison.InvariantCultureIgnoreCase))
                     {
                         spell = def;
                         return true;
@@ -250,7 +262,6 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            spell = null;
             return false;
         }
 

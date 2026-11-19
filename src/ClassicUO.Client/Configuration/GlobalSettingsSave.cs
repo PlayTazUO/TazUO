@@ -103,12 +103,6 @@ namespace ClassicUO.Configuration
         public bool WebMapControlsMinimized { get; set => SetProperty(ref field, value); }
 
         /// <summary>
-        /// Per-character last-equipment snapshots used by the character selection paperdoll, keyed by a
-        /// composite server+account+character id. Machine-wide.
-        /// </summary>
-        public Dictionary<string, string> LastEquipmentData { get; set => SetProperty(ref field, value); } = new Dictionary<string, string>();
-
-        /// <summary>
         /// Semicolon-separated poll ids the user has already voted on (see FirebasePollsManager /
         /// PollsWindow). Machine-wide.
         /// </summary>

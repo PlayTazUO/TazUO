@@ -211,7 +211,7 @@ public class ItemDetailMyraWindow : MyraControl
 
             ObjectActionQueue.Instance.Enqueue(
                 new MoveRequest(item.Serial, backpack.Serial).ToObjectActionQueueItem(),
-                ActionPriority.MoveItem);
+                ActionPriority.ManualMoveItem);
         }
         catch (Exception ex)
         {

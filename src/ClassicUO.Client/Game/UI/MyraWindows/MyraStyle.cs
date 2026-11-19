@@ -16,6 +16,12 @@ namespace ClassicUO.Game.UI.MyraWindows;
 public static class MyraStyle
 {
     public const int STANDARD_SPACING = 3;
+
+    /// <summary>
+    /// Hint text - counts, match explanations, anything subordinate to the thing it annotates -
+    /// is drawn at this fraction of the UI font so it reads as an aside rather than as content.
+    /// </summary>
+    public const float HINT_FONT_SCALE = 0.7f;
     public const int STANDARD_BORDER_ALPHA = 125;
 
     /// <summary>
@@ -24,6 +30,9 @@ public static class MyraStyle
     /// </summary>
     public static Color GridBorderColor => MyraTheme.Current.PanelBorder;
     public static SpriteFontBase UiFont => _uiFont;
+
+    /// <summary>Font size offset that renders hint text at <see cref="HINT_FONT_SCALE"/> of the UI font.</summary>
+    public static int HintFontSizeOffset => -(int)MathF.Round(UiFontSize * (1f - HINT_FONT_SCALE));
 
     public static int UiFontSize => ProfileManager.CurrentProfile == null ? 16 : ProfileManager.CurrentProfile.OptionsFontSize;
     public static SpriteFontBase GetUiFont(int sizeOffset) =>

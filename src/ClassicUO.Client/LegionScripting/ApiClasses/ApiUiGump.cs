@@ -7,6 +7,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
+using ClassicUO.Utility.Debounce;
 using FontStashSharp.RichText;
 
 namespace ClassicUO.LegionScripting.ApiClasses;
@@ -603,6 +604,39 @@ public class ApiUiGump(LegionAPI api)
         return OnMain(() => {
             control.Control.Disposed += (_, _) => api?.ScheduleCallback(onDispose);
             return control;
+        });
+    }
+
+    /// <summary>
+    /// Add an onMoved callback to a gump. The callback fires after the gump has been dragged to a new position.
+    /// Example:
+    /// ```py
+    /// def onMoved():
+    ///     API.SysMsg(f"Gump moved to {gump.GetX()}, {gump.GetY()}")
+    ///
+    /// gump = API.Gumps.CreateGump()
+    /// gump.SetRect(100, 100, 200, 200)
+    ///
+    /// API.Gumps.AddGumpOnMoved(gump, onMoved)
+    /// API.Gumps.AddGump(gump)
+    ///
+    /// while True:
+    ///   API.ProcessCallbacks()
+    /// ```
+    /// </summary>
+    /// <param name="gump">The gump listening for movement</param>
+    /// <param name="onMoved">The callback function</param>
+    /// <returns>Returns the gump so methods can be chained.</returns>
+    public ApiUiBaseControl AddGumpOnMoved(ApiUiBaseControl gump, object onMoved)
+    {
+        if (gump == null || onMoved == null || gump.Control == null || !api.CallbackChannel.CanInvoke(onMoved))
+            return gump;
+
+        return OnMain(() => {
+            var debounce = new Debounce(() => api?.ScheduleCallback(onMoved), 100, maxWaitMs: 500);
+            gump.Control.Moved += (_, _) => debounce.Invoke();
+            gump.Control.Disposed += (_, _) => debounce.Dispose();
+            return gump;
         });
     }
 }

@@ -9,9 +9,9 @@ using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
-using Myra.Events;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
@@ -21,8 +21,14 @@ using Myra.Graphics2D.UI.WrapPanel;
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
 /// <summary>
-///     The top-level options window that hosts category navigation, a search field, and
-///     the paged content area. Replaces any existing <see cref="OptionsWindow" /> when opened.
+///     The top-level options window that hosts category navigation, a search field, and the content
+///     area. Replaces any existing <see cref="OptionsWindow" /> when opened.
+///     <para>
+///         Everything that changes what the content area shows goes through
+///         <see cref="NavigateTo(SearchPath)" /> or <see cref="ShowSearch" />, which record the move in
+///         <see cref="_history" />. That makes the back and forward buttons work across categories,
+///         nested tabs, and search results alike.
+///     </para>
 /// </summary>
 public class OptionsWindow : MyraControl
 {
@@ -33,30 +39,93 @@ public class OptionsWindow : MyraControl
     private const int MIN_HEIGHT = 250;
     private const int MIN_WIDTH = 350;
 
-    private const int MAX_HEIGHT = 850;
+    private const int MAX_HEIGHT = 1050;
     private const int MAX_WIDTH = 1200;
 
     private const int SEARCH_DEBOUNCE_MS = 500;
 
-    private readonly Dictionary<string, List<IOptionSource>> _optionSources = new();
-    private readonly Dictionary<string, List<OptionEntry>> _searchIndex = new();
+    /// <summary>Horizontal correction for the back arrow, whose bearings sit it off-centre.</summary>
+    private const int BACK_GLYPH_NUDGE_X = -3;
+
+    /// <summary>
+    ///     Width conceded to the window frame and the results list's own vertical scrollbar when
+    ///     working out how much room a result row really has.
+    /// </summary>
+    private const int RESULTS_CHROME_ALLOWANCE = 24;
+
+    /// <summary>Fallback rail width, matching the category buttons' own minimum.</summary>
+    private const int RAIL_WIDTH_FALLBACK = 125;
+
+
+    /// <summary>
+    ///     Resize fires once per mouse-move tick, and re-deciding a row's presentation rebuilds its
+    ///     widget, so the re-evaluation waits for the drag to settle.
+    /// </summary>
+    private const int RESIZE_DEBOUNCE_MS = 300;
+
+    private readonly List<OptionCategory> _categories = [];
+    private readonly Dictionary<string, OptionCategory> _categoriesByLabel = new();
+    private readonly SearchIndex _searchIndex = new();
+    private readonly NavigationHistory<OptionsView> _history = new(comparer: OptionsView.LocationComparer);
+    private readonly HashSet<MyraTabControl> _watchedTabControls = [];
+
+    /// <summary>
+    ///     Each rendered tab control's own location, i.e. the path up to but excluding its selected
+    ///     tab. Recorded while the tree is stable so a selection change only has to look itself up,
+    ///     rather than re-deriving the whole path from a tree that is mutating underneath it.
+    /// </summary>
+    private readonly Dictionary<MyraTabControl, SearchPath> _tabControlPaths = new();
     private readonly MyraGrid _mainArea = new();
 
-    #endregion
-
-    #region Statics
-
-    private static Point? _pageControlOverhead;
+    /// <summary>
+    ///     Points out the setting a search result was followed to. Driven from <see cref="Update" />
+    ///     and cancelled whenever the content area is rebuilt under it.
+    /// </summary>
+    private readonly OptionHighlight _highlight = new();
 
     #endregion
 
     #region Mutables
 
-    private string _lastCategory = string.Empty;
+    /// <summary>
+    ///     Category whose rail entry is current, empty while search results are showing. Distinct from
+    ///     <see cref="_builtCategory" />: results own the content area but no rail entry.
+    /// </summary>
+    private string _currentCategory = string.Empty;
+
+    /// <summary>
+    ///     Category whose widgets are currently built into <see cref="_optionsPanel" />. Survives a
+    ///     trip through search, so coming back can re-parent the panel instead of re-rendering it and
+    ///     resetting every page and nested tab.
+    /// </summary>
+    private string _builtCategory = string.Empty;
+
+    /// <summary>
+    ///     Where the user last was before search took over the content area. Search blanks the
+    ///     current category, so this is what clearing the query box returns to.
+    /// </summary>
+    private SearchPath _lastPagePath;
     private string _pendingSearchText = string.Empty;
-    private double _searchDebounceTimer;
+
+    /// <summary>
+    ///     Debounce stamps, taken from <see cref="Time.Ticks" /> rather than
+    ///     <see cref="Environment.TickCount" />: the latter is signed and wraps to
+    ///     <see cref="int.MinValue" /> after ~25 days of uptime, which turns an elapsed check into a
+    ///     hugely negative number and stalls the debounce for good. Unsigned subtraction wraps
+    ///     correctly, so the comparison survives it.
+    /// </summary>
+    private uint _searchDebounceTimer;
+    private uint _resizeDebounceTimer;
+
     private bool _searchPending;
-    private Point? _resultsBudget;
+    private bool _resizePending;
+
+
+    /// <summary>
+    ///     Set while the window is reproducing a history entry, so the selections it drives don't
+    ///     record themselves as fresh navigations.
+    /// </summary>
+    private bool _restoring;
 
     #endregion
 
@@ -73,22 +142,16 @@ public class OptionsWindow : MyraControl
 
     private readonly WrapPanel _optionsStack = new() { UniformSizing = false, Orientation = Orientation.Vertical };
 
-    private readonly MyraInputBox _searchField = new()
+    private readonly SearchResultTree _resultTree = new();
+
+    private readonly SearchBar _searchBar = new(new SearchBarProps { HintText = TazLang.Get("mog_searchellipses") })
     {
-        TextVerticalAlignment = VerticalAlignment.Center,
-        Margin = new Thickness(
-            MyraStyle.STANDARD_SPACING,
-            0,
-            MyraStyle.STANDARD_SPACING,
-            MyraStyle.STANDARD_SPACING
-        ),
-        Padding = new Thickness(
-            MyraStyle.STANDARD_SPACING,
-            5,
-            MyraStyle.STANDARD_SPACING,
-            5
-        )
+        Margin = new Thickness(MyraStyle.STANDARD_SPACING, 0, MyraStyle.STANDARD_SPACING, MyraStyle.STANDARD_SPACING)
     };
+
+    private ScrollViewer? _categoryScroller;
+    private IconButton _backButton = null!;
+    private IconButton _forwardButton = null!;
 
     #endregion
 
@@ -97,9 +160,9 @@ public class OptionsWindow : MyraControl
     #region Events
 
     /// <summary>
-    ///     Raised when the active category changes, either via a category button click or when
-    ///     a search is cleared and the previous category is restored.
-    ///     The event argument is the newly selected category label.
+    ///     Raised when the active category changes, either via a category button click or because a
+    ///     navigation landed inside that category. The argument is the newly selected category
+    ///     label, or an empty string when search results are showing and no category is current.
     /// </summary>
     public event EventHandler<string>? SelectedCategoryChanged;
 
@@ -140,7 +203,15 @@ public class OptionsWindow : MyraControl
             (newValue) => ProfileManager.CurrentProfile?.OptionsWindowsSize = newValue
             );
 
-        _rootWindow.SizeChanged += (_, _) => _resultsBudget = null;
+        _rootWindow.SizeChanged += (_, _) =>
+        {
+            _resizeDebounceTimer = Time.Ticks;
+            _resizePending = true;
+
+            FreezeResultsWhileDragging();
+        };
+
+        NavigateTo(FirstCategoryPath());
     }
 
     #endregion
@@ -148,17 +219,99 @@ public class OptionsWindow : MyraControl
     #region Public Methods
 
     /// <summary>
-    ///     Fires the debounced search when the debounce timer has elapsed since the last keystroke
+    ///     Fires the debounced search and the debounced inline re-evaluation once their timers have
+    ///     elapsed since the last keystroke or resize tick.
     /// </summary>
     public override void Update()
     {
         base.Update();
 
-        if (_searchPending && Environment.TickCount - _searchDebounceTimer >= SEARCH_DEBOUNCE_MS)
+        if (_searchPending && Time.Ticks - _searchDebounceTimer >= SEARCH_DEBOUNCE_MS)
         {
             _searchPending = false;
-            ApplySearch(_pendingSearchText);
+            ApplySearchText(_pendingSearchText);
         }
+
+        if (_resizePending && Time.Ticks - _resizeDebounceTimer >= RESIZE_DEBOUNCE_MS)
+        {
+            _resizePending = false;
+            _resultTree.IsLayoutFrozen = false;
+
+            RefreshInlinePresentation();
+        }
+
+        _highlight.Update();
+    }
+
+    /// <summary>
+    ///     Opens the options at <paramref name="path" />, selecting the category and then driving each
+    ///     nested tab or page along the path. Records the move in history.
+    /// </summary>
+    /// <param name="path">
+    ///     The breadcrumb to open. Segments past the last navigable boundary - a visual container's
+    ///     caption, say - are ignored, landing on the closest page that does exist.
+    /// </param>
+    public void NavigateTo(SearchPath path)
+    {
+        if (path.IsEmpty)
+            return;
+
+        CaptureCurrentViewState();
+
+        var view = new OptionsView { Path = path };
+
+        // Restored before pushed: an under-specified path - a bare category, say - is rewritten by
+        // ShowPage to the page it actually landed on, and pushing beforehand would compare the
+        // unresolved path and record an entry that back then appears to do nothing.
+        Restore(view);
+        _history.Push(view);
+    }
+
+    /// <summary>Opens the options at the given breadcrumb segments</summary>
+    /// <param name="segments">The path segments, outermost first</param>
+    public void NavigateTo(params string[] segments) => NavigateTo(new SearchPath(segments));
+
+    /// <summary>
+    ///     Shows search results for <paramref name="query" />. Retyping while already on the results
+    ///     updates them in place rather than pushing a new history entry, so back doesn't retype the
+    ///     query a character at a time.
+    /// </summary>
+    /// <param name="query">The query to run</param>
+    public void ShowSearch(string query)
+    {
+        if (_history.Current is { IsSearch: true } current)
+        {
+            // Retyping stays on the same view, so its scroll and collapse state have to be folded
+            // back in first - ShowResults restores from the entry, and would otherwise re-expand
+            // everything the user just collapsed on every keystroke.
+            CaptureCurrentViewState();
+
+            bool queryChanged = !string.Equals(current.Query, query, StringComparison.Ordinal);
+
+            current.Query = query;
+
+            if (queryChanged)
+            {
+                // A different query is a different list: keeping the offset would open the narrower
+                // result set scrolled past its own top-ranked hits. Only back and forward restore one.
+                current.ScrollOffset = 0;
+
+                // Whatever was ahead was reached from the old query, so forward would jump to a page
+                // the user is no longer working from.
+                _history.TruncateForward();
+            }
+
+            Restore(current);
+
+            return;
+        }
+
+        CaptureCurrentViewState();
+
+        var view = new OptionsView { Query = query };
+
+        _history.Push(view);
+        Restore(view);
     }
 
     #endregion
@@ -167,33 +320,82 @@ public class OptionsWindow : MyraControl
 
     private void SetupOptions()
     {
+        // The second metadata argument is the category's synonym set. A category label is already
+        // matched as a breadcrumb segment, so these only have to cover the words that are not in
+        // it - "graphics" for Video, "audio" for Sound - which no individual setting can carry.
+        AddOptionSource(
+            TazLang.Get("mog_gameplaytab_gameplaylabel"),
+            GameplayTab.GetContent(),
+            CategorySynonyms("optsearch_cat_gameplay")
+        );
 
-        AddOptionSource(TazLang.Get("mog_gameplaytab_gameplaylabel"), GameplayTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_kw_interface"), InterfaceTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_labelchatandtext"), ChatTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_videotab_label"), VideoTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_soundtab_label"), SoundsTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_misctab_label"), MiscTab.GetContent());
-        AddOptionSource(TazLang.Get("mog_kw_profile"), ProfileTab.GetContent());
+        AddOptionSource(TazLang.Get("mog_kw_interface"), InterfaceTab.GetContent(), CategorySynonyms("optsearch_cat_interface"));
+        AddOptionSource(TazLang.Get("mog_labelchatandtext"), ChatTab.GetContent(), CategorySynonyms("optsearch_cat_chat"));
+        AddOptionSource(TazLang.Get("mog_videotab_label"), VideoTab.GetContent(), CategorySynonyms("optsearch_cat_video"));
+        AddOptionSource(TazLang.Get("mog_soundtab_label"), SoundsTab.GetContent(), CategorySynonyms("optsearch_cat_sound"));
+        AddOptionSource(TazLang.Get("mog_misctab_label"), MiscTab.GetContent(), CategorySynonyms("optsearch_cat_misc"));
+        AddOptionSource(TazLang.Get("mog_kw_profile"), ProfileTab.GetContent(), CategorySynonyms("optsearch_cat_profile"));
     }
 
-    private void AddOptionSource(string category, IOptionSource source)
+    /// <summary>
+    ///     Reads a category's comma-separated synonym list. Carries no label or match text, so it
+    ///     only ever adds match terms - an inherited label would name every spacer beneath it.
+    /// </summary>
+    /// <param name="languageKey">Language key holding the comma-separated synonyms</param>
+    /// <returns>Metadata carrying nothing but the synonyms</returns>
+    private static SearchMetadata CategorySynonyms(string languageKey) =>
+        new(Keywords: [TazLang.Get(languageKey)]);
+
+    /// <summary>
+    ///     Registers a top-level category and folds its subtree into the search index, with the
+    ///     category's own label seeding each entry's breadcrumb.
+    /// </summary>
+    /// <remarks>
+    ///     Note that window construction is effectively static, meaning runtime addition of nested settings, like
+    ///     new VFX rules, will not be indexed/searchable until the window is closed and reopened.
+    /// </remarks>
+    /// <param name="category">The category label, shown on the navigation rail</param>
+    /// <param name="source">The category's content</param>
+    /// <param name="search">
+    ///     Metadata every entry in the subtree inherits. Used for synonyms the category label does
+    ///     not contain, so one blob covers settings that would each have to repeat it.
+    /// </param>
+    private void AddOptionSource(string category, IOptionSource source, SearchMetadata? search = null)
     {
-        if (!_optionSources.TryGetValue(category, out List<IOptionSource>? sources))
+        if (!_categoriesByLabel.TryGetValue(category, out OptionCategory? existing))
         {
-            sources = [];
-            _optionSources.Add(category, sources);
+            existing = new OptionCategory(category);
+            _categories.Add(existing);
+            _categoriesByLabel.Add(category, existing);
         }
 
-        sources.Add(source);
+        existing.Sources.Add(source);
 
-        if (!_searchIndex.TryGetValue(category, out List<OptionEntry>? entries))
+        var context = new OptionIndexContext(new SearchPath(category), search);
+
+        foreach (SearchEntry entry in source.Index(context))
+            _searchIndex.Add(entry with { OnActivate = BuildActivation(entry) });
+    }
+
+    /// <summary>
+    ///     An entry activated from search results navigates to the page that owns it and then points
+    ///     the setting out, so the user lands on the thing they picked rather than on a page that
+    ///     merely contains it. The entry's own label is appended to the path so the deepest navigable
+    ///     boundary is reached even when the leaf itself is a tab or page.
+    /// </summary>
+    private Action BuildActivation(SearchEntry entry)
+    {
+        SearchPath target = entry.FullPath;
+        string label = entry.Label;
+
+        return () =>
         {
-            entries = [];
-            _searchIndex.Add(category, entries);
-        }
+            NavigateTo(target);
 
-        entries.AddRange(source.GetOptions(new SearchMetadata(Tags: [category])));
+            // The navigation has built the page but nothing has laid it out yet; the highlighter
+            // waits for the target to have bounds before scrolling to it.
+            _highlight.Start(_optionsPanel, target, label);
+        };
     }
 
     private void Build()
@@ -206,233 +408,697 @@ public class OptionsWindow : MyraControl
         _mainArea.AddRow(Proportion.Auto);
         _mainArea.AddRow(Proportion.Fill);
 
-        _searchField.HintText = TazLang.Get("mog_searchellipses");
-        _searchField.TextChangedByUser += SearchFieldOnTextChangedByUser;
-        _mainArea.AddWidget(_searchField, 0, 0, null, 2);
+        _mainArea.AddWidget(BuildToolbar(), 0, 0, null, 2);
 
         WrapPanel categoryPanel = new()
         {
             Orientation = Orientation.Vertical, HorizontalSpacing = MyraStyle.STANDARD_SPACING, VerticalSpacing = MyraStyle.STANDARD_SPACING
         };
 
-        _mainArea.AddWidget(categoryPanel.WrapInScroll(MAX_HEIGHT), 1, 0);
+        _categoryScroller = categoryPanel.WrapInScroll(MAX_HEIGHT);
+        _mainArea.AddWidget(_categoryScroller, 1, 0);
 
         _optionsStack.Widgets.Add(_optionsPanel);
         _mainArea.AddWidget(_optionsStack, 1, 1);
 
-        foreach (string category in _optionSources.Keys)
-            categoryPanel.Widgets.Add(GetCategoryButton(category));
+        _resultTree.NavigationRequested += (_, path) =>
+        {
+            NavigateTo(path);
+
+            // A crumb names whatever the user clicked - a category, a tab, a section. Pointing the
+            // cue at it covers the section case; a tab is its own feedback once selected, and
+            // FindTarget simply finds nothing for it.
+            if (path.Leaf is { Length: > 0 } segment)
+                _highlight.Start(_optionsPanel, path, segment);
+        };
+
+        foreach (OptionCategory category in _categories)
+            categoryPanel.Widgets.Add(GetCategoryButton(category.Label));
 
         SetRootContent(_mainArea);
     }
 
+    /// <summary>
+    ///     Builds the row holding the back and forward buttons, the query box, and the result count.
+    /// </summary>
+    private HorizontalStackPanel BuildToolbar()
+    {
+        _backButton = new IconButton(
+            "◀",
+            GoBack,
+            TazLang.Get("optsearch_nav_back"),
+            glyphSize: StyleConstantsDefaults.RESET_ICON_FONT_SIZE
+        )
+        {
+            // The glyph's own bearings seat it right of centre; the forward arrow's do not.
+            Nudge = new Point(BACK_GLYPH_NUDGE_X, 0)
+        };
+
+        _forwardButton = new IconButton(
+            "▶",
+            GoForward,
+            TazLang.Get("optsearch_nav_forward"),
+            glyphSize: StyleConstantsDefaults.RESET_ICON_FONT_SIZE
+        );
+
+        _searchBar.QueryChanged += (_, query) =>
+        {
+            _pendingSearchText = query.Trim();
+            _searchDebounceTimer = Time.Ticks;
+            _searchPending = true;
+        };
+
+        _searchBar.Cleared += (_, _) =>
+        {
+            _pendingSearchText = string.Empty;
+            _searchPending = false;
+            ApplySearchText(string.Empty);
+        };
+
+        var toolbar = new HorizontalStackPanel
+        {
+            Spacing = MyraStyle.STANDARD_SPACING,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        toolbar.Widgets.Add(_backButton);
+        toolbar.Widgets.Add(_forwardButton);
+        toolbar.Widgets.Add(_searchBar);
+
+        StackPanel.SetProportionType(_searchBar, ProportionType.Fill);
+
+        _history.Changed += (_, _) => UpdateNavigationButtons();
+        UpdateNavigationButtons();
+
+        return toolbar;
+    }
+
+    private void UpdateNavigationButtons()
+    {
+        _backButton.Enabled = _history.CanGoBack;
+        _forwardButton.Enabled = _history.CanGoForward;
+    }
+
+    private void GoBack()
+    {
+        LeaveCurrentView();
+
+        if (_history.TryGoBack(out OptionsView view))
+            Restore(view);
+    }
+
+    private void GoForward()
+    {
+        LeaveCurrentView();
+
+        if (_history.TryGoForward(out OptionsView view))
+            Restore(view);
+    }
+
+    /// <summary>
+    ///     Common preamble for an explicit history move: snapshot what the current view is showing,
+    ///     and drop any keystroke still inside the debounce window so it cannot fire into the view
+    ///     being navigated to.
+    /// </summary>
+    private void LeaveCurrentView()
+    {
+        CaptureCurrentViewState();
+
+        _searchPending = false;
+        _pendingSearchText = string.Empty;
+    }
+
     private ButtonBase2 GetCategoryButton(string category)
     {
-        var unstyledButton = new ToggleTextButton(category, _ => ShowPage(category)) { SpringLoaded = true };
+        var unstyledButton = new ToggleTextButton(category, _ => NavigateTo(new SearchPath(category))) { SpringLoaded = true };
 
         // Each button listens to the category selection event and updates its pressed state accordingly
-        SelectedCategoryChanged += (_, _) => unstyledButton.IsPressed = _lastCategory == category;
+        SelectedCategoryChanged += (_, _) => unstyledButton.IsPressed = _currentCategory == category;
 
         return ApplyTabStyleToButton(unstyledButton);
     }
 
-    private void SearchFieldOnTextChangedByUser(object? sender, ValueChangedEventArgs<string> e)
+    /// <summary>
+    ///     Handles the debounced query box. Clearing the box is a navigation back to the last page
+    ///     visited rather than a history pop, so forward stays meaningful.
+    /// </summary>
+    private void ApplySearchText(string searchText)
     {
-        _pendingSearchText = e.NewValue?.Trim() ?? string.Empty;
-        _searchDebounceTimer = Environment.TickCount;
-        _searchPending = true;
-    }
-
-    private void ApplySearch(string searchText)
-    {
-        if (string.IsNullOrEmpty(searchText))
+        if (!string.IsNullOrEmpty(searchText))
         {
-            _optionsStack.Widgets.Clear();
-            _optionsStack.Widgets.Add(_optionsPanel);
-
-            if (_lastCategory.NotNullNotEmpty())
-                ShowPage(_lastCategory);
-
+            ShowSearch(searchText);
             return;
         }
 
-        List<Widget> matches = CollectSearchMatches(searchText);
+        SearchPath fallback = LastVisitedPage();
 
-        _optionsStack.Widgets.Clear();
-        _optionsStack.Widgets.Add(BuildPagedResults(matches));
+        NavigateTo(fallback.IsEmpty ? FirstCategoryPath() : fallback);
     }
 
-    private List<Widget> CollectSearchMatches(string searchText)
-    {
-        List<Widget> matches = [];
-
-        foreach ((string _, List<OptionEntry> entries) in _searchIndex)
-        foreach (OptionEntry entry in entries)
-        foreach (OptionEntry match in entry.Match(new SearchMetadata(searchText)))
-            matches.Add(match.Render());
-
-        return matches;
-    }
+    /// <summary>The most recent non-search location, used when the query box is cleared</summary>
+    private SearchPath LastVisitedPage() =>
+        _currentCategory.NotNullNotEmpty() ? CurrentPath() : _lastPagePath;
 
     /// <summary>
-    ///     Builds a page control with the given search matches. Each page is sized to fit the available space.
+    ///     The first registered category's location, or empty when nothing registered - a tab whose
+    ///     content threw while being built leaves the window with no categories at all.
     /// </summary>
-    /// <param name="matches">The search results to display</param>
-    /// <returns>A ready to use, sized page control with the search results</returns>
-    private PageControl BuildPagedResults(List<Widget> matches)
-    {
-        Point stackBounds = _resultsBudget ??= ComputeResultsBudget();
-        Point overhead = GetPageControlOverhead();
-
-        // The 'ideal' budget is the current available space; We CAN exceed it, up to MAX_WIDTH/MAX_HEIGHT, but we aim not to.
-        Point idealBudget = new(
-            Math.Max(stackBounds.X - overhead.X, 1),
-            Math.Max(stackBounds.Y - overhead.Y, 1)
-        );
-
-        // The max budget is the absolute maximum we can grow to
-        Point maxBudget = new(
-            Math.Max(MAX_WIDTH - overhead.X, idealBudget.X),
-            Math.Max(MAX_HEIGHT - overhead.Y, idealBudget.Y)
-        );
-
-        // The max width/height of all the search results; We use this to asses optimal page size
-        Point maxMatchSize = MaxMatchSize(matches, maxBudget);
-
-        // Widen X to fit any item that exceeds the ideal width, capped at maxBudget.
-        idealBudget.X = Math.Max(idealBudget.X, Math.Min(maxMatchSize.X, maxBudget.X));
-
-        // All pages use this height so the control doesn't jump on navigation.
-        // Outlier items (taller than ideal) expand it, capped at maxBudget.Y.
-        int uniformHeight = Math.Min(Math.Max(idealBudget.Y, maxMatchSize.Y), maxBudget.Y);
-
-        return new PageControl(PackIntoPages(matches, idealBudget, maxBudget).ToArray()) { ContentSize = new Point(idealBudget.X, uniformHeight) };
-    }
+    private SearchPath FirstCategoryPath() =>
+        _categories.Count > 0 ? new SearchPath(_categories[0].Label) : SearchPath.Empty;
 
     /// <summary>
-    ///     Returns the widest and tallest natural sizes across all matches, measured against
-    ///     <paramref name="maxBudget" />. Used to widen <c>idealBudget</c> and compute
-    ///     <c>uniformHeight</c> before packing, so the content panel is sized to fit every item.
+    ///     Folds the results list's live scroll offset and collapse set back into the current history
+    ///     entry, so returning to it later lands on the same list rather than at the top of a freshly
+    ///     re-run search.
     /// </summary>
-    private static Point MaxMatchSize(List<Widget> matches, Point maxBudget)
+    private void CaptureCurrentViewState()
     {
-        int widest = 0, tallest = 0;
+        if (_history.Current is not { } current)
+            return;
 
-        foreach (Widget widget in matches)
+        if (!current.IsSearch)
         {
-            Point size = widget.Measure(maxBudget);
-            widest = Math.Max(widest, size.X);
-            tallest = Math.Max(tallest, size.Y);
+            CapturePageLocation(current);
+            return;
         }
 
-        return new Point(widest, tallest);
+        current.ScrollOffset = _resultTree.GetScrollOffset();
+        current.Collapsed.Clear();
+
+        foreach (string collapsed in _resultTree.CollapsedPaths)
+            current.Collapsed.Add(collapsed);
     }
 
     /// <summary>
-    ///     Derived from the main area and search bar bounds, so the budget reflects the actual
-    ///     fill-row height regardless of how much content the current category renders.
-    ///     Using <see cref="_optionsStack" /> ActualBounds instead would give the current tab's
-    ///     rendered content height, which can be shorter than the window on sparse tabs.
-    /// </summary>
-    private Point ComputeResultsBudget()
-    {
-        Rectangle mainBounds = _mainArea.ActualBounds;
-        Rectangle searchBounds = _searchField.ActualBounds;
-        int width = _optionsStack.ActualBounds.Width;
-
-        int height = mainBounds.Height - searchBounds.Height;
-
-        return height > 0 && width > 0
-            ? new Point(width, height)
-            : new Point(MAX_WIDTH, MAX_HEIGHT);
-    }
-
-    /// <summary>
-    ///     Packs <paramref name="matches" /> into pages using vertical-bias column packing
-    ///     (fill column height first, then wrap to a new column), matching WrapPanel's own layout
-    ///     strategy. Adds the page-break logic WrapPanel lacks: when accumulated column widths
-    ///     exceed <c>idealBudget.X</c>, the current page is finalized and a new one begins.
+    ///     Re-reads a page view's location off the screen before it is left.
     ///     <para>
-    ///         Each page starts with an effective height of <c>idealBudget.Y</c>. If the first item
-    ///         in a fresh column is taller than that, the page's effective height grows to fit it,
-    ///         up to <c>maxBudget.Y</c>. <see cref="SetPanelMaxSize" /> records this on the WrapPanel
-    ///         so Myra lays out the page at the correct size.
+    ///         The location is written when the view is opened, but paging and tabbing within it are
+    ///         not navigations and record nothing - so without this, returning to the entry replays
+    ///         where the user arrived rather than where they ended up.
     ///     </para>
     /// </summary>
-    private static List<Widget> PackIntoPages(List<Widget> matches, Point idealBudget, Point maxBudget)
+    /// <param name="view">The page view to update</param>
+    private void CapturePageLocation(OptionsView view)
     {
-        List<Widget> pages = [];
-        WrapPanel page = NewResultsPage(maxBudget);
+        if (CurrentPath() is not { IsEmpty: false } live)
+            return;
 
-        int columnHeight = 0;
-        int columnWidth = 0;
-        int pageWidth = 0;
-        int pageEffectiveHeight = idealBudget.Y;
+        // Guarded against a view for some other category: the panel on screen is the authority only
+        // for the category it is actually showing.
+        if (view.Path.IsEmpty || !string.Equals(view.Path[0], live[0], StringComparison.Ordinal))
+            return;
 
-        foreach (Widget widget in matches)
+        view.Path = live;
+    }
+
+    /// <summary>Reproduces <paramref name="view" /> in the content area without touching history</summary>
+    private void Restore(OptionsView view)
+    {
+        // Whatever is being pointed at is about to be rebuilt or scrolled away from.
+        _highlight.Cancel();
+
+        _restoring = true;
+
+        try
         {
-            Point size = widget.Measure(maxBudget);
-
-            // Item doesn't fit in the current column → close column, start a new one.
-            if (columnHeight > 0 && columnHeight + MyraStyle.STANDARD_SPACING + size.Y > pageEffectiveHeight)
-            {
-                pageWidth += columnWidth + MyraStyle.STANDARD_SPACING;
-                columnHeight = 0;
-                columnWidth = 0;
-            }
-
-            // Adding another column would exceed the page width → emit page, start fresh.
-            if (pageWidth > 0 && pageWidth + size.X > idealBudget.X)
-            {
-                SetPanelMaxSize(page, idealBudget.X, pageEffectiveHeight);
-                pages.Add(page);
-                page = NewResultsPage(maxBudget);
-                pageEffectiveHeight = idealBudget.Y;
-                pageWidth = 0;
-            }
-
-            // Single item taller than current effective height → expand this page to fit it.
-            if (columnHeight == 0 && size.Y > pageEffectiveHeight)
-                pageEffectiveHeight = Math.Min(size.Y, maxBudget.Y);
-
-            page.Widgets.Add(widget);
-            columnHeight += (columnHeight > 0 ? MyraStyle.STANDARD_SPACING : 0) + size.Y;
-            columnWidth = Math.Max(columnWidth, size.X);
+            if (view.IsSearch)
+                ShowResults(view);
+            else
+                ShowPage(view);
+        }
+        finally
+        {
+            _restoring = false;
         }
 
-        SetPanelMaxSize(page, idealBudget.X, pageEffectiveHeight);
-        pages.Add(page);
+        UpdateNavigationButtons();
+    }
 
-        return pages;
+    private void ShowResults(OptionsView view)
+    {
+        // A drag still in progress when the query changed leaves the list frozen, and its debounced
+        // pass may never run - it bails once the view is no longer a search.
+        _resultTree.IsLayoutFrozen = false;
+
+        _searchBar.Query = view.Query ?? string.Empty;
+
+        IReadOnlyList<SearchHit> hits = _searchIndex.Search(view.Query);
+
+        _resultTree.CollapsedPaths.Clear();
+
+        foreach (string collapsed in view.Collapsed)
+            _resultTree.CollapsedPaths.Add(collapsed);
+
+        _resultTree.AvailableWidth = ResultsWidth();
+        _resultTree.InlineThreshold = CurrentInlineThreshold();
+        _resultTree.ShowAttribution = ProfileManager.CurrentProfile?.OptionsSearchShowAttribution ?? false;
+        _resultTree.SetResults(hits);
+
+        // The scroller clamps against a maximum it only knows after layout, so restoring the
+        // offset now would silently snap it to zero. Applied even when zero: SetResults leaves the
+        // live scroll position alone, so a reset has to be written out to take effect.
+        int restoredOffset = view.ScrollOffset;
+
+        Defer(() => _resultTree.SetScrollOffset(restoredOffset));
+
+        // The tree states an empty result itself, so the count beside the box would only repeat it.
+        _searchBar.SetResultText(
+            hits.Count > 0 ? TazLang.Get("optsearch_results_count", [hits.Count.ToString()]) : null
+        );
+
+        if (_optionsStack.Widgets.Count != 1 || !ReferenceEquals(_optionsStack.Widgets[0], _resultTree))
+        {
+            _optionsStack.Widgets.Clear();
+            _optionsStack.Widgets.Add(_resultTree);
+        }
+
+        // Results span categories, so no single rail entry is current. The previous category's
+        // controls stay constructed but are no longer on screen, so drop the map with it: a
+        // selection raised on one of them would otherwise be recorded as a page navigation while
+        // the user is looking at search results.
+        _currentCategory = string.Empty;
+        ForgetTabControls();
+        SelectedCategoryChanged?.Invoke(this, string.Empty);
     }
 
     /// <summary>
-    ///     Sets the given panels max width and height
+    ///     Renders the category at the head of <paramref name="view" />'s path, then walks the rest of
+    ///     the path selecting the matching nested tab or page at each level.
     /// </summary>
-    /// <param name="page">The panel to update the max width/height of</param>
-    /// <param name="width">The panel's max width</param>
-    /// <param name="height">The panel's max height</param>
-    private static void SetPanelMaxSize(WrapPanel page, int width, int height)
+    private void ShowPage(OptionsView view)
     {
-        page.MaxWidth = width;
-        page.MaxHeight = height;
+        SearchPath path = view.Path;
+
+        if (path.IsEmpty)
+            return;
+
+        ShowCategory(path[0]);
+        ClearPendingSearch();
+
+        Widget current = _optionsPanel;
+
+        for (int depth = 1; depth < path.Length; depth++)
+        {
+            Widget? next = SelectPathSegment(current, path[depth]);
+
+            // The segment names something that isn't a navigable boundary - a visual container
+            // caption, for instance - so this page is as deep as navigation goes.
+            if (next == null)
+                break;
+
+            current = next;
+
+            // Selecting a tab builds its content, which may itself contain tab controls that have
+            // to be watched before the next segment is resolved.
+            WatchTabControls();
+        }
+
+        WatchTabControls();
+
+        _lastPagePath = CurrentPath();
+
+        // Selecting a category records only the category, but the page it lands on has tabs already
+        // selected. Without writing the resolved location back, returning to this entry would
+        // restore the category and leave whatever tabs happen to be showing - which looks exactly
+        // like back doing nothing.
+        if (_lastPagePath.Length > path.Length && _lastPagePath.StartsWith(path))
+            view.Path = _lastPagePath;
     }
 
     /// <summary>
-    ///     Creates a new search results page panel
+    ///     Selects <paramref name="segment" /> in whichever tab or page control beneath
+    ///     <paramref name="root" /> actually offers it.
+    ///     <para>
+    ///         Every candidate is tried, nearest first, rather than only the closest one: a tab's
+    ///         content can hold more than one control, and the nearest need not be the one that owns
+    ///         the segment.
+    ///     </para>
     /// </summary>
-    /// <param name="budget">The sizing 'budget' for the page, ergo, max height/width</param>
-    /// <returns></returns>
-    private static WrapPanel NewResultsPage(Point budget) => new()
+    /// <returns>The newly selected content to continue descending into, or <see langword="null" /> when nothing matched</returns>
+    private static Widget? SelectPathSegment(Widget root, string segment)
     {
-        UniformSizing = false,
-        Aligned = false,
-        Orientation = Orientation.Vertical,
-        HorizontalSpacing = MyraStyle.STANDARD_SPACING,
-        VerticalSpacing = MyraStyle.STANDARD_SPACING,
-        MaxWidth = budget.X,
-        MaxHeight = budget.Y
-    };
+        if (root is MyraTabControl self && self.TrySelectByLabel(segment))
+            return self.SelectedContent ?? root;
+
+        // Materialised first: selecting a tab builds its content into the very collection the
+        // walk is enumerating, which would otherwise throw part-way through a navigation.
+        // Live-only: a control cached inside an unselected tab is not on the user's route to the
+        // segment, and selecting a segment inside one would move a page nobody is looking at.
+        List<Widget> candidates = [.. root.Descendants(liveOnly: true)];
+
+        foreach (Widget descendant in candidates)
+        {
+            switch (descendant)
+            {
+                case MyraTabControl tabs when tabs.TrySelectByLabel(segment):
+                    return tabs.SelectedContent ?? root;
+
+                case PageControl pages when pages.TrySelectByLabel(segment):
+                    return pages.CurrentPageContent ?? root;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Renders a top-level category into the content area, replacing whatever was there</summary>
+    /// <summary>
+    ///     Brings <paramref name="category" /> on screen, building its content only if it is not
+    ///     already built.
+    ///     <para>
+    ///         Built-ness is tracked separately from rail selection. Showing search results swaps the
+    ///         results tree in for the options panel without disturbing the panel's contents, so
+    ///         returning to the same category only has to re-parent the panel - re-rendering it would
+    ///         hand back a fresh <see cref="PageControl" /> on its first page and fresh tab controls on
+    ///         their first tabs, losing wherever the user actually was.
+    ///     </para>
+    /// </summary>
+    /// <param name="category">The category label to show</param>
+    private void ShowCategory(string category)
+    {
+        bool alreadyBuilt = _builtCategory == category && _optionsPanel.Widgets.Count > 0;
+
+        if (!ReferenceEquals(FirstStackChild(), _optionsPanel))
+        {
+            _optionsStack.Widgets.Clear();
+            _optionsStack.Widgets.Add(_optionsPanel);
+        }
+
+        if (!alreadyBuilt)
+        {
+            // The subscriptions refer to controls this rebuild is about to discard.
+            ForgetTabControls();
+
+            _optionsPanel.Widgets.Clear();
+
+            if (_categoriesByLabel.TryGetValue(category, out OptionCategory? resolved))
+            {
+                foreach (IOptionSource source in resolved.Sources)
+                    _optionsPanel.Widgets.Add(source.Render());
+            }
+
+            _builtCategory = category;
+        }
+
+        // Both assignments run on either path: results clear the rail selection without touching what
+        // is built, so coming back has to restore the selection and light the button up again.
+        _currentCategory = category;
+        SelectedCategoryChanged?.Invoke(this, category);
+    }
+
+    private Widget? FirstStackChild() => _optionsStack.Widgets.Count > 0 ? _optionsStack.Widgets[0] : null;
+
+    /// <summary>
+    ///     Empties the search box and abandons any keystroke still inside the debounce window.
+    ///     <para>
+    ///         Every path that lands the user on a page owes this: the bar follows the location rather
+    ///         than the other way round, and a pending query left armed fires moments later and drags
+    ///         them into results for a query that is no longer on screen.
+    ///     </para>
+    /// </summary>
+    private void ClearPendingSearch()
+    {
+        _searchPending = false;
+        _pendingSearchText = string.Empty;
+        _searchBar.Query = string.Empty;
+        _searchBar.SetResultText(null);
+    }
+
+    /// <summary>
+    ///     Walks the rendered tree recording where each tab control sits and subscribing to it, so a
+    ///     click on a nested tab records itself in history. Tab contents are built lazily, so deeper
+    ///     controls only exist once their parent tab has been shown - hence re-running this after
+    ///     every selection change.
+    /// </summary>
+    private void WatchTabControls()
+    {
+        if (!_currentCategory.NotNullNotEmpty())
+            return;
+
+        MapTabControls(_optionsPanel, new SearchPath(_currentCategory));
+    }
+
+    /// <summary>
+    ///     Drops every tab-control subscription and its recorded location, for when the controls
+    ///     they refer to are about to be replaced or are no longer on screen.
+    /// </summary>
+    private void ForgetTabControls()
+    {
+        foreach (MyraTabControl tabs in _watchedTabControls)
+            tabs.SelectedIndexChanged -= OnNestedTabSelected;
+
+        _watchedTabControls.Clear();
+        _tabControlPaths.Clear();
+    }
+
+    /// <summary>
+    ///     Records and subscribes to the tab controls directly beneath <paramref name="root" />, then
+    ///     descends through each one's selected tab.
+    /// </summary>
+    /// <param name="root">The widget to search beneath</param>
+    /// <param name="path">The location of <paramref name="root" /> itself</param>
+    private void MapTabControls(Widget root, SearchPath path)
+    {
+        foreach (MyraTabControl tabs in NearestTabControls(root))
+        {
+            _tabControlPaths[tabs] = path;
+
+            if (_watchedTabControls.Add(tabs))
+                tabs.SelectedIndexChanged += OnNestedTabSelected;
+
+            if (tabs.SelectedItem?.Text is not { } label || tabs.SelectedContent is not { } content)
+                continue;
+
+            MapTabControls(content, path.Push(label));
+        }
+    }
+
+    /// <summary>
+    ///     The tab controls nearest to <paramref name="root" />, not descending past one - a nested
+    ///     control belongs to whichever tab contains it, and is mapped when that tab is descended
+    ///     into.
+    /// </summary>
+    private static List<MyraTabControl> NearestTabControls(Widget root)
+    {
+        if (root is MyraTabControl self)
+            return [self];
+
+        List<MyraTabControl> found = [];
+        Queue<Widget> pending = new();
+
+        foreach (Widget child in root.ChildWidgets())
+            pending.Enqueue(child);
+
+        while (pending.Count > 0)
+        {
+            Widget current = pending.Dequeue();
+
+            // Stop at a tab control rather than descending through it: anything inside belongs to
+            // whichever tab holds it, and is mapped when that tab is descended into.
+            if (current is MyraTabControl tabs)
+            {
+                found.Add(tabs);
+                continue;
+            }
+
+            foreach (Widget child in current.ChildWidgets())
+                pending.Enqueue(child);
+        }
+
+        return found;
+    }
+
+    private void OnNestedTabSelected(object? sender, EventArgs e)
+    {
+        WatchTabControls();
+
+        if (_restoring || sender is not MyraTabControl tabs)
+            return;
+
+        // The cue is pointing into the tab content that just went off screen, and would otherwise
+        // keep pulsing there for the rest of its run.
+        _highlight.Cancel();
+
+        // Selecting a tab is landing on a page, so a query typed moments ago must not still fire and
+        // replace the tab that was just clicked.
+        ClearPendingSearch();
+
+        if (!_tabControlPaths.TryGetValue(tabs, out SearchPath basePath) || tabs.SelectedItem?.Text is not { } label)
+            return;
+
+        // Append the deeper levels' own selections so forward and back reproduce the exact page,
+        // not merely the tab that was clicked.
+        SearchPath path = ExtendWithSelections(basePath.Push(label), tabs.SelectedContent);
+
+        if (path.IsEmpty)
+            return;
+
+        CaptureCurrentViewState();
+        _history.Push(new OptionsView { Path = path });
+
+        // Clearing the query box returns to the last page, which is now this tab rather than
+        // whichever one the category landed on.
+        _lastPagePath = path;
+
+        UpdateNavigationButtons();
+    }
+
+    /// <summary>
+    ///     Appends what is selected at each level beneath <paramref name="root" /> - the chosen tab,
+    ///     and the shown page where the page group names its pages.
+    ///     <para>
+    ///         Pages are walked as well as tabs because the path is the only record of where the user
+    ///         is: a page group whose pages are named can be returned to, and without recording it a
+    ///         replayed history entry lands on the group's first page. An unnamed page is descended
+    ///         through without contributing a segment, since there is no label to come back by.
+    ///     </para>
+    /// </summary>
+    private static SearchPath ExtendWithSelections(SearchPath path, Widget? root)
+    {
+        Widget? current = root;
+
+        while (current != null)
+        {
+            if (NearestNavigable(current) is not { } navigable)
+                break;
+
+            switch (navigable)
+            {
+                case MyraTabControl tabs when tabs.SelectedItem?.Text is { Length: > 0 } tabLabel:
+                    path = path.Push(tabLabel);
+                    current = tabs.SelectedContent;
+                    continue;
+
+                case PageControl pages:
+                    if (pages.CurrentPageLabel is { Length: > 0 } pageLabel)
+                        path = path.Push(pageLabel);
+
+                    current = pages.CurrentPageContent;
+                    continue;
+            }
+
+            // Navigable but unnamed, so nothing can be recorded for it or beneath it.
+            break;
+        }
+
+        return path;
+    }
+
+    /// <summary>
+    ///     The nearest tab or page control beneath <paramref name="root" />, or <see langword="null" />
+    ///     when there is none. Breadth-first and stopping at the first hit, so the result is the one
+    ///     the user's route actually passes through.
+    /// </summary>
+    private static Widget? NearestNavigable(Widget root)
+    {
+        if (root is MyraTabControl or PageControl)
+            return root;
+
+        Queue<Widget> pending = new();
+
+        foreach (Widget child in root.ChildWidgets())
+            pending.Enqueue(child);
+
+        while (pending.Count > 0)
+        {
+            Widget current = pending.Dequeue();
+
+            if (current is MyraTabControl or PageControl)
+                return current;
+
+            foreach (Widget child in current.ChildWidgets())
+                pending.Enqueue(child);
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    ///     Reads the location currently on screen by walking the selected tab at each level. Page
+    ///     controls are deliberately skipped: paging within a page group is a pagination gesture
+    ///     rather than a change of location, and most such pages are unnamed anyway.
+    /// </summary>
+    private SearchPath CurrentPath() =>
+        _currentCategory.NotNullNotEmpty()
+            ? ExtendWithSelections(new SearchPath(_currentCategory), _optionsPanel)
+            : SearchPath.Empty;
+
+    /// <summary>
+    ///     Rebuilds the visible result rows, preserving scroll and collapse state. A no-op unless
+    ///     search results are showing, which is what separates it from
+    ///     <see cref="RefreshCurrentContent" />: a setting that only changes how results are drawn
+    ///     must not rebuild a whole category when the user happens to be on a page.
+    /// </summary>
+    internal void RefreshSearchResults()
+    {
+        if (_history.Current is not { IsSearch: true } search)
+            return;
+
+        // Restore reads scroll and collapse state off the entry, so what the user has since done
+        // to the live list has to be folded back in first.
+        CaptureCurrentViewState();
+        Restore(search);
+    }
+
+    /// <summary>
+    ///     Re-decides inline versus link for the visible results against the current window size and
+    ///     the configured threshold. A no-op unless search results are showing.
+    /// </summary>
+    internal void RefreshInlinePresentation()
+    {
+        if (_history.Current is not { IsSearch: true })
+            return;
+
+        _resultTree.AvailableWidth = ResultsWidth();
+        _resultTree.InlineThreshold = CurrentInlineThreshold();
+        _resultTree.ApplyPresentation();
+    }
+
+    /// <summary>
+    ///     Holds the results list's layout still for the duration of a window drag. The rows stay on
+    ///     screen and keep drawing; the debounced pass in <see cref="Update" /> thaws them and reflows
+    ///     once, at the size the window actually ended up.
+    ///     <para>
+    ///         Re-measuring 90 rows costs around 12ms a frame - most of the budget - and the drag
+    ///         re-measures them on every one of its frames. See
+    ///         <see cref="SearchResultTree.IsLayoutFrozen" /> for why Myra's own measure cache does
+    ///         not spare us that.
+    ///     </para>
+    /// </summary>
+    private void FreezeResultsWhileDragging()
+    {
+        if (_history.Current is { IsSearch: true })
+            _resultTree.IsLayoutFrozen = true;
+    }
+
+    /// <summary>
+    ///     Width a result row really has.
+    ///     <para>
+    ///         Derived from the window's own bounds, not from <see cref="_optionsStack" />: the window
+    ///         wraps its content in a scroll viewer that shows a horizontal bar, which hands the content
+    ///         an unbounded width to measure against. The stack therefore grows to fit whatever it
+    ///         holds, so reading its width would report how wide the rows already are and the demotion
+    ///         guard could never fire - the window would just scroll sideways instead.
+    ///     </para>
+    /// </summary>
+    private int ResultsWidth()
+    {
+        int window = _rootWindow.ActualBounds.Width;
+
+        if (window <= 0)
+            window = ProfileManager.CurrentProfile?.OptionsWindowsSize?.X ?? MIN_WIDTH;
+
+        int rail = _categoryScroller?.ActualBounds.Width ?? 0;
+
+        if (rail <= 0)
+            rail = RAIL_WIDTH_FALLBACK;
+
+        return Math.Max(window - rail - RESULTS_CHROME_ALLOWANCE, RAIL_WIDTH_FALLBACK);
+    }
+
+    private static double CurrentInlineThreshold() =>
+        (ProfileManager.CurrentProfile?.OptionsSearchInlineMode ?? SearchInlineMode.Balanced).ToThreshold();
 
     private static ButtonStyle _lastUsedButtonStylesheet = null!;
     private static ButtonStyle _tabButtonStyle = null!;
@@ -463,48 +1129,45 @@ public class OptionsWindow : MyraControl
     // their accessors so the values on screen agree with the applied profile.
     internal void RefreshCurrentContent()
     {
-        if (!string.IsNullOrWhiteSpace(_searchField.Text))
+        if (_history.Current is { IsSearch: true })
         {
-            ApplySearch(_searchField.Text.Trim());
+            RefreshSearchResults();
             return;
         }
 
-        if (_optionSources.TryGetValue(_lastCategory, out List<IOptionSource>? sources))
+        if (!_categoriesByLabel.TryGetValue(_currentCategory, out OptionCategory? resolved))
+            return;
+
+        // The cue points into a widget this rebuild is about to replace.
+        _highlight.Cancel();
+
+        for (int i = 0; i < resolved.Sources.Count && i < _optionsPanel.Widgets.Count; i++)
         {
-            for (int i = 0; i < sources.Count; i++)
+            // Rebuilding the category would reset nested tabs to their first page.
+            if (_optionsPanel.Widgets[i] is MyraTabControl tabs)
             {
-                // Rebuilding the category would reset nested tabs to their first page.
-                if (_optionsPanel.Widgets[i] is MyraTabControl tabs)
-                    tabs.RefreshSelectedContent();
-                else
-                    _optionsPanel.Widgets[i] = sources[i].Render();
+                tabs.RefreshSelectedContent();
+                continue;
             }
+
+            // A replaced PageControl is a fresh one showing its first page, so the page the user
+            // was on has to be carried across the swap.
+            int page = _optionsPanel.Widgets[i] is PageControl paged ? paged.CurrentPage : 0;
+            Widget rendered = resolved.Sources[i].Render();
+
+            if (rendered is PageControl renderedPages)
+                renderedPages.CurrentPage = page;
+
+            _optionsPanel.Widgets[i] = rendered;
         }
+
+        // Whatever tab controls the rebuilt content holds are new objects; the subscriptions went
+        // out with the widgets they were on.
+        ForgetTabControls();
+        WatchTabControls();
     }
 
-    private void ShowPage(string category)
-    {
-        if (_lastCategory == category)
-            return;
-
-        _searchField.Text = null;
-        // This internally calls some setters that render the hint again. Without this, and even though the property hasn't changes, hint will be lost.
-        _searchField.HintText = TazLang.Get("mog_searchellipses");
-
-        _optionsStack.Widgets.Clear();
-        _optionsStack.Widgets.Add(_optionsPanel);
-
-        _optionsPanel.Widgets.Clear();
-
-        _lastCategory = category;
-
-        if (!_optionSources.TryGetValue(category, out List<IOptionSource>? sources))
-            return;
-        foreach (IOptionSource source in sources)
-            _optionsPanel.Widgets.Add(source.Render());
-
-        SelectedCategoryChanged?.Invoke(this, category);
-    }
+    #endregion
 
     /// <summary>
     ///     Ends any effect preview started from the Visual Effects tab. The preview exists to be
@@ -513,26 +1176,17 @@ public class OptionsWindow : MyraControl
     /// </summary>
     public override void Dispose()
     {
+        _highlight.Cancel();
         ScreenOverlayManager.Instance.ClearPreview();
         base.Dispose();
         GC.SuppressFinalize(this);
     }
 
-    #region Static Methods
-
-    private static Point GetPageControlOverhead()
+    /// <summary>A top-level category and the sources rendered into it, in declared order</summary>
+    private sealed class OptionCategory(string label)
     {
-        if (_pageControlOverhead.HasValue)
-            return _pageControlOverhead.Value;
+        public string Label { get; } = label;
 
-        // Measure an empty PageControl to determine the total space its frame + control bar consume.
-        // Content size is zero, so the entire measured size is overhead the host must reserve.
-        var dummy = new PageControl();
-        _pageControlOverhead = dummy.Measure(new Point(MAX_WIDTH, MAX_HEIGHT));
-        return _pageControlOverhead.Value;
+        public List<IOptionSource> Sources { get; } = [];
     }
-
-    #endregion
-
-    #endregion
 }

@@ -28,5 +28,11 @@ namespace ClassicUO.Configuration
         /// Season override filters keyed by the season the server sends. Per-account.
         /// </summary>
         public Dictionary<Season, Season> SeasonFilters { get; set => SetProperty(ref field, value); } = new Dictionary<Season, Season>();
+
+        /// <summary>
+        /// Per-character last-equipment snapshots used by the character selection paperdoll, keyed by a
+        /// composite server+account+character id. Per-account so it follows the account across characters.
+        /// </summary>
+        public Dictionary<string, string> LastEquipmentData { get; set => SetProperty(ref field, value); } = new Dictionary<string, string>();
     }
 }

@@ -62,7 +62,12 @@ namespace ClassicUO.Game.UI.Gumps
             _mapIndex = isEdit && _markerIdx >= 0 ? _markers[_markerIdx].MapId : mapIndex ?? world.MapIndex;
 
             _colors = new[] { "none", "red", "green", "blue", "purple", "black", "yellow", "white" };
-            _icons = _markerIcons.Keys.ToArray();
+            // Directory.GetFiles gives no ordering guarantee: NTFS happens to return
+            // alphabetical, Linux filesystems return hash order. Sort explicitly so the
+            // icon list is stable across platforms.
+            _icons = _markerIcons.Keys
+                .OrderBy(k => k, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
 
             string markerName = _markerIdx < 0 ? TazLang.Get("marker_def_name") : _markers[_markerIdx].Name;
 

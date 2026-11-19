@@ -65,6 +65,35 @@ public class MyraTabControl : TabControl
         }
     }
 
+    /// <summary>
+    /// Selects the tab whose header matches <paramref name="label"/>, so a caller holding a path of
+    /// labels can drive the control without knowing tab indices.
+    /// </summary>
+    /// <param name="label">The tab header text to look for</param>
+    /// <returns>Whether a matching tab was found and selected</returns>
+    public bool TrySelectByLabel(string? label)
+    {
+        if (string.IsNullOrEmpty(label))
+            return false;
+
+        for (int i = 0; i < Items.Count; i++)
+        {
+            if (!string.Equals(Items[i].Text, label, StringComparison.Ordinal))
+                continue;
+
+            // Assigning an already-current index raises no event, but the page was built when it
+            // was first selected, so the content is present either way.
+            SelectedIndex = i;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>The selected tab's built content, or <see langword="null"/> when nothing is selected</summary>
+    public Widget? SelectedContent => SelectedItem?.Content;
+
     public void SelectFirst()
     {
         if (Items.Count > 0)

@@ -62,6 +62,12 @@ public static class SpellsTab
                     new Accessor<bool>(() => profile.EnableSpellIndicators),
                     search: new SearchMetadata(TazLang.Get("mog_combattab_spells_enablespellindicators"))
                 ),
+                Option.Checkbox(
+                    TazLang.Get("mog_combattab_spells_beginspellindicatoroncast"),
+                    new Accessor<bool>(() => profile.BeginSpellIndicatorOnCast),
+                    tooltip: TazLang.Get("mog_combattab_spells_beginspellindicatoroncasttooltip"),
+                    search: new SearchMetadata(TazLang.Get("mog_combattab_spells_beginspellindicatoroncast"), Keywords: [TazLang.Get("mog_kw_cast")])
+                ),
                 Option.Button(
                     TazLang.Get("mog_combattab_spells_importindicatorsfromurl"),
                     OpenConfigDownloadModal,
@@ -71,8 +77,7 @@ public static class SpellsTab
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_combattab_spells_spelllabel"), Tags: [TazLang.Get("mog_kw_spell"), TazLang.Get("mog_kw_magic")]));
     }
 
-    private static void OpenConfigDownloadModal()
-    {
+    private static void OpenConfigDownloadModal() =>
         UIManager.Add
         (
             new PromptPopupWindow
@@ -86,7 +91,6 @@ public static class SpellsTab
                 "https://github.com/PlayTazUO/TazUO/raw/refs/heads/dev/src/ClassicUO.Client/Game/Managers/DefaultSpellIndicatorConfig.json"
             ) { X = (ScaleHelper.LogicalWindowWidth >> 1) - 50, Y = (ScaleHelper.LogicalWindowHeight >> 1) - 50 }
         );
-    }
 
     private static async Task OnDownloadConfirmed(string url)
     {

@@ -1,6 +1,6 @@
 ---
 title: ApiUiLabel
-description: ApiUiLabel class documentation
+description: "ApiUiLabel class documentation"
 ---
 
 ## Properties

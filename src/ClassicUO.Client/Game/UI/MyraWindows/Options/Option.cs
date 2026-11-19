@@ -7,6 +7,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
 
@@ -38,6 +39,13 @@ internal static class Option
     /// <param name="tooltip">Optional tooltip text</param>
     /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
     /// <returns>An <see cref="OptionEntry"/> wrapping the checkbox widget</returns>
+    /// <remarks>
+    ///     <paramref name="value" /> is read when the entry is declared, not when the widget is built, so
+    ///     the editor shows that snapshot for as long as the entry lives. Fine for a widget created on
+    ///     demand; a trap in an options tab, where the search index keeps each entry's render factory
+    ///     from the moment the window opened - a result row would then display a value from then rather
+    ///     than the setting's own. Use the <see cref="Accessor{T}" /> overload there.
+    /// </remarks>
     public static OptionEntry Checkbox(string label, bool value, Action<bool> onValueChanged, string? tooltip = null, SearchMetadata? search = null) =>
         new(() => MyraCheckButton.CreateWithCallback(value, onValueChanged, label, tooltip), search ?? new SearchMetadata(label));
 
@@ -127,6 +135,13 @@ internal static class Option
     /// <param name="onChanged">An action to invoke when a hue is selected</param>
     /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
     /// <returns>An <see cref="OptionEntry"/> wrapping the hue-picker widget</returns>
+    /// <remarks>
+    ///     <paramref name="value" /> is read when the entry is declared, not when the widget is built, so
+    ///     the editor shows that snapshot for as long as the entry lives. Fine for a widget created on
+    ///     demand; a trap in an options tab, where the search index keeps each entry's render factory
+    ///     from the moment the window opened - a result row would then display a value from then rather
+    ///     than the setting's own. Use the <see cref="Accessor{T}" /> overload there.
+    /// </remarks>
     public static OptionEntry HuePicker(string label, ushort value, Action<ushort> onChanged, SearchMetadata? search = null) =>
         new(() => OptionsFactory.CreateHuePicker(label, value, onChanged, 20), search ?? new SearchMetadata(label));
 
@@ -281,8 +296,38 @@ internal static class Option
     /// <param name="tooltip">Optional tooltip text on the combo box</param>
     /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
     /// <returns>An <see cref="OptionEntry"/> wrapping the combo box widget</returns>
+    /// <remarks>
+    ///     <paramref name="value" /> is read when the entry is declared, not when the widget is built, so
+    ///     the editor shows that snapshot for as long as the entry lives. Fine for a widget created on
+    ///     demand; a trap in an options tab, where the search index keeps each entry's render factory
+    ///     from the moment the window opened - a result row would then display a value from then rather
+    ///     than the setting's own. Use the <see cref="Accessor{T}" /> overload there.
+    /// </remarks>
     public static OptionEntry ComboBox(string label, int value, string[] options, Action<int> onChange, string? tooltip = null, SearchMetadata? search = null) =>
         new(() => OptionsFactory.CreateComboBox(label, value, options, onChange, tooltip), search ?? new SearchMetadata(label));
+
+    /// <summary>
+    /// Creates a labeled combo box entry bound to an <see cref="int"/> property holding the selected
+    /// index. The index is read each time the widget is built, so a search result row shows the
+    /// setting's current value rather than whatever it held when the options window opened.
+    /// </summary>
+    /// <param name="label">The label displayed beside the combo box</param>
+    /// <param name="backingProperty">Accessor for the underlying selected-index value</param>
+    /// <param name="options">The option display strings, in index order</param>
+    /// <param name="tooltip">Optional tooltip text</param>
+    /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
+    /// <returns>An <see cref="OptionEntry"/> wrapping the combo box widget</returns>
+    public static OptionEntry ComboBox(
+        string label,
+        Accessor<int> backingProperty,
+        string[] options,
+        string? tooltip = null,
+        SearchMetadata? search = null
+    ) =>
+        new(
+            () => OptionsFactory.CreateComboBox(label, backingProperty.Get(), options, backingProperty.Set, tooltip),
+            search ?? new SearchMetadata(label)
+        );
 
     /// <summary>
     /// Creates a labeled text input entry bound to a <see cref="string"/> property
@@ -361,12 +406,23 @@ internal static class Option
 
     /// <summary>
     /// Creates an entry whose widget is produced by an arbitrary factory,
-    /// with optional search metadata
+    /// with optional search metadata.
+    /// <para>
+    /// Defaults to navigate-only in search results: a custom widget can be any size, and several
+    /// are editors that only work alongside their own page's toolbar and selection state. Pass
+    /// <paramref name="inlineable"/> for a custom widget that really is just a small control.
+    /// Omitting <paramref name="search"/> leaves the entry out of the index entirely.
+    /// </para>
     /// </summary>
     /// <param name="render">Factory that produces the custom widget</param>
     /// <param name="search">Optional search metadata for this entry</param>
+    /// <param name="inlineable">Whether the widget may be hosted directly in a search result row</param>
     /// <returns>An <see cref="OptionEntry"/> wrapping the custom widget</returns>
-    public static OptionEntry Custom(Func<Widget> render, SearchMetadata? search = null) => new(render, search);
+    public static OptionEntry Custom(Func<Widget> render, SearchMetadata? search = null, bool inlineable = false) =>
+        new(render, search)
+        {
+            Presentation = inlineable ? SearchPresentation.Inline : SearchPresentation.Navigate
+        };
 
     /// <summary>Creates a non-searchable vertical spacer entry</summary>
     /// <returns>An <see cref="OptionEntry"/> wrapping a small spacer widget</returns>

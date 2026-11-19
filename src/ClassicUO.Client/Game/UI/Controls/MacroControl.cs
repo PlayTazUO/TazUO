@@ -508,7 +508,7 @@ namespace ClassicUO.Game.UI.Controls
 
                         for (int i = 0; i < count; i++)
                         {
-                            names[i] = _allSubHotkeysNames[i + offset];
+                            names[i] = Macro.GetSubTypeName(obj.Code, (MacroSubType)(i + offset), _allSubHotkeysNames[i + offset]);
                         }
 
                         var sub = new Combobox

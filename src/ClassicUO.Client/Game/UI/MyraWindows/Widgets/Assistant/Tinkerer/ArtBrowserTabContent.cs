@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
+using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.MyraWindows.Widgets.ArtTexture;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Renderer;
@@ -169,7 +170,18 @@ public static class ArtBrowserTabContent
 
             jumpRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_goto", "Go to:"), MyraLabel.TextStyle.P));
             jumpRow.Widgets.Add(_gotoPicker);
+            jumpRow.Widgets.Add(TinkererTargeting.CreateButton(
+                TargetArt,
+                TazLang.Get("tinkerer_art_target_tooltip", "Target an object to jump to its art graphic.")
+            ));
             return jumpRow;
+        }
+
+        /// <summary>Jumps to the targeted object's art, previewing it in the object's hue.</summary>
+        private void TargetArt(GameObject picked)
+        {
+            _hue = picked.Hue;
+            JumpTo(picked.Graphic);
         }
 
         /// <summary>

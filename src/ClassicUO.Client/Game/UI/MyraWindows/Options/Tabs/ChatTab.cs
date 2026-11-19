@@ -12,10 +12,8 @@ public static class ChatTab
     /// <summary>Returns the tab group containing speech, journal, guild, and party chat sub-tabs</summary>
     internal static IOptionSource GetContent() => GetChatMenuTabs();
 
-    private static OptionTabGroup GetChatMenuTabs()
-    {
-
-        return new OptionTabGroup()
+    private static OptionTabGroup GetChatMenuTabs() =>
+        new OptionTabGroup()
             .AddTab(
                 TazLang.Get("mog_chattab_speech_label"),
                 SpeechTab.GetContent,
@@ -31,17 +29,13 @@ public static class ChatTab
                 FontsTab.GetContent,
                 new SearchMetadata(TazLang.Get("mog_chattab_fonttab_fontslabel"), Keywords: [TazLang.Get("mog_kw_font"), TazLang.Get("mog_kw_text"), TazLang.Get("mog_kw_style")])
             );
-    }
 
     #region Journal
 
-    private static IOptionSource GetJournalSubTabContentSource()
-    {
-
-        return OptionsUi.Vertical(
+    private static IOptionSource GetJournalSubTabContentSource() =>
+        OptionsUi.Vertical(
             GetJournalSubTabContent()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_chattab_journal_label"), [TazLang.Get("mog_kw_journal"), TazLang.Get("mog_kw_log")]));
-    }
 
     private static OptionFragment GetJournalSubTabContent()
     {
@@ -69,9 +63,8 @@ public static class ChatTab
             ),
             Option.ComboBox(
                 TazLang.Get("mog_chattab_journal_journalstyle"),
-                profile.JournalStyle,
+                new Accessor<int>(() => profile.JournalStyle),
                 Enum.GetNames<ResizableJournal.BorderStyle>(),
-                newValue => profile.JournalStyle = newValue,
                 search: new SearchMetadata(TazLang.Get("mog_chattab_journal_journalstyle"))
             ),
             Option.HuePicker(

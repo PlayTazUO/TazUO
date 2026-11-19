@@ -1,13 +1,35 @@
 #nullable enable
 
 using System.Collections.Generic;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
 /// <summary>
-/// Implemented by every node in the options tree: produces a widget for rendering and exposes its
-/// contained <see cref="OptionEntry"/> leaves so the search system can locate them
+/// State threaded down the options tree while it is being flattened for search. Carries the
+/// breadcrumb accumulated so far, so each node contributes its own name on the way down rather
+/// than walking back up to its parents - which it could not do anyway, since children are either
+/// value types or lazy factories with no back-reference.
+/// </summary>
+/// <param name="Path">Labels of the labelled ancestors visited so far, outermost first</param>
+/// <param name="Inherited">Search metadata propagated from ancestors</param>
+internal readonly record struct OptionIndexContext(SearchPath Path, SearchMetadata? Inherited = null)
+{
+    /// <summary>Returns this context with <paramref name="segment"/> appended to the path</summary>
+    /// <param name="segment">The segment to append; blank values are ignored</param>
+    /// <returns>The descended context</returns>
+    public OptionIndexContext Descend(string? segment) => this with { Path = Path.Push(segment) };
+
+    /// <summary>Returns this context with <paramref name="metadata"/> as the inherited metadata</summary>
+    /// <param name="metadata">The metadata children should inherit</param>
+    /// <returns>The updated context</returns>
+    public OptionIndexContext WithInherited(SearchMetadata? metadata) => this with { Inherited = metadata };
+}
+
+/// <summary>
+/// Implemented by every node in the options tree: produces a widget for rendering and flattens
+/// itself into <see cref="SearchEntry"/> values for the search index
 /// </summary>
 internal interface IOptionSource
 {
@@ -21,24 +43,19 @@ internal interface IOptionSource
     /// </summary>
     bool InheritsSearch { get; set; }
 
-    /// <summary>
-    /// Returns every <see cref="OptionEntry"/> leaf under this node whose metadata matches
-    /// <paramref name="search"/>
-    /// </summary>
-    /// <param name="search">The search criteria to evaluate against each leaf's metadata</param>
-    /// <returns>The matching option entries</returns>
-    IEnumerable<OptionEntry> Match(SearchMetadata search);
-
     /// <summary>Returns the widget that represents this source in the options UI</summary>
     /// <returns>The rendered widget</returns>
     Widget Render();
 
     /// <summary>
-    /// Returns every <see cref="OptionEntry"/> leaf under this node, each annotated with the
-    /// effective search metadata obtained by merging this node's own <see cref="Search"/> with
-    /// <paramref name="inheritedSearch"/>
+    /// Flattens this node into searchable entries, annotating each with the breadcrumb and merged
+    /// metadata accumulated in <paramref name="context"/>.
+    /// <para>
+    /// Entries are emitted without an activation callback - only the hosting window knows how to
+    /// navigate to a path, so it fills that in.
+    /// </para>
     /// </summary>
-    /// <param name="inheritedSearch">Search metadata propagated down from a parent node</param>
-    /// <returns>All leaf entries with their effective merged metadata</returns>
-    IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null);
+    /// <param name="context">The accumulated path and inherited metadata</param>
+    /// <returns>Every searchable entry under this node</returns>
+    IEnumerable<SearchEntry> Index(OptionIndexContext context);
 }

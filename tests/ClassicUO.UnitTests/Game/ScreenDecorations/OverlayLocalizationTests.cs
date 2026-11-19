@@ -33,6 +33,7 @@ public class OverlayLocalizationTests
         typeof(BlurEffect),
         typeof(RadialBlurEffect),
         typeof(ChromaticEffect),
+        typeof(SaturationEffect),
         typeof(PulseSpec),
         typeof(NoiseSpec),
         typeof(ShapeSpec),

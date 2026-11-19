@@ -1,6 +1,6 @@
 ---
 title: ApiUiAlphaBlendControl
-description: ApiUiAlphaBlendControl class documentation
+description: "ApiUiAlphaBlendControl class documentation"
 ---
 
 ## Properties
@@ -37,8 +37,7 @@ description: ApiUiAlphaBlendControl class documentation
 ## Methods
 ### SetBaseColor
 `(r, g, b, a)`
- Sets the base color of the alpha blend control using RGBA values (0-255)
-
+Sets the base color of the alpha blend control using RGBA values (0-255)
 
 **Parameters:**
 

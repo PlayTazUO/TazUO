@@ -26,8 +26,11 @@ namespace ClassicUO.Game.ScreenDecorations.Overlays.Presets.Layers;
 public static class LayerReach
 {
     /// <summary>
-    /// Ceiling from <see cref="ClassicUO.Renderer.Effects.OverlayShape.Reach" />. Past this the mask
-    /// covers the screen and further depth does nothing.
+    /// Ceiling for a staggered layer, which is lower than the one
+    /// <see cref="ClassicUO.Renderer.Effects.OverlayShape.Reach" /> itself allows. A stack like this
+    /// is a vignette: its deepest layer is meant to arrive at the centre, not to cover it, so the
+    /// range past 1 that <see cref="ClassicUO.Renderer.Effects.OverlayParams.MaxReach" /> opens up
+    /// for even full-screen cover would only flatten the stagger these margins exist to create.
     /// </summary>
     public const float Max = 1f;
 

@@ -26,10 +26,7 @@ namespace ClassicUO.Input
         /// </summary>
         public static event Action<SDL.SDL_Keymod> BareModifierEvent;
 
-        public static void ClearModifiers()
-        {
-            Alt = Shift = Ctrl = false;
-        }
+        public static void ClearModifiers() => Alt = Shift = Ctrl = false;
 
         public static string NormalizeKeyString(string input)
         {
@@ -63,9 +60,13 @@ namespace ClassicUO.Input
         /// <summary>
         /// True when the key combination described by <paramref name="input"/> is currently held.
         /// The input uses the same format as <see cref="NormalizeKeyString"/>, e.g. "CTRL+SHIFT+F1"
-        /// or "A". Extra modifiers beyond those specified do not prevent a match.
+        /// or "A". Extra modifiers beyond those specified do not prevent a match. A modifier-only
+        /// input (e.g. "CTRL") matches whenever those modifiers are held.
         /// </summary>
         /// <param name="input">Key combination to check, e.g. "CTRL+SHIFT+F1".</param>
+        /// <returns>
+        /// True if the combination is held; false for an empty input or an unrecognized key name.
+        /// </returns>
         public static bool IsKeyPressed(string input)
         {
             string normalized = NormalizeKeyString(input);
@@ -73,6 +74,7 @@ namespace ClassicUO.Input
                 return false;
 
             SDL.SDL_Keycode key = SDL.SDL_Keycode.SDLK_UNKNOWN;
+            bool hasKeyPart = false;
             bool ctrl = false, shift = false, alt = false;
 
             foreach (string part in normalized.Split('+'))
@@ -83,20 +85,21 @@ namespace ClassicUO.Input
                     case "SHIFT": shift = true; break;
                     case "ALT": alt = true; break;
                     default:
+                        hasKeyPart = true;
                         if (Enum.TryParse(part, true, out SDL.SDL_Keycode parsed))
                             key = parsed;
                         break;
                 }
             }
 
-            if (key == SDL.SDL_Keycode.SDLK_UNKNOWN || !_heldKeys.Contains(key))
-                return false;
+            bool modsMatch = (!ctrl || Ctrl) && (!shift || Shift) && (!alt || Alt);
 
-            if (ctrl && !Ctrl) return false;
-            if (shift && !Shift) return false;
-            if (alt && !Alt) return false;
+            // No key named means modifier-only binding.
+            // A named key that failed to parse must match nothing, so it can't be collapsed into the SDLK_UNKNOWN case above.
+            if (!hasKeyPart)
+                return modsMatch;
 
-            return true;
+            return key != SDL.SDL_Keycode.SDLK_UNKNOWN && modsMatch && _heldKeys.Contains(key);
         }
 
         /// <summary>Clear tracked held-key state (e.g. on focus loss) so keys don't appear stuck.</summary>
@@ -140,7 +143,7 @@ namespace ClassicUO.Input
                 return;
             }
 
-            SDL.SDL_Keycode keycode = (SDL.SDL_Keycode)e.key;
+            var keycode = (SDL.SDL_Keycode)e.key;
             if (e.type == SDL.SDL_EventType.SDL_EVENT_KEY_DOWN)
                 _heldKeys.Add(keycode);
             else

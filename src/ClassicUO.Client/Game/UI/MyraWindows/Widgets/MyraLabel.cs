@@ -1,6 +1,7 @@
 using System;
 using ClassicUO.Assets;
 using FontStashSharp.RichText;
+using ClassicUO.Game.UI.MyraWindows.Theme;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
@@ -70,6 +71,31 @@ public class MyraLabel : Label
             AlignMode.Right => HorizontalAlignment.Right,
             _ => HorizontalAlignment.Left
         };
+    }
+
+    /// <summary>
+    /// A subordinate annotation - a result count, a match explanation - drawn smaller and dimmer
+    /// than the thing it sits beside, so it reads as an aside rather than as more content.
+    /// </summary>
+    /// <param name="text">The hint text.</param>
+    /// <param name="color">Optional colour; the theme's disabled text when omitted.</param>
+    /// <returns>The label, single-line and vertically centred.</returns>
+    public static MyraLabel Hint(string text, Color? color = null)
+    {
+        // Built on the body style and then shrunk, rather than from the bare font constructor:
+        // that path applies no stylesheet, so the label would carry none of the padding or
+        // centring its neighbours have and would sit high against them.
+        var label = new MyraLabel(text, TextStyle.P)
+        {
+            Wrap = false,
+            SingleLine = true,
+            VerticalAlignment = VerticalAlignment.Center,
+            TextColor = color ?? MyraTheme.Current.DisabledText
+        };
+
+        label.Font = MyraStyle.GetUiFont(MyraStyle.HintFontSizeOffset);
+
+        return label;
     }
 
     /// <summary>

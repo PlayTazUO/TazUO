@@ -103,8 +103,8 @@ public partial class GridContainer : ResizableGump
             get
             {
                 if (_isCorpse)
-                    return TazLang.Get("gridcontainer_quickloot_corpse_tooltip", new string[] { QuickLootStatus });
-                return TazLang.Get("gridcontainer_quickloot_container_tooltip", new string[] { GetEnabledDisabledText(_quickLootThisContainer) });
+                    return TazLang.Get("gridcontainer_quickloot_corpse_tooltip_v2", new string[] { QuickLootStatus });
+                return TazLang.Get("gridcontainer_quickloot_container_tooltip_v2", new string[] { GetEnabledDisabledText(_quickLootThisContainer) });
             }
 
         }
@@ -421,13 +421,13 @@ public partial class GridContainer : ResizableGump
             };
             _openRegularGump.MouseEnter += (sender, e) => { _openRegularGump.Graphic = regularGumpIcon == null ? (ushort)1210 : (ushort)5840; };
             _openRegularGump.MouseExit += (sender, e) => { _openRegularGump.Graphic = regularGumpIcon == null ? (ushort)1209 : (ushort)5839; };
-            _openRegularGump.SetTooltip(TazLang.Get("gridcontainer_controls_tooltip",
+            _openRegularGump.SetTooltip(TazLang.Get("gridcontainer_controls_tooltip_v2",
                 "/c[orange]Grid Container Controls:/cd\n" +
                 "Ctrl + Click to lock an item in place\n" +
                 "Alt + Click to toggle selection for multi-move\n" +
                 "Alt + Double Click to select all similar items\n" +
                 "Shift + Click to add an item to your auto loot list\n" +
-                "Sort and single click looting can be enabled with the icons on the right side"));
+                "Sort options are on the right side. The loot icon opens item selection with a click, Alt + Click selects everything, and Ctrl + Click toggles single click looting"));
             _quickDropBackpack = new ResizableStaticPic(World.Player?.Backpack?.DisplayedGraphic ?? 0, 20, 20)
             {
                 X = Width - _openRegularGump.Width - 20 - _borderWidth,
@@ -435,22 +435,26 @@ public partial class GridContainer : ResizableGump
             };
             _quickDropBackpack.MouseUp += (sender, e) =>
             {
-                if (e.Button == MouseButtonType.Left && _quickDropBackpack.MouseIsOver)
+                if (e.Button != MouseButtonType.Left || !_quickDropBackpack.MouseIsOver)
+                    return;
+
+                if (Client.Game.UO.GameCursor.ItemHold.Enabled)
                 {
-                    if (Client.Game.UO.GameCursor.ItemHold.Enabled)
-                    {
-                        GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, 0xFFFF, 0xFFFF, 0, World.Player.Backpack);
-                    }
-                    else if (_isCorpse)
-                    {
-                        ProfileManager.CurrentProfile.CorpseSingleClickLoot ^= true;
-                        _quickDropBackpack.SetTooltip(QuickLootTooltip);
-                    }
-                    else
-                    {
-                        _quickLootThisContainer ^= true;
-                        _quickDropBackpack.SetTooltip(QuickLootTooltip);
-                    }
+                    GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, 0xFFFF, 0xFFFF, 0, World.Player.Backpack);
+                }
+                else if (Keyboard.Ctrl)
+                {
+                    ToggleSingleClickLoot();
+                }
+                else if (Keyboard.Alt)
+                {
+                    SelectItemsForMultiMove(_ => true);
+                }
+                else
+                {
+                    // Rebuild on every open so the entry lists reflect the container's current contents.
+                    _quickDropBackpack.ContextMenu = GenQuickLootContextMenu();
+                    _quickDropBackpack.ContextMenu?.Show();
                 }
             };
             _quickDropBackpack.MouseEnter += (sender, e) => { _quickDropBackpack.Hue = 0x34; };
@@ -713,20 +717,7 @@ public partial class GridContainer : ResizableGump
             control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_refreshhighlights", "Refresh item highlights"), GridHighlightData.RecheckMatchStatus));
 
             var multiMoveMenu = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove", "Multi Move"));
-            multiMoveMenu.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectall", "Select all"), () => SelectItemsForMultiMove(_ => true)));
-
-            var selectByLayer = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbylayer", "Select by layer"));
-            PopulateMultiMoveLayerEntries(selectByLayer);
-            multiMoveMenu.Add(selectByLayer);
-
-            var selectByGraphic = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbygraphic", "Select by graphic"));
-            PopulateMultiMoveGraphicEntries(selectByGraphic);
-            multiMoveMenu.Add(selectByGraphic);
-
-            var selectByName = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbyname", "Select by name"));
-            PopulateMultiMoveNameEntries(selectByName);
-            multiMoveMenu.Add(selectByName);
-
+            AddMultiMoveSelectEntries(multiMoveMenu.Add);
             control.Add(multiMoveMenu);
 
             control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_renamecontainer", "Rename container"), () =>
@@ -758,6 +749,45 @@ public partial class GridContainer : ResizableGump
             UpdateContainerNameLabel();
         }
     #nullable disable
+
+        /// <summary>
+        /// Context menu shown by clicking the quick loot icon. Mirrors the item selection entries from the
+        /// Multi Move submenu in the container controls menu.
+        /// </summary>
+        private ContextMenuControl GenQuickLootContextMenu()
+        {
+            var control = new ContextMenuControl(this);
+            AddMultiMoveSelectEntries(control.Add);
+            return control;
+        }
+
+        private void ToggleSingleClickLoot()
+        {
+            if (_isCorpse)
+                ProfileManager.CurrentProfile.CorpseSingleClickLoot ^= true;
+            else
+                _quickLootThisContainer ^= true;
+
+            _quickDropBackpack.SetTooltip(QuickLootTooltip);
+        }
+
+        /// <summary>Adds the item selection entries shared by the Multi Move submenu and the quick loot icon menu.</summary>
+        private void AddMultiMoveSelectEntries(Action<ContextMenuItemEntry> add)
+        {
+            add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectall", "Select all"), () => SelectItemsForMultiMove(_ => true)));
+
+            var selectByLayer = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbylayer", "Select by layer"));
+            PopulateMultiMoveLayerEntries(selectByLayer);
+            add(selectByLayer);
+
+            var selectByGraphic = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbygraphic", "Select by graphic"));
+            PopulateMultiMoveGraphicEntries(selectByGraphic);
+            add(selectByGraphic);
+
+            var selectByName = new ContextMenuItemEntry(TazLang.Get("gridcontainer_multimove_selectbyname", "Select by name"));
+            PopulateMultiMoveNameEntries(selectByName);
+            add(selectByName);
+        }
 
         private ContextMenuControl GenSortContextMenu()
         {
@@ -1197,7 +1227,12 @@ public partial class GridContainer : ResizableGump
 
                 Item bank = World.Player?.FindItemByLayer(Layer.Bank);
 
-                if (bank != null && (currentContainer.Serial == bank.Serial || currentContainer.Container == bank.Serial))
+                // Containers carried by another mobile (a player vendor's shop, a pack animal): when the main one is
+                // closed its inner containers are closed too, like the bank. The player's own bags stay open.
+                uint root = currentContainer.RootContainer;
+                bool onOtherMobile = SerialHelper.IsMobile(root) && root != World.Player?.Serial;
+
+                if (onOtherMobile || (bank != null && (currentContainer.Serial == bank.Serial || currentContainer.Container == bank.Serial)))
                 {
                     for (LinkedObject i = currentContainer.Items; i != null; i = i.Next)
                     {

@@ -13,12 +13,10 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs.CooldownBars;
 internal static partial class CooldownBarsTab
 {
     /// <summary>Returns the option fragment containing the cooldown-bars editor and enable toggle</summary>
-    internal static IOptionSource GetContent()
-    {
-        return OptionsUi.Vertical(
+    internal static IOptionSource GetContent() =>
+        OptionsUi.Vertical(
             GetSection()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_cooldownstab_cooldownbarslabel"), Tags: [TazLang.Get("mog_kw_cooldown"), TazLang.Get("mog_kw_timer")]));
-    }
 
     private static OptionFragment GetSection()
     {

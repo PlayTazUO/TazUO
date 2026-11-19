@@ -1,6 +1,6 @@
 ---
 title: ApiItemData
-description: ApiItemData class documentation
+description: "ApiItemData class documentation"
 ---
 
 ## Properties

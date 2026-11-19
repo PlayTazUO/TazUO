@@ -21,6 +21,6 @@ internal static class DenyWalk
         world.Player.Walker.DenyWalk(seq, x, y, z);
         world.Player.Direction = direction;
 
-        world.Weather.Reset();
+        // The weather is kept: a denied step doesn't change it, and the server won't resend what it already sent.
     }
 }

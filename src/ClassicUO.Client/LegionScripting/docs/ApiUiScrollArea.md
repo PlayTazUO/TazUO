@@ -1,11 +1,10 @@
 ---
 title: ApiUiScrollArea
-description:  Inherits from ApiUiBaseControl 
+description: "Inherits from ApiUiBaseControl"
 ---
 
 ## Class Description
- Inherits from ApiUiBaseControl
-
+Inherits from ApiUiBaseControl
 
 ## Properties
 *No properties found.*

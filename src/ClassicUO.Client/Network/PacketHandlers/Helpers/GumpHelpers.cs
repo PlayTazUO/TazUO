@@ -72,6 +72,8 @@ internal static class GumpHelpers
             gump = null;
 
         bool mustBeAdded = gump == null;
+        int serverX = x;
+        int serverY = y;
 
         if (UIManager.GetGumpCachePosition(gumpID, out Point pos))
         {
@@ -598,6 +600,16 @@ internal static class GumpHelpers
             {
                 gump.Children[i].ApplyScale(serverGumpScale);
             }
+        }
+
+        // A non-movable gump is placed by the server (often relative to the viewport it was told about), so a
+        // remembered position must not override it: neither one from earlier in the session or from the profile at
+        // login, nor a permanent one, which for such a gump can only come from the auto-save of all gump positions.
+        if (!gump.CanMove)
+        {
+            gump.X = serverX;
+            gump.Y = serverY;
+            UIManager.RemovePosition(gumpID);
         }
 
         if (mustBeAdded)

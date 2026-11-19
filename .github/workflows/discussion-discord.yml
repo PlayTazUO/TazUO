@@ -1,0 +1,94 @@
+name: Discussion to Discord
+
+# Posts newly created GitHub discussions to a Discord webhook.
+# DISCUSSION_CATEGORY is the category's display name as shown on GitHub.
+# DISCUSSION_CATEGORY_SLUG is the URL form (e.g. "Show and tell" -> "show-and-tell");
+# matching either one keeps this working if the name's casing/spacing changes.
+# The webhook URL is read from the SHOW_AND_TELL_BOT repository secret.
+# To reuse the existing features-bot webhook, change the secret name below to DISCORD_WEBHOOK.
+
+on:
+  discussion:
+    types: [created]
+
+permissions:
+  contents: read
+
+env:
+  DISCUSSION_CATEGORY: Show and tell
+  DISCUSSION_CATEGORY_SLUG: show-and-tell
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post discussion to Discord
+        if: >-
+          github.event.discussion.category.name == env.DISCUSSION_CATEGORY ||
+          github.event.discussion.category.slug == env.DISCUSSION_CATEGORY_SLUG
+        uses: actions/github-script@v7
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.SHOW_AND_TELL_BOT }}
+        with:
+          script: |
+            const webhook = process.env.DISCORD_WEBHOOK;
+            if (!webhook) {
+              core.setFailed('SHOW_AND_TELL_BOT secret is not configured.');
+              return;
+            }
+
+            const discussion = context.payload.discussion;
+            const category = discussion.category?.name ?? 'Uncategorized';
+            const author = discussion.user ?? {};
+
+            // Discord limits embed titles to 256 characters.
+            const fullTitle = discussion.title ?? 'New discussion';
+            const title =
+              fullTitle.length > 256 ? fullTitle.slice(0, 255).trimEnd() + '…' : fullTitle;
+
+            // Show a short excerpt, trimming on a word boundary.
+            const maxBodyLength = 200;
+            const rawBody = (discussion.body ?? '').trim();
+            let excerpt = rawBody;
+            if (excerpt.length > maxBodyLength) {
+              excerpt = excerpt
+                .slice(0, maxBodyLength)
+                .replace(/\s+\S*$/, '')
+                .trimEnd() + '…';
+            }
+
+            const link = `[View the discussion](${discussion.html_url})`;
+            const description = excerpt ? `${excerpt}\n\n${link}` : link;
+
+            const embed = {
+              title,
+              url: discussion.html_url,
+              description,
+              color: 0x5865f2,
+              author: {
+                name: author.login ?? 'Unknown',
+                icon_url: author.avatar_url ?? undefined,
+              },
+              footer: { text: `Category: ${category}` },
+              timestamp: discussion.created_at,
+            };
+
+            const response = await fetch(webhook, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                username: 'TazUO Discussions',
+                embeds: [embed],
+                // Never ping anyone from discussion content.
+                allowed_mentions: { parse: [] },
+              }),
+            });
+
+            if (!response.ok) {
+              core.setFailed(
+                `Discord webhook failed (${response.status}): ${await response.text()}`
+              );
+              return;
+            }
+
+            core.info(`Posted "${discussion.title}" to Discord.`);

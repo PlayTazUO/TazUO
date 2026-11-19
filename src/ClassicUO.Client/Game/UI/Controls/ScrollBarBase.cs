@@ -92,6 +92,12 @@ namespace ClassicUO.Game.UI.Controls
         public int ScrollStep { get; set; } = 50;
         protected int _value, _minValue, _maxValue;
 
+        /// <summary>
+        /// Resizes the bar, giving subclasses a chance to refresh geometry cached from their height.
+        /// </summary>
+        /// <param name="newHeight">The new bar height in pixels.</param>
+        public virtual void UpdateHeight(int newHeight) => Height = newHeight;
+
 
         public event EventHandler ValueChanged;
 

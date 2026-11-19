@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.Game.ScreenDecorations.Overlays;
+using ClassicUO.Game.ScreenDecorations.Overlays.Presets;
 using ClassicUO.Game.ScreenDecorations.Overlays.Presets.Layers;
 using ClassicUO.Renderer.Effects;
+using Microsoft.Xna.Framework;
 using FluentAssertions;
 using Xunit;
 
@@ -18,6 +20,12 @@ public class SamplingPresetTests
         return layers;
     }
 
+    /// <summary>
+    /// The presets that pair a distortion with colour painted over it. Desaturate is absent on
+    /// purpose - it is a grade and nothing else, so
+    /// <see cref="EachSamplingPresetPaintsOverItsDistortion"/> does not hold for it; see
+    /// <see cref="DesaturateCoversEveryPixelEvenly"/>.
+    /// </summary>
     public static TheoryData<ShippedPreset, OverlaySampleMode> SamplingPresets()
     {
         return new TheoryData<ShippedPreset, OverlaySampleMode>
@@ -26,6 +34,39 @@ public class SamplingPresetTests
             { ShippedPreset.Drunk, OverlaySampleMode.Radial },
             { ShippedPreset.Concussion, OverlaySampleMode.Chromatic }
         };
+    }
+
+    /// <summary>
+    /// Each assertion guards a way the preset could become a vignette or a blotchy haze instead of
+    /// an even grade - none of which shows in a single-frame screenshot.
+    /// </summary>
+    [Fact]
+    public void DesaturateCoversEveryPixelEvenly()
+    {
+        OverlayLayer layer = Bake(new DesaturateOverlay()).Should().ContainSingle().Subject;
+        OverlayParams p = layer.Params;
+
+        p.Sampling.Mode.Should().Be(OverlaySampleMode.Saturation);
+        p.Sampling.Saturation.Should().Be(0f);
+
+        // Past the centre, so the mask has no hole in the middle and no gradient anywhere.
+        p.Shape.Reach.Should().BeGreaterThanOrEqualTo(1f + p.Shape.Feather);
+
+        // Solid under the noise: at anything below 1 the noise field gates the alpha and the drain
+        // comes out as drifting patches.
+        p.Noise.FlatFloor.Should().Be(1f);
+
+        p.Noise.BaseScroll.Should().Be(Vector2.Zero);
+        p.Noise.DetailScroll.Should().Be(Vector2.Zero);
+
+        // Earns the pass that skips the noise fetches. At full reach nothing clips, so paying for
+        // three discarded fetches here would be a per-pixel cost over the whole viewport.
+        p.HasFlatAlpha.Should().BeTrue();
+
+        p.Shape.Jitter.ReachAmount.Should().Be(0f);
+        p.Shape.FocusAmount.Should().Be(0f);
+        p.Appearance.Opacity.Should().Be(1f);
+        p.Appearance.PulseAmp.Should().Be(0f);
     }
 
     [Theory]
@@ -81,6 +122,12 @@ public class SamplingPresetTests
 
         steady.Params.Noise.FlatFloor.Should().Be(1f);
         swimming.Params.Noise.FlatFloor.Should().BeApproximately(0.5f, 1e-5f);
+
+        // A floor of 1 multiplies the field out, so a swim block on the steady layer would be dead
+        // values on display in the composer - motion the layer does not actually have.
+        steady.Params.Noise.BaseScroll.Should().Be(Vector2.Zero);
+        steady.Params.Noise.DetailScroll.Should().Be(Vector2.Zero);
+        swimming.Params.Noise.BaseScroll.Should().NotBe(Vector2.Zero);
     }
 
     [Fact]

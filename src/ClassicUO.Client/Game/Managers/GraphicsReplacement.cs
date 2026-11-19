@@ -157,7 +157,11 @@ namespace ClassicUO.Game.Managers
             {
                 (ushort OriginalGraphic, byte OriginalType) key = (filter.OriginalGraphic, filter.OriginalType);
                 graphicChangeFilters[key] = filter;
-                quickLookup.Add(key);
+
+                // Disabled filters stay in the dictionary so they can be edited/re-enabled, but are
+                // left out of the lookup the hot Replace/ReplaceHue paths consult.
+                if (filter.Enabled)
+                    quickLookup.Add(key);
             }
         }
 
@@ -198,9 +202,29 @@ namespace ClassicUO.Game.Managers
             {
                 (ushort OriginalGraphic, byte OriginalType) key = (item.Value.OriginalGraphic, item.Value.OriginalType);
                 newList.Add(key, item.Value);
-                quickLookup.Add(key);
+
+                if (item.Value.Enabled)
+                    quickLookup.Add(key);
             }
             graphicChangeFilters = newList;
+        }
+
+        /// <summary>
+        /// Enables or disables an existing filter without removing it. The filter stays in the saved
+        /// list; only the lookup used for replacements is updated.
+        /// </summary>
+        public static void SetEnabled(ushort originalGraphic, byte originalType, bool enabled)
+        {
+            (ushort, byte) key = (originalGraphic, originalType);
+            if (!graphicChangeFilters.TryGetValue(key, out GraphicChangeFilter filter))
+                return;
+
+            filter.Enabled = enabled;
+
+            if (enabled)
+                quickLookup.Add(key);
+            else
+                quickLookup.Remove(key);
         }
 
         public static GraphicChangeFilter NewFilter(ushort originalGraphic, byte originalType, ushort newGraphic, byte newType, ushort newHue = ushort.MaxValue)
@@ -217,7 +241,10 @@ namespace ClassicUO.Game.Managers
                     NewHue = newHue
                 };
                 graphicChangeFilters.Add(key, f);
-                quickLookup.Add(key);
+
+                if (f.Enabled)
+                    quickLookup.Add(key);
+
                 return f;
             }
             return null;
@@ -267,7 +294,10 @@ namespace ClassicUO.Game.Managers
                         if (!graphicChangeFilters.ContainsKey(key))
                         {
                             graphicChangeFilters[key] = filter;
-                            quickLookup.Add(key);
+
+                            if (filter.Enabled)
+                                quickLookup.Add(key);
+
                             addedCount++;
                         }
                         else
@@ -299,5 +329,11 @@ namespace ClassicUO.Game.Managers
         public ushort ReplacementGraphic { get; set; }
         public byte ReplacementType { get; set; } = 1; // Default Mobile
         public ushort NewHue { get; set; } = ushort.MaxValue;
+
+        /// <summary>
+        /// Whether this filter is applied. Defaults to true, which also covers saves written before
+        /// this property existed (the initializer runs before a missing JSON property is skipped).
+        /// </summary>
+        public bool Enabled { get; set; } = true;
     }
 }

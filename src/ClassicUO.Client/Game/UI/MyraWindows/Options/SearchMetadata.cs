@@ -1,75 +1,98 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
 /// <summary>
 /// Immutable metadata attached to an option or option source that drives the search system.
-/// An option matches a user query if its <see cref="SearchText"/> contains the query string,
-/// or if any of its <see cref="Tags"/> or <see cref="Keywords"/> overlap with those in the query.
+/// <para>
+/// <see cref="Label"/> is what the user sees in a search result; the remaining members are match
+/// fuel and are never displayed. They are kept apart because grouped sources merge their
+/// descendants' match text into one blob, which would be unusable as a caption.
+/// </para>
 /// </summary>
 /// <param name="SearchText">
-/// Free-form text checked for a substring match against the user's search string.
-/// Typically the option's visible label.
+/// Free-form text matched against the user's query. Seeded from the option's visible label, then
+/// extended with descendant labels when a group is merged.
 /// </param>
 /// <param name="Tags">
-/// Category tags (e.g. a tab name) used for structural filtering.
-/// An option matches when any of its tags appears in the query's tag set.
+/// Category tags, historically a tab name. Structural position is now carried by the indexed
+/// path instead, so these survive only as additional match fuel.
 /// </param>
 /// <param name="Keywords">
-/// Secondary terms used for keyword-based discovery.
-/// An option matches when any of its keywords appears in the query's keyword set.
+/// Synonyms that should find this option, e.g. <c>talk</c> for a speech setting. Scored
+/// individually so the matching term can be reported back to the user.
 /// </param>
 public record SearchMetadata(string? SearchText = null, string[]? Tags = null, string[]? Keywords = null)
 {
-    private string[]? NormalizedTags => Tags?.SelectMany(t => t.Split(',').Select(s => s.Trim())).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
-    private string[]? NormalizedKeywords => Keywords?.SelectMany(k => k.Split(',').Select(s => s.Trim())).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+    /// <summary>
+    /// Display caption for a search result. Defaults to <see cref="SearchText"/>, since option
+    /// factories seed both from the visible label; merging preserves the innermost one rather than
+    /// concatenating, so it stays a single name.
+    /// </summary>
+    public string? Label { get; init; } = SearchText;
+
+    /// <summary>Tags split on commas and trimmed, as authors write them either way</summary>
+    public string[] NormalizedTags => Split(Tags);
+
+    /// <summary>Keywords split on commas and trimmed, as authors write them either way</summary>
+    public string[] NormalizedKeywords => Split(Keywords);
 
     /// <summary>
-    /// Returns <see langword="true"/> when this metadata satisfies the given <paramref name="search"/> query.
-    /// A match occurs if the search text is found as a substring of <see cref="SearchText"/>,
-    /// or if any tag or keyword in this metadata intersects with those in <paramref name="search"/>.
+    /// Keywords and tags folded into one synonym set. Tags used to carry structural position as
+    /// well, but the indexed path does that now, so both are plain alternate search terms and an
+    /// entry built from either has to match the same queries.
     /// </summary>
-    /// <param name="search">The query to match against</param>
-    /// <returns>Whether this metadata satisfies the query</returns>
-    public bool Matches(SearchMetadata search)
+    /// <value>The combined terms, or <see langword="null"/> when there are none</value>
+    public IReadOnlyList<string>? MatchTerms
     {
-        if (search.SearchText != null)
+        get
         {
-            if (SearchText?.Contains(search.SearchText, StringComparison.InvariantCultureIgnoreCase) == true)
-                return true;
+            string[] keywords = NormalizedKeywords;
+            string[] tags = NormalizedTags;
 
-            if (NormalizedTags?.Any(tag => search.SearchText.Contains(tag, StringComparison.InvariantCultureIgnoreCase)) == true)
-                return true;
+            if (keywords.Length == 0)
+                return tags.Length == 0 ? null : tags;
 
-            if (NormalizedKeywords?.Any(keyword => search.SearchText.Contains(keyword, StringComparison.InvariantCultureIgnoreCase)) == true)
-                return true;
+            return tags.Length == 0 ? keywords : [.. keywords, .. tags];
         }
-
-        if (NormalizedTags?.Length > 0 && search.Tags?.Length > 0)
-            return search.Tags.ContainsAny(NormalizedTags);
-
-        if (NormalizedKeywords?.Length > 0 && search.Keywords?.Length > 0)
-            return search.Keywords.ContainsAny(NormalizedKeywords);
-
-        return false;
     }
 
     /// <summary>
-    /// Combines two <see cref="SearchMetadata"/> instances into one, taking the search text from
-    /// <paramref name="a"/> first (falling back to <paramref name="b"/>) and deduplicating the
-    /// combined tag and keyword sets
+    /// Combines two instances, keeping the innermost <see cref="SearchText"/> and deduplicating the
+    /// combined tag and keyword sets.
+    /// <para>
+    /// <see cref="Label"/> is deliberately <b>not</b> inherited: it names one specific option, so
+    /// taking an ancestor's would give a name to everything that has none of its own - spacers and
+    /// decorative widgets would be indexed under their section's title and surface as blank rows.
+    /// Match text and keywords still propagate, since those are only ever matched against.
+    /// </para>
     /// </summary>
-    /// <param name="a">The primary metadata; its search text takes precedence</param>
-    /// <param name="b">The secondary metadata merged into the result</param>
-    /// <returns>A new <see cref="SearchMetadata"/> that is the union of both inputs</returns>
+    /// <param name="a">The inner metadata; its text and label take precedence</param>
+    /// <param name="b">The outer metadata merged into the result</param>
+    /// <returns>A new instance that is the union of both inputs</returns>
     public static SearchMetadata Merge(SearchMetadata? a, SearchMetadata? b)
     {
-        string? finalSearchText = a?.SearchText ?? b?.SearchText;
         string[] concatTags = [.. a?.Tags ?? [], .. b?.Tags ?? []];
         string[] concatKeywords = [.. a?.Keywords ?? [], .. b?.Keywords ?? []];
 
-        return new SearchMetadata(finalSearchText, concatTags.Distinct().ToArray(), concatKeywords.Distinct().ToArray());
+        return new SearchMetadata(
+            a?.SearchText ?? b?.SearchText,
+            concatTags.Distinct().ToArray(),
+            concatKeywords.Distinct().ToArray()
+        )
+        {
+            Label = a?.Label
+        };
     }
+
+    private static string[] Split(string[]? values) =>
+        values == null
+            ? []
+            : values
+                .SelectMany(value => value.Split(',').Select(part => part.Trim()))
+                .Where(part => !string.IsNullOrWhiteSpace(part))
+                .ToArray();
 }

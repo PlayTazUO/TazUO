@@ -90,7 +90,11 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
             {
                 if (loaded && e.Parent != null && ReferenceEquals(e.Parent, World.Player))
                     if (spellRangePowerWordCache.TryGetValue(e.Text.Trim(), out SpellRangeInfo spell))
-                        SetCasting(spell);
+                    {
+                        // With client-side cast begin the same cast is already tracked; keep its original
+                        // start time and avoid a second begin event when the server echoes the power words.
+                        if (!isCasting || currentSpell?.ID != spell.ID) SetCasting(spell);
+                    }
             });
 
         public void OnClilocReceived(int cliloc)
@@ -148,6 +152,19 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
         }
 
         public SpellRangeInfo GetCurrentSpell() => currentSpell;
+
+        /// <summary>
+        /// Starts tracking a cast as soon as the client sends the cast packet, rather than waiting for the
+        /// server's power-word message. Does nothing when the option is disabled or the spell has no
+        /// indicator entry.
+        /// </summary>
+        /// <param name="spellIndex">The spell ID sent to the server.</param>
+        public void BeginCastingFromClient(int spellIndex)
+        {
+            if (!loaded || ProfileManager.CurrentProfile?.BeginSpellIndicatorOnCast != true) return;
+
+            if (spellRangeCache.TryGetValue(spellIndex, out SpellRangeInfo spell)) SetCasting(spell);
+        }
 
         #region Load and unload
 

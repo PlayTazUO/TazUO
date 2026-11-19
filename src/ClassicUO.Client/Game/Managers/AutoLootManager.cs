@@ -78,6 +78,11 @@ namespace ClassicUO.Game.Managers
         private const int MaxLootedCorpseHistory = 10000;
 
         /// <summary>
+        /// Max corpse serials remembered as scanned in range; clearing is harmless.
+        /// </summary>
+        private const int MaxScannedCorpseHistory = 10000;
+
+        /// <summary>
         /// Serials of corpses that have been looted and hued. Persists across corpse
         /// recreation (e.g. walking out of and back into view) so the looted hue is reapplied.
         /// </summary>
@@ -86,6 +91,11 @@ namespace ClassicUO.Game.Managers
 
         private readonly HashSet<uint> _quickContainsLookup = new ();
         private readonly HashSet<uint> _recentlyLooted = new ();
+
+        /// <summary>
+        /// Corpses already scanned while in range; rescanned after they leave range or on retry.
+        /// </summary>
+        private readonly HashSet<uint> _scannedCorpsesInRange = new ();
         private readonly List<AutoLootConfigEntry> _fallbackEntries = new ();
         private AutoLootData _data = new ();
         private AutoLootList _currentList;
@@ -200,6 +210,7 @@ namespace ClassicUO.Game.Managers
                     return entry;
 
             AutoLootEntries.Add(item);
+            InvalidateScannedCorpses();
 
             return item;
         }
@@ -216,9 +227,14 @@ namespace ClassicUO.Game.Managers
         {
             if (corpse is not { IsCorpse: true }) return;
 
-            if (corpse.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange && !ProfileManager.CurrentProfile.DisableAutolootCorpseRetry)
+            if (corpse.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
             {
-                World.Instance?.Player?.AutoOpenedCorpses.Remove(corpse); //Retry if the distance was too great to loot
+                // Too far to loot; allow retry when the player gets close again.
+                _scannedCorpsesInRange.Remove(corpse.Serial);
+
+                if (!ProfileManager.CurrentProfile.DisableAutolootCorpseRetry)
+                    World.Instance?.Player?.AutoOpenedCorpses.Remove(corpse);
+
                 return;
             }
 
@@ -273,7 +289,11 @@ namespace ClassicUO.Game.Managers
                 if (entries[i].Uid == uid)
                     removeAt = i;
 
-            if (removeAt > -1) entries.RemoveAt(removeAt);
+            if (removeAt > -1)
+            {
+                entries.RemoveAt(removeAt);
+                InvalidateScannedCorpses();
+            }
         }
 
         /// <summary>
@@ -308,6 +328,7 @@ namespace ClassicUO.Game.Managers
 
             _currentList = list;
             _data.SelectedUid = list.Uid;
+            InvalidateScannedCorpses();
             Save();
         }
 
@@ -323,6 +344,7 @@ namespace ClassicUO.Game.Managers
             _data.Lists.Add(list);
             _currentList = list;
             _data.SelectedUid = list.Uid;
+            InvalidateScannedCorpses();
             Save();
 
             return list;
@@ -343,6 +365,7 @@ namespace ClassicUO.Game.Managers
                 _data.SelectedUid = _currentList.Uid;
             }
 
+            InvalidateScannedCorpses();
             Save();
             return true;
         }
@@ -375,11 +398,8 @@ namespace ClassicUO.Game.Managers
             Item root = _world.Items.Get(i.RootContainer);
             if (root != null && root.IsCorpse)
             {
-                // Check the item that triggered this call directly
+                // Each corpse item raises its own event, so only check the triggering item (avoids O(N²)).
                 CheckAndLoot(i);
-                // A defensive safety net to ensure all items in the corpse are processed
-                HandleCorpse(root);
-                return;
             }
         }
 
@@ -420,10 +440,40 @@ namespace ClassicUO.Game.Managers
         {
             if (!_loaded) return;
 
-            if (IsEnabled)
-                foreach (Item corpse in _world.GetCorpseSnapshot())
-                    CheckCorpse(corpse);
+            if (!IsEnabled)
+            {
+                _scannedCorpsesInRange.Clear();
+                return;
+            }
+
+            int lootRange = ProfileManager.CurrentProfile.AutoOpenCorpseRange;
+
+            foreach (Item corpse in _world.GetCorpseSnapshot())
+            {
+                if (corpse.Distance > lootRange)
+                {
+                    // Out of range: forget the scan so it is retried when back in range.
+                    _scannedCorpsesInRange.Remove(corpse.Serial);
+
+                    if (!ProfileManager.CurrentProfile.DisableAutolootCorpseRetry)
+                        World.Instance?.Player?.AutoOpenedCorpses.Remove(corpse);
+
+                    continue;
+                }
+
+                // Already scanned while in range; new items are handled by their own events.
+                if (_scannedCorpsesInRange.Add(corpse.Serial))
+                    HandleCorpse(corpse);
+            }
+
+            if (_scannedCorpsesInRange.Count > MaxScannedCorpseHistory)
+                _scannedCorpsesInRange.Clear();
         }
+
+        /// <summary>
+        /// Re-checks in-range corpses on the next position update.
+        /// </summary>
+        private void InvalidateScannedCorpses() => _scannedCorpsesInRange.Clear();
 
         private void OnOpenContainer(object sender, uint e)
         {
@@ -460,6 +510,10 @@ namespace ClassicUO.Game.Managers
                 if (Time.Ticks > _nextClearRecents)
                 {
                     _recentlyLooted.Clear();
+
+                    // Re-check in-range corpses periodically so failed loots can be retried.
+                    _scannedCorpsesInRange.Clear();
+
                     _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
                 }
                 return;
@@ -489,7 +543,11 @@ namespace ClassicUO.Game.Managers
                 if (rc != null && rc.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
                 {
                     if (rc.IsCorpse && !ProfileManager.CurrentProfile.DisableAutolootCorpseRetry)
+                    {
                         World.Instance?.Player?.AutoOpenedCorpses.Remove(rc); //Allow reopening this corpse, we got too far away to finish looting..
+                        _scannedCorpsesInRange.Remove(rc.Serial); //Force a rescan so this item gets retried
+                    }
+
                     _recentlyLooted.Remove(serial);
                     return;
                 }
@@ -695,6 +753,7 @@ namespace ClassicUO.Game.Managers
             _pendingLootCount = 0;
             _currentLootTotalCount = 0;
             _quickContainsLookup.Clear();
+            _scannedCorpsesInRange.Clear();
             _progressBarGump?.Dispose();
             _progressBarGump = null;
         }
@@ -738,6 +797,7 @@ namespace ClassicUO.Game.Managers
             if (newItems.Count > 0)
             {
                 currentEntries.AddRange(newItems);
+                InvalidateScannedCorpses();
                 Save();
             }
 
@@ -900,13 +960,18 @@ namespace ClassicUO.Game.Managers
 
             public bool Match(Item compareTo)
             {
-                if (Graphic != -1 && Graphic != compareTo.Graphic) return false;
+                // There's an inherent type mismatch here - graphic is ushort but stored as int.
+                // Additionally, new configs may have serialized -1 - current code does not allow this
+                // but leaving in the -1 here for backwards compatability.
+                //
+                // The comparison to ushort.MaxValue may misclassify items with graphic 0xFFFF but honestly, good enough for now.
+                if (Graphic != -1 && Graphic != ushort.MaxValue && Graphic != compareTo.Graphic)
+                    return false;
 
-                if (!HueCheck(compareTo.Hue)) return false;
+                if (!HueCheck(compareTo.Hue))
+                    return false;
 
-                if (RegexMatch && !RegexCheck(compareTo.World, compareTo)) return false;
-
-                return true;
+                return !RegexMatch || RegexCheck(compareTo.World, compareTo);
             }
 
             private bool HueCheck(ushort value)

@@ -12,7 +12,8 @@ internal static class Season
             return;
 
         byte season = p.ReadUInt8();
-        byte music = p.ReadUInt8();
+        // The second byte is a "play sound" flag (0/1), not a music index: region music is chosen by the server.
+        p.ReadUInt8();
 
         if (season > 4)
             season = 0;
@@ -25,11 +26,11 @@ internal static class Season
             return;
 
         world.OldSeason = (Game.Managers.Season)season;
-        world.OldMusicIndex = music;
+        world.OldMusicIndex = -1;
 
         if (world.Season == Game.Managers.Season.Desolation)
             world.OldMusicIndex = 42;
 
-        world.ChangeSeason(filteredSeason, music);
+        world.ChangeSeason(filteredSeason);
     }
 }

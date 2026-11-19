@@ -2,7 +2,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
-using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.IO;
 
 namespace ClassicUO.Network.PacketHandlers;
@@ -22,7 +22,7 @@ internal static class ChatMessage
                 world.ChatManager.CurrentChannelName = channelName;
                 world.ChatManager.AddChannel(channelName, hasPassword);
 
-                UIManager.GetGump<ChatGump>()?.RequestUpdateContents();
+                UIManager.GetGump<ChatWindow>()?.RequestUpdateContents();
 
                 break;
 
@@ -31,7 +31,7 @@ internal static class ChatMessage
                 channelName = p.ReadUnicodeBE();
                 world.ChatManager.RemoveChannel(channelName);
 
-                UIManager.GetGump<ChatGump>()?.RequestUpdateContents();
+                UIManager.GetGump<ChatWindow>()?.RequestUpdateContents();
 
                 break;
 
@@ -44,7 +44,7 @@ internal static class ChatMessage
                 world.ChatManager.Clear();
                 world.ChatManager.ChatIsEnabled = ChatStatus.Disabled;
 
-                UIManager.GetGump<ChatGump>()?.Dispose();
+                UIManager.GetGump<ChatWindow>()?.Dispose();
 
                 break;
 
@@ -77,7 +77,7 @@ internal static class ChatMessage
                 channelName = p.ReadUnicodeBE();
                 world.ChatManager.CurrentChannelName = channelName;
 
-                UIManager.GetGump<ChatGump>()?.UpdateConference();
+                UIManager.GetGump<ChatWindow>()?.UpdateConference();
 
                 GameActions.Print(
                     world,

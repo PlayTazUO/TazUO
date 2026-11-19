@@ -47,9 +47,8 @@ namespace ClassicUO.Game.GameObjects
         private ushort _animationRepeateMode = 1;
         private ushort _animationRepeatModeCount = 1;
 
-        // Smooths the per-frame animation offset that anchors overhead text so it doesn't jitter (-1 = uninitialized).
-        private float _smoothedTextAnimOffset = -1f;
-        private uint _lastTextCoordUpdate;
+        // Smooths the per-frame animation offset that anchors overhead text so it doesn't jitter.
+        private OverheadAnchorSmoother _textAnimSmoother;
 
         public Mobile(World world, uint serial) : base(world, serial)
         {
@@ -1118,6 +1117,21 @@ namespace ClassicUO.Game.GameObjects
             int alwaysHP = ProfileManager.CurrentProfile.MobileHPShowWhen;
             int mode = ProfileManager.CurrentProfile.MobileHPType;
 
+            bool hitsShown = health
+                && HitsTexture != null
+                && mode != 1
+                && (alwaysHP >= 1 && Hits != HitsMax || alwaysHP == 0);
+
+            if (TryGetOverheadTextBottom(hitsShown, out int textBottomY))
+            {
+                // The bottom already clears the nameplate, so no space is reserved for it. Reserving it and moving the
+                // anchor down to compensate only cancels out at zoom 1: overheads drawn unscaled rebuild their anchor
+                // from that offset and slide onto the nameplate when zoomed in.
+                PlaceTexts(last, new Point(RealScreenPosition.X + (int)Offset.X + 22, textBottomY), 0);
+
+                return;
+            }
+
             Point p = RealScreenPosition;
 
             if (IsGargoyle && IsFlyingAnimationEnabled)
@@ -1147,7 +1161,7 @@ namespace ClassicUO.Game.GameObjects
 
             // height/centerY change every animation frame and bounce the text; smooth the anchor so it glides instead of jumping.
             int targetAnimOffset = height + centerY + 8;
-            int smoothedAnimOffset = SmoothTextAnimOffset(targetAnimOffset);
+            int smoothedAnimOffset = _textAnimSmoother.Step(targetAnimOffset);
 
             p.X += (int)Offset.X + 22;
             p.Y += (int)(Offset.Y - Offset.Z - smoothedAnimOffset);
@@ -1158,16 +1172,22 @@ namespace ClassicUO.Game.GameObjects
                 p.Y -= Constants.OBJECT_HANDLES_GUMP_HEIGHT;
             }
 
-            if (
-                health
-                && HitsTexture != null
-                && mode != 1
-                && (alwaysHP >= 1 && Hits != HitsMax || alwaysHP == 0)
-            )
+            if (hitsShown)
             {
                 p.Y -= HitsTexture.Height;
             }
 
+            PlaceTexts(last, p, offY);
+        }
+
+        /// <summary>
+        /// Stacks the overhead texts upward from <paramref name="anchor"/>, newest at the bottom.
+        /// </summary>
+        /// <param name="last">Newest text; earlier ones are reached through <c>Previous</c>.</param>
+        /// <param name="anchor">World point the texts are centered on and stacked up from.</param>
+        /// <param name="offY">Space already taken above the anchor before the first text.</param>
+        private void PlaceTexts(TextObject last, Point anchor, int offY)
+        {
             for (; last != null; last = (TextObject)last.Previous)
             {
                 if (last.TextBox != null && !last.TextBox.IsDisposed)
@@ -1180,38 +1200,12 @@ namespace ClassicUO.Game.GameObjects
                     last.OffsetY = offY;
                     offY += last.TextBox.Height;
 
-                    last.RealScreenPosition.X = p.X - (last.TextBox.Width >> 1);
-                    last.RealScreenPosition.Y = p.Y - offY;
+                    last.RealScreenPosition.X = anchor.X - (last.TextBox.Width >> 1);
+                    last.RealScreenPosition.Y = anchor.Y - offY;
                 }
             }
 
             FixTextCoordinatesInScreen();
-        }
-
-        // Frame-rate independent exponential smoothing of the text anchor offset; advances at most once per game tick.
-        private int SmoothTextAnimOffset(int target)
-        {
-            // First use or a large jump (mount/dismount, morph, graphic swap): snap instead of sliding across the gap.
-            if (_smoothedTextAnimOffset < 0f || Math.Abs(target - _smoothedTextAnimOffset) > 40f)
-            {
-                _smoothedTextAnimOffset = target;
-                _lastTextCoordUpdate = Time.Ticks;
-                return target;
-            }
-
-            uint now = Time.Ticks;
-            float dt = (now - _lastTextCoordUpdate) / 1000f;
-
-            if (dt > 0f)
-            {
-                // ~200ms to converge; higher speed = snappier, lower = smoother.
-                const float SPEED = 12f;
-                float t = 1f - MathF.Exp(-SPEED * dt);
-                _smoothedTextAnimOffset += (target - _smoothedTextAnimOffset) * t;
-                _lastTextCoordUpdate = now;
-            }
-
-            return (int)MathF.Round(_smoothedTextAnimOffset);
         }
 
         public override void CheckGraphicChange(byte animIndex = 0)
@@ -1237,6 +1231,7 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                 case 0x025D:
+                case 0x025F:
                     {
                         IsFemale = false;
                         Race = RaceType.ELF;
@@ -1245,6 +1240,7 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                 case 0x025E:
+                case 0x0260:
                     {
                         IsFemale = true;
                         Race = RaceType.ELF;
@@ -1253,6 +1249,7 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                 case 0x029A:
+                case 0x02B6:
                     {
                         IsFemale = false;
                         Race = RaceType.GARGOYLE;
@@ -1261,6 +1258,7 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                 case 0x029B:
+                case 0x02B7:
                     {
                         IsFemale = true;
                         Race = RaceType.GARGOYLE;

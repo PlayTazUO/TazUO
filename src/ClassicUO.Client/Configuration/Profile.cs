@@ -26,6 +26,7 @@ using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Game.UI.MyraWindows;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 
 namespace ClassicUO.Configuration
 {
@@ -473,6 +474,8 @@ namespace ClassicUO.Configuration
         public bool DisableAutoFollowAlt { get; set => SetProperty(ref field, value); } = false;
         [JsonConverter(typeof(Point2Converter))] public Point ResizeJournalSize { get; set => SetProperty(ref field, value); } = new(410, 350);
         [JsonConverter(typeof(NullablePoint2Converter))] public Point? OptionsWindowsSize { get; set => SetProperty(ref field, value); }
+        public SearchInlineMode OptionsSearchInlineMode { get; set => SetProperty(ref field, value); } = SearchInlineMode.Balanced;
+        public bool OptionsSearchShowAttribution { get; set => SetProperty(ref field, value); }
         public bool FollowingMode { get; set => SetProperty(ref field, value); } = false;
         public uint FollowingTarget { get; set => SetProperty(ref field, value); }
         public bool NamePlateHealthBar { get; set => SetProperty(ref field, value); } = true;
@@ -733,6 +736,7 @@ namespace ClassicUO.Configuration
         public int DisplayRadiusDistance { get; set => SetProperty(ref field, value); } = 10;
         public ushort DisplayRadiusHue { get; set => SetProperty(ref field, value); } = 22;
         public bool EnableSpellIndicators { get; set => SetProperty(ref field, value); } = true;
+        public bool BeginSpellIndicatorOnCast { get; set => SetProperty(ref field, value); } = false;
         public bool EnableAutoLoot { get; set => SetProperty(ref field, value); } = false;
         public bool AutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
         public bool EnableAutoSkinning { get; set => SetProperty(ref field, value); } = false;
@@ -867,6 +871,7 @@ namespace ClassicUO.Configuration
         [JsonConverter(typeof(Point2Converter))] public Point ScriptManagerWindowPosition { get; set; } = Point.Zero;
         [JsonConverter(typeof(Point2Converter))] public Point ScriptManagerWindowSize { get; set; } = Point.Zero;
         public bool CandleFlickerLights { get; set; } = true;
+        public bool LightningFlash { get; set; } = true;
         public string LastLoaded { get; set; }
         public bool TreeToStumpsWithinRadius { get; set; }
         public bool AutoSaveGumpPositions { get; set; }

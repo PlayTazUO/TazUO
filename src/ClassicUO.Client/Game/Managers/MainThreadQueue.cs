@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers;
 
@@ -207,5 +210,27 @@ public static class MainThreadQueue
     public static void Reset()
     {
         while (QueuedActions.TryDequeue(out _)) { }
+    }
+
+    /// <summary>
+    ///     A <b>DEBUG-only</b> assertion that the caller is being invoked from the main thread
+    /// </summary>
+    /// <param name="callerPath">Caller file full path, provided by the compiler</param>
+    /// <param name="callerLine">Caller file line number, provided by the compiler</param>
+    /// <param name="callerName">Caller member name, provided by the compiler</param>
+    [Conditional("DEBUG")]
+    public static void DebugAssertIsMt(
+        [CallerFilePath] string callerPath = "Unk",
+        [CallerLineNumber] int callerLine = 0,
+        [CallerMemberName] string callerName = "Unk"
+    )
+    {
+        if (IsMainThread)
+            return;
+
+        string callerFile = Path.GetFileNameWithoutExtension(callerPath);
+        string msg = $"MT-only caller '{callerName}' ({callerFile}:{callerLine}) was invoked from non-MT thread {Environment.CurrentManagedThreadId}";
+        Log.Warn(msg);
+        Debug.Fail(msg);
     }
 }

@@ -3,14 +3,15 @@
 using System;
 using System.Collections.Generic;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
 /// <summary>
 /// An <see cref="IOptionSource"/> that presents its children as named tabs within a
-/// <see cref="MyraTabControl"/>. Each tab is produced on demand by a factory, and all tabs
-/// participate in search as a flat union.
+/// <see cref="MyraTabControl"/>. Each tab is produced on demand by a factory, and each tab's
+/// label becomes a breadcrumb segment for everything inside it.
 /// </summary>
 internal sealed class OptionTabGroup : IOptionSource
 {
@@ -53,31 +54,17 @@ internal sealed class OptionTabGroup : IOptionSource
     public Widget Render() => BuildTabControl();
 
     /// <inheritdoc/>
-    public IEnumerable<OptionEntry> Match(SearchMetadata search)
+    public IEnumerable<SearchEntry> Index(OptionIndexContext context)
     {
-        SearchMetadata? selfSearch = GetSearchMeta(search);
-        if (selfSearch == null)
-            yield break;
+        SearchMetadata? selfSearch = GetSearchMeta(context.Inherited);
 
         foreach (OptionTabDefinition tab in _tabs)
         {
-            var tabMerged = SearchMetadata.Merge(tab.Search, selfSearch);
+            OptionIndexContext tabContext = context
+                .Descend(tab.Label)
+                .WithInherited(SearchMetadata.Merge(tab.Search, selfSearch));
 
-            foreach (OptionEntry entry in tab.ContentFactory().Match(tabMerged))
-                yield return entry;
-        }
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null)
-    {
-        SearchMetadata? selfSearch = GetSearchMeta(inheritedSearch);
-
-        foreach (OptionTabDefinition tab in _tabs)
-        {
-            var tabMerged = SearchMetadata.Merge(tab.Search, selfSearch);
-
-            foreach (OptionEntry entry in tab.ContentFactory().GetOptions(tabMerged))
+            foreach (SearchEntry entry in tab.ContentFactory().Index(tabContext))
                 yield return entry;
         }
     }

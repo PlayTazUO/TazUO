@@ -1,6 +1,6 @@
 ---
 title: ApiUiSimpleProgressBar
-description: ApiUiSimpleProgressBar class documentation
+description: "ApiUiSimpleProgressBar class documentation"
 ---
 
 ## Properties
@@ -14,8 +14,7 @@ description: ApiUiSimpleProgressBar class documentation
 ## Methods
 ### SetProgress
 `(value, max)`
- Sets the progress value for the progress bar.
-
+Sets the progress value for the progress bar.
 
 **Parameters:**
 

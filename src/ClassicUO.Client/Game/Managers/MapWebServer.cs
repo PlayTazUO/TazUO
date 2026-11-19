@@ -345,8 +345,7 @@ namespace ClassicUO.Game.Managers
                     return;
                 }
 
-                string iconPath = null;
-                UI.Gumps.WorldMapGump._markerIconPaths.TryGetValue(name.ToLower(), out iconPath);
+                UI.Gumps.WorldMapGump.TryGetMarkerIconPath(name, out string iconPath);
 
                 if (string.IsNullOrEmpty(iconPath) || !File.Exists(iconPath))
                 {

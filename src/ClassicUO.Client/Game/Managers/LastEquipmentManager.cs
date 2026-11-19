@@ -17,31 +17,6 @@ public static class LastEquipmentManager
 
     private static string GetSaveID(string serverName, string charName, string accountName) => ID + serverName + accountName + charName;
 
-    #warning Remove migration >= 10/26/26
-    /// <summary>
-    /// One-time migration of the legacy per-server/account/character last-equipment rows from SQL
-    /// settings into the machine-wide <see cref="GlobalSettingsSave"/>. The legacy rows are cleared so
-    /// this is idempotent.
-    /// </summary>
-    public static void MigrateLegacySqlSettings()
-    {
-        if (Client.Settings == null || ProfileManager.GlobalSettings == null)
-        {
-            return;
-        }
-
-        GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
-
-        foreach (KeyValuePair<string, string> kvp in Client.Settings.GetAll(SettingsScope.Global))
-        {
-            if (!kvp.Key.StartsWith(ID))
-                continue;
-
-            globalSettings.LastEquipmentData[kvp.Key] = kvp.Value;
-            Client.Settings.Set(SettingsScope.Global, kvp.Key, string.Empty);
-        }
-    }
-
     public static void Save(Item[] items, string serverName, string charName, string accountName, ushort playerGraphic, ushort bodyHue, bool isFemale)
     {
         var sb = new StringBuilder();
@@ -63,19 +38,20 @@ public static class LastEquipmentManager
         string id = GetSaveID(serverName, charName, accountName);
         Log.TraceDebug($"Saving LEM data for ({id}): [{sb}]");
 
-        GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
-        if (globalSettings == null)
+        AccountSettingsSave? accountSettings = ProfileManager.AccountSettings;
+        if (accountSettings == null)
             return;
 
-        globalSettings.LastEquipmentData[id] = sb.ToString();
+        accountSettings.LastEquipmentData[id] = sb.ToString();
     }
 
     public static LemCharData? Load(string serverName, string charName, string accountName)
     {
         string id = GetSaveID(serverName, charName, accountName);
 
-        GlobalSettingsSave globalSettings = ProfileManager.GlobalSettings;
-        string res = globalSettings?.LastEquipmentData.TryGetValue(id, out string value) == true ? value : string.Empty;
+        AccountSettingsSave? accountSettings = ProfileManager.AccountSettings;
+        string res = accountSettings?.LastEquipmentData.TryGetValue(id, out string? value) == true ? value ?? string.Empty : string.Empty;
+
         Log.TraceDebug($"Loading LEM data for ({id}): [{res}]");
 
         if (!res.NotNullNotEmpty()) return null;

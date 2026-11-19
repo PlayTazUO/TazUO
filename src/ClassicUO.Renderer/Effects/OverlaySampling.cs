@@ -20,7 +20,13 @@ public enum OverlaySampleMode
     Radial,
 
     /// <summary>Red/blue split along that same ray. Lens fringing.</summary>
-    Chromatic
+    Chromatic,
+
+    /// <summary>
+    /// Pulls the frame's colour toward or away from its own luma. Drained for sickness and
+    /// near-death, pushed for fever and hallucination.
+    /// </summary>
+    Saturation
 }
 
 /// <summary>
@@ -88,11 +94,28 @@ public struct OverlaySampling
     public float Zoom;
 
     /// <summary>
+    /// Radians the radial march twists through on its way to <see cref="OverlayShape.Center"/>.
+    /// 0 leaves the taps on a straight ray - forward motion; raising it winds them into a spiral,
+    /// which is a vortex rather than a rush. Capped at <see cref="OverlayParams.MaxSampleSwirl"/>.
+    /// Exactly 0 is free - it takes a separate pass; anything else pays per tap.
+    /// </summary>
+    public float Swirl;
+
+    /// <summary>
     /// Red/blue separation, again as a fraction of the distance from
     /// <see cref="OverlayShape.Center"/>. Nothing separates at the centre; the fringing grows
     /// toward the corners, which is what makes it read as a lens rather than as a broken image.
     /// </summary>
     public float Aberration;
+
+    /// <summary>
+    /// Where the frame's colour is pulled to, relative to its own Rec. 709 luma: 1 untouched, 0
+    /// grey, above 1 pushed past its real colour, below 0 the complement. Bounded by
+    /// <see cref="OverlayParams.MinSampleSaturation"/> and
+    /// <see cref="OverlayParams.MaxSampleSaturation"/>. Scaled by the layer's alpha, so half
+    /// strength is a half-applied grade rather than a half-transparent one.
+    /// </summary>
+    public float Saturation;
 
     /// <summary>Whether this layer needs the scene bound to sample from.</summary>
     public readonly bool ReadsScene => Mode != OverlaySampleMode.None;

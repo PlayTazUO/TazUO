@@ -5,6 +5,7 @@ using ClassicUO.Game.Managers.EnhancedMap;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
@@ -18,22 +19,64 @@ public static class MiscTab
     /// <summary>Returns the paged option group containing miscellaneous settings pages</summary>
     internal static IOptionSource GetContent() => GetPages();
 
-    private static OptionPageGroup GetPages() => new(
-        new SearchMetadata(
-            Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")],
-            Tags: [TazLang.Get("mog_kw_misc")]
-        ),
-        GetPage1,
-        GetPage2,
-        GetPage3,
-        GetExperimentalSection
-    ) { MinWidth = 600, MinHeight = 300 };
+    private static OptionPageGroup GetPages() => new OptionPageGroup(
+            new SearchMetadata(
+                Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")],
+                Tags: [TazLang.Get("mog_kw_misc")]
+            )
+        )
+        .AddPage(GetPage1, TazLang.Get("mog_misctab_page_general"))
+        .AddPage(GetPage2, TazLang.Get("mog_misctab_page_system"))
+        .AddPage(GetPage3, TazLang.Get("mog_misctab_page_advanced"))
+        .AddPage(GetExperimentalSection, TazLang.Get("mog_misctab_page_experimental"))
+        .WithSize(minWidth: 600, minHeight: 300);
 
     private static OptionFragment GetPage1()
     {
         Profile profile = ProfileManager.CurrentProfile;
 
         return OptionsUi.Vertical(
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = TazLang.Get("optsearch_section_label") },
+                Option.LComboBox(
+                    TazLang.Get("optsearch_inline_label"),
+                    new Accessor<SearchInlineMode>(
+                        () => profile.OptionsSearchInlineMode,
+                        mode =>
+                        {
+                            profile.OptionsSearchInlineMode = mode;
+                            // Results already on screen won't re-measure on their own. Deferred
+                            // because this combo can be one of them: re-presenting the list from
+                            // inside SelectedIndexChanged would destroy the widget dispatching it,
+                            // while the desktop still holds its open dropdown.
+                            UIManager.ForEach<OptionsWindow>(window => window.Defer(window.RefreshInlinePresentation));
+                        }
+                    ),
+                    optionLocalizationPrefix: "optsearch_inline_",
+                    tooltip: TazLang.Get("optsearch_inline_tooltip"),
+                    search: new SearchMetadata(TazLang.Get("optsearch_inline_label"), Keywords: [TazLang.Get("optsearch_kw_search")])
+                ),
+                Option.Checkbox(
+                    TazLang.Get("optsearch_attribution_label"),
+                    new Accessor<bool>(
+                        () => profile.OptionsSearchShowAttribution,
+                        show =>
+                        {
+                            profile.OptionsSearchShowAttribution = show;
+
+                            // Each result row reads attribution once, when it is built, so the rows
+                            // on screen have to be rebuilt. Deferred because this checkbox can be
+                            // one of them: rebuilding the list from inside its own click handler
+                            // would destroy the widget currently dispatching the event.
+                            UIManager.ForEach<OptionsWindow>(window => window.Defer(window.RefreshSearchResults));
+                        }
+                    ),
+                    tooltip: TazLang.Get("optsearch_attribution_tooltip"),
+                    search: new SearchMetadata(TazLang.Get("optsearch_attribution_label"), Keywords: [TazLang.Get("optsearch_kw_search")])
+                )
+            ).WithSearch(
+                new SearchMetadata(TazLang.Get("optsearch_section_label"), Keywords: [TazLang.Get("optsearch_kw_search")])
+            ),
             Option.Checkbox(
                 TazLang.Get("mog_general_hidescreenshotmessage"),
                 new Accessor<bool>(() => profile.HideScreenshotStoredInMessage),
@@ -173,12 +216,18 @@ public static class MiscTab
             ),
             Option.Checkbox(
                 TazLang.Get("mog_tazuo_enableasyncmaploading"),
-                profile.EnableASyncMapLoading,
-                newValue =>
-                {
-                    profile.EnableASyncMapLoading = newValue;
-                    GameScene.Instance?.ASyncMapLoading = newValue;
-                }
+                new Accessor<bool>(
+                    () => profile.EnableASyncMapLoading,
+                    newValue =>
+                    {
+                        profile.EnableASyncMapLoading = newValue;
+                        GameScene.Instance?.ASyncMapLoading = newValue;
+                    }
+                ),
+                search: new SearchMetadata(
+                    TazLang.Get("mog_tazuo_enableasyncmaploading"),
+                    Keywords: [TazLang.Get("mog_kw_map"), TazLang.Get("mog_kw_thread"), TazLang.Get("mog_kw_advanced")]
+                )
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = TazLang.Get("mog_misctab_housingtransparency"), LabelLink = "https://tazuo.org/wiki/tazuotrasparenthouses/" },

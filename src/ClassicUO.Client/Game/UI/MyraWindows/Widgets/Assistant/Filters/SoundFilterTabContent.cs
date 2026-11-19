@@ -108,8 +108,10 @@ public static class SoundFilterTabContent
             lastSoundPanel.Widgets.Clear();
             lastSoundPanel.Widgets.Add(new MyraLabel("Recently played:", MyraLabel.TextStyle.H3));
 
+            var rowsPanel = new VerticalStackPanel { Spacing = 2 };
+
             int c = 0;
-            foreach ((int, string) sound in Client.Game.Audio.LastPlayedSounds.GetItems())
+            foreach ((int, string) sound in Client.Game.Audio.LastPlayedSounds.GetItems().Reverse())
             {
                 c++;
 
@@ -124,7 +126,17 @@ public static class SoundFilterTabContent
                 }) { Tooltip = "Add this sound to the filter list" });
                 row.Widgets.Add(new MyraButton("Play Again", () =>
                     Client.Game.Audio.PlaySound(id, true)) { Tooltip = "Play this sound again" });
-                lastSoundPanel.Widgets.Add(row);
+                rowsPanel.Widgets.Add(row);
+            }
+
+            if (c == 0)
+            {
+                rowsPanel.Widgets.Add(new MyraLabel("No sound played yet.", MyraLabel.TextStyle.P));
+                lastSoundPanel.Widgets.Add(rowsPanel);
+            }
+            else
+            {
+                lastSoundPanel.Widgets.Add(new ScrollViewer { Height = 200, Content = rowsPanel });
             }
 
             lastSoundPanel.Widgets.Add(new MyraButton("Refresh", () => BuildLastSoundSection())
@@ -133,15 +145,6 @@ public static class SoundFilterTabContent
             }.PlaceBefore(new MyraLabel(
                                           "Tip: Play a sound in-game to see its ID above, then click Add Filter.",
                                           MyraLabel.TextStyle.P)));
-
-            if(c == 0)
-            {
-                var row = new HorizontalStackPanel { Spacing = 4 };
-                row.Widgets.Add(new MyraLabel("No sound played yet.", MyraLabel.TextStyle.P));
-                row.Widgets.Add(new MyraButton("Refresh", () => BuildLastSoundSection())
-                    { Tooltip = "Refresh last played sound display" });
-                lastSoundPanel.Widgets.Add(row);
-            }
         }
 
         var addFilterPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };

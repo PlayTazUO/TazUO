@@ -102,6 +102,38 @@ namespace ClassicUO.Game
             public bool IsDestroyed;
         }
 
+        /// <summary>
+        /// Shallow-copies Multi component fields from every loaded player house into a flat
+        /// list of plain structs. Must be called on the main thread, where live World data is
+        /// safe to iterate; the result can then be passed to <see cref="FindPathAsync"/>.
+        /// </summary>
+        public static List<HouseMultiSnapshot> CaptureHouseMultis(HouseManager houseManager)
+        {
+            if (houseManager == null)
+                return null;
+
+            var list = new List<HouseMultiSnapshot>(256);
+
+            foreach (var house in houseManager.Houses)
+            {
+                foreach (var multi in house.Components)
+                {
+                    list.Add(new HouseMultiSnapshot
+                    {
+                        X = multi.X,
+                        Y = multi.Y,
+                        Z = multi.Z,
+                        Graphic = multi.Graphic,
+                        State = (int)multi.State,
+                        IsHousePreview = multi.IsHousePreview,
+                        IsDestroyed = multi.IsDestroyed,
+                    });
+                }
+            }
+
+            return list;
+        }
+
         /// <summary>Cancels any in-flight background search without starting a new one.</summary>
         public static void Cancel() => Interlocked.Increment(ref _searchVersion);
 

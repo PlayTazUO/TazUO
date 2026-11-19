@@ -89,4 +89,13 @@ public class JsonDiffTests
             .Which.LocalValue.Should()
             .Be("\"" + new string('x', 49) + "…");
     }
+
+    [Fact]
+    public void Paths_Are_Rendered_For_People_Rather_Than_As_JsonPath()
+    {
+        JsonDiff.PathLabel("$.window_position").Should().Be("window position");
+        JsonDiff.PathLabel("$.hotkeys[2].key").Should().Be("hotkeys #3 › key");
+        JsonDiff.PathLabel("$.gridContainersOpen").Should().Be("grid Containers Open");
+        JsonDiff.PathLabel("$").Should().Be("root");
+    }
 }

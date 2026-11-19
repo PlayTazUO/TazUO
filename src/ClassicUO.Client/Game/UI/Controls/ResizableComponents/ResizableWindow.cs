@@ -346,6 +346,11 @@ public class ResizableWindow : Window, IDisposable
         if (!IsCurrentlyResizable)
             return;
 
+        // Checked before the edge is latched; a held item means no resize, and leaving _activeResizeEdge set
+        // here would strand it - the clearing paths are only wired up further down.
+        if (Client.Game.UO.GameCursor.ItemHold.Enabled)
+            return;
+
         _activeResizeEdge = GetResizerUnderCursor();
         if (!_activeResizeEdge.HasValue)
             return;
@@ -781,9 +786,11 @@ public class ResizableWindow : Window, IDisposable
         if (!IsCurrentlyResizable)
             return;
 
-        bool isOnHandle = GetResizerUnderCursor() != null;
+        // A held item takes the cursor over, so it has to drop an existing override, not merely block a new one -
+        // the pickup can happen via macro or script while the cursor already sits on a handle.
+        bool wantsOverride = GetResizerUnderCursor() != null && !Client.Game.UO.GameCursor.ItemHold.Enabled;
 
-        switch (isOnHandle)
+        switch (wantsOverride)
         {
             case true when !_isOverridingCursorStyle:
                 OnHoverEnterOverDrag();

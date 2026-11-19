@@ -1,6 +1,6 @@
 ---
 title: ApiBuff
-description: ApiBuff class documentation
+description: "ApiBuff class documentation"
 ---
 
 ## Properties

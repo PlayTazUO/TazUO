@@ -1,21 +1,19 @@
 ---
 title: ApiUiRadioButton
-description:  Inherits from ApiUiCheckbox 
+description: "Inherits from ApiUiCheckbox"
 ---
 
 ## Class Description
- Inherits from ApiUiCheckbox
-
+Inherits from ApiUiCheckbox
 
 ## Properties
 ### `GroupIndex`
 
 **Type:** `int`
 
- Gets or sets the group index of the radio button.
- Radio buttons with the same group index are mutually exclusive.
- Used in python API
-
+Gets or sets the group index of the radio button.
+Radio buttons with the same group index are mutually exclusive.
+Used in python API
 
 
 *No fields found.*
@@ -26,21 +24,19 @@ description:  Inherits from ApiUiCheckbox
 ## Methods
 ### GetGroupIndex
 
- Gets the group index of the radio button.
- Radio buttons with the same group index are mutually exclusive.
- Used in python API
+Gets the group index of the radio button.
+Radio buttons with the same group index are mutually exclusive.
+Used in python API
 
-
-**Return Type:** `int`
+**Return Type:** `int` - The group index
 
 ---
 
 ### SetGroupIndex
 `(groupIndex)`
- Sets the group index of the radio button.
- Radio buttons with the same group index are mutually exclusive.
- Used in python API
-
+Sets the group index of the radio button.
+Radio buttons with the same group index are mutually exclusive.
+Used in python API
 
 **Parameters:**
 

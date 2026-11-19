@@ -68,3 +68,23 @@ world is cleared (e.g. on disconnect or world change).
 IDs are the underlying `ushort` values of the enum members. A feature must
 be defined in the enum in the client before it can be disabled. Packets
 referencing an unknown feature id are ignored.
+
+## Mobile Scale : 4
+### Server -> Client
+```cs
+HEADER
+uint   SERIAL    // Mobile serial
+ushort GRAPHIC   // Mobile graphic
+ushort X
+ushort Y
+sbyte  Z
+byte   DIRECTION // Direction flags (running bit included)
+ushort HUE
+byte   FLAGS     // Entity flags
+uint   SCALE     // IEEE 754 single-precision float, big endian
+```
+
+Creates or updates the mobile using the same logic as the standard mobile
+update packets, then applies `SCALE` to `Mobile.Scale`. The value must be
+finite and greater than zero; otherwise the packet is ignored. Non-mobile
+serials are ignored.

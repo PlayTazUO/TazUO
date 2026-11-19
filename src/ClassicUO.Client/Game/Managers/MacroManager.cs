@@ -50,14 +50,6 @@ namespace ClassicUO.Game.Managers
         private MacroObject _lastTriggeredHead;
         private long _lastTriggeredAt;
 
-        private readonly byte[] _skillTable =
-        [
-            1, 2, 35, 4, 6, 12,
-            14, 15, 16, 19, 21, 56 /*imbuing*/,
-            23, 3, 46, 9, 30, 22,
-            48, 32, 33, 47, 36, 38
-        ];
-
         private readonly int[] _spellsCountTable =
         [
             Constants.SPELLBOOK_1_SPELLS_COUNT,
@@ -108,6 +100,11 @@ namespace ClassicUO.Game.Managers
 
         public void Load()
         {
+            // A macro can still be mid-run when the scene changes (logout, disconnect, reconnect). The
+            // action chain it points at is about to be replaced, so drop the execution state instead of
+            // letting it resume against the freshly loaded macros on the next login.
+            StopExecution();
+
             string path = Path.Combine(ProfileManager.ProfilePath, "macros.xml");
 
             if (!File.Exists(path))
@@ -1503,16 +1500,11 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.UseSkill:
-                    int skill = macro.SubCode - MacroSubType.Anatomy;
+                    int skill = Macro.GetUseSkillIndex(macro.SubCode);
 
-                    if (skill >= 0 && skill < 24)
+                    if (skill >= 0)
                     {
-                        skill = _skillTable[skill];
-
-                        if (skill != 0xFF)
-                        {
-                            GameActions.UseSkill(skill);
-                        }
+                        GameActions.UseSkill(skill);
                     }
 
                     break;
@@ -2735,7 +2727,7 @@ namespace ClassicUO.Game.Managers
             if (world == null)
                 return;
 
-            GameActions.Print(world, "Target a mount to save it for the Mount macro.", 48);
+            GameActions.Print(world, "Target a mount or mount item to save it for the Mount macro.", 48);
             world.TargetManager.SetTargeting(CursorTarget.SetMount, 0, TargetType.Neutral);
         }
 
@@ -3328,6 +3320,80 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+
+        /// <summary>
+        /// Skill index (in the client's skill data files) for each UseSkill macro sub-type, in
+        /// <see cref="MacroSubType"/> order starting at <see cref="MacroSubType.Anatomy"/>.
+        /// </summary>
+        /// <remarks>
+        /// Saved macros store the sub-type enum value, so the enum order must never change. The
+        /// displayed names, however, come from the client data files (skills.mul/Skills.idx) and
+        /// can differ per shard, so they are resolved at runtime instead of using the enum name.
+        /// </remarks>
+        private static readonly byte[] _useSkillIndices =
+        [
+            1, 2, 35, 4, 6, 12,
+            14, 15, 16, 19, 21, 56 /*imbuing*/,
+            23, 3, 46, 9, 30, 22,
+            48, 32, 33, 47, 36, 38
+        ];
+
+        public static int GetUseSkillIndex(MacroSubType sub)
+        {
+            int index = (int)sub - (int)MacroSubType.Anatomy;
+
+            if (index >= 0 && index < _useSkillIndices.Length)
+            {
+                return _useSkillIndices[index];
+            }
+
+            return -1;
+        }
+
+        public static string GetUseSkillName(MacroSubType sub, string fallback = null)
+        {
+            int skillIndex = GetUseSkillIndex(sub);
+
+            if (skillIndex >= 0)
+            {
+                // Prefer the player's skills so the macro list matches the skills gump, which also
+                // reads from Player.Skills. Fall back to the loader for the login/macro editor.
+                Skill[] playerSkills = World.Instance?.Player?.Skills;
+
+                if (playerSkills != null && skillIndex < playerSkills.Length)
+                {
+                    string playerName = playerSkills[skillIndex]?.Name;
+
+                    if (!string.IsNullOrWhiteSpace(playerName))
+                    {
+                        return playerName;
+                    }
+                }
+
+                var skills = Client.Game.UO.FileManager.Skills.Skills;
+
+                if (skillIndex < skills.Count && !string.IsNullOrWhiteSpace(skills[skillIndex].Name))
+                {
+                    return skills[skillIndex].Name;
+                }
+            }
+
+            return fallback ?? sub.ToString();
+        }
+
+        /// <summary>
+        /// Display name for a macro sub-type. Skill sub-types keep their hard-coded enum order but
+        /// show the skill name from the client data files.
+        /// </summary>
+        public static string GetSubTypeName(MacroType code, MacroSubType sub, string fallback = null)
+        {
+            if (code == MacroType.UseSkill)
+            {
+                return GetUseSkillName(sub, fallback);
+            }
+
+            return fallback ?? sub.ToString();
+        }
 
         public static MacroObject Create(MacroType code)
         {

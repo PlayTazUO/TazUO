@@ -91,6 +91,21 @@ public sealed class RadialBlurEffect : LayerEffect
     public float Zoom { get; set; } = OverlayParams.Default.Sampling.Zoom;
 
     /// <summary>
+    /// Radians the march twists through on its way to the centre. 0 is a straight ray; raising it
+    /// winds the streaks into a spiral. Capped at <see cref="OverlayParams.MaxSampleSwirl" />, past
+    /// which they wrap and stop reading as travel. Exactly 0 costs nothing - it takes a separate,
+    /// cheaper pass - so leave it there unless the spiral is wanted.
+    /// </summary>
+    [LocalizedDisplayName("visualeffects_layer_swirl", "Swirl")]
+    [LocalizedDescription(
+        "visualeffects_layer_swirl_tooltip",
+        "Radians the streaks twist through on their way to the centre.\n"
+        + "0 is straight rays - plain forward motion, and the cheap case.\n"
+        + "Raising it winds them into a spiral; negative turns the other way."
+    )]
+    public float Swirl { get; set; } = OverlayParams.Default.Sampling.Swirl;
+
+    /// <summary>
     /// Samples taken per pixel. Fewer than a disk blur needs: radial taps land on a line rather than
     /// spreading over an area, so the gaps between them are far less visible.
     /// </summary>
@@ -110,7 +125,7 @@ public sealed class RadialBlurEffect : LayerEffect
     /// <inheritdoc />
     public override LayerEffect Clone()
     {
-        var copy = new RadialBlurEffect { Zoom = Zoom, Taps = Taps };
+        var copy = new RadialBlurEffect { Zoom = Zoom, Swirl = Swirl, Taps = Taps };
         CopyCommonTo(copy);
 
         return copy;
@@ -122,14 +137,15 @@ public sealed class RadialBlurEffect : LayerEffect
         {
             Mode = OverlaySampleMode.Radial,
             Zoom = Zoom,
+            Swirl = Swirl,
             Taps = Taps
         };
 }
 
 /// <summary>
-/// Red/blue split along the ray from the shape's centre. Lens fringing. The cheapest technique by a
-/// wide margin - three taps whatever its strength - so it is worth reaching for first when something
-/// needs to look wrong without costing anything.
+/// Red/blue split along the ray from the shape's centre. Lens fringing. Three taps whatever its
+/// strength - only <see cref="SaturationEffect" />, at one, is cheaper - so it is worth reaching for
+/// when something needs to look wrong without costing much.
 /// </summary>
 public sealed class ChromaticEffect : LayerEffect
 {
@@ -171,5 +187,53 @@ public sealed class ChromaticEffect : LayerEffect
         {
             Mode = OverlaySampleMode.Chromatic,
             Aberration = Aberration
+        };
+}
+
+/// <summary>
+/// Pulls the frame's colour toward or away from its own brightness. Drained reads as sickness,
+/// exhaustion and near-death; pushed reads as fever and hallucination. One sample per pixel, so it
+/// is the cheapest technique that reads the frame at all.
+/// </summary>
+public sealed class SaturationEffect : LayerEffect
+{
+    /// <summary>Persisted discriminator. Stable across releases.</summary>
+    internal const string Discriminator = "saturation";
+
+    /// <summary>
+    /// Where the colour is pulled to, relative to the frame's own brightness: 1 untouched, 0 grey,
+    /// above 1 pushed past its real colour, below 0 the complement. Bounded by
+    /// <see cref="OverlayParams.MinSampleSaturation" /> and
+    /// <see cref="OverlayParams.MaxSampleSaturation" />.
+    /// </summary>
+    [LocalizedDisplayName("visualeffects_layer_saturation", "Saturation")]
+    [LocalizedDescription(
+        "visualeffects_layer_saturation_tooltip",
+        "Where the colour is pulled to: 1 leaves the frame untouched,\n"
+        + "0 drains it to grey, above 1 pushes it past its real colour,\n"
+        + "below 0 lands on the opposite one."
+    )]
+    public float Saturation { get; set; } = OverlayParams.Default.Sampling.Saturation;
+
+    /// <inheritdoc />
+    [JsonIgnore]
+    [Browsable(false)]
+    public override string TechniqueName => TazLang.Get("overlaytechnique_saturation", "Saturation");
+
+    /// <inheritdoc />
+    public override LayerEffect Clone()
+    {
+        var copy = new SaturationEffect { Saturation = Saturation };
+        CopyCommonTo(copy);
+
+        return copy;
+    }
+
+    /// <inheritdoc />
+    private protected override void ApplyTechnique(ref OverlayParams parameters) =>
+        parameters.Sampling = new OverlaySampling
+        {
+            Mode = OverlaySampleMode.Saturation,
+            Saturation = Saturation
         };
 }

@@ -262,13 +262,6 @@ namespace ClassicUO
                 }
 
                 #warning Remove migration >= 10/26/26
-                if (ProfileManager.GlobalSettings.MigrationVersion < 3)
-                {
-                    LastEquipmentManager.MigrateLegacySqlSettings();
-                    ProfileManager.GlobalSettings.MigrationVersion = 3;
-                }
-
-                #warning Remove migration >= 10/26/26
                 if (ProfileManager.GlobalSettings.MigrationVersion < 4)
                 {
                     ProfileManager.GlobalSettings.UseCampfireCharacterSelect = Settings.Get(SettingsScope.Global, Constants.SqlSettings.CAMPFIRE_CHAR_SELECT, false);

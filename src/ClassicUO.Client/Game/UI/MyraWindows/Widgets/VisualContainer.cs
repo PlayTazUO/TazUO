@@ -59,8 +59,21 @@ public record struct VisualContainerProps()
 /// <see cref="StackPanelLayout"/> whose orientation and spacing are driven by
 /// <see cref="VisualContainerProps"/>.
 /// </summary>
-public class VisualContainer : Container
+public class VisualContainer : Container, IHighlightTarget
 {
+    /// <summary>
+    /// The header caption this section goes by, or <see langword="null"/> when it has none. Kept as
+    /// its own property rather than read back off the label widget, which may be a plain label or a
+    /// link, and is absent entirely for an unlabelled container.
+    /// </summary>
+    public string SectionLabel { get; }
+
+    /// <inheritdoc/>
+    public string HighlightLabel => SectionLabel;
+
+    /// <inheritdoc/>
+    public HighlightScope HighlightScope => HighlightScope.Section;
+
     /// <summary>
     /// Initializes a new <see cref="VisualContainer"/> with the given props and optional initial
     /// child widgets.
@@ -69,6 +82,8 @@ public class VisualContainer : Container
     /// <param name="widgets">Zero or more widgets added as children after the optional label.</param>
     public VisualContainer(VisualContainerProps props, params Widget[] widgets)
     {
+        SectionLabel = props.LabelText;
+
         if (!string.IsNullOrWhiteSpace(props.LabelText))
         {
             Widget label;

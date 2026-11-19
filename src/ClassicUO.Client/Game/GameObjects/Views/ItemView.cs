@@ -197,12 +197,7 @@ namespace ClassicUO.Game.GameObjects
             Client.Game.UO.Animations.ConvertBodyIfNeeded(ref graphic, isCorpse: IsCorpse);
             AnimationGroupsType animGroup = Client.Game.UO.Animations.GetAnimType(graphic);
             AnimationFlags animFlags = Client.Game.UO.Animations.GetAnimFlags(graphic);
-            byte group = Client.Game.UO.FileManager.Animations.GetDeathAction(
-                graphic,
-                animFlags,
-                animGroup,
-                UsedLayer
-            );
+            byte group = GetCorpseDeathAction(graphic, animFlags, animGroup);
 
             bool ishuman = IsHumanCorpse;
 
@@ -597,12 +592,7 @@ namespace ClassicUO.Game.GameObjects
                     animations.ConvertBodyIfNeeded(ref graphic, isCorpse: IsCorpse);
                     AnimationGroupsType animGroup = animations.GetAnimType(graphic);
                     AnimationFlags animFlags = animations.GetAnimFlags(graphic);
-                    byte group = Client.Game.UO.FileManager.Animations.GetDeathAction(
-                        graphic,
-                        animFlags,
-                        animGroup,
-                        UsedLayer
-                    );
+                    byte group = GetCorpseDeathAction(graphic, animFlags, animGroup);
                     Span<SpriteInfo> frames = animations.GetAnimationFrames(
                         graphic,
                         group,

@@ -67,7 +67,25 @@ namespace ClassicUO.Game.Managers
         )
         {
             if (string.IsNullOrEmpty(text))
+                return;
+
+            // This method, as well as some consumers of the RawMessageReceived event, mutate MT-only state.
+            // Have to use dispatch here, or, alternatively, modify everything we touch to be thread-safe.
+            if (!MainThreadQueue.IsMainThread)
             {
+                MainThreadQueue.EnqueueAction(() => HandleMessage(
+                    parent,
+                    text,
+                    name,
+                    hue,
+                    type,
+                    font,
+                    textType,
+                    unicode,
+                    lang,
+                    skipEventTrigger
+                ));
+
                 return;
             }
 
@@ -273,8 +291,8 @@ namespace ClassicUO.Game.Managers
                             }
                         }
 
-                        if (parent is Mobile && MessageTypeFilter.IsEnabled(currentProfile.DisabledOverheadMessageTypes, type))                        
-                            break;                        
+                        if (parent is Mobile && MessageTypeFilter.IsEnabled(currentProfile.DisabledOverheadMessageTypes, type))
+                            break;
 
                         parent.AddMessage(msg);
 

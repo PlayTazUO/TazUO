@@ -35,6 +35,14 @@ ClassicUO.sln
 - **Discord SDK**: Discord rich presence integration
 
 
+## Solution Design
+
+- Prefer zero-maintenance/self-aligning solutions (marker interface, single choke point, data-driven)
+  over hyper-specific/hardcoded ones (literal type lists, name matching, per-case branches). Exception:
+  the complexity gap is large.
+- Falling back to hyper-specificity → say so explicitly, up front, before writing it.
+- Any highly specific/hardcoded solution or workaround → state it as such when presenting it.
+
 ## Code Style Rules
 
 Applies to new code. Don't refactor existing code to match unless asked.
@@ -130,6 +138,9 @@ Indent/charset/EOL come from `.editorconfig`; this section covers what it can't 
 - Profile or reason through cost before committing to an approach.
 - No frame budget exists — never argue a cost is fine because it fits one. Assume weak hardware:
   make per-frame work cheap, or measure it.
+- CA1859: private/internal returns, fields and locals take the concrete type, not an interface —
+  unless the broader type is deliberate (a seam expected to vary). Info-severity, so
+  builds never print it; elevate and check before claiming clean.
 
 ### UI
 - Keep layout responsive: `WrapPanel`, no fixed `Width`/`Height` boxes. Resizable windows already

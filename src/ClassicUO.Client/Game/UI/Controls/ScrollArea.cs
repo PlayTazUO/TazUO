@@ -22,6 +22,17 @@ namespace ClassicUO.Game.UI.Controls
         /// </summary>
         public const int SCROLLBAR_WIDTH = 14;
 
+        /// <summary>
+        /// Width of the flag-style scrollbar gump. Used only to lay the flag out,
+        /// since the flag bar does not report a width on this control.
+        /// </summary>
+        private const int FLAG_SCROLLBAR_WIDTH = 16;
+
+        /// <summary>
+        /// Extra width appended to a flag scroll area so the flag has room past the content.
+        /// </summary>
+        private const int FLAG_AREA_PADDING = 15;
+
         private bool _isNormalScroll;
         private readonly ScrollBarBase _scrollBar;
 
@@ -49,11 +60,11 @@ namespace ClassicUO.Game.UI.Controls
             {
                 _scrollBar = new ScrollFlag
                 {
-                    X = Width - 19,
+                    X = Width - FLAG_SCROLLBAR_WIDTH,
                     Height = h
                 };
 
-                Width += 15;
+                Width += FLAG_AREA_PADDING;
             }
 
             ScrollMaxHeight = scroll_max_height;
@@ -94,10 +105,15 @@ namespace ClassicUO.Game.UI.Controls
 
         public void UpdateScrollbarPosition()
         {
-            if (_isNormalScroll)
-                _scrollBar.X = Width - SCROLLBAR_WIDTH;
-            else
-                _scrollBar.X = Width - 19;
+            // Match the layout applied in the constructor: a normal bar sits flush with the
+            // right edge, while a flag bar sits FLAG_SCROLLBAR_WIDTH in from the pre-padding
+            // edge, which is FLAG_SCROLLBAR_WIDTH + FLAG_AREA_PADDING from the final Width.
+            // Width is in final (possibly scaled) space, so scale the gutter to match.
+            int gutter = _isNormalScroll
+                ? SCROLLBAR_WIDTH
+                : FLAG_SCROLLBAR_WIDTH + FLAG_AREA_PADDING;
+
+            _scrollBar.X = Width - ScaleHelper.Scaled(gutter, _scrollBar.InternalScale);
         }
 
         public void ResetScrollbarPosition() => _scrollBar?.ResetScrollPosition();
@@ -179,7 +195,8 @@ namespace ClassicUO.Game.UI.Controls
 
         private void CalculateScrollBarMaxValue()
         {
-            _scrollBar.Height = ScrollMaxHeight >= 0 ? ScrollMaxHeight : Height;
+            _scrollBar.UpdateHeight(ScrollMaxHeight >= 0 ? ScrollMaxHeight : Height);
+            UpdateScrollbarPosition();
             bool maxValue = _scrollBar.Value == _scrollBar.MaxValue && _scrollBar.MaxValue != 0;
 
             int startX = 0, startY = 0, endX = 0, endY = 0;

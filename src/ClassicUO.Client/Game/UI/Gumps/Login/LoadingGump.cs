@@ -2,6 +2,7 @@
 
 using System;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Assets;
 using SDL3;
@@ -20,12 +21,17 @@ namespace ClassicUO.Game.UI.Gumps.Login
     {
         private readonly Action<int> _buttonClick;
         private readonly Label _label;
+        private readonly bool _acceptEnter;
 
         public LoadingGump(World world, string labelText, LoginButtons showButtons, Action<int> buttonClick = null) : base(world, 0, 0)
         {
             _buttonClick = buttonClick;
             CanCloseWithRightClick = false;
             CanCloseWithEsc = false;
+
+            // Only OK-only popups act as a simple "acknowledge" message. Gumps with Cancel
+            // (or no buttons at all) must not be dismissed by pressing Enter.
+            _acceptEnter = showButtons == LoginButtons.OK;
 
             bool isAsianLang = string.Compare(Settings.GlobalSettings.Language, "CHT", StringComparison.InvariantCultureIgnoreCase) == 0 ||
                 string.Compare(Settings.GlobalSettings.Language, "KOR", StringComparison.InvariantCultureIgnoreCase) == 0 ||
@@ -99,13 +105,21 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     }
                 );
             }
+
+            if (_acceptEnter)
+            {
+                // Error/message popups can appear while another login control has keyboard focus,
+                // so claim it explicitly. That also keeps Enter from reaching the screen underneath.
+                AcceptKeyboardInput = true;
+                SetKeyboardFocus();
+            }
         }
 
         public void SetText(string text) => _label.Text = text;
 
         public override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
         {
-            if (key == SDL.SDL_Keycode.SDLK_KP_ENTER || key == SDL.SDL_Keycode.SDLK_RETURN)
+            if (_acceptEnter && (key == SDL.SDL_Keycode.SDLK_KP_ENTER || key == SDL.SDL_Keycode.SDLK_RETURN))
             {
                 OnButtonClick((int) LoginButtons.OK);
             }
@@ -116,6 +130,14 @@ namespace ClassicUO.Game.UI.Gumps.Login
         {
             _buttonClick?.Invoke(buttonID);
             base.OnButtonClick(buttonID);
+
+            // Acknowledge popups stay in the tree when embedded (e.g. in character creation),
+            // so hand keyboard focus back once they are dismissed. Skip if the callback already
+            // sent focus somewhere else or disposed this gump.
+            if (!IsDisposed && HasKeyboardFocus)
+            {
+                UIManager.KeyboardFocusControl = null;
+            }
         }
     }
 }

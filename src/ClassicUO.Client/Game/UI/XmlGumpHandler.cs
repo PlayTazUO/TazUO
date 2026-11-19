@@ -209,6 +209,12 @@ namespace ClassicUO.Game.UI
                             hpBar.PoisonedHue = hp;
                         }
                         break;
+                    case "hue_paralyzed":
+                        if (ushort.TryParse(attr.Value, out ushort hpz))
+                        {
+                            hpBar.ParalyzedHue = hpz;
+                        }
+                        break;
                     case "direction":
                         if (attr.Value == "right")
                         {
@@ -235,6 +241,12 @@ namespace ClassicUO.Game.UI
                         if (ushort.TryParse(attr.Value, out ushort fgp))
                         {
                             hpBar.ForegroundImagePoisoned = fgp;
+                        }
+                        break;
+                    case "image_foreground_paralyzed":
+                        if (ushort.TryParse(attr.Value, out ushort fgpz))
+                        {
+                            hpBar.ForegroundImageParalyzed = fgpz;
                         }
                         break;
 
@@ -270,6 +282,12 @@ namespace ClassicUO.Game.UI
                         if (ushort.TryParse(attr.Value, out ushort hp))
                         {
                             hpBar.PoisonedHue = hp;
+                        }
+                        break;
+                    case "hue_paralyzed":
+                        if (ushort.TryParse(attr.Value, out ushort hpz))
+                        {
+                            hpBar.ParalyzedHue = hpz;
                         }
                         break;
                     case "direction":
@@ -984,10 +1002,11 @@ namespace ClassicUO.Game.UI
         private GumpPicInPic image_foreground;
         private Mobile mobile;
 
-        private ushort backgroundHue, backgroundImage, foregroundImage, foregroundImagePoisoned = 0;
+        private ushort backgroundHue, backgroundImage, foregroundImage, foregroundImagePoisoned = 0, foregroundImageParalyzed = 0;
 
         public ushort NormalHue = 97;
         public ushort PoisonedHue = 62;
+        public ushort ParalyzedHue = 49;
         public ushort BackgroundHue
         {
             get => backgroundHue; set
@@ -1042,6 +1061,15 @@ namespace ClassicUO.Game.UI
             }
         }
 
+        public ushort ForegroundImageParalyzed
+        {
+            get { return foregroundImageParalyzed == 0 ? foregroundImage : foregroundImageParalyzed; }
+            set
+            {
+                foregroundImageParalyzed = value;
+            }
+        }
+
         public XmlHealthBar(World world, uint serial)
         {
             LocalSerial = serial;
@@ -1076,7 +1104,22 @@ namespace ClassicUO.Game.UI
 
             if (mobile != null)
             {
-                if (mobile.IsPoisoned)
+                if (mobile.IsParalyzed)
+                {
+                    if (color_foreground != null)
+                    {
+                        color_foreground.Hue = ParalyzedHue;
+                    }
+                    if (image_foreground != null)
+                    {
+                        image_foreground.Hue = ParalyzedHue;
+                        if (foregroundImageParalyzed != 0)
+                        {
+                            image_foreground.Graphic = foregroundImageParalyzed;
+                        }
+                    }
+                }
+                else if (mobile.IsPoisoned)
                 {
                     if (color_foreground != null)
                     {

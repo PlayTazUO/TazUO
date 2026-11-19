@@ -3,6 +3,7 @@ using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
 using ClassicUO.Utility.Logging;
@@ -43,11 +44,28 @@ internal static class DenyMoveItem
 
         Item firstItem = world.Items.Get(Client.Game.UO.GameCursor.ItemHold.Serial);
 
-        if (
+        bool itemHoldDenial =
             Client.Game.UO.GameCursor.ItemHold.Enabled
             || (Client.Game.UO.GameCursor.ItemHold.Dropped
-                && (firstItem == null || !firstItem.AllowedToDraw))
-        )
+                && (firstItem == null || !firstItem.AllowedToDraw));
+
+        uint deniedSerial = 0;
+        bool hasPendingMove = false;
+        ItemMoveSource pendingMove = default;
+
+        if (itemHoldDenial)
+            deniedSerial = Client.Game.UO.GameCursor.ItemHold.Serial;
+        else if (ObjectActionQueue.Instance.TryGetPendingMove(out pendingMove))
+        {
+            deniedSerial = pendingMove.Serial;
+            hasPendingMove = true;
+        }
+
+        // The server refused this item, so drop any later queued moves for it instead of
+        // retrying against an item the client no longer knows the state of.
+        ObjectActionQueue.Instance.CancelMovesFor(deniedSerial);
+
+        if (itemHoldDenial)
         {
             if (world.ObjectToRemove == Client.Game.UO.GameCursor.ItemHold.Serial)
                 world.ObjectToRemove = 0;
@@ -140,8 +158,15 @@ internal static class DenyMoveItem
 
             Client.Game.UO.GameCursor.ItemHold.Clear();
         }
+        else if (hasPendingMove)
+        {
+            pendingMove.Restore(world);
+            Client.Game.UO.GameCursor.ItemHold.Clear();
+        }
         else
             Log.Warn("There was a problem with ItemHold object. It was cleared before :|");
+
+        ObjectActionQueue.Instance.ClearPendingMove(deniedSerial);
 
         // Actually RejectMoveItemReason
         byte rejectReason = p.ReadUInt8();

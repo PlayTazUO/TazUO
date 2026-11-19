@@ -63,18 +63,14 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: playlscript <filename>");
+                        GameActions.Print(world, "Usage: playlscript <path or file name>");
 
                         return;
                     }
 
-                    foreach (ScriptFile f in LoadedScripts)
-                        if (f.FileName == string.Join(" ", a.Skip(1)))
-                        {
-                            PlayScript(f);
-
-                            return;
-                        }
+                    ScriptFile script = FindScript(LoadedScripts, string.Join(" ", a.Skip(1)));
+                    if (script != null)
+                        PlayScript(script);
                 }
             );
 
@@ -84,18 +80,14 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: stoplscript <filename>");
+                        GameActions.Print(world, "Usage: stoplscript <path or file name>");
 
                         return;
                     }
 
-                    foreach (ScriptFile sf in RunningScripts)
-                        if (sf.FileName == string.Join(" ", a.Skip(1)))
-                        {
-                            StopScript(sf);
-
-                            return;
-                        }
+                    ScriptFile script = FindScript(RunningScripts, string.Join(" ", a.Skip(1)));
+                    if (script != null)
+                        StopScript(script);
                 }
             );
 
@@ -105,26 +97,23 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: togglelscript <filename>");
+                        GameActions.Print(world, "Usage: togglelscript <path or file name>");
 
                         return;
                     }
 
-                    foreach (ScriptFile sf in RunningScripts)
-                        if (sf.FileName == string.Join(" ", a.Skip(1)))
-                        {
-                            StopScript(sf);
+                    string identifier = string.Join(" ", a.Skip(1));
+                    ScriptFile running = FindScript(RunningScripts, identifier);
+                    if (running != null)
+                    {
+                        StopScript(running);
 
-                            return;
-                        }
+                        return;
+                    }
 
-                    foreach (ScriptFile f in LoadedScripts)
-                        if (f.FileName == string.Join(" ", a.Skip(1)))
-                        {
-                            PlayScript(f);
-
-                            return;
-                        }
+                    ScriptFile script = FindScript(LoadedScripts, identifier);
+                    if (script != null)
+                        PlayScript(script);
                 }
             );
 
@@ -150,6 +139,27 @@ namespace ClassicUO.LegionScripting
                     GameActions.Print(world, $"Stopped {count} running script(s).");
                 }
             );
+        }
+
+        /// <summary>
+        /// Finds a script in <paramref name="scripts"/> by its relative path first, then by bare file
+        /// name for backward compatibility with macros created before paths were recorded.
+        /// </summary>
+        /// <returns>The matching script, or null when none matches.</returns>
+        private static ScriptFile FindScript(List<ScriptFile> scripts, string identifier)
+        {
+            if (string.IsNullOrEmpty(identifier))
+                return null;
+
+            foreach (ScriptFile script in scripts)
+                if (string.Equals(script.RelativePath, identifier, StringComparison.Ordinal))
+                    return script;
+
+            foreach (ScriptFile script in scripts)
+                if (string.Equals(script.FileName, identifier, StringComparison.Ordinal))
+                    return script;
+
+            return null;
         }
 
         private static void EventSink_JournalEntryAdded(object sender, JournalEntry e)
@@ -180,8 +190,15 @@ namespace ClassicUO.LegionScripting
 
         public static void LoadScriptsFromFile()
         {
-            if (!Directory.Exists(ScriptPath))
-                Directory.CreateDirectory(ScriptPath);
+            try
+            {
+                if (!Directory.Exists(ScriptPath))
+                    Directory.CreateDirectory(ScriptPath);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Unable to create the LegionScripts directory '{ScriptPath}': {e.Message}");
+            }
 
             LoadedScripts.RemoveAll(ls => !ls.FileExists());
 
@@ -215,31 +232,58 @@ namespace ClassicUO.LegionScripting
         /// <returns></returns>
         private static List<string> HandleScriptsInDirectory(string path)
         {
+            var groups = new List<string>();
+
+            // The directory can vanish or become unreachable between the existence check and the
+            // enumeration - deleted while the client is running, disconnected network drive, sync
+            // folder that got removed, etc. Never let that bubble up and break login/game load.
+            if (!Directory.Exists(path))
+                return groups;
+
             var loadedScripts = new HashSet<string>();
 
             foreach (ScriptFile script in LoadedScripts)
                 loadedScripts.Add(script.FullPath);
 
-            var groups = new List<string>();
+            string[] entries;
 
-            foreach (string file in Directory.EnumerateFileSystemEntries(path))
+            try
             {
-                string fname = Path.GetFileName(file);
+                entries = Directory.GetFileSystemEntries(path);
+            }
+            catch (Exception e)
+            {
+                Log.Warn($"Unable to list the scripts in '{path}': {e.Message}");
 
-                if (fname == "API.py" || fname.StartsWith("_"))
-                    continue;
+                return groups;
+            }
 
-                if (file.EndsWith(".py") || file.EndsWith(".cs"))
+            foreach (string file in entries)
+            {
+                try
                 {
-                    if (loadedScripts.Contains(file))
+                    string fname = Path.GetFileName(file);
+
+                    if (fname == "API.py" || fname.StartsWith("_"))
                         continue;
 
-                    AddScriptFromFile(file);
-                    loadedScripts.Add(file);
+                    if (file.EndsWith(".py") || file.EndsWith(".cs"))
+                    {
+                        if (loadedScripts.Contains(file))
+                            continue;
+
+                        AddScriptFromFile(file);
+                        loadedScripts.Add(file);
+                    }
+                    else if (file.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && File.Exists(file))
+                        HandleScriptsInZip(file, loadedScripts);
+                    else if (Directory.Exists(file)) groups.Add(file);
                 }
-                else if (file.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && File.Exists(file))
-                    HandleScriptsInZip(file, loadedScripts);
-                else if (Directory.Exists(file)) groups.Add(file);
+                catch (Exception e)
+                {
+                    // One unreadable file/directory should not stop the rest from loading.
+                    Log.Warn($"Unable to load script '{file}': {e.Message}");
+                }
             }
 
             return groups;
@@ -489,11 +533,11 @@ namespace ClassicUO.LegionScripting
 
         private static void ExecutePythonScript(ScriptFile script)
         {
-            script.SetupPythonEngine();
-            script.SetupPythonScope();
-
             try
             {
+                script.SetupPythonEngine();
+                script.SetupPythonScope();
+
                 ScriptSource source = script.PythonEngine.CreateScriptSourceFromString(script.FileContentsJoined, script.FullPath, SourceCodeKind.File);
                 source?.Execute(script.PythonScope);
             }

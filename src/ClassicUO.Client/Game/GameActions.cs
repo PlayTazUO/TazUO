@@ -179,18 +179,36 @@ internal static class GameActions
         return true;
     }
 
+    /// <param name="page">
+    /// Legacy page index from the options gump this window replaced. The indices have no counterpart
+    /// in the current layout, so it is ignored; use <see cref="ShowNewOptionsGump(string[])"/> to open
+    /// at a known location.
+    /// </param>
     internal static void OpenSettings(World world, int page = 0) => ShowNewOptionsGump();
 
     /// <summary>
-    /// Creates or opens the options window
+    /// Creates or opens the options window, optionally navigating straight to a location within it
     /// </summary>
-    public static void ShowNewOptionsGump()
+    /// <param name="openAt">
+    /// Breadcrumb segments to open at, outermost first, e.g. <c>Video</c>, <c>Lighting</c>. Segments
+    /// past the deepest navigable boundary are ignored. Pass nothing to leave the window where it is.
+    /// </param>
+    public static void ShowNewOptionsGump(params string[] openAt)
     {
         NewOptionsWindow existing = UIManager.GetGump<NewOptionsWindow>();
+
         if (existing == null)
-            UIManager.Add(new NewOptionsWindow());
+        {
+            existing = new NewOptionsWindow();
+            UIManager.Add(existing);
+        }
         else
+        {
             existing.BringOnTop();
+        }
+
+        if (openAt is { Length: > 0 })
+            existing.NavigateTo(openAt);
     }
 
     internal static void OpenStatusBar(World world)
@@ -421,10 +439,10 @@ internal static class GameActions
     /// <returns>False if no chat was open</returns>
     internal static bool CloseChat()
     {
-        Gump g = UIManager.GetGump<ChatGump>();
-        if (g != null)
+        ChatWindow window = UIManager.GetGump<ChatWindow>();
+        if (window != null)
         {
-            g.Dispose();
+            window.Dispose();
             return true;
         }
         return false;
@@ -434,16 +452,16 @@ internal static class GameActions
     {
         if (world.ChatManager.ChatIsEnabled == ChatStatus.Enabled)
         {
-            ChatGump chatGump = UIManager.GetGump<ChatGump>();
+            ChatWindow chatWindow = UIManager.GetGump<ChatWindow>();
 
-            if (chatGump == null)
+            if (chatWindow == null)
             {
-                UIManager.Add(new ChatGump(world));
+                UIManager.Add(new ChatWindow(world));
             }
             else
             {
-                chatGump.SetInScreen();
-                chatGump.BringOnTop();
+                chatWindow.SetInScreen();
+                chatWindow.BringOnTop();
             }
         }
         else if (world.ChatManager.ChatIsEnabled == ChatStatus.EnabledUserRequest)
@@ -947,13 +965,19 @@ internal static class GameActions
             int amount = Client.Game.UO.GameCursor.ItemHold.Enabled ? Client.Game.UO.GameCursor.ItemHold.Amount : -1;
             ScriptRecorder.Instance.RecordDragDrop(sourceSerial, container, amount, x, y);
 
-            Client.Game.UO.GameCursor.ItemHold.Enabled = false;
-            Client.Game.UO.GameCursor.ItemHold.Dropped = true;
+            // Only mirror the drop onto the hold when we were actually holding the item. Forced
+            // drops sent by the move queue never populate ItemHold, and marking a stale hold as
+            // dropped would make the deny handler treat unrelated rejections as manual moves.
+            if (Client.Game.UO.GameCursor.ItemHold.Enabled)
+            {
+                Client.Game.UO.GameCursor.ItemHold.Enabled = false;
+                Client.Game.UO.GameCursor.ItemHold.Dropped = true;
+            }
 
             if (ProfileManager.CurrentProfile.QueueManualItemMoves && !force)
             {
                 Client.Game.UO.GameCursor.ItemHold.Clear();
-                ObjectActionQueue.Instance.Enqueue(new MoveRequest(serial, container, (ushort)amount, x, y, z).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                ObjectActionQueue.Instance.Enqueue(new MoveRequest(serial, container, (ushort)amount, x, y, z).ToObjectActionQueueItem(), ActionPriority.ManualMoveItem);
                 return;
             }
 
@@ -1138,6 +1162,7 @@ internal static class GameActions
             LastSpellIndex = index;
             SpellVisualRangeManager.Instance.ClearCasting();
             Socket.Send_CastSpellFromBook(index, bookSerial);
+            SpellVisualRangeManager.Instance.BeginCastingFromClient(index);
         }
     }
 
@@ -1216,6 +1241,7 @@ internal static class GameActions
             LastSpellIndex = index;
             SpellVisualRangeManager.Instance.ClearCasting();
             Socket.Send_CastSpell(index);
+            SpellVisualRangeManager.Instance.BeginCastingFromClient(index);
 
             // Record action for script recording
             string name = SpellDefinition.FullIndexGetSpell(index).Name;
@@ -1230,9 +1256,12 @@ internal static class GameActions
     /// <param name="name">Can be a partial match</param>
     internal static bool CastSpellByName(string name, bool partialMatch = true)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            return false;
+
         name = name.Trim();
 
-        if (!string.IsNullOrEmpty(name) && SpellDefinition.TryGetSpellFromName(name, out SpellDefinition spellDef, partialMatch))
+        if (SpellDefinition.TryGetSpellFromName(name, out SpellDefinition spellDef, partialMatch))
         {
             // Record action for script recording
             ScriptRecorder.Instance.RecordCastSpell(name);
@@ -1253,19 +1282,45 @@ internal static class GameActions
 
     public static void Logout(World world)
     {
-        LastEquipmentManager.Save(world.Player.GetEquippedItems(), ProfileManager.CurrentProfile.ServerName, world.Player.Name, ProfileManager.CurrentProfile.Username, world.Player.Graphic, world.Player.Hue, world.Player.IsFemale);
+        if (world == null)
+            return;
+
+        // Logout can be a request the server answers later, leaving the game scene (and therefore the
+        // macro tick) alive for a while. Stop here instead of letting a macro keep firing actions while
+        // the character is on its way out.
+        world.Macros.StopExecution();
+
+        // The player or profile can already be gone when the confirmation is answered during
+        // teardown (or a script calls this from outside the game); skip the snapshot then.
+        if (world.Player != null && ProfileManager.CurrentProfile != null)
+        {
+            LastEquipmentManager.Save(
+                world.Player.GetEquippedItems(),
+                ProfileManager.CurrentProfile.ServerName,
+                world.Player.Name,
+                ProfileManager.CurrentProfile.Username,
+                world.Player.Graphic,
+                world.Player.Hue,
+                world.Player.IsFemale
+            );
+        }
 
         LoginHandshake.Reconnect = false;
         WorldMapGump.ClearMapCache();
 
+        GameScene scene = Client.Game.GetScene<GameScene>();
+
+        if (scene == null)
+            return;
+
+        scene.DisconnectionRequested = true;
+
         if ((world.ClientFeatures.Flags & CharacterListFlags.CLF_OWERWRITE_CONFIGURATION_BUTTON) != 0)
         {
-            Client.Game.GetScene<GameScene>().DisconnectionRequested = true;
-            Socket.Send_LogoutNotification();
+            Socket?.Send_LogoutNotification();
         }
         else
         {
-            Client.Game.GetScene<GameScene>().DisconnectionRequested = true;
             Client.Game.SetScene(new LoginScene(world));
 
             Socket?.Disconnect();
@@ -1486,7 +1541,8 @@ internal static class GameActions
     }
 
     /// <summary>
-    ///     Double-clicks the player's saved mount to mount up.
+    ///     Double-clicks the player's saved mount to mount up. The saved mount may be a creature or
+    ///     a mount item on some servers, including one held in a container.
     /// </summary>
     /// <param name="useQueue">
     ///     If <see langword="true" />, routes through <see cref="DoubleClickQueued(uint, bool)" />.
@@ -1509,7 +1565,11 @@ internal static class GameActions
         if (mount == null)
             return MountResult.MountNotFound;
 
-        if (mount.Distance > profile.MountDistance)
+        // Items held in a container use container-relative coordinates, so their Distance is
+        // meaningless. They are always reachable by double-click.
+        bool isContainedItem = mount is Item { OnGround: false };
+
+        if (!isContainedItem && mount.Distance > profile.MountDistance)
             return MountResult.MountTooFar;
 
         if (useQueue)

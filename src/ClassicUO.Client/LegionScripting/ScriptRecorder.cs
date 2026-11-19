@@ -38,7 +38,6 @@ namespace ClassicUO.LegionScripting
         private uint _lastActionTime = 0;
         private int _lastPlayerX = -1;
         private int _lastPlayerY = -1;
-        private Direction _lastDirection = Direction.North;
 
         public bool IsRecording => _isRecording;
         public bool IsPaused => _isPaused;
@@ -68,6 +67,8 @@ namespace ClassicUO.LegionScripting
                 _isPaused = false;
                 _startTime = Time.Ticks;
                 _lastActionTime = _startTime;
+                _lastPlayerX = -1;
+                _lastPlayerY = -1;
                 _recordedActions.Clear();
             }
             RecordingStateChanged?.Invoke(this, EventArgs.Empty);
@@ -177,24 +178,39 @@ namespace ClassicUO.LegionScripting
                 { "type", containerType }
             });
 
-        public void UpdatePlayerPosition(int x, int y, Direction direction, bool isRunning)
+        /// <summary>
+        /// Records a walk/run when the player's tile actually changes. Direction is derived
+        /// from the position delta because the completed step is already dequeued by the time
+        /// the player's position-change notification fires, so the step queue can't be trusted.
+        /// </summary>
+        public void UpdatePlayerPosition(int x, int y, bool isRunning)
         {
             if (!_isRecording || _isPaused)
                 return;
 
-            // Only record if position actually changed
-            if (_lastPlayerX != -1 && _lastPlayerY != -1 &&
-                (_lastPlayerX != x || _lastPlayerY != y))
+            bool moved = _lastPlayerX != -1 && _lastPlayerY != -1 &&
+                (_lastPlayerX != x || _lastPlayerY != y);
+
+            if (moved)
             {
-                if (isRunning)
-                    RecordRun(direction);
-                else
-                    RecordWalk(direction);
+                int deltaX = Math.Abs(x - _lastPlayerX);
+                int deltaY = Math.Abs(y - _lastPlayerY);
+
+                // A single UO step changes at most one tile per axis. Larger jumps are
+                // teleports/resyncs and must not be replayed as movement.
+                if (Math.Max(deltaX, deltaY) == 1)
+                {
+                    Direction direction = DirectionHelper.CalculateDirection(_lastPlayerX, _lastPlayerY, x, y);
+
+                    if (isRunning)
+                        RecordRun(direction);
+                    else
+                        RecordWalk(direction);
+                }
             }
 
             _lastPlayerX = x;
             _lastPlayerY = y;
-            _lastDirection = direction;
         }
 
         public void RecordAttack(uint serial) => RecordAction("attack", new Dictionary<string, object> { { "serial", serial } });

@@ -46,8 +46,8 @@ public struct PulseSpec
 /// <em>should</em> be flat: every field of it maps one-to-one onto an effect parameter.
 /// </para>
 /// <para>
-/// Fixed set of four - the shader has four techniques, and there is no way to describe a fifth from
-/// config.
+/// Fixed set - one technique per pass compiled into the shader, and there is no way to describe
+/// any other from config.
 /// </para>
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "technique")]
@@ -55,6 +55,7 @@ public struct PulseSpec
 [JsonDerivedType(typeof(BlurEffect), BlurEffect.Discriminator)]
 [JsonDerivedType(typeof(RadialBlurEffect), RadialBlurEffect.Discriminator)]
 [JsonDerivedType(typeof(ChromaticEffect), ChromaticEffect.Discriminator)]
+[JsonDerivedType(typeof(SaturationEffect), SaturationEffect.Discriminator)]
 public abstract class LayerEffect
 {
     #region Public accessors
