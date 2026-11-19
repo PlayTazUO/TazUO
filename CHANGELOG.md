@@ -2,6 +2,9 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/18/26
+* ***Fix:*** Scrollbars on the shop and skills gumps no longer sit too far to the right - the bar position was being recomputed every frame from the padded scroll area width, and the offset is now scaled with the gump so scaled gumps stay aligned too
+
 ## 11/16/26
 * ***Fix:*** Autoloot no longer re-scans every item in a corpse for each item event and no longer re-scans every in-range corpse on every step - opening many corpses no longer causes noticeable stalls
 * ***Fix:*** Item moves rejected by the server now report completion for the canceled queued actions, so autoloot no longer leaves items marked as in-flight or gets stuck on its pending count

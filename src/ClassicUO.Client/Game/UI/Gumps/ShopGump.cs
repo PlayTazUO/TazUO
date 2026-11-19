@@ -149,10 +149,13 @@ namespace ClassicUO.Game.UI.Gumps
             );
             Add(_rightBottom);
 
+            // Stop both lists at the gump's divider. ScrollArea pads its right edge for the
+            // flag bar and places the bar against the width it was given, so any extra width
+            // here pushes the bar past the art's scrollbar channel.
             _shopScrollArea = new ScrollArea(
                 RIGHT_OFFSET,
                 _leftMiddle.Y,
-                artInfoLeft.UV.Width - RIGHT_OFFSET * 2 + 5,
+                artInfoLeft.UV.Width - RIGHT_OFFSET * 2,
                 _leftMiddle.Height + 50,
                 false,
                 _leftMiddle.Height
@@ -163,7 +166,7 @@ namespace ClassicUO.Game.UI.Gumps
             _transactionScrollArea = new ScrollArea(
                 RIGHT_OFFSET / 2 + rightTop.X,
                 LEFT_TOP_HEIGHT + rightTop.Y,
-                artInfoRight.UV.Width - RIGHT_OFFSET * 2 + RIGHT_OFFSET / 2 + 5,
+                artInfoRight.UV.Width - RIGHT_OFFSET * 2 + RIGHT_OFFSET / 2,
                 _rightMiddle.Height,
                 false
             );
