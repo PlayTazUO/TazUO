@@ -58,6 +58,52 @@ Sets whether the gump is resizable
 
 ---
 
+### GetMinWidth
+
+Gets the minimum width the gump can be resized to.
+
+**Return Type:** `int` - The minimum width in pixels
+
+---
+
+### SetMinWidth
+`(minWidth)`
+Sets the minimum width the gump can be resized to. The gump is not resized immediately; the
+new floor applies to subsequent resize drags.
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `minWidth` | `int` | ❌ No | The minimum width in pixels |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### GetMinHeight
+
+Gets the minimum height the gump can be resized to.
+
+**Return Type:** `int` - The minimum height in pixels
+
+---
+
+### SetMinHeight
+`(minHeight)`
+Sets the minimum height the gump can be resized to. The gump is not resized immediately; the
+new floor applies to subsequent resize drags.
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `minHeight` | `int` | ❌ No | The minimum height in pixels |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
 ### GetBorderSize
 
 Gets the border size of the nine-slice
