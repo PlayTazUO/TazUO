@@ -1,11 +1,18 @@
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.LegionScripting.ApiClasses;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.LegionScripting.ApiClasses;
 
 public class ApiUiTextBox(TextBox textBox) : ApiUiBaseControl(textBox)
 {
+    /// <summary>
+    /// The rendered size of the text in pixels, as measured by the renderer. Read <c>MeasuredSize.X</c>
+    /// for the text width and <c>MeasuredSize.Y</c> for the text height.
+    /// </summary>
+    public Point MeasuredSize => GetProp(() => textBox.MeasuredSize);
+
     public string Text
     {
         get => GetProp(() => textBox.Text, string.Empty);

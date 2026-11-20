@@ -1082,6 +1082,32 @@ class ApiUiNineSliceGump(ApiUiBaseControl, IApiGump):
         """
         pass
 
+    def GetMinWidth(self) -> "int":
+        """
+        Gets the minimum width the gump can be resized to.
+        """
+        pass
+
+    def SetMinWidth(self, minWidth: "int") -> None:
+        """
+        Sets the minimum width the gump can be resized to. The gump is not resized immediately; the
+        new floor applies to subsequent resize drags.
+        """
+        pass
+
+    def GetMinHeight(self) -> "int":
+        """
+        Gets the minimum height the gump can be resized to.
+        """
+        pass
+
+    def SetMinHeight(self, minHeight: "int") -> None:
+        """
+        Sets the minimum height the gump can be resized to. The gump is not resized immediately; the
+        new floor applies to subsequent resize drags.
+        """
+        pass
+
     def GetBorderSize(self) -> "int":
         """
         Gets the border size of the nine-slice
@@ -1208,6 +1234,7 @@ class ApiUiSlider(ApiUiBaseControl):
 
 class ApiUiTextBox(ApiUiBaseControl):
     ""
+    MeasuredSize = None
     Text: str = None
     Hue: int = None
     Font: str = None

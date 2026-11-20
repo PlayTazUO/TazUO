@@ -4,6 +4,12 @@ description: "ApiUiTextBox class documentation"
 ---
 
 ## Properties
+### `MeasuredSize`
+
+**Type:** `Point`
+
+The rendered size of the text in pixels, as measured by the renderer. Read `MeasuredSize.X` for the text width and `MeasuredSize.Y` for the text height.
+
 ### `Text`
 
 **Type:** `string`
