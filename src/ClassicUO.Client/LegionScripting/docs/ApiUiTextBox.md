@@ -9,6 +9,7 @@ description: "ApiUiTextBox class documentation"
 **Type:** `Point`
 
 The rendered size of the text in pixels, as measured by the renderer. Read `MeasuredSize.X` for the text width and `MeasuredSize.Y` for the text height.
+The read is marshalled to the main thread, so it is safe to call from a script thread.
 
 ### `Text`
 

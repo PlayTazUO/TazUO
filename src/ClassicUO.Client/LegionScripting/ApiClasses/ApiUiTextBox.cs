@@ -10,6 +10,7 @@ public class ApiUiTextBox(TextBox textBox) : ApiUiBaseControl(textBox)
     /// <summary>
     /// The rendered size of the text in pixels, as measured by the renderer. Read <c>MeasuredSize.X</c>
     /// for the text width and <c>MeasuredSize.Y</c> for the text height.
+    /// The read is marshalled to the main thread, so it is safe to call from a script thread.
     /// </summary>
     public Point MeasuredSize => GetProp(() => textBox.MeasuredSize);
 
