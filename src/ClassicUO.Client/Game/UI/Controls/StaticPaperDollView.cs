@@ -226,41 +226,31 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        private ushort GetEquipmentGumpId(ushort animID)
+        private uint GetEquipmentGumpId(ushort animID)
         {
-            int offset = _isFemale ? Constants.FEMALE_GUMP_OFFSET : Constants.MALE_GUMP_OFFSET;
+            uint offset = PaperDollInteractable.GetEquipGumpOffset(_isFemale);
 
             Client.Game.UO.Animations.ConvertBodyIfNeeded(ref _bodyGraphic);
 
+            uint anim = animID;
+
             if (Client.Game.UO.FileManager.Animations.EquipConversions.TryGetValue(
-                _bodyGraphic,
-                out Dictionary<ushort, EquipConvData> dict))
+                    _bodyGraphic,
+                    out Dictionary<ushort, EquipConvData> dict)
+                && dict.TryGetValue(animID, out EquipConvData data))
             {
-                if (dict.TryGetValue(animID, out EquipConvData data))
-                {
-                    if (data.Gump > Constants.MALE_GUMP_OFFSET)
-                    {
-                        animID = (ushort)(
-                            data.Gump >= Constants.FEMALE_GUMP_OFFSET
-                                ? data.Gump - Constants.FEMALE_GUMP_OFFSET
-                                : data.Gump - Constants.MALE_GUMP_OFFSET);
-                    }
-                    else
-                    {
-                        animID = data.Gump;
-                    }
-                }
+                anim = PaperDollInteractable.GetEquipConvAnimID(data);
             }
 
             // Check if the gump exists, otherwise try the other gender
-            int requested = animID + offset;
-            if (requested > GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT ||
-                Client.Game.UO.Gumps.GetGump((ushort)requested).Texture == null)
+            uint requested = anim + offset;
+            if (requested >= GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT ||
+                Client.Game.UO.Gumps.GetGump(requested).Texture == null)
             {
-                offset = _isFemale ? Constants.MALE_GUMP_OFFSET : Constants.FEMALE_GUMP_OFFSET;
+                offset = PaperDollInteractable.GetEquipGumpOffset(!_isFemale);
             }
 
-            return (ushort)(animID + offset);
+            return anim + offset;
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
@@ -328,7 +318,7 @@ namespace ClassicUO.Game.UI.Controls
             {
                 if (_equipment.TryGetValue(layer, out EquipmentEntry entry))
                 {
-                    ushort gumpId = GetEquipmentGumpId(entry.AnimID);
+                    uint gumpId = GetEquipmentGumpId(entry.AnimID);
                     DrawGump(batcher, gumpId, entry.Hue, x, y, entry.IsPartialHue);
                 }
             }
@@ -336,7 +326,7 @@ namespace ClassicUO.Game.UI.Controls
             return base.Draw(batcher, x, y);
         }
 
-        private void DrawGump(UltimaBatcher2D batcher, ushort gumpId, ushort hue, int x, int y, bool isPartialHue)
+        private void DrawGump(UltimaBatcher2D batcher, uint gumpId, ushort hue, int x, int y, bool isPartialHue)
         {
             ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(gumpId);
 

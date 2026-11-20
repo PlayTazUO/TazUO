@@ -513,9 +513,9 @@ namespace ClassicUO.Game.UI.Gumps
                 this.item = item;
             }
 
-            private static ushort GetAnimID(ushort graphic, ushort animID, bool isfemale)
+            private static uint GetAnimID(ushort graphic, ushort animID, bool isfemale)
             {
-                int offset = isfemale ? Constants.FEMALE_GUMP_OFFSET : Constants.MALE_GUMP_OFFSET;
+                uint offset = PaperDollInteractable.GetEquipGumpOffset(isfemale);
 
                 if (Client.Game.UO.Version >= Utility.ClientVersion.CV_7000 && animID == 0x03CA                          // graphic for dead shroud
                                                             && (graphic == 0x02B7 || graphic == 0x02B6)) // dead gargoyle graphics
@@ -525,28 +525,21 @@ namespace ClassicUO.Game.UI.Gumps
 
                 Client.Game.UO.Animations.ConvertBodyIfNeeded(ref graphic);
 
-                if (Client.Game.UO.FileManager.Animations.EquipConversions.TryGetValue(graphic, out Dictionary<ushort, EquipConvData> dict))
+                uint anim = animID;
+
+                if (Client.Game.UO.FileManager.Animations.EquipConversions.TryGetValue(graphic, out Dictionary<ushort, EquipConvData> dict)
+                    && dict.TryGetValue(animID, out EquipConvData data))
                 {
-                    if (dict.TryGetValue(animID, out EquipConvData data))
-                    {
-                        if (data.Gump > Constants.MALE_GUMP_OFFSET)
-                        {
-                            animID = (ushort)(data.Gump >= Constants.FEMALE_GUMP_OFFSET ? data.Gump - Constants.FEMALE_GUMP_OFFSET : data.Gump - Constants.MALE_GUMP_OFFSET);
-                        }
-                        else
-                        {
-                            animID = data.Gump;
-                        }
-                    }
+                    anim = PaperDollInteractable.GetEquipConvAnimID(data);
                 }
 
-                if (animID + offset > GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT || Client.Game.UO.Gumps.GetGump((ushort)(animID + offset)).Texture == null)
+                if (anim + offset >= GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT || Client.Game.UO.Gumps.GetGump(anim + offset).Texture == null)
                 {
                     // inverse
-                    offset = isfemale ? Constants.MALE_GUMP_OFFSET : Constants.FEMALE_GUMP_OFFSET;
+                    offset = PaperDollInteractable.GetEquipGumpOffset(!isfemale);
                 }
 
-                return (ushort)(animID + offset);
+                return anim + offset;
             }
 
             public override bool Draw(UltimaBatcher2D batcher, int x, int y)

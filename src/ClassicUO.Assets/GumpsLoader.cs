@@ -13,7 +13,10 @@ namespace ClassicUO.Assets
 {
     public sealed class GumpsLoader : UOFileLoader
     {
-        public const int MAX_GUMP_DATA_INDEX_COUNT = 0x10000;
+        // 0x12000, as UOFiddler (Gumps32): custom archives may hold more than 65,536 entries. The standard
+        // archive has a few gumps past 0xFFFF too (69971..69985), though no standard item reaches them through
+        // 60000 + AnimID.
+        public const int MAX_GUMP_DATA_INDEX_COUNT = 0x12000;
 
         /// <summary>
         /// Gump art of the shard's own, as loose files, by the number the server asks for.
@@ -22,7 +25,7 @@ namespace ClassicUO.Assets
         /// it aliases and never replaces. These do both: a file here is used whether or not the
         /// archive has that number, which is what makes correcting an existing gump possible.
         ///
-        /// The archive uses 5,571 of the 65,536 numbers and its highest is 61,728, so there is
+        /// The archive uses 5,571 of the 73,728 numbers and its highest is 61,728, so there is
         /// plenty of room to put ours somewhere nothing will ever collide with.
         /// </summary>
         private readonly Dictionary<int, string> _ours = new Dictionary<int, string>();

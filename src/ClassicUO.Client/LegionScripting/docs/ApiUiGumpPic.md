@@ -6,7 +6,7 @@ description: "ApiUiGumpPic class documentation"
 ## Properties
 ### `Graphic`
 
-**Type:** `ushort`
+**Type:** `uint`
 
 ### `Hue`
 

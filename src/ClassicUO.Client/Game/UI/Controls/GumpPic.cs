@@ -13,7 +13,7 @@ namespace ClassicUO.Game.UI.Controls
     public abstract class GumpPicBase : Control
     {
         public bool IsPartialHue { get; set; }
-        private ushort _graphic;
+        private uint _graphic;
 
         protected GumpPicBase()
         {
@@ -21,7 +21,7 @@ namespace ClassicUO.Game.UI.Controls
             AcceptMouseInput = true;
         }
 
-        public ushort Graphic
+        public uint Graphic
         {
             get => _graphic;
             set
@@ -121,7 +121,7 @@ namespace ClassicUO.Game.UI.Controls
 
     public class GumpPic : GumpPicBase
     {
-        public GumpPic(int x, int y, ushort graphic, ushort hue)
+        public GumpPic(int x, int y, uint graphic, ushort hue)
         {
             X = x;
             Y = y;

@@ -261,7 +261,7 @@ namespace ClassicUO.Game.UI.Controls
                         continue;
                     }
 
-                    ushort id = GetAnimID(
+                    uint id = GetAnimID(
                         mobile.Graphic,
                         equipItem.Graphic,
                         equipItem.ItemData.AnimID,
@@ -297,7 +297,7 @@ namespace ClassicUO.Game.UI.Controls
                     && Client.Game.UO.GameCursor.ItemHold.ItemData.AnimID != 0
                 )
                 {
-                    ushort id = GetAnimID(
+                    uint id = GetAnimID(
                         mobile.Graphic,
                         Client.Game.UO.GameCursor.ItemHold.Graphic,
                         Client.Game.UO.GameCursor.ItemHold.ItemData.AnimID,
@@ -506,9 +506,42 @@ namespace ClassicUO.Game.UI.Controls
 
         public void RequestUpdate() => _updateUi = true;
 
-        protected static ushort GetAnimID(ushort mobileGraphic, ushort itemGraphic, ushort animID, bool isfemale)
+        /// <summary>
+        /// AnimID an Equipconv.def entry maps the item to: its gump number without the male or female offset, or
+        /// the number itself when the entry gives an AnimID rather than a gump.
+        /// </summary>
+        /// <param name="data">The entry for the item's AnimID on the mobile's body.</param>
+        /// <returns>The AnimID to add the gender offset to.</returns>
+        internal static uint GetEquipConvAnimID(in EquipConvData data)
         {
-            int offset = isfemale ? Constants.FEMALE_GUMP_OFFSET : Constants.MALE_GUMP_OFFSET;
+            if (data.Gump <= Constants.MALE_GUMP_OFFSET)
+            {
+                return data.Gump;
+            }
+
+            return data.Gump >= Constants.FEMALE_GUMP_OFFSET
+                ? data.Gump - Constants.FEMALE_GUMP_OFFSET
+                : data.Gump - Constants.MALE_GUMP_OFFSET;
+        }
+
+        /// <summary>
+        /// Gump number offset of a gender's paperdoll equipment: gump = offset + AnimID.
+        /// </summary>
+        /// <param name="isFemale">True for the female gumps.</param>
+        /// <returns><see cref="Constants.FEMALE_GUMP_OFFSET"/> or <see cref="Constants.MALE_GUMP_OFFSET"/>.</returns>
+        internal static uint GetEquipGumpOffset(bool isFemale)
+        {
+            if (isFemale)
+            {
+                return Constants.FEMALE_GUMP_OFFSET;
+            }
+
+            return Constants.MALE_GUMP_OFFSET;
+        }
+
+        protected static uint GetAnimID(ushort mobileGraphic, ushort itemGraphic, ushort animID, bool isfemale)
+        {
+            uint offset = GetEquipGumpOffset(isfemale);
 
             if (
                     Client.Game.UO.Version >= ClientVersion.CV_7000
@@ -521,62 +554,51 @@ namespace ClassicUO.Game.UI.Controls
 
             Client.Game.UO.Animations.ConvertBodyIfNeeded(ref mobileGraphic);
 
+            uint anim = animID;
+
             if (
                 Client.Game.UO.FileManager.Animations.EquipConversions.TryGetValue(
                     mobileGraphic,
                     out Dictionary<ushort, EquipConvData> dict
                 )
+                && dict.TryGetValue(animID, out EquipConvData data)
             )
             {
-                if (dict.TryGetValue(animID, out EquipConvData data))
-                {
-                    if (data.Gump > Constants.MALE_GUMP_OFFSET)
-                    {
-                        animID = (ushort)(
-                            data.Gump >= Constants.FEMALE_GUMP_OFFSET
-                                ? data.Gump - Constants.FEMALE_GUMP_OFFSET
-                                : data.Gump - Constants.MALE_GUMP_OFFSET
-                        );
-                    }
-                    else
-                    {
-                        animID = data.Gump;
-                    }
-                }
+                anim = GetEquipConvAnimID(data);
             }
 
             if (Client.Game.UO.FileManager.TileArt.TryGetTileArtInfo(itemGraphic, out TileArtInfo tileArtInfo))
             {
                 if (tileArtInfo.TryGetAppearance(mobileGraphic, out uint appareanceId))
                 {
-                    ushort gumpId = (ushort)(Constants.MALE_GUMP_OFFSET + appareanceId);
+                    uint gumpId = Constants.MALE_GUMP_OFFSET + appareanceId;
                     if (Client.Game.UO.Gumps.GetGump(gumpId).Texture != null)
                     {
-                        Log.Info($"Equip conversion through tileart.uop done: old {animID} -> new {appareanceId}");
+                        Log.Info($"Equip conversion through tileart.uop done: old {anim} -> new {appareanceId}");
                         return gumpId;
                     }
                 }
             }
 
-            _ = IsAnimExistsInGump(animID, ref offset, isfemale);
+            _ = IsAnimExistsInGump(anim, ref offset, isfemale);
 
-            return (ushort)(animID + offset);
+            return anim + offset;
         }
 
-        private static bool IsAnimExistsInGump(ushort animID, ref int offset, bool isFemale)
+        private static bool IsAnimExistsInGump(uint animID, ref uint offset, bool isFemale)
         {
-            int requested = animID + offset;
+            uint requested = animID + offset;
             if (
-                    requested > GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT
-                    || Client.Game.UO.Gumps.GetGump((ushort)(requested)).Texture == null
+                    requested >= GumpsLoader.MAX_GUMP_DATA_INDEX_COUNT
+                    || Client.Game.UO.Gumps.GetGump(requested).Texture == null
                 )
             {
                 // inverse
-                offset = isFemale ? Constants.MALE_GUMP_OFFSET : Constants.FEMALE_GUMP_OFFSET;
+                offset = GetEquipGumpOffset(!isFemale);
                 requested = animID + offset;
             }
 
-            if (Client.Game.UO.Gumps.GetGump((ushort)(requested)).Texture == null)
+            if (Client.Game.UO.Gumps.GetGump(requested).Texture == null)
             {
                 return false;
             }
@@ -594,7 +616,7 @@ namespace ClassicUO.Game.UI.Controls
                 uint serial,
                 int x,
                 int y,
-                ushort graphic,
+                uint graphic,
                 ushort hue,
                 Layer layer
             ) : base(x, y, graphic, hue)
