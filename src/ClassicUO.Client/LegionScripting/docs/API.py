@@ -590,6 +590,15 @@ class ApiUiControlDropDown(ApiUiBaseControl):
         """
         pass
 
+class ApiUiExternalUrlImage(ApiUiBaseControl):
+    ""
+
+    def LoadImageFromUrl(self, url: "str") -> None:
+        """
+        Replaces the displayed image with the image downloaded from `url`.
+        """
+        pass
+
 class ApiUiGump:
     ""
 
@@ -723,6 +732,22 @@ class ApiUiGump:
         ```py
         # In your zip: icons/sword.png
         img = API.Gumps.LegionTextureControl("icons/sword.png")
+        img.SetPos(10, 10)
+        g.Add(img)
+        ```
+        """
+        pass
+
+    def CreateGumpExternalImage(self, url: "str", width: "int" = 100, height: "int" = 100) -> "Any":
+        """
+        Create an image control that downloads and displays an image from a URL.
+        The download happens in the background; the control draws nothing until the image is ready and keeps
+        its configured size in the meantime. Images are cached per URL.
+        
+        **Example:**
+        
+        ```py
+        img = API.Gumps.CreateGumpExternalImage("https://example.com/picture.png", 200, 200)
         img.SetPos(10, 10)
         g.Add(img)
         ```
