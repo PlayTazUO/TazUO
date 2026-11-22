@@ -6,6 +6,8 @@ All notable changes to TazUO will be recorded here.
 * ***Legion:*** Modern gumps now expose `GetMinWidth`/`SetMinWidth` and `GetMinHeight`/`SetMinHeight`, so the minimum resize size can be read and changed after creation instead of only at creation time
 * ***Legion:*** Gump text boxes now expose `MeasuredSize`, returning the renderer-measured text width (`MeasuredSize.X`) and height (`MeasuredSize.Y`) in pixels
 * ***Legion:*** Added `API.Gumps.CreateGumpExternalImage` to display an image downloaded from a URL, with `ApiUiExternalUrlImage.LoadImageFromUrl` to change the image after creation
+* ***Feature:*** External images (`CreateGumpExternalImage`, poll images) now accept inline `data:` URIs as well as URLs, so an image can be supplied without a web host - both base64 and percent-encoded payloads are supported
+* ***Fix:*** Gump external images no longer create their GPU texture from a background thread - downloading and decoding bytes still happen off the game loop, but texture creation is queued to the main thread instead of racing with rendering
 
 ## 11/18/26
 * ***Fix:*** Scrollbars on the shop and skills gumps no longer sit too far to the right - the bar position was being recomputed every frame from the padded scroll area width, and the offset is now scaled with the gump so scaled gumps stay aligned too
