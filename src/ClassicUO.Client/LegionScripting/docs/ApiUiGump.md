@@ -245,6 +245,32 @@ g.Add(img)
 
 ---
 
+### CreateGumpExternalImage
+`(url, width, height)`
+Create an image control that downloads and displays an image from a URL.
+The download happens in the background; the control draws nothing until the image is ready and keeps
+its configured size in the meantime. Images are cached per URL.
+
+**Example:**
+
+```py
+img = API.Gumps.CreateGumpExternalImage("https://example.com/picture.png", 200, 200)
+img.SetPos(10, 10)
+g.Add(img)
+```
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `url` | `string` | ❌ No | Absolute URL of the image to download, or an inline data URI ( `data:image/png;base64,...`) |
+| `width` | `int` | ✅ Yes | Display width in pixels |
+| `height` | `int` | ✅ Yes | Display height in pixels |
+
+**Return Type:** `ApiUiExternalUrlImage` - An external URL image control
+
+---
+
 ### CreateGumpButton
 `(text, hue, normal, pressed, hover)`
 Create a button for gumps.

@@ -11,8 +11,8 @@ public class NineSliceGump : Gump
     private Texture2D _customTexture;
     private Rectangle[] _slices = new Rectangle[9];
     private bool _resizable;
-    private readonly int _minWidth;
-    private readonly int _minHeight;
+    private int _minWidth;
+    private int _minHeight;
     private int _borderSize;
     private bool _isDragging;
     private Point _dragStartMousePos;
@@ -46,6 +46,26 @@ public class NineSliceGump : Gump
             _borderSize = value;
             CalculateSlices();
         }
+    }
+
+    /// <summary>
+    /// Minimum width the gump can be resized to. Values below twice the border size are effectively
+    /// superseded by that floor when resizing.
+    /// </summary>
+    public int MinWidth
+    {
+        get => _minWidth;
+        set => _minWidth = value;
+    }
+
+    /// <summary>
+    /// Minimum height the gump can be resized to. Values below twice the border size are effectively
+    /// superseded by that floor when resizing.
+    /// </summary>
+    public int MinHeight
+    {
+        get => _minHeight;
+        set => _minHeight = value;
     }
 
     private enum ResizeCorner

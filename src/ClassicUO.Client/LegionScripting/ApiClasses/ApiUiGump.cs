@@ -233,6 +233,24 @@ public class ApiUiGump(LegionAPI api)
         OnMain(() => new ApiUiLegionTexture(new LegionTexturePic(textureName, width, height)));
 
     /// <summary>
+    /// Create an image control that downloads and displays an image from a URL.
+    /// The download happens in the background; the control draws nothing until the image is ready and keeps
+    /// its configured size in the meantime. Images are cached per URL.
+    /// Example:
+    /// ```py
+    /// img = API.Gumps.CreateGumpExternalImage("https://example.com/picture.png", 200, 200)
+    /// img.SetPos(10, 10)
+    /// g.Add(img)
+    /// ```
+    /// </summary>
+    /// <param name="url">Absolute URL of the image to download, or an inline data URI (<c>data:image/png;base64,...</c>)</param>
+    /// <param name="width">Display width in pixels</param>
+    /// <param name="height">Display height in pixels</param>
+    /// <returns>An external URL image control</returns>
+    public ApiUiExternalUrlImage CreateGumpExternalImage(string url, int width = 100, int height = 100) =>
+        OnMain(() => new ApiUiExternalUrlImage(new ExternalUrlImage(url, width, height)));
+
+    /// <summary>
     /// Create a button for gumps.
     /// Example:
     /// ```py

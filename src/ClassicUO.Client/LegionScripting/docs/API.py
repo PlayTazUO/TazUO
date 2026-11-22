@@ -590,6 +590,16 @@ class ApiUiControlDropDown(ApiUiBaseControl):
         """
         pass
 
+class ApiUiExternalUrlImage(ApiUiBaseControl):
+    ""
+
+    def LoadImageFromUrl(self, url: "str") -> None:
+        """
+        Replaces the displayed image with the image downloaded from `url`, or decoded from the
+        inline data URI in `url`.
+        """
+        pass
+
 class ApiUiGump:
     ""
 
@@ -723,6 +733,22 @@ class ApiUiGump:
         ```py
         # In your zip: icons/sword.png
         img = API.Gumps.LegionTextureControl("icons/sword.png")
+        img.SetPos(10, 10)
+        g.Add(img)
+        ```
+        """
+        pass
+
+    def CreateGumpExternalImage(self, url: "str", width: "int" = 100, height: "int" = 100) -> "Any":
+        """
+        Create an image control that downloads and displays an image from a URL.
+        The download happens in the background; the control draws nothing until the image is ready and keeps
+        its configured size in the meantime. Images are cached per URL.
+        
+        **Example:**
+        
+        ```py
+        img = API.Gumps.CreateGumpExternalImage("https://example.com/picture.png", 200, 200)
         img.SetPos(10, 10)
         g.Add(img)
         ```
@@ -1082,6 +1108,32 @@ class ApiUiNineSliceGump(ApiUiBaseControl, IApiGump):
         """
         pass
 
+    def GetMinWidth(self) -> "int":
+        """
+        Gets the minimum width the gump can be resized to.
+        """
+        pass
+
+    def SetMinWidth(self, minWidth: "int") -> None:
+        """
+        Sets the minimum width the gump can be resized to. The gump is not resized immediately; the
+        new floor applies to subsequent resize drags.
+        """
+        pass
+
+    def GetMinHeight(self) -> "int":
+        """
+        Gets the minimum height the gump can be resized to.
+        """
+        pass
+
+    def SetMinHeight(self, minHeight: "int") -> None:
+        """
+        Sets the minimum height the gump can be resized to. The gump is not resized immediately; the
+        new floor applies to subsequent resize drags.
+        """
+        pass
+
     def GetBorderSize(self) -> "int":
         """
         Gets the border size of the nine-slice
@@ -1208,6 +1260,7 @@ class ApiUiSlider(ApiUiBaseControl):
 
 class ApiUiTextBox(ApiUiBaseControl):
     ""
+    MeasuredSize = None
     Text: str = None
     Hue: int = None
     Font: str = None

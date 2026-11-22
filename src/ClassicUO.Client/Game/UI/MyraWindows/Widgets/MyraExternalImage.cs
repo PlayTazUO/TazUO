@@ -5,6 +5,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ClassicUO.Game.Managers;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework.Graphics;
 using Myra.Graphics2D.TextureAtlases;
@@ -13,10 +14,11 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 /// <summary>
-/// A Myra Image widget that asynchronously downloads an image from a URL and displays it once available.
-/// The download happens off the UI thread; the GPU texture is created on the main thread (GraphicsDevice
-/// access is not thread-safe). Decoded textures are cached by URL for the process lifetime so the same
-/// image is only ever fetched and uploaded once — matching the behaviour of <c>ExternalUrlImage</c>.
+/// A Myra Image widget that asynchronously downloads an image from a URL — or decodes an inline data URI —
+/// and displays it once available. The download happens off the UI thread; the GPU texture is created on the
+/// main thread (GraphicsDevice access is not thread-safe). Decoded textures are cached by source string for
+/// the process lifetime so the same image is only ever fetched and uploaded once — matching the behaviour of
+/// <c>ExternalUrlImage</c>.
 /// </summary>
 public class MyraExternalImage : Image
 {
@@ -70,7 +72,10 @@ public class MyraExternalImage : Image
         byte[]? data = null;
         try
         {
-            data = await _httpClient.GetByteArrayAsync(url);
+            // Data URIs carry their own bytes, so there is nothing to download.
+            data = DataUri.TryDecode(url, out byte[]? decoded)
+                ? decoded
+                : await _httpClient.GetByteArrayAsync(url);
         }
         catch (Exception e)
         {

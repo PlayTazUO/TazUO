@@ -102,7 +102,8 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public void UpdateScrollbarPosition() => _scrollBar.X = Width - SCROLLBAR_WIDTH;
+        public void UpdateScrollbarPosition() =>
+            _scrollBar.X = Width - ScaleHelper.Scaled(SCROLLBAR_WIDTH, _scrollBar.InternalScale);
 
         public void UpdateHeight(int newHeight)
         {
@@ -118,7 +119,7 @@ namespace ClassicUO.Game.UI.Controls
             if (Width != newWidth)
             {
                 Width = newWidth;
-                _scrollBar.X = Width - SCROLLBAR_WIDTH;
+                UpdateScrollbarPosition();
             }
         }
 

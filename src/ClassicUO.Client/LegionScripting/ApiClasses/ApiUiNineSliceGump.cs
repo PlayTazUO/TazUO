@@ -92,6 +92,50 @@ public class ApiUiNineSliceGump : ApiUiBaseControl, IApiGump
     }
 
     /// <summary>
+    /// Gets the minimum width the gump can be resized to.
+    /// </summary>
+    /// <returns>The minimum width in pixels</returns>
+    public int GetMinWidth()
+    {
+        if (!VerifyIntegrity())
+            return 0;
+        return _nineSliceGump.MinWidth;
+    }
+
+    /// <summary>
+    /// Sets the minimum width the gump can be resized to. The gump is not resized immediately; the
+    /// new floor applies to subsequent resize drags.
+    /// </summary>
+    /// <param name="minWidth">The minimum width in pixels</param>
+    public void SetMinWidth(int minWidth)
+    {
+        if (VerifyIntegrity())
+            MainThreadQueue.EnqueueAction(() => _nineSliceGump.MinWidth = minWidth);
+    }
+
+    /// <summary>
+    /// Gets the minimum height the gump can be resized to.
+    /// </summary>
+    /// <returns>The minimum height in pixels</returns>
+    public int GetMinHeight()
+    {
+        if (!VerifyIntegrity())
+            return 0;
+        return _nineSliceGump.MinHeight;
+    }
+
+    /// <summary>
+    /// Sets the minimum height the gump can be resized to. The gump is not resized immediately; the
+    /// new floor applies to subsequent resize drags.
+    /// </summary>
+    /// <param name="minHeight">The minimum height in pixels</param>
+    public void SetMinHeight(int minHeight)
+    {
+        if (VerifyIntegrity())
+            MainThreadQueue.EnqueueAction(() => _nineSliceGump.MinHeight = minHeight);
+    }
+
+    /// <summary>
     /// Gets the border size of the nine-slice
     /// </summary>
     /// <returns>The border size in pixels</returns>
