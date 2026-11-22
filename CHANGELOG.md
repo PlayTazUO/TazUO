@@ -2,6 +2,9 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/22/26
+* ***Fix:*** UltimaLive blocks at the end of the map or statics file are no longer resent by the server at each query, removing the last static of a block now removes it from the screen, and a live map update received before a facet's first block query no longer throws a `NullReferenceException` - [P.R 1238](https://github.com/PlayTazUO/TazUO/pull/1238) ([DavideRei](https://github.com/DavideRei))
+
 ## 11/19/26
 * ***Legion:*** Modern gumps now expose `GetMinWidth`/`SetMinWidth` and `GetMinHeight`/`SetMinHeight`, so the minimum resize size can be read and changed after creation instead of only at creation time
 * ***Legion:*** Gump text boxes now expose `MeasuredSize`, returning the renderer-measured text width (`MeasuredSize.X`) and height (`MeasuredSize.Y`) in pixels
