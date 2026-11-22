@@ -3,6 +3,7 @@ All notable changes to TazUO will be recorded here.
 
 ---
 ## 11/19/26
+* ***Feature:*** New `Hovered nameplates follow their mobile` option in the nameplate settings, off by default - when on, a hovered nameplate keeps following its mobile while you or it walks, instead of staying under the mouse - [P.R 1220](https://github.com/PlayTazUO/TazUO/pull/1220) ([DavideRei](https://github.com/DavideRei))
 * ***Legion:*** Modern gumps now expose `GetMinWidth`/`SetMinWidth` and `GetMinHeight`/`SetMinHeight`, so the minimum resize size can be read and changed after creation instead of only at creation time
 * ***Legion:*** Gump text boxes now expose `MeasuredSize`, returning the renderer-measured text width (`MeasuredSize.X`) and height (`MeasuredSize.Y`) in pixels
 * ***Legion:*** Added `API.Gumps.CreateGumpExternalImage` to display an image downloaded from a URL, with `ApiUiExternalUrlImage.LoadImageFromUrl` to change the image after creation
