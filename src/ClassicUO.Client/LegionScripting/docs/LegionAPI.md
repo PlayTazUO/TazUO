@@ -45,6 +45,14 @@ Get this scripts full filename
 
 Get the full path to the file, no filename included. Use API.ScriptName to get the script.
 
+### `RelativeScriptPath`
+
+**Type:** `string`
+
+Get this script's path relative to the LegionScripts folder, including the filename
+(e.g. "mygroup/MyScript.py"). Uses '/' separators and the same form as
+ListRunningScripts, so it can be passed to ToggleScript, PlayScript, StopScript and IsScriptRunning.
+
 ### `Backpack`
 
 **Type:** `uint`

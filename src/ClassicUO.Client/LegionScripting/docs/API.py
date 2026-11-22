@@ -1718,6 +1718,7 @@ JournalEntries = None
 SoundEntries = None
 ScriptName: str = None
 ScriptPath: str = None
+RelativeScriptPath: str = None
 Backpack: int = None
 Player: ApiPlayer = None
 Bank: int = None
