@@ -355,6 +355,13 @@ namespace ClassicUO.LegionScripting
         public string ScriptPath => _scriptFile != null ? _scriptFile.Path : string.Empty;
 
         /// <summary>
+        /// Get this script's path relative to the LegionScripts folder, including the filename
+        /// (e.g. "mygroup/MyScript.py"). Uses '/' separators and the same form as
+        /// ListRunningScripts, so it can be passed to ToggleScript, PlayScript, StopScript and IsScriptRunning.
+        /// </summary>
+        public string RelativeScriptPath => _scriptFile != null ? _scriptFile.RelativePath : string.Empty;
+
+        /// <summary>
         /// Get the player's backpack serial
         /// </summary>
         public uint Backpack
@@ -1150,8 +1157,8 @@ namespace ClassicUO.LegionScripting
                     ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.EquipItem(serial, (Layer)i.ItemData.Layer), ActionPriority.EquipItem);
                 else
                 {
-                    GameActions.PickUp(World, serial, 0, 0, 1);
-                    GameActions.Equip(World);
+                    if (GameActions.PickUp(World, serial, 0, 0, 1))
+                        GameActions.Equip(World);
                 }
             }
         );

@@ -14,6 +14,7 @@ namespace ClassicUO.Game.Data
         public const int MageryArchCure = 25;
         public const int MageryGreaterHeal = 29;
         public const int ChivalryCloseWounds = 202;
+        public const int ChivalryCleanseByFire = 201;
         public const int ChivalryRemoveCurse = 209;
         public const int MysticismCleansingWinds = 688;
 
@@ -29,6 +30,7 @@ namespace ClassicUO.Game.Data
             HealthBarQuickAction.RemoveCurse => ChivalryRemoveCurse,
             HealthBarQuickAction.CloseWounds => ChivalryCloseWounds,
             HealthBarQuickAction.CleansingWinds => MysticismCleansingWinds,
+            HealthBarQuickAction.CleanseByFire => ChivalryCleanseByFire,
             _ => -1
         };
 

@@ -243,7 +243,7 @@ public class ApiUiGump(LegionAPI api)
     /// g.Add(img)
     /// ```
     /// </summary>
-    /// <param name="url">Absolute URL of the image to download</param>
+    /// <param name="url">Absolute URL of the image to download, or an inline data URI (<c>data:image/png;base64,...</c>)</param>
     /// <param name="width">Display width in pixels</param>
     /// <param name="height">Display height in pixels</param>
     /// <returns>An external URL image control</returns>

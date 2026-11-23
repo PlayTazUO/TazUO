@@ -2,13 +2,19 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## 11/22/26
+## 11/23/26
 * ***Fix:*** UltimaLive blocks at the end of the map or statics file are no longer resent by the server at each query, removing the last static of a block now removes it from the screen, and a live map update received before a facet's first block query no longer throws a `NullReferenceException` - [P.R 1238](https://github.com/PlayTazUO/TazUO/pull/1238) ([DavideRei](https://github.com/DavideRei))
+* ***Fix:*** Blocking Legion API calls that wait on the client (target, gump and pathfinding waits) no longer take up to a full frame to return at high frame rates - the main thread queue is now serviced at the start of each update, again right after network packets are processed, and during the idle time that used to be a plain sleep
+* ***Fix:*** The Script Manager's menu bar (Menu, Add, search) now stays pinned at the top of the window - only the script and group list scrolls, instead of the whole window contents including the menu bar
+* ***Fix:*** Modern windows only show the reset-to-auto-size button in the title bar once they have been manually resized (or restored with a previously saved size), and it disappears again when clicked so the window is back to auto sizing
 
 ## 11/19/26
+* ***Feature:*** New `Hovered nameplates follow their mobile` option in the nameplate settings, off by default - when on, a hovered nameplate keeps following its mobile while you or it walks, instead of staying under the mouse - [P.R 1220](https://github.com/PlayTazUO/TazUO/pull/1220) ([DavideRei](https://github.com/DavideRei))
 * ***Legion:*** Modern gumps now expose `GetMinWidth`/`SetMinWidth` and `GetMinHeight`/`SetMinHeight`, so the minimum resize size can be read and changed after creation instead of only at creation time
 * ***Legion:*** Gump text boxes now expose `MeasuredSize`, returning the renderer-measured text width (`MeasuredSize.X`) and height (`MeasuredSize.Y`) in pixels
 * ***Legion:*** Added `API.Gumps.CreateGumpExternalImage` to display an image downloaded from a URL, with `ApiUiExternalUrlImage.LoadImageFromUrl` to change the image after creation
+* ***Feature:*** External images (`CreateGumpExternalImage`, poll images) now accept inline `data:` URIs as well as URLs, so an image can be supplied without a web host - both base64 and percent-encoded payloads are supported
+* ***Fix:*** Gump external images no longer create their GPU texture from a background thread - downloading and decoding bytes still happen off the game loop, but texture creation is queued to the main thread instead of racing with rendering
 
 ## 11/18/26
 * ***Fix:*** Scrollbars on the shop and skills gumps no longer sit too far to the right - the bar position was being recomputed every frame from the padded scroll area width, and the offset is now scaled with the gump so scaled gumps stay aligned too

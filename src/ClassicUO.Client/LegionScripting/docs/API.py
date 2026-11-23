@@ -595,7 +595,8 @@ class ApiUiExternalUrlImage(ApiUiBaseControl):
 
     def LoadImageFromUrl(self, url: "str") -> None:
         """
-        Replaces the displayed image with the image downloaded from `url`.
+        Replaces the displayed image with the image downloaded from `url`, or decoded from the
+        inline data URI in `url`.
         """
         pass
 
@@ -1717,6 +1718,7 @@ JournalEntries = None
 SoundEntries = None
 ScriptName: str = None
 ScriptPath: str = None
+RelativeScriptPath: str = None
 Backpack: int = None
 Player: ApiPlayer = None
 Bank: int = None

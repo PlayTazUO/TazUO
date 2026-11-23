@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Game.ScreenDecorations.Manager;
 using ClassicUO.Game.ScreenDecorations.Overlays;
@@ -537,6 +536,12 @@ namespace ClassicUO
             Time.Ticks = (uint)gameTime.TotalGameTime.TotalMilliseconds;
             Time.Delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
+            // Service callers that were waiting while the previous tick rendered, before doing
+            // any of this tick's heavier work.
+            Profiler.EnterContext("MainThreadQueue");
+            MainThreadQueue.ProcessQueue();
+            Profiler.ExitContext("MainThreadQueue");
+
             Profiler.EnterContext("Mouse");
             Mouse.Update();
             Profiler.ExitContext("Mouse");
@@ -563,6 +568,12 @@ namespace ClassicUO
             Profiler.EnterContext("ProcessNetworkPackets");
             ProcessNetworkPackets();
             Profiler.ExitContext("ProcessNetworkPackets");
+
+            // Packet handlers may have fulfilled state that waiting scripts are polling; let them
+            // observe it in this same tick instead of waiting for the next one.
+            Profiler.EnterContext("MainThreadQueue");
+            MainThreadQueue.ProcessQueue();
+            Profiler.ExitContext("MainThreadQueue");
 
             if (_pluginsInitialized)
             {
@@ -626,7 +637,11 @@ namespace ClassicUO
 
                 if (!gameTime.IsRunningSlowly)
                 {
-                    Thread.Sleep(1);
+                    // Spend the idle slice servicing the main-thread queue instead of blocking
+                    // it behind a sleep, so blocking script callers don't wait for the next tick.
+                    Profiler.EnterContext("MainThreadQueue");
+                    MainThreadQueue.ProcessQueueFor(1);
+                    Profiler.ExitContext("MainThreadQueue");
                 }
             }
             Profiler.ExitContext("FpsTiming");

@@ -263,7 +263,7 @@ g.Add(img)
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `url` | `string` | ❌ No | Absolute URL of the image to download |
+| `url` | `string` | ❌ No | Absolute URL of the image to download, or an inline data URI ( `data:image/png;base64,...`) |
 | `width` | `int` | ✅ Yes | Display width in pixels |
 | `height` | `int` | ✅ Yes | Display height in pixels |
 
