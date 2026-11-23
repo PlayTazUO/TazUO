@@ -262,22 +262,23 @@ namespace ClassicUO.Game
 
                                 //update lookup AND index length on disk
                                 _UL._filesIdxStatics[mapId].WriteArray(block * 12, idxData);
-
-                            world.Map.InvalidateStreamBlockCache(block);
-
-                            _UL._ULMap.ReloadBlock(mapId, block);
-
-                            _pendingChunkReloads.Add(block);
-                            if (_pendingChunkReloads.Count == 1)
-                            {
-                                _pendingChunkReloadStartTicks = Time.Ticks;
-                            }
                         }
 
+                        //also for an emptied block: until it is reloaded, its removed statics stay in the map and on screen
+                        world.Map.InvalidateStreamBlockCache(block);
+
+                        _UL._ULMap.ReloadBlock(mapId, block);
+
+                        _pendingChunkReloads.Add(block);
+                        if (_pendingChunkReloads.Count == 1)
+                        {
+                            _pendingChunkReloadStartTicks = Time.Ticks;
+                        }
 
                         //instead of recalculating the CRC block 2 times, in case of terrain + statics update, we only set the actual block to ushort maxvalue, so it will be recalculated on next hash query
                         //also the server should always send FIRST the landdata packet, and only AFTER land the statics packet
-                        _UL.MapCRCs[mapId][block] = ushort.MaxValue;
+                        if (_UL.MapCRCs[mapId] != null)
+                            _UL.MapCRCs[mapId][block] = ushort.MaxValue;
                     }
 
                     break;
@@ -497,7 +498,8 @@ namespace ClassicUO.Game
                 world.Map.InvalidateStreamBlockCache(block);
 
                 //instead of recalculating the CRC block 2 times, in case of terrain + statics update, we only set the actual block to ushort maxvalue, so it will be recalculated on next hash query
-                _UL.MapCRCs[mapId][block] = ushort.MaxValue;
+                if (_UL.MapCRCs[mapId] != null)
+                    _UL.MapCRCs[mapId][block] = ushort.MaxValue;
                 int blockX = block / mapHeightInBlocks, blockY = block % mapHeightInBlocks;
                 int minx = Math.Max(0, blockX - 1), miny = Math.Max(0, blockY - 1);
                 blockX = Math.Min(mapWidthInBlocks, blockX + 1);
@@ -625,8 +627,8 @@ namespace ClassicUO.Game
             ULFileMul mapReader = _UL._filesMap[mapId];
             long mapBase = block * 196 + 4;
 
-            //preserve the original bounds check (mapBase + x + 1 >= Length) which stops before the file's final byte
-            int mapBytes = (int)Math.Min(LAND_BLOCK_LENGTH, Math.Max(0, mapReader.Length - mapBase - 1));
+            //a block can end exactly at EOF, so all the Length - offset bytes are readable, the last one included
+            int mapBytes = (int)Math.Min(LAND_BLOCK_LENGTH, Math.Max(0, mapReader.Length - mapBase));
 
             if (mapBytes > 0)
             {
@@ -639,7 +641,7 @@ namespace ClassicUO.Game
 
                 if (lookup < staticsReader.Length)
                 {
-                    int staticsBytes = (int)Math.Min(byteCount, staticsReader.Length - lookup - 1);
+                    int staticsBytes = (int)Math.Min(byteCount, staticsReader.Length - lookup);
 
                     if (staticsBytes > 0)
                     {
