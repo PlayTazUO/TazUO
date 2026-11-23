@@ -14,5 +14,6 @@ public enum HealthBarQuickAction
     ArchCure = 4,
     RemoveCurse = 5,
     CloseWounds = 6,
-    CleansingWinds = 7
+    CleansingWinds = 7,
+    CleanseByFire = 8
 }

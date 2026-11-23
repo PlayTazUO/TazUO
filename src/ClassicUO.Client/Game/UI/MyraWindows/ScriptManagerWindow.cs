@@ -9,6 +9,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.Controls.ResizableComponents;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -68,6 +69,10 @@ public class ScriptManagerWindow : MyraControl
 
     public ScriptManagerWindow() : base(TazLang.Get("scriptmanager_title", "Script Manager"))
     {
+        // The window's own content scroller would carry the menu bar along with the list; only the
+        // script list area scrolls, so it gets its own ScrollViewer in the Fill row instead.
+        _rootWindow.Props.Resize.ScrollerMode = ScrollViewerMode.None;
+
         Instance = this;
         CanBeSaved = true;
         Build();
@@ -154,7 +159,8 @@ public class ScriptManagerWindow : MyraControl
 
         _mainGrid.AddWidget(BuildMenuBar(), 0, 0);
 
-        _mainGrid.AddWidget(_scriptListPanel, 1, 0);
+        // Only the list scrolls; the menu bar above stays put.
+        _mainGrid.AddWidget(new ScrollViewer { Content = _scriptListPanel }, 1, 0);
 
         SetRootContent(_mainGrid);
     }
