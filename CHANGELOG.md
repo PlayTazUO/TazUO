@@ -4,6 +4,8 @@ All notable changes to TazUO will be recorded here.
 ---
 ## 11/23/26
 * ***Fix:*** Blocking Legion API calls that wait on the client (target, gump and pathfinding waits) no longer take up to a full frame to return at high frame rates - the main thread queue is now serviced at the start of each update, again right after network packets are processed, and during the idle time that used to be a plain sleep
+* ***Fix:*** The Script Manager's menu bar (Menu, Add, search) now stays pinned at the top of the window - only the script and group list scrolls, instead of the whole window contents including the menu bar
+* ***Fix:*** Modern windows only show the reset-to-auto-size button in the title bar once they have been manually resized (or restored with a previously saved size), and it disappears again when clicked so the window is back to auto sizing
 
 ## 11/19/26
 * ***Feature:*** New `Hovered nameplates follow their mobile` option in the nameplate settings, off by default - when on, a hovered nameplate keeps following its mobile while you or it walks, instead of staying under the mouse - [P.R 1220](https://github.com/PlayTazUO/TazUO/pull/1220) ([DavideRei](https://github.com/DavideRei))

@@ -154,6 +154,11 @@ public class ResizableWindow : Window, IDisposable
 
     private bool _isOverridingCursorStyle;
 
+    /// <summary>Whether the window carries a user-chosen size (drag-resized or restored from
+    /// persistence), as opposed to sizing itself to its content. Decides if the reset-size button
+    /// has anything to reset.</summary>
+    private bool _isManuallySized;
+
     private int _titlePanelFullWidth;
 
     #region Components
@@ -415,6 +420,10 @@ public class ResizableWindow : Window, IDisposable
             {
                 Width = initialSize.Value.X;
                 Height = initialSize.Value.Y;
+
+                // A persisted size is the remnant of a manual resize, so the way back belongs in
+                // the title bar from the start.
+                _isManuallySized = true;
             }
         }
 
@@ -427,11 +436,7 @@ public class ResizableWindow : Window, IDisposable
         else
             RemoveMinMaxButton();
 
-
-        if (Props.Resize.Enabled)
-            ConfigureResizeResetButton();
-        else
-            RemoveResizeResetButton();
+        UpdateResizeResetButtonVisibility();
     }
 
     /// <summary>
@@ -519,6 +524,17 @@ public class ResizableWindow : Window, IDisposable
         Width = null;
         Height = null;
 
+        // A reset while minimized lands on a window that is already auto-sized; without this,
+        // Maximize would put the discarded size back.
+        if (IsMinimized)
+        {
+            _restoreAutoWidth = true;
+            _restoreAutoHeight = true;
+        }
+
+        _isManuallySized = false;
+        UpdateResizeResetButtonVisibility();
+
         // Reset stored size, if one is defined
         Props?.InitialSizeStore?.Set(null);
     }
@@ -559,6 +575,18 @@ public class ResizableWindow : Window, IDisposable
     }
 
     /// <summary>
+    ///     Shows the reset-window-size button only while the window carries a user-chosen size. An
+    ///     auto-sized window has nothing to reset, so the button is left out of its title bar.
+    /// </summary>
+    private void UpdateResizeResetButtonVisibility()
+    {
+        if (Props.Resize.Enabled && _isManuallySized)
+            ConfigureResizeResetButton();
+        else
+            RemoveResizeResetButton();
+    }
+
+    /// <summary>
     ///     Initializes and adds the reset-window-size button to the title panel.
     /// </summary>
     /// <param name="index">The position within the title panel's widget list at which to insert the button.</param>
@@ -575,6 +603,7 @@ public class ResizableWindow : Window, IDisposable
         );
 
         TitlePanel.Widgets.Insert(index, _resetSizeButton);
+        RefreshTitlePanelMetrics();
     }
 
     /// <summary>
@@ -587,6 +616,7 @@ public class ResizableWindow : Window, IDisposable
 
         TitlePanel.Widgets.Remove(_resetSizeButton);
         _resetSizeButton = null;
+        RefreshTitlePanelMetrics();
     }
 
     /// <summary>
@@ -827,6 +857,13 @@ public class ResizableWindow : Window, IDisposable
         Top = newBounds.Y;
         Width = newBounds.Width;
         Height = newBounds.Height;
+
+        // The first size change ends auto-sizing, so the reset affordance appears from here on.
+        if (!_isManuallySized)
+        {
+            _isManuallySized = true;
+            UpdateResizeResetButtonVisibility();
+        }
 
         UpdateTitleLabelVisibility();
 
