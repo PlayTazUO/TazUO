@@ -207,6 +207,36 @@ public static class MainThreadQueue
                 item.Action();
     }
 
+    /// <summary>
+    ///     Drains queued actions for up to <paramref name="durationMs" /> milliseconds rather than
+    ///     idling, so blocking callers are serviced during what would otherwise be a sleep.
+    /// </summary>
+    /// <remarks>
+    ///     When the queue is momentarily empty this yields to the OS instead of spinning hot, so an
+    ///     idle call does not peg a core. An action enqueued during the window is still picked up
+    ///     immediately, which a plain <see cref="Thread.Sleep(int)" /> would not allow.
+    /// </remarks>
+    /// <param name="durationMs">How long, in milliseconds, to keep servicing the queue.</param>
+    public static void ProcessQueueFor(int durationMs)
+    {
+        long deadline = Stopwatch.GetTimestamp() + (long)durationMs * Stopwatch.Frequency / 1000;
+        var idle = new SpinWait();
+
+        while (Stopwatch.GetTimestamp() < deadline)
+        {
+            if (!QueuedActions.TryDequeue(out (Action Action, CancellationToken? Token) item))
+            {
+                idle.SpinOnce();
+                continue;
+            }
+
+            idle.Reset();
+
+            if (item.Token?.IsCancellationRequested != true)
+                item.Action();
+        }
+    }
+
     public static void Reset()
     {
         while (QueuedActions.TryDequeue(out _)) { }

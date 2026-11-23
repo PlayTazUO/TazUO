@@ -1157,8 +1157,8 @@ namespace ClassicUO.LegionScripting
                     ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.EquipItem(serial, (Layer)i.ItemData.Layer), ActionPriority.EquipItem);
                 else
                 {
-                    GameActions.PickUp(World, serial, 0, 0, 1);
-                    GameActions.Equip(World);
+                    if (GameActions.PickUp(World, serial, 0, 0, 1))
+                        GameActions.Equip(World);
                 }
             }
         );
