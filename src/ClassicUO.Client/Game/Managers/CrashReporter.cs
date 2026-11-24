@@ -78,9 +78,46 @@ public class CrashReporter
     /// </summary>
     /// <remarks>
     ///     Runs while the process is already dying, so it must not throw and must not depend on game state.
+    ///     Reached by crashes on threads the game loop cannot rescue (network, audio, plugins, scripts);
+    ///     a crash the loop caught never gets here, so every crash produces its own report.
     /// </remarks>
     /// <param name="e">Event args from <see cref="AppDomain.UnhandledException" />.</param>
-    public static void ReportAppDomainException(UnhandledExceptionEventArgs e)
+    public static void ReportAppDomainException(UnhandledExceptionEventArgs e) => ReportFatal(e.ExceptionObject);
+
+    /// <summary>
+    ///     Produces the full set of crash artifacts for a fatal exception: the HTML report with the build
+    ///     header and any suggested fix, the <c>Logs/crash.txt</c> entry and the webhook upload (when enabled).
+    /// </summary>
+    /// <remarks>
+    ///     Never throws: a failure to write the artifacts is reported to stderr instead, because callers
+    ///     rely on it not interrupting crash recovery. <paramref name="exceptionObject"/> is typed
+    ///     <see cref="object"/> because <see cref="UnhandledExceptionEventArgs.ExceptionObject"/> is not
+    ///     guaranteed to be an exception. Safe to call once per crash: nothing is deduplicated, so a crash
+    ///     loop leaves one report per crash.
+    /// </remarks>
+    /// <param name="exceptionObject">The exception (or other object) that killed the session.</param>
+    public static void ReportFatal(object exceptionObject)
+    {
+        try
+        {
+            WriteCrashArtifacts(exceptionObject);
+        }
+        catch (Exception artifactFailure)
+        {
+            ReportArtifactFailure(artifactFailure);
+        }
+    }
+
+    /// <summary>
+    ///     Builds and writes the crash artifacts: the HTML report, the <c>Logs</c> entry and the upload.
+    /// </summary>
+    /// <remarks>
+    ///     Any IO failure escapes to <see cref="ReportFatal"/>, which turns it into a stderr line. Nothing
+    ///     here may call back into <see cref="ReportFatal"/> - a second report from a failing report would
+    ///     fail the same way.
+    /// </remarks>
+    /// <param name="exceptionObject">The exception (or other object) that killed the session.</param>
+    private static void WriteCrashArtifacts(object exceptionObject)
     {
         var sb = new StringBuilder();
 #if DEV_BUILD || DEBUG
@@ -97,10 +134,10 @@ public class CrashReporter
 
         sb.AppendLine();
 
-        sb.Append($"Exception:\n{e.ExceptionObject}\n");
+        sb.Append($"Exception:\n{exceptionObject}\n");
         sb.AppendLine();
 
-        string suggestedFix = CrashSuggestedFix.Get(e.ExceptionObject);
+        string suggestedFix = CrashSuggestedFix.Get(exceptionObject);
 
         HtmlCrashLogGen.Generate(sb.ToString(), additional_notes: suggestedFix.NotNullNotEmpty() ? suggestedFix : string.Empty);
 
@@ -112,7 +149,7 @@ public class CrashReporter
         if (suggestedFix != null)
             sb.AppendLine(suggestedFix);
 
-        Log.Panic(e.ExceptionObject.ToString());
+        Log.Panic(exceptionObject.ToString());
         string path = Path.Combine(CUOEnviroment.ExecutablePath, "Logs");
 
         if (!Directory.Exists(path))
@@ -120,6 +157,23 @@ public class CrashReporter
 
         using var crashFile = new LogFile(path, "crash.txt");
         crashFile.Write(sb.ToString());
+    }
+
+    /// <summary>
+    ///     Last resort when the artifacts could not be written: one line to stderr, swallowing anything
+    ///     thrown by stderr itself. Reporting a crash must never become a second crash.
+    /// </summary>
+    /// <param name="exception">The failure raised while writing the report.</param>
+    private static void ReportArtifactFailure(Exception exception)
+    {
+        try
+        {
+            Console.Error.WriteLine($"Crash report could not be written: {exception}");
+        }
+        catch
+        {
+            // Nothing left to fall back to.
+        }
     }
 
     /// <summary>

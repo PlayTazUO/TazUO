@@ -62,6 +62,20 @@ namespace ClassicUO.Renderer
             return scissors;
         }
 
+        /// <summary>
+        ///     Drops every pushed scissor and restores the full-viewport scissor rectangle.
+        /// </summary>
+        /// <remarks>
+        ///     Only for unwinding out of an exception that left a <c>ClipBegin</c>/<c>ClipEnd</c> pair
+        ///     unfinished: the stack is process-wide, so a stale entry would clip everything drawn afterwards.
+        /// </remarks>
+        /// <param name="device">Device whose scissor rectangle is restored.</param>
+        public static void Clear(GraphicsDevice device)
+        {
+            _scissors.Clear();
+            device.ScissorRectangle = device.Viewport.Bounds;
+        }
+
         public static Rectangle CalculateScissors(Matrix batchTransform, int sx, int sy, int sw, int sh)
         {
             var tmp = new Vector2(sx, sy);

@@ -118,6 +118,12 @@ namespace ClassicUO
         private readonly List<(uint, Action)> _queuedActions = new();
         private bool _isExiting;
 
+        /// <summary>
+        ///     Crash raised inside the SDL event filter, waiting for the next <see cref="Update"/> to report it
+        ///     instead of unwinding through SDL's native event pump. Normally null.
+        /// </summary>
+        private Exception _pendingCrash;
+
         public void EnqueueAction(uint time, Action action) => _queuedActions.Add((Time.Ticks + time, action));
 
         protected override void Initialize() //Called during Game.Run() in FNA
@@ -531,6 +537,26 @@ namespace ClassicUO
 
         protected override void Update(GameTime gameTime)
         {
+            // Crashes raised from the SDL event filter are parked here rather than recovered inside SDL's
+            // native event pump; see HandleSdlEvent.
+            if (_pendingCrash is { } pendingCrash)
+            {
+                _pendingCrash = null;
+                HandleFrameCrash(pendingCrash);
+            }
+
+            try
+            {
+                UpdateFrame(gameTime);
+            }
+            catch (Exception e)
+            {
+                HandleFrameCrash(e);
+            }
+        }
+
+        private void UpdateFrame(GameTime gameTime)
+        {
             Profiler.EnterContext("Update");
 
             Time.Ticks = (uint)gameTime.TotalGameTime.TotalMilliseconds;
@@ -733,6 +759,18 @@ namespace ClassicUO
 
         protected override void Draw(GameTime gameTime)
         {
+            try
+            {
+                DrawFrame(gameTime);
+            }
+            catch (Exception e)
+            {
+                HandleFrameCrash(e);
+            }
+        }
+
+        private void DrawFrame(GameTime gameTime)
+        {
             Profiler.EnterContext("Draw");
 
             Profiler.EndFrame();
@@ -849,6 +887,76 @@ namespace ClassicUO
         protected override bool BeginDraw() => !_suppressedDraw && base.BeginDraw();
 
         /// <summary>
+        ///     Reports an exception that escaped a frame and, while <see cref="CrashRecoveryGuard"/> allows it,
+        ///     returns the client to the login screen instead of taking the process down.
+        /// </summary>
+        /// <remarks>
+        ///     Reporting lives here so no crash path can skip it. If the teardown itself throws, that failure
+        ///     gets its own report and the client closes, rather than running on half-torn-down state.
+        /// </remarks>
+        /// <param name="exception">The exception that escaped the frame.</param>
+        private void HandleFrameCrash(Exception exception)
+        {
+            CrashReporter.ReportFatal(exception);
+
+            if (!CrashRecoveryGuard.TryBeginRecovery(Environment.TickCount64))
+            {
+                Log.Error(
+                    $"TazUO crashed {CrashRecoveryGuard.MaxRecoveries} times in " +
+                    $"{CrashRecoveryGuard.WindowMs / 60_000} minutes - closing."
+                );
+
+                Client.ShowErrorMessage(TazLang.Get("crash_restart_limit_reached"));
+                ExitAfterCrash();
+
+                return;
+            }
+
+            try
+            {
+                RecoverToLoginScreen();
+            }
+            catch (Exception recoveryFailure)
+            {
+                CrashReporter.ReportFatal(recoveryFailure);
+                ExitAfterCrash();
+            }
+        }
+
+        /// <summary>
+        ///     Drops the failed scene and lands on the login screen. Uses the teardown a logout performs, so
+        ///     gumps, render targets and managers are released the same way they are on re-login.
+        /// </summary>
+        private void RecoverToLoginScreen()
+        {
+            // A crash mid-frame can leave an open sprite batch and a bound render target behind, and both
+            // would break the next frame.
+            GraphicsDevice.SetRenderTarget(null);
+            _uoSpriteBatch?.Abort();
+            _screenRenderTarget?.Dispose();
+            _screenRenderTarget = null;
+            _suppressedDraw = false;
+            Profiler.Reset();
+
+            SetScene(new LoginScene(UO.World));
+
+            UIManager.Add(new MessageBoxGump(UO.World, 400, 220, TazLang.Get("crash_restart_recovered"), null));
+
+            Log.Warn("Recovered from a crash; back at the login screen.");
+        }
+
+        /// <summary>
+        ///     Ends the process after the crash was reported. Called instead of rethrowing so the crash is
+        ///     reported exactly once: an escaping exception would reach
+        ///     <see cref="CrashReporter.ReportAppDomainException"/> and produce a second report for it.
+        /// </summary>
+        private static void ExitAfterCrash()
+        {
+            Log.Trace("Closing...");
+            Environment.Exit(1);
+        }
+
+        /// <summary>
         /// Must be called during a batch, cannot call before batcher.Begin or after batcher.End
         /// </summary>
         /// <param name="batcher"></param>
@@ -893,6 +1001,26 @@ namespace ClassicUO
         }
 
         private bool HandleSdlEvent(IntPtr userdata, SDL_Event* sdlEvent)
+        {
+            try
+            {
+                return DispatchSdlEvent(userdata, sdlEvent);
+            }
+            catch (Exception e) when (!_isExiting)
+            {
+                // An exception here unwinds through SDL's native event pump, which ends the process
+                // outright. Hold it instead: the next Update reports it and runs the same recovery as a
+                // frame crash. Only one can be parked, so a second is reported on the spot rather than lost.
+                if (_pendingCrash == null)
+                    _pendingCrash = e;
+                else
+                    CrashReporter.ReportFatal(e);
+
+                return true;
+            }
+        }
+
+        private bool DispatchSdlEvent(IntPtr userdata, SDL_Event* sdlEvent)
         {
             if (sdlEvent == null)
             {
