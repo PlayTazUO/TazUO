@@ -78,9 +78,24 @@ public class CrashReporter
     /// </summary>
     /// <remarks>
     ///     Runs while the process is already dying, so it must not throw and must not depend on game state.
+    ///     Reached by crashes on threads the game loop cannot rescue (network, audio, plugins, scripts);
+    ///     a crash the loop caught never gets here, so every crash produces its own report.
     /// </remarks>
     /// <param name="e">Event args from <see cref="AppDomain.UnhandledException" />.</param>
-    public static void ReportAppDomainException(UnhandledExceptionEventArgs e)
+    public static void ReportAppDomainException(UnhandledExceptionEventArgs e) => ReportFatal(e.ExceptionObject);
+
+    /// <summary>
+    ///     Produces the full set of crash artifacts for a fatal exception: the HTML report with the build
+    ///     header and any suggested fix, the <c>Logs/crash.txt</c> entry and the webhook upload (when enabled).
+    /// </summary>
+    /// <remarks>
+    ///     Must not throw - it is called from a game loop that has already lost its frame, and from the
+    ///     process-death handler. <paramref name="exceptionObject"/> is typed <see cref="object"/> because
+    ///     <see cref="UnhandledExceptionEventArgs.ExceptionObject"/> is not guaranteed to be an exception.
+    ///     Safe to call once per crash: nothing is deduplicated, so a crash loop leaves one report per crash.
+    /// </remarks>
+    /// <param name="exceptionObject">The exception (or other object) that killed the session.</param>
+    public static void ReportFatal(object exceptionObject)
     {
         var sb = new StringBuilder();
 #if DEV_BUILD || DEBUG
@@ -97,10 +112,10 @@ public class CrashReporter
 
         sb.AppendLine();
 
-        sb.Append($"Exception:\n{e.ExceptionObject}\n");
+        sb.Append($"Exception:\n{exceptionObject}\n");
         sb.AppendLine();
 
-        string suggestedFix = CrashSuggestedFix.Get(e.ExceptionObject);
+        string suggestedFix = CrashSuggestedFix.Get(exceptionObject);
 
         HtmlCrashLogGen.Generate(sb.ToString(), additional_notes: suggestedFix.NotNullNotEmpty() ? suggestedFix : string.Empty);
 
@@ -112,7 +127,7 @@ public class CrashReporter
         if (suggestedFix != null)
             sb.AppendLine(suggestedFix);
 
-        Log.Panic(e.ExceptionObject.ToString());
+        Log.Panic(exceptionObject.ToString());
         string path = Path.Combine(CUOEnviroment.ExecutablePath, "Logs");
 
         if (!Directory.Exists(path))
