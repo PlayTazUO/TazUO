@@ -3,6 +3,7 @@ All notable changes to TazUO will be recorded here.
 
 ---
 ## 11/23/26
+* ***Legion:*** Gump controls now expose `X`, `Y`, `Width`, `Height`, `Alpha`, `Tooltip`, `EntityTooltip` and `AcceptMouseInput` as directly settable properties (e.g. `label.X = 55`), avoiding the returned wrapper per assignment when building or laying out controls
 * ***Fix:*** UltimaLive blocks at the end of the map or statics file are no longer resent by the server at each query, removing the last static of a block now removes it from the screen, and a live map update received before a facet's first block query no longer throws a `NullReferenceException` - [P.R 1238](https://github.com/PlayTazUO/TazUO/pull/1238) ([DavideRei](https://github.com/DavideRei))
 * ***Fix:*** Blocking Legion API calls that wait on the client (target, gump and pathfinding waits) no longer take up to a full frame to return at high frame rates - the main thread queue is now serviced at the start of each update, again right after network packets are processed, and during the idle time that used to be a plain sleep
 * ***Fix:*** The Script Manager's menu bar (Menu, Add, search) now stays pinned at the top of the window - only the script and group list scrolls, instead of the whole window contents including the menu bar

@@ -4,10 +4,7 @@ description: "ApiUiRenderedMapArea class documentation"
 ---
 
 ## Properties
-### `Alpha`
-
-**Type:** `float`
-
+*No properties found.*
 
 *No fields found.*
 

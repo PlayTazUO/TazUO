@@ -13,12 +13,6 @@ public class ApiUiAlphaBlendControl(AlphaBlendControl control) : ApiUiBaseContro
         set => SetProp(() => control.Hue = value);
     }
 
-    public float Alpha
-    {
-        get => GetProp(() => control.Alpha);
-        set => SetProp(() => control.Alpha = value);
-    }
-
     public byte BaseColorR => GetProp(() => control.BaseColor.R);
 
     public byte BaseColorG => GetProp(() => control.BaseColor.G);

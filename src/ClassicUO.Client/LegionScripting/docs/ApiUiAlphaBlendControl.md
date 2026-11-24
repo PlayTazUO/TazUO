@@ -8,10 +8,6 @@ description: "ApiUiAlphaBlendControl class documentation"
 
 **Type:** `ushort`
 
-### `Alpha`
-
-**Type:** `float`
-
 ### `BaseColorR`
 
 **Type:** `byte`
