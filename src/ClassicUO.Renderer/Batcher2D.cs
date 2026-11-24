@@ -1437,9 +1437,10 @@ namespace ClassicUO.Renderer
         }
 
         /// <summary>
-        ///     Drops an open batch without drawing it. Only for unwinding out of an exception raised inside a
-        ///     draw call: that leaves the batcher "started", and the next <see cref="Begin()"/> would refuse or
-        ///     keep the half-built sprite list from the failed frame.
+        ///     Drops an open batch without drawing it and puts the batcher back into its default state. Only
+        ///     for unwinding out of an exception raised inside a draw call: that leaves the batcher "started"
+        ///     (so the next <see cref="Begin()"/> would refuse), keeps the half-built sprite list from the
+        ///     failed frame, and can leave clipping and blending set for one gump or pass.
         /// </summary>
         public void Abort()
         {
@@ -1447,6 +1448,9 @@ namespace ClassicUO.Renderer
             _numSprites = 0;
             _customEffect = null;
             _transformMatrix = Matrix.Identity;
+            _blendState = BlendState.AlphaBlend;
+
+            ScissorStack.Clear(GraphicsDevice);
         }
 
         /// <summary>

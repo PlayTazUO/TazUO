@@ -628,6 +628,12 @@ namespace ClassicUO.Game.Scenes
 
         public override void Dispose()
         {
+            // Scene.Dispose already no-ops once destroyed; this override has to as well. SetScene disposes
+            // what a replacement's constructor disposed a moment earlier, and the second pass would tear
+            // down the handshake that replacement had just subscribed to.
+            if (IsDestroyed)
+                return;
+
             base.Dispose();
             Client.Game.ScaleChanged -= GameOnScaleChanged;
             LoginHandshake.Instance.LoginStepChanged -= OnLoginStepChanged;

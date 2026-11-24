@@ -89,13 +89,35 @@ public class CrashReporter
     ///     header and any suggested fix, the <c>Logs/crash.txt</c> entry and the webhook upload (when enabled).
     /// </summary>
     /// <remarks>
-    ///     Must not throw - it is called from a game loop that has already lost its frame, and from the
-    ///     process-death handler. <paramref name="exceptionObject"/> is typed <see cref="object"/> because
-    ///     <see cref="UnhandledExceptionEventArgs.ExceptionObject"/> is not guaranteed to be an exception.
-    ///     Safe to call once per crash: nothing is deduplicated, so a crash loop leaves one report per crash.
+    ///     Never throws: a failure to write the artifacts is reported to stderr instead, because callers
+    ///     rely on it not interrupting crash recovery. <paramref name="exceptionObject"/> is typed
+    ///     <see cref="object"/> because <see cref="UnhandledExceptionEventArgs.ExceptionObject"/> is not
+    ///     guaranteed to be an exception. Safe to call once per crash: nothing is deduplicated, so a crash
+    ///     loop leaves one report per crash.
     /// </remarks>
     /// <param name="exceptionObject">The exception (or other object) that killed the session.</param>
     public static void ReportFatal(object exceptionObject)
+    {
+        try
+        {
+            WriteCrashArtifacts(exceptionObject);
+        }
+        catch (Exception artifactFailure)
+        {
+            ReportArtifactFailure(artifactFailure);
+        }
+    }
+
+    /// <summary>
+    ///     Builds and writes the crash artifacts: the HTML report, the <c>Logs</c> entry and the upload.
+    /// </summary>
+    /// <remarks>
+    ///     Any IO failure escapes to <see cref="ReportFatal"/>, which turns it into a stderr line. Nothing
+    ///     here may call back into <see cref="ReportFatal"/> - a second report from a failing report would
+    ///     fail the same way.
+    /// </remarks>
+    /// <param name="exceptionObject">The exception (or other object) that killed the session.</param>
+    private static void WriteCrashArtifacts(object exceptionObject)
     {
         var sb = new StringBuilder();
 #if DEV_BUILD || DEBUG
@@ -135,6 +157,23 @@ public class CrashReporter
 
         using var crashFile = new LogFile(path, "crash.txt");
         crashFile.Write(sb.ToString());
+    }
+
+    /// <summary>
+    ///     Last resort when the artifacts could not be written: one line to stderr, swallowing anything
+    ///     thrown by stderr itself. Reporting a crash must never become a second crash.
+    /// </summary>
+    /// <param name="exception">The failure raised while writing the report.</param>
+    private static void ReportArtifactFailure(Exception exception)
+    {
+        try
+        {
+            Console.Error.WriteLine($"Crash report could not be written: {exception}");
+        }
+        catch
+        {
+            // Nothing left to fall back to.
+        }
     }
 
     /// <summary>
