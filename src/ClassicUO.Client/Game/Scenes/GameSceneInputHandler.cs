@@ -510,15 +510,23 @@ namespace ClassicUO.Game.Scenes
             if (SelectedObject.Object is not GameObject obj)
                 return;
 
-            // Guard against multiple clicks to on the exact same entity
-            if (obj.X == _lastSelectedMultiPositionInHouseCustomization.X &&
-                obj.Y == _lastSelectedMultiPositionInHouseCustomization.Y &&
-                obj.Z == _lastSelectedMultiPositionInHouseCustomization.Z
-               )
-                return;
+            bool placing = _world.CustomHouseManager.SelectedGraphic != 0;
 
-            // Record the last position
-            _lastSelectedMultiPositionInHouseCustomization = new Point3D(obj.X, obj.Y, obj.Z);
+            if (placing)
+            {
+                // A held mouse re-dispatches while it drags, so skip the tile it already placed on.
+                // Erasing and the eyedropper are one-shot actions that are triggered by this same press:
+                // deduping them by tile would reject the component that was just placed there, making it
+                // unerrable until something else is placed elsewhere.
+                if (IsSameAsLastMultiPlacement(obj))
+                    return;
+
+                _lastSelectedMultiPositionInHouseCustomization = new Point3D(obj.X, obj.Y, obj.Z);
+            }
+            else
+            {
+                _lastSelectedMultiPositionInHouseCustomization = null;
+            }
 
             // Dispatch the event
             _world.CustomHouseManager.OnTargetWorld(obj);
