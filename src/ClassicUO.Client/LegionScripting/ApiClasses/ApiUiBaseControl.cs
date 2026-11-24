@@ -49,6 +49,26 @@ public class ApiUiBaseControl(Control control)
     }
 
     /// <summary>
+    /// The control's X position. Assigning sets it without the fluent <see cref="SetX"/> chain overhead.
+    /// Used in python API
+    /// </summary>
+    public int X
+    {
+        get => GetProp(() => control.X);
+        set => SetProp(() => control.X = value);
+    }
+
+    /// <summary>
+    /// The control's Y position. Assigning sets it without the fluent <see cref="SetY"/> chain overhead.
+    /// Used in python API
+    /// </summary>
+    public int Y
+    {
+        get => GetProp(() => control.Y);
+        set => SetProp(() => control.Y = value);
+    }
+
+    /// <summary>
     /// Returns the control's X position.
     /// Used in python API
     /// </summary>
@@ -87,6 +107,26 @@ public class ApiUiBaseControl(Control control)
         control.X = x;
         control.Y = y;
     });
+
+    /// <summary>
+    /// The control's width in pixels. Assigning sets it without the fluent <see cref="SetWidth"/> chain overhead.
+    /// Used in python API
+    /// </summary>
+    public int Width
+    {
+        get => GetProp(() => control.Width);
+        set => SetProp(() => control.Width = value);
+    }
+
+    /// <summary>
+    /// The control's height in pixels. Assigning sets it without the fluent <see cref="SetHeight"/> chain overhead.
+    /// Used in python API
+    /// </summary>
+    public int Height
+    {
+        get => GetProp(() => control.Height);
+        set => SetProp(() => control.Height = value);
+    }
 
     public int GetWidth() => GetProp(() => control.Width);
 
@@ -147,6 +187,16 @@ public class ApiUiBaseControl(Control control)
     }
 
     /// <summary>
+    /// The control's alpha (0-1). Assigning sets it without the fluent <see cref="SetAlpha"/> chain overhead.
+    /// Used in python API
+    /// </summary>
+    public float Alpha
+    {
+        get => GetProp(() => control.Alpha);
+        set => SetProp(() => control.Alpha = value);
+    }
+
+    /// <summary>
     /// Returns the control's Alpha value.
     /// Used in python API
     /// </summary>
@@ -159,6 +209,16 @@ public class ApiUiBaseControl(Control control)
     /// </summary>
     /// <param name="alpha">The new Alpha value</param>
     public ApiUiBaseControl SetAlpha(float alpha) => SetPropFluent(() => control.Alpha = alpha);
+
+    /// <summary>
+    /// Write-only plain text tooltip shown when hovering this control. Assigning enables mouse input
+    /// and sets the tooltip without the fluent <see cref="SetTooltip"/> chain overhead.
+    /// Used in python API
+    /// </summary>
+    public string Tooltip
+    {
+        set => SetTooltip(value);
+    }
 
     /// <summary>
     /// Sets a plain text tooltip that is shown when hovering this control.
@@ -174,6 +234,15 @@ public class ApiUiBaseControl(Control control)
     });
 
     /// <summary>
+    /// Write-only entity tooltip. Assigning shows that item/entity's properties on hover, as if hovering the item.
+    /// Used in python API
+    /// </summary>
+    public uint EntityTooltip
+    {
+        set => SetEntityTooltip(value);
+    }
+
+    /// <summary>
     /// Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
     /// Automatically enables mouse input so the tooltip can be triggered by hovering.
     /// Used in python API
@@ -185,6 +254,16 @@ public class ApiUiBaseControl(Control control)
         control.AcceptMouseInput = true;
         control.SetTooltip(serial);
     });
+
+    /// <summary>
+    /// Whether this control accepts mouse input. Must be enabled for hover features such as tooltips.
+    /// Used in python API
+    /// </summary>
+    public bool AcceptMouseInput
+    {
+        get => GetProp(() => control.AcceptMouseInput);
+        set => SetAcceptMouseInput(value);
+    }
 
     /// <summary>
     /// Sets whether this control accepts mouse input. Mouse input must be enabled for

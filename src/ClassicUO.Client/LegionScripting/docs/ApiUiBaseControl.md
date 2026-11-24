@@ -20,6 +20,63 @@ Weather this control/gump can be moved by dragging this control
 
 Check if this control has been disposed(delete/removed/etc)
 
+### `X`
+
+**Type:** `int`
+
+The control's X position. Assigning sets it without the fluent `SetX` chain overhead.
+Used in python API
+
+### `Y`
+
+**Type:** `int`
+
+The control's Y position. Assigning sets it without the fluent `SetY` chain overhead.
+Used in python API
+
+### `Width`
+
+**Type:** `int`
+
+The control's width in pixels. Assigning sets it without the fluent `SetWidth` chain overhead.
+Used in python API
+
+### `Height`
+
+**Type:** `int`
+
+The control's height in pixels. Assigning sets it without the fluent `SetHeight` chain overhead.
+Used in python API
+
+### `Alpha`
+
+**Type:** `float`
+
+The control's alpha (0-1). Assigning sets it without the fluent `SetAlpha` chain overhead.
+Used in python API
+
+### `Tooltip`
+
+**Type:** `string`
+
+Write-only plain text tooltip shown when hovering this control. Assigning enables mouse input
+and sets the tooltip without the fluent `SetTooltip` chain overhead.
+Used in python API
+
+### `EntityTooltip`
+
+**Type:** `uint`
+
+Write-only entity tooltip. Assigning shows that item/entity's properties on hover, as if hovering the item.
+Used in python API
+
+### `AcceptMouseInput`
+
+**Type:** `bool`
+
+Whether this control accepts mouse input. Must be enabled for hover features such as tooltips.
+Used in python API
+
 
 *No fields found.*
 

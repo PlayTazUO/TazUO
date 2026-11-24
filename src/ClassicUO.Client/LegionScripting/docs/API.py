@@ -328,7 +328,6 @@ class ApiStatic(ApiGameObject):
 class ApiUiAlphaBlendControl(ApiUiBaseControl):
     ""
     Hue: int = None
-    Alpha: float = None
     BaseColorR: int = None
     BaseColorG: int = None
     BaseColorB: int = None
@@ -345,6 +344,14 @@ class ApiUiBaseControl:
     CanMove: bool = None
     IsVisible: bool = None
     IsDisposed: bool = None
+    X: int = None
+    Y: int = None
+    Width: int = None
+    Height: int = None
+    Alpha: float = None
+    Tooltip: str = None
+    EntityTooltip: int = None
+    AcceptMouseInput: bool = None
 
     def Add(self, childControl: "Any") -> None:
         """
@@ -1198,7 +1205,6 @@ class ApiUiRadioButton(ApiUiCheckbox):
 
 class ApiUiRenderedMapArea(ApiUiBaseControl):
     ""
-    Alpha: float = None
 
 class ApiUiResizableStaticPic(ApiUiBaseControl):
     ""
