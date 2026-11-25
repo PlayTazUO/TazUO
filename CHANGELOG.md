@@ -3,7 +3,7 @@ All notable changes to TazUO will be recorded here.
 
 ---
 ## 11/24/26
-* ***Fix:*** A custom house component can now be erased on the tile it was just placed on - the guard that stops a held mouse from stacking components also rejected the erase click, so a newly placed component could only be removed after placing something else elsewhere
+* ***Fix:*** A custom house component can now be erased, replaced or eyedropped on the tile it was just placed on - a press on the last placed tile was being swallowed, so it could only be removed or replaced after placing something else elsewhere
 
 ## 11/23/26
 * ***Legion:*** Gump controls now expose `X`, `Y`, `Width`, `Height`, `Alpha`, `Tooltip`, `EntityTooltip` and `AcceptMouseInput` as directly settable properties (e.g. `label.X = 55`), avoiding the returned wrapper per assignment when building or laying out controls

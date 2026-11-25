@@ -70,9 +70,7 @@ namespace ClassicUO.Game.Scenes
         private bool _forceStopScene;
         private HealthLinesManager _healthLinesManager;
 
-        // Tile the current interaction last placed a component on. Null when the tool is not placement, so a
-        // one-shot action (erase/eyedropper) never inherits a stale tile.
-        private Point3D? _lastSelectedMultiPositionInHouseCustomization;
+        private Point3D _lastSelectedMultiPositionInHouseCustomization;
         private int _lightCount;
         private readonly LightData[] _lights = new LightData[MAX_LIGHTS_PER_FRAME];
 
@@ -1301,17 +1299,6 @@ namespace ClassicUO.Game.Scenes
         }
 
         /// <summary>
-        /// Whether <paramref name="obj"/> is the tile a component was already placed on by the current interaction.
-        /// Placement only: a freshly placed component sits on the tile that was clicked to place it, so applying this to
-        /// erasing would block erasing it until something else was placed elsewhere.
-        /// </summary>
-        private bool IsSameAsLastMultiPlacement(GameObject obj) =>
-            _lastSelectedMultiPositionInHouseCustomization is Point3D last
-            && last.X == obj.X
-            && last.Y == obj.Y
-            && last.Z == obj.Z;
-
-        /// <summary>
         /// Handles updates performed when the left mouse button is held.
         /// This method manages interactions with game objects while the left mouse button is being held down,
         /// including custom house modifications and item pickup behaviors.
@@ -1336,8 +1323,11 @@ namespace ClassicUO.Game.Scenes
                 if (SelectedObject.Object is not GameObject obj)
                     return;
 
-                // Keep a held mouse from stacking components on the tile it already placed one on
-                if (IsSameAsLastMultiPlacement(obj))
+                // Guard against multiple clicks to on the exact same entity
+                if (obj.X == _lastSelectedMultiPositionInHouseCustomization.X &&
+                    obj.Y == _lastSelectedMultiPositionInHouseCustomization.Y &&
+                    obj.Z == _lastSelectedMultiPositionInHouseCustomization.Z
+                   )
                     return;
 
                 _world.CustomHouseManager.OnTargetWorld(obj);
