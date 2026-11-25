@@ -111,7 +111,7 @@ internal static class ChatMessage
                 username = p.ReadUnicodeBE();
                 string msgSent = p.ReadUnicodeBE();
 
-                if (ProfileManager.CurrentProfile.StripChatUsernameId && !string.IsNullOrEmpty(username) && username[0] == '<')
+                if (ProfileManager.CurrentProfile?.StripChatUsernameId == true && !string.IsNullOrEmpty(username) && username[0] == '<')
                 {
                     int idEnd = username.IndexOf('>');
 

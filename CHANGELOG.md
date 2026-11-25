@@ -2,6 +2,9 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/26/26
+* ***Fix:*** Uncommon crash upon receiving a chat message during shutdown - [P.R 1246](https://github.com/PlayTazUO/TazUO/pull/1246) ([yuval-po](https://github.com/yuval-po))
+
 ## 11/23/26
 * ***Legion:*** Gump controls now expose `X`, `Y`, `Width`, `Height`, `Alpha`, `Tooltip`, `EntityTooltip` and `AcceptMouseInput` as directly settable properties (e.g. `label.X = 55`), avoiding the returned wrapper per assignment when building or laying out controls
 * ***Fix:*** UltimaLive blocks at the end of the map or statics file are no longer resent by the server at each query, removing the last static of a block now removes it from the screen, and a live map update received before a facet's first block query no longer throws a `NullReferenceException` - [P.R 1238](https://github.com/PlayTazUO/TazUO/pull/1238) ([DavideRei](https://github.com/DavideRei))
