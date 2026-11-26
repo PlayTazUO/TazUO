@@ -1332,8 +1332,7 @@ namespace ClassicUO.Game.Scenes
 
                 _world.CustomHouseManager.OnTargetWorld(obj);
                 _timeToPlaceMultiInHouseCustomization = Time.Ticks + 50;
-                _lastSelectedMultiPositionInHouseCustomization.X = obj.X;
-                _lastSelectedMultiPositionInHouseCustomization.Y = obj.Y;
+                _lastSelectedMultiPositionInHouseCustomization = new Point3D(obj.X, obj.Y, obj.Z);
                 return;
             }
 

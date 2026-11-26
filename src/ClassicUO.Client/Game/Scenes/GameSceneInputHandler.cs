@@ -510,14 +510,9 @@ namespace ClassicUO.Game.Scenes
             if (SelectedObject.Object is not GameObject obj)
                 return;
 
-            // Guard against multiple clicks to on the exact same entity
-            if (obj.X == _lastSelectedMultiPositionInHouseCustomization.X &&
-                obj.Y == _lastSelectedMultiPositionInHouseCustomization.Y &&
-                obj.Z == _lastSelectedMultiPositionInHouseCustomization.Z
-               )
-                return;
-
-            // Record the last position
+            // Every press dispatches: erasing or replacing a component on the tile that was just clicked to
+            // place it is a valid action. Only the held-mouse pass suppresses by tile (see UpdateWhenLeftClickHeld),
+            // so record this tile to stop that pass from placing a second component on it.
             _lastSelectedMultiPositionInHouseCustomization = new Point3D(obj.X, obj.Y, obj.Z);
 
             // Dispatch the event
