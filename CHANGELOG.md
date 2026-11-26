@@ -3,6 +3,7 @@ All notable changes to TazUO will be recorded here.
 
 ---
 ## 11/26/26
+* ***Fix:*** Auto-open corpses no longer wastes an object-delay cycle on a corpse that is out of range or already gone by the time it is dequeued - the queue now runs the next queued corpse the same tick instead
 * ***Fix:*** Uncommon crash upon receiving a chat message during shutdown - [P.R 1246](https://github.com/PlayTazUO/TazUO/pull/1246) ([yuval-po](https://github.com/yuval-po))
 
 ## 11/23/26

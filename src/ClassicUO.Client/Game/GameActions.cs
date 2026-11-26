@@ -618,10 +618,15 @@ internal static class GameActions
         Socket.Send_AttackRequest(serial);
     }
 
-    internal static void QueueOpenCorpse(uint serial, bool ownCorpse = false) =>
+    internal static void QueueOpenCorpse(uint serial, bool ownCorpse = false)
+    {
+        bool opened = false;
+
         ObjectActionQueue.Instance.Enqueue(
             new ObjectActionQueueItem(() =>
             {
+                opened = false;
+
                 if (serial == 0)
                     return;
 
@@ -631,11 +636,20 @@ internal static class GameActions
                     item.IsCorpse &&
                     item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange
                    )
+                {
                     ObjectActionQueueItem.DoubleClick(serial).Action(); // Using the 'Action' here to remain DRY.
-            }),
+                    opened = true;
+                }
+            })
+            {
+                // A corpse that was too far (or gone) was never opened, so don't start the shared
+                // object delay; letting the queue drain to the next corpse this same tick.
+                TriggersGlobalCooldown = () => opened
+            },
             ownCorpse ? ActionPriority.Immediate :
                 World.Instance.Player.ManualOpenedCorpses.Contains(serial) ? ActionPriority.ManualUseItem : ActionPriority.OpenCorpse
         );
+    }
 
     internal static void DoubleClickQueued(uint serial) => ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.DoubleClick(serial), ActionPriority.UseItem);
 
