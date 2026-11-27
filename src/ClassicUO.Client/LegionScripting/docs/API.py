@@ -999,6 +999,23 @@ class ApiUiGump:
         """
         pass
 
+    def AddControlOnDoubleClick(self, control: "Any", onDoubleClick: "Any", leftOnly: "bool" = True) -> "Any":
+        """
+        Add an onDoubleClick callback to a control.
+        
+        **Example:**
+        
+        ```py
+        def myfunc:
+          API.SysMsg("Something double clicked!")
+        bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
+        API.Gumps.AddControlOnDoubleClick(bg, myfunc)
+        while True:
+          API.ProcessCallbacks()
+        ```
+        """
+        pass
+
     def AddControlOnDisposed(self, control: "ApiUiBaseControl", onDispose: "Any") -> "ApiUiBaseControl":
         """
         Add onDispose(Closed) callback to a control.

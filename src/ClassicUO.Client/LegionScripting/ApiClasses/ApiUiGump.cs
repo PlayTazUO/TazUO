@@ -596,6 +596,52 @@ public class ApiUiGump(LegionAPI api)
     }
 
     /// <summary>
+    /// Add an onDoubleClick callback to a control.
+    /// Example:
+    /// ```py
+    /// def myfunc:
+    ///   API.SysMsg("Something double clicked!")
+    /// bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
+    /// API.Gumps.AddControlOnDoubleClick(bg, myfunc)
+    /// while True:
+    ///   API.ProcessCallbacks()
+    /// ```
+    /// </summary>
+    /// <param name="control">The control listening for double clicks</param>
+    /// <param name="onDoubleClick">The callback function</param>
+    /// <param name="leftOnly">Only accept left mouse double clicks?</param>
+    /// <returns>Returns the control so methods can be chained.</returns>
+    public object AddControlOnDoubleClick(object control, object onDoubleClick, bool leftOnly = true)
+    {
+        if (control == null || onDoubleClick == null || !api.CallbackChannel.CanInvoke(onDoubleClick))
+            return control;
+
+        return OnMain(() => {
+            Control wControl = null;
+
+            if(control is Control)
+                wControl = (Control)control;
+            else if (control is ApiUiBaseControl pbc && pbc.Control != null)
+                wControl = pbc.Control;
+
+            if (wControl == null)
+                return control;
+
+            wControl.AcceptMouseInput = true;
+
+            wControl.MouseDoubleClick += (_, e) =>
+            {
+                if (leftOnly && e.Button != MouseButtonType.Left)
+                    return;
+
+                api?.ScheduleCallback(onDoubleClick);
+            };
+
+            return control;
+        });
+    }
+
+    /// <summary>
     /// Add onDispose(Closed) callback to a control.
     /// Example:
     /// ```py
