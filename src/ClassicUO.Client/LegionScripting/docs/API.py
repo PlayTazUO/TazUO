@@ -4256,9 +4256,10 @@ def GetViewportBounds() -> "Any":
 
 def GetWindowTitle() -> "str":
     """
-    Get the current text shown in the game window's title bar.
-    This includes the TazUO name/version suffix, and any player name or
-    title bar stats if those features are enabled.
+    Get the current text shown in the game window's title bar, without the
+    TazUO name/version suffix. This includes any player name or title bar
+    stats if those features are enabled.
+    Returns an empty string when the window is showing its default title.
     
     **Example:**
     

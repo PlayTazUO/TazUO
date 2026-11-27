@@ -4234,9 +4234,10 @@ API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
 
 ### GetWindowTitle
 
-Get the current text shown in the game window's title bar.
-This includes the TazUO name/version suffix, and any player name or
-title bar stats if those features are enabled.
+Get the current text shown in the game window's title bar, without the
+TazUO name/version suffix. This includes any player name or title bar
+stats if those features are enabled.
+Returns an empty string when the window is showing its default title.
 
 **Example:**
 
@@ -4244,7 +4245,7 @@ title bar stats if those features are enabled.
 API.SysMsg(API.GetWindowTitle())
 ```
 
-**Return Type:** `string` - The full title bar text as currently displayed.
+**Return Type:** `string` - The current title bar text, excluding the TazUO suffix.
 
 ---
 
