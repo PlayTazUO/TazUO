@@ -71,6 +71,12 @@ namespace ClassicUO
 
         private static string DefaultWindowTitle => $"[TazUO - {CUOEnviroment.Version}]";
 
+        /// <summary>
+        /// The title text set for the window, excluding the TazUO name/version suffix.
+        /// Empty when the window is showing its default title.
+        /// </summary>
+        public string CustomWindowTitle { get; private set; } = string.Empty;
+
         public GameController(IPluginHost pluginHost)
         {
             GraphicManager = new GraphicsDeviceManager(this);
@@ -330,6 +336,8 @@ namespace ClassicUO
 
         public void SetWindowTitle(string title)
         {
+            CustomWindowTitle = string.IsNullOrEmpty(title) ? string.Empty : title;
+
             if (string.IsNullOrEmpty(title))
             {
 #if DEV_BUILD

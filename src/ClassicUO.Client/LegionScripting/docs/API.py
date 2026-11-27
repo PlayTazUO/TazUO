@@ -4254,6 +4254,37 @@ def GetViewportBounds() -> "Any":
     """
     pass
 
+def GetWindowTitle() -> "str":
+    """
+    Get the current text shown in the game window's title bar, without the
+    TazUO name/version suffix. This includes any player name or title bar
+    stats if those features are enabled.
+    Returns an empty string when the window is showing its default title.
+    
+    **Example:**
+    
+    ```py
+    API.SysMsg(API.GetWindowTitle())
+    ```
+    """
+    pass
+
+def SetWindowTitle(title: "str") -> None:
+    """
+    Set the game window's title bar text.
+    The TazUO name/version suffix is appended automatically. Passing null or an
+    empty string restores the default title.
+    Note: if title bar stats are enabled, they will overwrite this text on the
+    next stat update.
+    
+    **Example:**
+    
+    ```py
+    API.SetWindowTitle("Farming")
+    ```
+    """
+    pass
+
 class EventSinkApiDeclaration:
     ""
 

@@ -3,6 +3,7 @@ All notable changes to TazUO will be recorded here.
 
 ---
 ## 11/26/26
+* ***Legion:*** Added `API.GetWindowTitle()` and `API.SetWindowTitle(title)` to read and set the game window's title bar text - the getter omits the TazUO name/version suffix, an empty or null title restores the default, and the suffix is still appended automatically
 * ***Legion:*** Gump controls now expose `Bounds`, a settable `ApiRect` carrying `X`, `Y`, `Width` and `Height` - reading it takes one main-thread call and assigning it applies all four in a single non-blocking task, instead of four separate property accesses
 * ***Fix:*** A custom house component can now be erased, replaced or eyedropped on the tile it was just placed on - a press on the last placed tile was being swallowed, so it could only be removed or replaced after placing something else elsewhere
 * ***Fix:*** Auto-open corpses no longer wastes an object-delay cycle on a corpse that is out of range or already gone by the time it is dequeued - the queue now runs the next queued corpse the same tick instead
