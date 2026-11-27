@@ -5,7 +5,7 @@ namespace ClassicUO.LegionScripting.ApiClasses;
 
 public class ApiUiGumpPic(GumpPic gumpPic) : ApiUiBaseControl(gumpPic)
 {
-    public ushort Graphic
+    public uint Graphic
     {
         get => GetProp(() => gumpPic.Graphic);
         set => SetProp(() => gumpPic.Graphic = value);
