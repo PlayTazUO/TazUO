@@ -5390,6 +5390,32 @@ namespace ClassicUO.LegionScripting
         /// <returns>A Rectangle with X, Y, Width and Height of the game viewport in screen pixels, or an empty Rectangle if the game scene is not active.</returns>
         public Rectangle GetViewportBounds() => OnMain(() => Client.Game.GetScene<GameScene>()?.Camera.Bounds ?? Rectangle.Empty);
 
+        /// <summary>
+        /// Get the current text shown in the game window's title bar.
+        /// This includes the TazUO name/version suffix, and any player name or
+        /// title bar stats if those features are enabled.
+        /// Example:
+        /// ```py
+        /// API.SysMsg(API.GetWindowTitle())
+        /// ```
+        /// </summary>
+        /// <returns>The full title bar text as currently displayed.</returns>
+        public string GetWindowTitle() => OnMain(() => Client.Game.Window.Title);
+
+        /// <summary>
+        /// Set the game window's title bar text.
+        /// The TazUO name/version suffix is appended automatically. Passing null or an
+        /// empty string restores the default title.
+        /// Note: if title bar stats are enabled, they will overwrite this text on the
+        /// next stat update.
+        /// Example:
+        /// ```py
+        /// API.SetWindowTitle("Farming")
+        /// ```
+        /// </summary>
+        /// <param name="title">The text to show before the TazUO suffix.</param>
+        public void SetWindowTitle(string title) => OnMain(() => Client.Game.SetWindowTitle(title));
+
         #endregion
     }
 }

@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `11/23/26`.*
+*This was generated on `11/26/26`.*
 
 ## Properties
 ### `Events`
@@ -4229,6 +4229,46 @@ API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
 ```
 
 **Return Type:** `Rectangle` - A Rectangle with X, Y, Width and Height of the game viewport in screen pixels, or an empty Rectangle if the game scene is not active.
+
+---
+
+### GetWindowTitle
+
+Get the current text shown in the game window's title bar.
+This includes the TazUO name/version suffix, and any player name or
+title bar stats if those features are enabled.
+
+**Example:**
+
+```py
+API.SysMsg(API.GetWindowTitle())
+```
+
+**Return Type:** `string` - The full title bar text as currently displayed.
+
+---
+
+### SetWindowTitle
+`(title)`
+Set the game window's title bar text.
+The TazUO name/version suffix is appended automatically. Passing null or an
+empty string restores the default title.
+Note: if title bar stats are enabled, they will overwrite this text on the
+next stat update.
+
+**Example:**
+
+```py
+API.SetWindowTitle("Farming")
+```
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `title` | `string` | ❌ No | The text to show before the TazUO suffix. |
+
+**Return Type:** `void` *(Does not return anything)*
 
 ---
 
