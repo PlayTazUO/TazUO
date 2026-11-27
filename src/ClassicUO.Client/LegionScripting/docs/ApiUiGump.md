@@ -627,6 +627,33 @@ while True:
 
 ---
 
+### AddControlOnDoubleClick
+`(control, onDoubleClick, leftOnly)`
+Add an onDoubleClick callback to a control.
+
+**Example:**
+
+```py
+def myfunc:
+  API.SysMsg("Something double clicked!")
+bg = API.Gumps.CreateGumpColorBox(0.7, "#D4202020")
+API.Gumps.AddControlOnDoubleClick(bg, myfunc)
+while True:
+  API.ProcessCallbacks()
+```
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `control` | `object` | ❌ No | The control listening for double clicks |
+| `onDoubleClick` | `object` | ❌ No | The callback function |
+| `leftOnly` | `bool` | ✅ Yes | Only accept left mouse double clicks? |
+
+**Return Type:** `object` - Returns the control so methods can be chained.
+
+---
+
 ### AddControlOnDisposed
 `(control, onDispose)`
 Add onDispose(Closed) callback to a control.
