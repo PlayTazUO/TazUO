@@ -163,6 +163,43 @@ public class ApiUiBaseControl(Control control)
     });
 
     /// <summary>
+    /// The control's position and size (X, Y, Width, Height) as one <see cref="ApiRect"/>.
+    /// Reading reads all four in a single main-thread call; assigning applies all four in one
+    /// non-blocking enqueue, instead of four separate property sets.
+    /// Used in python API
+    /// </summary>
+    public ApiRect Bounds
+    {
+        get => GetProp(() => new ApiRect(control.X, control.Y, control.Width, control.Height));
+        set
+        {
+            if (value == null) return;
+
+            // Snapshot now: the caller may reuse or edit this same rect before the queued task runs.
+            int x = value.X;
+            int y = value.Y;
+            int width = value.Width;
+            int height = value.Height;
+
+            EnqueueProp(() =>
+            {
+                control.X = x;
+                control.Y = y;
+                control.Width = width;
+                control.Height = height;
+            });
+        }
+    }
+
+    /// <summary>
+    /// Returns the control's position and size (X, Y, Width, Height) as one <see cref="ApiRect"/>.
+    /// Reads all four in a single main-thread call, the read counterpart of <see cref="SetRect"/>.
+    /// Used in python API
+    /// </summary>
+    /// <returns>The control's bounds.</returns>
+    public ApiRect GetBounds() => Bounds;
+
+    /// <summary>
     /// Centers a GUMP horizontally in the viewport. Only works on Gump instances.
     /// Used in python API
     /// </summary>
@@ -323,12 +360,21 @@ public class ApiUiBaseControl(Control control)
     }
 
     /// <summary>
+    /// Enqueues a control mutation on the main thread without blocking the caller.
+    /// No-op when the control is disposed or missing.
+    /// </summary>
+    protected void EnqueueProp(System.Action setter)
+    {
+        if (VerifyIntegrity())
+            MainThreadQueue.EnqueueAction(setter);
+    }
+
+    /// <summary>
     /// Enqueues a control mutation on the main thread and returns this wrapper for fluent chaining.
     /// </summary>
     protected ApiUiBaseControl SetPropFluent(System.Action setter)
     {
-        if (VerifyIntegrity())
-            MainThreadQueue.EnqueueAction(setter);
+        EnqueueProp(setter);
 
         return this;
     }
