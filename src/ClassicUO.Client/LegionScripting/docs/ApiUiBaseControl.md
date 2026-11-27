@@ -48,6 +48,15 @@ Used in python API
 The control's height in pixels. Assigning sets it without the fluent `SetHeight` chain overhead.
 Used in python API
 
+### `Bounds`
+
+**Type:** `ApiRect`
+
+The control's position and size (X, Y, Width, Height) as one `ApiRect`.
+Reading reads all four in a single main-thread call; assigning applies all four in one
+non-blocking enqueue, instead of four separate property sets.
+Used in python API
+
 ### `Alpha`
 
 **Type:** `float`
@@ -220,6 +229,16 @@ Used in python API
 | `height` | `int` | ❌ No | The new height in pixels |
 
 **Return Type:** `ApiUiBaseControl`
+
+---
+
+### GetBounds
+
+Returns the control's position and size (X, Y, Width, Height) as one `ApiRect`.
+Reads all four in a single main-thread call, the read counterpart of `SetRect`.
+Used in python API
+
+**Return Type:** `ApiRect` - The control's bounds.
 
 ---
 

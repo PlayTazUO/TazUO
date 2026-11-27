@@ -309,6 +309,19 @@ class ApiPlayer(ApiMobile):
     InWarMode: bool = None
     __class__: str = None
 
+class ApiRect(PyApiObject):
+    ""
+    X: int = None
+    Y: int = None
+    Width: int = None
+    Height: int = None
+
+    def ToString(self) -> "str":
+        """
+        Readable text form, so printing one while tuning a layout shows all four fields.
+        """
+        pass
+
 class ApiSoundEntry:
     ""
     ID: int = None
@@ -348,6 +361,7 @@ class ApiUiBaseControl:
     Y: int = None
     Width: int = None
     Height: int = None
+    Bounds = None
     Alpha: float = None
     Tooltip: str = None
     EntityTooltip: int = None
@@ -418,6 +432,14 @@ class ApiUiBaseControl:
     def SetRect(self, x: "int", y: "int", width: "int", height: "int") -> "ApiUiBaseControl":
         """
         Sets the control's position and size in one operation.
+        Used in python API
+        """
+        pass
+
+    def GetBounds(self) -> "Any":
+        """
+        Returns the control's position and size (X, Y, Width, Height) as one `ApiRect`.
+        Reads all four in a single main-thread call, the read counterpart of `SetRect`.
         Used in python API
         """
         pass
