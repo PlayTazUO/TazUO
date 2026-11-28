@@ -2929,7 +2929,8 @@ namespace ClassicUO.LegionScripting
                 case "beneficial" or "ben": targetT = TargetType.Beneficial; break;
             }
 
-            while (!OnMain(() => { return World.TargetManager.IsTargeting && (World.TargetManager.TargetingType == targetT || targetType.ToLower() == "any"); }) && !AbortRequested)
+            bool targetReady;
+            while (!(targetReady = OnMain(() => { return World.TargetManager.IsTargeting && (World.TargetManager.TargetingType == targetT || targetType.ToLower() == "any"); })) && !AbortRequested)
             {
                 if (DateTime.UtcNow > expire)
                     return false;
@@ -2937,7 +2938,7 @@ namespace ClassicUO.LegionScripting
                 Thread.Sleep(1);
             }
 
-            return true;
+            return targetReady;
         }
 
         /// <summary>
@@ -3845,7 +3846,8 @@ namespace ClassicUO.LegionScripting
                 ID = lastGumpId.Value;
             }
 
-            while (!OnMain(() => UIManager.GetGumpServer(ID) != null) && !AbortRequested)
+            bool gumpReady;
+            while (!(gumpReady = OnMain(() => UIManager.GetGumpServer(ID) != null)) && !AbortRequested)
             {
                 if (DateTime.UtcNow > expire)
                     return false;
@@ -3853,7 +3855,7 @@ namespace ClassicUO.LegionScripting
                 Thread.Sleep(1);
             }
 
-            return true;
+            return gumpReady;
         }
 
         /// <summary>
