@@ -14,7 +14,7 @@ All methods, properties, enums, etc need to pre prefaced with `API.` for example
 :::
 
 
-*This was generated on `11/26/26`.*
+*This was generated on `11/28/26`.*
 
 ## Properties
 ### `Events`
@@ -149,7 +149,9 @@ override that; see `ApiVisualEffects`.
 
 **Type:** `bool`
 
-Check if the script has been requested to stop.
+Check if the script has been requested to stop. It is true while an OnStop callback
+runs and for the rest of the script's life after that, but main-thread APIs keep
+working until the stop grace period ends.
 
 ```py
 while not API.StopRequested:
@@ -159,6 +161,9 @@ while not API.StopRequested:
 ### `CancellationToken`
 
 **Type:** `CancellationTokenSource`
+
+Cancels main-thread dispatch to this script. Cancelled only when the script is torn
+down, so cleanup code can still use the API while it unwinds.
 
 
 ## Enums
@@ -2976,9 +2981,14 @@ API.Pause(5)
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `seconds` | `double` | ❌ No |  |
+| `seconds` | `double` | ❌ No | How long to pause, in seconds. |
 
 **Return Type:** `void` *(Does not return anything)*
+
+**Raises:**
+
+- `OperationCanceledException` - The script is stopping.
+- `ArgumentOutOfRangeException` - `seconds` is negative.
 
 ---
 
