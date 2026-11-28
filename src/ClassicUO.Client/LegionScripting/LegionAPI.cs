@@ -53,6 +53,7 @@ namespace ClassicUO.LegionScripting
         private volatile object _onStopCallback;
         private volatile bool _onStopScheduled;
         private volatile bool _onStopCompleted;
+        private volatile bool _stopInitiated;
         private readonly ConcurrentDictionary<string, bool> _pressedKeys = new();
         private readonly ConcurrentDictionary<string, string> _keyToHotkeyMap = new();
 
@@ -67,12 +68,28 @@ namespace ClassicUO.LegionScripting
 
         private volatile bool _disposed;
         private readonly CancellationToken _cachedToken;
+        private readonly CancellationToken _stopToken;
 
         #endregion
 
         #region Accessors
 
         internal ICallbackChannel CallbackChannel { get; }
+
+        /// <summary>
+        /// Cancels when the script must abort blocking work now: at the end of the OnStop grace
+        /// period, or immediately when no OnStop callback is registered. This is deliberately
+        /// separate from <see cref="CancellationToken" />, which stays alive during graceful
+        /// teardown so main-thread APIs (e.g. <see cref="SysMsg" />) keep working.
+        /// </summary>
+        internal CancellationTokenSource StopTokenSource { get; }
+
+        /// <summary>
+        /// True once the stop grace period has ended and the script must stop blocking work.
+        /// Unlike <see cref="StopRequested" /> it remains false while an OnStop callback runs, so
+        /// that callback can still use the API.
+        /// </summary>
+        private bool AbortRequested => _stopToken.IsCancellationRequested;
 
         // ReSharper disable once MemberCanBePrivate.Global - Used by user scripts
         public EventSinkApi Events { get; }
@@ -87,6 +104,8 @@ namespace ClassicUO.LegionScripting
             _scriptFile = script;
             CallbackChannel = callbackChannel;
             _cachedToken = CancellationToken.Token;
+            StopTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_cachedToken);
+            _stopToken = StopTokenSource.Token;
             Events = new EventSinkApi(this);
             Gumps = new ApiUiGump(this);
             VisualEffects = new ApiVisualEffects(this);
@@ -139,22 +158,21 @@ namespace ClassicUO.LegionScripting
                 }
                 catch (OperationCanceledException)
                 {
-                    // Expected when the callback stops the script
+                    // Expected cancellation signal while the script must stop (e.g. API.Pause
+                    // called during teardown). Must unwind to the script's own cleanup.
+                    throw;
                 }
                 catch (ThreadInterruptedException)
                 {
-                    // Expected when the script is being stopped
+                    // Expected interrupt signal from StopScript(). Must unwind immediately.
+                    throw;
                 }
                 catch (Exception ex)
                 {
                     Log.Warn($"Script callback error: {ex}");
-                    // This may be spammy use needs to know if something's wrong.
-                    // Ideally, this should bubble up to terminate the script.
-                    GameActions.Print(
-                        World,
-                        $"Script callback failed: {ex.Message}",
-                        Constants.HUE_WARN
-                    );
+                    // Rethrow so the error reaches ExecutePythonScript/ExecuteCSharpScript, where
+                    // it is reported and the script's with/try-finally cleanup can run.
+                    throw;
                 }
             };
 
@@ -201,6 +219,23 @@ namespace ClassicUO.LegionScripting
         internal bool OnStopCompleted => _onStopCompleted;
 
         /// <summary>
+        /// Returns true while a stop is already in flight: the OnStop callback has been scheduled or
+        /// the actual teardown has started. Internal state deliberately does not derive from
+        /// <see cref="StopRequested" />, which flips as soon as OnStop begins running.
+        /// </summary>
+        internal bool IsStopPending => _onStopScheduled || _stopInitiated;
+
+        /// <summary>
+        /// Marks the start of the actual teardown and raises <see cref="StopRequested" /> so script
+        /// code knows the stop is under way. The stop token is cancelled separately by the caller.
+        /// </summary>
+        internal void BeginStop()
+        {
+            _stopInitiated = true;
+            StopRequested = true;
+        }
+
+        /// <summary>
         /// Schedules the registered OnStop callback so it will run on the next call to
         /// ProcessCallbacks. This is idempotent: it only schedules once and
         /// returns true only on the first call so callers can start a single wait/timeout.
@@ -228,18 +263,24 @@ namespace ClassicUO.LegionScripting
             {
                 try
                 {
+                    StopRequested = true;
                     CallbackChannel.Invoke(callback);
                 }
                 catch (OperationCanceledException)
                 {
-                    // Expected when the callback stops the script
+                    // The grace period ended while the callback was waiting. Unwind so the script
+                    // stops instead of continuing after teardown.
+                    throw;
                 }
                 catch (ThreadInterruptedException)
                 {
-                    // Expected when the script is being stopped
+                    // Expected interrupt signal from StopScript(). Must unwind immediately.
+                    throw;
                 }
                 catch (Exception ex)
                 {
+                    // OnStop is the final teardown hook, so a user error is logged rather than
+                    // turned into an error popup from an already-degrading script environment.
                     Log.Warn($"OnStop callback error: {ex}");
                 }
                 finally
@@ -336,7 +377,21 @@ namespace ClassicUO.LegionScripting
             ScreenShake.Viewport.CancelByOwner(this);
             ScreenShake.Window.CancelByOwner(this);
 
-            CancellationToken.Dispose();
+            CancellationToken.Cancel();
+            StopTokenSource.Cancel();
+
+            // A detached script may still have code running (a Python zombie thread, or a C# run
+            // task that ignored cancellation) and that code can be blocked in Pause on the stop
+            // token's wait handle. Disposing the source would close the handle while the wait is
+            // returning, so leave it for the GC in that case. Both tokens are already cancelled,
+            // so any later Pause throws before touching the handle.
+            bool scriptStillRunning = _scriptFile is { IsZombie: true } || _scriptFile?.ScriptThread is { IsAlive: true };
+
+            if (!scriptStillRunning)
+            {
+                StopTokenSource.Dispose();
+                CancellationToken.Dispose();
+            }
         }
 
         public ConcurrentQueue<ApiJournalEntry> JournalEntries => _journalEntries;
@@ -463,7 +518,9 @@ namespace ClassicUO.LegionScripting
         public ApiVisualEffects VisualEffects;
 
         /// <summary>
-        /// Check if the script has been requested to stop.
+        /// Check if the script has been requested to stop. It is true while an OnStop callback
+        /// runs and for the rest of the script's life after that, but main-thread APIs keep
+        /// working until the stop grace period ends.
         /// ```py
         /// while not API.StopRequested:
         ///   DoSomeStuff()
@@ -471,6 +528,10 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         public volatile bool StopRequested;
 
+        /// <summary>
+        /// Cancels main-thread dispatch to this script. Cancelled only when the script is torn
+        /// down, so cleanup code can still use the API while it unwinds.
+        /// </summary>
         public CancellationTokenSource CancellationToken = new();
 
         #endregion
@@ -628,7 +689,7 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (DateTime.Now < expire && !StopRequested && !window.IsDisposed)
+            while (DateTime.Now < expire && !AbortRequested && !window.IsDisposed)
             {
                 lock (gate)
                     if (captured != null)
@@ -1048,7 +1109,7 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.UtcNow.AddSeconds(timeout);
 
-            while (DateTime.UtcNow < expire && !StopRequested)
+            while (DateTime.UtcNow < expire && !AbortRequested)
             {
                 // null = menu not ready yet (keep waiting), true = matched & sent, false = menu open but no match
                 bool? result = OnMain<bool?>(() =>
@@ -2082,7 +2143,7 @@ namespace ClassicUO.LegionScripting
             Stack<uint> containers = new();
             containers.Push(container);
 
-            while (containers.Count > 0 && !StopRequested)
+            while (containers.Count > 0 && !AbortRequested)
             {
                 uint current = containers.Pop();
 
@@ -2368,7 +2429,7 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player?.Pathfinder?.AutoWalking == true) && !StopRequested)
+            while (OnMain(() => World.Player?.Pathfinder?.AutoWalking == true) && !AbortRequested)
             {
                 if (DateTime.Now >= expire)
                 {
@@ -2436,7 +2497,7 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player?.Pathfinder?.AutoWalking == true) && !StopRequested)
+            while (OnMain(() => World.Player?.Pathfinder?.AutoWalking == true) && !AbortRequested)
             {
                 if (DateTime.Now >= expire)
                 {
@@ -2607,7 +2668,7 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.UtcNow.AddSeconds(timeoutSeconds);
 
-            while (!completed.IsSet && !StopRequested && DateTime.UtcNow < expire)
+            while (!completed.IsSet && !AbortRequested && DateTime.UtcNow < expire)
                 completed.Wait(15);
 
             if (!completed.IsSet)
@@ -2686,7 +2747,7 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player?.Pathfinder?.AutoWalking == true) && !StopRequested)
+            while (OnMain(() => World.Player?.Pathfinder?.AutoWalking == true) && !AbortRequested)
             {
                 if (DateTime.Now >= expire)
                 {
@@ -2868,7 +2929,8 @@ namespace ClassicUO.LegionScripting
                 case "beneficial" or "ben": targetT = TargetType.Beneficial; break;
             }
 
-            while (!OnMain(() => { return World.TargetManager.IsTargeting && (World.TargetManager.TargetingType == targetT || targetType.ToLower() == "any"); }) && !StopRequested)
+            bool targetReady;
+            while (!(targetReady = OnMain(() => { return World.TargetManager.IsTargeting && (World.TargetManager.TargetingType == targetT || targetType.ToLower() == "any"); })) && !AbortRequested)
             {
                 if (DateTime.UtcNow > expire)
                     return false;
@@ -2876,7 +2938,7 @@ namespace ClassicUO.LegionScripting
                 Thread.Sleep(1);
             }
 
-            return true;
+            return targetReady;
         }
 
         /// <summary>
@@ -2936,7 +2998,7 @@ namespace ClassicUO.LegionScripting
                 World.TargetManager.SetTargeting(CursorTarget.Internal, CursorType.Target, TargetType.Neutral);
             });
 
-            while (DateTime.Now < expire && !StopRequested)
+            while (DateTime.Now < expire && !AbortRequested)
                 if (!OnMain(() => World.TargetManager.IsTargeting))
                     return World.TargetManager.LastTargetInfo.Serial;
                 else
@@ -2983,7 +3045,7 @@ namespace ClassicUO.LegionScripting
                 World.TargetManager.SetTargeting(CursorTarget.Internal, CursorType.Target, TargetType.Neutral);
             });
 
-            while (DateTime.Now < expire && !StopRequested)
+            while (DateTime.Now < expire && !AbortRequested)
             {
                 if (OnMain(() => World.TargetManager.IsTargeting))
                 {
@@ -3438,7 +3500,7 @@ namespace ClassicUO.LegionScripting
             {
                 DateTime expire = DateTime.UtcNow.AddSeconds(timeout);
 
-                while (!OnMain(() => World.OPL.Contains(serial)) && DateTime.UtcNow < expire && !StopRequested)
+                while (!OnMain(() => World.OPL.Contains(serial)) && DateTime.UtcNow < expire && !AbortRequested)
                 {
                     Thread.Sleep(100);
                 }
@@ -3784,7 +3846,8 @@ namespace ClassicUO.LegionScripting
                 ID = lastGumpId.Value;
             }
 
-            while (!OnMain(() => UIManager.GetGumpServer(ID) != null) && !StopRequested)
+            bool gumpReady;
+            while (!(gumpReady = OnMain(() => UIManager.GetGumpServer(ID) != null)) && !AbortRequested)
             {
                 if (DateTime.UtcNow > expire)
                     return false;
@@ -3792,7 +3855,7 @@ namespace ClassicUO.LegionScripting
                 Thread.Sleep(1);
             }
 
-            return true;
+            return gumpReady;
         }
 
         /// <summary>
@@ -4124,12 +4187,23 @@ namespace ClassicUO.LegionScripting
         /// API.Pause(5)
         /// ```
         /// </summary>
+        /// <remarks>
+        /// Throws <see cref="OperationCanceledException" /> once the stop grace period has ended.
+        /// It does not check <see cref="StopRequested" />, so an OnStop callback can still pause
+        /// (bounded by the stop timeout) while the client keeps processing main-thread work.
+        /// </remarks>
+        /// <param name="seconds">How long to pause, in seconds.</param>
+        /// <exception cref="OperationCanceledException">The script is stopping.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="seconds" /> is negative.</exception>
         public void Pause(double seconds)
         {
-            Task.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: _cachedToken).Wait(cancellationToken: _cachedToken);
+            if (_stopToken.IsCancellationRequested)
+                throw new OperationCanceledException("The script is stopping.", _stopToken);
 
-            if (StopRequested)
-                throw new ThreadInterruptedException();
+            bool canceled = _stopToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(seconds));
+
+            if (canceled || _stopToken.IsCancellationRequested)
+                throw new OperationCanceledException("The script is stopping.", _stopToken);
         }
 
         /// <summary>

@@ -1,4 +1,6 @@
 using System;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
 using Microsoft.Scripting.Hosting;
 
 namespace ClassicUO.LegionScripting;
@@ -35,8 +37,19 @@ public class CSharpCallbackChannel : ICallbackChannel
 
     public void Invoke(object callback, params object[] args)
     {
-        if (CanInvoke(callback))
+        if (!CanInvoke(callback))
+            return;
+
+        try
+        {
             ((Delegate)callback).DynamicInvoke(args);
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException != null)
+        {
+            // DynamicInvoke wraps the callback's own exception. Rethrow the original so callers
+            // (and script cleanup) see the real error and stack instead of the reflection wrapper.
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+        }
     }
 }
 

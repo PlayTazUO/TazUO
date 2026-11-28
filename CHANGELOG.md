@@ -2,6 +2,12 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## 11/28/26
+* ***Legion:*** Script shutdown is now graceful: `API.StopRequested` becomes true while an `OnStop` callback runs, and the main-thread cancellation token is only cancelled when the script is torn down - so `API.SysMsg` and other main-thread calls still work inside `OnStop`, `with` and `try-finally` cleanup
+* ***Legion:*** `API.Pause` and blocking API waits now abort when the `OnStop` grace period ends instead of as soon as a stop is requested, letting cleanup code use the API during the grace window (up to 5 seconds)
+* ***Legion:*** Exceptions raised by script callbacks now propagate to the script runner instead of being swallowed, so cleanup still runs and C# callback errors report the original exception rather than a reflection wrapper
+* ***Fix:*** `API.WaitForTarget` and `API.WaitForGump` now return `false` when a script stop aborts the wait, while still returning `true` when the target or gump is present
+
 ## 11/26/26
 * ***Legion:*** Added `API.GetWindowTitle()` and `API.SetWindowTitle(title)` to read and set the game window's title bar text - the getter omits the TazUO name/version suffix, an empty or null title restores the default, and the suffix is still appended automatically
 * ***Legion:*** Gump controls now expose `Bounds`, a settable `ApiRect` carrying `X`, `Y`, `Width` and `Height` - reading it takes one main-thread call and assigning it applies all four in a single non-blocking task, instead of four separate property accesses
